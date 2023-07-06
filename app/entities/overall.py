@@ -13,8 +13,8 @@ class Overall:
     and app settings."""
     title = "Generic Adventure"
     description = (
-        "An empty scenario. Before starting to play, you'll"
-        " probably want to change the"
+        "An empty scenario. To begin, go to \"Change Setup\"."
+        " You'll probably want to change the"
         " title and this description in addition to doing some basic"
         " setup such as adding a few starting items.")
     winning_item = None
@@ -35,8 +35,12 @@ class Overall:
         cls.title = data['title']
         cls.description = data['description']
         winning_item_id = data['winning_item']
-        cls.winning_item = Item.get_by_id(winning_item_id)
-        cls.winning_quantity = data['winning_quantity']
+        if winning_item_id is not None:
+            cls.winning_item = Item.get_by_id(winning_item_id)
+            cls.winning_quantity = data['winning_quantity']
+        else:
+            cls.winning_item = None
+            cls.winning_quantity = 0
 
     @classmethod
     def configure_by_form(cls):

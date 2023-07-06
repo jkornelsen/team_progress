@@ -7,6 +7,8 @@ from flask import (
     session,
     url_for
 )
+from .location import Location
+from .timer import Timer
 
 class Character:
     last_id = 0  # used to auto-generate a unique id for each object
@@ -25,6 +27,7 @@ class Character:
         self.attributes = []  # list of Attribute objects
         self.items = {}  # keys are Item object, values are slot name
         self.location = None  # Location object
+        self.timer = Timer(self)  # for travel or perhaps other actions
 
     @classmethod
     def get_by_id(cls, id_to_get):
@@ -39,7 +42,7 @@ class Character:
             'name': self.name,
             'description': self.description,
             'character_type': self.character_type,
-            'items': [item.to_json() for item in self.items],
+            'items': {item.id: slot for item, slot in self.items.items()},
             'location_id': self.location.id if self.location else None
         }
 
@@ -49,7 +52,9 @@ class Character:
         character.name = data['name']
         character.description = data.get('description', '')
         character.character_type = data['character_type']
-        character.items = [Item.get_by_id(item_data['id']) for item_data in data['items']]
+        character.items = {
+            Item.get_by_id(item_data['id']): item_data['slot']
+            for item_data in data['items']}
         character.location = Location.get_by_id(data['location_id'])
         cls.instances.append(character)
         return character
@@ -59,7 +64,10 @@ class Character:
         cls.instances.clear()
         for character_data in json_data:
             cls.from_json(character_data)
-        cls.last_id = max(character.id for character in cls.instances)
+        if cls.instances:
+            cls.last_id = max(character.id for character in cls.instances)
+        else:
+            cls.last_id = 0
         return cls.instances
 
     def configure_by_form(self):
@@ -72,17 +80,16 @@ class Character:
                 self.description = request.form.get('character_description')
                 self.character_type = request.form.get('character_type')
                 item_ids = request.form.getlist('item_id[]')
-                item_worn = request.form.getlist('item_worn[]')
-                self.items = []
-                for item_id, worn in zip(item_ids, item_worn):
+                item_slots = request.form.getlist('item_slot[]')
+                self.items = {}
+                for item_id, item_slot in zip(item_ids, item_slots):
                     item = Item.get_by_id(int(item_id))
                     if item:
-                        item.worn = (worn == item_id)
-                        self.items.append(item)
+                        self.items[item] = item_slot
                 location_id = request.form.get('character_location')
                 self.location = Location.get_by_id(int(location_id)) if location_id else None
                 print(request.form)
-            elif 'delete_character' inrequest.form:
+            elif 'delete_character' in request.form:
                 self.__class__.instances.remove(self)
             elif 'cancel_changes' in request.form:
                 print("Cancelling changes.")

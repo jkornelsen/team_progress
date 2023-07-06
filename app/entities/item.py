@@ -7,7 +7,7 @@ from flask import (
     session,
     url_for
 )
-from . import timer
+from .timer import Timer
 
 class Item:
     last_id = 0  # used to auto-generate a unique id for each object
@@ -23,7 +23,7 @@ class Item:
         self.name = ""
         self.description = ""
         self.toplevel = False if len(self.__class__.instances) > 1 else True
-        self.timer = timer.Timer(self)
+        self.timer = Timer(self)
         self.growable = 'over_time'
         self.sources = {}  # keys are Item object, values are quantity required
         self.contained_by = None  # Location or Character object
@@ -54,7 +54,7 @@ class Item:
         item.description = data.get('description', '')
         item.toplevel = data['toplevel']
         item.growable = data['growable']
-        item.timer = timer.Timer.from_json(data['timer'], item)
+        item.timer = Timer.from_json(data['timer'], item)
         source_ids[item.id] = {
             int(source_id): quantity
             for source_id, quantity in data['sources'].items()
@@ -63,7 +63,7 @@ class Item:
         return item
 
     @classmethod
-    def itemlist_from_json(cls, json_data):
+    def item_list_from_json(cls, json_data):
         cls.instances.clear()
         source_ids = {}
         for item_data in json_data:
@@ -89,7 +89,7 @@ class Item:
                 self.growable = request.form.get('growable')
                 rate_amount = float(request.form.get('rate_amount'))
                 rate_duration = float(request.form.get('rate_duration'))
-                self.timer = timer.Timer(self, rate_amount, rate_duration)
+                self.timer = Timer(self, rate_amount, rate_duration)
                 source_ids = request.form.getlist('source_id')
                 print(f"Source IDs: {source_ids}")
                 source_quantities = {}

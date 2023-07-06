@@ -10,19 +10,40 @@
         <a class="upper-left" href="{{ url_for('overview') }}">Overview</a>
         <span class="separator">|</span>
         <a class="upper-left" href="{{ url_for('configure') }}">General Setup</a>
+        <span class="separator">|</span>
+        <a class="upper-left" href="{{ url_for('configure_character', character_id=character.id) }}">Character Setup</a>
     </div>
     <h1>{{ character.name }}</h1>
     {% if character.description %}
         <p>{{ character.description }}</p>
     {% endif %}
     {% if character.character_type.lower() == "npc" %}
-        <h2>NPC</h2>
+        <p>NPC</p>
     {% else %}
-        <h2>Character for {{ character.character_type|capitalize }}</h2>
+        <p>Character for {{ character.character_type|capitalize }}</p>
     {% endif %}
 
-    {% if character.location %}<h2>Location: <a href="{{ url_for('play_location', location_id=character.location.id) }}">{{ character.location.name }}</a>{% endif %}</h2>
+    {% if character.location %}
+        <p>Location: <a href="{{ url_for('play_location', location_id=character.location.id) }}">{{ character.location.name }}</a></p>
+        {% if character.location.destinations %}
+            <div class="flexdiv">
+                <label for="destination-select">Travel To:</label>
+                <select id="destination-select"  class="select-box">
+                    <option value="">(Select destination)</option>
+                    {% for destination, distance in character.location.destinations.items() %}
+                        <option value="{{ destination.id }}" data-distance="{{ distance }}">{{ destination.name }}</option>
+                    {% endfor %}
+                </select>
+                <div id="destination-info" class="flexdiv" style="display: none;">
+                    <p id="destination-distance"></p>
+                    <button id="start-timer-btn">Start</button>
+                    <button id="stop-timer-btn">Stop</button>
+                </div>
+            </div>
+        {% endif %}
+    {% endif %}
 
+    {% if character.items %}
     <h2>Worn Items</h2>
     <ul>
         {% for item, slot in character.items.items() if slot %}
@@ -41,11 +62,43 @@
             </li>
         {% endfor %}
     </ul>
+    {% endif %}
 
+    {% if character.attributes %}
     <h2>Attributes (Not Implemented Yet)</h2>
     <ul>
         <!-- Loop over character.attributes once they are implemented -->
     </ul>
+    {% endif %}
+    <script>
+$(document).ready(function() {
+    $('#destination-select').change(function() {
+        var selectedOption = $(this).find(':selected');
+        var destinationId = selectedOption.val();
+        var destinationName = selectedOption.text();
+        var destinationDistance = selectedOption.data('distance');
+        $('#destination-name').text(destinationName);
+        $('#destination-distance').text('Distance: ' + {{ character.timer.quantity }} + ' of ' + destinationDistance);
+        if (destinationId) {
+            $('#destination-info').show();
+        } else {
+            $('#destination-info').hide();
+        }
+    });
+
+    $('#start-timer-btn').click(function() {
+        var destinationId = $('#destination-select').val();
+        // Start the timer for the selected destination
+        // ...
+    });
+
+    $('#stop-timer-btn').click(function() {
+        var destinationId = $('#destination-select').val();
+        // Stop the timer for the selected destination
+        // ...
+    });
+});
+    </script>
 </body>
 </html>
 

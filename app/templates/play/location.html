@@ -10,12 +10,21 @@
         <a class="upper-left" href="{{ url_for('overview') }}">Overview</a>
         <span class="separator">|</span>
         <a class="upper-left" href="{{ url_for('configure') }}">General Setup</a>
+        <span class="separator">|</span>
+        <a class="upper-left" href="{{ url_for('configure_location', location_id=location.id) }}">Location Setup</a>
     </div>
-    <h1>{{ current_location.name }}</h1>
+    <h1>{{ location.name }}</h1>
     {% if location.description %}
         <p>{{ location.description }}</p>
     {% endif %}
 
+    {% set outerscope = namespace(display_section = false) %}
+    {% for character in location.game_data.characters %}
+        {% if character.location.id == location.id %}
+            {% set outerscope.display_section = true %}
+        {% endif %}
+    {% endfor %}
+    {% if outerscope.display_section %}
     <h2>Characters</h2>
     <ul>
         {% for character in location.game_data.characters if character.location.id == location.id %}
@@ -24,7 +33,15 @@
             </li>
         {% endfor %}
     </ul>
+    {% endif %}
 
+    {% set outerscope = namespace(display_section = false) %}
+    {% for item in location.game_data.items %}
+        {% if item.contained_by and item.contained_by.__class__.__name__ == 'Location' and item.contained_by.id == location.id %}
+            {% set outerscope.display_section = true %}
+        {% endif %}
+    {% endfor %}
+    {% if outerscope.display_section %}
     <h2>Items</h2>
     <ul>
         {% for item in location.game_data.items if item.contained_by and item.contained_by.__class__.__name__ == 'Location' and item.contained_by.id == location.id %}
@@ -33,7 +50,9 @@
             </li>
         {% endfor %}
     </ul>
+    {% endif %}
 
+    {% if location.destinations %}
     <h2>Destinations</h2>
     <ul>
         {% for destination, distance in location.destinations.items() %}
@@ -43,6 +62,7 @@
             </li>
         {% endfor %}
     </ul>
+    {% endif %}
 </body>
 </html>
 

@@ -1,32 +1,77 @@
-[
-    {
-        "id": 2,
-        "name": "Ballpoint Pens",
-        "description": "",
-        "toplevel": true,
-        "growable": "over_time",
-        "sources": {
-            "4": 3
+{
+    "characters": [
+        {
+            "id": 2,
+            "name": "Suzy",
+            "description": "Sent to fetch bacon for dinner by her mother.",
+            "character_type": "user1",
+            "items": {},
+            "location_id": 2
+        }
+    ],
+    "items": [
+        {
+            "id": 2,
+            "name": "Pigs",
+            "description": "Can be raised, and will provide bacon.",
+            "toplevel": false,
+            "growable": "over_time",
+            "sources": {},
+            "timer": {
+                "rate_amount": 1.0,
+                "rate_duration": 10.0,
+                "quantity": 0,
+                "prev_elapsed_time": 0
+            }
         },
-        "timer": {
-            "rate_amount": 1.0,
-            "rate_duration": 3.0,
-            "quantity": 20.0,
-            "prev_elapsed_time": 55.180015563964844
+        {
+            "id": 4,
+            "name": "Bacon",
+            "description": "",
+            "toplevel": true,
+            "growable": "over_time",
+            "sources": {
+                "2": 1
+            },
+            "timer": {
+                "rate_amount": 1.0,
+                "rate_duration": 5.0,
+                "quantity": 0,
+                "prev_elapsed_time": 0
+            }
         }
-    },
-    {
-        "id": 4,
-        "name": "Ink",
-        "description": "",
-        "toplevel": false,
-        "growable": "over_time",
-        "sources": {},
-        "timer": {
-            "rate_amount": 1.0,
-            "rate_duration": 1.0,
-            "quantity": 829.0,
-            "prev_elapsed_time": 10.982203960418701
+    ],
+    "locations": [
+        {
+            "id": 2,
+            "name": "Home",
+            "description": "Starting point, and we'll return here at the end.",
+            "destinations": {
+                "4": 1
+            }
+        },
+        {
+            "id": 4,
+            "name": "Sketchy-Path Forest",
+            "description": "Easy to get lost in here.",
+            "destinations": {
+                "6": 10,
+                "2": 10
+            }
+        },
+        {
+            "id": 6,
+            "name": "Uncle's Pig Farm",
+            "description": "Suzy's uncle is okay with her butchering pigs from time to time.",
+            "destinations": {
+                "4": 2
+            }
         }
+    ],
+    "overall": {
+        "title": "Grab the Bacon",
+        "description": "A character starts in location 1, must go to location 3, get an item there, then return to location 1. To go to a destination, a character must be in one of the allowable source locations. On item screen, specify max number of items gainable, for example, 1.",
+        "winning_item": null,
+        "winning_quantity": 0
     }
-]
+}

@@ -25,12 +25,12 @@
 
         <h2>Destinations</h2>
         <div id="destinations-container">
-            {% for destination in current_location.destinations %}
+            {% for destination, distance in current_location.destinations.items() %}
                 <div class="destination">
                     <input type="hidden" name="destination_id[]" value="{{ destination.id }}">
                     <p>{{ destination.name }}
                     <label for="destination-distance">Distance:</label>
-                    <input type="number" id="destination-distance" name="destination_distance[]" value="{{ destination.distance }}" class="distance-field">
+                    <input type="number" id="destination-distance" name="destination_distance[]" value="{{ distance }}" class="distance-field">
                     <button class="remove-destination-btn">Remove Destination</button>
                     </p>
                 </div>
@@ -77,7 +77,6 @@
                 if (existingDestination.length > 0) {
                     alert('Destination already exists.');
                     return;
-               ```html
                 }
                 // Create HTML elements for the destination
                 var destinationHtml = `

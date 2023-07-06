@@ -29,6 +29,16 @@
             <option value="npc">NPC</option>
         </select><br>
 
+        <label for="character-location">Location:</label>
+        <select id="character-location" name="character_location">
+            <option value="" selected>(Select location)</option>
+            {% for location in game.locations %}
+                <option value="{{ location.id }}" {% if current_character.location.id == location.id %}selected{% endif %}>
+                    {{ location.name }}
+                </option>
+            {% endfor %}
+        </select><br>
+
         <h2>Attributes</h2>
         <p>TODO</p>
 <!--
@@ -42,38 +52,45 @@
         </div>
 -->
 
-        <h2>Items</h2>
-        <div id="items-container">
-            {% for item in current_character.items %}
-                <div class="item">
-                    <input type="hidden" name="item_id[]" value="{{ item.id }}">
-                    <p>{{ item.name }}
-                    <label for="item-worn">Worn:</label>
-                    <input type="checkbox" id="item-worn" name="item_worn[]" value="{{ item.id }}" {% if item.worn %}checked{% endif %}>
-                    <button class="remove-item-btn">Remove Item</button>
-                    </p>
-                </div>
-            {% endfor %}
-            <div>
-                {% for item in game.items %}
-                    <div class="select-box">
-                        <select class="item-select" name="item_select[]">
-                            <option value="" selected>(Select item)</option>
-                            <option value="{{ item.id }}">{{ item.name }}</option>
-                        </select>
-                        <button type="button" class="add-item-btn lesser-button">Add Item</button>
-                    </div>
+        <table id="items-table">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Worn Slot</th>
+                    <th class="transparent-col"></th>
+                </tr>
+            </thead>
+            <tbody id="items-container">
+                {% for item, slot in current_character.items.items() %}
+                    <tr class="item">
+                        <td>{{ item.name }}</td>
+                        <td>
+                            <input type="hidden" name="item_id[]" value="{{ item.id }}">
+                            <input type="text" name="item_slot[]" value="{{ slot }}" size="8">
+                        </td>
+                        <td>
+                            <button class="remove-item-btn">Remove Item</button>
+                        </td>
+                    </tr>
                 {% endfor %}
-            </div>
+            </tbody>
+        </table>
+        <div>
+            {% if game.items %}
+                <!-- Select box for adding another source -->
+                <div class="select-box">
+                    <select class="item-select" name="item_select">
+                        <option value="" selected>(Select item)</option>
+                        {% for item in game.items %}
+                            <option value="{{ item.id }}">{{ item.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="button" class="add-item-btn lesser-button">Add Item</button>
+                </div>
+            {% else %}
+                <p class="no-items">(No other items)</p>
+            {% endif %}
         </div>
-
-        <label for="character-location">Location:</label>
-        <select id="character-location" name="character_location">
-            <option value="" selected>(Select location)</option>
-            {% for location in game.locations %}
-                <option value="{{ location.id }}">{{ location.name }}</option>
-            {% endfor %}
-        </select><br>
 
         <button type="submit" id="btn-save" name="save_changes">Save and Continue</button>
         <button type="submit" id="btn-cancel" name="cancel_changes" formnovalidate>Cancel Changes</button>
@@ -97,16 +114,18 @@
                 }
                 // Create HTML elements for the item
                 var itemHtml = `
-                    <div class="item">
-                        <input type="hidden" name="item_id[]" value="${itemId}">
-                        <p>${itemName}
-                        <label for="item-worn">Worn:</label>
-                        <input type="checkbox" id="item-worn" name="item_worn[]" value="${itemId}">
-                        <button class="remove-item-btn">Remove Item</button>
-                        </p>
-                    </div>
+                    <tr>
+                        <td>${itemName}</td>
+                        <td>
+                            <input type="hidden" name="item_id[]" value="${itemId}">
+                            <input type="text" name="item_slot[]" value="" size="10">
+                        </td>
+                        <td>
+                            <button class="remove-item-btn">Remove Item</button>
+                        </td>
+                    </tr>
                 `;
-                $('#items-container').append(itemHtml);
+                $('#items-container').prepend(itemHtml);
             });
 
             // Remove an item from the list

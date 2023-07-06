@@ -53,12 +53,14 @@ def configure():
 
 @app.route('/save_to_file')
 def save_to_file():
+    data_to_save = {
+        'characters': [character.to_json() for character in Character.instances],
+        'items': [item.to_json() for item in Item.instances],
+        'locations': [location.to_json() for location in Location.instances],
+        'overall': Overall.to_json()
+    }
     with open('data.json', 'w') as outfile:
-        json.dump(
-            Item.instances,
-            outfile,
-            default=lambda obj: obj.to_json(),
-            indent=4)
+        json.dump(data_to_save, outfile, indent=4)
     session['file_message'] = 'Saved to file.'
     return redirect(url_for('configure'))
 
@@ -66,7 +68,10 @@ def save_to_file():
 def load_from_file():
     with open('data.json', 'r') as infile:
         data = json.load(infile)
-        Item.itemlist_from_json(data)
+        Overall.from_json(data['overall'])
+        Location.location_list_from_json(data['locations'])
+        Item.item_list_from_json(data['items'])
+        Character.character_list_from_json(data['characters'])
     session['file_message'] = 'Loaded from file.'
     return redirect(url_for('configure'))
 

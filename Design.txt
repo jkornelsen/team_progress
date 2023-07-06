@@ -74,6 +74,10 @@ select from a list or specify custom
 strength, intelligence, dexterity, stamina (current/max), health (current/max)
 status conditions
 
+different players may be given different authority,
+for example, only managers can spend money to open new stores
+an easy distinction would be that only the gamemaster can change setup
+
 events can pop up randomly
 period and chance is in settings, can be 0 to turn off
 before the event is shown, event params are shown which can either be
@@ -90,9 +94,6 @@ call it templating or copying
 
 scenario: you have been contracted to produce as much as possible with x resources
 the client is willing to provide better tools in exchange for some products
-
-different players may be given different authority,
-for example, only managers can spend money to open new stores
 
 keep track of how many produced (for xp) as well as how many in inventory
 age could be similar to xp, increasing over time
@@ -190,4 +191,9 @@ for example, sell 1 pen for 5 crypto.
 
 For convenience, items should be hyperlinked to any items that use them as sources.
 "Used For".
+
+Start and Stop buttons should only be one button, whichever changes the action.
+
+Will probably need to fix Character item reference serialization in the
+same way that we fixed Location destinations and Item sources.
 

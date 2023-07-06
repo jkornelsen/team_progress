@@ -17,7 +17,7 @@
         <p>{{ file_message }}</p>
     {% endif %}
     <h1>Game Setup</h1>
-    <div class="item-container">
+    <div class="entitylist-container">
         <a href="{{ url_for('configure_overall') }}">Overall Settings</a>
     </div>
     <div class="flexdiv">
@@ -35,7 +35,7 @@
         {% else %}
             <p class="no-items">(No items)</p>
         {% endif %}
-        <div class="item-container">
+        <div class="entitylist-container">
             <a href="/configure/item/new">Add New</a>
         </div>
     </div>
@@ -54,7 +54,7 @@
         {% else %}
             <p class="no-items">(No locations)</p>
         {% endif %}
-        <div class="location-container">
+        <div class="entitylist-container">
             <a href="/configure/location/new">Add New</a>
         </div>
     </div>
@@ -73,7 +73,7 @@
         {% else %}
             <p class="no-items">(No characters)</p>
         {% endif %}
-        <div class="character-container">
+        <div class="entitylist-container">
             <a href="/configure/character/new">Add New</a>
         </div>
     </div>

@@ -42,20 +42,19 @@
             {% endfor %}
         </table>
     {% endif %}
-    {% set outerscope = namespace(has_player_characters = false) %}
+    {% set outerscope = namespace(display_section = false) %}
     {% for character in overall.game_data.characters %}
         {% if character.character_type != "npc" %}
-            {% set outerscope.has_player_characters = true %}
-            {% break %}
+            {% set outerscope.display_section = true %}
         {% endif %}
     {% endfor %}
-    {% if outerscope.has_player_characters %}
+    {% if outerscope.display_section %}
         <h2>Player Characters</h2>
         <ul>
             {% for character in overall.game_data.characters %}
                 {% if character.character_type != "npc" %}
                     <li>
-                        <a href="{{ url_for('play_character', character_id=character.id) }}">{{ character.name }}</a> -
+                        <a href="{{ url_for('play_character', character_id=character.id) }}">{{ character.name }}</a> &mdash;
                         {% if character.location %}
                             <a href="{{ url_for('play_location', location_id=character.location.id) }}">{{ character.location.name }}</a>
                         {% else %}

@@ -35,30 +35,38 @@ class Location:
             'id': self.id,
             'name': self.name,
             'description': self.description,
-            'destinations': [
-                {'location_id': dest.id, 'distance': distance}
+            'destinations': {
+                dest.id: distance
                 for dest, distance in self.destinations.items()
-            ]
+            }
         }
 
     @classmethod
-    def from_json(cls, data):
+    def from_json(cls, data, destination_ids):
         location = cls(int(data['id']))
         location.name = data['name']
         location.description = data.get('description', '')
-        for dest_data in data['destinations']:
-            dest_location = cls.get_by_id(dest_data['location_id'])
-            if dest_location:
-                location.destinations[dest_location] = dest_data['distance']
+        destination_ids[location.id] = {
+            int(dest_id): distance
+            for dest_id, distance in data['destinations'].items()
+        }
         cls.instances.append(location)
         return location
 
     @classmethod
     def location_list_from_json(cls, json_data):
         cls.instances.clear()
+        destination_ids = {}
         for location_data in json_data:
-            cls.from_json(location_data)
+            cls.from_json(location_data, destination_ids)
         cls.last_id = max(location.id for location in cls.instances)
+        # set the destination objects now that all locations have been loaded
+        for location in cls.instances:
+            location.destinations = {
+                cls.get_by_id(location_id): distance
+                for location_id, distance in destination_ids.get(
+                    location.id, {}).items()
+            }
         return cls.instances
 
     def configure_by_form(self):
