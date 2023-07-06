@@ -1,0 +1,159 @@
+body {
+    background-color: #1f1f1f;
+    color: #ffffff;
+}
+
+.flexdiv {
+    display: flex;
+    align-items: center;
+}
+
+.item-container {
+    margin-left: 10px;
+}
+
+.nav-container {
+    display: flex;
+    background-color: #4d2b1e;
+    padding: 10px;
+    margin-bottom: 10px;
+    width: fit-content;
+}
+
+.nav-container > a {
+    margin-left: 10px;
+    color: #ffffff;
+}
+
+.nav-container > .separator {
+    margin: 0 0 0 10px;
+}
+
+a {
+    color: #dddddd;
+}
+
+a:hover {
+    color: #ffffff;
+}
+
+.select-box {
+    margin-left: 10px;
+}
+
+h1 {
+    color: #ffffff;
+    text-align: center;
+}
+
+label {
+    color: #ffffff;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="checkbox"],
+input[type="radio"],
+select {
+    background-color: #2a2a2a;
+    color: #ffffff;
+    border: none;
+    padding: 5px;
+}
+
+select option {
+    background-color: #2a2a2a;
+    color: #ffffff;
+}
+
+.source {
+    margin-bottom: 10px;
+}
+
+button {
+    color: white;
+    background-color: rgba(0, 0, 255, 0.5);
+    border: none;
+    margin-left: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+button:hover {
+    background-color: #0000dd;
+}
+
+.dangerous-button {
+    color: #ffffff;
+    background-color: rgba(255, 0, 0, 0.5);
+    border: none;
+    padding: 3px 6px;
+    cursor: pointer;
+}
+
+.dangerous-button:hover {
+    background-color: #dd0000;
+}
+
+.lesser-button {
+    background-color: #252525;
+    color: #ffffff;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.lesser-button:hover {
+    background-color: #2a2a2a;
+}
+
+button:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  background-color: #999999;
+  cursor: not-allowed;
+}
+
+button:disabled:hover {
+  background-color: #999999;
+}
+
+.no-items {
+    margin-left: 10px;
+}
+
+.footnote {
+    margin-top: 20px;
+    font-size: 12px;
+    color: #dddddd;
+}
+
+table {
+    background-color: #252525;
+    color: #ffffff;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+table th,
+table td {
+    padding: 10px;
+}
+
+table th {
+    background-color: #2a2a2a;
+}
+
+h2 {
+    margin: 10px 10px;
+}
+
+.inner-table {
+    border: 1px solid #dddddd;
+}
+
+textarea {
+    vertical-align: middle;
+    background-color: #2a2a2a;
+    color: #ffffff;
+    border: none;
+}

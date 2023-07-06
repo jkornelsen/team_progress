@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ config['TITLE'] }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Values passed from Flask render_page(). 
+            var isConfigured = {{ current_item.configured|default(False)|lower }};
+
+            // Enable or disable buttons based on configuration status
+            if (isConfigured) {
+                $('#btn-delete').removeAttr('disabled');
+            } else {
+                $('#btn-delete').attr('disabled', 'disabled');
+            }
+        });
+    </script>
+</head>
+<body>
+    <h1>Item Setup</h1>
+    <form method="post">
+        <label for="item-name">Name:</label>
+        <input type="text" id="item-name" name="item_name" value="{{ current_item.name }}" required><br>
+        <p><label for="item-id">ID:</label> {{ current_item.id }}</p>
+        <label for="item-description" >Description:</label>
+        <textarea id="item-description" name="item_description" rows="4" cols="50">{{ current_item.description }}</textarea><br>
+
+        <div>
+            <input type="checkbox" id="top_level" name="top_level" {% if current_item.toplevel %}checked{% endif %}>
+            <label for="top_level">Show in Overview</label><br>
+            <input type="radio" id="growable-gain-over_time" name="growable" value="over_time" {% if current_item.growable != "instantly" and current_item.growable != "not-growable" %}checked{% endif %}>
+            <label for="growable-gain-over_time">Gain over time</label>
+            <input type="radio" id="growable-gain-instantly" name="growable" value="instantly" {% if current_item.growable == "instantly" %}checked{% endif %}>
+            <label for="growable-gain-instantly">Gain instantly</label>
+            <input type="radio" id="growable-not-growable" name="growable" value="not-growable" {% if current_item.growable == "not-growable" %}checked{% endif %}>
+            <label for="growable-not-growable">Not growable</label>
+        </div>
+        <div id="rate-container">
+            <label for="rate-amount">Rate:</label><br>
+            <input type="number" id="rate-amount" name="rate_amount" value="{{ current_item.timer.rate_amount }}" required>
+            <span>per</span>
+            <input type="number" id="rate-duration" name="rate_duration" value="{{ current_item.timer.rate_duration }}" required>
+            <span>seconds</span><br>
+        </div>
+
+        <div id="source-container" style="border: 1px solid #ccc; padding: 10px;">
+            {% for source_item, quantity in current_item.sources.items() %}
+                <div class="source" data-source-id="{{ source_item.id }}">
+                    <input type="hidden" name="source_id" value="{{ source_item.id }}">
+                    <p>{{ source_item.name }}
+                    <label for="source-{{ source_item.id }}-quantity">:</label>
+                    <input type="number" id="source-{{ source_item.id }}-quantity" name="source_quantity_{{ source_item.id }}" value="{{ quantity }}">
+                    <button class="remove-source-btn lesser-button">Remove Source</button>
+                    </p>
+                </div>
+            {% endfor %}
+            <div>
+                {% set outerscope = namespace(has_other_item = false) %}
+                {% for item in game.items %}
+                    {% if item.id != current_item.id %}
+                        {% set outerscope.has_other_item = true %}
+                    {% endif %}
+                {% endfor %}
+                {% if outerscope.has_other_item %}
+                    <!-- Select box for adding another source -->
+                    <div class="select-box">
+                        <select id="add-source-select">
+                            <option value="" selected>(Select item)</option>
+                            {% for item in game.items %}
+                                {% if item.id != current_item.id %}
+                                <option value="{{ item.id }}">{{ item.name }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                        <button type="button" id="add-source-btn" class="lesser-button">Add Source</button>
+                    </div>
+                {% else %}
+                    <p class="no-items">(No other items)</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <button type="submit" id="btn-save" name="save_changes">Save and Continue</button>
+        <button type="submit" id="btn-cancel" name="cancel_changes" formnovalidate>Cancel Changes</button>
+        <button type="submit" id="btn-delete" name="delete_item" class="dangerous-button">Delete Item</button>
+    </form>
+    <script>
+        $(document).ready(function() {
+            $('input[name="growable"]').change(function() {
+              var growableValue = $(this).val();
+              
+              // Toggle visibility of rate-related elements based on the selected option
+              if (growableValue === "over_time") {
+                $('#rate-container').show();
+              } else {
+                $('#rate-container').hide();
+              }
+              
+              // Toggle disabled state of source input boxes based on the selected option
+              var isGrowable = (growableValue === "over_time" || growableValue === "instantly");
+              $('#source-container input').prop('disabled', !isGrowable);
+            });
+
+            $('#add-source-btn').click(function() {
+                var selectedOption = $('#add-source-select option:selected');
+                var sourceId = selectedOption.val();
+                var sourceName = selectedOption.text();
+                if (sourceId == "") {
+                    return; // don't add if the selected option is the placeholder
+                }
+                var existingSource = $('.source[data-source-id="' + sourceId + '"]');
+                if (existingSource.length > 0) {
+                    alert('Source already exists.');
+                    return;
+                }
+                // Create HTML elements for the source
+                var sourceHtml = `
+                    <div class="source" data-source-id="${sourceId}">
+                        <input type="hidden" name="source_id" value="${sourceId}">
+                        <p>${sourceName}
+                        <label for="source-${sourceId}-quantity">:</label>
+                        <input type="number" id="source-${sourceId}-quantity" name="source_quantity_${sourceId}" value="0">
+                        <button class="remove-source-btn">Remove Source</button>
+                        </p>
+                    </div>
+                `;
+                //<input type="hidden" name="source_id_${sourceId}" value="${sourceId}">
+                $('#source-container').prepend(sourceHtml);
+            });
+
+            $('#source-container').on('click', '.remove-source-btn', function() {
+                var sourceContainer = $(this).closest('.source');
+                var sourceId = sourceContainer.data('source-id');
+
+                // Remove the source from the DOM
+                sourceContainer.remove();
+            });
+        });
+    </script>
+</body>
+</html>

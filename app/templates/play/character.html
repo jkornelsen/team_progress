@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Character Information</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="nav-container">
+        <a class="upper-left" href="{{ url_for('overview') }}">Overview</a>
+        <span class="separator">|</span>
+        <a class="upper-left" href="{{ url_for('configure') }}">General Setup</a>
+    </div>
+    <h1>{{ character.name }}</h1>
+    {% if character.description %}
+        <p>{{ character.description }}</p>
+    {% endif %}
+    {% if character.character_type.lower() == "npc" %}
+        <h2>NPC</h2>
+    {% else %}
+        <h2>Character for {{ character.character_type|capitalize }}</h2>
+    {% endif %}
+
+    {% if character.location %}<h2>Location: <a href="{{ url_for('play_location', location_id=character.location.id) }}">{{ character.location.name }}</a>{% endif %}</h2>
+
+    <h2>Worn Items</h2>
+    <ul>
+        {% for item, slot in character.items.items() if slot %}
+            <li>
+                <a href="{{ url_for('play_item', item_id=item.id) }}">{{ item.name }}</a> -
+                Slot: {{ slot }}
+            </li>
+        {% endfor %}
+    </ul>
+
+    <h2>Inventory Items</h2>
+    <ul>
+        {% for item, slot in character.items.items() if not slot %}
+            <li>
+                <a href="{{ url_for('play_item', item_id=item.id) }}">{{ item.name }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <h2>Attributes (Not Implemented Yet)</h2>
+    <ul>
+        <!-- Loop over character.attributes once they are implemented -->
+    </ul>
+</body>
+</html>
+

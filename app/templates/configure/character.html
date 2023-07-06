@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ config['TITLE'] }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Enable or disable the attribute fields based on the selected character type
+            $('#character-type-select').change(function() {
+                var selectedOption = $(this).find(':selected');
+                var isPlayer = (selectedOption.val() === 'player');
+                $('.attribute-field').prop('disabled', !isPlayer);
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>Character Setup</h1>
+    <form method="post">
+        <label for="character-name">Name:</label>
+        <input type="text" id="character-name" name="character_name" value="{{ current_character.name }}" required><br>
+        <label for="character-description">Description:</label>
+        <textarea id="character-description" name="character_description" rows="4" cols="50">{{ current_character.description }}</textarea><br>
+        <label for="character-type">Type:</label>
+        <select id="character-type-select" name="character_type">
+            <option value="user1">For Player 1</option>
+            <option value="user2">For Player 2</option>
+            <option value="npc">NPC</option>
+        </select><br>
+
+        <h2>Attributes</h2>
+        <p>TODO</p>
+<!--
+        <div id="attributes-container">
+            <label for="character-xp">XP:</label>
+            <input type="number" id="character-xp" name="character_xp" value="{{ current_character.xp }}" class="attribute-field"><br>
+            <label for="character-int">Intelligence:</label>
+            <input type="number" id="character-int" name="character_int" value="{{ current_character.intelligence }}" class="attribute-field"><br>
+            <label for="character-charisma">Charisma:</label>
+            <input type="number" id="character-charisma" name="character_charisma" value="{{ current_character.charisma }}" class="attribute-field"><br>
+        </div>
+-->
+
+        <h2>Items</h2>
+        <div id="items-container">
+            {% for item in current_character.items %}
+                <div class="item">
+                    <input type="hidden" name="item_id[]" value="{{ item.id }}">
+                    <p>{{ item.name }}
+                    <label for="item-worn">Worn:</label>
+                    <input type="checkbox" id="item-worn" name="item_worn[]" value="{{ item.id }}" {% if item.worn %}checked{% endif %}>
+                    <button class="remove-item-btn">Remove Item</button>
+                    </p>
+                </div>
+            {% endfor %}
+            <div>
+                {% for item in game.items %}
+                    <div class="select-box">
+                        <select class="item-select" name="item_select[]">
+                            <option value="" selected>(Select item)</option>
+                            <option value="{{ item.id }}">{{ item.name }}</option>
+                        </select>
+                        <button type="button" class="add-item-btn lesser-button">Add Item</button>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <label for="character-location">Location:</label>
+        <select id="character-location" name="character_location">
+            <option value="" selected>(Select location)</option>
+            {% for location in game.locations %}
+                <option value="{{ location.id }}">{{ location.name }}</option>
+            {% endfor %}
+        </select><br>
+
+        <button type="submit" id="btn-save" name="save_changes">Save and Continue</button>
+        <button type="submit" id="btn-cancel" name="cancel_changes" formnovalidate>Cancel Changes</button>
+    </form>
+
+    <script>
+        $(document).ready(function() {
+            // Add an item select box and corresponding add button
+            $('.add-item-btn').click(function() {
+                var selectBox = $(this).prev('.item-select');
+                var selectedOption = selectBox.find(':selected');
+                var itemId = selectedOption.val();
+                var itemName = selectedOption.text();
+                if (itemId === '') {
+                    return; // don't add if the selected option is the placeholder
+                }
+                var existingItem = $('.item input[value="' + itemId + '"]').closest('.item');
+                if (existingItem.length > 0) {
+                    alert('Item already exists.');
+                    return;
+                }
+                // Create HTML elements for the item
+                var itemHtml = `
+                    <div class="item">
+                        <input type="hidden" name="item_id[]" value="${itemId}">
+                        <p>${itemName}
+                        <label for="item-worn">Worn:</label>
+                        <input type="checkbox" id="item-worn" name="item_worn[]" value="${itemId}">
+                        <button class="remove-item-btn">Remove Item</button>
+                        </p>
+                    </div>
+                `;
+                $('#items-container').append(itemHtml);
+            });
+
+            // Remove an item from the list
+            $('#items-container').on('click', '.remove-item-btn', function() {
+                var itemContainer = $(this).closest('.item');
+                itemContainer.remove();
+            });
+        });
+    </script>
+</body>
+</html>
+

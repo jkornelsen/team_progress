@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Overall Settings</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Overall Settings</h1>
+    <form method="post">
+        <label for="title">Scenario Title:</label>
+        <input type="text" id="title" name="scenario_title" value="{{ overall.title }}" required><br>
+        <label for="description">Scenario Description:</label>
+        <textarea id="description" name="scenario_description" rows="4" cols="50">{{ overall.description }}</textarea><br>
+        <style>
+            .winning-container label,
+            .winning-container select,
+            .winning-container input {
+                display: inline;
+            }
+        </style>
+        <div class="winning-container">
+            <label for="winning-item">Winning Item:</label>
+            <select id="winning-item" name="winning_item">
+                <option value="" {% if not overall.winning_item %}selected{% endif %}>(None)</option>
+                {% for item in overall.game_data.items %}
+                    <option value="{{ item.id }}" {% if overall.winning_item.id == item.id %}selected{% endif %}>{{ item.name }}</option>
+                {% endfor %}
+            </select>
+            <label for="winning-quantity">Quantity:</label>
+            <input type="number" id="winning-quantity" name="winning_quantity" value="{{ overall.winning_quantity|default(0) }}">
+        </div>
+        <button type="submit" id="btn-save" name="save_changes">Save and Continue</button>
+        <button type="submit" id="btn-cancel" name="cancel_changes" formnovalidate>Cancel Changes</button>
+    </form>
+    <script>
+        $(document).ready(function() {
+            // Enable or disable the winning quantity field based on the selected winning item
+            $('#winning-item').change(function() {
+                var selectedOption = $(this).find(':selected');
+                var isWinningItemSelected = (selectedOption.val() !== '');
+                $('#winning-quantity-container').toggle(isWinningItemSelected);
+            });
+        });
+    </script>
+</body>
+</html>

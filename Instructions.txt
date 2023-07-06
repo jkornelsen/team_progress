@@ -1,0 +1,19 @@
+
+open powershell with admin privs in order to install for all users (C:\Program Files\python)
+pip install flask
+pip show flask
+
+open powershell with standard user
+chdir "C:\OurDocs\family_and_fun\games code by Jim\team_adventurers\app"
+python -m venv venv
+venv\Scripts\activate
+pip install flask
+create app.py with text editor
+
+
+-- reloading --
+
+chdir "C:\OurDocs\family_and_fun\games code by Jim\team_adventurers\app"
+venv\Scripts\activate
+python app.py
+Open a web browser to http://localhost:5000 

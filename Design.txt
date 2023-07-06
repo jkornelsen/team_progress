@@ -1,0 +1,193 @@
+networked web game
+store code in github
+
+various scenarios to start the board
+partially procedurally generated
+choose goal
+
+cut down trees to build a raft
+or swim across
+or build a bridge
+stamina points
+train stamina by swimming in pool
+randomized progress
+    for example if str is 10 then hit on tree is from 8 to 10
+sources are also items, such as trees to chop down
+or they could be a required location
+sudden bad or good events may also happen
+cards aren't fixed
+    four outcomes from the card, big miss, minor miss, minor hit, big hit
+    card is customized per scenario
+    so for example, card is major loss, and if scenario is trees, lose lots of logs
+
+colorful icons to show each character, a bit like scribbl.io
+choose name
+
+scenario: factory
+either maximize profits or products
+currency name: credits
+
+could either play competitively or as a team
+
+scenario: fight enemies
+
+scenario: hunting for food, like UnReal World
+
+scenario: build house
+various rooms
+perhaps goal would be best house, compete but outcome is subjective
+
+scenario: race
+perhaps track meet
+
+hosting possibilities:
+https://levelup.gitconnected.com/program-your-first-multiple-user-network-game-in-python-9f4cc3650de2
+https://stackoverflow.com/questions/31655085/database-on-a-personal-github-page
+
+for example, factory
+what to build is completely customizable, but suggestions are given
+    automobiles of perhaps a new or sci-fi kind, such as walkers a bit like in Hoth
+    sandwiches, pies, pizzas -- perhaps more of a kitchen than factory
+inventory is dynamic list, including for example currency
+can customize currency name, or choose from a list
+default view shows top-level items, and selecting one shows components
+
+source of resources: obtained from activities in forest which can be
+unlimited, regenerates periodically, or fixed limit.
+if unlimited, it's equivalent to saying magically produced by an activity,
+so we don't actually have a source
+    but perhaps a particular location or crafing station is required
+resources could be purchased
+realistic would be to start with a debt and eventually break even and better
+but can choose to make it easy and simply be given lots of money or resources to start
+fixed limit could be used to give an endpoint to the game
+
+sales can increase in complexity as well, adding stores and store management
+NPCs can work at stores
+items of a single name are unique
+so if we want multiple stores, make "store 1", "store 2"
+could also divide money into "store 1 money" and "general money"
+    and they could require each other to allow transfers
+
+each player has stats that are chosen at the beginning of the game
+select from a list or specify custom
+strength, intelligence, dexterity, stamina (current/max), health (current/max)
+status conditions
+
+events can pop up randomly
+period and chance is in settings, can be 0 to turn off
+before the event is shown, event params are shown which can either be
+accepted or changed, and then roll for the event
+incremental rather than turn-based, but time can be paused, like e.g. the Sims
+
+scenarios can be randomly generated except number of players must be specified
+setting up the configuration one question at a time could be tedious
+perhaps the questions could be all in a list
+for quality of life, could have the ability to copy info from one entity to another
+so an entity could be used like a template
+maybe specify a list of which attrs to copy
+call it templating or copying
+
+scenario: you have been contracted to produce as much as possible with x resources
+the client is willing to provide better tools in exchange for some products
+
+different players may be given different authority,
+for example, only managers can spend money to open new stores
+
+keep track of how many produced (for xp) as well as how many in inventory
+age could be similar to xp, increasing over time
+
+farm: breeding
+traits
+
+states (effects) may change over time, such as poisoning
+
+can set a win condition e.g. 1M credits
+or defeat a boss
+there should be a config screen for the overview of the game
+    scenario title e.g. Button Factory
+    scenario description -- other entities also have description text fields
+    color or image or text graphic
+    win condition
+ability to replay a game?
+"overall setup"
+
+chance of success for incrementing
+optionally manual rather than auto increment, like manually attempting to chop a tree
+also can select a failure event from a dropdown list
+events would be another type of object, with their own config screen
+event chance may depend on stats of characters or items involved
+maybe a list of buttons in a side panel to configure each entity currently involved
+    in the action
+there are event objects saved in data, and event instances which have an effect but
+are not saved
+
+to buy, press a button like "start", only different because it would be
+a specified number of repetitions instantly
+perhaps button would say "repeat" x times.
+growable determines which buttons are shown on /play/item.html.
+    start/stop, or gain, or none.
+quantity may be unlimited
+if a specific value is needed, quantity could be set by an event, e.g. start with $500.
+items may have different sets of materials
+    for example, wood could come from a log or from disassembling a shelf
+    or by purchasing
+    but for now, keep it simple and have only one set
+
+to cover more cases, we'd need to differentiate between materials and contained items.
+for example, a wooden box requires planks and nails to build, but could contain clothes.
+or perhaps only locations need to contain things, and a wooden box could be a location
+    it may still be possible to build a location, perhaps by brute force with an event
+    we could manufacture a wooded box item, then destroy it and create the unique location
+characters (players and npcs) could also contain (i.e. wear or hold) items
+
+no matter what the scenario, there will be a list of the following entities:
+    items
+    locations -- e.g. first room to the north
+    events -- e.g. axe breaks
+    actions -- e.g. swing axe or move north; similar to events?
+    characters -- player or npc, with select box to specify "user 1" etc
+    attributes -- e.g. 100 max hp
+    states -- e.g. 20 hp left; should this be combined with attrs?
+    overview
+each entity perhaps would have a template e.g. all characters in this scenario have int
+entity classes might have superclasses for partially shared behavior
+    players and npcs are both actors and can potentially gain xp from an action
+    items and locations can both have a position, such as inside another one
+    items, sources, and states can be incremented over time
+
+perhaps the database is only needed for persistence
+or maybe store the game with JSON rather than in a database
+store client-side in browser with downloadable JSON?
+would that work for multiplayer?
+
+global stop button on overview screen, but no other ability to manufacture anything
+
+likely too, no items are top-level, but rather locations,
+perhaps a backpack or chest,
+and clicking on it would show its contents.
+a room could serve this purpose as well, containing npcs for example.
+locations could require travel time, similar to any other incremental
+or at least, they require going through place 1 and 2 in order to get to place 3
+location travel time could be handled by a travel Timer object of the character,
+with distances specified in the location itself
+
+the overview screen should show all players,
+along with what they're doing and where they are
+clicking on a player would show their attributes
+
+
+
+---- Issues ----
+
+Implement the Gain instantly option on the play screen.
+
+If an item is modified, be sure to stop it from production first.
+Whether it needs to be restarted or not is unclear.
+
+Allow exchange rates of better than 1,
+for example, sell 1 pen for 5 crypto.
+
+For convenience, items should be hyperlinked to any items that use them as sources.
+"Used For".
+

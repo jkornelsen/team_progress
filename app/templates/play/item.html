@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Item Information</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="nav-container">
+        <a class="upper-left" href="{{ url_for('overview') }}">Overview</a>
+        <span class="separator">|</span>
+        <a class="upper-left" href="{{ url_for('configure') }}">General Setup</a>
+        <span class="separator">|</span>
+        <a class="upper-left" href="{{ url_for('configure_item', item_id=item.id) }}">Item Setup</a>
+    </div>
+    <table>
+        <tr>
+            <td style="background-color: #2a2a2a; border-bottom: 2px solid #ffffff;">
+                <h2 style="margin: 10px 10px">{{ item.name }}:
+                <span id="quantity-{{ item.id }}">...</span>
+                </h2>
+            </td>
+        </tr>
+{% if item.description %}
+        <tr>
+            <td>
+                <p>{{ item.description }}</p>
+            </td>
+        </tr>
+{% endif %}
+        <tr>
+            <td>
+                Rate: <span id="rate-amount">{{ item.timer.rate_amount }}</span> per 
+                <span id="rate-duration">{{ item.timer.rate_duration }}</span> seconds
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Elapsed Time: <span id="elapsed-time">...</span>
+            </td>
+        </tr>
+        {% if item.sources %}
+        <tr>
+            <td>
+                <table class="inner-table" cellspacing="0" cellpadding="5">
+                    <tr>
+                        <th>Source Item</th>
+                        <th>In Stock</th>
+                        <th>Required</th>
+                    </tr>
+                    {% for source_item, quantity in item.sources.items() %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('play_item', item_id=source_item.id) }}">
+                                {{ source_item.name }}
+                            </a>
+                        </td>
+                        <td id="source-{{ source_item.id }}-quantity">...</td>
+                        <td>{{ quantity }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </td>
+        </tr>
+        {% endif %}
+    </table>
+
+    <button id="start-btn" {% if item.timer.is_running %}disabled{% endif %}>
+        {% if item.timer.is_running %}Running...{% else %}Start{% endif %}
+    </button>
+    <button id="stop-btn">Stop</button>
+
+    <script>
+        $(document).ready(function() {
+            function updateQuantity() {
+                // Main item quantity
+                $.get('/item_quantity/{{ item.id }}', function(data) {
+                    $('#quantity-{{ item.id }}').text(data.quantity);
+                });
+
+                // Source item quantities
+                {% for source_item, _ in item.sources.items() %}
+                $.get('/item_quantity/{{ source_item.id }}', function(data) {
+                    $('#source-{{ source_item.id }}-quantity').text(data.quantity);
+                });
+                {% endfor %}
+            }
+
+            // Update Elapsed time
+            function updateElapsedTime() {
+                $.get('/item_time/{{ item.id }}', function(data) {
+                    $('#elapsed-time').text(data.time);
+                });
+            }
+
+            // the Start button may change to "Running..."
+            function updateStartbuttonLabel() {
+                fetch('/timer_status/item/{{ item.id }}')
+                    .then(response => response.json())
+                    .then(data => {
+                        var startBtn = document.getElementById("start-btn");
+                        if (data.is_running) {
+                            startBtn.innerHTML = "Running...";
+                            startBtn.disabled = true;
+                        } else {
+                            startBtn.innerHTML = "Start";
+                            startBtn.disabled = false;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+            }
+
+            // Update quantities and elapsed time initially
+            updateQuantity();
+            updateElapsedTime();
+
+            // Update quantities, elapsed time, and rate every second
+            setInterval(function() {
+                updateQuantity();
+                updateElapsedTime();
+                updateStartbuttonLabel();
+            }, 1000);
+
+            // Button click event handlers
+            $('#start-btn').click(function() {
+                startItem();
+            });
+
+            $('#stop-btn').click(function() {
+                stopItem();
+            });
+
+            function startItem() {
+                item_id = {{ item.id }}
+                console.log('startItem(): ' + item_id);
+                fetch('/start/item/' + item_id)
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data.message);
+                        updateStartbuttonLabel();
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+            }
+
+            function stopItem() {
+                item_id = {{ item.id }}
+                console.log('stopItem(): ' + item_id);
+                fetch('/stop/item/' + item_id)
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data.message);
+                        updateStartbuttonLabel();
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+            }
+        });
+    </script>
+</body>
+</html>

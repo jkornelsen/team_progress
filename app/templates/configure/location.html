@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ config['TITLE'] }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Enable or disable the distance fields based on the selected destination
+            $('#destination-select').change(function() {
+                var selectedOption = $(this).find(':selected');
+                var isDestinationSelected = (selectedOption.val() !== '');
+                $('.distance-field').prop('disabled', !isDestinationSelected);
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>Location Setup</h1>
+    <form method="post">
+        <label for="location-name">Name:</label>
+        <input type="text" id="location-name" name="location_name" value="{{ current_location.name }}" required><br>
+        <label for="location-description">Description:</label>
+        <textarea id="location-description" name="location_description" rows="4" cols="50">{{ current_location.description }}</textarea><br>
+
+        <h2>Destinations</h2>
+        <div id="destinations-container">
+            {% for destination in current_location.destinations %}
+                <div class="destination">
+                    <input type="hidden" name="destination_id[]" value="{{ destination.id }}">
+                    <p>{{ destination.name }}
+                    <label for="destination-distance">Distance:</label>
+                    <input type="number" id="destination-distance" name="destination_distance[]" value="{{ destination.distance }}" class="distance-field">
+                    <button class="remove-destination-btn">Remove Destination</button>
+                    </p>
+                </div>
+            {% endfor %}
+            <div>
+                {% set outerscope = namespace(has_other_location = false) %}
+                {% for location in game.locations %}
+                    {% if location.id != current_location.id %}
+                        {% set outerscope.has_other_location = true %}
+                    {% endif %}
+                {% endfor %}
+                {% if outerscope.has_other_location %}
+                    <!-- Select box for adding another destination -->
+                    <div class="select-box">
+                        <select id="destination-select">
+                            <option value="" selected>(Select location)</option>
+                            {% for location in game.locations %}
+                                {% if location.id != current_location.id %}
+                                <option value="{{ location.id }}">{{ location.name }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                        <button type="button" id="add-destination-btn" class="lesser-button">Add Destination</button>
+                    </div>
+                {% else %}
+                    <p class="no-locations">(No other locations)</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <button type="submit" id="btn-save" name="save_changes">Save and Continue</button>
+        <button type="submit" id="btn-cancel" name="cancel_changes" formnovalidate>Cancel Changes</button>
+    </form>
+    <script>
+        $(document).ready(function() {
+            $('#add-destination-btn').click(function() {
+                var selectedOption = $('#destination-select option:selected');
+                var destinationId = selectedOption.val();
+                var destinationName = selectedOption.text();
+                if (destinationId == "") {
+                    return; // don't add if the selected option is the placeholder
+                }
+                var existingDestination = $('.destination input[value="' + destinationId + '"]').closest('.destination');
+                if (existingDestination.length > 0) {
+                    alert('Destination already exists.');
+                    return;
+               ```html
+                }
+                // Create HTML elements for the destination
+                var destinationHtml = `
+                    <div class="destination">
+                        <input type="hidden" name="destination_id[]" value="${destinationId}">
+                        <p>${destinationName}
+                        <label for="destination-distance">Distance:</label>
+                        <input type="number" id="destination-distance" name="destination_distance[]" value="1" class="distance-field">
+                        <button class="remove-destination-btn">Remove Destination</button>
+                        </p>
+                    </div>
+                `;
+                $('#destinations-container').prepend(destinationHtml);
+            });
+
+            $('#destinations-container').on('click', '.remove-destination-btn', function() {
+                var destinationContainer = $(this).closest('.destination');
+                destinationContainer.remove();
+            });
+        });
+    </script>
+</body>
+</html>
+
