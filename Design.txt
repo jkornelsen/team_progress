@@ -84,6 +84,13 @@ before the event is shown, event params are shown which can either be
 accepted or changed, and then roll for the event
 incremental rather than turn-based, but time can be paused, like e.g. the Sims
 
+an event could be a four-outcome type,
+one-timer performed by pressing a button.
+the meaning of the four outcomes could perhaps be explained in the description,
+and if the radio button specifies that the type is four-outcome,
+then pressing the button would display "strong success", "minor success",
+"minor failure", "major failure".
+
 scenarios can be randomly generated except number of players must be specified
 setting up the configuration one question at a time could be tedious
 perhaps the questions could be all in a list
@@ -143,14 +150,12 @@ or perhaps only locations need to contain things, and a wooden box could be a lo
 characters (players and npcs) could also contain (i.e. wear or hold) items
 
 no matter what the scenario, there will be a list of the following entities:
-    items
-    locations -- e.g. first room to the north
-    events -- e.g. axe breaks
-    actions -- e.g. swing axe or move north; similar to events?
-    characters -- player or npc, with select box to specify "user 1" etc
-    attributes -- e.g. 100 max hp
-    states -- e.g. 20 hp left; should this be combined with attrs?
     overview
+    items -- can be used
+    locations -- e.g. first room to the north
+    characters -- player or npc, with select box to specify "user 1" etc
+    events -- e.g. axe breaks; random chance that can occur once per second during action
+    attributes -- e.g. 100 max hp; also states such as poisoned or 20 hp left
 each entity perhaps would have a template e.g. all characters in this scenario have int
 entity classes might have superclasses for partially shared behavior
     players and npcs are both actors and can potentially gain xp from an action
@@ -177,17 +182,70 @@ the overview screen should show all players,
 along with what they're doing and where they are
 clicking on a player would show their attributes
 
+attributes would be the main thing determining event chances,
+and attributes could be members of characters, items, locations, or top-level
+
+one attribute would be max hp
+another would be current hp
+a third would be poison duration remaining
+then there would need to be a next turn in a fight where these are possibly changed
+perhaps the turn would be an event
+the event would calculate a random hp change based on attributes and items
+current hp would be selected as an attribute to modify
+items would have their own attrs list,
+including e.g. hp change that would indicate how much of an
+impact it would have in increasing or reducing hp change of the event
+perhaps basic mechanics could be implemented automatically,
+and more advanced mechanics would require manual changes to stats
+armor could be dmg * 0.95, or chance to get hit * 0.95
+
+base chances could be displayed in the form of 1 / 10000 ticks
+or 3 / 5 chance to hit
+also min and max result,
+for example, 70% chance to do between 30 and 60 damage.
+
+for example, an attribute could be the season
+so an event based on the season would have a worse chance or lower average
+distance if season is winter
+winter would be explained in the attr description,
+and the implementation would be an input box showing * 0.9
+
+what about one to many relationships for characters to attrs?
+for example, both a rat and a player character would have current hp
+perhaps character attrs would be a dict with keys as attr obj and values as
+whatever data needs to be maintained for that character for that attribute
+for example, the attr obj would be current hp,
+and the value for a character would be 80.
+
+or the attr obj would be damage reduction,
+perhaps somehow specifying that values are meant to be multipliers,
+(that could be explained in the description at least),
+and a piece of armor would have value 0.9 as the multiplier
+maybe multiplier would be one of several radio button options explaining what
+kind of stat it is
+an attr could possibly also reference another attr that is used to change it,
+for example, hp change could be affected by damage reduction
+
+in a fighting event,
+all factors should be displayed to show how the outcome is arrived at
+
+perhaps one event could contain references to other (sub-)events,
+for example, an attack would be a chance of changing hp
+as well as a chance at poisoning
 
 
 ---- Issues ----
 
 Implement the Gain instantly option on the play screen.
 
-If an item is modified, be sure to stop it from production first.
-Whether it needs to be restarted or not is unclear.
-
 Allow exchange rates of better than 1,
 for example, sell 1 pen for 5 crypto.
+Would look like this: [__] pens (source items) for [__] (current items).
+For multiple source sets, the gain number would need to be the same for the whole set.
+Could have this automatically change, or else, have one control for the whole set.
+
+If an item is modified, be sure to stop it from production first.
+Whether it needs to be restarted or not is unclear.
 
 For convenience, items should be hyperlinked to any items that use them as sources.
 "Used For".
