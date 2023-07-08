@@ -13,3 +13,20 @@ to start with, implement attributes as manual only,
 not automatically affecting event chances or outcomes
 would need to manually adjust event chances based on attrs involved
 
+
+---- Issues ----
+
+Allow exchange rates of better than 1,
+for example, sell 1 pen for 5 crypto.
+Would look like this: [__] pens (source items) for [__] (current items).
+For multiple source sets, the gain number would need to be the same for the whole set.
+Could have this automatically change, or else, have one control for the whole set.
+
+If an item is modified, be sure to stop it from production first.
+Whether it needs to be restarted or not is unclear.
+
+Start and Stop buttons should only be one button, whichever changes the action.
+
+Will probably need to fix Character item reference serialization in the
+same way that we fixed Location destinations and Item sources.
+

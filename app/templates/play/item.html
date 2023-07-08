@@ -21,13 +21,14 @@
                 </h2>
             </td>
         </tr>
-{% if item.description %}
+        {% if item.description %}
         <tr>
             <td>
                 <p>{{ item.description }}</p>
             </td>
         </tr>
-{% endif %}
+        {% endif %}
+        {% if item.growable == 'over_time' %}
         <tr>
             <td>
                 Rate: <span id="rate-amount">{{ item.timer.rate_amount }}</span> per 
@@ -39,6 +40,7 @@
                 Elapsed Time: <span id="elapsed-time">...</span>
             </td>
         </tr>
+        {% endif %}
         {% if item.sources %}
         <tr>
             <td>
@@ -63,24 +65,59 @@
             </td>
         </tr>
         {% endif %}
+
+        {% set outerscope = namespace(used_for_items=[]) %}
+        {% for other_item in item.game_data.items %}
+            {% if item in other_item.sources %}
+                {% set _ = outerscope.used_for_items.append(other_item) %}
+            {% endif %}
+        {% endfor %}
+        {% if outerscope.used_for_items %}
+        <tr>
+            <td>
+                <table class="inner-table" cellspacing="0" cellpadding="5">
+                    <tr>
+                        <th>Used For</th>
+                        <th>Required</th>
+                    </tr>
+                    {% for used_for_item in outerscope.used_for_items %}
+                    {% set quantity = used_for_item.sources[item] %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('play_item', item_id=used_for_item.id) }}">
+                                {{ used_for_item.name }}
+                            </a>
+                        </td>
+                        <td>{{ quantity }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </td>
+        </tr>
+        {% endif %}
     </table>
 
+    {% if item.growable == 'over_time' %}
     <button id="start-btn" {% if item.timer.is_running %}disabled{% endif %}>
         {% if item.timer.is_running %}Running...{% else %}Start{% endif %}
     </button>
     <button id="stop-btn">Stop</button>
+    {% elif item.growable == 'instantly' %}
+    <input type="number" id="quantity_to_gain" size="10" value="1">
+    <button id="gain-btn">Gain</button>
+    {% endif %}
 
     <script>
         $(document).ready(function() {
             function updateQuantity() {
                 // Main item quantity
-                $.get('/item_quantity/{{ item.id }}', function(data) {
+                $.get('/item/quantity/{{ item.id }}', function(data) {
                     $('#quantity-{{ item.id }}').text(data.quantity);
                 });
 
                 // Source item quantities
                 {% for source_item, _ in item.sources.items() %}
-                $.get('/item_quantity/{{ source_item.id }}', function(data) {
+                $.get('/item/quantity/{{ source_item.id }}', function(data) {
                     $('#source-{{ source_item.id }}-quantity').text(data.quantity);
                 });
                 {% endfor %}
@@ -88,14 +125,14 @@
 
             // Update Elapsed time
             function updateElapsedTime() {
-                $.get('/item_time/{{ item.id }}', function(data) {
+                $.get('/item/time/{{ item.id }}', function(data) {
                     $('#elapsed-time').text(data.time);
                 });
             }
 
             // the Start button may change to "Running..."
             function updateStartbuttonLabel() {
-                fetch('/timer_status/item/{{ item.id }}')
+                fetch('/item/timer_status/{{ item.id }}')
                     .then(response => response.json())
                     .then(data => {
                         var startBtn = document.getElementById("start-btn");
@@ -119,23 +156,33 @@
             // Update quantities, elapsed time, and rate every second
             setInterval(function() {
                 updateQuantity();
-                updateElapsedTime();
-                updateStartbuttonLabel();
-            }, 1000);
+                {% if item.growable == 'over_time' %}
+                    updateElapsedTime();
+                    updateStartbuttonLabel();
+                {% endif %}
+            //}, 1000);
+            }, 5000);
 
             // Button click event handlers
+            $('#gain-btn').click(function() {
+                item_id = {{ item.id }}
+                quantity = $('#quantity_to_gain').val();
+                $.ajax({
+                    url: '/item/gain/' + item_id,
+                    method: 'POST',
+                    data: { quantity: quantity },
+                    success: function(response) {
+                        updateQuantity();
+                    },
+                    error: function(error) {
+                        console.error('Error:', error);
+                    }
+                });
+            });
             $('#start-btn').click(function() {
-                startItem();
-            });
-
-            $('#stop-btn').click(function() {
-                stopItem();
-            });
-
-            function startItem() {
                 item_id = {{ item.id }}
                 console.log('startItem(): ' + item_id);
-                fetch('/start/item/' + item_id)
+                fetch('/item/start/' + item_id)
                     .then(response => response.json())
                     .then(data => {
                         console.log(data.message);
@@ -144,12 +191,11 @@
                     .catch(error => {
                         console.error('Error:', error);
                     });
-            }
-
-            function stopItem() {
+            });
+            $('#stop-btn').click(function() {
                 item_id = {{ item.id }}
                 console.log('stopItem(): ' + item_id);
-                fetch('/stop/item/' + item_id)
+                fetch('/item/stop/' + item_id)
                     .then(response => response.json())
                     .then(data => {
                         console.log(data.message);
@@ -158,7 +204,7 @@
                     .catch(error => {
                         console.error('Error:', error);
                     });
-            }
+            });
         });
     </script>
 </body>

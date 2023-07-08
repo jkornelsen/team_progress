@@ -59,7 +59,8 @@ class Location:
         destination_ids = {}
         for location_data in json_data:
             cls.from_json(location_data, destination_ids)
-        cls.last_id = max(location.id for location in cls.instances)
+        cls.last_id = max(
+            (location.id for location in cls.instances), default=0)
         # set the destination objects now that all locations have been loaded
         for location in cls.instances:
             location.destinations = {

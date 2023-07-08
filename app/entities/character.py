@@ -64,10 +64,8 @@ class Character:
         cls.instances.clear()
         for character_data in json_data:
             cls.from_json(character_data)
-        if cls.instances:
-            cls.last_id = max(character.id for character in cls.instances)
-        else:
-            cls.last_id = 0
+        cls.last_id = max(
+            (character.id for character in cls.instances), default=0)
         return cls.instances
 
     def configure_by_form(self):

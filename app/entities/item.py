@@ -25,7 +25,8 @@ class Item:
         self.toplevel = False if len(self.__class__.instances) > 1 else True
         self.timer = Timer(self)
         self.growable = 'over_time'
-        self.sources = {}  # keys are Item object, values are quantity required
+        self.sources = {}  # keys Item object, values quantity required
+        self.result_qty = 1  # how many one batch yields
         self.contained_by = None  # Location or Character object
 
     @classmethod
@@ -42,8 +43,9 @@ class Item:
             'description': self.description,
             'toplevel': self.toplevel,
             'growable': self.growable,
-            'sources': {item.id: quantity
-                for item, quantity in self.sources.items()},
+            'sources': {
+                item.id: (quantities[0], quantities[1])
+                for item, quantities in self.sources.items()},
             'timer': self.timer.to_json(),
         }
 
@@ -56,8 +58,8 @@ class Item:
         item.growable = data['growable']
         item.timer = Timer.from_json(data['timer'], item)
         source_ids[item.id] = {
-            int(source_id): quantity
-            for source_id, quantity in data['sources'].items()
+            int(source_id): quantities
+            for source_id, quantities in data['sources'].items()
         }
         cls.instances.append(item)
         return item
@@ -68,12 +70,14 @@ class Item:
         source_ids = {}
         for item_data in json_data:
             cls.from_json(item_data, source_ids)
-        cls.last_id = max(item.id for item in cls.instances)
+        cls.last_id = max(
+            (item.id for item in cls.instances), default=0)
         # set the source item objects now that all items have been loaded
         for item in cls.instances:
             item.sources = {
-                cls.get_by_id(source_id): quantity
-                for source_id, quantity in source_ids.get(item.id, {}).items()
+                cls.get_by_id(source_id): quantities
+                for source_id, quantities in
+                source_ids.get(item.id, {}).items()
             }
         return cls.instances
 
@@ -94,9 +98,10 @@ class Item:
                 print(f"Source IDs: {source_ids}")
                 source_quantities = {}
                 for source_id in source_ids:
-                    quantity = int(request.form.get(f'source_quantity_{source_id}', 0))
+                    source_quantity = int(request.form.get(f'source_quantity_{source_id}', 0))
+                    result_quantity = int(request.form.get(f'result_quantity_{source_id}', 0))
                     source_item = self.__class__.get_by_id(source_id)
-                    source_quantities[source_item] = quantity
+                    source_quantities[source_item] = (source_quantity, result_quantity)
                 print(f"Source Quantities: {source_quantities}")
                 self.sources = source_quantities
                 print(request.form)
@@ -139,7 +144,16 @@ def set_routes(app):
         else:
             return 'Item not found'
 
-    @app.route('/start/item/<int:item_id>')
+    @app.route('/item/gain/<int:item_id>', methods=['POST'])
+    def gain_item(item_id):
+        quantity = int(request.form.get('quantity'))
+        item = Item.get_by_id(item_id)
+        if item.timer.change_quantity(quantity):
+            return jsonify({'message': f'Quantity of {item.name} changed by {quantity}.'})
+        else:
+            return jsonify({'message': f'Could not change quantity of {item.name} by {quantity}.'})
+
+    @app.route('/item/start/<int:item_id>')
     def start_item(item_id):
         item = Item.get_by_id(item_id)
         if item.timer.start():
@@ -147,7 +161,7 @@ def set_routes(app):
         else:
             return jsonify({'message': 'Item is already in progress.'})
 
-    @app.route('/stop/item/<int:item_id>')
+    @app.route('/item/stop/<int:item_id>')
     def stop_item(item_id):
         item = Item.get_by_id(item_id)
         if item.timer.stop():
@@ -155,12 +169,12 @@ def set_routes(app):
         else:
             return jsonify({'message': 'Item progress is already paused.'})
 
-    @app.route('/timer_status/item/<int:item_id>')
+    @app.route('/item/timer_status/<int:item_id>')
     def item_timer_status(item_id):
         item = Item.get_by_id(item_id)
         return jsonify({'is_running': item.timer.is_running})
 
-    @app.route('/item_quantity/<int:item_id>')
+    @app.route('/item/quantity/<int:item_id>')
     def get_quantity(item_id):
         item = Item.get_by_id(item_id)
         if item:
@@ -168,7 +182,7 @@ def set_routes(app):
         else:
             return jsonify({'error': 'Item not found'})
 
-    @app.route('/item_time/<int:item_id>')
+    @app.route('/item/time/<int:item_id>')
     def get_time(item_id):
         item = Item.get_by_id(item_id)
         if item:

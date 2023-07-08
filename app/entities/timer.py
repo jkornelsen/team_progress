@@ -2,6 +2,7 @@ from flask import jsonify
 import threading
 from datetime import timedelta
 import time
+import math
 
 class Timer:
     def __init__(self, item, rate_amount=1.0, rate_duration=1.0, quantity=0):
@@ -34,16 +35,19 @@ class Timer:
         return timer
 
     def can_change_quantity(self, amount):
-        for source_item, required in self.item.sources.items():
-            if required > 0 and source_item.timer.quantity < required:
-                print(f"Cannot subtract {required} from {source_item.name}")
+        for source_item, (source_qty, result_qty) in self.item.sources.items():
+            effective_result_qty = math.floor(amount / result_qty)
+            effective_source_qty = effective_result_qty * source_qty
+            if (effective_source_qty > 0 and
+                    source_item.timer.quantity < effective_source_qty):
+                print(f"Cannot subtract {effective_source_qty} from {source_item.name}")
                 return False
         return True
 
     def change_quantity(self, amount):
         if not self.can_change_quantity(amount):
             return False
-        for source_item, required in self.item.sources.items():
+        for source_item, (source_qty, result_qty) in self.item.sources.items():
             source_item.timer.quantity -= required
         self.quantity += amount
         return True
