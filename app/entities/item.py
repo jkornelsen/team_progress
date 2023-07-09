@@ -43,9 +43,10 @@ class Item:
             'description': self.description,
             'toplevel': self.toplevel,
             'growable': self.growable,
+            'result_qty': self.result_qty,
             'sources': {
-                item.id: (quantities[0], quantities[1])
-                for item, quantities in self.sources.items()},
+                item.id: quantity
+                for item, quantity in self.sources.items()},
             'timer': self.timer.to_json(),
         }
 
@@ -56,10 +57,11 @@ class Item:
         item.description = data.get('description', '')
         item.toplevel = data['toplevel']
         item.growable = data['growable']
+        item.result_qty = data.get('result_qty', 1)
         item.timer = Timer.from_json(data['timer'], item)
         source_ids[item.id] = {
-            int(source_id): quantities
-            for source_id, quantities in data['sources'].items()
+            int(source_id): quantity
+            for source_id, quantity in data['sources'].items()
         }
         cls.instances.append(item)
         return item
@@ -75,8 +77,8 @@ class Item:
         # set the source item objects now that all items have been loaded
         for item in cls.instances:
             item.sources = {
-                cls.get_by_id(source_id): quantities
-                for source_id, quantities in
+                cls.get_by_id(source_id): quantity
+                for source_id, quantity in
                 source_ids.get(item.id, {}).items()
             }
         return cls.instances
@@ -93,17 +95,23 @@ class Item:
                 self.growable = request.form.get('growable')
                 rate_amount = float(request.form.get('rate_amount'))
                 rate_duration = float(request.form.get('rate_duration'))
-                self.timer = Timer(self, rate_amount, rate_duration)
+                was_running = self.timer.is_running
+                if was_running:
+                    self.timer.stop()
+                self.timer = Timer(
+                    self, rate_amount, rate_duration, self.timer.quantity)
+                self.result_qty = int(request.form.get('result_quantity'))
                 source_ids = request.form.getlist('source_id')
                 print(f"Source IDs: {source_ids}")
-                source_quantities = {}
+                self.sources = {}
                 for source_id in source_ids:
-                    source_quantity = int(request.form.get(f'source_quantity_{source_id}', 0))
-                    result_quantity = int(request.form.get(f'result_quantity_{source_id}', 0))
+                    source_quantity = int(
+                        request.form.get(f'source_quantity_{source_id}', 0))
                     source_item = self.__class__.get_by_id(source_id)
-                    source_quantities[source_item] = (source_quantity, result_quantity)
-                print(f"Source Quantities: {source_quantities}")
-                self.sources = source_quantities
+                    self.sources[source_item] = source_quantity
+                print(f"Source Quantities: {self.sources}")
+                if was_running:
+                    self.timer.start()
                 print(request.form)
             elif 'delete_item' in request.form:
                 self.__class__.instances.remove(self)
@@ -118,9 +126,7 @@ class Item:
             else:
                 return redirect(url_for('configure'))
         else:
-            return render_template(
-                'configure/item.html', current_item=self,
-                game=self.__class__.game_data)
+            return render_template('configure/item.html', current=self)
 
 def set_routes(app):
     @app.route('/configure/item/<item_id>', methods=['GET', 'POST'])
@@ -140,7 +146,7 @@ def set_routes(app):
     def play_item(item_id):
         item = Item.get_by_id(item_id)
         if item:
-            return render_template('play/item.html', item=item, game=Item.game_data)
+            return render_template('play/item.html', current=item)
         else:
             return 'Item not found'
 
@@ -148,26 +154,38 @@ def set_routes(app):
     def gain_item(item_id):
         quantity = int(request.form.get('quantity'))
         item = Item.get_by_id(item_id)
+        try:
+            item.timer.can_change_quantity(quantity)
+        except Exception as ex:
+            return jsonify({'status': 'error', 'message': str(ex)})
         if item.timer.change_quantity(quantity):
-            return jsonify({'message': f'Quantity of {item.name} changed by {quantity}.'})
+            return jsonify({
+                'status': 'success', 'message':
+                f'Quantity of {item.name} changed by {quantity}.'})
         else:
-            return jsonify({'message': f'Could not change quantity of {item.name} by {quantity}.'})
+            return jsonify({
+                'status': 'error',
+                'message': 'Could not change quantity.'})
 
     @app.route('/item/start/<int:item_id>')
     def start_item(item_id):
         item = Item.get_by_id(item_id)
+        try:
+            item.timer.can_change_quantity(item.timer.rate_amount)
+        except Exception as ex:
+            return jsonify({'status': 'error', 'message': str(ex)})
         if item.timer.start():
-            return jsonify({'message': 'Item progress started.'})
+            return jsonify({'status': 'success', 'message': 'Progress started.'})
         else:
-            return jsonify({'message': 'Item is already in progress.'})
+            return jsonify({'status': 'error', 'message': 'Could not start.'})
 
     @app.route('/item/stop/<int:item_id>')
     def stop_item(item_id):
         item = Item.get_by_id(item_id)
         if item.timer.stop():
-            return jsonify({'message': 'Item progress paused.'})
+            return jsonify({'message': 'Progress paused.'})
         else:
-            return jsonify({'message': 'Item progress is already paused.'})
+            return jsonify({'message': 'Progress is already paused.'})
 
     @app.route('/item/timer_status/<int:item_id>')
     def item_timer_status(item_id):

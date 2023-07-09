@@ -4,54 +4,42 @@
     <title>{{ config['TITLE'] }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            // Values passed from Flask render_page(). 
-            var isConfigured = {{ current_item.configured|default(False)|lower }};
-
-            // Enable or disable buttons based on configuration status
-            if (isConfigured) {
-                $('#btn-delete').removeAttr('disabled');
-            } else {
-                $('#btn-delete').attr('disabled', 'disabled');
-            }
-        });
-    </script>
 </head>
 <body>
     <h1>Item Setup</h1>
     <form method="post">
         <label for="item-name">Name:</label>
-        <input type="text" id="item-name" name="item_name" value="{{ current_item.name }}" required><br>
-        <p><label for="item-id">ID:</label> {{ current_item.id }}</p>
+        <input type="text" id="item-name" name="item_name" value="{{ current.name }}" required><br>
+        <p>ID: {{ current.id }}</p>
         <label for="item-description" >Description:</label>
-        <textarea id="item-description" name="item_description" rows="4" cols="50">{{ current_item.description }}</textarea><br>
+        <textarea id="item-description" name="item_description" rows="4" cols="50">{{ current.description }}</textarea><br>
 
         <div>
-            <input type="checkbox" id="top_level" name="top_level" {% if current_item.toplevel %}checked{% endif %}>
+            <input type="checkbox" id="top_level" name="top_level" {% if current.toplevel %}checked{% endif %}>
             <label for="top_level">Show in Overview</label><br>
-            <input type="radio" id="growable-gain-over_time" name="growable" value="over_time" {% if current_item.growable != "instantly" and current_item.growable != "not_growable" %}checked{% endif %}>
+            <input type="radio" id="growable-gain-over_time" name="growable" value="over_time" {% if current.growable != "instantly" and current.growable != "not_growable" %}checked{% endif %}>
             <label for="growable-gain-over_time">Gain over time</label>
-            <input type="radio" id="growable-gain-instantly" name="growable" value="instantly" {% if current_item.growable == "instantly" %}checked{% endif %}>
+            <input type="radio" id="growable-gain-instantly" name="growable" value="instantly" {% if current.growable == "instantly" %}checked{% endif %}>
             <label for="growable-gain-instantly">Gain instantly</label>
-            <input type="radio" id="growable-not_growable" name="growable" value="not_growable" {% if current_item.growable == "not_growable" %}checked{% endif %}>
+            <input type="radio" id="growable-not_growable" name="growable" value="not_growable" {% if current.growable == "not_growable" %}checked{% endif %}>
             <label for="growable-not_growable">Not growable</label>
         </div>
-        <div id="rate-container">
+        <div id="rate-container" {% if current.growable == "instantly" or current.growable == "not_growable" %}style="display: none;"{% endif %}>
             <label for="rate-amount">Rate:</label>
-            <input type="number" id="rate-amount" name="rate_amount" value="{{ current_item.timer.rate_amount }}" required>
+            <input type="number" id="rate-amount" name="rate_amount" value="{{ current.timer.rate_amount }}" required>
             <span>per</span>
-            <input type="text" size="6" id="rate-duration" name="rate_duration" value="{{ current_item.timer.rate_duration }}" required>
+            <input type="text" size="6" id="rate-duration" name="rate_duration" value="{{ current.timer.rate_duration }}" required>
             <span>seconds</span><br>
         </div>
 
         <div id="source-container" style="border: 1px solid #ccc; padding: 10px;">
             <div class="source flexdiv" data-source-id="result">
-                <label>Yields:</label>
-                <input type="number" id="result-quantity" name="result_quantity" value="{{ current_item.result_qty }}">
+                <label for="result-quantity">Gives</label>
+                <input type="number" id="result-quantity" name="result_quantity" value="{{ current.result_qty }}">
             </div>
-                {% for source_item, source_qty in current_item.sources.items() %}
+                {% for source_item, source_qty in current.sources.items() %}
                     <div class="source flexdiv" data-source-id="{{ source_item.id }}">
+                        <input type="hidden" name="source_id" value="{{ source_item.id }}">
                         <label>Takes</label>
                         <input type="number" id="source-{{ source_item.id }}-quantity" name="source_quantity_{{ source_item.id }}" value="{{ source_qty }}">
                         {{ source_item.name }}
@@ -62,8 +50,8 @@
                 <!-- Placeholder for appending new sources -->
                 <div id="sourcelist_end" style="width: 0; height: 0; opacity: 0;"></div>
                 {% set outerscope = namespace(has_other_item = false) %}
-                {% for item in game.items %}
-                    {% if item.id != current_item.id %}
+                {% for item in current.__class__.instances %}
+                    {% if item.id != current.id %}
                         {% set outerscope.has_other_item = true %}
                     {% endif %}
                 {% endfor %}
@@ -72,8 +60,8 @@
                     <div class="select-box">
                         <select id="add-source-select">
                             <option value="" selected>(Select item)</option>
-                            {% for item in game.items %}
-                                {% if item.id != current_item.id %}
+                            {% for item in current.__class__.instances %}
+                                {% if item.id != current.id %}
                                 <option value="{{ item.id }}">{{ item.name }}</option>
                                 {% endif %}
                             {% endfor %}
@@ -92,6 +80,19 @@
     </form>
     <script>
         $(document).ready(function() {
+            // Enable button if the current entity has been configured before.
+            {% set outerscope = namespace(has_current = false) %}
+            {% for item in current.__class__.instances %}
+                {% if item.id == current.id %}
+                    {% set outerscope.has_current = true %}
+                {% endif %}
+            {% endfor %}
+            {% if outerscope.has_current %}
+                $('#btn-delete').removeAttr('disabled');
+            {% else %}
+                $('#btn-delete').attr('disabled', 'disabled');
+            {% endif %}
+
             $('input[name="growable"]').change(function() {
               var growableValue = $(this).val();
               
@@ -122,6 +123,7 @@
                 // Create HTML elements for the source
                 var sourceHtml = `
                     <div class="source flexdiv" data-source-id="${sourceId}">
+                        <input type="hidden" name="source_id" value="${sourceId}">
                         <label>Takes:</label>
                         <input type="number" id="source-${sourceId}-quantity" name="source_quantity_${sourceId}" value="1">
                         ${sourceName}
@@ -137,6 +139,15 @@
 
                 // Remove the source from the DOM
                 sourceContainer.remove();
+            });
+            $('#btn-save').click(function() {
+                var growable = $('input[name="growable"]:checked').val();
+                var rateAmount = parseFloat($('#rate-amount').val());
+                var resultQty = parseInt($('#result-quantity').val(), 10);
+                if (growable === "over_time" && rateAmount < resultQty) {
+                    alert('Rate amount must be at least as high as the result quantity (labeled "Gives").');
+                    return false; // Prevent form submission
+                }
             });
         });
     </script>

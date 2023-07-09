@@ -34,27 +34,48 @@ class Timer:
         timer.prev_elapsed_time = data['prev_elapsed_time']
         return timer
 
+    def calc_effective(self, amount):
+        """Determine source and result quantity changes by batch.
+        For example, if the speed is 6 produced per 10 seconds,
+        and the exchange rate is 5 required to produce 3,
+        then there will be two batches, producing 6 and requiring 10.
+
+        In case the speed is slightly higher, it will be rounded down,
+        although that may not have real-world meaning,
+        so it's probably best if the speed and production qty divide evenly.
+        """
+        result_qty = self.item.result_qty
+        batches = math.floor(amount / result_qty)  # best if no rounding needed
+        effective_result_qty = batches * result_qty
+        effective_quantities = {}
+        for source_item, source_qty in self.item.sources.items():
+            effective_source_qty = batches * source_qty
+            effective_quantities[source_item] = effective_source_qty
+        return effective_result_qty, effective_quantities
+
     def can_change_quantity(self, amount):
-        for source_item, (source_qty, result_qty) in self.item.sources.items():
-            effective_result_qty = math.floor(amount / result_qty)
-            effective_source_qty = effective_result_qty * source_qty
-            if (effective_source_qty > 0 and
-                    source_item.timer.quantity < effective_source_qty):
-                print(f"Cannot subtract {effective_source_qty} from {source_item.name}")
-                return False
-        return True
+        effective_result_qty, effective_quantities = self.calc_effective(amount)
+        for source_item, effective_source_qty in effective_quantities.items():
+            if effective_source_qty > 0 and source_item.timer.quantity < effective_source_qty:
+                raise Exception(
+                    f"Cannot take {effective_source_qty} {source_item.name}.")
 
     def change_quantity(self, amount):
-        if not self.can_change_quantity(amount):
+        effective_result_qty, effective_quantities = self.calc_effective(amount)
+        try:
+            self.can_change_quantity(amount)
+        except Exception:
             return False
-        for source_item, (source_qty, result_qty) in self.item.sources.items():
-            source_item.timer.quantity -= required
-        self.quantity += amount
+        for source_item, effective_source_qty in effective_quantities.items():
+            source_item.timer.quantity -= effective_source_qty
+        self.quantity += effective_result_qty
         return True
 
     def increment_progress(self):
         while self.is_running:
-            if not self.can_change_quantity(self.rate_amount):
+            try:
+                self.can_change_quantity(self.rate_amount)
+            except Exception:
                 self.stop()
                 break
             time.sleep(self.rate_duration)

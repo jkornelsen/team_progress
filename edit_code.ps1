@@ -17,7 +17,10 @@ $inpath = Join-Path $PSScriptRoot "app"
 $htmlFiles = Get-FilteredChildItems -Path $inpath -Filter "*.html"
 $cssFiles = Get-FilteredChildItems -Path $inpath -Filter "*.css"
 $pyFiles = Get-FilteredChildItems -Path $inpath -Filter "*.py"
+$txtFiles = Get-ChildItem -Path $inpath\..\ -Filter "*.txt" -File
 & $EDITOR $htmlFiles.FullName + $cssFiles.FullName
 Start-Sleep -Milliseconds 500
 & $EDITOR $pyFiles.FullName
+Start-Sleep -Milliseconds 500
+& $EDITOR $txtFiles.FullName
 
