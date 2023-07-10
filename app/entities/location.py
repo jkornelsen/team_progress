@@ -103,6 +103,9 @@ class Location:
                 'configure/location.html', current_location=self,
                 game=self.__class__.game_data)
 
+    def distance(self, other_location):
+        return self.destinations.get(other_location, -1)
+
 def set_routes(app):
     @app.route('/configure/location/<location_id>',methods=['GET', 'POST'])
     def configure_location(location_id):

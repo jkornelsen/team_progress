@@ -7,7 +7,7 @@ from flask import (
     session,
     url_for
 )
-from .timer import Timer
+from .progress import Progress
 
 class Item:
     last_id = 0  # used to auto-generate a unique id for each object
@@ -23,7 +23,7 @@ class Item:
         self.name = ""
         self.description = ""
         self.toplevel = False if len(self.__class__.instances) > 1 else True
-        self.timer = Timer(self)
+        self.progress = Progress()
         self.growable = 'over_time'
         self.sources = {}  # keys Item object, values quantity required
         self.result_qty = 1  # how many one batch yields
@@ -47,7 +47,7 @@ class Item:
             'sources': {
                 item.id: quantity
                 for item, quantity in self.sources.items()},
-            'timer': self.timer.to_json(),
+            'progress': self.progress.to_json(),
         }
 
     @classmethod
@@ -58,7 +58,8 @@ class Item:
         item.toplevel = data['toplevel']
         item.growable = data['growable']
         item.result_qty = data.get('result_qty', 1)
-        item.timer = Timer.from_json(data['timer'], item)
+        item.progress = Progress.from_json(data['progress'])
+        item.progress.step_size = item.result_qty
         source_ids[item.id] = {
             int(source_id): quantity
             for source_id, quantity in data['sources'].items()
@@ -81,6 +82,7 @@ class Item:
                 for source_id, quantity in
                 source_ids.get(item.id, {}).items()
             }
+        item.progress.sources = item.sources
         return cls.instances
 
     def configure_by_form(self):
@@ -93,13 +95,6 @@ class Item:
                 self.description = request.form.get('item_description')
                 self.toplevel = bool(request.form.get('top_level'))
                 self.growable = request.form.get('growable')
-                rate_amount = float(request.form.get('rate_amount'))
-                rate_duration = float(request.form.get('rate_duration'))
-                was_running = self.timer.is_running
-                if was_running:
-                    self.timer.stop()
-                self.timer = Timer(
-                    self, rate_amount, rate_duration, self.timer.quantity)
                 self.result_qty = int(request.form.get('result_quantity'))
                 source_ids = request.form.getlist('source_id')
                 print(f"Source IDs: {source_ids}")
@@ -109,9 +104,20 @@ class Item:
                         request.form.get(f'source_quantity_{source_id}', 0))
                     source_item = self.__class__.get_by_id(source_id)
                     self.sources[source_item] = source_quantity
-                print(f"Source Quantities: {self.sources}")
+                print("Sources: ", {source.name: quantity
+                    for source, quantity in self.sources.items()})
+                prev_quantity = self.progress.quantity
+                was_running = self.progress.is_running
                 if was_running:
-                    self.timer.start()
+                    self.progress.stop()
+                self.progress = Progress(
+                    quantity=prev_quantity,
+                    step_size=self.result_qty,
+                    rate_amount=float(request.form.get('rate_amount')),
+                    rate_duration=float(request.form.get('rate_duration')),
+                    sources=self.sources)
+                if was_running:
+                    self.progress.start()
                 print(request.form)
             elif 'delete_item' in request.form:
                 self.__class__.instances.remove(self)
@@ -155,10 +161,10 @@ def set_routes(app):
         quantity = int(request.form.get('quantity'))
         item = Item.get_by_id(item_id)
         try:
-            item.timer.can_change_quantity(quantity)
+            item.progress.can_change_quantity(quantity)
         except Exception as ex:
             return jsonify({'status': 'error', 'message': str(ex)})
-        if item.timer.change_quantity(quantity):
+        if item.progress.change_quantity(quantity):
             return jsonify({
                 'status': 'success', 'message':
                 f'Quantity of {item.name} changed by {quantity}.'})
@@ -171,10 +177,10 @@ def set_routes(app):
     def start_item(item_id):
         item = Item.get_by_id(item_id)
         try:
-            item.timer.can_change_quantity(item.timer.rate_amount)
+            item.progress.can_change_quantity(item.progress.rate_amount)
         except Exception as ex:
             return jsonify({'status': 'error', 'message': str(ex)})
-        if item.timer.start():
+        if item.progress.start():
             return jsonify({'status': 'success', 'message': 'Progress started.'})
         else:
             return jsonify({'status': 'error', 'message': 'Could not start.'})
@@ -182,29 +188,29 @@ def set_routes(app):
     @app.route('/item/stop/<int:item_id>')
     def stop_item(item_id):
         item = Item.get_by_id(item_id)
-        if item.timer.stop():
+        if item.progress.stop():
             return jsonify({'message': 'Progress paused.'})
         else:
             return jsonify({'message': 'Progress is already paused.'})
 
-    @app.route('/item/timer_status/<int:item_id>')
-    def item_timer_status(item_id):
+    @app.route('/item/progress_running/<int:item_id>')
+    def item_progress_running(item_id):
         item = Item.get_by_id(item_id)
-        return jsonify({'is_running': item.timer.is_running})
+        return jsonify({'is_running': item.progress.is_running})
 
-    @app.route('/item/quantity/<int:item_id>')
-    def get_quantity(item_id):
+    @app.route('/item/progress_quantity/<int:item_id>')
+    def item_progress_quantity(item_id):
         item = Item.get_by_id(item_id)
         if item:
-            return jsonify({'quantity': item.timer.quantity})
+            return jsonify({'quantity': item.progress.quantity})
         else:
             return jsonify({'error': 'Item not found'})
 
-    @app.route('/item/time/<int:item_id>')
-    def get_time(item_id):
+    @app.route('/item/progress_time/<int:item_id>')
+    def item_progress_time(item_id):
         item = Item.get_by_id(item_id)
         if item:
-            return item.timer.get_time()
+            return item.progress.get_time()
         else:
             return jsonify({'error': 'Item not found'})
 

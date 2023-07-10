@@ -1,38 +1,42 @@
-from flask import jsonify
-import threading
 from datetime import timedelta
-import time
+from flask import jsonify
 import math
+import threading
+import time
 
-class Timer:
-    def __init__(self, item, rate_amount=1.0, rate_duration=1.0, quantity=0):
-        self.item = item
+class Progress:
+    """Track progress, such as over time."""
+    def __init__(self, step_size=1.0, rate_amount=1.0, rate_duration=1.0,
+            quantity=0, sources=None):
+        self.quantity = quantity  # the main value tracked
+        self.step_size = step_size
         self.rate_amount = rate_amount
         self.rate_duration = rate_duration
-        self.quantity = quantity
-
+        if sources:
+            self.sources = sources
+        else:
+            self.sources = {}
+        self.is_running = False
+        self.increment_lock = threading.Lock()
         self.prev_elapsed_time = 0
         self.last_start_time = None
 
-        self.increment_lock = threading.Lock()
-        self.is_running = False
-
     def to_json(self):
         return {
+            'quantity': self.quantity,
             'rate_amount': self.rate_amount,
             'rate_duration': self.rate_duration,
-            'quantity': self.quantity,
             'prev_elapsed_time': self.prev_elapsed_time,
         }
 
     @classmethod
-    def from_json(cls, data, item):
-        timer = cls(item)
-        timer.rate_amount = data['rate_amount']
-        timer.rate_duration = data['rate_duration']
-        timer.quantity = data['quantity']
-        timer.prev_elapsed_time = data['prev_elapsed_time']
-        return timer
+    def from_json(cls, data):
+        progress = cls()
+        progress.quantity = data['quantity']
+        progress.rate_amount = data['rate_amount']
+        progress.rate_duration = data['rate_duration']
+        progress.prev_elapsed_time = data['prev_elapsed_time']
+        return progress
 
     def calc_effective(self, amount):
         """Determine source and result quantity changes by batch.
@@ -44,31 +48,32 @@ class Timer:
         although that may not have real-world meaning,
         so it's probably best if the speed and production qty divide evenly.
         """
-        result_qty = self.item.result_qty
+        result_qty = self.step_size
         batches = math.floor(amount / result_qty)  # best if no rounding needed
-        effective_result_qty = batches * result_qty
-        effective_quantities = {}
-        for source_item, source_qty in self.item.sources.items():
-            effective_source_qty = batches * source_qty
-            effective_quantities[source_item] = effective_source_qty
-        return effective_result_qty, effective_quantities
+        eff_result_qty = batches * result_qty
+        eff_source_qtys = {}
+        for source_item, source_qty in self.sources.items():
+            eff_source_qty = batches * source_qty
+            eff_source_qtys[source_item] = eff_source_qty
+        return eff_result_qty, eff_source_qtys
 
     def can_change_quantity(self, amount):
-        effective_result_qty, effective_quantities = self.calc_effective(amount)
-        for source_item, effective_source_qty in effective_quantities.items():
-            if effective_source_qty > 0 and source_item.timer.quantity < effective_source_qty:
+        eff_result_qty, eff_source_qtys = self.calc_effective(amount)
+        for source_item, eff_source_qty in eff_source_qtys.items():
+            if (eff_source_qty > 0
+                    and source_item.progress.quantity < eff_source_qty):
                 raise Exception(
-                    f"Cannot take {effective_source_qty} {source_item.name}.")
+                    f"Cannot take {eff_source_qty} {source_item.name}.")
 
     def change_quantity(self, amount):
-        effective_result_qty, effective_quantities = self.calc_effective(amount)
+        eff_result_qty, eff_source_qtys = self.calc_effective(amount)
         try:
             self.can_change_quantity(amount)
         except Exception:
             return False
-        for source_item, effective_source_qty in effective_quantities.items():
-            source_item.timer.quantity -= effective_source_qty
-        self.quantity += effective_result_qty
+        for source_item, eff_source_qty in eff_source_qtys.items():
+            source_item.progress.quantity -= eff_source_qty
+        self.quantity += eff_result_qty
         return True
 
     def increment_progress(self):

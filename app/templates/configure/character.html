@@ -19,9 +19,9 @@
     <h1>Character Setup</h1>
     <form method="post">
         <label for="character-name">Name:</label>
-        <input type="text" id="character-name" name="character_name" value="{{ current_character.name }}" required><br>
+        <input type="text" id="character-name" name="character_name" value="{{ current.name }}" required><br>
         <label for="character-description">Description:</label>
-        <textarea id="character-description" name="character_description" rows="4" cols="50">{{ current_character.description }}</textarea><br>
+        <textarea id="character-description" name="character_description" rows="4" cols="50">{{ current.description }}</textarea><br>
         <label for="character-type">Type:</label>
         <select id="character-type-select" name="character_type">
             <option value="user1">For Player 1</option>
@@ -33,7 +33,7 @@
         <select id="character-location" name="character_location">
             <option value="" selected>(Select location)</option>
             {% for location in game.locations %}
-                <option value="{{ location.id }}" {% if current_character.location.id == location.id %}selected{% endif %}>
+                <option value="{{ location.id }}" {% if current.location.id == location.id %}selected{% endif %}>
                     {{ location.name }}
                 </option>
             {% endfor %}
@@ -44,11 +44,11 @@
 <!--
         <div id="attributes-container">
             <label for="character-xp">XP:</label>
-            <input type="number" id="character-xp" name="character_xp" value="{{ current_character.xp }}" class="attribute-field"><br>
+            <input type="number" id="character-xp" name="character_xp" value="{{ current.xp }}" class="attribute-field"><br>
             <label for="character-int">Intelligence:</label>
-            <input type="number" id="character-int" name="character_int" value="{{ current_character.intelligence }}" class="attribute-field"><br>
+            <input type="number" id="character-int" name="character_int" value="{{ current.intelligence }}" class="attribute-field"><br>
             <label for="character-charisma">Charisma:</label>
-            <input type="number" id="character-charisma" name="character_charisma" value="{{ current_character.charisma }}" class="attribute-field"><br>
+            <input type="number" id="character-charisma" name="character_charisma" value="{{ current.charisma }}" class="attribute-field"><br>
         </div>
 -->
 
@@ -61,7 +61,7 @@
                 </tr>
             </thead>
             <tbody id="items-container">
-                {% for item, slot in current_character.items.items() %}
+                {% for item, slot in current.items.items() %}
                     <tr class="item">
                         <td>{{ item.name }}</td>
                         <td>

@@ -15,8 +15,8 @@
         <a class="upper-left" href="{{ url_for('configure') }}">Change Setup</a>
     </div>
 
-    <h1 class="{% if overall.winning_item and overall.winning_item.timer.quantity >= overall.winning_quantity %}winning-title{% endif %}">
-        {% if overall.winning_item and overall.winning_item.timer.quantity >= overall.winning_quantity %}
+    <h1 class="{% if overall.winning_item and overall.winning_item.progress.quantity >= overall.winning_quantity %}winning-title{% endif %}">
+        {% if overall.winning_item and overall.winning_item.progress.quantity >= overall.winning_quantity %}
             &#10004; <!-- Checkmark symbol -->
         {% endif %}
         {{ overall.title }}
@@ -43,20 +43,20 @@
         </table>
     {% endif %}
     {% set outerscope = namespace(display_section = false) %}
-    {% for character in overall.game_data.characters %}
-        {% if character.character_type != "npc" %}
+    {% for char in overall.game_data.characters %}
+        {% if char.char_type != "npc" %}
             {% set outerscope.display_section = true %}
         {% endif %}
     {% endfor %}
     {% if outerscope.display_section %}
         <h2>Player Characters</h2>
         <ul>
-            {% for character in overall.game_data.characters %}
-                {% if character.character_type != "npc" %}
+            {% for char in overall.game_data.characters %}
+                {% if char.char_type != "npc" %}
                     <li>
-                        <a href="{{ url_for('play_character', character_id=character.id) }}">{{ character.name }}</a> &mdash;
-                        {% if character.location %}
-                            <a href="{{ url_for('play_location', location_id=character.location.id) }}">{{ character.location.name }}</a>
+                        <a href="{{ url_for('play_char', char_id=char.id) }}">{{ char.name }}</a> &mdash;
+                        {% if char.location %}
+                            <a href="{{ url_for('play_location', location_id=char.location.id) }}">{{ char.location.name }}</a>
                         {% else %}
                             Not in any location
                         {% endif %}
@@ -70,7 +70,7 @@
             function updateQuantities() {
                 {% for item in overall.game_data.items %}
                     // Make AJAX request for item quantity
-                    $.get('/item/quantity/{{ item.id }}', function(data) {
+                    $.get('/item/progress_quantity/{{ item.id }}', function(data) {
                         // Update quantity value in the table
                         $('#item-{{ item.id }}-quantity').text(data.quantity);
                     });

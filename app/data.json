@@ -1,59 +1,78 @@
 {
-    "characters": [],
+    "characters": [
+        {
+            "id": 2,
+            "name": "Suzy",
+            "description": "Sent to fetch bacon for dinner by her mother.",
+            "char_type": "user1",
+            "items": {},
+            "location_id": 2
+        }
+    ],
     "items": [
         {
             "id": 2,
-            "name": "buns",
-            "description": "",
+            "name": "Pigs",
+            "description": "Can be raised, and will provide bacon.",
             "toplevel": false,
-            "growable": "instantly",
-            "result_qty": 8,
+            "growable": "over_time",
+            "result_qty": 1,
             "sources": {},
-            "timer": {
+            "progress": {
                 "rate_amount": 1.0,
-                "rate_duration": 1.0,
-                "quantity": 24,
+                "rate_duration": 60.0,
+                "quantity": 0,
                 "prev_elapsed_time": 0
             }
         },
         {
             "id": 4,
-            "name": "hot dog meat",
+            "name": "Raw Bacon",
             "description": "",
-            "toplevel": false,
-            "growable": "instantly",
-            "result_qty": 6,
-            "sources": {},
-            "timer": {
-                "rate_amount": 1.0,
-                "rate_duration": 1.0,
-                "quantity": 18,
-                "prev_elapsed_time": 0
-            }
-        },
-        {
-            "id": 6,
-            "name": "hot dogs",
-            "description": "Since buns are sold in packages of 8, the extras will need to be discarded. Pets would be happy to eat them.",
             "toplevel": true,
             "growable": "over_time",
-            "result_qty": 6,
+            "result_qty": 10,
             "sources": {
-                "2": 80,
-                "4": 6
+                "2": 1
             },
-            "timer": {
-                "rate_amount": 6.0,
+            "progress": {
+                "rate_amount": 10.0,
                 "rate_duration": 10.0,
-                "quantity": 12,
+                "quantity": 0,
                 "prev_elapsed_time": 0
             }
         }
     ],
-    "locations": [],
+    "locations": [
+        {
+            "id": 2,
+            "name": "Home",
+            "description": "Starting point, and we'll return here at the end.",
+            "destinations": {
+                "4": 1
+            }
+        },
+        {
+            "id": 4,
+            "name": "Sketchy-Path Forest",
+            "description": "Easy to get lost in here.",
+            "destinations": {
+                "6": 10,
+                "2": 10
+            }
+        },
+        {
+            "id": 6,
+            "name": "Uncle's Pig Farm",
+            "description": "Suzy's uncle is okay with her butchering pigs from time to time.",
+            "destinations": {
+                "4": 2
+            }
+        }
+    ],
     "overall": {
-        "title": "Generic Adventure",
-        "description": "An empty scenario. To begin, go to \"Change Setup\". You'll probably want to change the title and this description in addition to doing some basic setup such as adding a few starting items.",
+        "title": "Grab the Bacon",
+        "description": "A character starts in location 1, must go to location 3, get an item there, then return to location 1. To go to a destination, a character must be in one of the allowable source locations. On item screen, specify max number of items gainable, for example, 1.",
         "winning_item": null,
         "winning_quantity": 0
     }

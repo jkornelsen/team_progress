@@ -175,8 +175,11 @@ and clicking on it would show its contents.
 a room could serve this purpose as well, containing npcs for example.
 locations could require travel time, similar to any other incremental
 or at least, they require going through place 1 and 2 in order to get to place 3
-location travel time could be handled by a travel Timer object of the character,
+
+location travel time could be handled by a travel Progress object of the character,
 with distances specified in the location itself
+travel could optionally take a resource such as food for each distance step
+the character object would have this food
 
 the overview screen should show all players,
 along with what they're doing and where they are

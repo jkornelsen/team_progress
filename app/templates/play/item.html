@@ -31,8 +31,8 @@
         {% if current.growable == 'over_time' %}
         <tr>
             <td>
-                Rate: <span id="rate-amount">{{ current.timer.rate_amount }}</span> per 
-                <span id="rate-duration">{{ current.timer.rate_duration }}</span> seconds
+                Rate: <span id="rate-amount">{{ current.progress.rate_amount }}</span> per 
+                <span id="rate-duration">{{ current.progress.rate_duration }}</span> seconds
             </td>
         </tr>
         <tr>
@@ -105,10 +105,8 @@
     </table>
 
     {% if current.growable == 'over_time' %}
-    <button id="start-btn" {% if current.timer.is_running %}disabled{% endif %}>
-        {% if current.timer.is_running %}Running...{% else %}Start{% endif %}
-    </button>
-    <button id="stop-btn"{% if not current.timer.is_running %}disabled{% endif %}>Stop</button>
+    <button id="start-btn">Start</button>
+    <button id="stop-btn">Stop</button>
     {% elif current.growable == 'instantly' %}
     <input type="number" id="quantity_to_gain" size="10" value="{{ current.result_qty }}">
     <button id="gain-btn">Gain</button>
@@ -118,13 +116,12 @@
         $(document).ready(function() {
             function updateQuantity() {
                 // Main item quantity
-                $.get('/item/quantity/{{ current.id }}', function(data) {
+                $.get('/item/progress_quantity/{{ current.id }}', function(data) {
                     $('#quantity-{{ current.id }}').text(data.quantity);
                 });
-
                 // Source item quantities
                 {% for source_item, _ in current.sources.items() %}
-                $.get('/item/quantity/{{ source_item.id }}', function(data) {
+                $.get('/item/progress_quantity/{{ source_item.id }}', function(data) {
                     $('#source-{{ source_item.id }}-quantity').text(data.quantity);
                 });
                 {% endfor %}
@@ -132,14 +129,14 @@
 
             // Update Elapsed time
             function updateElapsedTime() {
-                $.get('/item/time/{{ current.id }}', function(data) {
+                $.get('/item/progress_time/{{ current.id }}', function(data) {
                     $('#elapsed-time').text(data.time);
                 });
             }
 
             // the Start button may change to "Running..."
             function updateStartbuttonLabel() {
-                fetch('/item/timer_status/{{ current.id }}')
+                fetch('/item/progress_running/{{ current.id }}')
                     .then(response => response.json())
                     .then(data => {
                         var startBtn = document.getElementById("start-btn");
@@ -159,11 +156,14 @@
                     });
             }
 
-            // Update quantities and elapsed time initially
+            // Update initially
             updateQuantity();
             updateElapsedTime();
+            {% if current.growable == 'over_time' %}
+            updateStartbuttonLabel();
+            {% endif %}
 
-            // Update quantities, elapsed time, and rate every second
+            // Update every second
             setInterval(function() {
                 updateQuantity();
                 {% if current.growable == 'over_time' %}
@@ -202,9 +202,9 @@
                 });
             });
             $('#start-btn').click(function() {
-                var item_id = {{ current.id }};
-                console.log('startItem(): ' + item_id);
-                fetch('/item/start/' + item_id)
+                const current_id = {{ current.id }};
+                console.log('startItem(): ' + current_id);
+                fetch('/item/start/' + current_id)
                     .then(response => response.json())
                     .then(data => {
                         console.log(data.message);
@@ -219,9 +219,9 @@
                     });
             });
             $('#stop-btn').click(function() {
-                item_id = {{ current.id }}
-                console.log('stopItem(): ' + item_id);
-                fetch('/item/stop/' + item_id)
+                const current_id = {{ current.id }}
+                console.log('stopItem(): ' + current_id);
+                fetch('/item/stop/' + current_id)
                     .then(response => response.json())
                     .then(data => {
                         console.log(data.message);

@@ -16,6 +16,7 @@
             "description": "Can be raised, and will provide bacon.",
             "toplevel": false,
             "growable": "over_time",
+            "result_qty": 1,
             "sources": {},
             "timer": {
                 "rate_amount": 1.0,
@@ -26,16 +27,17 @@
         },
         {
             "id": 4,
-            "name": "Bacon",
+            "name": "Raw Bacon",
             "description": "",
             "toplevel": true,
             "growable": "over_time",
+            "result_qty": 10,
             "sources": {
                 "2": 1
             },
             "timer": {
-                "rate_amount": 1.0,
-                "rate_duration": 5.0,
+                "rate_amount": 10.0,
+                "rate_duration": 10.0,
                 "quantity": 0,
                 "prev_elapsed_time": 0
             }

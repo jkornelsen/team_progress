@@ -11,42 +11,48 @@
         <span class="separator">|</span>
         <a class="upper-left" href="{{ url_for('configure') }}">General Setup</a>
         <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for('configure_character', character_id=character.id) }}">Character Setup</a>
+        <a class="upper-left" href="{{ url_for('configure_char', char_id=current.id) }}">Character Setup</a>
     </div>
-    <h1>{{ character.name }}</h1>
-    {% if character.description %}
-        <p>{{ character.description }}</p>
+    <h1>{{ current.name }}</h1>
+    {% if current.description %}
+        <p>{{ current.description }}</p>
     {% endif %}
-    {% if character.character_type.lower() == "npc" %}
+    {% if current.char_type.lower() == "npc" %}
         <p>NPC</p>
     {% else %}
-        <p>Character for {{ character.character_type|capitalize }}</p>
+        <p>Character for {{ current.char_type|capitalize }}</p>
     {% endif %}
 
-    {% if character.location %}
-        <p>Location: <a href="{{ url_for('play_location', location_id=character.location.id) }}">{{ character.location.name }}</a></p>
-        {% if character.location.destinations %}
+    {% if current.location %}
+        <p>Location: <a href="{{ url_for('play_location', location_id=current.location.id) }}">{{ current.location.name }}</a></p>
+        {% if current.location.destinations %}
             <div class="flexdiv">
-                <label for="destination-select">Travel To:</label>
-                <select id="destination-select"  class="select-box">
+                <label for="destination-select">Travel To</label>
+                <select id="destination-select" class="select-box">
                     <option value="">(Select destination)</option>
-                    {% for destination, distance in character.location.destinations.items() %}
-                        <option value="{{ destination.id }}" data-distance="{{ distance }}">{{ destination.name }}</option>
+                    {% for destination, distance in current.location.destinations.items() %}
+                        <option value="{{ destination.id }}" data-distance="{{ distance }}"
+                            {% if current.destination and destination.id == current.destination.id %}
+                                selected
+                            {% endif %}
+                        >
+                            {{ destination.name }}
+                        </option>
                     {% endfor %}
                 </select>
-                <div id="destination-info" class="flexdiv" style="display: none;">
-                    <p id="destination-distance"></p>
-                    <button id="start-timer-btn">Start</button>
-                    <button id="stop-timer-btn">Stop</button>
+                <div id="destination-info" class="flexdiv">
+                    <p id="destination-distance">Distance: ... of ...</p>
+                    <button id="start-travel-btn">Start</button>
+                    <button id="stop-travel-btn">Stop</button>
                 </div>
             </div>
         {% endif %}
     {% endif %}
 
-    {% if character.items %}
+    {% if current.items %}
     <h2>Worn Items</h2>
     <ul>
-        {% for item, slot in character.items.items() if slot %}
+        {% for item, slot in current.items.items() if slot %}
             <li>
                 <a href="{{ url_for('play_item', item_id=item.id) }}">{{ item.name }}</a> -
                 Slot: {{ slot }}
@@ -56,7 +62,7 @@
 
     <h2>Inventory Items</h2>
     <ul>
-        {% for item, slot in character.items.items() if not slot %}
+        {% for item, slot in current.items.items() if not slot %}
             <li>
                 <a href="{{ url_for('play_item', item_id=item.id) }}">{{ item.name }}</a>
             </li>
@@ -64,40 +70,109 @@
     </ul>
     {% endif %}
 
-    {% if character.attributes %}
+    {% if current.attributes %}
     <h2>Attributes (Not Implemented Yet)</h2>
     <ul>
-        <!-- Loop over character.attributes once they are implemented -->
+        <!-- Loop over current.attributes once they are implemented -->
     </ul>
     {% endif %}
     <script>
-$(document).ready(function() {
-    $('#destination-select').change(function() {
-        var selectedOption = $(this).find(':selected');
-        var destinationId = selectedOption.val();
-        var destinationName = selectedOption.text();
-        var destinationDistance = selectedOption.data('distance');
-        $('#destination-name').text(destinationName);
-        $('#destination-distance').text('Distance: ' + {{ character.timer.quantity }} + ' of ' + destinationDistance);
-        if (destinationId) {
-            $('#destination-info').show();
-        } else {
-            $('#destination-info').hide();
-        }
-    });
+        $(document).ready(function() {
+            function updateTravelProgress() {
+                const destSel = $('#destination-select');
+                const destinationId = destSel.val();
+                const distance = destSel.data('distance');
+                const destInfo = $('#destination-info');
+                const destDist = $('#destination-distance');
+                if (destinationId) {
+                    $.get('/char/progress_quantity/{{ current.id }}', function(data) {
+                        destDist.text('Distance ' + data.quantity + ' of ' + distance);
+                        destInfo.show();
+                    });
+                } else {
+                    destInfo.hide();
+                }
+            }
 
-    $('#start-timer-btn').click(function() {
-        var destinationId = $('#destination-select').val();
-        // Start the timer for the selected destination
-        // ...
-    });
+            // the Start button may change to "Running..."
+            function updateStartbuttonLabel() {
+                fetch('/item/progress_running/{{ current.id }}')
+                    .then(response => response.json())
+                    .then(data => {
+                        const startBtn = $('#start-travel-btn');
+                        const stopBtn = $('#stop-travel-btn');
+                        const destSel = $('#destination-select');
+                        if (data.is_running) {
+                            startBtn.innerHTML = "Travelling...";
+                            startBtn.disabled = true;
+                            stopBtn.disabled = false;
+                            destSel.disabled = true;
+                        } else {
+                            startBtn.innerHTML = "Start";
+                            startBtn.disabled = false;
+                            stopBtn.disabled = true;
+                            destSel.disabled = false;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+            }
 
-    $('#stop-timer-btn').click(function() {
-        var destinationId = $('#destination-select').val();
-        // Stop the timer for the selected destination
-        // ...
-    });
-});
+            // Update initially
+            updateTravelProgress();
+            updateStartbuttonLabel();
+
+            // Update every second
+            setInterval(function() {
+                updateTravelProgress();
+                updateStartbuttonLabel();
+            //}, 1000);
+            }, 5000);
+
+            $('#destination-select').change(function() {
+                updateTravelProgress();
+            });
+
+            $('#start-travel-btn').click(function() {
+                // Start the progress for the selected destination
+                const destinationId = $('#destination-select').val();
+                const current_id = {{ current.id }};
+                console.log('startItem(): ' + current_id);
+                $.ajax({
+                    url: '/char/start/' + current_id,
+                    method: 'POST',
+                    data: { dest_id: destinationId },
+                    success: function(response) {
+                        if (response.status === 'error') {
+                            console.error(response.message);
+                            alert(response.message);
+                        }
+                        updateStartbuttonLabel();
+                    },
+                    error: function(error) {
+                        console.error('Error:', error);
+                    },
+                    complete: function() {
+                        updateTravelProgress();
+                    }
+                });
+            });
+            $('#stop-travel-btn').click(function() {
+                // Stop the progress
+                const current_id = {{ current.id }}
+                console.log('stopItem(): ' + current_id);
+                fetch('/item/stop/' + current_id)
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data.message);
+                        updateStartbuttonLabel();
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+            });
+        });
     </script>
 </body>
 </html>

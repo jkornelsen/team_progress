@@ -5,7 +5,6 @@ from flask import (
     request,
     url_for
 )
-from . import timer
 from .item import Item
 
 class Overall:
