@@ -16,8 +16,8 @@ class Item:
 
     def __init__(self, new_id='auto'):
         if new_id == 'auto':
-            Item.last_id += 1
-            self.id = Item.last_id
+            self.__class__.last_id += 1
+            self.id = self.__class__.last_id
         else:
             self.id = new_id
         self.name = ""
@@ -68,7 +68,7 @@ class Item:
         return item
 
     @classmethod
-    def item_list_from_json(cls, json_data):
+    def list_from_json(cls, json_data):
         cls.instances.clear()
         source_ids = {}
         for item_data in json_data:

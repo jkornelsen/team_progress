@@ -86,10 +86,10 @@ incremental rather than turn-based, but time can be paused, like e.g. the Sims
 
 an event could be a four-outcome type,
 one-timer performed by pressing a button.
+radio button specifies that the type is four-outcome
 the meaning of the four outcomes could perhaps be explained in the description,
-and if the radio button specifies that the type is four-outcome,
-then pressing the button would display "strong success", "minor success",
-"minor failure", "major failure".
+Difficulty would be specified in config as 4 default values for Easy, Moderate,
+Hard, and Very Hard.
 
 scenarios can be randomly generated except number of players must be specified
 setting up the configuration one question at a time could be tedious
@@ -123,25 +123,15 @@ ability to replay a game?
 chance of success for incrementing
 optionally manual rather than auto increment, like manually attempting to chop a tree
 also can select a failure event from a dropdown list
-events would be another type of object, with their own config screen
 event chance may depend on stats of characters or items involved
-maybe a list of buttons in a side panel to configure each entity currently involved
-    in the action
 there are event objects saved in data, and event instances which have an effect but
 are not saved
 
-to buy, press a button like "start", only different because it would be
-a specified number of repetitions instantly
-perhaps button would say "repeat" x times.
-growable determines which buttons are shown on /play/item.html.
-    start/stop, or gain, or none.
 quantity may be unlimited
-if a specific value is needed, quantity could be set by an event, e.g. start with $500.
 items may have different sets of materials
-    for example, wood could come from a log or from disassembling a shelf
-    or by purchasing
-    but for now, keep it simple and have only one set
-
+for example, wood could come from a log or from disassembling a shelf
+or by purchasing
+but for now, keep it simple and have only one set
 On item screen, specify max number of items gainable.
 If nothing else, this could be useful for unique items, where max is 1. 
 

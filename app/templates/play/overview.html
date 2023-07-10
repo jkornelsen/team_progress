@@ -65,6 +65,24 @@
             {% endfor %}
         </ul>
     {% endif %}
+    {% set outerscope = namespace(display_section = false) %}
+    {% for event in overall.game_data.events %}
+        {% if event.toplevel %}
+            {% set outerscope.display_section = true %}
+        {% endif %}
+    {% endfor %}
+    {% if outerscope.display_section %}
+        <h2>Events</h2>
+        <ul>
+            {% for event in overall.game_data.events %}
+                {% if event.toplevel %}
+                    <li>
+                        <a href="{{ url_for('play_event', event_id=event.id) }}">{{ event.name }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    {% endif %}
     <script>
         $(document).ready(function() {
             function updateQuantities() {

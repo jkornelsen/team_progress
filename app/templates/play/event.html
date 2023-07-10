@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Event Information</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="nav-container">
+        <a class="upper-left" href="{{ url_for('overview') }}">Overview</a>
+        <span class="separator">|</span>
+        <a class="upper-left" href="{{ url_for('configure') }}">General Setup</a>
+        <span class="separator">|</span>
+        <a class="upper-left" href="{{ url_for('configure_event', event_id=current.id) }}">Event Setup</a>
+    </div>
+    <table>
+        <tr>
+            <td style="background-color: #2a2a2a; border-bottom: 2px solid #ffffff;">
+                <h2 style="margin: 10px 10px">{{ current.name }}</h2>
+            </td>
+        </tr>
+        {% if current.description %}
+        <tr>
+            <td>
+                <p>{{ current.description }}</p>
+            </td>
+        </tr>
+        {% endif %}
+        <tr>
+            <td>
+                <form method="POST" action="{{ url_for('play_event', event_id=current.id) }}">
+                    <label for="event_difficulty">Difficulty:</label>
+                    <input type="number" id="event_difficulty" name="event_difficulty" value="{{ current.adjusted_difficulty }}">
+                    <br>
+                    <label for="event_outcome_margin">Outcome Margin:</label>
+                    <input type="number" id="event_outcome_margin" name="event_outcome_margin" value="{{ current.outcome_margin }}">
+                    <br>
+                    <label for="event_stat_adjustment">Stat Adjustment:</label>
+                    <input type="number" id="event_stat_adjustment" name="event_stat_adjustment" value="{{ current.stat_adjustment }}">
+                    <br>
+                    <button type="submit" id="roll-btn">Roll</button>
+                </form>
+            </td>
+        </tr>
+        {% if outcome %}
+        <tr>
+            <td>
+                <div id="outcome-display">{{ outcome|safe }}</div>
+            </td>
+        </tr>
+        {% endif %}
+    </table>
+</body>
+</html>

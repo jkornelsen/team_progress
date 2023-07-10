@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ config['TITLE'] }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Event Setup</h1>
+    <form method="post">
+        <label for="event-name">Name:</label>
+        <input type="text" id="event-name" name="event_name" value="{{ current.name }}" required><br>
+        <p>ID: {{ current.id }}</p>
+        <label for="event-description" >Description:</label>
+        <textarea id="event-description" name="event_description" rows="4" cols="50">{{ current.description }}</textarea><br>
+        <label for="event-difficulty">Base Difficulty:</label>
+        <select id="event-difficulty" name="event_difficulty">
+            {% for difficulty, value in current.base_difficulty.items() %}
+                <option value="{{ value }}" {% if current.adjusted_difficulty == value %}selected{% endif %}>{{ difficulty }}</option>
+            {% endfor %}
+        </select><br>
+        <label for="event-outcome-margin">Outcome Margin:</label>
+        <input type="number" id="event-outcome-margin" name="event_outcome_margin" value="{{ current.outcome_margin }}"><br>
+        <label for="event-stat-adjustment">Stat Adjustment:</label>
+        <input type="number" id="event-stat-adjustment" name="event_stat_adjustment" value="{{ current.stat_adjustment }}"><br>
+
+        <button type="submit" id="btn-save" name="save_changes">Save and Continue</button>
+        <button type="submit" id="btn-cancel" name="cancel_changes" formnovalidate>Cancel Changes</button>
+        <button type="submit" id="btn-delete" name="delete_event" class="dangerous-button">Delete Event</button>
+    </form>
+    <script>
+        $(document).ready(function() {
+            // Enable button if the current entity has been configured before.
+            {% set outerscope = namespace(has_current = false) %}
+            {% for event in current.__class__.instances %}
+                {% if event.id == current.id %}
+                    {% set outerscope.has_current = true %}
+                {% endif %}
+            {% endfor %}
+            {% if outerscope.has_current %}
+                $('#btn-delete').removeAttr('disabled');
+            {% else %}
+                $('#btn-delete').attr('disabled', 'disabled');
+            {% endif %}
+
+            $('#btn-save').click(function() {
+                var difficulty = $('#event-difficulty').val();
+                var outcomeMargin = $('#event-outcome-margin').val();
+                var statAdjustment = $('#event-stat-adjustment').val();
+
+                // Perform validation or additional checks if needed
+            });
+        });
+    </script>
+</body>
+</html>
+

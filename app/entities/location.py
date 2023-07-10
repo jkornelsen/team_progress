@@ -15,8 +15,8 @@ class Location:
 
     def __init__(self, new_id='auto'):
         if new_id == 'auto':
-            Location.last_id += 1
-            self.id = Location.last_id
+            self.__class__.last_id += 1
+            self.id = self.__class__.last_id
         else:
             self.id = new_id
         self.name = ""
@@ -54,7 +54,7 @@ class Location:
         return location
 
     @classmethod
-    def location_list_from_json(cls, json_data):
+    def list_from_json(cls, json_data):
         cls.instances.clear()
         destination_ids = {}
         for location_data in json_data:

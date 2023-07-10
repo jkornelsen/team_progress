@@ -77,6 +77,25 @@
             <a href="/configure/char/new">Add New</a>
         </div>
     </div>
+    <div class="flexdiv">
+        {% if game.events %}
+            <div class="select-box">
+                <select id="event-select">
+                    {% for event in game.events %}
+                        <option value="{{ event.id }}">{{ event.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="modify-button">
+                <button onclick="configureSelected('event')">Modify Event</button>
+            </div>
+        {% else %}
+            <p class="no-items">(No events)</p>
+        {% endif %}
+        <div class="entitylist-container">
+            <a href="/configure/event/new">Add New</a>
+        </div>
+    </div>
     <script>
         function configureSelected(type) {
             var selectedId = $("#" + type + "-select").val();

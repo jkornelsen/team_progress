@@ -18,8 +18,8 @@ class Character:
 
     def __init__(self, new_id='auto'):
         if new_id == 'auto':
-            Character.last_id += 1
-            self.id = Character.last_id
+            self.__class__.last_id += 1
+            self.id = self.__class__.last_id
         else:
             self.id = new_id
         self.name = ""
@@ -65,7 +65,7 @@ class Character:
         return char
 
     @classmethod
-    def char_list_from_json(cls, json_data):
+    def list_from_json(cls, json_data):
         cls.instances.clear()
         for char_data in json_data:
             cls.from_json(char_data)
