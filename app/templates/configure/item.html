@@ -13,7 +13,8 @@
         <p>ID: {{ current.id }}</p>
         <label for="item-description" >Description:</label>
         <textarea id="item-description" name="item_description" rows="4" cols="50">{{ current.description }}</textarea><br>
-
+        <label for="item-quantity">Quantity:</label>
+        <input type="number" id="item-quantity" name="item_quantity" value="{{ current.progress.quantity }}"><span id="running-label"></span><br>
         <div>
             <input type="checkbox" id="top_level" name="top_level" {% if current.toplevel %}checked{% endif %}>
             <label for="top_level">Show in Overview</label><br>
@@ -93,20 +94,29 @@
                 $('#btn-delete').attr('disabled', 'disabled');
             {% endif %}
 
-            $('input[name="growable"]').change(function() {
-              var growableValue = $(this).val();
-              
-              // Toggle visibility of rate-related elements based on the selected option
-              if (growableValue === "over_time") {
-                $('#rate-container').show();
-              } else {
-                $('#rate-container').hide();
-              }
-              
-              // Toggle disabled state of source input boxes based on the selected option
-              var isGrowable = (growableValue === "over_time" || growableValue === "instantly");
-              $('#source-container input').prop('disabled', !isGrowable);
-            });
+            // disable changing quantity if currently in progress
+            const itemQuantityInput = $('#item-quantity');
+            if ({{ current.progress.is_running|lower }}) {
+                itemQuantityInput.prop('disabled', true);
+                $('#running-label').text('(Running)');
+            }
+
+            function updateGrowableVisibility() {
+                // Toggle visibility of rate-related elements based on the selected option
+                if ($('#growable-gain-over_time').is(':checked')) {
+                    $('#rate-container').show();
+                } else {
+                    $('#rate-container').hide();
+                }
+                if ($('#growable-not_growable').is(':checked')) {
+                    $('#source-container').hide();
+                    //$('#source-container input').prop('disabled', true);
+                } else {
+                    $('#source-container').show();
+                }
+            }
+            $('input[name="growable"]').change(updateGrowableVisibility);
+            updateGrowableVisibility();
 
             $('#add-source-btn').click(function() {
                 var selectedOption = $('#add-source-select option:selected');

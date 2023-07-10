@@ -74,6 +74,7 @@ class Location:
         if request.method == 'POST':
             if 'save_changes' in request.form:  # button was clicked
                 print("Saving changes.")
+                print(request.form)
                 if self not in self.__class__.instances:
                     self.__class__.instances.append(self)
                 self.name = request.form.get('location_name')
@@ -85,7 +86,6 @@ class Location:
                     dest_location = Location.get_by_id(int(dest_id))
                     if dest_location:
                         self.destinations[dest_location] = int(dest_dist)
-                print(request.form)
             elif 'delete_location' in request.form:
                 self.__class__.instances.remove(self)
             elif 'cancel_changes' in request.form:

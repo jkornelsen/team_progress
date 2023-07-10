@@ -7,6 +7,7 @@ from flask import (
     session,
     url_for
 )
+from .item import Item
 from .location import Location
 from .progress import Progress
 
@@ -23,7 +24,7 @@ class Character:
             self.id = new_id
         self.name = ""
         self.description = ""
-        self.char_type = ""  # NPC or for a particular player
+        self.char_type = "npc"  # NPC or for a particular player
         self.attributes = []  # list of Attribute objects
         self.items = {}  # keys are Item object, values are slot name
         self.location = None  # Location object
@@ -56,9 +57,9 @@ class Character:
         char.description = data.get('description', '')
         char.char_type = data['char_type']
         char.items = {
-            Item.get_by_id(item_data['id']): item_data['slot']
-            for item_data in data['items']}
-        char.location = Location.get_by_id(data['location_id'])
+            Item.get_by_id(int(item_id)): slot
+            for item_id, slot in data['items'].items()}
+        char.location = Location.get_by_id(int(data['location_id']))
         char.progress = Progress.from_json(data['progress'])
         cls.instances.append(char)
         return char
@@ -76,6 +77,7 @@ class Character:
         if request.method == 'POST':
             if 'save_changes' in request.form:  # button was clicked
                 print("Saving changes.")
+                print(request.form)
                 if self not in self.__class__.instances:
                     self.__class__.instances.append(self)
                 self.name = request.form.get('char_name')
@@ -91,7 +93,6 @@ class Character:
                 location_id = request.form.get('char_location')
                 self.location = Location.get_by_id(
                     int(location_id)) if location_id else None
-                print(request.form)
             elif 'delete_character' in request.form:
                 self.__class__.instances.remove(self)
             elif 'cancel_changes' in request.form:
@@ -162,7 +163,19 @@ def set_routes(app):
     def char_progress_quantity(char_id):
         char = Character.get_by_id(char_id)
         if char:
-            return jsonify({'quantity': int(char.progress.quantity)})
+            if not char.location or not char.destination:
+                #return jsonify({'error': 'No travel destination.'})
+                return jsonify({'quantity': 0})
+            distance = char.location.destinations[char.destination]
+            if char.progress.quantity >= distance:
+                # arrived at the destination
+                char.progress.stop()
+                char.progress.quantity = 0
+                char.location = char.destination
+                char.destination = None
+                return jsonify({'status': 'arrived'})
+            else:
+                return jsonify({'quantity': int(char.progress.quantity)})
         else:
-            return jsonify({'error': 'Character not found'})
+            return jsonify({'error': 'Character not found.'})
 

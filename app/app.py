@@ -51,6 +51,8 @@ def configure():
         game=game_data,
         file_message=file_message)
 
+FILEPATH = 'data/data.json'
+
 @app.route('/save_to_file')
 def save_to_file():
     data_to_save = {
@@ -59,19 +61,19 @@ def save_to_file():
         'locations': [location.to_json() for location in Location.instances],
         'overall': Overall.to_json()
     }
-    with open('data.json', 'w') as outfile:
+    with open(FILEPATH, 'w') as outfile:
         json.dump(data_to_save, outfile, indent=4)
     session['file_message'] = 'Saved to file.'
     return redirect(url_for('configure'))
 
 @app.route('/load_from_file')
 def load_from_file():
-    with open('data.json', 'r') as infile:
+    with open(FILEPATH, 'r') as infile:
         data = json.load(infile)
         Overall.from_json(data['overall'])
         Location.location_list_from_json(data['locations'])
         Item.item_list_from_json(data['items'])
-        Character.character_list_from_json(data['characters'])
+        Character.char_list_from_json(data['characters'])
     session['file_message'] = 'Loaded from file.'
     return redirect(url_for('configure'))
 

@@ -5,8 +5,17 @@
             "name": "Suzy",
             "description": "Sent to fetch bacon for dinner by her mother.",
             "char_type": "user1",
-            "items": {},
-            "location_id": 2
+            "items": {
+                "7": "main hand"
+            },
+            "location_id": 2,
+            "progress": {
+                "quantity": 1.0,
+                "rate_amount": 1.0,
+                "rate_duration": 1.0,
+                "prev_elapsed_time": 11.658744096755981
+            },
+            "dest_id": null
         }
     ],
     "items": [
@@ -19,9 +28,9 @@
             "result_qty": 1,
             "sources": {},
             "progress": {
+                "quantity": 2,
                 "rate_amount": 1.0,
-                "rate_duration": 60.0,
-                "quantity": 0,
+                "rate_duration": 20.0,
                 "prev_elapsed_time": 0
             }
         },
@@ -36,9 +45,41 @@
                 "2": 1
             },
             "progress": {
+                "quantity": 0,
                 "rate_amount": 10.0,
                 "rate_duration": 10.0,
+                "prev_elapsed_time": 0
+            }
+        },
+        {
+            "id": 7,
+            "name": "knife",
+            "description": "for butchering",
+            "toplevel": false,
+            "growable": "not_growable",
+            "result_qty": 1,
+            "sources": {},
+            "progress": {
+                "quantity": 1,
+                "rate_amount": 1.0,
+                "rate_duration": 1.0,
+                "prev_elapsed_time": 0
+            }
+        },
+        {
+            "id": 9,
+            "name": "Cooked Bacon",
+            "description": "Cooked on the wood stove in a cast iron skillet at home.",
+            "toplevel": false,
+            "growable": "over_time",
+            "result_qty": 1,
+            "sources": {
+                "4": 1
+            },
+            "progress": {
                 "quantity": 0,
+                "rate_amount": 1.0,
+                "rate_duration": 1.0,
                 "prev_elapsed_time": 0
             }
         }
@@ -72,8 +113,8 @@
     ],
     "overall": {
         "title": "Grab the Bacon",
-        "description": "A character starts in location 1, must go to location 3, get an item there, then return to location 1. To go to a destination, a character must be in one of the allowable source locations. On item screen, specify max number of items gainable, for example, 1.",
-        "winning_item": null,
-        "winning_quantity": 0
+        "description": "Suzy must get bacon from the pig farm and then return home to cook it.",
+        "winning_item": 9,
+        "winning_quantity": 15
     }
 }

@@ -82,13 +82,14 @@ class Item:
                 for source_id, quantity in
                 source_ids.get(item.id, {}).items()
             }
-        item.progress.sources = item.sources
+            item.progress.sources = item.sources
         return cls.instances
 
     def configure_by_form(self):
         if request.method == 'POST':
             if 'save_changes' in request.form:  # button was clicked
                 print("Saving changes.")
+                print(request.form)
                 if self not in self.__class__.instances:
                     self.__class__.instances.append(self)
                 self.name = request.form.get('item_name')
@@ -106,10 +107,12 @@ class Item:
                     self.sources[source_item] = source_quantity
                 print("Sources: ", {source.name: quantity
                     for source, quantity in self.sources.items()})
-                prev_quantity = self.progress.quantity
                 was_running = self.progress.is_running
                 if was_running:
                     self.progress.stop()
+                else:
+                    self.progress.quantity = int(request.form.get('item_quantity'))
+                prev_quantity = self.progress.quantity
                 self.progress = Progress(
                     quantity=prev_quantity,
                     step_size=self.result_qty,
@@ -118,7 +121,6 @@ class Item:
                     sources=self.sources)
                 if was_running:
                     self.progress.start()
-                print(request.form)
             elif 'delete_item' in request.form:
                 self.__class__.instances.remove(self)
             elif 'cancel_changes' in request.form:

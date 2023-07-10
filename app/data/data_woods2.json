@@ -4,9 +4,18 @@
             "id": 2,
             "name": "Suzy",
             "description": "Sent to fetch bacon for dinner by her mother.",
-            "character_type": "user1",
-            "items": {},
-            "location_id": 2
+            "char_type": "user1",
+            "items": {
+                "7": "main hand"
+            },
+            "location_id": 6,
+            "progress": {
+                "quantity": 1.0,
+                "rate_amount": 1.0,
+                "rate_duration": 1.0,
+                "prev_elapsed_time": 11.658744096755981
+            },
+            "dest_id": null
         }
     ],
     "items": [
@@ -18,11 +27,11 @@
             "growable": "over_time",
             "result_qty": 1,
             "sources": {},
-            "timer": {
+            "progress": {
+                "quantity": 2,
                 "rate_amount": 1.0,
-                "rate_duration": 10.0,
-                "quantity": 0,
-                "prev_elapsed_time": 0
+                "rate_duration": 60.0,
+                "prev_elapsed_time": 156.2120852470398
             }
         },
         {
@@ -35,10 +44,25 @@
             "sources": {
                 "2": 1
             },
-            "timer": {
+            "progress": {
+                "quantity": 0,
                 "rate_amount": 10.0,
                 "rate_duration": 10.0,
-                "quantity": 0,
+                "prev_elapsed_time": 0
+            }
+        },
+        {
+            "id": 7,
+            "name": "knife",
+            "description": "for butchering",
+            "toplevel": false,
+            "growable": "not_growable",
+            "result_qty": 1,
+            "sources": {},
+            "progress": {
+                "quantity": 1,
+                "rate_amount": 1.0,
+                "rate_duration": 1.0,
                 "prev_elapsed_time": 0
             }
         }
@@ -72,8 +96,8 @@
     ],
     "overall": {
         "title": "Grab the Bacon",
-        "description": "A character starts in location 1, must go to location 3, get an item there, then return to location 1. To go to a destination, a character must be in one of the allowable source locations. On item screen, specify max number of items gainable, for example, 1.",
-        "winning_item": null,
-        "winning_quantity": 0
+        "description": "A character starts in location 1, must go to location 3, get an item there, then return to location 1.",
+        "winning_item": 4,
+        "winning_quantity": 1
     }
 }

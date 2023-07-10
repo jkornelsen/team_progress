@@ -61,14 +61,14 @@
     <div class="flexdiv">
         {% if game.characters %}
             <div class="select-box">
-                <select id="character-select">
+                <select id="char-select">
                     {% for char in game.characters %}
                         <option value="{{ char.id }}">{{ char.name }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="modify-button">
-                <button onclick="configureSelected('character')">Modify Character</button>
+                <button onclick="configureSelected('char')">Modify Character</button>
             </div>
         {% else %}
             <p class="no-items">(No characters)</p>

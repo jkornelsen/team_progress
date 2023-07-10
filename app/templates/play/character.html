@@ -29,7 +29,7 @@
             <div class="flexdiv">
                 <label for="destination-select">Travel To</label>
                 <select id="destination-select" class="select-box">
-                    <option value="">(Select destination)</option>
+                    <option value="" data-distance="-1">(Select destination)</option>
                     {% for destination, distance in current.location.destinations.items() %}
                         <option value="{{ destination.id }}" data-distance="{{ distance }}"
                             {% if current.destination and destination.id == current.destination.id %}
@@ -54,9 +54,11 @@
     <ul>
         {% for item, slot in current.items.items() if slot %}
             <li>
-                <a href="{{ url_for('play_item', item_id=item.id) }}">{{ item.name }}</a> -
-                Slot: {{ slot }}
+                <a href="{{ url_for('play_item', item_id=item.id) }}">{{ item.name }}</a>
+                &mdash; {{ slot }}
             </li>
+        {% else %}
+            (None)
         {% endfor %}
     </ul>
 
@@ -66,6 +68,8 @@
             <li>
                 <a href="{{ url_for('play_item', item_id=item.id) }}">{{ item.name }}</a>
             </li>
+        {% else %}
+            (None)
         {% endfor %}
     </ul>
     {% endif %}
@@ -80,14 +84,22 @@
         $(document).ready(function() {
             function updateTravelProgress() {
                 const destSel = $('#destination-select');
+                const selectedOption = destSel.find(":selected");
+                const distance = selectedOption.data("distance");
                 const destinationId = destSel.val();
-                const distance = destSel.data('distance');
                 const destInfo = $('#destination-info');
                 const destDist = $('#destination-distance');
                 if (destinationId) {
                     $.get('/char/progress_quantity/{{ current.id }}', function(data) {
-                        destDist.text('Distance ' + data.quantity + ' of ' + distance);
-                        destInfo.show();
+                        if (data.hasOwnProperty('status') && data.status === 'arrived') {
+                            location.reload();
+                        } else if (data.hasOwnProperty('error') && data.error === 'No travel destination.') {
+                            console.log(data.error);
+                        } else {
+                            const quantity = data.hasOwnProperty('quantity') ? data.quantity : -1;
+                            destDist.text('Distance: ' + quantity + ' of ' + distance);
+                            destInfo.show();
+                        }
                     });
                 } else {
                     destInfo.hide();
@@ -127,8 +139,7 @@
             setInterval(function() {
                 updateTravelProgress();
                 updateStartbuttonLabel();
-            //}, 1000);
-            }, 5000);
+            }, 1000);
 
             $('#destination-select').change(function() {
                 updateTravelProgress();

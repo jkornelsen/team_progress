@@ -25,7 +25,7 @@ class Overall:
         return {
             'title': cls.title,
             'description': cls.description,
-            'winning_item': cls.winning_item,
+            'winning_item': cls.winning_item.id if cls.winning_item else None,
             'winning_quantity': cls.winning_quantity
         }
 
@@ -35,7 +35,7 @@ class Overall:
         cls.description = data['description']
         winning_item_id = data['winning_item']
         if winning_item_id is not None:
-            cls.winning_item = Item.get_by_id(winning_item_id)
+            cls.winning_item = Item.get_by_id(int(winning_item_id))
             cls.winning_quantity = data['winning_quantity']
         else:
             cls.winning_item = None
@@ -46,6 +46,7 @@ class Overall:
         if request.method == 'POST':
             if 'save_changes' in request.form:
                 print("Saving changes.")
+                print(request.form)
                 cls.title = request.form.get('scenario_title')
                 cls.description = request.form.get('scenario_description')
                 winning_item_id = request.form.get('winning_item')

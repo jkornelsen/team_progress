@@ -1,0 +1,44 @@
+{
+    "characters": [],
+    "items": [
+        {
+            "id": 2,
+            "name": "ink",
+            "description": "",
+            "toplevel": false,
+            "growable": "over_time",
+            "result_qty": 1,
+            "sources": {},
+            "progress": {
+                "quantity": 0,
+                "rate_amount": 1.0,
+                "rate_duration": 1.0,
+                "prev_elapsed_time": 0
+            }
+        },
+        {
+            "id": 4,
+            "name": "pen",
+            "description": "",
+            "toplevel": true,
+            "growable": "over_time",
+            "result_qty": 1,
+            "sources": {
+                "2": 1
+            },
+            "progress": {
+                "quantity": 0,
+                "rate_amount": 1.0,
+                "rate_duration": 1.0,
+                "prev_elapsed_time": 0
+            }
+        }
+    ],
+    "locations": [],
+    "overall": {
+        "title": "Generic Adventure",
+        "description": "An empty scenario. To begin, go to \"Change Setup\". You'll probably want to change the title and this description in addition to doing some basic setup such as adding a few starting items.",
+        "winning_item": null,
+        "winning_quantity": 0
+    }
+}
