@@ -9,8 +9,8 @@
     <h1>Item Setup</h1>
     <form method="post">
         <label for="item-name">Name:</label>
-        <input type="text" id="item-name" name="item_name" value="{{ current.name }}" required><br>
-        <p>ID: {{ current.id }}</p>
+        <input type="text" id="item-name" name="item_name" value="{{ current.name }}" required>
+        ID: {{ current.id }}<br>
         <label for="item-description" >Description:</label>
         <textarea id="item-description" name="item_description" rows="4" cols="50">{{ current.description }}</textarea><br>
         <label for="item-quantity">Quantity:</label>

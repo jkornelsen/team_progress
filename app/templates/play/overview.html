@@ -22,6 +22,12 @@
         {{ overall.title }}
     </h1>
     <p><center>{{ overall.description }}</center></p>
+    {% if overall.winning_item %}
+<!--
+    <p>Need {{ overall.winning_quantity }} {{ overall.winning_item.name }} to win.</p>
+    <p>Currently have {{ overall.winning_item.progress.quantity }}.</p>
+-->
+    {% endif %}
     {% if overall.game_data.items %}
         <table cellspacing="0" cellpadding="5">
             <tr>

@@ -10,7 +10,7 @@ to start with, implement attributes as manual only,
 not automatically affecting event chances or outcomes
 would need to manually adjust event chances based on attrs involved
 
-to do soon: require character in location for item progress
+require character in location for item progress
 that means on /play/item, we would need to select a character to do the exchange
 so add a dropdown list of characters on that screen
 also require worn item
@@ -20,4 +20,9 @@ maybe have a checkbox that the item won't get consumed during the exchange
 ---- Issues ----
 
 Progress is yielding too many results in some cases, maybe doubling.
+
+Watching progress every second isn't smooth enough.
+Perhaps send AJAX request every 0.5 seconds.
+
+Stop travel didn't work.
 

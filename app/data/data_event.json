@@ -1,17 +1,18 @@
 {
     "events": [
         {
-            "id": 3,
-            "name": "step over dog",
-            "description": "try not to wake it up",
+            "id": 2,
+            "name": "step over sleeping dog",
+            "description": "If it goes badly, the dog might wake up.",
             "toplevel": true,
-            "difficulty_values": {
+            "base_difficulty": {
                 "Easy": 5,
                 "Moderate": 10,
                 "Hard": 15,
                 "Very Hard": 20
             },
-            "outcome_margin": 9
+            "outcome_margin": 10,
+            "stat_adjustment": 0
         }
     ],
     "characters": [],

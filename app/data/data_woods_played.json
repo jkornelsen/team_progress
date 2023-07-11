@@ -1,4 +1,34 @@
 {
+    "events": [
+        {
+            "id": 2,
+            "name": "Travel",
+            "description": "Chance of something happening during our trip, or whether it is a safe trip.",
+            "toplevel": true,
+            "base_difficulty": {
+                "Easy": 5,
+                "Moderate": 10,
+                "Hard": 15,
+                "Very Hard": 20
+            },
+            "outcome_margin": 10,
+            "stat_adjustment": 0
+        },
+        {
+            "id": 4,
+            "name": "Phone",
+            "description": "See if we can connect.",
+            "toplevel": true,
+            "base_difficulty": {
+                "Easy": 5,
+                "Moderate": 10,
+                "Hard": 15,
+                "Very Hard": 20
+            },
+            "outcome_margin": 10,
+            "stat_adjustment": 0
+        }
+    ],
     "characters": [
         {
             "id": 2,
@@ -8,12 +38,27 @@
             "items": {
                 "7": "main hand"
             },
-            "location_id": 6,
+            "location_id": 2,
             "progress": {
                 "quantity": 1.0,
                 "rate_amount": 1.0,
                 "rate_duration": 1.0,
-                "prev_elapsed_time": 11.658744096755981
+                "prev_elapsed_time": 47.92503786087036
+            },
+            "dest_id": null
+        },
+        {
+            "id": 4,
+            "name": "Mom",
+            "description": "Suzy's mother",
+            "char_type": "user1",
+            "items": {},
+            "location_id": 2,
+            "progress": {
+                "quantity": 1.0,
+                "rate_amount": 1.0,
+                "rate_duration": 1.0,
+                "prev_elapsed_time": 13.684030532836914
             },
             "dest_id": null
         }
@@ -28,10 +73,10 @@
             "result_qty": 1,
             "sources": {},
             "progress": {
-                "quantity": 2,
+                "quantity": 6,
                 "rate_amount": 1.0,
-                "rate_duration": 60.0,
-                "prev_elapsed_time": 156.2120852470398
+                "rate_duration": 20.0,
+                "prev_elapsed_time": 123.65351414680481
             }
         },
         {
@@ -48,7 +93,7 @@
                 "quantity": 0,
                 "rate_amount": 10.0,
                 "rate_duration": 10.0,
-                "prev_elapsed_time": 0
+                "prev_elapsed_time": 22.460339784622192
             }
         },
         {
@@ -64,6 +109,23 @@
                 "rate_amount": 1.0,
                 "rate_duration": 1.0,
                 "prev_elapsed_time": 0
+            }
+        },
+        {
+            "id": 9,
+            "name": "Cooked Bacon",
+            "description": "Cooked on the wood stove in a cast iron skillet at home.",
+            "toplevel": false,
+            "growable": "over_time",
+            "result_qty": 1,
+            "sources": {
+                "4": 1
+            },
+            "progress": {
+                "quantity": 30,
+                "rate_amount": 1.0,
+                "rate_duration": 1.0,
+                "prev_elapsed_time": 30.183175563812256
             }
         }
     ],
@@ -96,8 +158,8 @@
     ],
     "overall": {
         "title": "Grab the Bacon",
-        "description": "A character starts in location 1, must go to location 3, get an item there, then return to location 1.",
-        "winning_item": 4,
-        "winning_quantity": 1
+        "description": "Suzy must get bacon from the pig farm and then return home to cook it.",
+        "winning_item": 9,
+        "winning_quantity": 15
     }
 }

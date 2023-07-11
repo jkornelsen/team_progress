@@ -19,7 +19,8 @@
     <h1>Character Setup</h1>
     <form method="post">
         <label for="character-name">Name:</label>
-        <input type="text" id="character-name" name="char_name" value="{{ current.name }}" required><br>
+        <input type="text" id="character-name" name="char_name" value="{{ current.name }}" required>
+        ID: {{ current.id }}<br>
         <label for="character-description">Description:</label>
         <textarea id="character-description" name="char_description" rows="4" cols="50">{{ current.description }}</textarea><br>
         <label for="character-type">Type:</label>

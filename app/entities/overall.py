@@ -64,6 +64,7 @@ class Overall:
         else:
             return render_template(
                 'configure/overall.html', overall=cls)
+
 def set_routes(app):
     @app.route('/overview')
     def overview():

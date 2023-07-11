@@ -29,15 +29,17 @@
         <tr>
             <td>
                 <form method="POST" action="{{ url_for('play_event', event_id=current.id) }}">
-                    <label for="event_difficulty">Difficulty:</label>
-                    <input type="number" id="event_difficulty" name="event_difficulty" value="{{ current.adjusted_difficulty }}">
-                    <br>
-                    <label for="event_outcome_margin">Outcome Margin:</label>
-                    <input type="number" id="event_outcome_margin" name="event_outcome_margin" value="{{ current.outcome_margin }}">
-                    <br>
+                    <label for="event-difficulty">Difficulty:</label>
+                    <select id="event-difficulty" name="event_difficulty">
+                        {% for difficulty, value in current.difficulty_values.items() %}
+                            <option value="{{ difficulty }}" {% if difficulty == current.difficulty %}selected{% endif %}>{{ difficulty }} ({{ value }})</option>
+                        {% endfor %}
+                    </select><br>
                     <label for="event_stat_adjustment">Stat Adjustment:</label>
                     <input type="number" id="event_stat_adjustment" name="event_stat_adjustment" value="{{ current.stat_adjustment }}">
                     <br>
+                    <label for="event_outcome_margin">Outcome Margin:</label>
+                    {{ current.outcome_margin }}<br>
                     <button type="submit" id="roll-btn">Roll</button>
                 </form>
             </td>

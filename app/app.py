@@ -75,10 +75,10 @@ def save_to_file():
 def load_from_file():
     with open(FILEPATH, 'r') as infile:
         data = json.load(infile)
-        Overall.from_json(data['overall'])
         Location.list_from_json(data['locations'])
         Item.list_from_json(data['items'])
         Character.list_from_json(data['characters'])
+        Overall.from_json(data['overall'])
         Event.list_from_json(data['events'])
     session['file_message'] = 'Loaded from file.'
     return redirect(url_for('configure'))

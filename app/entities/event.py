@@ -14,6 +14,10 @@ OUTCOMES = [
     "Minor Failure",
     "Minor Success",
     "Major Success"]
+(OUTCOME_CRITICAL_FAILURE,
+ OUTCOME_MINOR_FAILURE,
+ OUTCOME_MINOR_SUCCESS,
+ OUTCOME_MAJOR_SUCCESS) = range(len(OUTCOMES))
 
 def roll_dice(sides):
     return random.randint(1, sides)
@@ -32,15 +36,16 @@ class Event:
         self.name = ""
         self.description = ""
         self.toplevel = False if len(self.__class__.instances) > 1 else True
-        self.base_difficulty = {  # specified on configure screen
+        self.outcome_margin = 9  # difference required to get major or critical
+        self.difficulty_values = {  # specified on configure screen
                 'Easy': 5,
                 'Moderate': 10,
                 'Hard': 15,
                 'Very Hard': 20,
             }
-        self.outcome_margin = 10
-        self.adjusted_difficulty = {}  # may be adjusted on play screen
+        self.difficulty = 'Moderate'  # which one for a particular occurrence
         self.stat_adjustment = 0  # for example, 5 for perception
+        self.advantage = 0  # for example +1 means best of two rolls
         self.outcome = 0
 
     @classmethod
@@ -50,41 +55,14 @@ class Event:
             (instance for instance in cls.instances
             if instance.id == id_to_get), None)
 
-    def get_outcome(self):
-        difficulty = self.adjusted_difficulty or self.base_difficulty
-        roll = self.stat_adjustment + roll_dice(20)
-        total = roll - difficulty
-        if total <= -self.outcome_margin:
-            self.outcome = 0  # Critical failure
-        elif total <= 0:
-            self.outcome = 1  # Minor Failure
-        elif total <= self.outcome_margin:
-            self.outcome = 2  # Minor Success
-        else:
-            self.outcome = 3  # Major Success
-        display = (
-            "Difficulty {}, Outcome Margin {}<br>"
-            "Stat Adjustment {} + 1d20 ({}) = {}<br>"
-            "Outcome is a {}."
-        ).format(
-            difficulty,
-            self.outcome_margin,
-            self.stat_adjustment,
-            roll,
-            total,
-            OUTCOMES[self.outcome],
-        )
-        return display
-
     def to_json(self):
         return {
             'id': self.id,
             'name': self.name,
             'description': self.description,
             'toplevel': self.toplevel,
-            'base_difficulty': self.base_difficulty,
+            'difficulty_values': self.difficulty_values,
             'outcome_margin': self.outcome_margin,
-            'stat_adjustment': self.stat_adjustment,
         }
 
     @classmethod
@@ -93,9 +71,8 @@ class Event:
         event.name = data['name']
         event.description = data['description']
         event.toplevel = data['toplevel']
-        event.base_difficulty = data['base_difficulty']
+        event.difficulty_values = data['difficulty_values']
         event.outcome_margin = data['outcome_margin']
-        event.stat_adjustment = data['stat_adjustment']
         cls.instances.append(event)
         return event
 
@@ -116,15 +93,11 @@ class Event:
                     self.__class__.instances.append(self)
                 self.name = request.form.get('event_name')
                 self.description = request.form.get('event_description')
-                self.base_difficulty = {
-                    'Easy': 5,
-                    'Moderate': 10,
-                    'Hard': 15,
-                    'Very Hard': 20
-                }
-                self.adjusted_difficulty = int(request.form.get('event_difficulty'))
+                self.toplevel = bool(request.form.get('top_level'))
+                for difficulty in self.difficulty_values:
+                    new_value = int(request.form.get(f'difficulty_{difficulty}'))
+                    self.difficulty_values[difficulty] = new_value
                 self.outcome_margin = int(request.form.get('event_outcome_margin'))
-                self.stat_adjustment = int(request.form.get('event_stat_adjustment'))
             elif 'delete_event' in request.form:
                 self.__class__.instances.remove(self)
             elif 'cancel_changes' in request.form:
@@ -145,13 +118,37 @@ class Event:
         if request.method == 'POST':
             print("Saving changes.")
             print(request.form)
-            self.adjusted_difficulty = int(request.form.get('event_difficulty'))
-            self.outcome_margin = int(request.form.get('event_outcome_margin'))
+            self.difficulty = request.form.get('event_difficulty')
             self.stat_adjustment = int(request.form.get('event_stat_adjustment'))
             return render_template('play/event.html', current=self,
                 outcome=self.get_outcome())
         else:
             return render_template('play/event.html', current=self)
+
+    def get_outcome(self):
+        difficulty_value = self.difficulty_values[self.difficulty]
+        roll = roll_dice(20)
+        total = roll + self.stat_adjustment - difficulty_value
+        if total <= -self.outcome_margin:
+            self.outcome = OUTCOME_CRITICAL_FAILURE
+        elif total <= 0:
+            self.outcome = OUTCOME_MINOR_FAILURE
+        elif total < self.outcome_margin:
+            self.outcome = OUTCOME_MINOR_SUCCESS
+        else:
+            self.outcome = OUTCOME_MAJOR_SUCCESS
+        display = (
+            "1d20 ({}) + Stat Adjustment {} - Difficulty {} = {}<br>"
+            "Outcome is a {}."
+        ).format(
+            roll,
+            self.stat_adjustment,
+            difficulty_value,
+            total,
+            OUTCOMES[self.outcome],
+        )
+        return display
+
 
 def set_routes(app):
     @app.route('/configure/event/<event_id>', methods=['GET', 'POST'])

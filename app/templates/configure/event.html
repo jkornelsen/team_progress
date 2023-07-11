@@ -9,20 +9,19 @@
     <h1>Event Setup</h1>
     <form method="post">
         <label for="event-name">Name:</label>
-        <input type="text" id="event-name" name="event_name" value="{{ current.name }}" required><br>
-        <p>ID: {{ current.id }}</p>
+        <input type="text" id="event-name" name="event_name" value="{{ current.name }}" required>
+        ID: {{ current.id }}<br>
         <label for="event-description" >Description:</label>
         <textarea id="event-description" name="event_description" rows="4" cols="50">{{ current.description }}</textarea><br>
-        <label for="event-difficulty">Base Difficulty:</label>
-        <select id="event-difficulty" name="event_difficulty">
-            {% for difficulty, value in current.base_difficulty.items() %}
-                <option value="{{ value }}" {% if current.adjusted_difficulty == value %}selected{% endif %}>{{ difficulty }}</option>
-            {% endfor %}
-        </select><br>
+        <input type="checkbox" id="top_level" name="top_level" {% if current.toplevel %}checked{% endif %}>
+        <label for="top_level">Show in Overview</label><br>
+        <label>Base Difficulty:</label>
+        {% for difficulty in current.difficulty_values %}
+            <label for="difficulty-{{ difficulty }}">{{ difficulty }}</label>
+            <input type="number" id="difficulty-{{ difficulty }}" name="difficulty_{{ difficulty }}" value="{{ current.difficulty_values[difficulty] }}" required>
+        {% endfor %}<br>
         <label for="event-outcome-margin">Outcome Margin:</label>
         <input type="number" id="event-outcome-margin" name="event_outcome_margin" value="{{ current.outcome_margin }}"><br>
-        <label for="event-stat-adjustment">Stat Adjustment:</label>
-        <input type="number" id="event-stat-adjustment" name="event_stat_adjustment" value="{{ current.stat_adjustment }}"><br>
 
         <button type="submit" id="btn-save" name="save_changes">Save and Continue</button>
         <button type="submit" id="btn-cancel" name="cancel_changes" formnovalidate>Cancel Changes</button>
