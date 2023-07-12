@@ -23,13 +23,8 @@
         ID: {{ current.id }}<br>
         <label for="character-description">Description:</label>
         <textarea id="character-description" name="char_description" rows="4" cols="50">{{ current.description }}</textarea><br>
-        <label for="character-type">Type:</label>
-        <select id="character-type-select" name="char_type">
-            {% set options = [('user1', 'For Player 1'), ('user2', 'For Player 2'), ('npc', 'NPC')] %}
-            {% for value, text in options %}
-                <option value="{{ value }}" {% if current.char_type == value %}selected{% endif %}>{{ text }}</option>
-            {% endfor %}
-        </select><br>
+        <input type="checkbox" id="top_level" name="top_level" {% if current.toplevel %}checked{% endif %}>
+        <label for="top_level">Show in Overview</label><br>
 
         <label for="character-location">Location:</label>
         <select id="character-location" name="char_location">
@@ -41,9 +36,8 @@
             {% endfor %}
         </select><br>
 
-        <h2>Attributes</h2>
-        <p>TODO</p>
 <!--
+        <h2>Attributes</h2>
         <div id="attributes-container">
             <label for="character-xp">XP:</label>
             <input type="number" id="character-xp" name="char_xp" value="{{ current.xp }}" class="attribute-field"><br>
@@ -53,6 +47,35 @@
             <input type="number" id="character-charisma" name="char_charisma" value="{{ current.charisma }}" class="attribute-field"><br>
         </div>
 -->
+
+        <div id="attrib-container" style="border: 1px solid #ccc; padding: 10px;">
+                {% for attrib, attrib_val in current.attribs.items() %}
+                    <div class="attrib flexdiv" data-attrib-id="{{ attrib.id }}">
+                        <input type="hidden" name="attrib_id" value="{{ attrib.id }}">
+                        {{ attrib.name }}
+                        <input type="number" id="attrib-{{ attrib.id }}-val" name="attrib_val_{{ attrib.id }}" value="{{ attrib_val }}">
+                        <button class="remove-attrib-btn lesser-button">Remove Attribute</button>
+                    </div>
+                {% endfor %}
+
+                <!-- Placeholder for appending new attribs -->
+                <div id="attriblist_end" style="width: 0; height: 0; opacity: 0;"></div>
+                {% if current.game_data.attribs %}
+                    <!-- Select box for adding another attrib -->
+                    <div class="select-box">
+                        <select id="add-attrib-select">
+                            <option value="" selected>(Select attribute)</option>
+                            {% for attrib in current.game_data.attribs %}
+                                <option value="{{ attrib.id }}">{{ attrib.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="button" id="add-attrib-btn" class="lesser-button">Add Attribute</button>
+                    </div>
+                {% else %}
+                    <p class="no-attributes">(No attributes)</p>
+                {% endif %}
+            </div>
+        </div>
 
         <table id="items-table">
             <thead>
@@ -136,6 +159,38 @@
             $('#items-container').on('click', '.remove-item-btn', function() {
                 var itemContainer = $(this).closest('.item');
                 itemContainer.remove();
+            });
+
+            $('#add-attrib-btn').click(function() {
+                const selectedOption = $('#add-attrib-select option:selected');
+                const attribId = selectedOption.val();
+                const attribName = selectedOption.text();
+                if (attribId == "") {
+                    return; // don't add if the selected option is the placeholder
+                }
+                const existingAttrib = $('.attrib[data-attrib-id="' + attribId + '"]');
+                if (existingAttrib.length > 0) {
+                    alert('Attribute already exists.');
+                    return;
+                }
+                // Create HTML elements for the attrib
+                const attribHtml = `
+                    <div class="attrib flexdiv" data-attrib-id="${attribId}">
+                        <input type="hidden" name="attrib_id" value="${attribId}">
+                        ${attribName}
+                        <input type="number" id="attrib-${attribId}-val" name="attrib_val_${attribId}" value="1">
+                        <button class="remove-attrib-btn lesser-button">Remove Attribute</button>
+                    </div>
+                `;
+                $('#attriblist_end').before(attribHtml);
+            });
+
+            $('#attrib-container').on('click', '.remove-attrib-btn', function() {
+                const attribContainer = $(this).closest('.attrib');
+                const attribId = attribContainer.data('attrib-id');
+
+                // Remove the attrib from the DOM
+                attribContainer.remove();
             });
         });
     </script>

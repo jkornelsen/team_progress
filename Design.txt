@@ -1,62 +1,50 @@
 networked web game
+could play competitively or as a team
 store code in github
 
 various scenarios to start the board
 partially procedurally generated
 choose goal
 
-cut down trees to build a raft
-or swim across
-or build a bridge
-stamina points
-train stamina by swimming in pool
-randomized progress
-    for example if str is 10 then hit on tree is from 8 to 10
-sources are also items, such as trees to chop down
-or they could be a required location
-sudden bad or good events may also happen
-cards aren't fixed
-    four outcomes from the card, big miss, minor miss, minor hit, big hit
-    card is customized per scenario
-    so for example, card is major loss, and if scenario is trees, lose lots of logs
+no matter what the scenario, there will be a list of the following entities:
+    overview -- scenario description and win requirements
+    items -- can be used; variety of types such as upgrades, sources
+    locations -- e.g. first room to the north
+    characters -- player or npc, with select box to specify "user 1" etc
+    events -- e.g. axe breaks; random chance that can occur once per second during action
+    attributes -- e.g. 100 max hp; also states such as poisoned or 20 hp left
 
-colorful icons to show each character, a bit like scribbl.io
-choose name
+action could be an event, or whatever was the most recent item interacted
+with for a particular character, even if the action is finished
+username and character in the same row doesn't necessarily mean that character
+is a player character
+all ongoing progress actions have a swirling icon next to the action name
 
-scenario: factory
-either maximize profits or products
-currency name: credits
+    character   location    action  player
+    ~~~~~~~~    ~~~~~~~~    ~~~~~~  ~~~~~~~~
+    Suzy        Home        Ink     mycoolusername
+    George      Woods       travel  2kul4wrds
+                            Pens    userwithoutchar
+    Peter       Woods       wolf
 
-could either play competitively or as a team
-
-scenario: fight enemies
-
-scenario: hunting for food, like UnReal World
-
-scenario: build house
-various rooms
-perhaps goal would be best house, compete but outcome is subjective
-
-scenario: race
-perhaps track meet
+icons or other images would add quite a bit of color to the game
+characters and items could have icons
+locations may even have bigger images, perhaps drawn
+what about adding a simple art screen,
+with a pencil (adjustable width) and color selection
+image sizes for each entity would be fixed, either icon size or image size
+of course, that would require more memory, not as scalable
 
 hosting possibilities:
 https://levelup.gitconnected.com/program-your-first-multiple-user-network-game-in-python-9f4cc3650de2
 https://stackoverflow.com/questions/31655085/database-on-a-personal-github-page
 
-for example, factory
-what to build is completely customizable, but suggestions are given
-    automobiles of perhaps a new or sci-fi kind, such as walkers a bit like in Hoth
-    sandwiches, pies, pizzas -- perhaps more of a kitchen than factory
-inventory is dynamic list, including for example currency
-can customize currency name, or choose from a list
-default view shows top-level items, and selecting one shows components
-
 source of resources: obtained from activities in forest which can be
 unlimited, regenerates periodically, or fixed limit.
 if unlimited, it's equivalent to saying magically produced by an activity,
 so we don't actually have a source
-    but perhaps a particular location or crafing station is required
+but a particular location or crafing station can be required
+the action stops if requirement is no longer met
 resources could be purchased
 realistic would be to start with a debt and eventually break even and better
 but can choose to make it easy and simply be given lots of money or resources to start
@@ -69,21 +57,35 @@ so if we want multiple stores, make "store 1", "store 2"
 could also divide money into "store 1 money" and "general money"
     and they could require each other to allow transfers
 
-each player has stats that are chosen at the beginning of the game
+stamina points
+train stamina by swimming in pool
+each player char has stats (attributes) that are chosen at the beginning of the game
 select from a list or specify custom
 strength, intelligence, dexterity, stamina (current/max), health (current/max)
+perception, athletics
 status conditions
+states (effects / attributes) may change over time, such as poisoning
+turn-based, not with a time delay
 
 different players may be given different authority,
 for example, only managers can spend money to open new stores
 an easy distinction would be that only the gamemaster can change setup
 
 events can pop up randomly while an action is in progress
+sudden bad or good events may also happen
+for example, outcome is critical failure, and if scenario is trees, lose lots of logs
 trigger chance is in settings, can be 0 to turn off
 for example, 1 out of 100 chance
 before the event is shown, event params are shown which can either be
 accepted or changed, and then roll for the event
 no random event can occur when progress is paused
+
+randomized progress
+for example if str is 10 then hit on tree is from 8 to 10
+chance of success for incrementing
+optionally manual rather than auto increment, like manually attempting to chop a tree
+can select a failure event from a dropdown list
+event chance may depend on stats (attributes) of characters or items involved
 
 radio in config specifies that the type is four-way outcome, on by default
 radio2: outcome is a number -- specify min and max
@@ -103,42 +105,21 @@ for quality of life, could have the ability to copy info from one entity to anot
 so an entity could be used like a template
 maybe specify a list of which attrs to copy
 call it templating or copying
-
-scenario: you have been contracted to produce as much as possible with x resources
-the client is willing to provide better tools in exchange for some products
+each entity perhaps would have a template e.g. all characters in this scenario have int
+or simply allow duplicating
 
 keep track of how many produced (for xp) as well as how many in inventory
 age could be similar to xp, increasing over time
 
-farm: breeding
-traits
-
-states (effects) may change over time, such as poisoning
-
-can set a win condition e.g. 1M credits
-or defeat a boss
-there should be a config screen for the overview of the game
-    scenario title e.g. Button Factory
-    scenario description -- other entities also have description text fields
-    color or image or text graphic
-    win condition
-ability to replay a game?
-"overall setup"
-
-chance of success for incrementing
-optionally manual rather than auto increment, like manually attempting to chop a tree
-also can select a failure event from a dropdown list
-event chance may depend on stats of characters or items involved
-there are event objects saved in data, and event occurrences which have an effect but
-are not saved
+can set a win condition to defeat a boss
+ability to replay a game
 
 quantity may be unlimited
 items may have different sets of materials
 for example, wood could come from a log or from disassembling a shelf
 or by purchasing
-but for now, keep it simple and have only one set
 On item screen, specify max number of items gainable.
-If nothing else, this could be useful for unique items, where max is 1. 
+this could be useful for unique items, where max is 1. 
 
 to cover more cases, we'd need to differentiate between materials and contained items.
 for example, a wooden box requires planks and nails to build, but could contain clothes.
@@ -147,18 +128,10 @@ or perhaps only locations need to contain things, and a wooden box could be a lo
     we could manufacture a wooded box item, then destroy it and create the unique location
 characters (players and npcs) could also contain (i.e. wear or hold) items
 
-no matter what the scenario, there will be a list of the following entities:
-    overview
-    items -- can be used
-    locations -- e.g. first room to the north
-    characters -- player or npc, with select box to specify "user 1" etc
-    events -- e.g. axe breaks; random chance that can occur once per second during action
-    attributes -- e.g. 100 max hp; also states such as poisoned or 20 hp left
-each entity perhaps would have a template e.g. all characters in this scenario have int
 entity classes might have superclasses for partially shared behavior
     players and npcs are both actors and can potentially gain xp from an action
     items and locations can both have a position, such as inside another one
-    items, sources, and states can be incremented over time
+    items and characters can be incremented over time
 
 perhaps the database is only needed for persistence
 or maybe store the game with JSON rather than in a database
@@ -174,17 +147,17 @@ a room could serve this purpose as well, containing npcs for example.
 locations could require travel time, similar to any other incremental
 or at least, they require going through place 1 and 2 in order to get to place 3
 
-location travel time could be handled by a travel Progress object of the character,
-with distances specified in the location itself
 travel could optionally take a resource such as food for each distance step
 the character object would have this food
 
-the overview screen should show all players,
-along with what they're doing and where they are
-clicking on a player would show their attributes
-
 attributes would be the main thing determining event chances,
-and attributes could be members of characters, items, locations, or top-level
+and attributes could be members of characters, items, or top-level
+or maybe not top-level, but special items could be added that could
+hold such attributes, for example a calendar item with a season attribute
+would they be useful for locations?
+for example, how dark a room is,
+or deep water would require swimming or limit evasion
+perhaps it would be better to simply mention such things in location description
 
 one attribute would be max hp
 another would be current hp
@@ -211,14 +184,7 @@ distance if season is winter
 winter would be explained in the attr description,
 and the implementation would be an input box showing * 0.9
 
-what about one to many relationships for characters to attrs?
-for example, both a rat and a player character would have current hp
-perhaps character attrs would be a dict with keys as attr obj and values as
-whatever data needs to be maintained for that character for that attribute
-for example, the attr obj would be current hp,
-and the value for a character would be 80.
-
-or the attr obj would be damage reduction,
+the attr obj would be damage reduction,
 perhaps somehow specifying that values are meant to be multipliers,
 (that could be explained in the description at least),
 and a piece of armor would have value 0.9 as the multiplier
@@ -236,11 +202,41 @@ as well as a chance at poisoning
 
 chances could be at a disadvantage (lowest of two rolls)
 or advantage (highest of two roles) based on story context
-ask chatgpt to explain the details of how e.g. a perception roll would work
-out of 20 perhaps, plus base perception stat?
 
 during encounters, time is turn-based and rotational,
 at other times, it is much freer
+
+
+---- scenarios ----
+
+cut down trees to build a raft
+or swim across
+or build a bridge
+
+scenario: factory
+either maximize profits or products
+what to build is completely customizable, but suggestions are given
+    automobiles of perhaps a new or sci-fi kind, such as walkers a bit like in Hoth
+    sandwiches, pies, pizzas -- perhaps more of a kitchen than factory
+currency name: credits
+can customize currency name, or choose from a list
+
+scenario: fight enemies
+
+scenario: hunting for food, like UnReal World
+
+scenario: build house
+various rooms
+perhaps goal would be best house, compete but outcome is subjective
+
+scenario: race
+perhaps track meet
+
+scenario: you have been contracted to produce as much as possible with x resources
+the client is willing to provide better tools in exchange for some products
+
+farm: breeding
+traits
 
 scenario: travel by train from chennai to dehradun
 limited money
@@ -256,4 +252,35 @@ sleep is a resource -- too low gives rolls disadvantage
 scenario: back to the future, or body switching
 have a certain goal to fix
 scenario: typical d&d ruleset
+
+dropdown list of scenarios selectable by their title
+
+scenario enhancement: Pen Factory
+include it as a packaged scenario
+no characters
+maximums, which can be increased with upgrades
+other upgrades increase efficiency,
+but require upgrading maximums before they can be purchased
+description of upgrades explains how to use them, i.e. manually
+
+scenario enhancement: Bacon for Dinner
+pigs require pigs as source, 2 => 3.
+if less than 2, then will have to earn money doing farm chores in
+order to get enough to buy another pig.
+requires minimum 2 pigs to win
+so multiple sources will be required.
+phone is an item, or at least an event
+Mom is also included from the start
+
+to travel from one location to another, selecting from a dropdown may
+be a bit tedious
+could have buttons instead to start travelling to a location
+perhaps we could use those instead of a single start button
+would still have a single stop button
+only a single distance display as well
+maybe display would include destination name: "Distance to Home: 3 of 10"
+since button would simply show "Travelling."
+other buttons would be greyed out if travelling.
+
+limit running progress objects to 10 concurrent per session.
 

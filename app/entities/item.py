@@ -7,6 +7,7 @@ from flask import (
     session,
     url_for
 )
+from .attrib import Attrib
 from .progress import Progress
 
 class Item:
@@ -23,11 +24,11 @@ class Item:
         self.name = ""
         self.description = ""
         self.toplevel = False if len(self.__class__.instances) > 1 else True
+        self.attribs = {}  # keys are Attrib object, values are stat val
         self.progress = Progress()
         self.growable = 'over_time'
         self.sources = {}  # keys Item object, values quantity required
         self.result_qty = 1  # how many one batch yields
-        self.contained_by = None  # Location or Character object
 
     @classmethod
     def get_by_id(cls, id_to_get):
@@ -47,30 +48,36 @@ class Item:
             'sources': {
                 item.id: quantity
                 for item, quantity in self.sources.items()},
+            'attribs': {
+                attrib.id: val
+                for attrib, val in self.attribs.items()},
             'progress': self.progress.to_json(),
         }
 
     @classmethod
     def from_json(cls, data, source_ids):
-        item = cls(int(data['id']))
-        item.name = data['name']
-        item.description = data.get('description', '')
-        item.toplevel = data['toplevel']
-        item.growable = data['growable']
-        item.result_qty = data.get('result_qty', 1)
-        item.progress = Progress.from_json(data['progress'])
-        item.progress.step_size = item.result_qty
-        source_ids[item.id] = {
+        instance = cls(int(data['id']))
+        instance.name = data['name']
+        instance.description = data.get('description', '')
+        instance.toplevel = data['toplevel']
+        instance.growable = data['growable']
+        instance.result_qty = data.get('result_qty', 1)
+        instance.progress = Progress.from_json(data['progress'])
+        instance.progress.step_size = instance.result_qty
+        source_ids[instance.id] = {
             int(source_id): quantity
-            for source_id, quantity in data['sources'].items()
-        }
-        cls.instances.append(item)
-        return item
+            for source_id, quantity in data['sources'].items()}
+        instance.attribs = {
+            Attrib.get_by_id(int(attrib_id)): val
+            for attrib_id, val in data['attribs'].items()}
+        cls.instances.append(instance)
+        return instance
 
     @classmethod
     def list_from_json(cls, json_data):
         cls.instances.clear()
         source_ids = {}
+        attrib_ids = {}
         for item_data in json_data:
             cls.from_json(item_data, source_ids)
         cls.last_id = max(
@@ -79,9 +86,7 @@ class Item:
         for item in cls.instances:
             item.sources = {
                 cls.get_by_id(source_id): quantity
-                for source_id, quantity in
-                source_ids.get(item.id, {}).items()
-            }
+                for source_id, quantity in source_ids.get(item.id, {}).items()}
             item.progress.sources = item.sources
         return cls.instances
 
@@ -107,6 +112,16 @@ class Item:
                     self.sources[source_item] = source_quantity
                 print("Sources: ", {source.name: quantity
                     for source, quantity in self.sources.items()})
+                attrib_ids = request.form.getlist('attrib_id')
+                print(f"Attrib IDs: {attrib_ids}")
+                self.attribs = {}
+                for attrib_id in attrib_ids:
+                    attrib_val = int(
+                        request.form.get(f'attrib_val_{attrib_id}', 0))
+                    attrib_item = Attrib.get_by_id(attrib_id)
+                    self.attribs[attrib_item] = attrib_val
+                print("attribs: ", {attrib.name: val
+                    for attrib, val in self.attribs.items()})
                 was_running = self.progress.is_running
                 if was_running:
                     self.progress.stop()
@@ -119,6 +134,7 @@ class Item:
                     rate_amount=float(request.form.get('rate_amount')),
                     rate_duration=float(request.form.get('rate_duration')),
                     sources=self.sources)
+                self.progress.limit = int(request.form.get('item_limit'))
                 if was_running:
                     self.progress.start()
             elif 'delete_item' in request.form:

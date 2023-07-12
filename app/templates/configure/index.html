@@ -78,6 +78,25 @@
         </div>
     </div>
     <div class="flexdiv">
+        {% if game.attribs %}
+            <div class="select-box">
+                <select id="attrib-select">
+                    {% for attrib in game.attribs %}
+                        <option value="{{ attrib.id }}">{{ attrib.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="modify-button">
+                <button onclick="configureSelected('attrib')">Modify Attribute</button>
+            </div>
+        {% else %}
+            <p class="no-items">(No attributes)</p>
+        {% endif %}
+        <div class="entitylist-container">
+            <a href="/configure/attrib/new">Add New</a>
+        </div>
+    </div>
+    <div class="flexdiv">
         {% if game.events %}
             <div class="select-box">
                 <select id="event-select">

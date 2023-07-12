@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ config['TITLE'] }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Session Link</h1>
+    <p>Share the following link with others to join the game session:</p>
+    <p><a href="{{ url }}">{{ url }}</a></p>
+</body>
+</html>

@@ -7,6 +7,7 @@ from flask import (
     session,
     url_for
 )
+from .attrib import Attrib
 from .item import Item
 from .location import Location
 from .progress import Progress
@@ -24,12 +25,13 @@ class Character:
             self.id = new_id
         self.name = ""
         self.description = ""
-        self.char_type = "npc"  # NPC or for a particular player
-        self.attributes = []  # list of Attribute objects
+        self.toplevel = False if len(self.__class__.instances) > 1 else True
+        self.attribs = {}  # keys are Attrib object, values are stat val
         self.items = {}  # keys are Item object, values are slot name
         self.location = None  # Location object
         self.progress = Progress()  # for travel or perhaps other actions
         self.destination = None  # Location object to travel to
+        self.user_id = ""
 
     @classmethod
     def get_by_id(cls, id_to_get):
@@ -43,8 +45,11 @@ class Character:
             'id': self.id,
             'name': self.name,
             'description': self.description,
-            'char_type': self.char_type,
+            'toplevel': self.toplevel,
             'items': {item.id: slot for item, slot in self.items.items()},
+            'attribs': {
+                attrib.id: val
+                for attrib, val in self.attribs.items()},
             'location_id': self.location.id if self.location else None,
             'progress': self.progress.to_json(),
             'dest_id': self.destination.id if self.destination else None
@@ -52,17 +57,21 @@ class Character:
 
     @classmethod
     def from_json(cls, data):
-        char = cls(int(data['id']))
-        char.name = data['name']
-        char.description = data.get('description', '')
-        char.char_type = data['char_type']
-        char.items = {
+        instance = cls(int(data['id']))
+        instance.name = data['name']
+        instance.description = data.get('description', '')
+        instance.toplevel = data['toplevel']
+        instance.items = {
             Item.get_by_id(int(item_id)): slot
             for item_id, slot in data['items'].items()}
-        char.location = Location.get_by_id(int(data['location_id']))
-        char.progress = Progress.from_json(data['progress'])
-        cls.instances.append(char)
-        return char
+        instance.attribs = {
+            Attrib.get_by_id(int(attrib_id)): val
+            for attrib_id, val in data['attribs'].items()}
+        instance.location = Location.get_by_id(
+            int(data['location_id'])) if data['location_id'] else None
+        instance.progress = Progress.from_json(data['progress'])
+        cls.instances.append(instance)
+        return instance
 
     @classmethod
     def list_from_json(cls, json_data):
@@ -82,7 +91,7 @@ class Character:
                     self.__class__.instances.append(self)
                 self.name = request.form.get('char_name')
                 self.description = request.form.get('char_description')
-                self.char_type = request.form.get('char_type')
+                self.toplevel = bool(request.form.get('top_level'))
                 item_ids = request.form.getlist('item_id[]')
                 item_slots = request.form.getlist('item_slot[]')
                 self.items = {}
@@ -93,6 +102,16 @@ class Character:
                 location_id = request.form.get('char_location')
                 self.location = Location.get_by_id(
                     int(location_id)) if location_id else None
+                attrib_ids = request.form.getlist('attrib_id')
+                print(f"Attrib IDs: {attrib_ids}")
+                self.attribs = {}
+                for attrib_id in attrib_ids:
+                    attrib_val = int(
+                        request.form.get(f'attrib_val_{attrib_id}', 0))
+                    attrib_item = Attrib.get_by_id(attrib_id)
+                    self.attribs[attrib_item] = attrib_val
+                print("attribs: ", {attrib.name: val
+                    for attrib, val in self.attribs.items()})
             elif 'delete_character' in request.form:
                 self.__class__.instances.remove(self)
             elif 'cancel_changes' in request.form:

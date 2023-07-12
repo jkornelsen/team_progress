@@ -22,6 +22,7 @@ class Location:
         self.name = ""
         self.description = ""
         self.destinations = {}  # keys are Location object, values are distance
+        self.items = []  # list of Item objects currently at this location
 
     @classmethod
     def get_by_id(cls, id_to_get):
@@ -43,15 +44,15 @@ class Location:
 
     @classmethod
     def from_json(cls, data, destination_ids):
-        location = cls(int(data['id']))
-        location.name = data['name']
-        location.description = data.get('description', '')
-        destination_ids[location.id] = {
+        instance = cls(int(data['id']))
+        instance.name = data['name']
+        instance.description = data.get('description', '')
+        destination_ids[instance.id] = {
             int(dest_id): distance
             for dest_id, distance in data['destinations'].items()
         }
-        cls.instances.append(location)
-        return location
+        cls.instances.append(instance)
+        return instance
 
     @classmethod
     def list_from_json(cls, json_data):
@@ -100,7 +101,7 @@ class Location:
                 return redirect(url_for('configure'))
         else:
             return render_template(
-                'configure/location.html', current_location=self,
+                'configure/location.html', current=self,
                 game=self.__class__.game_data)
 
     def distance(self, other_location):

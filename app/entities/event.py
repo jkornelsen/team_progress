@@ -10,7 +10,7 @@ from flask import (
 import random
 
 OUTCOMES = [
-    "Critical failure",
+    "Critical Failure",
     "Minor Failure",
     "Minor Success",
     "Major Success"]
@@ -67,14 +67,14 @@ class Event:
 
     @classmethod
     def from_json(cls, data):
-        event = cls(data['id'])
-        event.name = data['name']
-        event.description = data['description']
-        event.toplevel = data['toplevel']
-        event.difficulty_values = data['difficulty_values']
-        event.outcome_margin = data['outcome_margin']
-        cls.instances.append(event)
-        return event
+        instance = cls(data['id'])
+        instance.name = data['name']
+        instance.description = data['description']
+        instance.toplevel = data['toplevel']
+        instance.difficulty_values = data['difficulty_values']
+        instance.outcome_margin = data['outcome_margin']
+        cls.instances.append(instance)
+        return instance
 
     @classmethod
     def list_from_json(cls, json_data):

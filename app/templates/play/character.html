@@ -49,6 +49,21 @@
         {% endif %}
     {% endif %}
 
+    {% if current.attribs %}
+    <table>
+        <tr>
+            <th>Attribute</th>
+            <th>Value</th>
+        </tr>
+        {% for attrib, attrib_val in current.attribs.items() %}
+        <tr>
+            <td>{{ attrib.name }}</td>
+            <td>{{ attrib_val }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+
     {% if current.items %}
     <h2>Worn Items</h2>
     <ul>
@@ -108,12 +123,13 @@
 
             // the Start button may change to "Running..."
             function updateStartbuttonLabel() {
-                fetch('/item/progress_running/{{ current.id }}')
+                fetch('/char/progress_running/{{ current.id }}')
                     .then(response => response.json())
                     .then(data => {
-                        const startBtn = $('#start-travel-btn');
-                        const stopBtn = $('#stop-travel-btn');
-                        const destSel = $('#destination-select');
+                        //const startBtn = $('#start-travel-btn');  // doesn't work
+                        const startBtn = document.getElementById("start-travel-btn");
+                        const stopBtn = document.getElementById("stop-travel-btn");
+                        const destSel = document.getElementById("destination-select");
                         if (data.is_running) {
                             startBtn.innerHTML = "Travelling...";
                             startBtn.disabled = true;
@@ -139,7 +155,7 @@
             setInterval(function() {
                 updateTravelProgress();
                 updateStartbuttonLabel();
-            }, 1000);
+            }, 500);
 
             $('#destination-select').change(function() {
                 updateTravelProgress();
@@ -148,10 +164,9 @@
             $('#start-travel-btn').click(function() {
                 // Start the progress for the selected destination
                 const destinationId = $('#destination-select').val();
-                const current_id = {{ current.id }};
-                console.log('startItem(): ' + current_id);
+                console.log('startItem(): ' + {{ current.id }});
                 $.ajax({
-                    url: '/char/start/' + current_id,
+                    url: '/char/start/' + {{ current.id }},
                     method: 'POST',
                     data: { dest_id: destinationId },
                     success: function(response) {
@@ -171,9 +186,8 @@
             });
             $('#stop-travel-btn').click(function() {
                 // Stop the progress
-                const current_id = {{ current.id }}
-                console.log('stopItem(): ' + current_id);
-                fetch('/item/stop/' + current_id)
+                console.log('stopItem(): ' + {{ current.id }});
+                fetch('/char/stop/' + {{ current.id }})
                     .then(response => response.json())
                     .then(data => {
                         console.log(data.message);

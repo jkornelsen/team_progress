@@ -9,6 +9,7 @@ class Progress:
     def __init__(self, step_size=1.0, rate_amount=1.0, rate_duration=1.0,
             quantity=0, sources=None):
         self.quantity = quantity  # the main value tracked
+        self.limit = 0  # limit the quantity if not 0
         self.step_size = step_size
         self.rate_amount = rate_amount
         self.rate_duration = rate_duration
@@ -24,6 +25,7 @@ class Progress:
     def to_json(self):
         return {
             'quantity': self.quantity,
+            'limit': self.limit,
             'rate_amount': self.rate_amount,
             'rate_duration': self.rate_duration,
             'prev_elapsed_time': self.prev_elapsed_time,
@@ -31,12 +33,13 @@ class Progress:
 
     @classmethod
     def from_json(cls, data):
-        progress = cls()
-        progress.quantity = data['quantity']
-        progress.rate_amount = data['rate_amount']
-        progress.rate_duration = data['rate_duration']
-        progress.prev_elapsed_time = data['prev_elapsed_time']
-        return progress
+        instance = cls()
+        instance.quantity = data['quantity']
+        instance.limit = data.get('limit', 0)
+        instance.rate_amount = data['rate_amount']
+        instance.rate_duration = data['rate_duration']
+        instance.prev_elapsed_time = data['prev_elapsed_time']
+        return instance
 
     def calc_effective(self, amount):
         """Determine source and result quantity changes by batch.
@@ -74,20 +77,33 @@ class Progress:
         for source_item, eff_source_qty in eff_source_qtys.items():
             source_item.progress.quantity -= eff_source_qty
         self.quantity += eff_result_qty
+        if self.limit != 0 and abs(self.quantity) >= abs(self.limit):
+            self.quantity = self.limit
+            self.stop()
         return True
 
     def increment_progress(self):
+        wait_periods = math.floor(self.rate_duration)
+        wait_time = math.floor(self.rate_duration / wait_periods)
         while self.is_running:
             try:
                 self.can_change_quantity(self.rate_amount)
             except Exception:
                 self.stop()
-                break
-            time.sleep(self.rate_duration)
+                return
+            for _ in range(wait_periods):
+                time.sleep(wait_time)
+                if not self.is_running:
+                    return
+            try:
+                self.can_change_quantity(self.rate_amount)
+            except Exception:
+                self.stop()
+                return
             with self.increment_lock:
                 if not self.change_quantity(self.rate_amount):
                     self.stop()
-                    break
+                    return
 
     def start(self):
         if self.rate_amount == 0:

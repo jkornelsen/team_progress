@@ -12,7 +12,17 @@
 </head>
 <body>
     <div class="nav-container">
-        <a class="upper-left" href="{{ url_for('configure') }}">Change Setup</a>
+        <a href="{{ url_for('configure') }}">Change Setup</a>
+    </div>
+    <div class="upper-right">
+        Player <span class="userid"> {{ current_user_id }}</span>
+        <span class="separator">|</span>
+        <a href="{{ url_for('logout') }}">Change User</a>
+        <span class="separator">|</span>
+        <a href="{{ url_for('get_session_link') }}">Get Session Link</a>
+        <span class="separator">|</span>
+        <a href="{{ url_for('new_session') }}" onclick="return confirm(
+            'Creating a new session will reset the game. Are you sure you want to continue?')">New Session</a>
     </div>
 
     <h1 class="{% if overall.winning_item and overall.winning_item.progress.quantity >= overall.winning_quantity %}winning-title{% endif %}">
@@ -48,29 +58,31 @@
             {% endfor %}
         </table>
     {% endif %}
-    {% set outerscope = namespace(display_section = false) %}
-    {% for char in overall.game_data.characters %}
-        {% if char.char_type != "npc" %}
-            {% set outerscope.display_section = true %}
-        {% endif %}
-    {% endfor %}
-    {% if outerscope.display_section %}
-        <h2>Player Characters</h2>
-        <ul>
-            {% for char in overall.game_data.characters %}
-                {% if char.char_type != "npc" %}
-                    <li>
-                        <a href="{{ url_for('play_char', char_id=char.id) }}">{{ char.name }}</a> &mdash;
-                        {% if char.location %}
-                            <a href="{{ url_for('play_location', location_id=char.location.id) }}">{{ char.location.name }}</a>
-                        {% else %}
-                            Not in any location
-                        {% endif %}
-                    </li>
-                {% endif %}
-            {% endfor %}
-        </ul>
-    {% endif %}
+    <table>
+        <tr>
+            <th>Character</th>
+            <th>Location</th>
+            <th>Action</th>
+            <th>Player</th>
+        </tr>
+        {% for char in charlist %}
+            <tr>
+                <td>
+                    {% if char.char_id %}
+                        <a href="{{ url_for('play_char', char_id=char.char_id) }}">{{ char.char_name }}</a>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if char.loc_id %}
+                        <a href="{{ url_for('play_location', location_id=char.loc_id) }}">{{ char.loc_name }}</a>
+                    {% endif %}
+                </td>
+                <td>{{ char.action_name }}</td>
+                <td{% if char.user_id == current_user_id %} class="userid"{% endif %}>{{ char.user_id }}</td>
+
+            </tr>
+        {% endfor %}
+    </table>
     {% set outerscope = namespace(display_section = false) %}
     {% for event in overall.game_data.events %}
         {% if event.toplevel %}

@@ -14,7 +14,9 @@
         <label for="item-description" >Description:</label>
         <textarea id="item-description" name="item_description" rows="4" cols="50">{{ current.description }}</textarea><br>
         <label for="item-quantity">Quantity:</label>
-        <input type="number" id="item-quantity" name="item_quantity" value="{{ current.progress.quantity }}"><span id="running-label"></span><br>
+        <input type="number" id="item-quantity" name="item_quantity" value="{{ current.progress.quantity }}"><span id="running-label"></span>
+        <label for="item-limit">Limit:</label>
+        <input type="number" id="item-limit" name="item_limit" value="{{ current.progress.limit }}"><br>
         <div>
             <input type="checkbox" id="top_level" name="top_level" {% if current.toplevel %}checked{% endif %}>
             <label for="top_level">Show in Overview</label><br>
@@ -75,6 +77,35 @@
             </div>
         </div>
 
+        <div id="attrib-container" style="border: 1px solid #ccc; padding: 10px;">
+                {% for attrib, attrib_val in current.attribs.items() %}
+                    <div class="attrib flexdiv" data-attrib-id="{{ attrib.id }}">
+                        <input type="hidden" name="attrib_id" value="{{ attrib.id }}">
+                        {{ attrib.name }}
+                        <input type="number" id="attrib-{{ attrib.id }}-val" name="attrib_val_{{ attrib.id }}" value="{{ attrib_val }}">
+                        <button class="remove-attrib-btn lesser-button">Remove Attribute</button>
+                    </div>
+                {% endfor %}
+
+                <!-- Placeholder for appending new attribs -->
+                <div id="attriblist_end" style="width: 0; height: 0; opacity: 0;"></div>
+                {% if current.game_data.attribs %}
+                    <!-- Select box for adding another attrib -->
+                    <div class="select-box">
+                        <select id="add-attrib-select">
+                            <option value="" selected>(Select item)</option>
+                            {% for attrib in current.game_data.attribs %}
+                                <option value="{{ attrib.id }}">{{ attrib.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="button" id="add-attrib-btn" class="lesser-button">Add Attribute</button>
+                    </div>
+                {% else %}
+                    <p class="no-attributes">(No attributes)</p>
+                {% endif %}
+            </div>
+        </div>
+
         <button type="submit" id="btn-save" name="save_changes">Save and Continue</button>
         <button type="submit" id="btn-cancel" name="cancel_changes" formnovalidate>Cancel Changes</button>
         <button type="submit" id="btn-delete" name="delete_item" class="dangerous-button">Delete Item</button>
@@ -119,19 +150,19 @@
             updateGrowableVisibility();
 
             $('#add-source-btn').click(function() {
-                var selectedOption = $('#add-source-select option:selected');
-                var sourceId = selectedOption.val();
-                var sourceName = selectedOption.text();
+                const selectedOption = $('#add-source-select option:selected');
+                const sourceId = selectedOption.val();
+                const sourceName = selectedOption.text();
                 if (sourceId == "") {
                     return; // don't add if the selected option is the placeholder
                 }
-                var existingSource = $('.source[data-source-id="' + sourceId + '"]');
+                const existingSource = $('.source[data-source-id="' + sourceId + '"]');
                 if (existingSource.length > 0) {
                     alert('Source already exists.');
                     return;
                 }
                 // Create HTML elements for the source
-                var sourceHtml = `
+                const sourceHtml = `
                     <div class="source flexdiv" data-source-id="${sourceId}">
                         <input type="hidden" name="source_id" value="${sourceId}">
                         <label>Takes:</label>
@@ -144,16 +175,49 @@
             });
 
             $('#source-container').on('click', '.remove-source-btn', function() {
-                var sourceContainer = $(this).closest('.source');
-                var sourceId = sourceContainer.data('source-id');
+                const sourceContainer = $(this).closest('.source');
+                const sourceId = sourceContainer.data('source-id');
 
                 // Remove the source from the DOM
                 sourceContainer.remove();
             });
+
+            $('#add-attrib-btn').click(function() {
+                const selectedOption = $('#add-attrib-select option:selected');
+                const attribId = selectedOption.val();
+                const attribName = selectedOption.text();
+                if (attribId == "") {
+                    return; // don't add if the selected option is the placeholder
+                }
+                const existingAttrib = $('.attrib[data-attrib-id="' + attribId + '"]');
+                if (existingAttrib.length > 0) {
+                    alert('Attribute already exists.');
+                    return;
+                }
+                // Create HTML elements for the attrib
+                const attribHtml = `
+                    <div class="attrib flexdiv" data-attrib-id="${attribId}">
+                        <input type="hidden" name="attrib_id" value="${attribId}">
+                        ${attribName}
+                        <input type="number" id="attrib-${attribId}-val" name="attrib_val_${attribId}" value="1">
+                        <button class="remove-attrib-btn lesser-button">Remove Attribute</button>
+                    </div>
+                `;
+                $('#attriblist_end').before(attribHtml);
+            });
+
+            $('#attrib-container').on('click', '.remove-attrib-btn', function() {
+                const attribContainer = $(this).closest('.attrib');
+                const attribId = attribContainer.data('attrib-id');
+
+                // Remove the attrib from the DOM
+                attribContainer.remove();
+            });
+
             $('#btn-save').click(function() {
-                var growable = $('input[name="growable"]:checked').val();
-                var rateAmount = parseFloat($('#rate-amount').val());
-                var resultQty = parseInt($('#result-quantity').val(), 10);
+                const growable = $('input[name="growable"]:checked').val();
+                const rateAmount = parseFloat($('#rate-amount').val());
+                const resultQty = parseInt($('#result-quantity').val(), 10);
                 if (growable === "over_time" && rateAmount < resultQty) {
                     alert('Rate amount must be at least as high as the result quantity (labeled "Gives").');
                     return false; // Prevent form submission

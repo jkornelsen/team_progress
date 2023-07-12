@@ -28,6 +28,24 @@
             </td>
         </tr>
         {% endif %}
+        {% if current.attribs %}
+        <tr>
+            <td>
+                <table class="inner-table" cellspacing="0" cellpadding="5">
+                    <tr>
+                        <th>Attribute</th>
+                        <th>Value</th>
+                    </tr>
+                    {% for attrib, attrib_val in current.attribs.items() %}
+                    <tr>
+                        <td>{{ attrib.name }}</td>
+                        <td>{{ attrib_val }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </td>
+        </tr>
+        {% endif %}
         {% if current.growable == 'over_time' %}
         <tr>
             <td>
@@ -117,7 +135,8 @@
             function updateQuantity() {
                 // Main item quantity
                 $.get('/item/progress_quantity/{{ current.id }}', function(data) {
-                    $('#quantity-{{ current.id }}').text(data.quantity);
+                    $('#quantity-{{ current.id }}').text(data.quantity
+                    {% if current.progress.limit != 0 %} + " / " + {{ current.progress.limit }}{% endif %});
                 });
                 // Source item quantities
                 {% for source_item, _ in current.sources.items() %}
@@ -139,8 +158,8 @@
                 fetch('/item/progress_running/{{ current.id }}')
                     .then(response => response.json())
                     .then(data => {
-                        var startBtn = document.getElementById("start-btn");
-                        var stopBtn = document.getElementById("stop-btn");
+                        const startBtn = document.getElementById("start-btn");
+                        const stopBtn = document.getElementById("stop-btn");
                         if (data.is_running) {
                             startBtn.innerHTML = "Running...";
                             startBtn.disabled = true;
@@ -170,7 +189,7 @@
                     updateElapsedTime();
                     updateStartbuttonLabel();
                 {% endif %}
-            }, 1000);
+            }, 500);
 
             // Button click event handlers
             $('#gain-btn').click(function() {
