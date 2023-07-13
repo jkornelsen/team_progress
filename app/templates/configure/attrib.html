@@ -1,11 +1,6 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{ config['TITLE'] }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block content %}
     <h1>Attribute Setup</h1>
     <form method="post">
         <label for="attrib-name">Name:</label>
@@ -34,5 +29,4 @@
             {% endif %}
         });
     </script>
-</body>
-</html>
+{% endblock %}

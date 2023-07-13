@@ -6,6 +6,12 @@
 </head>
 <body>
     <h1>Set Username</h1>
+    <p>Looks like you don't have a player name yet, so let's make one now.<br>
+    This is your ID to access the game,
+    not the name of your player's character.</p>
+    <p>For example, your username could be tom123
+    (try to avoid giving personal information),
+    while the main character you play might be named "Carpenter Bob".
     <form method="POST" action="{{ url_for('set_username') }}">
         <label for="username">Username:</label>
         <input type="text" id="username" name="username" required>

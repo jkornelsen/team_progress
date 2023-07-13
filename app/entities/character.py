@@ -125,7 +125,9 @@ class Character:
             else:
                 return redirect(url_for('configure'))
         else:
-            return render_template('configure/character.html', current=self)
+            return render_template(
+                'configure/character.html',
+                current=self, current_user_id=g.user_id)
 
 def set_routes(app):
     @app.route('/configure/char/<char_id>', methods=['GET', 'POST'])
@@ -145,7 +147,9 @@ def set_routes(app):
     def play_char(char_id):
         char = Character.get_by_id(char_id)
         if char:
-            return render_template('play/character.html', current=char)
+            return render_template(
+                'play/character.html',
+                current=char, current_user_id=g.user_id)
         else:
             return 'Character not found'
 

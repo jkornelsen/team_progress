@@ -82,7 +82,9 @@ class Attrib:
             else:
                 return redirect(url_for('configure'))
         else:
-            return render_template('configure/attrib.html', current=self)
+            return render_template(
+                'configure/attrib.html',
+                current=self, current_user_id=g.user_id)
 
 def set_routes(app):
     @app.route('/configure/attrib/<attrib_id>', methods=['GET', 'POST'])

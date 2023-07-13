@@ -43,6 +43,7 @@ class Overall:
         else:
             cls.winning_item = None
             cls.winning_quantity = 0
+        return cls
 
     @classmethod
     def configure_by_form(cls):
@@ -59,6 +60,7 @@ class Overall:
                 else:
                     cls.winning_item = None
                     cls.winning_quantity = 1
+                    session['game_data'] = cls.game_data.to_json()
             elif 'cancel_changes' in request.form:
                 print("Cancelling changes.")
             else:
@@ -66,16 +68,16 @@ class Overall:
             return redirect(url_for('configure'))
         else:
             return render_template(
-                'configure/overall.html', overall=cls)
+                'configure/overall.html',
+                current=g.game_data.overall,
+                current_user_id=g.user_id)
 
-CharacterRow = namedtuple('CharacterRow', ['char_id', 'char_name', 'loc_id', 'loc_name', 'action_name', 'action_link', 'user_id'])
+CharacterRow = namedtuple('CharacterRow',
+    ['char_id', 'char_name', 'loc_id', 'loc_name',
+    'action_name', 'action_link', 'user_id'])
 
 def get_charlist_display():
-    user_id = session.get('user_id')
     overall = g.game_data.overall
-    # Get the user_ids from the current session game token
-    game_token_user_ids = session.get('game_token_users', [])
-    #game_token_user_ids = [user.user_id for user in game_token_users]
     # Create a list to hold the character rows
     character_rows = []
     for char in overall.game_data.characters:
@@ -90,9 +92,11 @@ def get_charlist_display():
                 user_id=char.user_id
             )
             character_rows.append(row)
-    # Add separate rows for each user_id from the game token that is not in
-    # the character list
-    for user_id in game_token_user_ids:
+    # Add separate rows for each user_id of the same the game token
+    # that is not in the character list
+    game_token = session.get('game_token')
+    user_ids = session.get('game_token_users', {}).get(game_token, [])
+    for user_id in user_ids:
         if user_id not in [row.user_id for row in character_rows]:
             row = CharacterRow(
                 char_id=None,
@@ -118,12 +122,15 @@ def get_charlist_display():
 def set_routes(app):
     @app.route('/overview')
     def overview():
-        user_id = session.get('user_id')
-        overall = g.game_data.overall
-        charlist = get_charlist_display()
+        #print("session: " +
+        #    '\n    '.join([f'{key}: {value}'
+        #    for key, value in dict(session).items()]))
+        #print("g.game_data: ", vars(g.game_data))
         return render_template(
-            'play/overview.html', overall=overall, current_user_id=user_id,
-            charlist=charlist)
+            'play/overview.html',
+            current=g.game_data.overall,
+            current_user_id=g.user_id,
+            charlist=get_charlist_display())
 
     @app.route('/configure/overall', methods=['GET', 'POST'])
     def configure_overall():

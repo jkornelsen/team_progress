@@ -112,7 +112,9 @@ class Event:
             else:
                 return redirect(url_for('configure'))
         else:
-            return render_template('configure/event.html', current=self)
+            return render_template(
+                'configure/event.html',
+                current=self, current_user_id=g.user_id)
 
     def play_by_form(self):
         if request.method == 'POST':
@@ -120,10 +122,14 @@ class Event:
             print(request.form)
             self.difficulty = request.form.get('event_difficulty')
             self.stat_adjustment = int(request.form.get('event_stat_adjustment'))
-            return render_template('play/event.html', current=self,
+            return render_template(
+                'play/event.html',
+                current=self, current_user_id=g.user_id,
                 outcome=self.get_outcome())
         else:
-            return render_template('play/event.html', current=self)
+            return render_template(
+                'play/event.html',
+                current=self, current_user_id=g.user_id)
 
     def get_outcome(self):
         difficulty_value = self.difficulty_values[self.difficulty]

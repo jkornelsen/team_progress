@@ -1,11 +1,6 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Location Information</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block upper_left %}
     <div class="nav-container">
         <a class="upper-left" href="{{ url_for('overview') }}">Overview</a>
         <span class="separator">|</span>
@@ -13,6 +8,9 @@
         <span class="separator">|</span>
         <a class="upper-left" href="{{ url_for('configure_location', location_id=location.id) }}">Location Setup</a>
     </div>
+{% endblock %}
+
+{% block content %}
     <h1>{{ location.name }}</h1>
     {% if location.description %}
         <p>{{ location.description }}</p>
@@ -63,6 +61,4 @@
         {% endfor %}
     </ul>
     {% endif %}
-</body>
-</html>
-
+{% endblock %}

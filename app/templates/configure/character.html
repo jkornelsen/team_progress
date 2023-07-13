@@ -1,21 +1,6 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{ config['TITLE'] }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            // Enable or disable the attribute fields based on the selected character type
-            $('#character-type-select').change(function() {
-                var selectedOption = $(this).find(':selected');
-                var isPlayer = (selectedOption.val() === 'player');
-                $('.attribute-field').prop('disabled', !isPlayer);
-            });
-        });
-    </script>
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block content %}
     <h1>Character Setup</h1>
     <form method="post">
         <label for="character-name">Name:</label>
@@ -194,6 +179,4 @@
             });
         });
     </script>
-</body>
-</html>
-
+{% endblock %}

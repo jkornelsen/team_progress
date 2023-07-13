@@ -34,6 +34,12 @@ class GameData:
         self.items = Item.instances
         self.locations = Location.instances
         self.overall = Overall
+        Attrib.game_data = self
+        Character.game_data = self
+        Event.game_data = self
+        Item.game_data = self
+        Location.game_data = self
+        Overall.game_data = self
 
     def to_json(self):
         return {
@@ -57,52 +63,36 @@ class GameData:
         game_data.overall = Overall.from_json(data['overall'])
         return game_data
 
-def generate_game_token():
-    # Generate a new unique game token
-    game_token = str(uuid.uuid4())
-    # Initialize the game data for the new game token
-    game_data = GameData()
-    Attrib.game_data = game_data
-    Character.game_data = game_data
-    Event.game_data = game_data
-    Item.game_data = game_data
-    Location.game_data = game_data
-    Overall.game_data = game_data
-    # Associate the game data with the game token
-    session['game_token'] = game_token
-    session['game_data'] = json.dumps(game_data)
-    return game_token
-
-@app.route('/new-session', methods=['GET', 'POST'])
-def new_session():
-    if request.method == 'POST':
-        game_token = generate_game_token()
-        return redirect(url_for('overview', game_token=game_token))
-    return render_template('session/new_session.html')
-
-# When a user joins the game token or logs in
-def join_game_token(user_id):
-    #game_token_users = set(session.get('game_token_users', []))
-    game_token_users = set(session.get('game_token_users', {}).get(game_token, []))
-    game_token_users.add(user_id)
-    game_token_data = session.get('game_token_users', {})
-    game_token_data[game_token] = list(game_token_users)
-    session['game_token_users'] = game_token_data
-
 # Store game_data in the g object per user
 @app.before_request
 def before_request():
+    print("before_request()")
     game_token = session.get('game_token')
-    #user_id = session.get('user_id')
-    user_id = session.get(game_token, {}).get('user_id')
-    if user_id:
-        g.game_data = game_data
-        join_game_token(game_token, user_id)
+    g.user_id = session.get(game_token, {}).get('user_id')
+    if g.user_id:
+        game_data_json = session.get('game_data')
+        if game_data_json:
+            g.game_data = GameData.from_json(game_data_json)
+            print("setting g.game_data")
+        else:
+            g.game_data = None
+            print("no game_data")
+        join_game_token(game_token)
     else:
         g.game_data = None
 
+# When a user joins the game token or logs in
+def join_game_token(game_token):
+    print("join_game_token()")
+    game_token_data = session.get('game_token_users', {})
+    game_token_users = set(game_token_data.get(game_token, []))
+    game_token_users.add(g.user_id)
+    game_token_data[game_token] = list(game_token_users)
+    session['game_token_users'] = game_token_data
+
 @app.route('/')  # route
 def index():  # endpoint
+    print("index()")
     # Retrieve game token from URL parameter
     game_token = request.args.get('game_token')
     # If game token is provided in the URL, store it in the session
@@ -118,6 +108,26 @@ def index():  # endpoint
     if not user_id:
         return redirect(url_for('set_username'))
     return redirect(url_for('overview'))  # name of endpoint
+
+@app.route('/new-session', methods=['GET', 'POST'])
+def new_session():
+    print("new_session()")
+    if request.method == 'POST':
+        game_token = generate_game_token()
+        return redirect(url_for('overview', game_token=game_token))
+    return render_template('session/new_session.html')
+
+def generate_game_token():
+    print("generate_game_token()")
+    # Generate a new unique game token
+    game_token = str(uuid.uuid4())
+    # Initialize the game data for the new game token
+    game_data = GameData()
+    # Associate the game data with the game token
+    session['game_token'] = game_token
+    #session['game_data'] = json.dumps(game_data)
+    session['game_data'] = game_data.to_json()
+    return game_token
 
 @app.route('/set-username', methods=['GET', 'POST'])
 def set_username():
@@ -155,10 +165,11 @@ _set_overall_routes(app)
 @app.route('/configure')
 def configure():
     file_message = session.pop('file_message', False)
-    game_data = json.loads(session['game_data'])
+    #game_data = json.loads(session['game_data'])
+    game_data = GameData.from_json(session['game_data'])
     return render_template(
         'configure/index.html',
-        game=game_data,
+        game=game_data, current_user_id=g.user_id,
         file_message=file_message)
 
 FILEPATH = 'data/data.json'

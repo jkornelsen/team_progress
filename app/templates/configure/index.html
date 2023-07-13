@@ -1,11 +1,6 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{ config['TITLE'] }}</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block upper_left %}
     <div class="nav-container">
         <a class="upper-left" href="{{ url_for('overview') }}">Continue Game</a>
         <span class="separator">|</span>
@@ -16,6 +11,9 @@
     {% if file_message %}
         <p>{{ file_message }}</p>
     {% endif %}
+{% endblock %}
+
+{% block content %}
     <h1>Game Setup</h1>
     <div class="entitylist-container">
         <a href="{{ url_for('configure_overall') }}">Overall Settings</a>
@@ -123,5 +121,4 @@
             }
         }
     </script>
-</body>
-</html>
+{% endblock %}

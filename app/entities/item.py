@@ -150,7 +150,9 @@ class Item:
             else:
                 return redirect(url_for('configure'))
         else:
-            return render_template('configure/item.html', current=self)
+            return render_template(
+                'configure/item.html',
+                current=self, current_user_id=g.user_id)
 
 def set_routes(app):
     @app.route('/configure/item/<item_id>', methods=['GET', 'POST'])
@@ -170,7 +172,9 @@ def set_routes(app):
     def play_item(item_id):
         item = Item.get_by_id(item_id)
         if item:
-            return render_template('play/item.html', current=item)
+            return render_template(
+                'play/item.html',
+                current=item, current_user_id=g.user_id)
         else:
             return 'Item not found'
 

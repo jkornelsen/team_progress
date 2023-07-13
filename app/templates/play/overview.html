@@ -1,50 +1,33 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{ overall.title }}</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <style>
-        .winning-title {
-            color: green;
-        }
-    </style>
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block upper_left %}
     <div class="nav-container">
         <a href="{{ url_for('configure') }}">Change Setup</a>
     </div>
-    <div class="upper-right">
-        Player <span class="userid"> {{ current_user_id }}</span>
-        <span class="separator">|</span>
-        <a href="{{ url_for('logout') }}">Change User</a>
-        <span class="separator">|</span>
-        <a href="{{ url_for('get_session_link') }}">Get Session Link</a>
-        <span class="separator">|</span>
-        <a href="{{ url_for('new_session') }}" onclick="return confirm(
-            'Creating a new session will reset the game. Are you sure you want to continue?')">New Session</a>
-    </div>
+{% endblock %}
 
-    <h1 class="{% if overall.winning_item and overall.winning_item.progress.quantity >= overall.winning_quantity %}winning-title{% endif %}">
-        {% if overall.winning_item and overall.winning_item.progress.quantity >= overall.winning_quantity %}
-            &#10004; <!-- Checkmark symbol -->
+{% block content %}
+    {% if current.winning_item and current.winning_item.progress.quantity >= current.winning_quantity %}
+    <h1 style="color:green">&#10004; <!-- Checkmark symbol -->
+        {% else %}
+    <h1>
         {% endif %}
-        {{ overall.title }}
+        {{ current.title }}
     </h1>
-    <p><center>{{ overall.description }}</center></p>
-    {% if overall.winning_item %}
+    <p><center>{{ current.description }}</center></p>
+    {% if current.winning_item %}
 <!--
-    <p>Need {{ overall.winning_quantity }} {{ overall.winning_item.name }} to win.</p>
-    <p>Currently have {{ overall.winning_item.progress.quantity }}.</p>
+    <p>Need {{ current.winning_quantity }} {{ current.winning_item.name }} to win.</p>
+    <p>Currently have {{ current.winning_item.progress.quantity }}.</p>
 -->
     {% endif %}
-    {% if overall.game_data.items %}
+    {% if current.game_data.items %}
         <table cellspacing="0" cellpadding="5">
             <tr>
                 <th>Item</th>
                 <th>Quantity</th>
             </tr>
-            {% for item in overall.game_data.items %}
+            {% for item in current.game_data.items %}
                 {% if item.toplevel %}
                     <tr>
                         <td>
@@ -84,7 +67,7 @@
         {% endfor %}
     </table>
     {% set outerscope = namespace(display_section = false) %}
-    {% for event in overall.game_data.events %}
+    {% for event in current.game_data.events %}
         {% if event.toplevel %}
             {% set outerscope.display_section = true %}
         {% endif %}
@@ -92,7 +75,7 @@
     {% if outerscope.display_section %}
         <h2>Events</h2>
         <ul>
-            {% for event in overall.game_data.events %}
+            {% for event in current.game_data.events %}
                 {% if event.toplevel %}
                     <li>
                         <a href="{{ url_for('play_event', event_id=event.id) }}">{{ event.name }}</a>
@@ -104,7 +87,7 @@
     <script>
         $(document).ready(function() {
             function updateQuantities() {
-                {% for item in overall.game_data.items %}
+                {% for item in current.game_data.items %}
                     // Make AJAX request for item quantity
                     $.get('/item/progress_quantity/{{ item.id }}', function(data) {
                         // Update quantity value in the table
@@ -120,5 +103,4 @@
             setInterval(updateQuantities, 5000);
         });
     </script>
-</body>
-</html>
+{% endblock %}

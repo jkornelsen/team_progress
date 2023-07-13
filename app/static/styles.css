@@ -40,6 +40,29 @@ body {
     color: #ffffff;
 }
 
+.dropdown-container {
+    position: relative;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    background-color: #4d2b1e;
+    color: #ffffff;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    left: -5rem;
+    padding: 12px 16px;
+    z-index: 1;
+}
+
+.upper-right:hover .dropdown-menu {
+    display: block;
+}
+
+.dropdown-icon {
+    cursor: pointer;
+}
 
 .separator {
     margin: 0 0 0 10px;
