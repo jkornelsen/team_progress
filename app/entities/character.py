@@ -12,10 +12,11 @@ from .item import Item
 from .location import Location
 from .progress import Progress
 
-class Character:
+from .db_serializable import DbSerializable
+
+class Character(DbSerializable):
     last_id = 0  # used to auto-generate a unique id for each object
     instances = []  # all objects of this class
-    game_data = None
 
     def __init__(self, new_id='auto'):
         if new_id == 'auto':
@@ -31,14 +32,7 @@ class Character:
         self.location = None  # Location object
         self.progress = Progress()  # for travel or perhaps other actions
         self.destination = None  # Location object to travel to
-        self.user_id = ""
-
-    @classmethod
-    def get_by_id(cls, id_to_get):
-        id_to_get = int(id_to_get)
-        return next(
-            (instance for instance in cls.instances
-            if instance.id == id_to_get), None)
+        self.user_id = ""  # whoever last played this character
 
     def to_json(self):
         return {
@@ -73,15 +67,6 @@ class Character:
         cls.instances.append(instance)
         return instance
 
-    @classmethod
-    def list_from_json(cls, json_data):
-        cls.instances.clear()
-        for char_data in json_data:
-            cls.from_json(char_data)
-        cls.last_id = max(
-            (char.id for char in cls.instances), default=0)
-        return cls.instances
-
     def configure_by_form(self):
         if request.method == 'POST':
             if 'save_changes' in request.form:  # button was clicked
@@ -112,8 +97,10 @@ class Character:
                     self.attribs[attrib_item] = attrib_val
                 print("attribs: ", {attrib.name: val
                     for attrib, val in self.attribs.items()})
+                self.to_db()
             elif 'delete_character' in request.form:
                 self.__class__.instances.remove(self)
+                self.__class__.remove_from_db(self.id)
             elif 'cancel_changes' in request.form:
                 print("Cancelling changes.")
             else:
@@ -127,7 +114,9 @@ class Character:
         else:
             return render_template(
                 'configure/character.html',
-                current=self, current_user_id=g.user_id)
+                current=self,
+                current_user_id=g.user_id,
+                game_data=g.game_data)
 
 def set_routes(app):
     @app.route('/configure/char/<char_id>', methods=['GET', 'POST'])

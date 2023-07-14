@@ -70,6 +70,11 @@ class GameData:
     @classmethod
     def from_db(cls):
         instance = cls()
+        instance.attribs = Attrib.list_from_db(data['attribs'])
+        instance.locations = Location.list_from_db(data['locations'])
+        instance.items = Item.list_from_db(data['items'])
+        instance.characters = Character.list_from_db(data['characters'])
+        instance.events = Event.list_from_db(data['events'])
         instance.overall = Overall.from_db()
         return instance
 

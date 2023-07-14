@@ -9,11 +9,11 @@ from flask import (
 )
 from .attrib import Attrib
 from .progress import Progress
+from .db_serializable import DbSerializable
 
-class Item:
+class Item(DbSerializable):
     last_id = 0  # used to auto-generate a unique id for each object
     instances = []  # all objects of this class
-    game_data = None
 
     def __init__(self, new_id='auto'):
         if new_id == 'auto':
@@ -29,13 +29,7 @@ class Item:
         self.growable = 'over_time'
         self.sources = {}  # keys Item object, values quantity required
         self.result_qty = 1  # how many one batch yields
-
-    @classmethod
-    def get_by_id(cls, id_to_get):
-        id_to_get = int(id_to_get)
-        return next(
-            (instance for instance in cls.instances
-            if instance.id == id_to_get), None)
+        self.user_id = ""  # whoever last played with this item
 
     def to_json(self):
         return {
@@ -55,7 +49,7 @@ class Item:
         }
 
     @classmethod
-    def from_json(cls, data, source_ids):
+    def from_json(cls, data):
         instance = cls(int(data['id']))
         instance.name = data['name']
         instance.description = data.get('description', '')
@@ -64,7 +58,7 @@ class Item:
         instance.result_qty = data.get('result_qty', 1)
         instance.progress = Progress.from_json(data['progress'])
         instance.progress.step_size = instance.result_qty
-        source_ids[instance.id] = {
+        cls.source_ids[instance.id] = {
             int(source_id): quantity
             for source_id, quantity in data['sources'].items()}
         instance.attribs = {
@@ -74,21 +68,33 @@ class Item:
         return instance
 
     @classmethod
-    def list_from_json(cls, json_data):
-        cls.instances.clear()
-        source_ids = {}
-        attrib_ids = {}
-        for item_data in json_data:
-            cls.from_json(item_data, source_ids)
-        cls.last_id = max(
-            (item.id for item in cls.instances), default=0)
-        # set the source item objects now that all items have been loaded
-        for item in cls.instances:
-            item.sources = {
+    def list_with_references(cls, callback):
+        cls.source_ids = {}
+        cls.attrib_ids = {}
+        callback()
+        # replace IDs with actual object referencess now that all entities
+        # have been loaded
+        for instance in cls.instances:
+            instance.sources = {
                 cls.get_by_id(source_id): quantity
-                for source_id, quantity in source_ids.get(item.id, {}).items()}
-            item.progress.sources = item.sources
+                for source_id, quantity
+                in cls.source_ids.get(instance.id, {}).items()}
+            instance.progress.sources = instance.sources
+        del cls.source_ids  # remove attr from class
+        del cls.attrib_ids  # remove attr from class
         return cls.instances
+
+    @classmethod
+    def list_from_json(cls, json_data):
+        def callback():
+            super().list_from_json(json_data)
+        return cls.list_with_references(callback)
+
+    @classmethod
+    def list_from_db(cls):
+        def callback():
+            super().list_from_db()
+        return cls.list_with_references(callback)
 
     def configure_by_form(self):
         if request.method == 'POST':
@@ -137,8 +143,10 @@ class Item:
                 self.progress.limit = int(request.form.get('item_limit'))
                 if was_running:
                     self.progress.start()
+                self.to_db()
             elif 'delete_item' in request.form:
                 self.__class__.instances.remove(self)
+                self.__class__.remove_from_db(self.id)
             elif 'cancel_changes' in request.form:
                 print("Cancelling changes.")
             else:
@@ -152,7 +160,9 @@ class Item:
         else:
             return render_template(
                 'configure/item.html',
-                current=self, current_user_id=g.user_id)
+                current=self,
+                current_user_id=g.user_id,
+                game_data=g.game_data)
 
 def set_routes(app):
     @app.route('/configure/item/<item_id>', methods=['GET', 'POST'])
@@ -174,7 +184,9 @@ def set_routes(app):
         if item:
             return render_template(
                 'play/item.html',
-                current=item, current_user_id=g.user_id)
+                current=item,
+                current_user_id=g.user_id,
+                game_data=g.game_data)
         else:
             return 'Item not found'
 

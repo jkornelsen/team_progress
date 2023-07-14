@@ -7,8 +7,9 @@ from flask import (
     session,
     url_for
 )
+from .db_serializable import DbSerializable
 
-class Attrib:
+class Attrib(DbSerializable):
     """
     Stat or state or other type of attribute for a character or item.
     Examples: Perception, XP, Max HP, Current HP, Poisoned
@@ -17,7 +18,6 @@ class Attrib:
     """
     last_id = 0  # used to auto-generate a unique id for each object
     instances = []  # all objects of this class
-    game_data = None
 
     def __init__(self, new_id='auto'):
         if new_id == 'auto':
@@ -28,13 +28,6 @@ class Attrib:
         self.name = ""
         self.description = ""
         self.threshold_names = {}  # example "{10: 'Very Hungry', 50: 'Full'}
-
-    @classmethod
-    def get_by_id(cls, id_to_get):
-        id_to_get = int(id_to_get)
-        return next(
-            (instance for instance in cls.instances
-            if instance.id == id_to_get), None)
 
     def to_json(self):
         return {
@@ -57,7 +50,7 @@ class Attrib:
         for attrib_data in json_data:
             cls.from_json(attrib_data)
         cls.last_id = max(
-            (attrib.id for attrib in cls.instances), default=0)
+            (instance.id for instance in cls.instances), default=0)
         return cls.instances
 
     def configure_by_form(self):
@@ -69,8 +62,10 @@ class Attrib:
                     self.__class__.instances.append(self)
                 self.name = request.form.get('attrib_name')
                 self.description = request.form.get('attrib_description')
+                self.to_db()
             elif 'delete_attrib' in request.form:
                 self.__class__.instances.remove(self)
+                self.__class__.remove_from_db(self.id)
             elif 'cancel_changes' in request.form:
                 print("Cancelling changes.")
             else:

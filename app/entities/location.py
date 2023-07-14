@@ -7,11 +7,11 @@ from flask import (
     session,
     url_for
 )
+from .db_serializable import DbSerializable
 
-class Location:
+class Location(DbSerializable):
     last_id = 0  # used to auto-generate a unique id for each object
     instances = []  # all objects of this class
-    game_data = None
 
     def __init__(self, new_id='auto'):
         if new_id == 'auto':
@@ -23,13 +23,6 @@ class Location:
         self.description = ""
         self.destinations = {}  # keys are Location object, values are distance
         self.items = []  # list of Item objects currently at this location
-
-    @classmethod
-    def get_by_id(cls, id_to_get):
-        id_to_get = int(id_to_get)
-        return next(
-            (instance for instance in cls.instances
-            if instance.id == id_to_get), None)
 
     def to_json(self):
         return {
@@ -43,11 +36,11 @@ class Location:
         }
 
     @classmethod
-    def from_json(cls, data, destination_ids):
+    def from_json(cls, data):
         instance = cls(int(data['id']))
         instance.name = data['name']
         instance.description = data.get('description', '')
-        destination_ids[instance.id] = {
+        cls.destination_ids[instance.id] = {
             int(dest_id): distance
             for dest_id, distance in data['destinations'].items()
         }
@@ -55,21 +48,31 @@ class Location:
         return instance
 
     @classmethod
-    def list_from_json(cls, json_data):
-        cls.instances.clear()
-        destination_ids = {}
-        for location_data in json_data:
-            cls.from_json(location_data, destination_ids)
-        cls.last_id = max(
-            (location.id for location in cls.instances), default=0)
-        # set the destination objects now that all locations have been loaded
-        for location in cls.instances:
-            location.destinations = {
-                cls.get_by_id(location_id): distance
-                for location_id, distance in destination_ids.get(
-                    location.id, {}).items()
-            }
+    def list_with_references(cls, callback):
+        cls.destination_ids = {}
+        callback()
+        # replace IDs with actual object referencess now that all entities
+        # have been loaded
+        for instance in cls.instances:
+            instance.destinations = {
+                cls.get_by_id(destination_id): distance
+                for destination_id, distance
+                in cls.destination_ids.get(instance.id, {}).items()}
+            instance.progress.destinations = instance.destinations
+        del cls.destination_ids  # remove attr from class
         return cls.instances
+
+    @classmethod
+    def list_from_json(cls, json_data):
+        def callback():
+            super().list_from_json(json_data)
+        return cls.list_with_references(callback)
+
+    @classmethod
+    def list_from_db(cls):
+        def callback():
+            super().list_from_db()
+        return cls.list_with_references(callback)
 
     def configure_by_form(self):
         if request.method == 'POST':
@@ -87,8 +90,10 @@ class Location:
                     dest_location = Location.get_by_id(int(dest_id))
                     if dest_location:
                         self.destinations[dest_location] = int(dest_dist)
+                self.to_db()
             elif 'delete_location' in request.form:
                 self.__class__.instances.remove(self)
+                self.__class__.remove_from_db(self.id)
             elif 'cancel_changes' in request.form:
                 print("Cancelling changes.")
             else:
@@ -125,7 +130,11 @@ def set_routes(app):
     def play_location(location_id):
         location = Location.get_by_id(location_id)
         if location:
-            return render_template('play/location.html', location=location, game=Location.game_data)
+            return render_template(
+                'play/location.html',
+                current=location,
+                current_user_id=g.user_id,
+                game_data=g.game_data)
         else:
             return 'Location not found'
 

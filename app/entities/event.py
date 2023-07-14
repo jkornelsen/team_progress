@@ -22,10 +22,11 @@ OUTCOMES = [
 def roll_dice(sides):
     return random.randint(1, sides)
 
-class Event:
+from .db_serializable import DbSerializable
+
+class Event(DbSerializable):
     last_id = 0  # used to auto-generate a unique id for each object
     instances = []  # all objects of this class
-    game_data = None
 
     def __init__(self, new_id='auto'):
         if new_id == 'auto':
@@ -48,13 +49,6 @@ class Event:
         self.advantage = 0  # for example +1 means best of two rolls
         self.outcome = 0
 
-    @classmethod
-    def get_by_id(cls, id_to_get):
-        id_to_get = int(id_to_get)
-        return next(
-            (instance for instance in cls.instances
-            if instance.id == id_to_get), None)
-
     def to_json(self):
         return {
             'id': self.id,
@@ -76,14 +70,6 @@ class Event:
         cls.instances.append(instance)
         return instance
 
-    @classmethod
-    def list_from_json(cls, json_data):
-        cls.instances.clear()
-        for event_data in json_data:
-            cls.from_json(event_data)
-        cls.last_id = max((event.id for event in cls.instances), default=0)
-        return cls.instances
-
     def configure_by_form(self):
         if request.method == 'POST':
             if 'save_changes' in request.form:  # button was clicked
@@ -98,8 +84,10 @@ class Event:
                     new_value = int(request.form.get(f'difficulty_{difficulty}'))
                     self.difficulty_values[difficulty] = new_value
                 self.outcome_margin = int(request.form.get('event_outcome_margin'))
+                self.to_db()
             elif 'delete_event' in request.form:
                 self.__class__.instances.remove(self)
+                self.__class__.remove_from_db(self.id)
             elif 'cancel_changes' in request.form:
                 print("Cancelling changes.")
             else:
@@ -114,7 +102,8 @@ class Event:
         else:
             return render_template(
                 'configure/event.html',
-                current=self, current_user_id=g.user_id)
+                current=self,
+                current_user_id=g.user_id)
 
     def play_by_form(self):
         if request.method == 'POST':
@@ -124,7 +113,8 @@ class Event:
             self.stat_adjustment = int(request.form.get('event_stat_adjustment'))
             return render_template(
                 'play/event.html',
-                current=self, current_user_id=g.user_id,
+                current=self,
+                current_user_id=g.user_id,
                 outcome=self.get_outcome())
         else:
             return render_template(

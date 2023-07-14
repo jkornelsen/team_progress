@@ -14,7 +14,7 @@
         <label for="character-location">Location:</label>
         <select id="character-location" name="char_location">
             <option value="" selected>(Select location)</option>
-            {% for location in current.game_data.locations %}
+            {% for location in game_data.locations %}
                 <option value="{{ location.id }}" {% if current.location.id == location.id %}selected{% endif %}>
                     {{ location.name }}
                 </option>
@@ -45,12 +45,12 @@
 
                 <!-- Placeholder for appending new attribs -->
                 <div id="attriblist_end" style="width: 0; height: 0; opacity: 0;"></div>
-                {% if current.game_data.attribs %}
+                {% if game_data.attribs %}
                     <!-- Select box for adding another attrib -->
                     <div class="select-box">
                         <select id="add-attrib-select">
                             <option value="" selected>(Select attribute)</option>
-                            {% for attrib in current.game_data.attribs %}
+                            {% for attrib in game_data.attribs %}
                                 <option value="{{ attrib.id }}">{{ attrib.name }}</option>
                             {% endfor %}
                         </select>
@@ -86,12 +86,12 @@
             </tbody>
         </table>
         <div>
-            {% if current.game_data.items %}
+            {% if game_data.items %}
                 <!-- Select box for adding another source -->
                 <div class="select-box">
                     <select class="item-select" name="item_select">
                         <option value="" selected>(Select item)</option>
-                        {% for item in current.game_data.items %}
+                        {% for item in game_data.items %}
                             {% if item not in current.items %}
                                 <option value="{{ item.id }}">{{ item.name }}</option>
                             {% endif %}

@@ -84,12 +84,12 @@
 
                 <!-- Placeholder for appending new attribs -->
                 <div id="attriblist_end" style="width: 0; height: 0; opacity: 0;"></div>
-                {% if current.game_data.attribs %}
+                {% if game_data.attribs %}
                     <!-- Select box for adding another attrib -->
                     <div class="select-box">
                         <select id="add-attrib-select">
                             <option value="" selected>(Select item)</option>
-                            {% for attrib in current.game_data.attribs %}
+                            {% for attrib in game_data.attribs %}
                                 <option value="{{ attrib.id }}">{{ attrib.name }}</option>
                             {% endfor %}
                         </select>

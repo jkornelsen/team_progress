@@ -21,13 +21,13 @@
     <p>Currently have {{ current.winning_item.progress.quantity }}.</p>
 -->
     {% endif %}
-    {% if current.game_data.items %}
+    {% if game_data.items %}
         <table cellspacing="0" cellpadding="5">
             <tr>
                 <th>Item</th>
                 <th>Quantity</th>
             </tr>
-            {% for item in current.game_data.items %}
+            {% for item in game_data.items %}
                 {% if item.toplevel %}
                     <tr>
                         <td>
@@ -67,7 +67,7 @@
         {% endfor %}
     </table>
     {% set outerscope = namespace(display_section = false) %}
-    {% for event in current.game_data.events %}
+    {% for event in game_data.events %}
         {% if event.toplevel %}
             {% set outerscope.display_section = true %}
         {% endif %}
@@ -75,7 +75,7 @@
     {% if outerscope.display_section %}
         <h2>Events</h2>
         <ul>
-            {% for event in current.game_data.events %}
+            {% for event in game_data.events %}
                 {% if event.toplevel %}
                     <li>
                         <a href="{{ url_for('play_event', event_id=event.id) }}">{{ event.name }}</a>
@@ -87,7 +87,7 @@
     <script>
         $(document).ready(function() {
             function updateQuantities() {
-                {% for item in current.game_data.items %}
+                {% for item in game_data.items %}
                     // Make AJAX request for item quantity
                     $.get('/item/progress_quantity/{{ item.id }}', function(data) {
                         // Update quantity value in the table

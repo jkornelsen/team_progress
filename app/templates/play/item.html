@@ -90,7 +90,7 @@
         {% endif %}
 
         {% set outerscope = namespace(used_for_items=[]) %}
-        {% for other_item in current.game_data.items %}
+        {% for other_item in game_data.items %}
             {% if current in other_item.sources %}
                 {% set _ = outerscope.used_for_items.append(other_item) %}
             {% endif %}
