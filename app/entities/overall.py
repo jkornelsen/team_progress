@@ -1,3 +1,4 @@
+from collections import namedtuple
 from flask import (
     Flask,
     g,
@@ -7,60 +8,86 @@ from flask import (
     session,
     url_for
 )
-from .item import Item
-from collections import namedtuple
 
-class Overall:
+from .item import Item
+
+class Overall():
     """Overall scenario settings such as scenario title and goal,
     and app settings."""
-    title = "Generic Adventure"
-    description = (
-        "An empty scenario. To begin, go to \"Change Setup\"."
-        " You'll probably want to change the"
-        " title and this description in addition to doing some basic"
-        " setup such as adding a few starting items.")
-    winning_item = None
-    winning_quantity = 0
-    game_data = None
+    collection_name = 'overall'
 
-    @classmethod
-    def to_json(cls):
+    def __init__(self):
+        self.title = "Generic Adventure"
+        self.description = (
+            "An empty scenario. To begin, go to \"Change Setup\"."
+            " You'll probably want to change the"
+            " title and this description in addition to doing some basic"
+            " setup such as adding a few starting items.")
+        self.winning_item = None
+        self.winning_quantity = 0
+
+    def to_json(self):
         return {
-            'title': cls.title,
-            'description': cls.description,
-            'winning_item': cls.winning_item.id if cls.winning_item else None,
-            'winning_quantity': cls.winning_quantity
+            'title': self.title,
+            'description': self.description,
+            'winning_item': self.winning_item.id if self.winning_item else None,
+            'winning_quantity': self.winning_quantity
         }
 
     @classmethod
     def from_json(cls, data):
-        cls.title = data['title']
-        cls.description = data['description']
+        instance = cls()
+        instance.title = data['title']
+        instance.description = data['description']
         winning_item_id = data['winning_item']
         if winning_item_id is not None:
-            cls.winning_item = Item.get_by_id(int(winning_item_id))
-            cls.winning_quantity = data['winning_quantity']
+            instance.winning_item = Item.get_by_id(int(winning_item_id))
+            instance.winning_quantity = data['winning_quantity']
         else:
-            cls.winning_item = None
-            cls.winning_quantity = 0
-        return cls
+            instance.winning_item = None
+            instance.winning_quantity = 0
+        return instance
+
+    def to_db(self):
+        collection = g.db[self.__class__.collection_name]
+        if collection.find_one({'game_token': g.game_token}):
+            print(f"updating collection {self.__class__.collection_name}")
+            collection.update_one(
+                {'game_token': g.game_token}, {'$set': self.to_json()})
+        else:
+            print(f"inserting collection {self.__class__.collection_name}")
+            doc = self.to_json()
+            doc ['game_token'] = g.game_token
+            collection.insert_one(doc)
+
+    @classmethod
+    def from_db(cls):
+        print(f"{cls.__name__}.from_db()")
+        collection = g.db[cls.collection_name]
+        doc = collection.find_one({'game_token': g.game_token})
+        if doc is None:
+            #return "Overall not found"
+            print("doc not found -- returning generic object")
+            return cls()
+        return cls.from_json(doc)
 
     @classmethod
     def configure_by_form(cls):
+        instance = cls.from_db()
         if request.method == 'POST':
             if 'save_changes' in request.form:
                 print("Saving changes.")
                 print(request.form)
-                cls.title = request.form.get('scenario_title')
-                cls.description = request.form.get('scenario_description')
+                instance.title = request.form.get('scenario_title')
+                instance.description = request.form.get('scenario_description')
                 winning_item_id = request.form.get('winning_item')
                 if winning_item_id:
-                    cls.winning_item = Item.get_by_id(int(winning_item_id))
-                    cls.winning_quantity = int(request.form.get('winning_quantity'))
+                    instance.winning_item = Item.get_by_id(int(winning_item_id))
+                    instance.winning_quantity = int(request.form.get('winning_quantity'))
                 else:
-                    cls.winning_item = None
-                    cls.winning_quantity = 1
-                    session['game_data'] = cls.game_data.to_json()
+                    instance.winning_item = None
+                    instance.winning_quantity = 1
+                instance.to_db()
             elif 'cancel_changes' in request.form:
                 print("Cancelling changes.")
             else:
@@ -69,7 +96,7 @@ class Overall:
         else:
             return render_template(
                 'configure/overall.html',
-                current=g.game_data.overall,
+                current=instance,
                 current_user_id=g.user_id)
 
 CharacterRow = namedtuple('CharacterRow',
@@ -116,7 +143,6 @@ def get_charlist_display():
     # alphabetical sorting within rows.
     character_rows.sort(key=lambda row:
         (not row.user_id, row.user_id or '', row.char_name))
-
     return character_rows
 
 def set_routes(app):

@@ -1,3 +1,4 @@
+from datetime import timedelta
 from flask import (
     Flask,
     g,
@@ -8,9 +9,9 @@ from flask import (
     session,
     url_for
 )
+from pymongo import MongoClient
 import json
 import threading
-from datetime import timedelta
 import time
 import uuid
 
@@ -25,6 +26,9 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'team-adventurers'
 app.config['TITLE'] = 'Team Adventurers'
 app.config['TEMPLATES_AUTO_RELOAD'] = True  # set to False for production
+app.config['MONGO_URI'] = 'mongodb://localhost:27017/team_adventurers_db'
+client = MongoClient(app.config['MONGO_URI'])
+db = client['team_adventurers_db']
 
 class GameData:
     def __init__(self):
@@ -33,7 +37,7 @@ class GameData:
         self.events = Event.instances
         self.items = Item.instances
         self.locations = Location.instances
-        self.overall = Overall
+        self.overall = Overall.from_db()
         Attrib.game_data = self
         Character.game_data = self
         Event.game_data = self
@@ -53,41 +57,43 @@ class GameData:
 
     @classmethod
     def from_json(cls, data):
-        game_data = cls()
+        instance = cls()
         # Load in this order to correctly get references to other entities. 
-        game_data.attribs = Attrib.list_from_json(data['attribs'])
-        game_data.locations = Location.list_from_json(data['locations'])
-        game_data.items = Item.list_from_json(data['items'])
-        game_data.characters = Character.list_from_json(data['characters'])
-        game_data.events = Event.list_from_json(data['events'])
-        game_data.overall = Overall.from_json(data['overall'])
-        return game_data
+        instance.attribs = Attrib.list_from_json(data['attribs'])
+        instance.locations = Location.list_from_json(data['locations'])
+        instance.items = Item.list_from_json(data['items'])
+        instance.characters = Character.list_from_json(data['characters'])
+        instance.events = Event.list_from_json(data['events'])
+        instance.overall = Overall.from_json(data['overall'])
+        return instance
+
+    @classmethod
+    def from_db(cls):
+        instance = cls()
+        instance.overall = Overall.from_db()
+        return instance
+
 
 # Store game_data in the g object per user
 @app.before_request
 def before_request():
     print("before_request()")
-    game_token = session.get('game_token')
-    g.user_id = session.get(game_token, {}).get('user_id')
+    g.game_token = session.get('game_token')
+    g.db = db
+    g.user_id = session.get(g.game_token, {}).get('user_id')
     if g.user_id:
-        game_data_json = session.get('game_data')
-        if game_data_json:
-            g.game_data = GameData.from_json(game_data_json)
-            print("setting g.game_data")
-        else:
-            g.game_data = None
-            print("no game_data")
-        join_game_token(game_token)
+        g.game_data = GameData.from_db()
+        join_game_token()
     else:
         g.game_data = None
 
 # When a user joins the game token or logs in
-def join_game_token(game_token):
+def join_game_token():
     print("join_game_token()")
     game_token_data = session.get('game_token_users', {})
-    game_token_users = set(game_token_data.get(game_token, []))
+    game_token_users = set(game_token_data.get(g.game_token, []))
     game_token_users.add(g.user_id)
-    game_token_data[game_token] = list(game_token_users)
+    game_token_data[g.game_token] = list(game_token_users)
     session['game_token_users'] = game_token_data
 
 @app.route('/')  # route
@@ -95,7 +101,6 @@ def index():  # endpoint
     print("index()")
     # Retrieve game token from URL parameter
     game_token = request.args.get('game_token')
-    # If game token is provided in the URL, store it in the session
     if game_token:
         session['game_token'] = game_token
     else:
@@ -121,12 +126,12 @@ def generate_game_token():
     print("generate_game_token()")
     # Generate a new unique game token
     game_token = str(uuid.uuid4())
-    # Initialize the game data for the new game token
-    game_data = GameData()
-    # Associate the game data with the game token
     session['game_token'] = game_token
+    # Initialize the game data for the new game token
+    #game_data = GameData()
+    # Associate the game data with the game token
     #session['game_data'] = json.dumps(game_data)
-    session['game_data'] = game_data.to_json()
+    #session['game_data'] = game_data.to_json()
     return game_token
 
 @app.route('/set-username', methods=['GET', 'POST'])
@@ -135,7 +140,6 @@ def set_username():
     if request.method == 'POST':
         user_id = request.form.get('username')
         if user_id:
-            #session['user_id'] = user_id
             # Store the user ID specific to the game token
             session[game_token] = {'user_id': user_id}
             return redirect(url_for('overview'))
@@ -165,11 +169,9 @@ _set_overall_routes(app)
 @app.route('/configure')
 def configure():
     file_message = session.pop('file_message', False)
-    #game_data = json.loads(session['game_data'])
-    game_data = GameData.from_json(session['game_data'])
     return render_template(
         'configure/index.html',
-        game=game_data, current_user_id=g.user_id,
+        game=g.game_data, current_user_id=g.user_id,
         file_message=file_message)
 
 FILEPATH = 'data/data.json'

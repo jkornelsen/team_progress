@@ -5,16 +5,25 @@ open powershell with admin privs in order to install for all users (C:\Program F
 pip install flask
 pip show flask
 
+download MongoDB
+don't install as a service -- we can start by command line instead
+modify C:\Program Files\MongoDB\Server\6.0\bin\mongod.cfg
+    MONGO_DATA_PATH=C:\ProgramData\MongoDB\data\
+    MONGO_LOG_PATH=C:\ProgramData\MongoDB\log\
+
 open powershell with standard user
 chdir "C:\OurDocs\family_and_fun\games code by Jim\team_adventurers\app"
 create app.py with text editor
 python -m venv venv
+python.exe -m pip install --upgrade pip
+pip install pymongo
 
 
 ---- reload ----
 
+& "C:\Program Files\MongoDB\Server\6.0\bin\mongod.exe" --config "C:\Program Files\MongoDB\Server\6.0\bin\mongod.cfg"
+
 chdir "C:\OurDocs\family_and_fun\games code by Jim\team_adventurers\app"
 venv\Scripts\activate
-
 python app.py
 Open a web browser to http://localhost:5000 
