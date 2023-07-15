@@ -167,18 +167,17 @@ def set_routes(app):
         else:
             return jsonify({'message': 'Progress is already paused.'})
 
-    @app.route('/char/progress_ongoing/<int:char_id>')
-    def char_progress_ongoing(char_id):
-        char = Character.get_by_id(char_id)
-        return jsonify({'is_ongoing': char.progress.is_ongoing})
-
-    @app.route('/char/progress_quantity/<int:char_id>')
-    def char_progress_quantity(char_id):
+    @app.route('/char/progress_data/<int:char_id>')
+    def char_progress_data(instance_id):
         char = Character.get_by_id(char_id)
         if char:
             if not char.location or not char.destination:
                 #return jsonify({'error': 'No travel destination.'})
-                return jsonify({'quantity': 0})
+                return jsonify({
+                    'quantity': 0,
+                    'is_ongoing': False}
+            if char.progress.is_ongoing:
+                char.progress.determine_current_quantity()
             distance = char.location.destinations[char.destination]
             if char.progress.quantity >= distance:
                 # arrived at the destination
@@ -188,7 +187,10 @@ def set_routes(app):
                 char.destination = None
                 return jsonify({'status': 'arrived'})
             else:
-                return jsonify({'quantity': int(char.progress.quantity)})
+                return jsonify({
+                    'is_ongoing': char.progress.is_ongoing,
+                    'quantity': int(char.progress.quantity),
+                    'elapsed_time': char.progress.calculate_elapsed_time()}
         else:
             return jsonify({'error': 'Character not found.'})
 

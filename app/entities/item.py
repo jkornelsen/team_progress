@@ -225,24 +225,15 @@ def set_routes(app):
         else:
             return jsonify({'message': 'Progress is already paused.'})
 
-    @app.route('/item/progress_ongoing/<int:item_id>')
-    def item_progress_ongoing(item_id):
-        item = Item.get_by_id(item_id)
-        return jsonify({'is_ongoing': item.progress.is_ongoing})
-
-    @app.route('/item/progress_quantity/<int:item_id>')
-    def item_progress_quantity(item_id):
+    @app.route('/item/progress_data/<int:item_id>')
+    def item_progress_data(item_id):
         item = Item.get_by_id(item_id)
         if item:
-            return jsonify({'quantity': item.progress.quantity})
-        else:
-            return jsonify({'error': 'Item not found'})
-
-    @app.route('/item/progress_time/<int:item_id>')
-    def item_progress_time(item_id):
-        item = Item.get_by_id(item_id)
-        if item:
-            return item.progress.get_time()
-        else:
-            return jsonify({'error': 'Item not found'})
-
+            if item.progress.is_ongoing:
+                item.progress.determine_current_quantity()
+        return jsonify({
+            'is_ongoing': item.progress.is_ongoing,
+            'quantity': item.progress.quantity,
+            'elapsed_time': item.progress.calculate_elapsed_time()}
+    else:
+        return jsonify({'error': 'Item not found'})
