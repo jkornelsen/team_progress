@@ -18,6 +18,7 @@ class Overall(DbSerializable):
     and app settings."""
 
     def __init__(self):
+        self.id = 1  # only one instance of this class for each game token
         self.title = "Generic Adventure"
         self.description = (
             "An empty scenario. To begin, go to \"Change Setup\"."
@@ -52,7 +53,7 @@ class Overall(DbSerializable):
     @classmethod
     def from_db(cls):
         print(f"{cls.__name__}.from_db()")
-        collection = g.db[cls.collection_name]
+        collection = cls.get_collection()
         doc = collection.find_one({'game_token': g.game_token})
         if doc is None:
             #return "Overall not found"

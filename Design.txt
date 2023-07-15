@@ -224,7 +224,71 @@ maybe display would include destination name: "Distance to Home: 3 of 10"
 since button would simply show "Travelling."
 other buttons would be greyed out if travelling.
 
-limit running progress objects to 10 concurrent per session.
+instead of a loop, actions in progress can be
+done with elapsed time that gets updated when queried
+optionally they can be regularly queried, e.g. once every second
+
+Progress class would need to remember how long it's been since the last batch
+for example, if batches take 10 seconds, and we query at 15.2 seconds,
+then do one batch and record that we're 5.2 seconds into the next batch
+so then if queried 4.9 seconds later, it should do a second batch
+no, count elapsed time from when the entire task was first started,
+and keep track of how many batches we've registered so far
+when next queried, calculate how many more to do
+
+it would be helpful to see elapsed time since start was last pressed,
+if the action is still in progress
+that could be displayed smoothly on the client side
+clock could update every second, and query for quantity every 2 seconds
+even if progress ends up getting stopped a few seconds before
+the time counter is stopped,
+it should be manageable, as the result count would not change
+
+for locations, have speed as well as distance
+characters would have travel speed for a particular location?
+for example, a swimming speed and a walking speed
+speed for a particular type of terrain, and a location would have a type of terrain
+or we could manually change the character's speed when entering a new location
+
+not as interesting to see total time spent on this action across starts/stops
+for now, let's eliminate it
+race scenarios would need more than that anyway,
+as each character would need their own time
+
+limit actions in progress to 10 concurrent per session?
+or two per user?
+but there might be several long-term actions in progress,
+such as an animal born once an hour
+limit elapsed time to 24 hours at least
+after that, though, it doesn't have to be stopped -- it's just not counted for more
+
+will it be difficult if several elapsed-time actions depend on each other?
+pen requires lid requires plastic, and each is incremented regularly
+when querying an item, first recursively query
+all of its sources that are in progress
+avoid recursion loops by maintaining a set of items to query
+the set would need to be a local variable passed as a parameter
+
+offline events can occur?
+multiple would get a bit crazy if they are not handled automatically,
+like, multiple event screens to work through when logging back in
+probably not what we want
+could stop progress if an event occurs
+or maybe no offline progress
+the idea of farming for something for hours, hoping for a certain chance,
+is exciting but can also feel like being tied up
+
+event log to show outcomes
+would be nice for e.g. digging holes competition
+for example, "depth gained: 3.5" where event has chance from 1 to 5
+wouldn't have to keep initiating the event for each step
+or maybe that wouldn't be so bad, if only one button press
+is required for a step
+maybe we can view an event and another page at the same time
+either a separate part of the page,
+or in a different tab
+or maybe the event can automatically update a value and show the
+change as well as the updated value
 
 
 ---- scenarios ----

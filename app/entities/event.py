@@ -1,5 +1,6 @@
 from flask import (
     Flask,
+    g,
     jsonify,
     redirect,
     render_template,
@@ -60,7 +61,7 @@ class Event(DbSerializable):
         }
 
     @classmethod
-    def from_json(cls, data):
+    def from_json(cls, data, _):
         instance = cls(data['id'])
         instance.name = data['name']
         instance.description = data['description']

@@ -121,14 +121,14 @@
 
             // the Start button may change to "Running..."
             function updateStartbuttonLabel() {
-                fetch('/char/progress_running/{{ current.id }}')
+                fetch('/char/progress_ongoing/{{ current.id }}')
                     .then(response => response.json())
                     .then(data => {
                         //const startBtn = $('#start-travel-btn');  // doesn't work
                         const startBtn = document.getElementById("start-travel-btn");
                         const stopBtn = document.getElementById("stop-travel-btn");
                         const destSel = document.getElementById("destination-select");
-                        if (data.is_running) {
+                        if (data.is_ongoing) {
                             startBtn.innerHTML = "Travelling...";
                             startBtn.disabled = true;
                             stopBtn.disabled = false;

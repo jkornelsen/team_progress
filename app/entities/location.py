@@ -1,5 +1,6 @@
 from flask import (
     Flask,
+    g,
     jsonify,
     redirect,
     render_template,
@@ -36,11 +37,11 @@ class Location(DbSerializable):
         }
 
     @classmethod
-    def from_json(cls, data):
+    def from_json(cls, data, id_refs):
         instance = cls(int(data['id']))
         instance.name = data['name']
         instance.description = data.get('description', '')
-        cls.destination_ids[instance.id] = {
+        id_refs.setdefault('dest', {})[instance.id] = {
             int(dest_id): distance
             for dest_id, distance in data['destinations'].items()
         }
@@ -49,29 +50,28 @@ class Location(DbSerializable):
 
     @classmethod
     def list_with_references(cls, callback):
-        cls.destination_ids = {}
-        callback()
+        id_refs = {}
+        callback(id_refs)
         # replace IDs with actual object referencess now that all entities
         # have been loaded
         for instance in cls.instances:
             instance.destinations = {
                 cls.get_by_id(destination_id): distance
-                for destination_id, distance
-                in cls.destination_ids.get(instance.id, {}).items()}
+                for destination_id, distance in
+                id_refs.get('dest', {}).get(instance.id, {}).items()}
             instance.progress.destinations = instance.destinations
-        del cls.destination_ids  # remove attr from class
         return cls.instances
 
     @classmethod
     def list_from_json(cls, json_data):
-        def callback():
-            super().list_from_json(json_data)
+        def callback(id_refs):
+            super(cls, cls).list_from_json(json_data, id_refs)
         return cls.list_with_references(callback)
 
     @classmethod
     def list_from_db(cls):
-        def callback():
-            super().list_from_db()
+        def callback(id_refs):
+            super(cls, cls).list_from_db(id_refs)
         return cls.list_with_references(callback)
 
     def configure_by_form(self):

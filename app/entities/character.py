@@ -1,5 +1,6 @@
 from flask import (
     Flask,
+    g,
     jsonify,
     redirect,
     render_template,
@@ -50,7 +51,7 @@ class Character(DbSerializable):
         }
 
     @classmethod
-    def from_json(cls, data):
+    def from_json(cls, data, _):
         instance = cls(int(data['id']))
         instance.name = data['name']
         instance.description = data.get('description', '')
@@ -166,10 +167,10 @@ def set_routes(app):
         else:
             return jsonify({'message': 'Progress is already paused.'})
 
-    @app.route('/char/progress_running/<int:char_id>')
-    def char_progress_running(char_id):
+    @app.route('/char/progress_ongoing/<int:char_id>')
+    def char_progress_ongoing(char_id):
         char = Character.get_by_id(char_id)
-        return jsonify({'is_running': char.progress.is_running})
+        return jsonify({'is_ongoing': char.progress.is_ongoing})
 
     @app.route('/char/progress_quantity/<int:char_id>')
     def char_progress_quantity(char_id):

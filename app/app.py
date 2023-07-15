@@ -70,11 +70,11 @@ class GameData:
     @classmethod
     def from_db(cls):
         instance = cls()
-        instance.attribs = Attrib.list_from_db(data['attribs'])
-        instance.locations = Location.list_from_db(data['locations'])
-        instance.items = Item.list_from_db(data['items'])
-        instance.characters = Character.list_from_db(data['characters'])
-        instance.events = Event.list_from_db(data['events'])
+        instance.attribs = Attrib.list_from_db()
+        instance.locations = Location.list_from_db()
+        instance.items = Item.list_from_db()
+        instance.characters = Character.list_from_db()
+        instance.events = Event.list_from_db()
         instance.overall = Overall.from_db()
         return instance
 
@@ -90,6 +90,7 @@ def before_request():
         g.game_data = GameData.from_db()
         join_game_token()
     else:
+        print("no user id and no game data")
         g.game_data = None
 
 # When a user joins the game token or logs in
@@ -124,7 +125,7 @@ def new_session():
     print("new_session()")
     if request.method == 'POST':
         game_token = generate_game_token()
-        return redirect(url_for('overview', game_token=game_token))
+        return redirect(url_for('index'))
     return render_template('session/new_session.html')
 
 def generate_game_token():
@@ -134,9 +135,6 @@ def generate_game_token():
     session['game_token'] = game_token
     # Initialize the game data for the new game token
     #game_data = GameData()
-    # Associate the game data with the game token
-    #session['game_data'] = json.dumps(game_data)
-    #session['game_data'] = game_data.to_json()
     return game_token
 
 @app.route('/set-username', methods=['GET', 'POST'])
@@ -147,7 +145,7 @@ def set_username():
         if user_id:
             # Store the user ID specific to the game token
             session[game_token] = {'user_id': user_id}
-            return redirect(url_for('overview'))
+            return redirect(url_for('index'))
     return render_template('session/username.html')
 
 @app.route('/session-link')

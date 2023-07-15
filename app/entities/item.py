@@ -1,5 +1,6 @@
 from flask import (
     Flask,
+    g,
     jsonify,
     redirect,
     render_template,
@@ -49,7 +50,7 @@ class Item(DbSerializable):
         }
 
     @classmethod
-    def from_json(cls, data):
+    def from_json(cls, data, id_refs):
         instance = cls(int(data['id']))
         instance.name = data['name']
         instance.description = data.get('description', '')
@@ -58,7 +59,7 @@ class Item(DbSerializable):
         instance.result_qty = data.get('result_qty', 1)
         instance.progress = Progress.from_json(data['progress'])
         instance.progress.step_size = instance.result_qty
-        cls.source_ids[instance.id] = {
+        id_refs.setdefault('source', {})[instance.id] = {
             int(source_id): quantity
             for source_id, quantity in data['sources'].items()}
         instance.attribs = {
@@ -69,31 +70,28 @@ class Item(DbSerializable):
 
     @classmethod
     def list_with_references(cls, callback):
-        cls.source_ids = {}
-        cls.attrib_ids = {}
-        callback()
+        id_refs = {}
+        callback(id_refs)
         # replace IDs with actual object referencess now that all entities
         # have been loaded
         for instance in cls.instances:
             instance.sources = {
                 cls.get_by_id(source_id): quantity
-                for source_id, quantity
-                in cls.source_ids.get(instance.id, {}).items()}
+                for source_id, quantity in
+                id_refs.get('source', {}).get(instance.id, {}).items()}
             instance.progress.sources = instance.sources
-        del cls.source_ids  # remove attr from class
-        del cls.attrib_ids  # remove attr from class
         return cls.instances
 
     @classmethod
     def list_from_json(cls, json_data):
-        def callback():
-            super().list_from_json(json_data)
+        def callback(id_refs):
+            super(cls, cls).list_from_json(json_data, id_refs)
         return cls.list_with_references(callback)
 
     @classmethod
     def list_from_db(cls):
-        def callback():
-            super().list_from_db()
+        def callback(id_refs):
+            super(cls, cls).list_from_db(id_refs)
         return cls.list_with_references(callback)
 
     def configure_by_form(self):
@@ -128,8 +126,8 @@ class Item(DbSerializable):
                     self.attribs[attrib_item] = attrib_val
                 print("attribs: ", {attrib.name: val
                     for attrib, val in self.attribs.items()})
-                was_running = self.progress.is_running
-                if was_running:
+                was_ongoing = self.progress.is_ongoing
+                if was_ongoing:
                     self.progress.stop()
                 else:
                     self.progress.quantity = int(request.form.get('item_quantity'))
@@ -141,7 +139,7 @@ class Item(DbSerializable):
                     rate_duration=float(request.form.get('rate_duration')),
                     sources=self.sources)
                 self.progress.limit = int(request.form.get('item_limit'))
-                if was_running:
+                if was_ongoing:
                     self.progress.start()
                 self.to_db()
             elif 'delete_item' in request.form:
@@ -227,10 +225,10 @@ def set_routes(app):
         else:
             return jsonify({'message': 'Progress is already paused.'})
 
-    @app.route('/item/progress_running/<int:item_id>')
-    def item_progress_running(item_id):
+    @app.route('/item/progress_ongoing/<int:item_id>')
+    def item_progress_ongoing(item_id):
         item = Item.get_by_id(item_id)
-        return jsonify({'is_running': item.progress.is_running})
+        return jsonify({'is_ongoing': item.progress.is_ongoing})
 
     @app.route('/item/progress_quantity/<int:item_id>')
     def item_progress_quantity(item_id):

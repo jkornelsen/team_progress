@@ -17,7 +17,7 @@ class Progress:
             self.sources = sources
         else:
             self.sources = {}
-        self.is_running = False
+        self.is_ongoing = False
         self.increment_lock = threading.Lock()
         self.prev_elapsed_time = 0
         self.last_start_time = None
@@ -107,10 +107,10 @@ class Progress:
 
     def start(self):
         if self.rate_amount == 0:
-            self.is_running = False
+            self.is_ongoing = False
             return False
-        if not self.is_running:
-            self.is_running = True
+        if not self.is_ongoing:
+            self.is_ongoing = True
             self.last_start_time = time.time()
             thread = threading.Thread(target=self.increment_progress)
             thread.daemon = True
@@ -120,8 +120,8 @@ class Progress:
             return False
 
     def stop(self):
-        if self.is_running:
-            self.is_running = False
+        if self.is_ongoing:
+            self.is_ongoing = False
             self.prev_elapsed_time = self.calculate_elapsed_time()
             self.last_start_time = None
             return True

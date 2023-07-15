@@ -13,10 +13,10 @@ class DbSerializable:
             if instance.id == id_to_get), None)
 
     @classmethod
-    def list_from_json(cls, json_data):
+    def list_from_json(cls, json_data, id_references=None):
         cls.instances.clear()
         for entity_data in json_data:
-            cls.from_json(entity_data)
+            cls.from_json(entity_data, id_references)
         cls.last_id = max(
             (instance.id for instance in cls.instances), default=0)
         return cls.instances
@@ -56,12 +56,12 @@ class DbSerializable:
                 cls.remove_from_db(doc_id)
 
     @classmethod
-    def list_from_db(cls):
+    def list_from_db(cls, id_references=None):
         print(f"{cls.__name__}.list_from_db()")
         cls.instances.clear()
         collection = cls.get_collection()
         docs = collection.find({'game_token': g.game_token})
-        instances = [cls.from_json(doc) for doc in docs]
+        instances = [cls.from_json(doc, id_references) for doc in docs]
         cls.last_id = max(
             (instance.id for instance in cls.instances), default=0)
         return instances
