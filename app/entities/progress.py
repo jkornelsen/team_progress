@@ -19,6 +19,7 @@ class Progress:
             self.sources = {}
         self.start_time = None
         self.stop_time = None
+        self.batches_processed = 0
         self.is_ongoing = False
         self.lock = threading.Lock()
 
@@ -31,6 +32,7 @@ class Progress:
             'rate_duration': self.rate_duration,
             'start_time': self.start_time,
             'stop_time': self.stop_time,
+            'batches_processed': self.batches_processed,
             'is_ongoing': self.is_ongoing,
         }
 
@@ -44,57 +46,53 @@ class Progress:
         instance.rate_duration = data['rate_duration']
         instance.start_time = data['start_time']
         instance.stop_time = data['stop_time']
+        instance.batches_processed = data['batches_processed']
         instance.is_ongoing = data['is_ongoing']
         return instance
 
-    def calc_effective(self, num_batches):
-        """Determine source and result quantity changes by batch.
-        For example, if the speed is 6 produced per 10 seconds,
-        and the exchange rate is 5 required to produce 3,
-        then there will be two batches, producing 6 and requiring 10.
-
-        In case the speed is slightly higher, it will be rounded down,
-        although that may not have real-world meaning,
-        so it's probably best if the speed and production qty divide evenly.
-        """
-        result_qty = self.step_size
-        eff_result_qty = num_batches * result_qty
-        eff_source_qtys = {}
-        for source_item, source_qty in self.sources.items():
-            eff_source_qty = num_batches * source_qty
-            eff_source_qtys[source_item] = eff_source_qty
-        return eff_result_qty, eff_source_qtys
-
-    def can_change_quantity(self, num_batches):
-        eff_result_qty, eff_source_qtys = self.calc_effective(num_batches)
-        for source_item, eff_source_qty in eff_source_qtys.items():
-            if (eff_source_qty > 0
-                    and source_item.progress.quantity < eff_source_qty):
-                raise Exception(
-                    f"Cannot take {eff_source_qty} {source_item.name}.")
-
-    def change_quantity(self, num_batches):
+    # return true if able to change quantity
+    def change_quantity(self, batches_requested):
         with self.lock:
-            eff_result_qty, eff_source_qtys = self.calc_effective(num_batches)
-            try:
-                self.can_change_quantity(num_batches)
-            except Exception:
-                return False
-            for source_item, eff_source_qty in eff_source_qtys.items():
-                source_item.progress.quantity -= eff_source_qty
-            self.quantity += eff_result_qty
-            if self.limit != 0 and abs(self.quantity) >= abs(self.limit):
-                self.quantity = self.limit
+            stop_here = False
+            if batches_requested == 0:
                 self.stop()
-                #return False
-            return True
+                return False
+            num_batches = batches_requested
+            eff_result_qty = num_batches * self.step_size
+            if self.limit != 0 and abs(eff_result_qty) > abs(self.limit):
+                num_batches = abs(self.limit) // abs(self.step_size)
+                eff_result_qty = num_batches * self.step_size
+                stop_here = True  # can't process the full amount
+            eff_source_qtys = {}
+            for source_item, source_qty in self.sources.items():
+                eff_source_qty = num_batches * source_qty
+                eff_source_qtys[source_item] = eff_source_qty
+            for source_item, source_qty in self.sources.items():
+                eff_source_qty = num_batches * source_qty
+                if (eff_source_qty > 0
+                        and source_item.progress.quantity < eff_source_qty):
+                    stop_here = True  # can't process the full amount
+                    num_batches = min(
+                        num_batches,
+                        math.floor(source_item.progress.quantity / eff_source_qty))
+            if num_batches > 0:
+                for source_item, source_qty in self.sources.items():
+                    eff_source_qty = num_batches * source_qty
+                    source_item.progress.quantity -= eff_source_qty
+                eff_result_qty = num_batches * self.step_size
+                self.quantity += eff_result_qty
+                self.batches_processed += num_batches
+            if stop_here:
+                self.stop()
+            return num_batches > 0
 
     def determine_current_quantity(self):
         elapsed_time = self.calculate_elapsed_time()
-        num_batches = math.floor(
+        total_batches_needed = math.floor(
             elapsed_time * (self.rate_amount * self.rate_duration))
-        if num_batches > 0:
-            return self.change_quantity(num_batches)
+        batches_to_do = total_batches_needed - self.batches_processed
+        if batches_to_do > 0:
+            return self.change_quantity(batches_to_do)
         else:
             return False
 
@@ -102,6 +100,7 @@ class Progress:
         if self.rate_amount == 0 or self.is_ongoing:
             return False
         self.start_time = time.time()
+        self.batches_processed = 0
         self.is_ongoing = True
         return True
 

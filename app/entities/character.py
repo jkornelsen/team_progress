@@ -150,11 +150,13 @@ def set_routes(app):
         if not char.destination or char.destination.id != dest_id:
             char.destination = Location.get_by_id(dest_id)
             char.progress.quantity = 0
+            char.to_db()
         try:
             char.progress.can_change_quantity(char.progress.rate_amount)
         except Exception as ex:
             return jsonify({'status': 'error', 'message': str(ex)})
         if char.progress.start():
+            char.to_db()
             return jsonify({'status': 'success', 'message': 'Progress started.'})
         else:
             return jsonify({'status': 'error', 'message': 'Could not start.'})
@@ -163,6 +165,7 @@ def set_routes(app):
     def stop_char(char_id):
         char = Character.get_by_id(char_id)
         if char.progress.stop():
+            char.to_db()
             return jsonify({'message': 'Progress paused.'})
         else:
             return jsonify({'message': 'Progress is already paused.'})
@@ -175,9 +178,10 @@ def set_routes(app):
                 #return jsonify({'error': 'No travel destination.'})
                 return jsonify({
                     'quantity': 0,
-                    'is_ongoing': False}
+                    'is_ongoing': False})
             if char.progress.is_ongoing:
                 char.progress.determine_current_quantity()
+                char.to_db()
             distance = char.location.destinations[char.destination]
             if char.progress.quantity >= distance:
                 # arrived at the destination
@@ -185,12 +189,13 @@ def set_routes(app):
                 char.progress.quantity = 0
                 char.location = char.destination
                 char.destination = None
+                char.to_db()
                 return jsonify({'status': 'arrived'})
             else:
                 return jsonify({
                     'is_ongoing': char.progress.is_ongoing,
                     'quantity': int(char.progress.quantity),
-                    'elapsed_time': char.progress.calculate_elapsed_time()}
+                    'elapsed_time': char.progress.calculate_elapsed_time()})
         else:
             return jsonify({'error': 'Character not found.'})
 

@@ -119,35 +119,30 @@
             }
 
             // Global variable to store the current elapsed time
-            let currentElapsedTime = 0;
+            let elapsedTime = 0;
 
             // Update the elapsed time on the client.
             function updateElapsedTime() {
-              // Increment the elapsed time by 1 second
-              currentElapsedTime += 1;
-              $('#dest-time').text(formatTime(currentElapsedTime));
+              elapsedTime += 1;  // Increment by 1 second
+              $('#dest-time').text(formatTime(elapsedTime));
             }
 
             // Function to format the time in HH:MM:SS format.
             function formatTime(time) {
               const hours = Math.floor(time / 3600);
               const minutes = Math.floor((time % 3600) / 60);
-              const seconds = time % 60;
+              const seconds = Math.floor(time % 60);
               return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             }
 
             // Reconcile the elapsed time with the server-side progress time.
             function reconcileElapsedTime(data) {
-                const serverTime = parseTime(data.time);
-                // Reconcile the elapsed time with the server time
-                elapsedTime = serverTime;
+                if (data.elapsed_time) {
+                    elapsedTime = data.elapsed_time;
+                } else {
+                    elapsedTime = 0;
+                }
                 $('#dest-time').text(formatTime(elapsedTime));
-            }
-
-            // Parse the time in HH:MM:SS format and convert it to seconds.
-            function parseTime(timeString) {
-              const [hours, minutes, seconds] = timeString.split(':').map(Number);
-              return hours * 3600 + minutes * 60 + seconds;
             }
 
             // the Start button may change to "Running..."

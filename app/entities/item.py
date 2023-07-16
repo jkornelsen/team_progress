@@ -8,6 +8,7 @@ from flask import (
     session,
     url_for
 )
+import math
 from .attrib import Attrib
 from .progress import Progress
 from .db_serializable import DbSerializable
@@ -192,27 +193,37 @@ def set_routes(app):
     def gain_item(item_id):
         quantity = int(request.form.get('quantity'))
         item = Item.get_by_id(item_id)
-        try:
-            item.progress.can_change_quantity(quantity)
-        except Exception as ex:
-            return jsonify({'status': 'error', 'message': str(ex)})
-        if item.progress.change_quantity(quantity):
+        num_batches = math.floor(quantity / item.progress.step_size)
+        changed = item.progress.change_quantity(num_batches)
+        item.to_db()
+        if changed:
             return jsonify({
                 'status': 'success', 'message':
-                f'Quantity of {item.name} changed by {quantity}.'})
+                f'Quantity of {item.name} changed.'})
         else:
             return jsonify({
                 'status': 'error',
                 'message': 'Could not change quantity.'})
 
+    @app.route('/item/progress_data/<int:item_id>')
+    def item_progress_data(item_id):
+        item = Item.get_by_id(item_id)
+        if item:
+            if item.progress.is_ongoing:
+                item.progress.determine_current_quantity()
+                item.to_db()
+            return jsonify({
+                'is_ongoing': item.progress.is_ongoing,
+                'quantity': item.progress.quantity,
+                'elapsed_time': item.progress.calculate_elapsed_time()})
+        else:
+            return jsonify({'error': 'Item not found'})
+
     @app.route('/item/start/<int:item_id>')
     def start_item(item_id):
         item = Item.get_by_id(item_id)
-        try:
-            item.progress.can_change_quantity(item.progress.rate_amount)
-        except Exception as ex:
-            return jsonify({'status': 'error', 'message': str(ex)})
         if item.progress.start():
+            item.to_db()
             return jsonify({'status': 'success', 'message': 'Progress started.'})
         else:
             return jsonify({'status': 'error', 'message': 'Could not start.'})
@@ -221,19 +232,7 @@ def set_routes(app):
     def stop_item(item_id):
         item = Item.get_by_id(item_id)
         if item.progress.stop():
+            item.to_db()
             return jsonify({'message': 'Progress paused.'})
         else:
             return jsonify({'message': 'Progress is already paused.'})
-
-    @app.route('/item/progress_data/<int:item_id>')
-    def item_progress_data(item_id):
-        item = Item.get_by_id(item_id)
-        if item:
-            if item.progress.is_ongoing:
-                item.progress.determine_current_quantity()
-        return jsonify({
-            'is_ongoing': item.progress.is_ongoing,
-            'quantity': item.progress.quantity,
-            'elapsed_time': item.progress.calculate_elapsed_time()}
-    else:
-        return jsonify({'error': 'Item not found'})

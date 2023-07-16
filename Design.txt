@@ -47,6 +47,13 @@ offer an online single-player version that doesn't require a database
 socket.io (e.g. Flask-SocketIO) is another tech often mentioned for
 synching between multiple players, like Scribbl.io
 
+db.collection.create_index("expiry_time", expireAfterSeconds=<time_in_seconds>)
+maybe for firebase, keep track of how long it's been since a clean has been done
+once per day, clean up data for game tokens that haven't been played recently
+keep data for 1 week?
+maybe when on the game setup screen, check if cleaning needs to be done,
+and if so, post a message when it's done, like saving to file
+
 source of resources: obtained from activities in forest which can be
 unlimited, regenerates periodically, or fixed limit.
 if unlimited, it's equivalent to saying magically produced by an activity,

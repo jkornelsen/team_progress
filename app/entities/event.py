@@ -112,6 +112,7 @@ class Event(DbSerializable):
             print(request.form)
             self.difficulty = request.form.get('event_difficulty')
             self.stat_adjustment = int(request.form.get('event_stat_adjustment'))
+            self.to_db()
             return render_template(
                 'play/event.html',
                 current=self,
