@@ -14,6 +14,7 @@ class DbSerializable:
 
     @classmethod
     def list_from_json(cls, json_data, id_references=None):
+        print(f"{cls.__name__}.list_from_json()")
         cls.instances.clear()
         for entity_data in json_data:
             cls.from_json(entity_data, id_references)
@@ -31,19 +32,20 @@ class DbSerializable:
         collection.delete_one({'game_token': g.game_token, 'id': int(doc_id)})
 
     def to_db(self):
-        collection = self.__class__.get_collection()
         doc = self.to_json()
         doc['game_token'] = g.game_token
-        if collection.find_one({'game_token': g.game_token, 'id': self.id}):
+        query = {'game_token': g.game_token, 'id': self.id}
+        collection = self.__class__.get_collection()
+        if collection.find_one(query):
             print(f"Updating document for {self.__class__.__name__} with id {self.id}")
-            collection.update_one({'game_token': g.game_token, 'id': self.id}, {'$set': doc})
-            # or replace_one()?
+            collection.replace_one(query, doc)
         else:
             print(f"Inserting new document for {self.__class__.__name__} with id {self.id}")
             collection.insert_one(doc)
 
     @classmethod
     def list_to_db(cls):
+        print(f"{cls.__name__}.list_to_db()")
         collection = cls.get_collection()
         existing_ids = set(
             str(doc['id'])

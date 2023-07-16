@@ -15,12 +15,13 @@ import threading
 import time
 import uuid
 
-from entities.attrib import Attrib, set_routes as _set_attrib_routes
-from entities.character import Character, set_routes as _set_character_routes
-from entities.event import Event, set_routes as _set_event_routes
-from entities.item import Item, set_routes as _set_item_routes
-from entities.location import Location, set_routes as _set_location_routes
-from entities.overall import Overall, set_routes as _set_overall_routes
+from src.attrib import Attrib, set_routes as _set_attrib_routes
+from src.character import Character, set_routes as _set_character_routes
+from src.event import Event, set_routes as _set_event_routes
+from src.item import Item, set_routes as _set_item_routes
+from src.location import Location, set_routes as _set_location_routes
+from src.overall import Overall, set_routes as _set_overall_routes
+from src.user_interaction import UserInteraction
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'team-adventurers'
@@ -67,6 +68,15 @@ class GameData:
         instance.overall = Overall.from_json(data['overall'])
         return instance
 
+    def to_db(self):
+        entity_lists = [
+            self.attribs, self.locations, self.items, self.characters,
+            self.events]
+        for entity_list in entity_lists:
+            for entity in entity_list:
+                entity.to_db()
+        self.overall.to_db()
+
     @classmethod
     def from_db(cls):
         instance = cls()
@@ -79,7 +89,7 @@ class GameData:
         return instance
 
 
-# Store game_data in the g object per user
+# Store game data in the g object per user
 @app.before_request
 def before_request():
     print("before_request()")
@@ -88,19 +98,11 @@ def before_request():
     g.user_id = session.get(g.game_token, {}).get('user_id')
     if g.user_id:
         g.game_data = GameData.from_db()
-        join_game_token()
+        interaction = UserInteraction(g.user_id)
+        interaction.to_db()
     else:
         print("no user id and no game data")
         g.game_data = None
-
-# When a user joins the game token or logs in
-def join_game_token():
-    print("join_game_token()")
-    game_token_data = session.get('game_token_users', {})
-    game_token_users = set(game_token_data.get(g.game_token, []))
-    game_token_users.add(g.user_id)
-    game_token_data[g.game_token] = list(game_token_users)
-    session['game_token_users'] = game_token_data
 
 @app.route('/')  # route
 def index():  # endpoint
@@ -133,8 +135,6 @@ def generate_game_token():
     # Generate a new unique game token
     game_token = str(uuid.uuid4())
     session['game_token'] = game_token
-    # Initialize the game data for the new game token
-    #game_data = GameData()
     return game_token
 
 @app.route('/set-username', methods=['GET', 'POST'])
@@ -181,8 +181,7 @@ FILEPATH = 'data/data.json'
 
 @app.route('/save_to_file')
 def save_to_file():
-    game_data = g.game_data
-    data_to_save = game_data.to_json()
+    data_to_save = g.game_data.to_json()
     with open(FILEPATH, 'w') as outfile:
         json.dump(data_to_save, outfile, indent=4)
     session['file_message'] = 'Saved to file.'
@@ -192,8 +191,8 @@ def save_to_file():
 def load_from_file():
     with open(FILEPATH, 'r') as infile:
         data = json.load(infile)
-        game_data = GameData.from_json(data)
-    g.game_data = game_data
+        g.game_data = GameData.from_json(data)
+    g.game_data.to_db()
     session['file_message'] = 'Loaded from file.'
     return redirect(url_for('configure'))
 

@@ -10,7 +10,6 @@ from flask import (
 )
 
 from .item import Item
-
 from .db_serializable import DbSerializable
 
 class Overall(DbSerializable):
@@ -94,8 +93,7 @@ CharacterRow = namedtuple('CharacterRow',
 
 def get_charlist_display():
     overall = g.game_data.overall
-    # Create a list to hold the character rows
-    character_rows = []
+    character_rows = [] # Create a list to hold the character rows
     for char in overall.game_data.characters:
         if char.toplevel or char.user_id:
             row = CharacterRow(
@@ -105,24 +103,37 @@ def get_charlist_display():
                 loc_name=char.location.name if char.location else None,
                 action_name="TODO",
                 action_link="TODO",
-                user_id=char.user_id
+                user_id=None
             )
             character_rows.append(row)
+    from .user_interaction import UserInteraction
+    interactions = UserInteraction.recent_interactions()
+    # Combine user records with rows containing the same character.
+    for interaction in interactions:
+        if interaction.char:
+            modified_rows = []
+            for row in character_rows:
+                if row.char_id == interaction.char.id:
+                    modified_row = row._replace(
+                        user_id=interaction.user_id,
+                        action_name=interaction.action_name(),
+                        action_link=interaction.action_link())
+                    modified_rows.append(modified_row)
+                else:
+                    modified_rows.append(row)
+            character_rows = modified_rows
     # Add separate rows for each user_id of the same the game token
     # that is not in the character list
-    game_token = session.get('game_token')
-    user_ids = session.get('game_token_users', {}).get(game_token, [])
-    for user_id in user_ids:
-        if user_id not in [row.user_id for row in character_rows]:
+    for interaction in interactions:
+        if interaction.user_id not in [row.user_id for row in character_rows]:
             row = CharacterRow(
-                char_id=None,
-                char_name=None,
+                char_id=interaction.char.id if interaction.char else -1,
+                char_name=interaction.char.name if interaction.char else "",
                 loc_id=None,
                 loc_name=None,
-                action_name=None,
-                action_link=None,
-                user_id=user_id
-            )
+                action_name=interaction.action_name(),
+                action_link=interaction.action_link(),
+                user_id=interaction.user_id)
             character_rows.append(row)
     # not row.user_id ensures that rows without a user_id (empty or None) come
     # before rows with a user_id.

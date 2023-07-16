@@ -33,7 +33,6 @@ class Character(DbSerializable):
         self.location = None  # Location object
         self.progress = Progress()  # for travel or perhaps other actions
         self.destination = None  # Location object to travel to
-        self.user_id = ""  # whoever last played this character
 
     def to_json(self):
         return {
