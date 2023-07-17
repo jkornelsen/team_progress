@@ -12,12 +12,14 @@ from flask import (
 from .item import Item
 from .db_serializable import DbSerializable
 
+SINGLE_ID = 1  # only one instance of this class for each game token
+
 class Overall(DbSerializable):
     """Overall scenario settings such as scenario title and goal,
     and app settings."""
 
     def __init__(self):
-        self.id = 1  # only one instance of this class for each game token
+        self.id = SINGLE_ID  # used by parent class
         self.title = "Generic Adventure"
         self.description = (
             "An empty scenario. To begin, go to \"Change Setup\"."
@@ -29,6 +31,7 @@ class Overall(DbSerializable):
 
     def to_json(self):
         return {
+            'id': SINGLE_ID,
             'title': self.title,
             'description': self.description,
             'winning_item': self.winning_item.id if self.winning_item else None,

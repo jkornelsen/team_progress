@@ -55,6 +55,11 @@ maybe when on the game setup screen, check if cleaning needs to be done,
 and if so, post a message when it's done, like saving to file
 prompt each player to save to their PC once per day
 
+perhaps the database is only needed for persistence
+or maybe store the game with JSON rather than in a database
+store client-side in browser with downloadable JSON?
+would that work for multiplayer?
+
 source of resources: obtained from activities in forest which can be
 unlimited, regenerates periodically, or fixed limit.
 if unlimited, it's equivalent to saying magically produced by an activity,
@@ -148,11 +153,6 @@ entity classes might have superclasses for partially shared behavior
     players and npcs are both actors and can potentially gain xp from an action
     items and locations can both have a position, such as inside another one
     items and characters can be incremented over time
-
-perhaps the database is only needed for persistence
-or maybe store the game with JSON rather than in a database
-store client-side in browser with downloadable JSON?
-would that work for multiplayer?
 
 global stop button on overview screen, but no other ability to manufacture anything
 

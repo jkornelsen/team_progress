@@ -15,11 +15,10 @@
     {% if current.description %}
         <p>{{ current.description }}</p>
     {% endif %}
-    {% if current.char_type.lower() == "npc" %}
-        <p>NPC</p>
-    {% else %}
-        <p>Character for {{ current.char_type|capitalize }}</p>
-    {% endif %}
+    <!--
+    if current.for_player
+    <p>Character for current.for_player|capitalize </p>
+    -->
 
     {% if current.location %}
         <p>Location: <a href="{{ url_for('play_location', location_id=current.location.id) }}">{{ current.location.name }}</a></p>
@@ -151,7 +150,7 @@
                 const startBtn = document.getElementById("start-travel-btn");
                 const stopBtn = document.getElementById("stop-travel-btn");
                 const destSel = document.getElementById("destination-select");
-                if (data.is_ongoing) {
+                if (data && data.is_ongoing) {
                     startBtn.innerHTML = "Travelling...";
                     startBtn.disabled = true;
                     stopBtn.disabled = false;
@@ -175,6 +174,7 @@
                         updateStartbuttonLabel(data);
                     });
                 } else {
+                    updateTravelProgress(null);
                     updateStartbuttonLabel(null);
                 }
             }

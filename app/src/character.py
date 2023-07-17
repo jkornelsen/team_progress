@@ -40,9 +40,11 @@ class Character(DbSerializable):
             'name': self.name,
             'description': self.description,
             'toplevel': self.toplevel,
-            'items': {item.id: slot for item, slot in self.items.items()},
+            'items': {
+                str(item.id): slot
+                for item, slot in self.items.items()},
             'attribs': {
-                attrib.id: val
+                str(attrib.id): val
                 for attrib, val in self.attribs.items()},
             'location_id': self.location.id if self.location else None,
             'progress': self.progress.to_json(),
@@ -64,6 +66,8 @@ class Character(DbSerializable):
         instance.location = Location.get_by_id(
             int(data['location_id'])) if data['location_id'] else None
         instance.progress = Progress.from_json(data['progress'])
+        instance.destination = Location.get_by_id(
+            int(data['dest_id'])) if data['dest_id'] else None
         cls.instances.append(instance)
         return instance
 
@@ -150,10 +154,6 @@ def set_routes(app):
             char.destination = Location.get_by_id(dest_id)
             char.progress.quantity = 0
             char.to_db()
-        try:
-            char.progress.can_change_quantity(char.progress.rate_amount)
-        except Exception as ex:
-            return jsonify({'status': 'error', 'message': str(ex)})
         if char.progress.start():
             char.to_db()
             return jsonify({'status': 'success', 'message': 'Progress started.'})
@@ -170,14 +170,14 @@ def set_routes(app):
             return jsonify({'message': 'Progress is already paused.'})
 
     @app.route('/char/progress_data/<int:char_id>')
-    def char_progress_data(instance_id):
+    def char_progress_data(char_id):
         char = Character.get_by_id(char_id)
         if char:
             if not char.location or not char.destination:
-                #return jsonify({'error': 'No travel destination.'})
                 return jsonify({
                     'quantity': 0,
-                    'is_ongoing': False})
+                    'is_ongoing': False,
+                    'message': 'No travel destination.'})
             if char.progress.is_ongoing:
                 char.progress.determine_current_quantity()
                 char.to_db()

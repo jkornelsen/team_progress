@@ -31,7 +31,7 @@ class Location(DbSerializable):
             'name': self.name,
             'description': self.description,
             'destinations': {
-                dest.id: distance
+                str(dest.id): distance
                 for dest, distance in self.destinations.items()
             }
         }
@@ -59,7 +59,6 @@ class Location(DbSerializable):
                 cls.get_by_id(destination_id): distance
                 for destination_id, distance in
                 id_refs.get('dest', {}).get(instance.id, {}).items()}
-            instance.progress.destinations = instance.destinations
         return cls.instances
 
     @classmethod

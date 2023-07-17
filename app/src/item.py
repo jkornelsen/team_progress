@@ -42,10 +42,10 @@ class Item(DbSerializable):
             'growable': self.growable,
             'result_qty': self.result_qty,
             'sources': {
-                item.id: quantity
+                str(item.id): quantity
                 for item, quantity in self.sources.items()},
             'attribs': {
-                attrib.id: val
+                str(attrib.id): val
                 for attrib, val in self.attribs.items()},
             'progress': self.progress.to_json(),
         }
