@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block upper_left %}
+    <div class="nav-container">
+        <a href="{{ url_for('configure') }}">Back to Setup</a>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <h1>Pre-built Scenarios</h1>
+    <div class="scenario-list">
+        {% for scenario in scenarios %}
+            <div class="scenario-item">
+                <h2>{{ scenario.title }}</h2>
+                <p>{{ scenario.description }}</p>
+                <form method="POST" action="{{ url_for('browse_scenarios') }}">
+                    <input type="hidden" name="scenario_file" value="{{ scenario.filename }}">
+                    <input type="hidden" name="scenario_title" value="{{ scenario.title }}">
+                    <button type="submit">Load Scenario</button>
+                </form>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
+

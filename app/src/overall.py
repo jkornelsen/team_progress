@@ -22,10 +22,10 @@ class Overall(DbSerializable):
         self.id = SINGLE_ID  # used by parent class
         self.title = "Generic Adventure"
         self.description = (
-            "An empty scenario. To begin, go to \"Change Setup\"."
-            " You'll probably want to change the"
-            " title and this description in addition to doing some basic"
-            " setup such as adding a few starting items.")
+            "An empty scenario."
+            " To start with, change the title and this description"
+            " in the Overall settings, and do some basic"
+            " setup such as adding some items.")
         self.winning_item = None
         self.winning_quantity = 0
 
