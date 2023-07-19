@@ -36,6 +36,7 @@ def load_scenario_metadata(filepath):
 def load_data_from_file(filepath):
     with open(filepath, 'r') as infile:
         data = json.load(infile)
+        GameData.clear_db_for_token()
         g.game_data = GameData.from_json(data)
     g.game_data.to_db()
     session['file_message'] = 'Loaded from file.'
@@ -49,7 +50,7 @@ def set_routes(app):
         with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
             filepath = temp_file.name
             json.dump(data_to_save, temp_file, indent=4)
-        return send_file(filepath, as_attachment=True, attachment_filename=filename)
+        return send_file(filepath, as_attachment=True, download_name=filename)
 
     @app.route('/load_from_file')
     def load_from_file():
@@ -80,4 +81,12 @@ def set_routes(app):
                 scenario = load_scenario_metadata(filepath)
                 scenarios.append(scenario)
         return render_template('configure/scenarios.html', scenarios=scenarios)
+
+    @app.route('/blank_scenario')
+    def blank_scenario():
+        GameData.clear_db_for_token()
+        g.game_data = GameData()
+        g.game_data.to_db()
+        session['file_message'] = 'Starting game with default setup.'
+        return redirect(url_for('configure'))
 

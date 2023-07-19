@@ -5,8 +5,6 @@
         <div class="dropdown-menu">
             <a href="{{ url_for('logout') }}">Change User</a><br>
             <a href="{{ url_for('get_session_link') }}">Get Session Link</a><br>
-            <a href="{{ url_for('new_session') }}" onclick="return confirm(
-                'Creating a new session will reset the game. Are you sure you want to continue?')">New Session</a><br>
         </div>
     </span>
     Player <span class="userid" id="playerName">{{ current_user_id }}</span>

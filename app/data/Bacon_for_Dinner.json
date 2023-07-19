@@ -1,13 +1,22 @@
 {
-    "attribs": [],
+    "attribs": [
+        {
+            "description": "Knowledge of the woods.",
+            "id": 1,
+            "name": "Pathfinding"
+        }
+    ],
     "characters": [
         {
-            "attribs": {},
+            "attribs": {
+                "1": 2
+            },
             "description": "Sent to fetch bacon for dinner by her mother.",
             "dest_id": null,
             "id": 1,
             "items": {
-                "4": "main hand"
+                "4": "",
+                "5": ""
             },
             "location_id": 1,
             "name": "Suzy",
@@ -23,9 +32,80 @@
                 "stop_time": 1689618564.4476461
             },
             "toplevel": true
+        },
+        {
+            "attribs": {
+                "1": 7
+            },
+            "description": "Suzy's mother. Good understanding of the trails in the woods.",
+            "dest_id": null,
+            "id": 2,
+            "items": {},
+            "location_id": 1,
+            "name": "Mom",
+            "progress": {
+                "batches_processed": 0,
+                "is_ongoing": false,
+                "limit": 0,
+                "quantity": 0,
+                "rate_amount": 1.0,
+                "rate_duration": 1.0,
+                "start_time": null,
+                "step_size": 1.0,
+                "stop_time": null
+            },
+            "toplevel": true
+        },
+        {
+            "attribs": {},
+            "description": "Will pay a modest salary for chores.",
+            "dest_id": null,
+            "id": 3,
+            "items": {},
+            "location_id": 3,
+            "name": "Uncle",
+            "progress": {
+                "batches_processed": 0,
+                "is_ongoing": false,
+                "limit": 0,
+                "quantity": 0,
+                "rate_amount": 1.0,
+                "rate_duration": 1.0,
+                "start_time": null,
+                "step_size": 1.0,
+                "stop_time": null
+            },
+            "toplevel": false
         }
     ],
-    "events": [],
+    "events": [
+        {
+            "description": "Chance of something happening during a trip, such as getting lost in the woods. Use Moderate difficulty.",
+            "difficulty_values": {
+                "Easy": 5,
+                "Hard": 15,
+                "Moderate": 10,
+                "Very Hard": 20
+            },
+            "id": 1,
+            "name": "Travel",
+            "outcome_margin": 9,
+            "toplevel": true
+        },
+        {
+            "description": "Attempt to connect. Choose Easy difficulty since we won't be far from civilization.",
+            "difficulty_values": {
+                "Easy": 5,
+                "Hard": 15,
+                "Moderate": 10,
+                "Very Hard": 20
+            },
+            "id": 2,
+            "name": "Connect",
+            "outcome_margin": 9,
+            "toplevel": true
+        }
+    ],
     "items": [
         {
             "attribs": {},
@@ -112,6 +192,71 @@
             "result_qty": 1,
             "sources": {},
             "toplevel": false
+        },
+        {
+            "attribs": {},
+            "description": "Suzy's mother is the first number on the list.",
+            "growable": "not_growable",
+            "id": 5,
+            "name": "Phone",
+            "progress": {
+                "batches_processed": 0,
+                "is_ongoing": false,
+                "limit": 0,
+                "quantity": 1,
+                "rate_amount": 1.0,
+                "rate_duration": 1.0,
+                "start_time": null,
+                "step_size": 1,
+                "stop_time": null
+            },
+            "result_qty": 1,
+            "sources": {},
+            "toplevel": false
+        },
+        {
+            "attribs": {},
+            "description": "Pitchforking hay to feed animals. Mucking manure. Milking cows. When enough chores are done, find the Uncle to get paid for them.",
+            "growable": "over_time",
+            "id": 6,
+            "name": "Chores",
+            "progress": {
+                "batches_processed": 0,
+                "is_ongoing": false,
+                "limit": 100,
+                "quantity": 0,
+                "rate_amount": 1.0,
+                "rate_duration": 1.0,
+                "start_time": null,
+                "step_size": 1,
+                "stop_time": null
+            },
+            "result_qty": 1,
+            "sources": {},
+            "toplevel": false
+        },
+        {
+            "attribs": {},
+            "description": "Get paid for chores. Useful for purchasing pigs at the market in case breeding doesn't work out.",
+            "growable": "instantly",
+            "id": 7,
+            "name": "Cash",
+            "progress": {
+                "batches_processed": 0,
+                "is_ongoing": false,
+                "limit": 0,
+                "quantity": 0,
+                "rate_amount": 1.0,
+                "rate_duration": 1.0,
+                "start_time": null,
+                "step_size": 1,
+                "stop_time": null
+            },
+            "result_qty": 1,
+            "sources": {
+                "6": 10
+            },
+            "toplevel": false
         }
     ],
     "locations": [
@@ -146,6 +291,6 @@
         "id": 1,
         "title": "Bacon for Dinner",
         "winning_item": 1,
-        "winning_quantity": 15
+        "winning_quantity": 30
     }
 }

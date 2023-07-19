@@ -49,7 +49,7 @@ class Attrib(DbSerializable):
     def list_from_json(cls, json_data):
         cls.instances.clear()
         for attrib_data in json_data:
-            cls.from_json(attrib_data)
+            cls.from_json(attrib_data, None)
         cls.last_id = max(
             (instance.id for instance in cls.instances), default=0)
         return cls.instances

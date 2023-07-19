@@ -5,11 +5,11 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <h1>Create New Session</h1>
-    <p>Warning: Creating a new session will clear the existing game data.</p>
-    <p>Are you sure you want to create a new session?</p>
+    <h1>New Session</h1>
+    <p>A session is for a specific game,
+    and you can also invite friends to join.</p>
     <form action="{{ url_for('new_session') }}" method="POST">
-        <button type="submit">Yes, Create New Session</button>
+        <button type="submit">Create New Session</button>
     </form>
 </body>
 </html>

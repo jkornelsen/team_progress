@@ -2,6 +2,10 @@
 
 {% block content %}
     <h1>Event Setup</h1>
+    <p>Chance of something happening. Four-outcome rolls use a d20 die.
+    If the result is greater than the outcome margin,
+    for example if difficulty is 5, margin is 9, and roll is 15,
+    then the result is a major success, because 15 - 5 &gt; 9.</p>
     <form method="post">
         <label for="event-name">Name:</label>
         <input type="text" id="event-name" name="event_name" value="{{ current.name }}" required>

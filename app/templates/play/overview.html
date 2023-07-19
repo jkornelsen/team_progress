@@ -89,8 +89,7 @@
             function updateQuantities() {
                 {% for item in game_data.items %}
                     // Make AJAX request for item quantity
-                    $.get('/item/progress_quantity/{{ item.id }}', function(data) {
-                        // Update quantity value in the table
+                    $.get('/item/progress_data/{{ item.id }}', function(data) {
                         $('#item-{{ item.id }}-quantity').text(data.quantity);
                     });
                 {% endfor %}

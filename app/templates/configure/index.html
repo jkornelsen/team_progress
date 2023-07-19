@@ -15,7 +15,10 @@
 
 {% block content %}
     <h1>Game Setup</h1>
-    <center><a href="{{ url_for('browse_scenarios') }}"><button>Browse Example Scenarios</button></a></center>
+    <center>
+        <a href="{{ url_for('browse_scenarios') }}"><button>Browse Example Scenarios</button></a>
+        <a href="{{ url_for('blank_scenario') }}"><button onclick="return confirm('Are you sure you want to clear the current game\'s data and start with an empty setup?')">Blank Setup</button></a>
+    </center>
     <div class="entitylist-container">
         <a href="{{ url_for('configure_overall') }}">Overall Settings</a>
     </div>

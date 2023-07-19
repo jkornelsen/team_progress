@@ -1,12 +1,15 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{ config['TITLE'] }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block upper_left %}
+    <div class="nav-container">
+        <a class="upper-left" href="{{ url_for('overview') }}">Continue Game</a>
+        <span class="separator">|</span>
+        <a href="{{ url_for('configure') }}">Change Setup</a>
+    </div>
+{% endblock %}
+
+{% block content %}
     <h1>Session Link</h1>
     <p>Share the following link with others to join the game session:</p>
     <p><a href="{{ url }}">{{ url }}</a></p>
-</body>
-</html>
+{% endblock %}

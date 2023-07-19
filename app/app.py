@@ -94,7 +94,10 @@ def get_session_link():
     game_token = session.get('game_token')
     if game_token:
         url = url_for('index', game_token=game_token, _external=True)
-        return render_template('session/session_link.html', url=url)
+        return render_template(
+                'session/session_link.html',
+                current_user_id=g.user_id,
+                url=url)
     else:
         return "Session not found"
 
@@ -116,7 +119,8 @@ def configure():
     file_message = session.pop('file_message', False)
     return render_template(
         'configure/index.html',
-        game=g.game_data, current_user_id=g.user_id,
+        current_user_id=g.user_id,
+        game=g.game_data,
         file_message=file_message)
 
 if __name__ == '__main__':

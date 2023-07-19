@@ -98,7 +98,7 @@ def get_charlist_display():
     overall = g.game_data.overall
     character_rows = [] # Create a list to hold the character rows
     for char in overall.game_data.characters:
-        if char.toplevel or char.user_id:
+        if char.toplevel:
             row = CharacterRow(
                 char_id=char.id,
                 char_name=char.name,
@@ -151,10 +151,6 @@ def get_charlist_display():
 def set_routes(app):
     @app.route('/overview')
     def overview():
-        #print("session: " +
-        #    '\n    '.join([f'{key}: {value}'
-        #    for key, value in dict(session).items()]))
-        #print("g.game_data: ", vars(g.game_data))
         return render_template(
             'play/overview.html',
             current=g.game_data.overall,
