@@ -8,16 +8,50 @@ from flask import (
     session,
     url_for
 )
+
+from db import db
+from .db_serializable import DbSerializable
 from .attrib import Attrib
 from .item import Item
 from .location import Location
 from .progress import Progress
 
-from .db_serializable import DbSerializable
+# Create the association table for the many-to-many relationship
+character_attribs = DbSerializable.finish_table(
+    'character_attribs',
+    db.Column('character_id', db.Integer, db.ForeignKey('character.id'), primary_key=True),
+    db.Column('attrib_id', db.Integer, db.ForeignKey('attrib.id'), primary_key=True))
+
+character_items = DbSerializable.finish_table(
+    'character_items',
+    db.Column('character_id', db.Integer, db.ForeignKey('character.id'), primary_key=True),
+    db.Column('item_id', db.Integer, db.ForeignKey('item.id'), primary_key=True))
 
 class Character(DbSerializable):
     last_id = 0  # used to auto-generate a unique id for each object
     instances = []  # all objects of this class
+
+    name = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    toplevel = db.Column(db.Boolean, nullable=False)
+    # Use the 'character_attribs' association table for the attribs relationship
+    attribs = db.relationship(
+        'Attrib',
+        secondary=character_attribs,
+        backref=db.backref('characters', lazy=True)
+    )
+    items = db.relationship('Item',
+        secondary=character_items, backref='owners', lazy=True)
+    location_id = db.Column(db.Integer)
+    location = db.relationship('Location', backref='characters_at',
+        foreign_keys=[DbSerializable.game_token, location_id], lazy=True)
+    progress_id = db.Column(db.Integer, nullable=True)
+    progress = db.relationship('Progress', backref='character_for_progress',
+        foreign_keys=[DbSerializable.game_token, progress_id], lazy=True,
+        uselist=False)
+    destination_id = db.Column(db.Integer)
+    destination = db.relationship('Location', backref='characters_dest',
+        foreign_keys=[DbSerializable.game_token, destination_id], lazy=True)
 
     def __init__(self, new_id='auto'):
         if new_id == 'auto':
@@ -31,7 +65,7 @@ class Character(DbSerializable):
         self.attribs = {}  # keys are Attrib object, values are stat val
         self.items = {}  # keys are Item object, values are slot name
         self.location = None  # Location object
-        self.progress = Progress()  # for travel or perhaps other actions
+        self.progress = Progress(self)  # for travel or perhaps other actions
         self.destination = None  # Location object to travel to
 
     def to_json(self):
@@ -40,12 +74,12 @@ class Character(DbSerializable):
             'name': self.name,
             'description': self.description,
             'toplevel': self.toplevel,
-            'items': {
-                str(item.id): slot
-                for item, slot in self.items.items()},
             'attribs': {
                 str(attrib.id): val
                 for attrib, val in self.attribs.items()},
+            'items': {
+                str(item.id): slot
+                for item, slot in self.items.items()},
             'location_id': self.location.id if self.location else None,
             'progress': self.progress.to_json(),
             'dest_id': self.destination.id if self.destination else None
@@ -65,7 +99,7 @@ class Character(DbSerializable):
             for attrib_id, val in data['attribs'].items()}
         instance.location = Location.get_by_id(
             int(data['location_id'])) if data['location_id'] else None
-        instance.progress = Progress.from_json(data['progress'])
+        instance.progress = Progress.from_json(data['progress'], instance)
         instance.destination = Location.get_by_id(
             int(data['dest_id'])) if data['dest_id'] else None
         cls.instances.append(instance)
@@ -119,7 +153,6 @@ class Character(DbSerializable):
             return render_template(
                 'configure/character.html',
                 current=self,
-                current_user_id=g.user_id,
                 game_data=g.game_data)
 
 def set_routes(app):
@@ -142,7 +175,7 @@ def set_routes(app):
         if char:
             return render_template(
                 'play/character.html',
-                current=char, current_user_id=g.user_id)
+                current=char)
         else:
             return 'Character not found'
 

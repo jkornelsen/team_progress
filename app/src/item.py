@@ -9,13 +9,44 @@ from flask import (
     url_for
 )
 import math
+
+from db import db
 from .attrib import Attrib
 from .progress import Progress
 from .db_serializable import DbSerializable
 
+# Define the association table for the many-to-many relationship.
+item_sources = DbSerializable.finish_table(
+    'item_sources',
+    db.Column('item_id', db.Integer, db.ForeignKey('item.id'), primary_key=True),
+    db.Column('source_id', db.Integer, db.ForeignKey('item.id'), primary_key=True))
+
 class Item(DbSerializable):
     last_id = 0  # used to auto-generate a unique id for each object
     instances = []  # all objects of this class
+
+    name = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    toplevel = db.Column(db.Boolean, nullable=False)
+    growable = db.Column(db.Boolean, nullable=False)
+    result_qty = db.Column(db.Float(precision=2), nullable=False)
+    sources = db.relationship(
+        'Item', secondary=item_sources,
+        primaryjoin=(item_sources.c.item_id == DbSerializable.id)
+            & (item_sources.c.game_token == DbSerializable.game_token),
+        secondaryjoin=(item_sources.c.source_id == DbSerializable.id)
+            & (item_sources.c.game_token == DbSerializable.game_token),
+        backref=db.backref('source_of', lazy='dynamic'), lazy='dynamic')
+    item_attribs = DbSerializable.finish_table(
+        'item_attribs',
+        db.Column('item_id', db.Integer, db.ForeignKey('item.id'), primary_key=True),
+        db.Column('attrib_id', db.Integer, db.ForeignKey('attrib.id'), primary_key=True))
+    attribs = db.relationship('Attrib', secondary=item_attribs,
+        backref='applies_to_items', lazy=True)
+    progress_id = db.Column(db.Integer, nullable=True)
+    progress = db.relationship('Progress', backref='item_for_progress',
+        foreign_keys=[DbSerializable.game_token, progress_id], lazy=True,
+        uselist=False)
 
     def __init__(self, new_id='auto'):
         if new_id == 'auto':
@@ -27,11 +58,10 @@ class Item(DbSerializable):
         self.description = ""
         self.toplevel = False if len(self.__class__.instances) > 1 else True
         self.attribs = {}  # keys are Attrib object, values are stat val
-        self.progress = Progress()
+        self.progress = Progress(self)
         self.growable = 'over_time'
         self.sources = {}  # keys Item object, values quantity required
         self.result_qty = 1  # how many one batch yields
-        self.user_id = ""  # whoever last played with this item
 
     def to_json(self):
         return {
@@ -58,7 +88,7 @@ class Item(DbSerializable):
         instance.toplevel = data['toplevel']
         instance.growable = data['growable']
         instance.result_qty = data.get('result_qty', 1)
-        instance.progress = Progress.from_json(data['progress'])
+        instance.progress = Progress.from_json(data['progress'], instance)
         instance.progress.step_size = instance.result_qty
         id_refs.setdefault('source', {})[instance.id] = {
             int(source_id): quantity
@@ -134,6 +164,7 @@ class Item(DbSerializable):
                     self.progress.quantity = int(request.form.get('item_quantity'))
                 prev_quantity = self.progress.quantity
                 self.progress = Progress(
+                    self,
                     quantity=prev_quantity,
                     step_size=self.result_qty,
                     rate_amount=float(request.form.get('rate_amount')),
@@ -160,7 +191,6 @@ class Item(DbSerializable):
             return render_template(
                 'configure/item.html',
                 current=self,
-                current_user_id=g.user_id,
                 game_data=g.game_data)
 
 def set_routes(app):
@@ -184,7 +214,6 @@ def set_routes(app):
             return render_template(
                 'play/item.html',
                 current=item,
-                current_user_id=g.user_id,
                 game_data=g.game_data)
         else:
             return 'Item not found'
@@ -195,7 +224,6 @@ def set_routes(app):
         item = Item.get_by_id(item_id)
         num_batches = math.floor(quantity / item.progress.step_size)
         changed = item.progress.change_quantity(num_batches)
-        item.to_db()
         if changed:
             return jsonify({
                 'status': 'success', 'message':
@@ -211,7 +239,6 @@ def set_routes(app):
         if item:
             if item.progress.is_ongoing:
                 item.progress.determine_current_quantity()
-                item.to_db()
             return jsonify({
                 'is_ongoing': item.progress.is_ongoing,
                 'quantity': item.progress.quantity,

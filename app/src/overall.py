@@ -9,14 +9,26 @@ from flask import (
     url_for
 )
 
+from db import db
 from .item import Item
 from .db_serializable import DbSerializable
 
 SINGLE_ID = 1  # only one instance of this class for each game token
 
+# Define the association table for the many-to-many relationship between Overall and Item.
+overall_winning_items = DbSerializable.finish_table(
+    'overall_winning_items',
+    db.Column('item_id', db.Integer, db.ForeignKey('item.id'), primary_key=True),
+    db.Column('quantity', db.Integer, nullable=False))
+
 class Overall(DbSerializable):
     """Overall scenario settings such as scenario title and goal,
     and app settings."""
+    title = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    # Define the relationship with the Item model using the association table.
+    winning_items = db.relationship('Item', secondary=overall_winning_items,
+                                    backref='items_win_for', lazy=True)
 
     def __init__(self):
         self.id = SINGLE_ID  # used by parent class
@@ -26,8 +38,7 @@ class Overall(DbSerializable):
             " To start with, change the title and this description"
             " in the Overall settings, and do some basic"
             " setup such as adding some items.")
-        self.winning_item = None
-        self.winning_quantity = 0
+        self.winning_items = {}  # Item objects with quantity required.
 
     def to_json(self):
         return {
@@ -70,6 +81,17 @@ class Overall(DbSerializable):
                 print(request.form)
                 self.title = request.form.get('scenario_title')
                 self.description = request.form.get('scenario_description')
+                winning_item_ids = request.form.getlist('winning_item_id')
+                print(f"Source IDs: {winning_item_ids}")
+                self.winning_items = {}
+                for winning_item_id in winning_item_ids:
+                    winning_item_quantity = int(
+                        request.form.get(f'winning_item_quantity_{winning_item_id}', 0))
+                    winning_item = self.__class__.get_by_id(winning_item_id)
+                    self.winning_items[winning_item] = winning_item_quantity
+                print("Sources: ", {winning_item.name: quantity
+                    for winning_item, quantity in self.winning_items.items()})
+
                 winning_item_id = request.form.get('winning_item')
                 if winning_item_id:
                     self.winning_item = Item.get_by_id(int(winning_item_id))
@@ -77,7 +99,8 @@ class Overall(DbSerializable):
                 else:
                     self.winning_item = None
                     self.winning_quantity = 1
-                self.to_db()
+                db.session.commit()
+                #self.to_db()
             elif 'cancel_changes' in request.form:
                 print("Cancelling changes.")
             else:
@@ -87,15 +110,21 @@ class Overall(DbSerializable):
             return render_template(
                 'configure/overall.html',
                 current=self,
-                current_user_id=g.user_id,
                 game_data=g.game_data)
 
 CharacterRow = namedtuple('CharacterRow',
     ['char_id', 'char_name', 'loc_id', 'loc_name',
-    'action_name', 'action_link', 'user_id'])
+    'action_name', 'action_link', 'username'])
 
 def get_charlist_display():
-    overall = g.game_data.overall
+    collection = Character.get_collection()
+    projection = {'name': 1, 'id': 1}
+    docs = collection.find({'game_token': g.game_token}, projection)
+    entities_data[GameData.entity_name(entity_cls)] = list(docs)
+    # SELECT B.name, B.id
+    # FROM Character A, Location B
+    # WHERE B.id = A.location_id
+    #overall = g.game_data.overall
     character_rows = [] # Create a list to hold the character rows
     for char in overall.game_data.characters:
         if char.toplevel:
@@ -106,7 +135,7 @@ def get_charlist_display():
                 loc_name=char.location.name if char.location else None,
                 action_name="TODO",
                 action_link="TODO",
-                user_id=None
+                username=None
             )
             character_rows.append(row)
     from .user_interaction import UserInteraction
@@ -118,17 +147,17 @@ def get_charlist_display():
             for row in character_rows:
                 if row.char_id == interaction.char.id:
                     modified_row = row._replace(
-                        user_id=interaction.user_id,
+                        username=interaction.username,
                         action_name=interaction.action_name(),
                         action_link=interaction.action_link())
                     modified_rows.append(modified_row)
                 else:
                     modified_rows.append(row)
             character_rows = modified_rows
-    # Add separate rows for each user_id of the same the game token
+    # Add separate rows for each username of the same the game token
     # that is not in the character list
     for interaction in interactions:
-        if interaction.user_id not in [row.user_id for row in character_rows]:
+        if interaction.username not in [row.username for row in character_rows]:
             row = CharacterRow(
                 char_id=interaction.char.id if interaction.char else -1,
                 char_name=interaction.char.name if interaction.char else "",
@@ -136,16 +165,16 @@ def get_charlist_display():
                 loc_name=None,
                 action_name=interaction.action_name(),
                 action_link=interaction.action_link(),
-                user_id=interaction.user_id)
+                username=interaction.username)
             character_rows.append(row)
-    # not row.user_id ensures that rows without a user_id (empty or None) come
-    # before rows with a user_id.
-    # row.user_id or '' handles the case where row.user_id is None or an empty
-    # string, ensuring consistent sorting within rows without a user_id.
+    # not row.username ensures that rows without a username (empty or None) come
+    # before rows with a username.
+    # row.username or '' handles the case where row.username is None or an empty
+    # string, ensuring consistent sorting within rows without a username.
     # row.char_name is used as the primary sorting criterion, ensuring
     # alphabetical sorting within rows.
     character_rows.sort(key=lambda row:
-        (not row.user_id, row.user_id or '', row.char_name))
+        (not row.username, row.username or '', row.char_name))
     return character_rows
 
 def set_routes(app):
@@ -154,7 +183,6 @@ def set_routes(app):
         return render_template(
             'play/overview.html',
             current=g.game_data.overall,
-            current_user_id=g.user_id,
             game_data=g.game_data,
             charlist=get_charlist_display())
 

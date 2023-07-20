@@ -7,29 +7,30 @@ from src.item import Item
 from src.location import Location
 from src.overall import Overall
 
-# In this order for from_json().
-ENTITIES = [
-        Attrib,
-        Location,
-        Item,
-        Character,
-        Event]
-
-def entity_name(cls):
-    return cls.__name__.lower() + 's'
-
 class GameData:
+    # In this order for from_json().
+    ENTITIES = [
+            Attrib,
+            Location,
+            Item,
+            Character,
+            Event]
+
     def __init__(self):
-        for entity_cls in ENTITIES:
+        for entity_cls in self.ENTITIES:
             entity_cls.instances.clear()
             setattr(self, entity_name(entity_cls), entity_cls.instances)
             setattr(entity_cls, 'game_data', self)
         self.overall = Overall.from_db()
         Overall.game_data = self
 
+    @staticmethod
+    def entity_name(entity_cls):
+        return entity_cls.__name__.lower() + 's'
+
     def to_json(self):
         game_data = {}
-        for entity_cls in ENTITIES:
+        for entity_cls in self.ENTITIES:
             entity_data = [
                 entity.to_json()
                 for entity in getattr(self, entity_name(entity_cls))]
@@ -41,7 +42,7 @@ class GameData:
     def from_json(cls, data):
         instance = cls()
         # Load in order to correctly get references to other entities. 
-        for entity_cls in ENTITIES:
+        for entity_cls in cls.ENTITIES:
             entity_data = data[entity_name(entity_cls)]
             setattr(
                 instance, entity_name(entity_cls),
@@ -50,7 +51,7 @@ class GameData:
         return instance
 
     def to_db(self):
-        for entity_cls in ENTITIES:
+        for entity_cls in self.ENTITIES:
             entity_list = getattr(self, entity_name(entity_cls))
             for entity in entity_list:
                 entity.to_db()
@@ -58,7 +59,7 @@ class GameData:
 
     @staticmethod
     def clear_db_for_token():
-        for entity_cls in ENTITIES + [Overall]:
+        for entity_cls in GameData.ENTITIES + [Overall]:
             query = {'game_token': g.game_token}
             collection = entity_cls.get_collection()
             collection.delete_many(query)
@@ -66,7 +67,7 @@ class GameData:
     @classmethod
     def from_db(cls):
         instance = cls()
-        for entity_cls in ENTITIES:
+        for entity_cls in cls.ENTITIES:
             setattr(
                 instance, entity_name(entity_cls),
                 entity_cls.list_from_db())

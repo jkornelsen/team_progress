@@ -8,6 +8,8 @@ from flask import (
     session,
     url_for
 )
+
+from db import db
 from .db_serializable import DbSerializable
 
 class Attrib(DbSerializable):
@@ -19,6 +21,9 @@ class Attrib(DbSerializable):
     """
     last_id = 0  # used to auto-generate a unique id for each object
     instances = []  # all objects of this class
+
+    name = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text, nullable=True)
 
     def __init__(self, new_id='auto'):
         if new_id == 'auto':
@@ -78,9 +83,7 @@ class Attrib(DbSerializable):
             else:
                 return redirect(url_for('configure'))
         else:
-            return render_template(
-                'configure/attrib.html',
-                current=self, current_user_id=g.user_id)
+            return render_template('configure/attrib.html', current=self)
 
 def set_routes(app):
     @app.route('/configure/attrib/<attrib_id>', methods=['GET', 'POST'])

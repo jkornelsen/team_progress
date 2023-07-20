@@ -16,8 +16,12 @@ chdir "C:\OurDocs\family_and_fun\games code by Jim\team_adventurers\app"
 create app.py with text editor
 python -m venv venv
 python.exe -m pip install --upgrade pip
-pip install pymongo
+pip install psycopg2
 
+chdir "C:\Program Files\PostgreSQL\15\bin"
+./pg_ctl start -D "C:\ProgramData\PostgreSQL\data"
+./psql -U postgres -d postgres
+password *d***
 
 ---- reload ----
 

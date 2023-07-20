@@ -43,6 +43,20 @@ def load_data_from_file(filepath):
     return redirect(url_for('configure'))
 
 def set_routes(app):
+    @app.route('/configure')
+    def configure():
+        file_message = session.pop('file_message', False)
+        entities_data = {}
+        for entity_cls in GameData.ENTITIES:
+            # Use the relationship attribute defined in the models.
+            query = entity_cls.query.filter_by(game_token=g.game_token)
+            entities_data[GameData.entity_name(entity_cls)] = query.with_entities(
+                entity_cls.name, entity_cls.id).all()
+        return render_template(
+            'configure/index.html',
+            entities_data=entities_data,
+            file_message=file_message)
+
     @app.route('/save_to_file')
     def save_to_file():
         data_to_save = g.game_data.to_json()
@@ -80,7 +94,10 @@ def set_routes(app):
                 filepath = os.path.join(EXAMPLES_DIR, filename)
                 scenario = load_scenario_metadata(filepath)
                 scenarios.append(scenario)
-        return render_template('configure/scenarios.html', scenarios=scenarios)
+        scenarios = sorted(scenarios, key=lambda sc: sc['filename'])
+        return render_template(
+            'configure/scenarios.html',
+            scenarios=scenarios)
 
     @app.route('/blank_scenario')
     def blank_scenario():

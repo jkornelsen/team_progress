@@ -1,8 +1,18 @@
 from flask import g
+from sqlalchemy.ext.declarative import declarative_base
 
-class DbSerializable:
+from db import db
+
+Base = declarative_base()
+
+class DbSerializable(Base, db.Model):
+    __abstract__ = True
+
+    game_token = db.Column(db.String(50), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+
     """
-    Superclass with methods for serializing to database along with some other
+    Parent class with methods for serializing to database along with some other
     things that entities have in common.
     """
     @classmethod
@@ -23,8 +33,8 @@ class DbSerializable:
         return cls.instances
 
     @classmethod
-    def get_collection(cls):
-        return g.db[cls.__name__.lower()]
+    def get_table_name(cls):
+        return cls.__name__.lower()
 
     @classmethod
     def remove_from_db(cls, doc_id):
@@ -68,4 +78,20 @@ class DbSerializable:
             (instance.id for instance in cls.instances), default=0)
         return instances
 
+    @staticmethod
+    def finish_table(table_name, *columns):
+        """
+        Args:
+            table_name (str): The name of the table.
+            *columns (Column): Columns to be included in the new table.
+        Returns:
+            Table: The new table definition with the game_token column.
+        """
+        return db.Table(
+            table_name,
+            Base.metadata,
+            #db.Column('game_token', db.String(50), primary_key=True, default=g.game_token),
+            db.Column('game_token', db.String(50), primary_key=True),
+            *columns
+        )
 

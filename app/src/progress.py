@@ -4,10 +4,29 @@ import math
 import threading
 import time
 
-class Progress:
-    """Track progress, such as over time."""
-    def __init__(self, step_size=1.0, rate_amount=1.0, rate_duration=1.0,
-            quantity=0, sources=None):
+from db import db
+from .db_serializable import DbSerializable
+
+class Progress(DbSerializable):
+    """Track progress, such as over time.
+    Instead of its own collection the data for this class will be stored in
+    the database for the entity that contains it.
+    """
+    #entity_id = db.Column(db.Integer, db.ForeignKey('item.id'), nullable=False)
+    quantity = db.Column(db.Float(precision=2), nullable=False)
+    limit = db.Column(db.Float(precision=2), nullable=False)
+    step_size = db.Column(db.Float(precision=2), nullable=False)
+    rate_amount = db.Column(db.Float(precision=2), nullable=False)
+    rate_duration = db.Column(db.Float(precision=2), nullable=False)
+    sources_json = db.Column(db.Text, nullable=False)
+    start_time = db.Column(db.DateTime, nullable=True)
+    stop_time = db.Column(db.DateTime, nullable=True)
+    batches_processed = db.Column(db.Integer, nullable=False)
+    is_ongoing = db.Column(db.Boolean, nullable=False)
+
+    def __init__(self, entity, step_size=1.0,
+            rate_amount=1.0, rate_duration=1.0, quantity=0, sources=None):
+        self.entity = entity  # the Item or other entity that uses this object
         self.quantity = quantity  # the main value tracked
         self.limit = 0  # limit the quantity if not 0
         self.step_size = step_size
@@ -37,8 +56,8 @@ class Progress:
         }
 
     @classmethod
-    def from_json(cls, data):
-        instance = cls()
+    def from_json(cls, data, entity):
+        instance = cls(entity)
         instance.quantity = data['quantity']
         instance.limit = data.get('limit', 0)
         instance.step_size = data.get('step_size', 0)
@@ -53,15 +72,17 @@ class Progress:
     # return true if able to change quantity
     def change_quantity(self, batches_requested):
         with self.lock:
+            print(f"Changing quantity: batches_requested={batches_requested}")
             stop_here = False
             if batches_requested == 0:
-                self.stop()
-                return False
+                raise Exception("Expected non-zero number of batches.")
             num_batches = batches_requested
             eff_result_qty = num_batches * self.step_size
-            if self.limit != 0 and abs(eff_result_qty) > abs(self.limit):
-                num_batches = abs(self.limit) // abs(self.step_size)
-                eff_result_qty = num_batches * self.step_size
+            new_quantity = self.quantity + eff_result_qty
+            if ((self.limit > 0 and new_quantity > self.limit)
+                    or (self.limit < 0 and new_quantity < self.limit)):
+                #num_batches = math.floor(abs(self.limit) / abs(self.step_size))
+                num_batches = (self.limit - self.quantity) // self.step_size
                 stop_here = True  # can't process the full amount
             eff_source_qtys = {}
             for source_item, source_qty in self.sources.items():
@@ -79,9 +100,11 @@ class Progress:
                 for source_item, source_qty in self.sources.items():
                     eff_source_qty = num_batches * source_qty
                     source_item.progress.quantity -= eff_source_qty
+                    source_item.to_db()
                 eff_result_qty = num_batches * self.step_size
                 self.quantity += eff_result_qty
                 self.batches_processed += num_batches
+                self.entity.to_db()
             if stop_here:
                 self.stop()
             return num_batches > 0
@@ -91,9 +114,11 @@ class Progress:
         total_batches_needed = math.floor(
             elapsed_time * (self.rate_amount * self.rate_duration))
         batches_to_do = total_batches_needed - self.batches_processed
+        print(f"determine_current_quantity: batches_to_do={batches_to_do}")
         if batches_to_do > 0:
             return self.change_quantity(batches_to_do)
         else:
+            self.stop()
             return False
 
     def start(self):
@@ -102,12 +127,14 @@ class Progress:
         self.start_time = time.time()
         self.batches_processed = 0
         self.is_ongoing = True
+        self.entity.to_db()
         return True
 
     def stop(self):
         if self.is_ongoing:
             self.is_ongoing = False
             self.stop_time = time.time()
+            self.entity.to_db()
             return True
         else:
             return False

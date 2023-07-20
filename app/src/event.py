@@ -10,6 +10,9 @@ from flask import (
 )
 import random
 
+from db import db
+from .db_serializable import DbSerializable
+
 OUTCOMES = [
     "Critical Failure",
     "Minor Failure",
@@ -23,11 +26,15 @@ OUTCOMES = [
 def roll_dice(sides):
     return random.randint(1, sides)
 
-from .db_serializable import DbSerializable
-
 class Event(DbSerializable):
     last_id = 0  # used to auto-generate a unique id for each object
     instances = []  # all objects of this class
+
+    name = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    toplevel = db.Column(db.Boolean, nullable=False)
+    outcome_margin = db.Column(db.Integer, nullable=False)
+    difficulty_values = db.Column(db.JSON, nullable=False)
 
     def __init__(self, new_id='auto'):
         if new_id == 'auto':
@@ -66,8 +73,8 @@ class Event(DbSerializable):
         instance.name = data['name']
         instance.description = data['description']
         instance.toplevel = data['toplevel']
-        instance.difficulty_values = data['difficulty_values']
         instance.outcome_margin = data['outcome_margin']
+        instance.difficulty_values = data['difficulty_values']
         cls.instances.append(instance)
         return instance
 
@@ -103,8 +110,7 @@ class Event(DbSerializable):
         else:
             return render_template(
                 'configure/event.html',
-                current=self,
-                current_user_id=g.user_id)
+                current=self)
 
     def play_by_form(self):
         if request.method == 'POST':
@@ -116,12 +122,11 @@ class Event(DbSerializable):
             return render_template(
                 'play/event.html',
                 current=self,
-                current_user_id=g.user_id,
                 outcome=self.get_outcome())
         else:
             return render_template(
                 'play/event.html',
-                current=self, current_user_id=g.user_id)
+                current=self)
 
     def get_outcome(self):
         difficulty_value = self.difficulty_values[self.difficulty]

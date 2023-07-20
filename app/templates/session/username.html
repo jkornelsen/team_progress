@@ -7,10 +7,11 @@
 <body>
     <h1>Choose Username</h1>
     <p>This is your ID to access the game,
-    not the name of your player's character.</p>
-    <p>For example, your username could be tom123
-    (try to avoid giving personal information),
-    while the main character you play might be named "Carpenter Bob".
+    not the name of your player's character.
+    For example, your username could be tom123
+    while the main character you play might be named "Carpenter Bob".</p>
+    <p>As with many places on the internet,
+    it's best to avoid giving personal information.</p>
     <form method="POST" action="{{ url_for('set_username') }}">
         <label for="username">Username:</label>
         <input type="text" id="username" name="username" required>

@@ -8,11 +8,30 @@ from flask import (
     session,
     url_for
 )
+from db import db
 from .db_serializable import DbSerializable
+
+# Assuming you have defined the `location_destinations` association table like this:
+location_destinations = DbSerializable.finish_table(
+    'location_destinations',
+    db.Column('origin_id', db.Integer, db.ForeignKey('location.id'), primary_key=True),
+    db.Column('dest_id', db.Integer, db.ForeignKey('location.id'), primary_key=True))
 
 class Location(DbSerializable):
     last_id = 0  # used to auto-generate a unique id for each object
     instances = []  # all objects of this class
+
+    name = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    # Use the 'location_destinations' association table for the destinations
+    destinations = db.relationship(
+        'Location',
+        secondary=location_destinations,
+        primaryjoin=id == location_destinations.c.origin_id,
+        secondaryjoin=id == location_destinations.c.dest_id,
+        backref='sources',
+        lazy=True
+    )
 
     def __init__(self, new_id='auto'):
         if new_id == 'auto':
@@ -132,7 +151,6 @@ def set_routes(app):
             return render_template(
                 'play/location.html',
                 current=location,
-                current_user_id=g.user_id,
                 game_data=g.game_data)
         else:
             return 'Location not found'
