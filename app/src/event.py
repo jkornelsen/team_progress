@@ -9,6 +9,7 @@ from flask import (
     url_for
 )
 import random
+from sqlalchemy import Column, Integer, String, Text, Boolean, JSON
 
 from db import db
 from .db_serializable import DbSerializable
@@ -26,15 +27,19 @@ OUTCOMES = [
 def roll_dice(sides):
     return random.randint(1, sides)
 
+event_tbl = DbSerializable.table_with_id(
+    'event',
+    Column('name', String(255), nullable=False),
+    Column('description', Text, nullable=True),
+    Column('toplevel', Boolean, nullable=False),
+    Column('outcome_margin', Integer, nullable=False),
+    Column('difficulty_values', JSON, nullable=False))
+
 class Event(DbSerializable):
+    __table__ = event_tbl
+
     last_id = 0  # used to auto-generate a unique id for each object
     instances = []  # all objects of this class
-
-    name = db.Column(db.String(255), nullable=False)
-    description = db.Column(db.Text, nullable=True)
-    toplevel = db.Column(db.Boolean, nullable=False)
-    outcome_margin = db.Column(db.Integer, nullable=False)
-    difficulty_values = db.Column(db.JSON, nullable=False)
 
     def __init__(self, new_id='auto'):
         if new_id == 'auto':

@@ -1,20 +1,16 @@
 from flask import g
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 
 from db import db
 
 Base = declarative_base()
 
 class DbSerializable(Base, db.Model):
+    """Parent class with methods for serializing to database along with some
+    other things that entities have in common.
+    """
     __abstract__ = True
 
-    game_token = db.Column(db.String(50), primary_key=True)
-    id = db.Column(db.Integer, primary_key=True)
-
-    """
-    Parent class with methods for serializing to database along with some other
-    things that entities have in common.
-    """
     @classmethod
     def get_by_id(cls, id_to_get):
         id_to_get = int(id_to_get)
@@ -79,19 +75,19 @@ class DbSerializable(Base, db.Model):
         return instances
 
     @staticmethod
-    def finish_table(table_name, *columns):
-        """
-        Args:
-            table_name (str): The name of the table.
-            *columns (Column): Columns to be included in the new table.
-        Returns:
-            Table: The new table definition with the game_token column.
-        """
+    def table_with_token(table_name, *columns):
         return db.Table(
             table_name,
             Base.metadata,
             #db.Column('game_token', db.String(50), primary_key=True, default=g.game_token),
             db.Column('game_token', db.String(50), primary_key=True),
-            *columns
-        )
+            *columns)
+
+    @staticmethod
+    def table_with_id(table_name, *columns):
+        return DbSerializable.table_with_token(
+            table_name,
+            db.Column('id', db.Integer, primary_key=True),
+            *columns)
+
 

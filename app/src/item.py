@@ -9,44 +9,83 @@ from flask import (
     url_for
 )
 import math
+from sqlalchemy import (Column, String, Text, Boolean, Float, Integer,
+    ForeignKeyConstraint,
+    and_, text)
+from sqlalchemy.orm import relationship
 
 from db import db
-from .attrib import Attrib
-from .progress import Progress
+from .attrib import Attrib, attrib_tbl
+from .progress import Progress, progress_tbl
 from .db_serializable import DbSerializable
 
-# Define the association table for the many-to-many relationship.
-item_sources = DbSerializable.finish_table(
+item_tbl = DbSerializable.table_with_id(
+    'item',
+    Column('name', String(255), nullable=False),
+    Column('description', Text, nullable=True),
+    Column('toplevel', Boolean, nullable=False),
+    Column('growable', Boolean, nullable=False),
+    Column('result_qty', Float(precision=2), nullable=False),
+    Column('progress_id', Integer, nullable=True))
+item_tbl.append_constraint(
+    ForeignKeyConstraint(
+        [item_tbl.c.game_token, item_tbl.c.progress_id],
+        [progress_tbl.c.game_token, progress_tbl.c.id]))
+
+item_attribs = DbSerializable.table_with_token(
+    'item_attribs',
+    Column('item_id', Integer, primary_key=True),
+    Column('attrib_id', Integer, primary_key=True))
+item_attribs.append_constraint(
+    ForeignKeyConstraint(
+        [item_attribs.c.game_token, item_attribs.c.item_id],
+        [item_tbl.c.game_token, item_tbl.c.id]))
+item_attribs.append_constraint(
+    ForeignKeyConstraint(
+        [item_attribs.c.game_token, item_attribs.c.attrib_id],
+        [attrib_tbl.c.game_token, attrib_tbl.c.id]))
+
+item_sources = DbSerializable.table_with_token(
     'item_sources',
-    db.Column('item_id', db.Integer, db.ForeignKey('item.id'), primary_key=True),
-    db.Column('source_id', db.Integer, db.ForeignKey('item.id'), primary_key=True))
+    Column('item_id', primary_key=True),
+    Column('source_id', primary_key=True))
+item_sources.append_constraint(
+    ForeignKeyConstraint(
+        [item_sources.c.game_token, item_sources.c.item_id],
+        [item_tbl.c.game_token, item_tbl.c.id]))
+item_sources.append_constraint(
+    ForeignKeyConstraint(
+        [item_sources.c.game_token, item_sources.c.source_id],
+        [item_tbl.c.game_token, item_tbl.c.id]))
 
 class Item(DbSerializable):
+    __table__ = item_tbl
+
     last_id = 0  # used to auto-generate a unique id for each object
     instances = []  # all objects of this class
 
-    name = db.Column(db.String(255), nullable=False)
-    description = db.Column(db.Text, nullable=True)
-    toplevel = db.Column(db.Boolean, nullable=False)
-    growable = db.Column(db.Boolean, nullable=False)
-    result_qty = db.Column(db.Float(precision=2), nullable=False)
-    sources = db.relationship(
+    attribs = relationship(
+        Attrib, secondary=item_attribs,
+        primaryjoin=and_(
+            item_attribs.c.game_token == item_tbl.c.game_token,
+            item_attribs.c.item_id == item_tbl.c.id),
+        secondaryjoin=and_(
+            item_attribs.c.game_token == attrib_tbl.c.game_token,
+            item_attribs.c.attrib_id == attrib_tbl.c.id),
+        backref='applies_to_items', lazy='dynamic')
+    sources = relationship(
         'Item', secondary=item_sources,
-        primaryjoin=(item_sources.c.item_id == DbSerializable.id)
-            & (item_sources.c.game_token == DbSerializable.game_token),
-        secondaryjoin=(item_sources.c.source_id == DbSerializable.id)
-            & (item_sources.c.game_token == DbSerializable.game_token),
-        backref=db.backref('source_of', lazy='dynamic'), lazy='dynamic')
-    item_attribs = DbSerializable.finish_table(
-        'item_attribs',
-        db.Column('item_id', db.Integer, db.ForeignKey('item.id'), primary_key=True),
-        db.Column('attrib_id', db.Integer, db.ForeignKey('attrib.id'), primary_key=True))
-    attribs = db.relationship('Attrib', secondary=item_attribs,
-        backref='applies_to_items', lazy=True)
-    progress_id = db.Column(db.Integer, nullable=True)
-    progress = db.relationship('Progress', backref='item_for_progress',
-        foreign_keys=[DbSerializable.game_token, progress_id], lazy=True,
-        uselist=False)
+        primaryjoin=and_(
+            item_sources.c.game_token == item_tbl.c.game_token,
+            item_sources.c.item_id == item_tbl.c.id),
+        secondaryjoin=and_(
+            item_sources.c.game_token == item_tbl.c.game_token,
+            item_sources.c.source_id == item_tbl.c.id),
+        backref='applies_to_items', lazy='dynamic')
+    progress = relationship(
+        Progress, backref='item_for_progress',
+        foreign_keys=[item_tbl.c.game_token, item_tbl.c.progress_id],
+        lazy=True, uselist=False)
 
     def __init__(self, new_id='auto'):
         if new_id == 'auto':

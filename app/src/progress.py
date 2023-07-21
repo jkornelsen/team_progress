@@ -3,26 +3,30 @@ from flask import jsonify
 import math
 import threading
 import time
+from sqlalchemy import Column, Float, Text, DateTime, Integer, Boolean
 
 from db import db
 from .db_serializable import DbSerializable
+
+progress_tbl = DbSerializable.table_with_id(
+    'progress',
+    Column('quantity', Float(precision=2), nullable=False),
+    Column('limit', Float(precision=2), nullable=False),
+    Column('step_size', Float(precision=2), nullable=False),
+    Column('rate_amount', Float(precision=2), nullable=False),
+    Column('rate_duration', Float(precision=2), nullable=False),
+    Column('sources_json', Text, nullable=False),
+    Column('start_time', DateTime, nullable=True),
+    Column('stop_time', DateTime, nullable=True),
+    Column('batches_processed', Integer, nullable=False),
+    Column('is_ongoing', Boolean, nullable=False))
 
 class Progress(DbSerializable):
     """Track progress, such as over time.
     Instead of its own collection the data for this class will be stored in
     the database for the entity that contains it.
     """
-    #entity_id = db.Column(db.Integer, db.ForeignKey('item.id'), nullable=False)
-    quantity = db.Column(db.Float(precision=2), nullable=False)
-    limit = db.Column(db.Float(precision=2), nullable=False)
-    step_size = db.Column(db.Float(precision=2), nullable=False)
-    rate_amount = db.Column(db.Float(precision=2), nullable=False)
-    rate_duration = db.Column(db.Float(precision=2), nullable=False)
-    sources_json = db.Column(db.Text, nullable=False)
-    start_time = db.Column(db.DateTime, nullable=True)
-    stop_time = db.Column(db.DateTime, nullable=True)
-    batches_processed = db.Column(db.Integer, nullable=False)
-    is_ongoing = db.Column(db.Boolean, nullable=False)
+    __table__ = progress_tbl
 
     def __init__(self, entity, step_size=1.0,
             rate_amount=1.0, rate_duration=1.0, quantity=0, sources=None):
@@ -69,7 +73,7 @@ class Progress(DbSerializable):
         instance.is_ongoing = data['is_ongoing']
         return instance
 
-    # return true if able to change quantity
+    # returns true if able to change quantity
     def change_quantity(self, batches_requested):
         with self.lock:
             print(f"Changing quantity: batches_requested={batches_requested}")
@@ -81,7 +85,6 @@ class Progress(DbSerializable):
             new_quantity = self.quantity + eff_result_qty
             if ((self.limit > 0 and new_quantity > self.limit)
                     or (self.limit < 0 and new_quantity < self.limit)):
-                #num_batches = math.floor(abs(self.limit) / abs(self.step_size))
                 num_batches = (self.limit - self.quantity) // self.step_size
                 stop_here = True  # can't process the full amount
             eff_source_qtys = {}

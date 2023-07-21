@@ -12,18 +12,21 @@ from flask import (
 from db import db
 from .db_serializable import DbSerializable
 
+attrib_tbl = DbSerializable.table_with_id(
+    'attrib',
+    db.Column('name', db.String(255), nullable=False),
+    db.Column('description', db.Text, nullable=True))
+
 class Attrib(DbSerializable):
-    """
-    Stat or state or other type of attribute for a character or item.
+    """Stat or state or other type of attribute for a character or item.
     Examples: Perception, XP, Max HP, Current HP, Poisoned
     Values of the attrib can be stored as values in attrib dicts of other
     entities.
     """
+    __table__ = attrib_tbl
+
     last_id = 0  # used to auto-generate a unique id for each object
     instances = []  # all objects of this class
-
-    name = db.Column(db.String(255), nullable=False)
-    description = db.Column(db.Text, nullable=True)
 
     def __init__(self, new_id='auto'):
         if new_id == 'auto':

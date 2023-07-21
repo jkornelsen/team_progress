@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from flask import g
+from sqlalchemy import Column, String, DateTime, Integer
 
 from db import db
 from .db_serializable import DbSerializable
@@ -11,31 +12,30 @@ from .item import Item
 from .location import Location
 from .overall import Overall
 
+userlog_tbl = DbSerializable.table_with_token(
+    'user_interactions',
+    Column('username', String(50), nullable=True),
+    Column('timestamp', DateTime, nullable=False, onupdate=db.func.current_timestamp()),
+    Column('char_id', Integer, nullable=True),
+    Column('action_id', Integer, nullable=True),
+    Column('action_type', String(50), nullable=True))
+
 class UserInteraction(DbSerializable):
     """Keep a record of recent user interactions with the game
     so they can be displayed on the overview screen.
     """
-    __tablename__ = 'user_interactions'  # Define the table name
-
-    username = db.Column(db.String(50), nullable=True)
-    timestamp = db.Column(db.DateTime, nullable=False, onupdate=db.func.current_timestamp())
-    char_id = db.Column(db.Integer, nullable=True)
-    action_id = db.Column(db.Integer, nullable=True)
-    action_type = db.Column(db.String(50), nullable=True)
+    __table__ = userlog_tbl
 
     __table_args__ = (
         # Unique constraint for the nullable columns
-        db.UniqueConstraint('game_token', 'id', name='user_interaction_pk'),
         db.UniqueConstraint('username', 'char_id', 'action_id', 'action_type',
-                            name='user_interaction_unique_interaction')
+                            name='user_interactions_unique_nullable'),
     )
-    char = db.relationship(
-        'Character', backref='user_interactions', lazy=True,
-        foreign_keys=[DbSerializable.game_token, char_id])
 
     def __init__(self, username):
         self.game_token = g.game_token
         self.username = username
+        self.timestamp = datetime.min
         self.char = None
         self.action_obj = None  # object of most recent interaction
         self.action_type = None  # class such as Item or Location
@@ -74,16 +74,15 @@ class UserInteraction(DbSerializable):
             'username': self.username,
             'char_id': self.char.id if self.char else -1
         }
-        existing_interaction = UserInteraction.query.filter_by(**query).first()
+        existing_interaction = self.query.filter_by(**query).first()
         if existing_interaction:
             print(f"Updating for {self.__class__.__name__} with username {self.username}")
             for key, value in self.to_json().items():
                 setattr(existing_interaction, key, value)
-            db.session.commit()
         else:
             print(f"Inserting for {self.__class__.__name__} with username {self.username}")
             db.session.add(self)
-            db.session.commit()
+        db.session.commit()
 
     def action_name(self):
         return self.action_obj.name if self.action_obj else ""

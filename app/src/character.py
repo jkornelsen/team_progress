@@ -8,50 +8,102 @@ from flask import (
     session,
     url_for
 )
+from sqlalchemy import (
+    Column, String, Text, Boolean, Integer,
+    ForeignKeyConstraint, and_)
+from sqlalchemy.orm import relationship
 
 from db import db
 from .db_serializable import DbSerializable
-from .attrib import Attrib
-from .item import Item
-from .location import Location
-from .progress import Progress
+from .attrib import Attrib, attrib_tbl
+from .item import Item, item_tbl
+from .location import Location, loc_tbl
+from .progress import Progress, progress_tbl
 
-# Create the association table for the many-to-many relationship
-character_attribs = DbSerializable.finish_table(
-    'character_attribs',
-    db.Column('character_id', db.Integer, db.ForeignKey('character.id'), primary_key=True),
-    db.Column('attrib_id', db.Integer, db.ForeignKey('attrib.id'), primary_key=True))
+char_tbl = DbSerializable.table_with_id(
+    'character',
+    Column('name', String(255), nullable=False),
+    Column('description', Text, nullable=True),
+    Column('toplevel', Boolean, nullable=False),
+    Column('location_id', Integer),
+    Column('progress_id', Integer, nullable=True),
+    Column('destination_id', Integer))
+char_tbl.append_constraint(
+    ForeignKeyConstraint(
+        [char_tbl.c.game_token, char_tbl.c.progress_id],
+        [progress_tbl.c.game_token, progress_tbl.c.id]))
 
-character_items = DbSerializable.finish_table(
-    'character_items',
-    db.Column('character_id', db.Integer, db.ForeignKey('character.id'), primary_key=True),
-    db.Column('item_id', db.Integer, db.ForeignKey('item.id'), primary_key=True))
+char_attribs = DbSerializable.table_with_token(
+    'char_attribs',
+    Column('char_id', Integer, primary_key=True),
+    Column('attrib_id', Integer, primary_key=True))
+char_attribs.append_constraint(
+    ForeignKeyConstraint(
+        [char_attribs.c.game_token, char_attribs.c.char_id],
+        [char_tbl.c.game_token, char_tbl.c.id]))
+char_attribs.append_constraint(
+    ForeignKeyConstraint(
+        [char_attribs.c.game_token, char_attribs.c.attrib_id],
+        [attrib_tbl.c.game_token, attrib_tbl.c.id]))
+
+char_items = DbSerializable.table_with_token(
+    'char_items',
+    Column('char_id', primary_key=True),
+    Column('item_id', primary_key=True))
+char_items.append_constraint(
+    ForeignKeyConstraint(
+        [char_items.c.game_token, char_items.c.char_id],
+        [char_tbl.c.game_token, char_tbl.c.id]))
+char_items.append_constraint(
+    ForeignKeyConstraint(
+        [char_items.c.game_token, char_items.c.item_id],
+        [item_tbl.c.game_token, item_tbl.c.id]))
 
 class Character(DbSerializable):
+    __table__ = char_tbl
+
     last_id = 0  # used to auto-generate a unique id for each object
     instances = []  # all objects of this class
 
-    name = db.Column(db.String(255), nullable=False)
-    description = db.Column(db.Text, nullable=True)
-    toplevel = db.Column(db.Boolean, nullable=False)
-    # Use the 'character_attribs' association table for the attribs relationship
-    attribs = db.relationship(
-        'Attrib',
-        secondary=character_attribs,
-        backref=db.backref('characters', lazy=True)
-    )
-    items = db.relationship('Item',
-        secondary=character_items, backref='owners', lazy=True)
-    location_id = db.Column(db.Integer)
-    location = db.relationship('Location', backref='characters_at',
-        foreign_keys=[DbSerializable.game_token, location_id], lazy=True)
-    progress_id = db.Column(db.Integer, nullable=True)
-    progress = db.relationship('Progress', backref='character_for_progress',
-        foreign_keys=[DbSerializable.game_token, progress_id], lazy=True,
-        uselist=False)
-    destination_id = db.Column(db.Integer)
-    destination = db.relationship('Location', backref='characters_dest',
-        foreign_keys=[DbSerializable.game_token, destination_id], lazy=True)
+    attribs = relationship(
+        Attrib, secondary=char_attribs,
+        primaryjoin=and_(
+            char_attribs.c.game_token == char_tbl.c.game_token,
+            char_attribs.c.char_id == char_tbl.c.id),
+        secondaryjoin=and_(
+            char_attribs.c.game_token == attrib_tbl.c.game_token,
+            char_attribs.c.attrib_id == attrib_tbl.c.id),
+        backref='affects_char', lazy='dynamic')
+    items = relationship(
+        Item, secondary=char_items,
+        primaryjoin=and_(
+            char_items.c.game_token == char_tbl.c.game_token,
+            char_items.c.char_id == char_tbl.c.id),
+        secondaryjoin=and_(
+            char_items.c.game_token == item_tbl.c.game_token,
+            char_items.c.item_id == item_tbl.c.id),
+        backref='owned_by', lazy='dynamic')
+    location = relationship(
+        Location, backref='char_at',
+        primaryjoin=and_(
+            char_tbl.c.game_token == loc_tbl.c.game_token,
+            char_tbl.c.location_id == loc_tbl.c.id),
+        foreign_keys={
+            char_tbl.c.game_token: loc_tbl.c.game_token,
+            char_tbl.c.location_id: loc_tbl.c.id},
+        lazy=True, uselist=False)
+    destination = relationship(
+        Location, backref='char_dest',
+        primaryjoin=and_(
+            char_tbl.c.game_token == loc_tbl.c.game_token,
+            char_tbl.c.location_id == loc_tbl.c.id),
+        foreign_keys={
+            char_tbl.c.game_token: loc_tbl.c.game_token,
+            char_tbl.c.destination_id: loc_tbl.c.id},
+        lazy=True, uselist=False)
+    progress = relationship(
+        Progress, backref='char_for_progress',
+        lazy=True, uselist=False)
 
     def __init__(self, new_id='auto'):
         if new_id == 'auto':

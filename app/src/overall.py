@@ -8,30 +8,45 @@ from flask import (
     session,
     url_for
 )
+from sqlalchemy import (
+    ForeignKey, ForeignKeyConstraint,
+    Integer, String, Text, Column, Integer, and_)
+from sqlalchemy.orm import relationship, load_only
 
 from db import db
-from .item import Item
+from .item import Item, item_tbl
+from .character import Character
 from .db_serializable import DbSerializable
 
-SINGLE_ID = 1  # only one instance of this class for each game token
+overall_tbl = DbSerializable.table_with_token(
+    'overall',
+    Column('title', String(255), nullable=False),
+    Column('description', Text, nullable=True))
 
-# Define the association table for the many-to-many relationship between Overall and Item.
-overall_winning_items = DbSerializable.finish_table(
-    'overall_winning_items',
-    db.Column('item_id', db.Integer, db.ForeignKey('item.id'), primary_key=True),
-    db.Column('quantity', db.Integer, nullable=False))
+winning_items = DbSerializable.table_with_token(
+    'winning_items',
+    Column('item_id', ForeignKey(item_tbl.c.id), primary_key=True),
+    Column('quantity', Integer, nullable=False))
+winning_items.append_constraint(
+    ForeignKeyConstraint(
+        [winning_items.c.game_token, winning_items.c.item_id],
+        [item_tbl.c.game_token, item_tbl.c.id]))
 
 class Overall(DbSerializable):
     """Overall scenario settings such as scenario title and goal,
     and app settings."""
-    title = db.Column(db.String(255), nullable=False)
-    description = db.Column(db.Text, nullable=True)
-    # Define the relationship with the Item model using the association table.
-    winning_items = db.relationship('Item', secondary=overall_winning_items,
-                                    backref='items_win_for', lazy=True)
+    __table__ = overall_tbl
+
+    items = relationship(
+        Item, secondary=winning_items,
+        primaryjoin=(
+            winning_items.c.game_token == overall_tbl.c.game_token),
+        secondaryjoin=and_(
+            winning_items.c.game_token == item_tbl.c.game_token,
+            winning_items.c.item_id == item_tbl.c.id),
+        backref='item_wins_for', lazy='dynamic')
 
     def __init__(self):
-        self.id = SINGLE_ID  # used by parent class
         self.title = "Generic Adventure"
         self.description = (
             "An empty scenario."
@@ -42,7 +57,6 @@ class Overall(DbSerializable):
 
     def to_json(self):
         return {
-            'id': SINGLE_ID,
             'title': self.title,
             'description': self.description,
             'winning_item': self.winning_item.id if self.winning_item else None,
@@ -69,7 +83,6 @@ class Overall(DbSerializable):
         collection = cls.get_collection()
         doc = collection.find_one({'game_token': g.game_token})
         if doc is None:
-            #return "Overall not found"
             print("doc not found -- returning generic object")
             return cls()
         return cls.from_json(doc)
@@ -117,16 +130,15 @@ CharacterRow = namedtuple('CharacterRow',
     'action_name', 'action_link', 'username'])
 
 def get_charlist_display():
-    collection = Character.get_collection()
-    projection = {'name': 1, 'id': 1}
-    docs = collection.find({'game_token': g.game_token}, projection)
-    entities_data[GameData.entity_name(entity_cls)] = list(docs)
+    docs = Character.query.options(
+        load_only(Character.name, Character.id, Character.toplevel)).filter_by(
+        game_token=g.game_token).all()
+    char_data = [character.__dict__ for character in docs]
     # SELECT B.name, B.id
     # FROM Character A, Location B
     # WHERE B.id = A.location_id
-    #overall = g.game_data.overall
     character_rows = [] # Create a list to hold the character rows
-    for char in overall.game_data.characters:
+    for char in char_data:
         if char.toplevel:
             row = CharacterRow(
                 char_id=char.id,
@@ -180,10 +192,10 @@ def get_charlist_display():
 def set_routes(app):
     @app.route('/overview')
     def overview():
+        overall = Overall()
         return render_template(
             'play/overview.html',
-            current=g.game_data.overall,
-            game_data=g.game_data,
+            current=overall,
             charlist=get_charlist_display())
 
     @app.route('/configure/overall', methods=['GET', 'POST'])

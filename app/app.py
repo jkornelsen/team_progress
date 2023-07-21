@@ -16,7 +16,6 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'team-adventurers'
 app.config['TITLE'] = 'Team Adventurers'
 app.config['TEMPLATES_AUTO_RELOAD'] = True  # set to False for production
-app.config['MONGO_URI'] = 'mongodb://localhost:27017/team_adventurers_db'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:admin@localhost/postgres'
 db.init_app(app)  # Do this before importing the db model classes.
 
@@ -30,6 +29,14 @@ from src.item      import set_routes as _set_routes_item
 from src.location  import set_routes as _set_routes_location
 from src.overall   import set_routes as _set_routes_overall
 from src.file      import set_routes as _set_routes_file
+
+with app.app_context():
+    print("starting app")
+    from sqlalchemy import inspect
+    mapper = inspect(UserInteraction)
+    print(f"Table Name: {mapper.mapped_table.name}")
+    print("Column Names:", [c.name for c in mapper.columns])
+    db.create_all()
 
 @app.before_request
 def before_request():
@@ -120,8 +127,5 @@ def inject_username():
     return {'current_username': username}
 
 if __name__ == '__main__':
-    with app.app_context():
-        # only needed if modifying the database schema
-        db.create_all()
     app.run()
 

@@ -8,30 +8,45 @@ from flask import (
     session,
     url_for
 )
+from sqlalchemy import Column, String, Text, ForeignKeyConstraint, and_
+from sqlalchemy.orm import relationship
 from db import db
 from .db_serializable import DbSerializable
 
-# Assuming you have defined the `location_destinations` association table like this:
-location_destinations = DbSerializable.finish_table(
+loc_tbl = DbSerializable.table_with_id(
+    'location',
+    db.Column('name', db.String(255), nullable=False),
+    db.Column('description', db.Text, nullable=True))
+
+loc_dests = DbSerializable.table_with_token(
     'location_destinations',
-    db.Column('origin_id', db.Integer, db.ForeignKey('location.id'), primary_key=True),
-    db.Column('dest_id', db.Integer, db.ForeignKey('location.id'), primary_key=True))
+    Column('origin_id', primary_key=True),
+    Column('dest_id', primary_key=True))
+loc_dests.append_constraint(
+    ForeignKeyConstraint(
+        [loc_dests.c.game_token, loc_dests.c.origin_id],
+        [loc_tbl.c.game_token, loc_tbl.c.id]))
+loc_dests.append_constraint(
+    ForeignKeyConstraint(
+        [loc_dests.c.game_token, loc_dests.c.dest_id],
+        [loc_tbl.c.game_token, loc_tbl.c.id]))
 
 class Location(DbSerializable):
+    __table__ = loc_tbl
+
     last_id = 0  # used to auto-generate a unique id for each object
     instances = []  # all objects of this class
 
-    name = db.Column(db.String(255), nullable=False)
-    description = db.Column(db.Text, nullable=True)
-    # Use the 'location_destinations' association table for the destinations
-    destinations = db.relationship(
-        'Location',
-        secondary=location_destinations,
-        primaryjoin=id == location_destinations.c.origin_id,
-        secondaryjoin=id == location_destinations.c.dest_id,
-        backref='sources',
-        lazy=True
-    )
+    destinations = relationship(
+        'Item', secondary=loc_dests,
+        primaryjoin=and_(
+            loc_dests.c.game_token == loc_tbl.c.game_token,
+            loc_dests.c.origin_id == loc_tbl.c.id),
+        secondaryjoin=and_(
+            loc_dests.c.game_token == loc_tbl.c.game_token,
+            loc_dests.c.dest_id == loc_tbl.c.id),
+        backref='can_come_from',
+        lazy='dynamic')
 
     def __init__(self, new_id='auto'):
         if new_id == 'auto':

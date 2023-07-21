@@ -12,9 +12,24 @@ so add a dropdown list of characters on that screen
 also require worn item
 maybe have a checkbox that the item won't get consumed during the exchange
 
+https://docs.sqlalchemy.org/en/20/core/constraints.html
+two things i want to do that haven't been explained in the docs yet:
+1. many-to-many relationship with composite foreign key
+Foreign keys may also be defined at the table level, using the ForeignKeyConstraint object.
+It’s important to note that the ForeignKeyConstraint is the only way to define a composite foreign key.
+This object can describe a single- or multi-column foreign key. 
+,
+    ForeignKeyConstraint(
+        ["invoice_id", "ref_num"], ["invoice.invoice_id", "invoice.ref_num"]
+    ),
+To apply table-level constraint objects such as ForeignKeyConstraint to a table defined using Declarative, use the __table_args__ attribute.
+
+https://docs.sqlalchemy.org/en/20/orm/relationships.html
+https://docs.sqlalchemy.org/en/20/orm/basic_relationships.html#many-to-many
+2. many-to-many relationship (which means using an association table) where the other side can be several different classes, perhaps siblings
+
 
 ---- Issues ----
 
 Going to play_item resulted in item not found. Reloading the page caused
 the item to be found. Maybe data didn't get loaded from db at the right time?
-
