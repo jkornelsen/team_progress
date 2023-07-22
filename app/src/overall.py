@@ -1,4 +1,5 @@
 from collections import namedtuple
+from types import SimpleNamespace
 from flask import (
     Flask,
     g,
@@ -13,19 +14,21 @@ from sqlalchemy import (
     Integer, String, Text, Column, Integer, and_)
 from sqlalchemy.orm import relationship, load_only
 
-from db import db
+from database import db
+from .db_serializable import DbSerializable, table_with_token, alch_to_dict
+
 from .item import Item, item_tbl
 from .character import Character
-from .db_serializable import DbSerializable
+from .event import Event
 
-overall_tbl = DbSerializable.table_with_token(
+overall_tbl = table_with_token(
     'overall',
     Column('title', String(255), nullable=False),
     Column('description', Text, nullable=True))
 
-winning_items = DbSerializable.table_with_token(
+winning_items = table_with_token(
     'winning_items',
-    Column('item_id', ForeignKey(item_tbl.c.id), primary_key=True),
+    Column('item_id', primary_key=True),
     Column('quantity', Integer, nullable=False))
 winning_items.append_constraint(
     ForeignKeyConstraint(
@@ -189,14 +192,35 @@ def get_charlist_display():
         (not row.username, row.username or '', row.char_name))
     return character_rows
 
+def get_items_and_events():
+    item_data = (
+        Item.query
+        .with_entities(Item.id, Item.name)
+        .filter(Item.toplevel == True)
+        .all()
+    )
+    event_data = (
+        Event.query
+        .with_entities(Event.id, Event.name)
+        .filter(Event.toplevel == True)
+        .all()
+    )
+    result = SimpleNamespace(**{
+        'items': item_data,
+        'events': event_data
+    })
+    return result
+
 def set_routes(app):
     @app.route('/overview')
     def overview():
+        other_entities = get_items_and_events()
         overall = Overall()
         return render_template(
             'play/overview.html',
             current=overall,
-            charlist=get_charlist_display())
+            charlist=get_charlist_display(),
+            other_entities=get_items_and_events())
 
     @app.route('/configure/overall', methods=['GET', 'POST'])
     def configure_overall():

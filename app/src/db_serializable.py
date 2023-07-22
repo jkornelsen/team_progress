@@ -1,9 +1,25 @@
 from flask import g
-from sqlalchemy.orm import declarative_base
 
-from db import db
+from database import db, Base
 
-Base = declarative_base()
+def table_with_token(table_name, *columns):
+    return db.Table(
+        table_name,
+        Base.metadata,
+        #db.Column('game_token', db.String(50), primary_key=True, default=g.game_token),
+        db.Column('game_token', db.String(50), primary_key=True),
+        *columns)
+
+def table_with_id(table_name, *columns):
+    """To view sequences:
+    select * from information_schema.sequences;
+    """
+    #sequence = db.Sequence(table_name + '_id_seq')  # generates unique IDs
+    return table_with_token(
+        table_name,
+        #db.Column('id', db.Integer, sequence, primary_key=True),
+        db.Column('id', db.Integer, primary_key=True, autoincrement=True),
+        *columns)
 
 class DbSerializable(Base, db.Model):
     """Parent class with methods for serializing to database along with some
@@ -73,21 +89,4 @@ class DbSerializable(Base, db.Model):
         cls.last_id = max(
             (instance.id for instance in cls.instances), default=0)
         return instances
-
-    @staticmethod
-    def table_with_token(table_name, *columns):
-        return db.Table(
-            table_name,
-            Base.metadata,
-            #db.Column('game_token', db.String(50), primary_key=True, default=g.game_token),
-            db.Column('game_token', db.String(50), primary_key=True),
-            *columns)
-
-    @staticmethod
-    def table_with_id(table_name, *columns):
-        return DbSerializable.table_with_token(
-            table_name,
-            db.Column('id', db.Integer, primary_key=True),
-            *columns)
-
 

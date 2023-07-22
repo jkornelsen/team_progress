@@ -21,23 +21,21 @@
     <p>Currently have {{ current.winning_item.progress.quantity }}.</p>
 -->
     {% endif %}
-    {% if game_data.items %}
+    {% if other_entities.items %}
         <table cellspacing="0" cellpadding="5">
             <tr>
                 <th>Item</th>
                 <th>Quantity</th>
             </tr>
-            {% for item in game_data.items %}
-                {% if item.toplevel %}
-                    <tr>
-                        <td>
-                            <a href="{{ url_for('play_item', item_id=item.id) }}">
-                                {{ item.name }}
-                            </a>
-                        </td>
-                        <td id="item-{{ item.id }}-quantity">...</td>
-                    </tr>
-                {% endif %}
+            {% for item in other_entities.items %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('play_item', item_id=item.id) }}">
+                            {{ item.name }}
+                        </a>
+                    </td>
+                    <td id="item-{{ item.id }}-quantity">...</td>
+                </tr>
             {% endfor %}
         </table>
     {% endif %}
@@ -67,27 +65,23 @@
         {% endfor %}
     </table>
     {% set outerscope = namespace(display_section = false) %}
-    {% for event in game_data.events %}
-        {% if event.toplevel %}
-            {% set outerscope.display_section = true %}
-        {% endif %}
+    {% for event in other_entities.events %}
+        {% set outerscope.display_section = true %}
     {% endfor %}
     {% if outerscope.display_section %}
         <h2>Events</h2>
         <ul>
-            {% for event in game_data.events %}
-                {% if event.toplevel %}
-                    <li>
-                        <a href="{{ url_for('play_event', event_id=event.id) }}">{{ event.name }}</a>
-                    </li>
-                {% endif %}
+            {% for event in other_entities.events %}
+                <li>
+                    <a href="{{ url_for('play_event', event_id=event.id) }}">{{ event.name }}</a>
+                </li>
             {% endfor %}
         </ul>
     {% endif %}
     <script>
         $(document).ready(function() {
             function updateQuantities() {
-                {% for item in game_data.items %}
+                {% for item in other_entities.items %}
                     // Make AJAX request for item quantity
                     $.get('/item/progress_data/{{ item.id }}', function(data) {
                         $('#item-{{ item.id }}-quantity').text(data.quantity);

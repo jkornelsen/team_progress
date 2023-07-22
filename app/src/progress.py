@@ -5,10 +5,10 @@ import threading
 import time
 from sqlalchemy import Column, Float, Text, DateTime, Integer, Boolean
 
-from db import db
-from .db_serializable import DbSerializable
+from database import db
+from .db_serializable import DbSerializable, table_with_id
 
-progress_tbl = DbSerializable.table_with_id(
+progress_tbl = table_with_id(
     'progress',
     Column('quantity', Float(precision=2), nullable=False),
     Column('limit', Float(precision=2), nullable=False),

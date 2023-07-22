@@ -9,13 +9,15 @@ from flask import (
     url_for
 )
 
-from db import db
-from .db_serializable import DbSerializable
+from database import db
+from .db_serializable import DbSerializable, table_with_id
 
-attrib_tbl = DbSerializable.table_with_id(
+attrib_tbl = table_with_id(
     'attrib',
     db.Column('name', db.String(255), nullable=False),
     db.Column('description', db.Text, nullable=True))
+    # example "{10: 'Very Hungry', 50: 'Full'}
+    #db.Column('threshold_names', db.JSON, nullable=False)
 
 class Attrib(DbSerializable):
     """Stat or state or other type of attribute for a character or item.
@@ -27,16 +29,6 @@ class Attrib(DbSerializable):
 
     last_id = 0  # used to auto-generate a unique id for each object
     instances = []  # all objects of this class
-
-    def __init__(self, new_id='auto'):
-        if new_id == 'auto':
-            self.__class__.last_id += 1
-            self.id = self.__class__.last_id
-        else:
-            self.id = new_id
-        self.name = ""
-        self.description = ""
-        self.threshold_names = {}  # example "{10: 'Very Hungry', 50: 'Full'}
 
     def to_json(self):
         return {

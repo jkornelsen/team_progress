@@ -14,12 +14,12 @@ from sqlalchemy import (Column, String, Text, Boolean, Float, Integer,
     and_, text)
 from sqlalchemy.orm import relationship
 
-from db import db
+from database import db
 from .attrib import Attrib, attrib_tbl
 from .progress import Progress, progress_tbl
-from .db_serializable import DbSerializable
+from .db_serializable import DbSerializable, table_with_id, table_with_token
 
-item_tbl = DbSerializable.table_with_id(
+item_tbl = table_with_id(
     'item',
     Column('name', String(255), nullable=False),
     Column('description', Text, nullable=True),
@@ -32,7 +32,7 @@ item_tbl.append_constraint(
         [item_tbl.c.game_token, item_tbl.c.progress_id],
         [progress_tbl.c.game_token, progress_tbl.c.id]))
 
-item_attribs = DbSerializable.table_with_token(
+item_attribs = table_with_token(
     'item_attribs',
     Column('item_id', Integer, primary_key=True),
     Column('attrib_id', Integer, primary_key=True))
@@ -45,7 +45,7 @@ item_attribs.append_constraint(
         [item_attribs.c.game_token, item_attribs.c.attrib_id],
         [attrib_tbl.c.game_token, attrib_tbl.c.id]))
 
-item_sources = DbSerializable.table_with_token(
+item_sources = table_with_token(
     'item_sources',
     Column('item_id', primary_key=True),
     Column('source_id', primary_key=True))

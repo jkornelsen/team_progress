@@ -1,8 +1,9 @@
 from datetime import datetime, timedelta
 from flask import g
-from sqlalchemy import Column, String, DateTime, Integer
+from sqlalchemy import (
+    Table, Column, String, DateTime, Integer, UniqueConstraint, and_, func)
 
-from db import db
+from database import db, Base
 from .db_serializable import DbSerializable
 
 from .attrib import Attrib
@@ -12,10 +13,14 @@ from .item import Item
 from .location import Location
 from .overall import Overall
 
-userlog_tbl = DbSerializable.table_with_token(
+userlog_tbl = Table(
     'user_interactions',
+    Base.metadata,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('game_token', String(50), nullable=False),
     Column('username', String(50), nullable=True),
-    Column('timestamp', DateTime, nullable=False, onupdate=db.func.current_timestamp()),
+    Column('timestamp', DateTime, nullable=False,
+        onupdate=func.current_timestamp()),
     Column('char_id', Integer, nullable=True),
     Column('action_id', Integer, nullable=True),
     Column('action_type', String(50), nullable=True))
@@ -28,8 +33,9 @@ class UserInteraction(DbSerializable):
 
     __table_args__ = (
         # Unique constraint for the nullable columns
-        db.UniqueConstraint('username', 'char_id', 'action_id', 'action_type',
-                            name='user_interactions_unique_nullable'),
+        UniqueConstraint(
+            'game_data', 'username', 'char_id', 'action_id', 'action_type',
+            name='user_interactions_unique_nullable'),
     )
 
     def __init__(self, username):
@@ -95,19 +101,20 @@ class UserInteraction(DbSerializable):
     @classmethod
     def recent_interactions(cls, threshold_minutes=2):
         threshold_time = datetime.now() - timedelta(minutes=threshold_minutes)
-        pipeline = [{
-                '$match': {
-                    'game_token': g.game_token,
-                    'timestamp': {'$gt': threshold_time}}
-            }, {
-                '$group': {
-                    '_id': {'username': '$username', 'char_id': '$char_id'},
-                    'max_timestamp': {'$max': '$timestamp'},
-                    'interaction': {'$first': '$$ROOT'}}
-            }, {
-                '$replaceRoot': {'newRoot': '$interaction'}
-            }
-        ]
-        entries = cls.get_collection().aggregate(pipeline)
-        return [cls.from_json(entry) for entry in entries]
-
+        subquery = (
+            cls.query
+            .with_entities(cls.username, cls.char_id,
+                func.max(cls.timestamp).label('max_timestamp'))
+            .filter(cls.timestamp > threshold_time)
+            .group_by(cls.username, cls.char_id)
+            .subquery()
+        )
+        query = (
+            cls.query
+            .join(subquery, and_(
+                cls.username == subquery.c.username,
+                cls.char_id == subquery.c.char_id,
+                cls.timestamp == subquery.c.max_timestamp,
+            ))
+        )
+        return query.all()

@@ -11,8 +11,8 @@ from flask import (
 import random
 from sqlalchemy import Column, Integer, String, Text, Boolean, JSON
 
-from db import db
-from .db_serializable import DbSerializable
+from database import db
+from .db_serializable import DbSerializable, table_with_id
 
 OUTCOMES = [
     "Critical Failure",
@@ -27,7 +27,7 @@ OUTCOMES = [
 def roll_dice(sides):
     return random.randint(1, sides)
 
-event_tbl = DbSerializable.table_with_id(
+event_tbl = table_with_id(
     'event',
     Column('name', String(255), nullable=False),
     Column('description', Text, nullable=True),

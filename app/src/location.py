@@ -10,15 +10,15 @@ from flask import (
 )
 from sqlalchemy import Column, String, Text, ForeignKeyConstraint, and_
 from sqlalchemy.orm import relationship
-from db import db
-from .db_serializable import DbSerializable
+from database import db
+from .db_serializable import DbSerializable, table_with_id, table_with_token
 
-loc_tbl = DbSerializable.table_with_id(
+loc_tbl = table_with_id(
     'location',
     db.Column('name', db.String(255), nullable=False),
     db.Column('description', db.Text, nullable=True))
 
-loc_dests = DbSerializable.table_with_token(
+loc_dests = table_with_token(
     'location_destinations',
     Column('origin_id', primary_key=True),
     Column('dest_id', primary_key=True))

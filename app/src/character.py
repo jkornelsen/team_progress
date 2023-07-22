@@ -13,14 +13,14 @@ from sqlalchemy import (
     ForeignKeyConstraint, and_)
 from sqlalchemy.orm import relationship
 
-from db import db
-from .db_serializable import DbSerializable
+from database import db
+from .db_serializable import DbSerializable, table_with_id, table_with_token
 from .attrib import Attrib, attrib_tbl
 from .item import Item, item_tbl
 from .location import Location, loc_tbl
 from .progress import Progress, progress_tbl
 
-char_tbl = DbSerializable.table_with_id(
+char_tbl = table_with_id(
     'character',
     Column('name', String(255), nullable=False),
     Column('description', Text, nullable=True),
@@ -33,7 +33,7 @@ char_tbl.append_constraint(
         [char_tbl.c.game_token, char_tbl.c.progress_id],
         [progress_tbl.c.game_token, progress_tbl.c.id]))
 
-char_attribs = DbSerializable.table_with_token(
+char_attribs = table_with_token(
     'char_attribs',
     Column('char_id', Integer, primary_key=True),
     Column('attrib_id', Integer, primary_key=True))
@@ -46,7 +46,7 @@ char_attribs.append_constraint(
         [char_attribs.c.game_token, char_attribs.c.attrib_id],
         [attrib_tbl.c.game_token, attrib_tbl.c.id]))
 
-char_items = DbSerializable.table_with_token(
+char_items = table_with_token(
     'char_items',
     Column('char_id', primary_key=True),
     Column('item_id', primary_key=True))
