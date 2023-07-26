@@ -8,112 +8,50 @@ from flask import (
     session,
     url_for
 )
-from sqlalchemy import (
-    Column, String, Text, Boolean, Integer,
-    ForeignKeyConstraint, and_)
-from sqlalchemy.orm import relationship
+from .db_serializable import Identifiable, coldef
+from .attrib import Attrib
+from .item import Item
+from .location import Location
+from .progress import Progress
 
-from database import db
-from .db_serializable import DbSerializable, table_with_id, table_with_token
-from .attrib import Attrib, attrib_tbl
-from .item import Item, item_tbl
-from .location import Location, loc_tbl
-from .progress import Progress, progress_tbl
+tables_to_create = {
+    'character': f"""
+        {coldef('id')},
+        {coldef('name')},
+        {coldef('description')},
+        {coldef('toplevel')},
+        location_id INTEGER,
+        progress_id INTEGER,
+        destination_id INTEGER,
+        FOREIGN KEY (game_token, progress_id)
+            REFERENCES progress (game_token, id)
+    """,
+    'char_attribs': f"""
+        {coldef('token')},
+        char_id INTEGER PRIMARY_KEY,
+        attrib_id INTEGER PRIMARY_KEY,
+        FOREIGN KEY (game_token, char_id)
+            REFERENCES character (game_token, id)
+        FOREIGN KEY (game_token, attrib_id)
+            REFERENCES attrib (game_token, id)
+    """,
+    'char_items': f"""
+        {coldef('token')},
+        char_id INTEGER PRIMARY KEY,
+        item_id INTEGER PRIMARY KEY,
+        FOREIGN KEY (game_token, char_id)
+            REFERENCES character (game_token, id),
+        FOREIGN KEY (game_token, item_id)
+            REFERENCES item (game_token, id)
+    """
+}
 
-char_tbl = table_with_id(
-    'character',
-    Column('name', String(255), nullable=False),
-    Column('description', Text, nullable=True),
-    Column('toplevel', Boolean, nullable=False),
-    Column('location_id', Integer),
-    Column('progress_id', Integer, nullable=True),
-    Column('destination_id', Integer))
-char_tbl.append_constraint(
-    ForeignKeyConstraint(
-        [char_tbl.c.game_token, char_tbl.c.progress_id],
-        [progress_tbl.c.game_token, progress_tbl.c.id]))
-
-char_attribs = table_with_token(
-    'char_attribs',
-    Column('char_id', Integer, primary_key=True),
-    Column('attrib_id', Integer, primary_key=True))
-char_attribs.append_constraint(
-    ForeignKeyConstraint(
-        [char_attribs.c.game_token, char_attribs.c.char_id],
-        [char_tbl.c.game_token, char_tbl.c.id]))
-char_attribs.append_constraint(
-    ForeignKeyConstraint(
-        [char_attribs.c.game_token, char_attribs.c.attrib_id],
-        [attrib_tbl.c.game_token, attrib_tbl.c.id]))
-
-char_items = table_with_token(
-    'char_items',
-    Column('char_id', primary_key=True),
-    Column('item_id', primary_key=True))
-char_items.append_constraint(
-    ForeignKeyConstraint(
-        [char_items.c.game_token, char_items.c.char_id],
-        [char_tbl.c.game_token, char_tbl.c.id]))
-char_items.append_constraint(
-    ForeignKeyConstraint(
-        [char_items.c.game_token, char_items.c.item_id],
-        [item_tbl.c.game_token, item_tbl.c.id]))
-
-class Character(DbSerializable):
-    __table__ = char_tbl
-
-    last_id = 0  # used to auto-generate a unique id for each object
-    instances = []  # all objects of this class
-
-    attribs = relationship(
-        Attrib, secondary=char_attribs,
-        primaryjoin=and_(
-            char_attribs.c.game_token == char_tbl.c.game_token,
-            char_attribs.c.char_id == char_tbl.c.id),
-        secondaryjoin=and_(
-            char_attribs.c.game_token == attrib_tbl.c.game_token,
-            char_attribs.c.attrib_id == attrib_tbl.c.id),
-        backref='affects_char', lazy='dynamic')
-    items = relationship(
-        Item, secondary=char_items,
-        primaryjoin=and_(
-            char_items.c.game_token == char_tbl.c.game_token,
-            char_items.c.char_id == char_tbl.c.id),
-        secondaryjoin=and_(
-            char_items.c.game_token == item_tbl.c.game_token,
-            char_items.c.item_id == item_tbl.c.id),
-        backref='owned_by', lazy='dynamic')
-    location = relationship(
-        Location, backref='char_at',
-        primaryjoin=and_(
-            char_tbl.c.game_token == loc_tbl.c.game_token,
-            char_tbl.c.location_id == loc_tbl.c.id),
-        foreign_keys={
-            char_tbl.c.game_token: loc_tbl.c.game_token,
-            char_tbl.c.location_id: loc_tbl.c.id},
-        lazy=True, uselist=False)
-    destination = relationship(
-        Location, backref='char_dest',
-        primaryjoin=and_(
-            char_tbl.c.game_token == loc_tbl.c.game_token,
-            char_tbl.c.location_id == loc_tbl.c.id),
-        foreign_keys={
-            char_tbl.c.game_token: loc_tbl.c.game_token,
-            char_tbl.c.destination_id: loc_tbl.c.id},
-        lazy=True, uselist=False)
-    progress = relationship(
-        Progress, backref='char_for_progress',
-        lazy=True, uselist=False)
-
-    def __init__(self, new_id='auto'):
-        if new_id == 'auto':
-            self.__class__.last_id += 1
-            self.id = self.__class__.last_id
-        else:
-            self.id = new_id
+class Character(Identifiable):
+    def __init__(self, id=""):
+        super().__init__(id)
         self.name = ""
         self.description = ""
-        self.toplevel = False if len(self.__class__.instances) > 1 else True
+        self.toplevel = False if len(self.instances) > 1 else True
         self.attribs = {}  # keys are Attrib object, values are stat val
         self.items = {}  # keys are Item object, values are slot name
         self.location = None  # Location object
@@ -162,8 +100,8 @@ class Character(DbSerializable):
             if 'save_changes' in request.form:  # button was clicked
                 print("Saving changes.")
                 print(request.form)
-                if self not in self.__class__.instances:
-                    self.__class__.instances.append(self)
+                if self not in self.instances:
+                    self.instances.append(self)
                 self.name = request.form.get('char_name')
                 self.description = request.form.get('char_description')
                 self.toplevel = bool(request.form.get('top_level'))
@@ -189,8 +127,8 @@ class Character(DbSerializable):
                     for attrib, val in self.attribs.items()})
                 self.to_db()
             elif 'delete_character' in request.form:
-                self.__class__.instances.remove(self)
-                self.__class__.remove_from_db(self.id)
+                self.instances.remove(self)
+                self.remove_from_db(self.id)
             elif 'cancel_changes' in request.form:
                 print("Cancelling changes.")
             else:

@@ -8,56 +8,33 @@ from flask import (
     session,
     url_for
 )
-from sqlalchemy import Column, String, Text, ForeignKeyConstraint, and_
-from sqlalchemy.orm import relationship
-from database import db
-from .db_serializable import DbSerializable, table_with_id, table_with_token
+from .db_serializable import Identifiable, coldef
 
-loc_tbl = table_with_id(
-    'location',
-    db.Column('name', db.String(255), nullable=False),
-    db.Column('description', db.Text, nullable=True))
+tables_to_create = {
+    'location': f"""
+        {coldef('id')},
+        {coldef('name')},
+        {coldef('description')}
+    """,
+    'location_destinations': f"""
+        {coldef('token')},
+        origin_id INTEGER PRIMARY KEY,
+        dest_id INTEGER PRIMARY KEY,
+        FOREIGN KEY (game_token, origin_id)
+            REFERENCES location (game_token, id),
+        FOREIGN KEY (game_token, dest_id)
+            REFERENCES location (game_token, id)
+    """
+}
 
-loc_dests = table_with_token(
-    'location_destinations',
-    Column('origin_id', primary_key=True),
-    Column('dest_id', primary_key=True))
-loc_dests.append_constraint(
-    ForeignKeyConstraint(
-        [loc_dests.c.game_token, loc_dests.c.origin_id],
-        [loc_tbl.c.game_token, loc_tbl.c.id]))
-loc_dests.append_constraint(
-    ForeignKeyConstraint(
-        [loc_dests.c.game_token, loc_dests.c.dest_id],
-        [loc_tbl.c.game_token, loc_tbl.c.id]))
-
-class Location(DbSerializable):
-    __table__ = loc_tbl
-
-    last_id = 0  # used to auto-generate a unique id for each object
-    instances = []  # all objects of this class
-
-    destinations = relationship(
-        'Item', secondary=loc_dests,
-        primaryjoin=and_(
-            loc_dests.c.game_token == loc_tbl.c.game_token,
-            loc_dests.c.origin_id == loc_tbl.c.id),
-        secondaryjoin=and_(
-            loc_dests.c.game_token == loc_tbl.c.game_token,
-            loc_dests.c.dest_id == loc_tbl.c.id),
-        backref='can_come_from',
-        lazy='dynamic')
-
-    def __init__(self, new_id='auto'):
-        if new_id == 'auto':
-            self.__class__.last_id += 1
-            self.id = self.__class__.last_id
-        else:
-            self.id = new_id
+class Location(Identifiable):
+    def __init__(self, id=""):
+        super().__init__(id)
         self.name = ""
         self.description = ""
-        self.destinations = {}  # keys are Location object, values are distance
-        self.items = []  # list of Item objects currently at this location
+        self.destinations = {}  # Location objects and their distance
+        self.items = []  # Item objects currently at this location
+        self.charactrs = []  # Character objects currently at this location
 
     def to_json(self):
         return {
@@ -112,8 +89,8 @@ class Location(DbSerializable):
             if 'save_changes' in request.form:  # button was clicked
                 print("Saving changes.")
                 print(request.form)
-                if self not in self.__class__.instances:
-                    self.__class__.instances.append(self)
+                if self not in self.instances:
+                    self.instances.append(self)
                 self.name = request.form.get('location_name')
                 self.description = request.form.get('location_description')
                 destination_ids = request.form.getlist('destination_id[]')
@@ -125,8 +102,8 @@ class Location(DbSerializable):
                         self.destinations[dest_location] = int(dest_dist)
                 self.to_db()
             elif 'delete_location' in request.form:
-                self.__class__.instances.remove(self)
-                self.__class__.remove_from_db(self.id)
+                self.instances.remove(self)
+                self.remove_from_db(self.id)
             elif 'cancel_changes' in request.form:
                 print("Cancelling changes.")
             else:
@@ -140,7 +117,7 @@ class Location(DbSerializable):
         else:
             return render_template(
                 'configure/location.html', current=self,
-                game=self.__class__.game_data)
+                game=self.game_data)
 
     def distance(self, other_location):
         return self.destinations.get(other_location, -1)

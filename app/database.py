@@ -1,30 +1,41 @@
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import declarative_base
+import psycopg2
+from flask import g
 
-DB_INIT_STR = 'postgresql://postgres:admin@localhost/postgres'
+def get_db():
+    if 'db' not in g:
+        g.db = psycopg2.connect(
+            dbname='postgresql',
+            user='postgres',
+            password='admin',
+            host='localhost',
+            port='5432'
+        )
+        #g.db.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+    return g.db
 
-print(f"{__name__}: creating db and Base")
-db = SQLAlchemy()
-Base = declarative_base()
+@app.teardown_appcontext
+def close_db(error):
+    db = g.pop('db', None)
+    if db is not None:
+        db.close()
 
 def create_all():
-    print(f"{__name__}: create_all BEGIN")
-    # Creating an sqlalchemy engine directly works well for creating tables,
-    # but it causes problems with multiple flask session requests.
-    # Apparently that's what flask_sqlalchemy helps with.
-    from sqlalchemy import create_engine
-    engine = create_engine(
-        DB_INIT_STR,
-        connect_args = {"port": 5432},
-        echo="debug",
-        echo_pool=True
+    import importlib
+    module_names = [
+        'attrib',
+        'character',
+        'event',
+        'item',
+        'location',
+        'overall',
+        'user_interaction',
+    ]
+    for module_name in module_names:
+        module = importlib.import_module(f'src.{module_name}')
+        for table, schema in module.tables_to_create():
+            with g.db.cursor() as cursor:
+                cursor.execute(f"""
+    CREATE TABLE {table} (
+        {schema.strip()}
     )
-    import src.attrib
-    import src.character
-    import src.event
-    import src.item
-    import src.location
-    import src.overall
-    import src.user_interaction
-    Base.metadata.create_all(bind=engine)
-    print(f"{__name__}: create_all END")
+"""

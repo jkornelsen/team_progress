@@ -1,31 +1,66 @@
 from flask import g
 
-from database import db, Base
+def coldef(which):
+    """Definitions for commonly used columns for creating a table."""
+    if which == 'token':
+        return "game_token VARCHAR(50) NOT NULL"
+    elif which == 'id':
+        # include game token as well
+        return f"""{column('token')},
+            id SERIAL PRIMARY KEY"""
+    elif which == 'name':
+        return "name VARCHAR(255) NOT NULL"
+    elif which == 'desc':
+        return "description TEXT"
+    elif which == 'toplevel':
+        return "toplevel BOOLEAN NOT NULL"
+    else:
+        return ""
 
-def table_with_token(table_name, *columns):
-    return db.Table(
-        table_name,
-        Base.metadata,
-        #db.Column('game_token', db.String(50), primary_key=True, default=g.game_token),
-        db.Column('game_token', db.String(50), primary_key=True),
-        *columns)
-
-def table_with_id(table_name, *columns):
-    """To view sequences:
-    select * from information_schema.sequences;
-    """
-    #sequence = db.Sequence(table_name + '_id_seq')  # generates unique IDs
-    return table_with_token(
-        table_name,
-        #db.Column('id', db.Integer, sequence, primary_key=True),
-        db.Column('id', db.Integer, primary_key=True, autoincrement=True),
-        *columns)
-
-class DbSerializable(Base, db.Model):
+class DbSerializable():
     """Parent class with methods for serializing to database along with some
     other things that entities have in common.
     """
     __abstract__ = True
+
+    def __init__(self):
+        self.game_token = g.game_token
+
+    @classmethod
+    def get_table(cls):
+        return cls.__name__.lower()
+
+    @classmethod
+    def execute_change(cls, query_without_table, values,
+            commit=True, fetch=False):
+        query = query_without_table.format(table=cls.get_table())
+        result = None
+        with g.db.cursor() as cursor:
+            cursor.execute(query, tuple(values))
+            if fetch:
+                result = cursor.fetchone()
+        if commit:
+            g.db.commit()
+        return result
+
+    @classmethod
+    def execute_select(cls, query, values=None, fetch_all=False):
+        with g.db.cursor() as cursor:
+            cursor.execute(query, values)
+            if fetch_all:
+                result = cursor.fetchall()
+            else:
+                result = cursor.fetchone()
+            return result
+
+class Identifiable(DbSerializable):
+    __abstract__ = True
+
+    instances = []  # all objects of this class
+
+    def __init__(self, id):
+        super().__init__()
+        self.id = id
 
     @classmethod
     def get_by_id(cls, id_to_get):
@@ -33,6 +68,47 @@ class DbSerializable(Base, db.Model):
         return next(
             (instance for instance in cls.instances
             if instance.id == id_to_get), None)
+
+    def to_db(self):
+        doc = self.to_json()
+        doc['game_token'] = g.game_token
+        fields = list(doc.keys())
+        values = [doc[field] for field in fields]
+        TABLE = "{table}"  # partial string format
+        if doc.get('id') not in ('auto', ''):
+            update_fields = [field for field in fields
+                if field not in ('id', 'game_token')]
+            field_exprs = ', '.join([f"{field}=%s" for field in update_fields])
+            update_values = (
+                [doc[field] for field in update_fields]
+                + [doc['id'], doc['game_token']])
+            query = f"""
+                UPDATE {TABLE}
+                SET {field_exprs}
+                WHERE id = %s AND game_token = %s
+            """
+            try:
+                self.execute_change(query, values)
+                return
+            except psycopg2.IntegrityError:
+                # id doesn't exist yet
+                pass
+        placeholders = ','.join(['%s'] * len(fields))
+        query = f"""
+            INSERT INTO {TABLE} ({', '.join(fields)})
+            VALUES ({placeholders})
+            RETURNING id
+        """
+        row = self.execute_change(query, values, fetch=True)
+        self.id = row[0]
+
+    def remove_from_db(self):
+        self.execute_change(
+            """
+                DELETE FROM {table}
+                WHERE id = %s AND game_token = %s
+            """,
+            (self.id, self.game_token))
 
     @classmethod
     def list_from_json(cls, json_data, id_references=None):
@@ -45,30 +121,9 @@ class DbSerializable(Base, db.Model):
         return cls.instances
 
     @classmethod
-    def get_table_name(cls):
-        return cls.__name__.lower()
-
-    @classmethod
-    def remove_from_db(cls, doc_id):
-        collection = cls.get_collection()
-        collection.delete_one({'game_token': g.game_token, 'id': int(doc_id)})
-
-    def to_db(self):
-        doc = self.to_json()
-        doc['game_token'] = g.game_token
-        query = {'game_token': g.game_token, 'id': self.id}
-        collection = self.__class__.get_collection()
-        if collection.find_one(query):
-            print(f"Updating document for {self.__class__.__name__} with id {self.id}")
-            collection.replace_one(query, doc)
-        else:
-            print(f"Inserting new document for {self.__class__.__name__} with id {self.id}")
-            collection.insert_one(doc)
-
-    @classmethod
     def list_to_db(cls):
         print(f"{cls.__name__}.list_to_db()")
-        collection = cls.get_collection()
+        collection = cls.get_table()
         existing_ids = set(
             str(doc['id'])
             for doc in collection.find({'game_token': g.game_token}))
@@ -83,7 +138,7 @@ class DbSerializable(Base, db.Model):
     def list_from_db(cls, id_references=None):
         print(f"{cls.__name__}.list_from_db()")
         cls.instances.clear()
-        collection = cls.get_collection()
+        collection = cls.get_table()
         docs = collection.find({'game_token': g.game_token})
         instances = [cls.from_json(doc, id_references) for doc in docs]
         cls.last_id = max(

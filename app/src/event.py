@@ -9,10 +9,8 @@ from flask import (
     url_for
 )
 import random
-from sqlalchemy import Column, Integer, String, Text, Boolean, JSON
 
-from database import db
-from .db_serializable import DbSerializable, table_with_id
+from .db_serializable import Identifiable, coldef
 
 OUTCOMES = [
     "Critical Failure",
@@ -27,29 +25,23 @@ OUTCOMES = [
 def roll_dice(sides):
     return random.randint(1, sides)
 
-event_tbl = table_with_id(
-    'event',
-    Column('name', String(255), nullable=False),
-    Column('description', Text, nullable=True),
-    Column('toplevel', Boolean, nullable=False),
-    Column('outcome_margin', Integer, nullable=False),
-    Column('difficulty_values', JSON, nullable=False))
+tables_to_create = {
+    'event': f"""
+        {coldef('id')},
+        {coldef('name')},
+        {coldef('description')},
+        {coldef('toplevel')},
+        outcome_margin INTEGER,
+        difficulty_values JSON
+    """
+}
 
 class Event(DbSerializable):
-    __table__ = event_tbl
-
-    last_id = 0  # used to auto-generate a unique id for each object
-    instances = []  # all objects of this class
-
-    def __init__(self, new_id='auto'):
-        if new_id == 'auto':
-            self.__class__.last_id += 1
-            self.id = self.__class__.last_id
-        else:
-            self.id = new_id
+    def __init__(self, id=""):
+        super().__init__(id)
         self.name = ""
         self.description = ""
-        self.toplevel = False if len(self.__class__.instances) > 1 else True
+        self.toplevel = False if len(self.instances) > 1 else True
         self.outcome_margin = 9  # difference required to get major or critical
         self.difficulty_values = {  # specified on configure screen
                 'Easy': 5,
@@ -88,8 +80,8 @@ class Event(DbSerializable):
             if 'save_changes' in request.form:  # button was clicked
                 print("Saving changes.")
                 print(request.form)
-                if self not in self.__class__.instances:
-                    self.__class__.instances.append(self)
+                if self not in self.instances:
+                    self.instances.append(self)
                 self.name = request.form.get('event_name')
                 self.description = request.form.get('event_description')
                 self.toplevel = bool(request.form.get('top_level'))
@@ -99,8 +91,8 @@ class Event(DbSerializable):
                 self.outcome_margin = int(request.form.get('event_outcome_margin'))
                 self.to_db()
             elif 'delete_event' in request.form:
-                self.__class__.instances.remove(self)
-                self.__class__.remove_from_db(self.id)
+                self.instances.remove(self)
+                self.remove_from_db(self.id)
             elif 'cancel_changes' in request.form:
                 print("Cancelling changes.")
             else:

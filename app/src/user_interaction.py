@@ -1,10 +1,7 @@
 from datetime import datetime, timedelta
 from flask import g
-from sqlalchemy import (
-    Table, Column, String, DateTime, Integer, UniqueConstraint, and_, func)
 
-from database import db, Base
-from .db_serializable import DbSerializable
+from .db_serializable import Identifiable, coldef
 
 from .attrib import Attrib
 from .character import Character
@@ -13,31 +10,22 @@ from .item import Item
 from .location import Location
 from .overall import Overall
 
-userlog_tbl = Table(
-    'user_interactions',
-    Base.metadata,
-    Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('game_token', String(50), nullable=False),
-    Column('username', String(50), nullable=True),
-    Column('timestamp', DateTime, nullable=False,
-        onupdate=func.current_timestamp()),
-    Column('char_id', Integer, nullable=True),
-    Column('action_id', Integer, nullable=True),
-    Column('action_type', String(50), nullable=True))
+tables_to_create = {
+    'user_interactions': f"""
+        game_token VARCHAR(50) NOT NULL,
+        username VARCHAR(50),
+        timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        char_id INTEGER,
+        action_id INTEGER,
+        action_type VARCHAR(50),
+        UNIQUE (game_token, username, char_id, action_id, action_type) ON CONFLICT REPLACE
+    """
+}
 
 class UserInteraction(DbSerializable):
     """Keep a record of recent user interactions with the game
     so they can be displayed on the overview screen.
     """
-    __table__ = userlog_tbl
-
-    __table_args__ = (
-        # Unique constraint for the nullable columns
-        UniqueConstraint(
-            'game_data', 'username', 'char_id', 'action_id', 'action_type',
-            name='user_interactions_unique_nullable'),
-    )
-
     def __init__(self, username):
         self.game_token = g.game_token
         self.username = username
@@ -47,8 +35,8 @@ class UserInteraction(DbSerializable):
         self.action_type = None  # class such as Item or Location
 
     @classmethod
-    def get_collection(cls):
-        return g.db['user_interactions']
+    def get_table(cls):
+        return 'user_interactions'
 
     def to_json(self):
         return {
@@ -75,20 +63,34 @@ class UserInteraction(DbSerializable):
         return instance
 
     def to_db(self):
-        query = {
-            'game_token': self.game_token,
-            'username': self.username,
-            'char_id': self.char.id if self.char else -1
-        }
-        existing_interaction = self.query.filter_by(**query).first()
-        if existing_interaction:
-            print(f"Updating for {self.__class__.__name__} with username {self.username}")
-            for key, value in self.to_json().items():
-                setattr(existing_interaction, key, value)
-        else:
-            print(f"Inserting for {self.__class__.__name__} with username {self.username}")
-            db.session.add(self)
-        db.session.commit()
+        doc = self.to_json()
+        doc['game_token'] = g.game_token
+        fields = list(doc.keys())
+        values = [doc[field] for field in fields]
+        TABLE = "{table}"  # partial string format
+        update_fields = [field for field in fields
+            if field not in ('game_token', 'username', 'char_id')]
+        field_exprs = ', '.join([f"{field}=%s" for field in update_fields])
+        update_values = (
+            [doc[field] for field in update_fields]
+            + [doc['game_token'], doc['username'], doc['char_id']])
+        query = f"""
+            UPDATE {TABLE}
+            SET {field_exprs}
+            WHERE game_token = %s AND username = %s AND char_id = %s
+        """
+        try:
+            self.execute_change(query, values)
+            return
+        except psycopg2.IntegrityError:
+            # no record with those values exists yet
+            pass
+        placeholders = ','.join(['%s'] * len(fields))
+        query = f"""
+            INSERT INTO {TABLE} ({', '.join(fields)})
+            VALUES ({placeholders})
+        """
+        self.execute_change(query, values)
 
     def action_name(self):
         return self.action_obj.name if self.action_obj else ""
@@ -101,20 +103,13 @@ class UserInteraction(DbSerializable):
     @classmethod
     def recent_interactions(cls, threshold_minutes=2):
         threshold_time = datetime.now() - timedelta(minutes=threshold_minutes)
-        subquery = (
-            cls.query
-            .with_entities(cls.username, cls.char_id,
-                func.max(cls.timestamp).label('max_timestamp'))
-            .filter(cls.timestamp > threshold_time)
-            .group_by(cls.username, cls.char_id)
-            .subquery()
-        )
-        query = (
-            cls.query
-            .join(subquery, and_(
-                cls.username == subquery.c.username,
-                cls.char_id == subquery.c.char_id,
-                cls.timestamp == subquery.c.max_timestamp,
-            ))
-        )
-        return query.all()
+        query = f"""
+            SELECT DISTINCT ON (username, char_id)
+                username, char_id, timestamp, action_id, action_type
+            FROM {cls.get_table()}
+            WHERE timestamp > %s
+            ORDER BY username, char_id, timestamp DESC
+        """
+        values = (threshold_time,)
+        return cls.execute_select(query, values, fetch_all=True)
+

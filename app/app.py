@@ -9,15 +9,12 @@ from flask import (
     url_for
 )
 import uuid
-
-from database import db, DB_INIT_STR
+from database import get_db
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'team-adventurers'
 app.config['TITLE'] = 'Team Adventurers'
 app.config['TEMPLATES_AUTO_RELOAD'] = True  # set to False for production
-app.config['SQLALCHEMY_DATABASE_URI'] = DB_INIT_STR
-db.init_app(app)  # Do this before importing the db model classes.
 
 from src.game_data import GameData
 from src.user_interaction import UserInteraction
@@ -36,6 +33,7 @@ with app.app_context():
 @app.before_request
 def before_request():
     print("before_request()")
+    g.db = get_db()
     # Store data in the g object per user
     g.game_token = session.get('game_token')
     global username  # global to module only -- not as global as g.

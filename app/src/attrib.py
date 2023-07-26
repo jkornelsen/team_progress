@@ -8,27 +8,28 @@ from flask import (
     session,
     url_for
 )
+from .db_serializable import Identifiable, coldef
 
-from database import db
-from .db_serializable import DbSerializable, table_with_id
-
-attrib_tbl = table_with_id(
-    'attrib',
-    db.Column('name', db.String(255), nullable=False),
-    db.Column('description', db.Text, nullable=True))
+tables_to_create = {
+    'attrib': f"""
+        {coldef('id')},
+        {coldef('name')},
+        {coldef('desc')}
+""",
     # example "{10: 'Very Hungry', 50: 'Full'}
-    #db.Column('threshold_names', db.JSON, nullable=False)
+    # threshold_names JSON NOT NULL
+}
 
-class Attrib(DbSerializable):
+class Attrib(Identifiable):
     """Stat or state or other type of attribute for a character or item.
     Examples: Perception, XP, Max HP, Current HP, Poisoned
     Values of the attrib can be stored as values in attrib dicts of other
     entities.
     """
-    __table__ = attrib_tbl
-
-    last_id = 0  # used to auto-generate a unique id for each object
-    instances = []  # all objects of this class
+    def __init__(self, id=""):
+        super().__init__(id)
+        self.name = ""
+        self.description = ""
 
     def to_json(self):
         return {
@@ -50,8 +51,6 @@ class Attrib(DbSerializable):
         cls.instances.clear()
         for attrib_data in json_data:
             cls.from_json(attrib_data, None)
-        cls.last_id = max(
-            (instance.id for instance in cls.instances), default=0)
         return cls.instances
 
     def configure_by_form(self):
@@ -59,14 +58,14 @@ class Attrib(DbSerializable):
             if 'save_changes' in request.form:  # button was clicked
                 print("Saving changes.")
                 print(request.form)
-                if self not in self.__class__.instances:
-                    self.__class__.instances.append(self)
+                if self not in self.instances:
+                    self.instances.append(self)
                 self.name = request.form.get('attrib_name')
                 self.description = request.form.get('attrib_description')
                 self.to_db()
             elif 'delete_attrib' in request.form:
-                self.__class__.instances.remove(self)
-                self.__class__.remove_from_db(self.id)
+                self.instances.remove(self)
+                self.remove_from_db(self.id)
             elif 'cancel_changes' in request.form:
                 print("Cancelling changes.")
             else:

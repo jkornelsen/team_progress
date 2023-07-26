@@ -9,93 +9,49 @@ from flask import (
     url_for
 )
 import math
-from sqlalchemy import (Column, String, Text, Boolean, Float, Integer,
-    ForeignKeyConstraint,
-    and_, text)
-from sqlalchemy.orm import relationship
 
-from database import db
-from .attrib import Attrib, attrib_tbl
-from .progress import Progress, progress_tbl
-from .db_serializable import DbSerializable, table_with_id, table_with_token
+from .attrib import Attrib
+from .progress import Progress
+from .db_serializable import Identifiable, coldef
 
-item_tbl = table_with_id(
-    'item',
-    Column('name', String(255), nullable=False),
-    Column('description', Text, nullable=True),
-    Column('toplevel', Boolean, nullable=False),
-    Column('growable', Boolean, nullable=False),
-    Column('result_qty', Float(precision=2), nullable=False),
-    Column('progress_id', Integer, nullable=True))
-item_tbl.append_constraint(
-    ForeignKeyConstraint(
-        [item_tbl.c.game_token, item_tbl.c.progress_id],
-        [progress_tbl.c.game_token, progress_tbl.c.id]))
+tables_to_create = {
+    'item': f"""
+        {coldef('id')},
+        {coldef('name')},
+        {coldef('description')},
+        {coldef('toplevel')},
+        growable BOOLEAN,
+        result_qty FLOAT(2) NOT NULL,
+        progress_id INTEGER,
+        FOREIGN KEY (game_token, progress_id)
+            REFERENCES progress (game_token, id)
+    """,
+    'item_attribs': f"""
+        {coldef('token')},
+        item_id INTEGER PRIMARY KEY,
+        attrib_id INTEGER PRIMARY KEY,
+        FOREIGN KEY (game_token, item_id)
+            REFERENCES item (game_token, id),
+        FOREIGN KEY (game_token, attrib_id)
+            REFERENCES attrib (game_token, id)
+    """,
+    'item_sources': f"""
+        {coldef('token')},
+        item_id INTEGER PRIMARY KEY,
+        source_id INTEGER PRIMARY KEY,
+        FOREIGN KEY (game_token, item_id)
+            REFERENCES item (game_token, id),
+        FOREIGN KEY (game_token, source_id)
+            REFERENCES item (game_token, id)
+    """
+}
 
-item_attribs = table_with_token(
-    'item_attribs',
-    Column('item_id', Integer, primary_key=True),
-    Column('attrib_id', Integer, primary_key=True))
-item_attribs.append_constraint(
-    ForeignKeyConstraint(
-        [item_attribs.c.game_token, item_attribs.c.item_id],
-        [item_tbl.c.game_token, item_tbl.c.id]))
-item_attribs.append_constraint(
-    ForeignKeyConstraint(
-        [item_attribs.c.game_token, item_attribs.c.attrib_id],
-        [attrib_tbl.c.game_token, attrib_tbl.c.id]))
-
-item_sources = table_with_token(
-    'item_sources',
-    Column('item_id', primary_key=True),
-    Column('source_id', primary_key=True))
-item_sources.append_constraint(
-    ForeignKeyConstraint(
-        [item_sources.c.game_token, item_sources.c.item_id],
-        [item_tbl.c.game_token, item_tbl.c.id]))
-item_sources.append_constraint(
-    ForeignKeyConstraint(
-        [item_sources.c.game_token, item_sources.c.source_id],
-        [item_tbl.c.game_token, item_tbl.c.id]))
-
-class Item(DbSerializable):
-    __table__ = item_tbl
-
-    last_id = 0  # used to auto-generate a unique id for each object
-    instances = []  # all objects of this class
-
-    attribs = relationship(
-        Attrib, secondary=item_attribs,
-        primaryjoin=and_(
-            item_attribs.c.game_token == item_tbl.c.game_token,
-            item_attribs.c.item_id == item_tbl.c.id),
-        secondaryjoin=and_(
-            item_attribs.c.game_token == attrib_tbl.c.game_token,
-            item_attribs.c.attrib_id == attrib_tbl.c.id),
-        backref='applies_to_items', lazy='dynamic')
-    sources = relationship(
-        'Item', secondary=item_sources,
-        primaryjoin=and_(
-            item_sources.c.game_token == item_tbl.c.game_token,
-            item_sources.c.item_id == item_tbl.c.id),
-        secondaryjoin=and_(
-            item_sources.c.game_token == item_tbl.c.game_token,
-            item_sources.c.source_id == item_tbl.c.id),
-        backref='applies_to_items', lazy='dynamic')
-    progress = relationship(
-        Progress, backref='item_for_progress',
-        foreign_keys=[item_tbl.c.game_token, item_tbl.c.progress_id],
-        lazy=True, uselist=False)
-
-    def __init__(self, new_id='auto'):
-        if new_id == 'auto':
-            self.__class__.last_id += 1
-            self.id = self.__class__.last_id
-        else:
-            self.id = new_id
+class Item(Identifiable):
+    def __init__(self, id=""):
+        super().__init__(id)
         self.name = ""
         self.description = ""
-        self.toplevel = False if len(self.__class__.instances) > 1 else True
+        self.toplevel = False if len(self.instances) > 1 else True
         self.attribs = {}  # keys are Attrib object, values are stat val
         self.progress = Progress(self)
         self.growable = 'over_time'
@@ -169,8 +125,8 @@ class Item(DbSerializable):
             if 'save_changes' in request.form:  # button was clicked
                 print("Saving changes.")
                 print(request.form)
-                if self not in self.__class__.instances:
-                    self.__class__.instances.append(self)
+                if self not in self.instances:
+                    self.instances.append(self)
                 self.name = request.form.get('item_name')
                 self.description = request.form.get('item_description')
                 self.toplevel = bool(request.form.get('top_level'))
@@ -182,7 +138,7 @@ class Item(DbSerializable):
                 for source_id in source_ids:
                     source_quantity = int(
                         request.form.get(f'source_quantity_{source_id}', 0))
-                    source_item = self.__class__.get_by_id(source_id)
+                    source_item = self.get_by_id(source_id)
                     self.sources[source_item] = source_quantity
                 print("Sources: ", {source.name: quantity
                     for source, quantity in self.sources.items()})
@@ -214,8 +170,8 @@ class Item(DbSerializable):
                     self.progress.start()
                 self.to_db()
             elif 'delete_item' in request.form:
-                self.__class__.instances.remove(self)
-                self.__class__.remove_from_db(self.id)
+                self.instances.remove(self)
+                self.remove_from_db(self.id)
             elif 'cancel_changes' in request.form:
                 print("Cancelling changes.")
             else:

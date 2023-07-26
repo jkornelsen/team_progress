@@ -1,10 +1,36 @@
 networked web game
-could play competitively or as a team
-store code in github
+
+Team Progress -- inspired by tRPGs
+Similar to a tabletop RPG,
+the driving forces are narrative and imagination along with chance.
+However, idle/incremental elements are also involved.
+For example, you could set it up to manage a factory,
+and employees from a rival company might suddenly invade
+and attempt to steal equipment or trade secrets.
+
+This was conceived as a group game,
+although there is a reason idle games are typically single player.
+Multiplayer generally requires a lot to be handled by the server,
+and many sites do not offer the required infrastructure.
+So, a good way to play is to download the source code and
+run as a home LAN server with friends or family.
+There are some websites such as pythonAnywhere that can host
+this type of game for free,
+so we'll see if it can handle the load.
 
 various scenarios to start the board
-partially procedurally generated
+partially procedurally generated,
+use lists like those found in tabletop rpg books,
+only with different kinds of items, such as paperclips
 choose goal
+research scenario-related details online during the game
+for example, how are pens made
+gamemaster could research beforehand as well as possibly some setup
+
+source more scenarios from community
+perhaps submit to github via enhancement requests
+optionally sort scenarios based on popularity
+keep track of scenarios played by a game token with at least 10 interactions
 
 no matter what the scenario, there will be a list of the following entities:
     overview -- scenario description and win requirements
@@ -89,9 +115,18 @@ status conditions
 states (effects / attributes) may change over time, such as poisoning
 turn-based, not with a time delay
 
-different players may be given different authority,
+different players may be given different authority (rights, privileges),
 for example, only managers can spend money to open new stores
 an easy distinction would be that only the gamemaster can change setup
+checkbox on overview screen to say I am the gamemaster (like an admin)
+checkbox to prevent all others from making setup changes
+can also set config permissions for a particular player on a particular entity
+or play permissions -- might even be more helpful than setup permissions
+anyone can make setup changes, but only certain people can do certain actions
+users will need passwords so someone can't just say they're a different user
+or how about a downloadable key file
+maybe give each player the choice of auth method
+a player could choose no auth if desired
 
 events can pop up randomly while an action is in progress
 sudden bad or good events may also happen
@@ -186,9 +221,16 @@ current hp would be selected as an attribute to modify
 items would have their own attrs list,
 including e.g. hp change that would indicate how much of an
 impact it would have in increasing or reducing hp change of the event
+
 perhaps basic mechanics could be implemented automatically,
 and more advanced mechanics would require manual changes to stats
 armor could be dmg * 0.95, or chance to get hit * 0.95
+attributes could be attached to events both to affect and be changed by
+change and effect can both be automatic, by approval, or manual
+
+hp attr could be current value along with max, like items have
+however, attacks such as poison often do damage based on % of max hp
+maybe events can be based on the current (default) or max -- a checkbox
 
 base chances could be displayed in the form of 1 / 10000 ticks
 or 3 / 5 chance to hit
@@ -212,10 +254,13 @@ for example, hp change could be affected by damage reduction
 
 in a fighting event,
 all factors should be displayed to show how the outcome is arrived at
+magic missile could be one event entity, and sword swing could be another
+or one event could be used for any of a group of similar abilities
 
 perhaps one event could contain references to other (sub-)events,
 for example, an attack would be a chance of changing hp
 as well as a chance at poisoning
+if nothing else, could explain subevents in description
 
 chances could be at a disadvantage (lowest of two rolls)
 or advantage (highest of two roles) based on story context
@@ -258,6 +303,39 @@ characters would have travel speed for a particular location?
 for example, a swimming speed and a walking speed
 speed for a particular type of terrain, and a location would have a type of terrain
 or we could manually change the character's speed when entering a new location
+
+a location could optionally have subdivisions
+specify as having a grid of x by y
+position of the character or item
+would be an attribute of a many-to-many is_at_location relationship
+show visually on play screen with ascii graphics
+first letter of characters and items in their position
+also display the coords of each entity at that location
+the area would be a <pre> with a different background to
+show empty space
+
+no travel time progress between subdivisions,
+but speed could make it so can move two at a time
+compared to another character's one at a time
+arrow buttons to change position
+
+a single player could open two tabs
+one to move character and another to see location change
+
+a particular item with quantity in a place,
+where there could be several stacks in different places
+a many-to-many relationship with item and either location or character
+
+randomly populate room with items to pick up
+by selecting items from a list of all items on location config screen
+for example 0 to 10 items
+chance based on item rarity
+or possibly any attrs, for example, some items more likely in fire caves
+and others more likely in ice
+maybe also randomly populate with monsters
+
+location config screen would list all items and their positions and quantities
+could remove one at a position, or all at location
 
 not as interesting to see total time spent on this action across starts/stops
 for now, let's eliminate it
@@ -457,4 +535,11 @@ can win an award for the best design.
 Operate on a budget or have access to unlimited resources.
 This scenario is more open-ended than most,
 focused on designing rather than working towards a goal.
+
+scenario: History
+revolutionary war of an actual country
+such as the U.S. with George Washington
+
+scenario: Honeycomb Raid
+like Winnie-the-Pooh, or more like tribal adventure
 

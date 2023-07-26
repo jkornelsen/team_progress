@@ -9,46 +9,31 @@ from flask import (
     session,
     url_for
 )
-from sqlalchemy import (
-    ForeignKey, ForeignKeyConstraint,
-    Integer, String, Text, Column, Integer, and_)
-from sqlalchemy.orm import relationship, load_only
+from .db_serializable import DbSerializable, coldef
 
-from database import db
-from .db_serializable import DbSerializable, table_with_token, alch_to_dict
-
-from .item import Item, item_tbl
+from .item import Item
 from .character import Character
 from .event import Event
 
-overall_tbl = table_with_token(
-    'overall',
-    Column('title', String(255), nullable=False),
-    Column('description', Text, nullable=True))
-
-winning_items = table_with_token(
-    'winning_items',
-    Column('item_id', primary_key=True),
-    Column('quantity', Integer, nullable=False))
-winning_items.append_constraint(
-    ForeignKeyConstraint(
-        [winning_items.c.game_token, winning_items.c.item_id],
-        [item_tbl.c.game_token, item_tbl.c.id]))
+tables_to_create = {
+    'overall': f"""
+        {coldef('token')},
+        title VARCHAR(255) NOT NULL,
+        {coldef('description')},
+        PRIMARY KEY (game_token)
+    """,
+    'winning_items': f"""
+        {coldef('token')},
+        item_id INTEGER PRIMARY KEY,
+        quantity INTEGER NOT NULL,
+        FOREIGN KEY (game_token, item_id)
+            REFERENCES item (game_token, id)
+    """
+}
 
 class Overall(DbSerializable):
     """Overall scenario settings such as scenario title and goal,
     and app settings."""
-    __table__ = overall_tbl
-
-    items = relationship(
-        Item, secondary=winning_items,
-        primaryjoin=(
-            winning_items.c.game_token == overall_tbl.c.game_token),
-        secondaryjoin=and_(
-            winning_items.c.game_token == item_tbl.c.game_token,
-            winning_items.c.item_id == item_tbl.c.id),
-        backref='item_wins_for', lazy='dynamic')
-
     def __init__(self):
         self.title = "Generic Adventure"
         self.description = (
@@ -56,7 +41,7 @@ class Overall(DbSerializable):
             " To start with, change the title and this description"
             " in the Overall settings, and do some basic"
             " setup such as adding some items.")
-        self.winning_items = {}  # Item objects with quantity required.
+        self.winning_items = {}  # Item objects and their quantity required
 
     def to_json(self):
         return {
@@ -103,7 +88,7 @@ class Overall(DbSerializable):
                 for winning_item_id in winning_item_ids:
                     winning_item_quantity = int(
                         request.form.get(f'winning_item_quantity_{winning_item_id}', 0))
-                    winning_item = self.__class__.get_by_id(winning_item_id)
+                    winning_item = self.get_by_id(winning_item_id)
                     self.winning_items[winning_item] = winning_item_quantity
                 print("Sources: ", {winning_item.name: quantity
                     for winning_item, quantity in self.winning_items.items()})

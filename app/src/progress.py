@@ -3,34 +3,33 @@ from flask import jsonify
 import math
 import threading
 import time
-from sqlalchemy import Column, Float, Text, DateTime, Integer, Boolean
 
-from database import db
-from .db_serializable import DbSerializable, table_with_id
+from .db_serializable import Identifiable, coldef
 
-progress_tbl = table_with_id(
-    'progress',
-    Column('quantity', Float(precision=2), nullable=False),
-    Column('limit', Float(precision=2), nullable=False),
-    Column('step_size', Float(precision=2), nullable=False),
-    Column('rate_amount', Float(precision=2), nullable=False),
-    Column('rate_duration', Float(precision=2), nullable=False),
-    Column('sources_json', Text, nullable=False),
-    Column('start_time', DateTime, nullable=True),
-    Column('stop_time', DateTime, nullable=True),
-    Column('batches_processed', Integer, nullable=False),
-    Column('is_ongoing', Boolean, nullable=False))
+tables_to_create = {
+    'progress': f"""
+        {coldef('id')},
+        quantity FLOAT(2) NOT NULL,
+        limit FLOAT(2) NOT NULL,
+        step_size FLOAT(2) NOT NULL,
+        rate_amount FLOAT(2) NOT NULL,
+        rate_duration FLOAT(2) NOT NULL,
+        sources_json TEXT NOT NULL,
+        start_time TIMESTAMP,
+        stop_time TIMESTAMP,
+        batches_processed INTEGER NOT NULL,
+        is_ongoing BOOLEAN NOT NULL
+    """
+}
 
-class Progress(DbSerializable):
+class Progress(Identifiable):
     """Track progress, such as over time.
     Instead of its own collection the data for this class will be stored in
     the database for the entity that contains it.
     """
-    __table__ = progress_tbl
-
     def __init__(self, entity, step_size=1.0,
-            rate_amount=1.0, rate_duration=1.0, quantity=0, sources=None):
-        self.entity = entity  # the Item or other entity that uses this object
+            rate_amount=1.0, rate_duration=1.0, quantity=0.0, sources=None):
+        self.entity = entity  # Item or other entity that uses this object
         self.quantity = quantity  # the main value tracked
         self.limit = 0  # limit the quantity if not 0
         self.step_size = step_size
