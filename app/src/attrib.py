@@ -11,10 +11,10 @@ from flask import (
 from .db_serializable import Identifiable, coldef
 
 tables_to_create = {
-    'attrib': f"""
+    'attribs': f"""
         {coldef('id')},
         {coldef('name')},
-        {coldef('desc')}
+        {coldef('description')}
 """,
     # example "{10: 'Very Hungry', 50: 'Full'}
     # threshold_names JSON NOT NULL

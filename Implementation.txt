@@ -12,12 +12,28 @@ so add a dropdown list of characters on that screen
 also require worn item
 maybe have a checkbox that the item won't get consumed during the exchange
 
+Maybe use GameData to load everything,
+which will also be useful for JSON file serialization.
+The user_interactions table wouldn't go into the file or
+be part of GameData.
+When loading GameData, perhaps we wouldn't need to select join the far
+side of relation tables, because we could join to the near side and
+then use get_by_id() in python to get the object reference.
+Joining relation tables fully might be useful when only grabbing specific
+information.
+
 TODO next:
-    test until overview screen is displayed without crashing
-    then add code to insert relationships and make them work
+    In overall.get_char_list_display(),
+        recent_interactions() needs to return objects with action_name attr.
+        List of UserInteraction objects.
+        This requires first obtaining action_type,
+        then getting the name from those objects.
+        First call GameData to load_list_from_db() for all entities.
+        Well, we could optimize a bit by excluding events and attribs perhaps.
+        Then for each interaction, reference its action object with get_by_id().
+
+Add code to insert relationships and make them work.
 
 
 ---- Issues ----
 
-Going to play_item resulted in item not found. Reloading the page caused
-the item to be found. Maybe data didn't get loaded from db at the right time?

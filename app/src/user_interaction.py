@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from flask import g
 
-from .db_serializable import Identifiable, coldef
+from .db_serializable import DbSerializable, coldef
 
 from .attrib import Attrib
 from .character import Character
@@ -14,11 +14,11 @@ tables_to_create = {
     'user_interactions': f"""
         game_token VARCHAR(50) NOT NULL,
         username VARCHAR(50),
-        timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         char_id INTEGER,
         action_id INTEGER,
         action_type VARCHAR(50),
-        UNIQUE (game_token, username, char_id, action_id, action_type) ON CONFLICT REPLACE
+        UNIQUE (game_token, username, char_id)
     """
 }
 
@@ -66,31 +66,20 @@ class UserInteraction(DbSerializable):
         doc = self.to_json()
         doc['game_token'] = g.game_token
         fields = list(doc.keys())
-        values = [doc[field] for field in fields]
-        TABLE = "{table}"  # partial string format
+        placeholders = ','.join(['%s'] * len(fields))
         update_fields = [field for field in fields
             if field not in ('game_token', 'username', 'char_id')]
-        field_exprs = ', '.join([f"{field}=%s" for field in update_fields])
-        update_values = (
-            [doc[field] for field in update_fields]
-            + [doc['game_token'], doc['username'], doc['char_id']])
+        update_placeholders = ', '.join(
+            [f"{field}=%s" for field in update_fields])
         query = f"""
-            UPDATE {TABLE}
-            SET {field_exprs}
-            WHERE game_token = %s AND username = %s AND char_id = %s
-        """
-        try:
-            self.execute_change(query, values)
-            return
-        except psycopg2.IntegrityError:
-            # no record with those values exists yet
-            pass
-        placeholders = ','.join(['%s'] * len(fields))
-        query = f"""
-            INSERT INTO {TABLE} ({', '.join(fields)})
+            INSERT INTO {{table}} ({', '.join(fields)})
             VALUES ({placeholders})
+            ON CONFLICT (game_token, username, char_id) DO UPDATE
+            SET {update_placeholders}
         """
-        self.execute_change(query, values)
+        values = [doc[field] for field in fields]
+        update_values = [doc[field] for field in update_fields]
+        self.execute_change(query, values + update_values)
 
     def action_name(self):
         return self.action_obj.name if self.action_obj else ""
@@ -104,12 +93,12 @@ class UserInteraction(DbSerializable):
     def recent_interactions(cls, threshold_minutes=2):
         threshold_time = datetime.now() - timedelta(minutes=threshold_minutes)
         query = f"""
-            SELECT DISTINCT ON (username, char_id)
+            SELECT DISTINCT ON (game_token, username, char_id)
                 username, char_id, timestamp, action_id, action_type
             FROM {cls.get_table()}
-            WHERE timestamp > %s
+            WHERE game_token = {g.game_token} AND timestamp > %s
             ORDER BY username, char_id, timestamp DESC
         """
         values = (threshold_time,)
-        return cls.execute_select(query, values, fetch_all=True)
+        return cls.execute_select(query, values)
 

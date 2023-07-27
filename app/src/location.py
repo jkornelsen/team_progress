@@ -11,19 +11,10 @@ from flask import (
 from .db_serializable import Identifiable, coldef
 
 tables_to_create = {
-    'location': f"""
+    'locations': f"""
         {coldef('id')},
         {coldef('name')},
         {coldef('description')}
-    """,
-    'location_destinations': f"""
-        {coldef('token')},
-        origin_id INTEGER PRIMARY KEY,
-        dest_id INTEGER PRIMARY KEY,
-        FOREIGN KEY (game_token, origin_id)
-            REFERENCES location (game_token, id),
-        FOREIGN KEY (game_token, dest_id)
-            REFERENCES location (game_token, id)
     """
 }
 

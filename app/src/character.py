@@ -15,7 +15,7 @@ from .location import Location
 from .progress import Progress
 
 tables_to_create = {
-    'character': f"""
+    'characters': f"""
         {coldef('id')},
         {coldef('name')},
         {coldef('description')},
@@ -26,24 +26,6 @@ tables_to_create = {
         FOREIGN KEY (game_token, progress_id)
             REFERENCES progress (game_token, id)
     """,
-    'char_attribs': f"""
-        {coldef('token')},
-        char_id INTEGER PRIMARY_KEY,
-        attrib_id INTEGER PRIMARY_KEY,
-        FOREIGN KEY (game_token, char_id)
-            REFERENCES character (game_token, id)
-        FOREIGN KEY (game_token, attrib_id)
-            REFERENCES attrib (game_token, id)
-    """,
-    'char_items': f"""
-        {coldef('token')},
-        char_id INTEGER PRIMARY KEY,
-        item_id INTEGER PRIMARY KEY,
-        FOREIGN KEY (game_token, char_id)
-            REFERENCES character (game_token, id),
-        FOREIGN KEY (game_token, item_id)
-            REFERENCES item (game_token, id)
-    """
 }
 
 class Character(Identifiable):

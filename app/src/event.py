@@ -26,7 +26,7 @@ def roll_dice(sides):
     return random.randint(1, sides)
 
 tables_to_create = {
-    'event': f"""
+    'events': f"""
         {coldef('id')},
         {coldef('name')},
         {coldef('description')},
@@ -36,7 +36,7 @@ tables_to_create = {
     """
 }
 
-class Event(DbSerializable):
+class Event(Identifiable):
     def __init__(self, id=""):
         super().__init__(id)
         self.name = ""

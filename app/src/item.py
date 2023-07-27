@@ -15,7 +15,7 @@ from .progress import Progress
 from .db_serializable import Identifiable, coldef
 
 tables_to_create = {
-    'item': f"""
+    'items': f"""
         {coldef('id')},
         {coldef('name')},
         {coldef('description')},
@@ -25,24 +25,6 @@ tables_to_create = {
         progress_id INTEGER,
         FOREIGN KEY (game_token, progress_id)
             REFERENCES progress (game_token, id)
-    """,
-    'item_attribs': f"""
-        {coldef('token')},
-        item_id INTEGER PRIMARY KEY,
-        attrib_id INTEGER PRIMARY KEY,
-        FOREIGN KEY (game_token, item_id)
-            REFERENCES item (game_token, id),
-        FOREIGN KEY (game_token, attrib_id)
-            REFERENCES attrib (game_token, id)
-    """,
-    'item_sources': f"""
-        {coldef('token')},
-        item_id INTEGER PRIMARY KEY,
-        source_id INTEGER PRIMARY KEY,
-        FOREIGN KEY (game_token, item_id)
-            REFERENCES item (game_token, id),
-        FOREIGN KEY (game_token, source_id)
-            REFERENCES item (game_token, id)
     """
 }
 
@@ -165,7 +147,7 @@ class Item(Identifiable):
                     rate_amount=float(request.form.get('rate_amount')),
                     rate_duration=float(request.form.get('rate_duration')),
                     sources=self.sources)
-                self.progress.limit = int(request.form.get('item_limit'))
+                self.progress.q_limit = int(request.form.get('item_limit'))
                 if was_ongoing:
                     self.progress.start()
                 self.to_db()

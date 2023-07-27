@@ -1,21 +1,24 @@
 from flask import g
+from types import SimpleNamespace
+from psycopg2.extras import RealDictCursor
 
 def coldef(which):
     """Definitions for commonly used columns for creating a table."""
-    if which == 'token':
+    if which == 'game_token':
         return "game_token VARCHAR(50) NOT NULL"
     elif which == 'id':
         # include game token as well
-        return f"""{column('token')},
-            id SERIAL PRIMARY KEY"""
+        return f"""{coldef('game_token')},
+        id SERIAL,
+        PRIMARY KEY (game_token, id)"""
     elif which == 'name':
         return "name VARCHAR(255) NOT NULL"
-    elif which == 'desc':
+    elif which == 'description':
         return "description TEXT"
     elif which == 'toplevel':
         return "toplevel BOOLEAN NOT NULL"
     else:
-        return ""
+        raise Exception(f"Unexpected coldef type '{which}'")
 
 class DbSerializable():
     """Parent class with methods for serializing to database along with some
@@ -44,13 +47,13 @@ class DbSerializable():
         return result
 
     @classmethod
-    def execute_select(cls, query, values=None, fetch_all=False):
-        with g.db.cursor() as cursor:
+    def execute_select(cls, query, values=None, fetch_all=True):
+        with g.db.cursor(cursor_factory=RealDictCursor) as cursor:
             cursor.execute(query, values)
             if fetch_all:
-                result = cursor.fetchall()
+                result = [SimpleNamespace(**row) for row in cursor.fetchall()]
             else:
-                result = cursor.fetchone()
+                result = SimpleNamespace(**cursor.fetchone())
             return result
 
 class Identifiable(DbSerializable):
@@ -74,7 +77,6 @@ class Identifiable(DbSerializable):
         doc['game_token'] = g.game_token
         fields = list(doc.keys())
         values = [doc[field] for field in fields]
-        TABLE = "{table}"  # partial string format
         if doc.get('id') not in ('auto', ''):
             update_fields = [field for field in fields
                 if field not in ('id', 'game_token')]
@@ -83,7 +85,7 @@ class Identifiable(DbSerializable):
                 [doc[field] for field in update_fields]
                 + [doc['id'], doc['game_token']])
             query = f"""
-                UPDATE {TABLE}
+                UPDATE {{table}}
                 SET {field_exprs}
                 WHERE id = %s AND game_token = %s
             """
@@ -95,7 +97,7 @@ class Identifiable(DbSerializable):
                 pass
         placeholders = ','.join(['%s'] * len(fields))
         query = f"""
-            INSERT INTO {TABLE} ({', '.join(fields)})
+            INSERT INTO {{table}} ({', '.join(fields)})
             VALUES ({placeholders})
             RETURNING id
         """

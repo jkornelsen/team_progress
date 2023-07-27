@@ -10,7 +10,7 @@ tables_to_create = {
     'progress': f"""
         {coldef('id')},
         quantity FLOAT(2) NOT NULL,
-        limit FLOAT(2) NOT NULL,
+        q_limit FLOAT(2) NOT NULL,
         step_size FLOAT(2) NOT NULL,
         rate_amount FLOAT(2) NOT NULL,
         rate_duration FLOAT(2) NOT NULL,
@@ -31,7 +31,7 @@ class Progress(Identifiable):
             rate_amount=1.0, rate_duration=1.0, quantity=0.0, sources=None):
         self.entity = entity  # Item or other entity that uses this object
         self.quantity = quantity  # the main value tracked
-        self.limit = 0  # limit the quantity if not 0
+        self.q_limit = 0  # limit the quantity if not 0
         self.step_size = step_size
         self.rate_amount = rate_amount
         self.rate_duration = rate_duration
@@ -48,7 +48,7 @@ class Progress(Identifiable):
     def to_json(self):
         return {
             'quantity': self.quantity,
-            'limit': self.limit,
+            'q_limit': self.q_limit,
             'step_size': self.step_size,
             'rate_amount': self.rate_amount,
             'rate_duration': self.rate_duration,
@@ -62,7 +62,7 @@ class Progress(Identifiable):
     def from_json(cls, data, entity):
         instance = cls(entity)
         instance.quantity = data['quantity']
-        instance.limit = data.get('limit', 0)
+        instance.q_limit = data.get('q_limit', 0)
         instance.step_size = data.get('step_size', 0)
         instance.rate_amount = data['rate_amount']
         instance.rate_duration = data['rate_duration']
@@ -82,9 +82,9 @@ class Progress(Identifiable):
             num_batches = batches_requested
             eff_result_qty = num_batches * self.step_size
             new_quantity = self.quantity + eff_result_qty
-            if ((self.limit > 0 and new_quantity > self.limit)
-                    or (self.limit < 0 and new_quantity < self.limit)):
-                num_batches = (self.limit - self.quantity) // self.step_size
+            if ((self.q_limit > 0 and new_quantity > self.q_limit)
+                    or (self.q_limit < 0 and new_quantity < self.q_limit)):
+                num_batches = (self.q_limit - self.quantity) // self.step_size
                 stop_here = True  # can't process the full amount
             eff_source_qtys = {}
             for source_item, source_qty in self.sources.items():

@@ -17,17 +17,10 @@ from .event import Event
 
 tables_to_create = {
     'overall': f"""
-        {coldef('token')},
+        {coldef('game_token')},
         title VARCHAR(255) NOT NULL,
         {coldef('description')},
         PRIMARY KEY (game_token)
-    """,
-    'winning_items': f"""
-        {coldef('token')},
-        item_id INTEGER PRIMARY KEY,
-        quantity INTEGER NOT NULL,
-        FOREIGN KEY (game_token, item_id)
-            REFERENCES item (game_token, id)
     """
 }
 
@@ -118,10 +111,14 @@ CharacterRow = namedtuple('CharacterRow',
     'action_name', 'action_link', 'username'])
 
 def get_charlist_display():
-    docs = Character.query.options(
-        load_only(Character.name, Character.id, Character.toplevel)).filter_by(
-        game_token=g.game_token).all()
-    char_data = [character.__dict__ for character in docs]
+    char_data = DbSerializable.execute_select("""
+        SELECT c.name, c.id, c.toplevel, c.location_id,
+            l.name as location_name
+        FROM characters c
+        LEFT OUTER JOIN locations l
+            ON c.location_id = l.id AND c.game_token = l.game_token
+        WHERE c.game_token = %s
+    """, (g.game_token,))
     # SELECT B.name, B.id
     # FROM Character A, Location B
     # WHERE B.id = A.location_id
@@ -131,21 +128,21 @@ def get_charlist_display():
             row = CharacterRow(
                 char_id=char.id,
                 char_name=char.name,
-                loc_id=char.location.id if char.location else None,
-                loc_name=char.location.name if char.location else None,
+                loc_id=char.location_id,
+                loc_name=char.location_name,
                 action_name="TODO",
                 action_link="TODO",
                 username=None
             )
             character_rows.append(row)
-    from .user_interaction import UserInteraction
+    from .user_interaction import UserInteraction  # avoid circular import
     interactions = UserInteraction.recent_interactions()
     # Combine user records with rows containing the same character.
     for interaction in interactions:
         if interaction.char:
             modified_rows = []
             for row in character_rows:
-                if row.char_id == interaction.char.id:
+                if row.char_id == interaction.char_id:
                     modified_row = row._replace(
                         username=interaction.username,
                         action_name=interaction.action_name(),
@@ -159,8 +156,8 @@ def get_charlist_display():
     for interaction in interactions:
         if interaction.username not in [row.username for row in character_rows]:
             row = CharacterRow(
-                char_id=interaction.char.id if interaction.char else -1,
-                char_name=interaction.char.name if interaction.char else "",
+                char_id=interaction.char_id if interaction_char_id else -1,
+                char_name=interaction.char_name if interaction.char_id else "",
                 loc_id=None,
                 loc_name=None,
                 action_name=interaction.action_name(),
@@ -178,23 +175,17 @@ def get_charlist_display():
     return character_rows
 
 def get_items_and_events():
-    item_data = (
-        Item.query
-        .with_entities(Item.id, Item.name)
-        .filter(Item.toplevel == True)
-        .all()
-    )
-    event_data = (
-        Event.query
-        .with_entities(Event.id, Event.name)
-        .filter(Event.toplevel == True)
-        .all()
-    )
-    result = SimpleNamespace(**{
-        'items': item_data,
-        'events': event_data
-    })
-    return result
+    item_data = DbSerializable.execute_select("""
+        SELECT id, name
+        FROM items
+        WHERE toplevel = TRUE
+    """)
+    event_data = DbSerializable.execute_select("""
+        SELECT id, name
+        FROM events
+        WHERE toplevel = TRUE
+    """)
+    return SimpleNamespace(items=item_data, events=event_data)
 
 def set_routes(app):
     @app.route('/overview')

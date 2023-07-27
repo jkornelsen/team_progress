@@ -9,7 +9,7 @@ from flask import (
     url_for
 )
 import uuid
-from database import get_db
+from database import get_db, close_db
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'team-adventurers'
@@ -119,9 +119,10 @@ _set_routes_file(app)
 def inject_username():
     return {'current_username': username}
 
+@app.teardown_appcontext
+def teardown(ctx):
+    close_db()
+
 if __name__ == '__main__':
-    with app.app_context():
-        from database import create_all
-        create_all()
     app.run()
 
