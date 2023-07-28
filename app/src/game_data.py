@@ -7,6 +7,10 @@ from src.item import Item
 from src.location import Location
 from src.overall import Overall
 
+def entity_name(entity_cls):
+    # attributes of GameData, same as table name
+    return "{}s".format(entity_cls.__name__.lower())
+
 class GameData:
     # In this order for from_json().
     ENTITIES = [
@@ -16,30 +20,28 @@ class GameData:
             Character,
             Event]
 
+    instance = None  # reference to singleton
+
     def __init__(self):
         for entity_cls in self.ENTITIES:
             entity_cls.instances.clear()
             setattr(self, entity_name(entity_cls), entity_cls.instances)
-            setattr(entity_cls, 'game_data', self)
-        self.overall = Overall.from_db()
-        Overall.game_data = self
-
-    @staticmethod
-    def entity_name(entity_cls):
-        return entity_cls.__name__.lower() + 's'
+        self.overall = Overall.instance
 
     def to_json(self):
-        game_data = {}
+        data = {}
         for entity_cls in self.ENTITIES:
             entity_data = [
                 entity.to_json()
                 for entity in getattr(self, entity_name(entity_cls))]
-            game_data[entity_name(entity_cls)] = entity_data
-        game_data['overall'] = self.overall.to_json()
-        return game_data
+            data[entity_name(entity_cls)] = entity_data
+        data['overall'] = self.overall.to_json()
+        return data
 
     @classmethod
     def from_json(cls, data):
+        if cls.instance:
+            return cls.instance
         instance = cls()
         # Load in order to correctly get references to other entities. 
         for entity_cls in cls.ENTITIES:
@@ -61,11 +63,13 @@ class GameData:
     def clear_db_for_token():
         for entity_cls in GameData.ENTITIES + [Overall]:
             query = {'game_token': g.game_token}
-            collection = entity_cls.get_collection()
-            collection.delete_many(query)
+            table = entity_cls.get_table()
+            table.delete_many(query)
 
     @classmethod
     def from_db(cls):
+        if cls.instance:
+            return cls.instance
         instance = cls()
         for entity_cls in cls.ENTITIES:
             setattr(

@@ -1,5 +1,6 @@
 import os
 import tempfile
+from types import SimpleNamespace
 from flask import (
     g,
     json,
@@ -12,7 +13,7 @@ from flask import (
 )
 from tkinter import Tk, filedialog
 
-from src.game_data import GameData
+from src.game_data import GameData, entity_name as get_entity_name
 from src.overall import Overall
 
 def generate_filename(title):
@@ -47,11 +48,12 @@ def set_routes(app):
     def configure():
         file_message = session.pop('file_message', False)
         entities_data = {}
-        for entity_cls in GameData.ENTITIES:
-            # Use the relationship attribute defined in the models.
-            query = entity_cls.query.filter_by(game_token=g.game_token)
-            entities_data[GameData.entity_name(entity_cls)] = query.with_entities(
-                entity_cls.name, entity_cls.id).all()
+        game_data = GameData.from_db()
+        for entity_cls in game_data.ENTITIES:
+            entity_name = get_entity_name(entity_cls)
+            entities_data[entity_name] = [
+                SimpleNamespace(name=entity.name, id=entity.id)
+                for entity in getattr(game_data, entity_name)]
         return render_template(
             'configure/index.html',
             entities_data=entities_data,

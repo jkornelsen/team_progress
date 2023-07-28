@@ -24,7 +24,7 @@ tables_to_create = {
 
 class Progress(Identifiable):
     """Track progress, such as over time.
-    Instead of its own collection the data for this class will be stored in
+    Instead of its own table, the data for this class will be stored in
     the database for the entity that contains it.
     """
     def __init__(self, entity, step_size=1.0,

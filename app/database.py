@@ -1,5 +1,6 @@
 import psycopg2
 from flask import Flask, g
+from src.db_serializable import pretty
 
 def get_db():
     if 'db' not in g:
@@ -34,8 +35,9 @@ def create_all():
     for module_name in module_names:
         module = importlib.import_module(f'src.{module_name}')
         for table, schema in module.tables_to_create.items():
-            command = "CREATE TABLE {} (\n{})".format(
-                table, schema.strip(chr(13) + chr(10)))
+            command = pretty(
+                "CREATE TABLE {} (\n{})".format(
+                table, pretty(schema)))
             print(command)
             with db.cursor() as cursor:
                 cursor.execute(command)

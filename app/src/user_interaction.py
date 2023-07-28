@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from flask import g
 
 from .db_serializable import DbSerializable, coldef
+from src.game_data import GameData
 
 from .attrib import Attrib
 from .character import Character
@@ -40,7 +41,6 @@ class UserInteraction(DbSerializable):
 
     def to_json(self):
         return {
-            'game_token': self.game_token,
             'username': self.username,
             'timestamp': datetime.now(),
             'char_id': self.char.id if self.char else -1,
@@ -51,7 +51,6 @@ class UserInteraction(DbSerializable):
     @classmethod
     def from_json(cls, data):
         instance = cls(data['username'])
-        instance.game_token = data['game_token']
         instance.timestamp = data['timestamp']
         char_id = int(data['char_id'])
         if char_id >= 0: 
@@ -96,9 +95,11 @@ class UserInteraction(DbSerializable):
             SELECT DISTINCT ON (game_token, username, char_id)
                 username, char_id, timestamp, action_id, action_type
             FROM {cls.get_table()}
-            WHERE game_token = {g.game_token} AND timestamp > %s
-            ORDER BY username, char_id, timestamp DESC
+            WHERE game_token = %s AND timestamp > %s
+            ORDER BY game_token, username, char_id, timestamp DESC
         """
-        values = (threshold_time,)
-        return cls.execute_select(query, values)
+        values = (g.game_token, threshold_time,)
+        rows = cls.execute_select(query, values)
+        GameData.from_db()
+        return [UserInteraction.from_json(vars(row)) for row in rows]
 

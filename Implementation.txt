@@ -23,14 +23,7 @@ Joining relation tables fully might be useful when only grabbing specific
 information.
 
 TODO next:
-    In overall.get_char_list_display(),
-        recent_interactions() needs to return objects with action_name attr.
-        List of UserInteraction objects.
-        This requires first obtaining action_type,
-        then getting the name from those objects.
-        First call GameData to load_list_from_db() for all entities.
-        Well, we could optimize a bit by excluding events and attribs perhaps.
-        Then for each interaction, reference its action object with get_by_id().
+    continue testing /configure
 
 Add code to insert relationships and make them work.
 

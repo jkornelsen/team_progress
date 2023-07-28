@@ -27,7 +27,11 @@ tables_to_create = {
 class Overall(DbSerializable):
     """Overall scenario settings such as scenario title and goal,
     and app settings."""
+
+    instance = None  # reference to singleton
+
     def __init__(self):
+        Overall.instance = self
         self.title = "Generic Adventure"
         self.description = (
             "An empty scenario."
@@ -46,6 +50,8 @@ class Overall(DbSerializable):
 
     @classmethod
     def from_json(cls, data):
+        if cls.instance:
+            return cls.instance
         instance = cls()
         instance.title = data['title']
         instance.description = data['description']
@@ -60,13 +66,17 @@ class Overall(DbSerializable):
 
     @classmethod
     def from_db(cls):
-        print(f"{cls.__name__}.from_db()")
-        collection = cls.get_collection()
-        doc = collection.find_one({'game_token': g.game_token})
-        if doc is None:
-            print("doc not found -- returning generic object")
+        if cls.instance:
+            return cls.instance
+        data = DbSerializable.execute_select("""
+            SELECT *
+            FROM overall
+            WHERE game_token = %s
+        """, (g.game_token,))
+        if not data:
+            print("overall data not found -- returning generic object")
             return cls()
-        return cls.from_json(doc)
+        return cls.from_json(data)
 
     def configure_by_form(self):
         if request.method == 'POST':
@@ -156,7 +166,7 @@ def get_charlist_display():
     for interaction in interactions:
         if interaction.username not in [row.username for row in character_rows]:
             row = CharacterRow(
-                char_id=interaction.char_id if interaction_char_id else -1,
+                char_id=interaction.char_id if interaction.char_id else -1,
                 char_name=interaction.char_name if interaction.char_id else "",
                 loc_id=None,
                 loc_name=None,

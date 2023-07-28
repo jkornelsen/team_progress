@@ -20,6 +20,15 @@ def coldef(which):
     else:
         raise Exception(f"Unexpected coldef type '{which}'")
 
+def pretty(text):
+    """Pretty-print SQL by indenting consistently and removing extra
+    newlines."""
+    text = text.strip('\r\n')
+    lines = text.split('\n')
+    indented_lines = [' ' * 8 + line.strip() for line in lines]
+    indented_text = '\n'.join(indented_lines)
+    return indented_text
+
 class DbSerializable():
     """Parent class with methods for serializing to database along with some
     other things that entities have in common.
@@ -31,23 +40,32 @@ class DbSerializable():
 
     @classmethod
     def get_table(cls):
-        return cls.__name__.lower()
+        return "{}s".format(cls.__name__.lower())
 
     @classmethod
     def execute_change(cls, query_without_table, values,
             commit=True, fetch=False):
+        """Returning a value is useful when inserting
+        auto-generated IDs.
+        """
         query = query_without_table.format(table=cls.get_table())
         result = None
-        with g.db.cursor() as cursor:
+        print(pretty(query), values)
+        with g.db.cursor(cursor_factory=RealDictCursor) as cursor:
             cursor.execute(query, tuple(values))
             if fetch:
-                result = cursor.fetchone()
+                result = SimpleNamespace(**cursor.fetchone())
         if commit:
             g.db.commit()
         return result
 
     @classmethod
     def execute_select(cls, query, values=None, fetch_all=True):
+        """Returns data as a list of objects with attributes that are
+        column names.
+        For example, to get the name column of the first row: result[0].name
+        """
+        print(pretty(query), values)
         with g.db.cursor(cursor_factory=RealDictCursor) as cursor:
             cursor.execute(query, values)
             if fetch_all:
@@ -76,33 +94,26 @@ class Identifiable(DbSerializable):
         doc = self.to_json()
         doc['game_token'] = g.game_token
         fields = list(doc.keys())
-        values = [doc[field] for field in fields]
-        if doc.get('id') not in ('auto', ''):
-            update_fields = [field for field in fields
-                if field not in ('id', 'game_token')]
-            field_exprs = ', '.join([f"{field}=%s" for field in update_fields])
-            update_values = (
-                [doc[field] for field in update_fields]
-                + [doc['id'], doc['game_token']])
-            query = f"""
-                UPDATE {{table}}
-                SET {field_exprs}
-                WHERE id = %s AND game_token = %s
-            """
-            try:
-                self.execute_change(query, values)
-                return
-            except psycopg2.IntegrityError:
-                # id doesn't exist yet
-                pass
+        if doc.get('id') in ('auto', ''):
+            # Remove the 'id' field from the fields to be inserted
+            fields = [field for field in fields if field != 'id']
         placeholders = ','.join(['%s'] * len(fields))
+        update_fields = [
+            field for field in fields
+            if field not in ('id', 'game_token')]
+        update_placeholders = ', '.join(
+            [f"{field}=%s" for field in update_fields])
         query = f"""
             INSERT INTO {{table}} ({', '.join(fields)})
             VALUES ({placeholders})
+            ON CONFLICT (id, game_token) DO UPDATE
+            SET {update_placeholders}
             RETURNING id
         """
-        row = self.execute_change(query, values, fetch=True)
-        self.id = row[0]
+        values = [doc[field] for field in fields]
+        update_values = [doc[field] for field in update_fields]
+        row = self.execute_change(query, values + update_values, fetch=True)
+        self.id = row.id
 
     def remove_from_db(self):
         self.execute_change(
@@ -125,10 +136,10 @@ class Identifiable(DbSerializable):
     @classmethod
     def list_to_db(cls):
         print(f"{cls.__name__}.list_to_db()")
-        collection = cls.get_table()
+        table = cls.get_table()
         existing_ids = set(
             str(doc['id'])
-            for doc in collection.find({'game_token': g.game_token}))
+            for doc in table.find({'game_token': g.game_token}))
         for instance in cls.instances:
             instance.to_db()
         for doc_id in existing_ids:
@@ -140,9 +151,13 @@ class Identifiable(DbSerializable):
     def list_from_db(cls, id_references=None):
         print(f"{cls.__name__}.list_from_db()")
         cls.instances.clear()
-        collection = cls.get_table()
-        docs = collection.find({'game_token': g.game_token})
-        instances = [cls.from_json(doc, id_references) for doc in docs]
+        table = cls.get_table()
+        data = DbSerializable.execute_select(f"""
+            SELECT *
+            FROM {table}
+            WHERE game_token = %s
+        """, (g.game_token,))
+        instances = [cls.from_json(vars(dat), id_references) for dat in data]
         cls.last_id = max(
             (instance.id for instance in cls.instances), default=0)
         return instances
