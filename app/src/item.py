@@ -33,7 +33,7 @@ class Item(Identifiable):
         super().__init__(id)
         self.name = ""
         self.description = ""
-        self.toplevel = False if len(self.instances) > 1 else True
+        self.toplevel = False if len(self.get_list()) > 1 else True
         self.attribs = {}  # keys are Attrib object, values are stat val
         self.progress = Progress(self)
         self.growable = 'over_time'
@@ -73,7 +73,6 @@ class Item(Identifiable):
         instance.attribs = {
             Attrib.get_by_id(int(attrib_id)): val
             for attrib_id, val in data['attribs'].items()}
-        cls.instances.append(instance)
         return instance
 
     @classmethod
@@ -82,13 +81,14 @@ class Item(Identifiable):
         callback(id_refs)
         # replace IDs with actual object referencess now that all entities
         # have been loaded
-        for instance in cls.instances:
+        entity_list = cls.get_list()
+        for instance in entity_list:
             instance.sources = {
                 cls.get_by_id(source_id): quantity
                 for source_id, quantity in
                 id_refs.get('source', {}).get(instance.id, {}).items()}
             instance.progress.sources = instance.sources
-        return cls.instances
+        return entity_list
 
     @classmethod
     def list_from_json(cls, json_data):
@@ -107,18 +107,19 @@ class Item(Identifiable):
             if 'save_changes' in request.form:  # button was clicked
                 print("Saving changes.")
                 print(request.form)
-                if self not in self.instances:
-                    self.instances.append(self)
+                entity_list = self.get_list()
+                if self not in entity_list:
+                    entity_list.append(self)
                 self.name = request.form.get('item_name')
                 self.description = request.form.get('item_description')
                 self.toplevel = bool(request.form.get('top_level'))
                 self.growable = request.form.get('growable')
-                self.result_qty = int(request.form.get('result_quantity'))
+                self.result_qty = float(request.form.get('result_quantity'))
                 source_ids = request.form.getlist('source_id')
                 print(f"Source IDs: {source_ids}")
                 self.sources = {}
                 for source_id in source_ids:
-                    source_quantity = int(
+                    source_quantity = float(
                         request.form.get(f'source_quantity_{source_id}', 0))
                     source_item = self.get_by_id(source_id)
                     self.sources[source_item] = source_quantity
@@ -138,7 +139,8 @@ class Item(Identifiable):
                 if was_ongoing:
                     self.progress.stop()
                 else:
-                    self.progress.quantity = int(request.form.get('item_quantity'))
+                    self.progress.quantity = float(
+                        request.form.get('item_quantity'))
                 prev_quantity = self.progress.quantity
                 self.progress = Progress(
                     self,
@@ -147,12 +149,11 @@ class Item(Identifiable):
                     rate_amount=float(request.form.get('rate_amount')),
                     rate_duration=float(request.form.get('rate_duration')),
                     sources=self.sources)
-                self.progress.q_limit = int(request.form.get('item_limit'))
+                self.progress.q_limit = float(request.form.get('item_limit'))
                 if was_ongoing:
                     self.progress.start()
                 self.to_db()
             elif 'delete_item' in request.form:
-                self.instances.remove(self)
                 self.remove_from_db(self.id)
             elif 'cancel_changes' in request.form:
                 print("Cancelling changes.")
@@ -173,6 +174,8 @@ class Item(Identifiable):
 def set_routes(app):
     @app.route('/configure/item/<item_id>', methods=['GET', 'POST'])
     def configure_item(item_id):
+        from src.game_data import GameData
+        GameData.from_db()
         if request.method == 'GET':
             session['referrer'] = request.referrer
             print(f"Referrer in configure_item(): {request.referrer}")
@@ -197,7 +200,7 @@ def set_routes(app):
 
     @app.route('/item/gain/<int:item_id>', methods=['POST'])
     def gain_item(item_id):
-        quantity = int(request.form.get('quantity'))
+        quantity = float(request.form.get('quantity'))
         item = Item.get_by_id(item_id)
         num_batches = math.floor(quantity / item.progress.step_size)
         changed = item.progress.change_quantity(num_batches)

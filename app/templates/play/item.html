@@ -133,7 +133,7 @@
             function updateQuantity(data) {
                 // Main item quantity
                 $('#quantity-{{ current.id }}').text(data.quantity
-                    {% if current.progress.limit != 0 %} + " / " + {{ current.progress.limit }}{% endif %});
+                    {% if current.progress.q_limit != 0 %} + " / " + {{ current.progress.q_limit }}{% endif %});
                 // Source item quantities
                 {% for source_item, _ in current.sources.items() %}
                 $.get('/item/progress_data/{{ source_item.id }}', function(data) {

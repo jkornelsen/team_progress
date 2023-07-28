@@ -28,10 +28,8 @@ class Overall(DbSerializable):
     """Overall scenario settings such as scenario title and goal,
     and app settings."""
 
-    instance = None  # reference to singleton
-
     def __init__(self):
-        Overall.instance = self
+        g.overall = self
         self.title = "Generic Adventure"
         self.description = (
             "An empty scenario."
@@ -50,8 +48,6 @@ class Overall(DbSerializable):
 
     @classmethod
     def from_json(cls, data):
-        if cls.instance:
-            return cls.instance
         instance = cls()
         instance.title = data['title']
         instance.description = data['description']
@@ -66,8 +62,8 @@ class Overall(DbSerializable):
 
     @classmethod
     def from_db(cls):
-        if cls.instance:
-            return cls.instance
+        if 'overall' in g:
+            return g.overall
         data = DbSerializable.execute_select("""
             SELECT *
             FROM overall
@@ -152,7 +148,7 @@ def get_charlist_display():
         if interaction.char:
             modified_rows = []
             for row in character_rows:
-                if row.char_id == interaction.char_id:
+                if row.char_id == interaction.char.id:
                     modified_row = row._replace(
                         username=interaction.username,
                         action_name=interaction.action_name(),
@@ -166,8 +162,8 @@ def get_charlist_display():
     for interaction in interactions:
         if interaction.username not in [row.username for row in character_rows]:
             row = CharacterRow(
-                char_id=interaction.char_id if interaction.char_id else -1,
-                char_name=interaction.char_name if interaction.char_id else "",
+                char_id=interaction.char.id if interaction.char else -1,
+                char_name=interaction.char.name if interaction.char else "",
                 loc_id=None,
                 loc_name=None,
                 action_name=interaction.action_name(),
@@ -182,6 +178,7 @@ def get_charlist_display():
     # alphabetical sorting within rows.
     character_rows.sort(key=lambda row:
         (not row.username, row.username or '', row.char_name))
+    print(f"character_rows={character_rows}")
     return character_rows
 
 def get_items_and_events():

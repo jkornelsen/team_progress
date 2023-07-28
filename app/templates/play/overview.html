@@ -59,7 +59,7 @@
                     {% endif %}
                 </td>
                 <td>{{ char.action_name }}</td>
-                <td{% if char.user_id == current_user_id %} class="userid"{% endif %}>{{ char.user_id }}</td>
+                <td{% if char.username == current_username %} class="userid"{% endif %}>{{ char.username }}</td>
 
             </tr>
         {% endfor %}

@@ -12,7 +12,7 @@ so add a dropdown list of characters on that screen
 also require worn item
 maybe have a checkbox that the item won't get consumed during the exchange
 
-Maybe use GameData to load everything,
+Use GameData to load everything,
 which will also be useful for JSON file serialization.
 The user_interactions table wouldn't go into the file or
 be part of GameData.
@@ -22,10 +22,7 @@ then use get_by_id() in python to get the object reference.
 Joining relation tables fully might be useful when only grabbing specific
 information.
 
-TODO next:
-    continue testing /configure
-
-Add code to insert relationships and make them work.
+Add code to insert relationships in db.
 
 
 ---- Issues ----

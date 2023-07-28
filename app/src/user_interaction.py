@@ -102,4 +102,3 @@ class UserInteraction(DbSerializable):
         rows = cls.execute_select(query, values)
         GameData.from_db()
         return [UserInteraction.from_json(vars(row)) for row in rows]
-

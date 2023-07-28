@@ -43,28 +43,27 @@ class Attrib(Identifiable):
         instance = cls(int(data['id']))
         instance.name = data['name']
         instance.description = data.get('description', '')
-        cls.instances.append(instance)
         return instance
 
     @classmethod
     def list_from_json(cls, json_data):
-        cls.instances.clear()
+        instances = []
         for attrib_data in json_data:
-            cls.from_json(attrib_data, None)
-        return cls.instances
+            instances.append(cls.from_json(attrib_data, None))
+        return instances
 
     def configure_by_form(self):
         if request.method == 'POST':
             if 'save_changes' in request.form:  # button was clicked
                 print("Saving changes.")
                 print(request.form)
-                if self not in self.instances:
-                    self.instances.append(self)
+                entity_list = self.get_list()
+                if self not in entity_list:
+                    entity_list.append(self)
                 self.name = request.form.get('attrib_name')
                 self.description = request.form.get('attrib_description')
                 self.to_db()
             elif 'delete_attrib' in request.form:
-                self.instances.remove(self)
                 self.remove_from_db(self.id)
             elif 'cancel_changes' in request.form:
                 print("Cancelling changes.")

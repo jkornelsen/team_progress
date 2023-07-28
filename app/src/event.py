@@ -41,7 +41,7 @@ class Event(Identifiable):
         super().__init__(id)
         self.name = ""
         self.description = ""
-        self.toplevel = False if len(self.instances) > 1 else True
+        self.toplevel = False if len(self.get_list()) > 1 else True
         self.outcome_margin = 9  # difference required to get major or critical
         self.difficulty_values = {  # specified on configure screen
                 'Easy': 5,
@@ -72,7 +72,6 @@ class Event(Identifiable):
         instance.toplevel = data['toplevel']
         instance.outcome_margin = data['outcome_margin']
         instance.difficulty_values = data['difficulty_values']
-        cls.instances.append(instance)
         return instance
 
     def configure_by_form(self):
@@ -80,8 +79,9 @@ class Event(Identifiable):
             if 'save_changes' in request.form:  # button was clicked
                 print("Saving changes.")
                 print(request.form)
-                if self not in self.instances:
-                    self.instances.append(self)
+                entity_list = self.get_list()
+                if self not in entity_list:
+                    entity_list.append(self)
                 self.name = request.form.get('event_name')
                 self.description = request.form.get('event_description')
                 self.toplevel = bool(request.form.get('top_level'))
@@ -91,7 +91,6 @@ class Event(Identifiable):
                 self.outcome_margin = int(request.form.get('event_outcome_margin'))
                 self.to_db()
             elif 'delete_event' in request.form:
-                self.instances.remove(self)
                 self.remove_from_db(self.id)
             elif 'cancel_changes' in request.form:
                 print("Cancelling changes.")

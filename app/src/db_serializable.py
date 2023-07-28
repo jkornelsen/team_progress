@@ -37,6 +37,7 @@ class DbSerializable():
 
     def __init__(self):
         self.game_token = g.game_token
+        self.game_data = None
 
     @classmethod
     def get_table(cls):
@@ -77,8 +78,6 @@ class DbSerializable():
 class Identifiable(DbSerializable):
     __abstract__ = True
 
-    instances = []  # all objects of this class
-
     def __init__(self, id):
         super().__init__()
         self.id = id
@@ -86,9 +85,21 @@ class Identifiable(DbSerializable):
     @classmethod
     def get_by_id(cls, id_to_get):
         id_to_get = int(id_to_get)
+        entity_list = g.game_data.get_list(cls)
         return next(
-            (instance for instance in cls.instances
+            (instance for instance in entity_list
             if instance.id == id_to_get), None)
+
+    @classmethod
+    def listname(cls):
+        """Attributes of GameData for each entity. Same as table name."""
+        return cls.get_table()
+
+    @classmethod
+    def get_list(cls):
+        if 'game_data' in g:
+            return g.game_data.get_list(cls)
+        return []
 
     def to_db(self):
         doc = self.to_json()
@@ -122,16 +133,20 @@ class Identifiable(DbSerializable):
                 WHERE id = %s AND game_token = %s
             """,
             (self.id, self.game_token))
+        entity_list = self.get_list()
+        if self in entity_list:
+            entity_list.remove(self)
 
     @classmethod
     def list_from_json(cls, json_data, id_references=None):
         print(f"{cls.__name__}.list_from_json()")
-        cls.instances.clear()
+        instances = []
         for entity_data in json_data:
-            cls.from_json(entity_data, id_references)
+            instances.append(
+                cls.from_json(entity_data, id_references))
         cls.last_id = max(
-            (instance.id for instance in cls.instances), default=0)
-        return cls.instances
+            (instance.id for instance in instances), default=0)
+        return instances
 
     @classmethod
     def list_to_db(cls):
@@ -140,17 +155,17 @@ class Identifiable(DbSerializable):
         existing_ids = set(
             str(doc['id'])
             for doc in table.find({'game_token': g.game_token}))
-        for instance in cls.instances:
+        entity_list = g.game_data.get_list(cls)
+        for instance in entity_list:
             instance.to_db()
         for doc_id in existing_ids:
-            if doc_id not in (str(instance.id) for instance in cls.instances):
+            if doc_id not in (str(instance.id) for instance in entity_list):
                 print(f"Removing document with id {doc_id}")
                 cls.remove_from_db(doc_id)
 
     @classmethod
     def list_from_db(cls, id_references=None):
         print(f"{cls.__name__}.list_from_db()")
-        cls.instances.clear()
         table = cls.get_table()
         data = DbSerializable.execute_select(f"""
             SELECT *
@@ -159,6 +174,6 @@ class Identifiable(DbSerializable):
         """, (g.game_token,))
         instances = [cls.from_json(vars(dat), id_references) for dat in data]
         cls.last_id = max(
-            (instance.id for instance in cls.instances), default=0)
+            (instance.id for instance in instances), default=0)
         return instances
 

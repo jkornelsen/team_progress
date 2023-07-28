@@ -13,7 +13,7 @@ from flask import (
 )
 from tkinter import Tk, filedialog
 
-from src.game_data import GameData, entity_name as get_entity_name
+from src.game_data import GameData
 from src.overall import Overall
 
 def generate_filename(title):
@@ -50,10 +50,10 @@ def set_routes(app):
         entities_data = {}
         game_data = GameData.from_db()
         for entity_cls in game_data.ENTITIES:
-            entity_name = get_entity_name(entity_cls)
-            entities_data[entity_name] = [
+            listname = entity_cls.listname
+            entities_data[listname] = [
                 SimpleNamespace(name=entity.name, id=entity.id)
-                for entity in getattr(game_data, entity_name)]
+                for entity in getattr(game_data, listname)]
         return render_template(
             'configure/index.html',
             entities_data=entities_data,

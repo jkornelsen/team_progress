@@ -18,7 +18,7 @@
         <label for="item-quantity">Quantity:</label>
         <input type="number" id="item-quantity" name="item_quantity" value="{{ current.progress.quantity }}"><span id="running-label"></span>
         <label for="item-limit">Limit:</label>
-        <input type="number" id="item-limit" name="item_limit" value="{{ current.progress.limit }}"><br>
+        <input type="number" id="item-limit" name="item_limit" value="{{ current.progress.q_limit }}"> 0 for unlimited<br>
         <div>
             <input type="checkbox" id="top_level" name="top_level" {% if current.toplevel %}checked{% endif %}>
             <label for="top_level">Show in Overview</label><br>
@@ -55,7 +55,7 @@
                 <!-- Placeholder for appending new sources -->
                 <div id="sourcelist_end" style="width: 0; height: 0; opacity: 0;"></div>
                 {% set outerscope = namespace(has_other_item = false) %}
-                {% for item in current.__class__.instances %}
+                {% for item in current.instances %}
                     {% if item.id != current.id %}
                         {% set outerscope.has_other_item = true %}
                     {% endif %}
@@ -65,7 +65,7 @@
                     <div class="select-box">
                         <select id="add-source-select">
                             <option value="" selected>(Select item)</option>
-                            {% for item in current.__class__.instances %}
+                            {% for item in current.instances %}
                                 {% if item.id != current.id %}
                                 <option value="{{ item.id }}">{{ item.name }}</option>
                                 {% endif %}
@@ -116,7 +116,7 @@
         $(document).ready(function() {
             // Enable button if the current entity has been configured before.
             {% set outerscope = namespace(has_current = false) %}
-            {% for item in current.__class__.instances %}
+            {% for item in current.instances %}
                 {% if item.id == current.id %}
                     {% set outerscope.has_current = true %}
                 {% endif %}

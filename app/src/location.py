@@ -47,7 +47,6 @@ class Location(Identifiable):
             int(dest_id): distance
             for dest_id, distance in data['destinations'].items()
         }
-        cls.instances.append(instance)
         return instance
 
     @classmethod
@@ -56,12 +55,13 @@ class Location(Identifiable):
         callback(id_refs)
         # replace IDs with actual object referencess now that all entities
         # have been loaded
-        for instance in cls.instances:
+        entity_list = cls.get_list()
+        for instance in entity_list:
             instance.destinations = {
                 cls.get_by_id(destination_id): distance
                 for destination_id, distance in
                 id_refs.get('dest', {}).get(instance.id, {}).items()}
-        return cls.instances
+        return entity_list
 
     @classmethod
     def list_from_json(cls, json_data):
@@ -80,8 +80,9 @@ class Location(Identifiable):
             if 'save_changes' in request.form:  # button was clicked
                 print("Saving changes.")
                 print(request.form)
-                if self not in self.instances:
-                    self.instances.append(self)
+                entity_list = self.get_list()
+                if self not in entity_list:
+                    entity_list.append(self)
                 self.name = request.form.get('location_name')
                 self.description = request.form.get('location_description')
                 destination_ids = request.form.getlist('destination_id[]')
@@ -93,7 +94,6 @@ class Location(Identifiable):
                         self.destinations[dest_location] = int(dest_dist)
                 self.to_db()
             elif 'delete_location' in request.form:
-                self.instances.remove(self)
                 self.remove_from_db(self.id)
             elif 'cancel_changes' in request.form:
                 print("Cancelling changes.")

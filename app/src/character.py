@@ -33,7 +33,7 @@ class Character(Identifiable):
         super().__init__(id)
         self.name = ""
         self.description = ""
-        self.toplevel = False if len(self.instances) > 1 else True
+        self.toplevel = False if len(self.get_list()) > 1 else True
         self.attribs = {}  # keys are Attrib object, values are stat val
         self.items = {}  # keys are Item object, values are slot name
         self.location = None  # Location object
@@ -74,7 +74,6 @@ class Character(Identifiable):
         instance.progress = Progress.from_json(data['progress'], instance)
         instance.destination = Location.get_by_id(
             int(data['dest_id'])) if data['dest_id'] else None
-        cls.instances.append(instance)
         return instance
 
     def configure_by_form(self):
@@ -82,8 +81,9 @@ class Character(Identifiable):
             if 'save_changes' in request.form:  # button was clicked
                 print("Saving changes.")
                 print(request.form)
-                if self not in self.instances:
-                    self.instances.append(self)
+                entity_list = self.get_list()
+                if self not in entity_list:
+                    entity_list.append(self)
                 self.name = request.form.get('char_name')
                 self.description = request.form.get('char_description')
                 self.toplevel = bool(request.form.get('top_level'))
@@ -109,7 +109,6 @@ class Character(Identifiable):
                     for attrib, val in self.attribs.items()})
                 self.to_db()
             elif 'delete_character' in request.form:
-                self.instances.remove(self)
                 self.remove_from_db(self.id)
             elif 'cancel_changes' in request.form:
                 print("Cancelling changes.")
