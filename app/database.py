@@ -43,6 +43,33 @@ def create_all():
                 cursor.execute(command)
     db.commit()
 
+def column_counts(table_name):
+    """
+    Generate the values with:
+        SELECT '''' || table_name || ''': ' || COUNT(column_name) || ','
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+        GROUP BY table_name
+        ORDER BY table_name;
+    """
+    lookup = {
+        'attribs': 4,
+        'char_attribs': 3,
+        'char_items': 3,
+        'characters': 8,
+        'events': 7,
+        'item_attribs': 3,
+        'item_sources': 3,
+        'items': 8,
+        'location_destinations': 3,
+        'locations': 4,
+        'overall': 3,
+        'progress': 12,
+        'user_interactions': 6,
+        'winning_items': 3,
+    }
+    return lookup[table_name]
+
 if __name__ == '__main__':
     app = Flask(__name__)
     with app.app_context():

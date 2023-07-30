@@ -20,9 +20,10 @@ tables_to_create = {
         {coldef('name')},
         {coldef('description')},
         {coldef('toplevel')},
-        location_id INTEGER,
-        progress_id INTEGER,
-        destination_id INTEGER,
+        location_id integer,
+        progress_id integer,
+        destination_id integer,
+        position integer[2]
         FOREIGN KEY (game_token, progress_id)
             REFERENCES progress (game_token, id)
     """,
@@ -35,7 +36,7 @@ class Character(Identifiable):
         self.description = ""
         self.toplevel = False if len(self.get_list()) > 1 else True
         self.attribs = {}  # keys are Attrib object, values are stat val
-        self.items = {}  # keys are Item object, values are slot name
+        self.items = {}  # Item objects and their slot name
         self.location = None  # Location object
         self.progress = Progress(self)  # for travel or perhaps other actions
         self.destination = None  # Location object to travel to

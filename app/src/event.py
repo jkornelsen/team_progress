@@ -31,8 +31,8 @@ tables_to_create = {
         {coldef('name')},
         {coldef('description')},
         {coldef('toplevel')},
-        outcome_margin INTEGER,
-        difficulty_values JSON
+        outcome_margin integer,
+        difficulty_values json
     """
 }
 

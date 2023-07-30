@@ -8,8 +8,9 @@ tables_to_create = {
     # Character
     'char_attribs': f"""
         {coldef('game_token')},
-        char_id INTEGER,
-        attrib_id INTEGER,
+        char_id integer,
+        attrib_id integer,
+        value integer,
         PRIMARY KEY (game_token, char_id, attrib_id),
         FOREIGN KEY (game_token, char_id)
             REFERENCES characters (game_token, id),
@@ -18,8 +19,9 @@ tables_to_create = {
     """,
     'char_items': f"""
         {coldef('game_token')},
-        char_id INTEGER,
-        item_id INTEGER,
+        char_id integer,
+        item_id integer,
+        quantity integer NOT NULL,
         PRIMARY KEY (game_token, char_id, item_id),
         FOREIGN KEY (game_token, char_id)
             REFERENCES characters (game_token, id),
@@ -29,8 +31,9 @@ tables_to_create = {
     # Item
     'item_attribs': f"""
         {coldef('game_token')},
-        item_id INTEGER,
-        attrib_id INTEGER,
+        item_id integer,
+        attrib_id integer,
+        value integer,
         PRIMARY KEY (game_token, item_id, attrib_id),
         FOREIGN KEY (game_token, item_id)
             REFERENCES items (game_token, id),
@@ -39,8 +42,9 @@ tables_to_create = {
     """,
     'item_sources': f"""
         {coldef('game_token')},
-        item_id INTEGER,
-        source_id INTEGER,
+        item_id integer,
+        source_id integer,
+        quantity integer NOT NULL,
         PRIMARY KEY (game_token, item_id, source_id),
         FOREIGN KEY (game_token, item_id)
             REFERENCES items (game_token, id),
@@ -50,19 +54,32 @@ tables_to_create = {
     # Location
     'location_destinations': f"""
         {coldef('game_token')},
-        origin_id INTEGER,
-        dest_id INTEGER,
+        origin_id integer,
+        dest_id integer,
+        distance integer NOT NULL,
         PRIMARY KEY (game_token, origin_id, dest_id),
         FOREIGN KEY (game_token, origin_id)
             REFERENCES locations (game_token, id),
         FOREIGN KEY (game_token, dest_id)
             REFERENCES locations (game_token, id)
     """,
+    'loc_items': f"""
+        {coldef('game_token')},
+        location_id integer,
+        item_id integer,
+        quantity integer NOT NULL,
+        position integer[2],
+        PRIMARY KEY (game_token, location_id, item_id),
+        FOREIGN KEY (game_token, location_id)
+            REFERENCES location (game_token, id),
+        FOREIGN KEY (game_token, item_id)
+            REFERENCES items (game_token, id)
+    """,
     # Overall
     'winning_items': f"""
         {coldef('game_token')},
-        item_id INTEGER,
-        quantity INTEGER NOT NULL,
+        item_id integer,
+        quantity integer NOT NULL,
         PRIMARY KEY (game_token, item_id),
         FOREIGN KEY (game_token, item_id)
             REFERENCES items (game_token, id)

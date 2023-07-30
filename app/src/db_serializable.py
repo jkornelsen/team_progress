@@ -5,18 +5,18 @@ from psycopg2.extras import RealDictCursor
 def coldef(which):
     """Definitions for commonly used columns for creating a table."""
     if which == 'game_token':
-        return "game_token VARCHAR(50) NOT NULL"
+        return "game_token varchar(50) NOT NULL"
     elif which == 'id':
         # include game token as well
-        return f"""{coldef('game_token')},
-        id SERIAL,
-        PRIMARY KEY (game_token, id)"""
+        return f"""id SERIAL,
+        {coldef('game_token')},
+        PRIMARY KEY (id, game_token)"""
     elif which == 'name':
-        return "name VARCHAR(255) NOT NULL"
+        return "name varchar(255) NOT NULL"
     elif which == 'description':
-        return "description TEXT"
+        return "description text"
     elif which == 'toplevel':
-        return "toplevel BOOLEAN NOT NULL"
+        return "toplevel boolean NOT NULL"
     else:
         raise Exception(f"Unexpected coldef type '{which}'")
 
@@ -29,6 +29,10 @@ def pretty(text):
     indented_text = '\n'.join(indented_lines)
     return indented_text
 
+def load_game_data():
+    from src.game_data import GameData
+    GameData.from_db()
+
 class DbSerializable():
     """Parent class with methods for serializing to database along with some
     other things that entities have in common.
@@ -40,7 +44,7 @@ class DbSerializable():
         self.game_data = None
 
     @classmethod
-    def get_table(cls):
+    def tablename(cls):
         return "{}s".format(cls.__name__.lower())
 
     @classmethod
@@ -49,7 +53,7 @@ class DbSerializable():
         """Returning a value is useful when inserting
         auto-generated IDs.
         """
-        query = query_without_table.format(table=cls.get_table())
+        query = query_without_table.format(table=cls.tablename())
         result = None
         print(pretty(query), values)
         with g.db.cursor(cursor_factory=RealDictCursor) as cursor:
@@ -93,7 +97,7 @@ class Identifiable(DbSerializable):
     @classmethod
     def listname(cls):
         """Attributes of GameData for each entity. Same as table name."""
-        return cls.get_table()
+        return cls.tablename()
 
     @classmethod
     def get_list(cls):
@@ -102,9 +106,14 @@ class Identifiable(DbSerializable):
         return []
 
     def to_db(self):
-        doc = self.to_json()
+        self.json_to_db(
+            self.to_json())
+
+    def json_to_db(self, doc):
         doc['game_token'] = g.game_token
         fields = list(doc.keys())
+        fields = [field for field in doc.keys()
+            if not isinstance(doc[field], dict]
         if doc.get('id') in ('auto', ''):
             # Remove the 'id' field from the fields to be inserted
             fields = [field for field in fields if field != 'id']
@@ -144,14 +153,12 @@ class Identifiable(DbSerializable):
         for entity_data in json_data:
             instances.append(
                 cls.from_json(entity_data, id_references))
-        cls.last_id = max(
-            (instance.id for instance in instances), default=0)
         return instances
 
     @classmethod
     def list_to_db(cls):
         print(f"{cls.__name__}.list_to_db()")
-        table = cls.get_table()
+        table = cls.tablename()
         existing_ids = set(
             str(doc['id'])
             for doc in table.find({'game_token': g.game_token}))
@@ -166,14 +173,12 @@ class Identifiable(DbSerializable):
     @classmethod
     def list_from_db(cls, id_references=None):
         print(f"{cls.__name__}.list_from_db()")
-        table = cls.get_table()
+        table = cls.tablename()
         data = DbSerializable.execute_select(f"""
             SELECT *
             FROM {table}
             WHERE game_token = %s
         """, (g.game_token,))
         instances = [cls.from_json(vars(dat), id_references) for dat in data]
-        cls.last_id = max(
-            (instance.id for instance in instances), default=0)
         return instances
 

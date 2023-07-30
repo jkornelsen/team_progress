@@ -14,7 +14,8 @@ tables_to_create = {
     'locations': f"""
         {coldef('id')},
         {coldef('name')},
-        {coldef('description')}
+        {coldef('description')},
+        dimensions integer[2],
     """
 }
 
@@ -24,8 +25,8 @@ class Location(Identifiable):
         self.name = ""
         self.description = ""
         self.destinations = {}  # Location objects and their distance
-        self.items = []  # Item objects currently at this location
-        self.charactrs = []  # Character objects currently at this location
+        self.items = {}  # Item objects with their quantity and position
+        self.characters = {}  # Character objects and their position
 
     def to_json(self):
         return {

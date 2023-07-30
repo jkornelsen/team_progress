@@ -13,12 +13,12 @@ from .overall import Overall
 
 tables_to_create = {
     'user_interactions': f"""
-        game_token VARCHAR(50) NOT NULL,
-        username VARCHAR(50),
-        timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        char_id INTEGER,
-        action_id INTEGER,
-        action_type VARCHAR(50),
+        game_token varchar(50) NOT NULL,
+        username varchar(50),
+        timestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        char_id integer,
+        action_id integer,
+        action_type varchar(50),
         UNIQUE (game_token, username, char_id)
     """
 }
@@ -36,7 +36,7 @@ class UserInteraction(DbSerializable):
         self.action_type = None  # class such as Item or Location
 
     @classmethod
-    def get_table(cls):
+    def tablename(cls):
         return 'user_interactions'
 
     def to_json(self):
@@ -94,7 +94,7 @@ class UserInteraction(DbSerializable):
         query = f"""
             SELECT DISTINCT ON (game_token, username, char_id)
                 username, char_id, timestamp, action_id, action_type
-            FROM {cls.get_table()}
+            FROM {cls.tablename()}
             WHERE game_token = %s AND timestamp > %s
             ORDER BY game_token, username, char_id, timestamp DESC
         """

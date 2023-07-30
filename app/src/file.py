@@ -50,7 +50,7 @@ def set_routes(app):
         entities_data = {}
         game_data = GameData.from_db()
         for entity_cls in game_data.ENTITIES:
-            listname = entity_cls.listname
+            listname = entity_cls.listname()
             entities_data[listname] = [
                 SimpleNamespace(name=entity.name, id=entity.id)
                 for entity in getattr(game_data, listname)]

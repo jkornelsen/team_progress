@@ -9,16 +9,16 @@ from .db_serializable import Identifiable, coldef
 tables_to_create = {
     'progress': f"""
         {coldef('id')},
-        quantity FLOAT(2) NOT NULL,
-        q_limit FLOAT(2) NOT NULL,
-        step_size FLOAT(2) NOT NULL,
-        rate_amount FLOAT(2) NOT NULL,
-        rate_duration FLOAT(2) NOT NULL,
-        sources_json TEXT NOT NULL,
-        start_time TIMESTAMP,
-        stop_time TIMESTAMP,
-        batches_processed INTEGER NOT NULL,
-        is_ongoing BOOLEAN NOT NULL
+        quantity float(2) NOT NULL,
+        q_limit float(2) NOT NULL,
+        step_size float(2) NOT NULL,
+        rate_amount float(2) NOT NULL,
+        rate_duration float(2) NOT NULL,
+        sources_json text NOT NULL,
+        start_time timestamp,
+        stop_time timestamp,
+        batches_processed integer NOT NULL,
+        is_ongoing boolean NOT NULL
     """
 }
 

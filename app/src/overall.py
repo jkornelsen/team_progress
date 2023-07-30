@@ -18,7 +18,7 @@ from .event import Event
 tables_to_create = {
     'overall': f"""
         {coldef('game_token')},
-        title VARCHAR(255) NOT NULL,
+        title varchar(255) NOT NULL,
         {coldef('description')},
         PRIMARY KEY (game_token)
     """

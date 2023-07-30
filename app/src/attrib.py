@@ -8,7 +8,7 @@ from flask import (
     session,
     url_for
 )
-from .db_serializable import Identifiable, coldef
+from .db_serializable import Identifiable, coldef, load_game_data
 
 tables_to_create = {
     'attribs': f"""
@@ -81,6 +81,7 @@ class Attrib(Identifiable):
 def set_routes(app):
     @app.route('/configure/attrib/<attrib_id>', methods=['GET', 'POST'])
     def configure_attrib(attrib_id):
+        load_game_data()
         if request.method == 'GET':
             session['referrer'] = request.referrer
             print(f"Referrer in configure_attrib(): {request.referrer}")
