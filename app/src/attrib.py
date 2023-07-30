@@ -39,7 +39,9 @@ class Attrib(Identifiable):
         }
 
     @classmethod
-    def from_json(cls, data, _):
+    def from_json(cls, data, _=None):
+        if not isinstance(data, dict):
+            data = vars(data)
         instance = cls(int(data['id']))
         instance.name = data['name']
         instance.description = data.get('description', '')

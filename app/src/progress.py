@@ -60,16 +60,18 @@ class Progress(Identifiable):
 
     @classmethod
     def from_json(cls, data, entity):
+        if not isinstance(data, dict):
+            data = vars(data)
         instance = cls(entity)
-        instance.quantity = data['quantity']
+        instance.quantity = data.get('quantity', 0.0)
         instance.q_limit = data.get('q_limit', 0.0)
         instance.step_size = data.get('step_size', 0)
-        instance.rate_amount = data['rate_amount']
-        instance.rate_duration = data['rate_duration']
-        instance.start_time = data['start_time']
-        instance.stop_time = data['stop_time']
-        instance.batches_processed = data['batches_processed']
-        instance.is_ongoing = data['is_ongoing']
+        instance.rate_amount = data.get('rate_amount', 1.0)
+        instance.rate_duration = data.get('rate_duration', 1.0)
+        instance.start_time = data.get('start_time')
+        instance.stop_time = data.get('stop_time')
+        instance.batches_processed = data.get('batches_processed', 0)
+        instance.is_ongoing = data.get('is_ongoing', False)
         return instance
 
     # returns true if able to change quantity

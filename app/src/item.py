@@ -12,8 +12,7 @@ import math
 
 from .attrib import Attrib
 from .progress import Progress
-from .db_serializable import Identifiable, coldef, load_game_data
-from database import column_counts
+from .db_serializable import DbSerializable, Identifiable, coldef, new_game_data
 
 tables_to_create = {
     'items': f"""
@@ -59,21 +58,26 @@ class Item(Identifiable):
         }
 
     @classmethod
-    def from_json(cls, data, id_refs):
-        instance = cls(int(data['id']))
-        instance.name = data['name']
-        instance.description = data.get('description', '')
-        instance.toplevel = data['toplevel']
-        instance.growable = data['growable']
-        instance.result_qty = data.get('result_qty', 1)
-        instance.progress = Progress.from_json(data['progress'], instance)
-        instance.progress.step_size = instance.result_qty
-        id_refs.setdefault('source', {})[instance.id] = {
-            int(source_id): quantity
-            for source_id, quantity in data['sources'].items()}
+    def from_json(cls, data, id_refs=None):
+        if not isinstance(data, dict):
+            data = vars(data)
+        instance = cls(int(data.get('id', 0)))
+        instance.name = data.get('name', "")
+        instance.description = data.get('description', "")
+        instance.toplevel = data.get('toplevel', False)
         instance.attribs = {
             Attrib.get_by_id(int(attrib_id)): val
-            for attrib_id, val in data['attribs'].items()}
+            for attrib_id, val in data.get('attribs', {}).items()
+        }
+        instance.progress = Progress.from_json(
+            data.get('progress', {}), instance)
+        instance.progress.step_size = instance.result_qty
+        instance.growable = data.get('growable', 'over_time')
+        if id_refs is not None:
+            id_refs.setdefault('source', {})[instance.id] = {
+                int(source_id): quantity
+                for source_id, quantity in data.get('sources', {}).items()}
+        instance.result_qty = data.get('result_qty', 1)
         return instance
 
     def to_db(self):
@@ -134,68 +138,52 @@ class Item(Identifiable):
                 FROM {table}
                 WHERE game_token = %s
             """, (g.game_token,))
-            instances = [cls.from_json(vars(dat), id_refs) for dat in data]
+            instances = [cls.from_json(dat, id_refs) for dat in data]
             return instances
         return cls.list_with_references(callback)
 
     @classmethod
     def data_for_configure(cls, item_id):
         print(f"{cls.__name__}.data_for_configure()")
-        query = """
+        game_data = new_game_data()
+        if item_id == 'new':
+            item_id = 0
+        tables_rows = DbSerializable.select_tables("""
             SELECT *
-            FROM items
-            WHERE game_token = %s
-            LEFT JOIN progress
-                ON items.progress_id = progress.id
-                AND items.game_token = progress.game_token
-                AND items.id = %s
-        """
-        game_data = GameData()
-        cursor.execute(query, (g.game_token, item_id))
-        rows = cursor.fetchall()
-        items_data = []
-        column_names = [desc[0] for desc in cursor.description]
-        items_cols = column_counts('items')
-        progress_data = None
-        current_item_data = None
-        for row in rows:
-            item_data = dict(zip(
-                column_names[:items_cols], row[:items_cols]))
+            FROM {tables[0]}
+            LEFT JOIN {tables[1]}
+                ON {tables[0]}.progress_id = {tables[1]}.id
+                AND {tables[0]}.game_token = {tables[1]}.game_token
+                AND {tables[0]}.id = %s
+            WHERE {tables[0]}.game_token = %s
+        """, (item_id, g.game_token), ['items', 'progress'])
+        game_data.items = []
+        current_item_data = {}
+        for item_data, progress_data in tables_rows:
             if item_data.id == item_id:
                 current_item_data = item_data
-                progress_data = dict(zip(
-                    column_names[items_cols:], row[items_cols:]))
-                item_data['progress'] = progress_data
-            items_data.append(item_data)
+                item_data.progress = progress_data
             game_data.items.append(Item.from_json(item_data))
-        if 'progress' not in current_item_data:
+        if current_item_data and 'progress' not in current_item_data:
             raise Exception(
                 f"Did not find progress data for item {current_item_data.id}.")
-        query = """
+        tables_rows = DbSerializable.select_tables("""
             SELECT *
-            FROM attribs
-            WHERE game_token = %s
-            LEFT JOIN item_attribs ON
-                ON attribs.id = item_attribs.attrib_id
-                AND attribs.game_token = item_attribs.game_token
-                AND item_attribs.item_id = %s
-        """
-        cursor.execute(query, (g.game_token, item_id))
-        rows = cursor.fetchall()
+            FROM {tables[0]}
+            LEFT JOIN {tables[1]}
+                ON {tables[0]}.id = {tables[1]}.attrib_id
+                AND {tables[0]}.game_token = {tables[1]}.game_token
+                AND {tables[1]}.item_id = %s
+            WHERE {tables[0]}.game_token = %s
+        """, (item_id, g.game_token), ['attribs', 'item_attribs'])
         attribs_data = []
-        column_names = [desc[0] for desc in cursor.description]
-        attribs_cols = column_counts('items')
-        for row in rows:
-            attrib_data = dict(zip(
-                column_names[:attribs_cols], row[:attribs_cols]))
-            if row[attribs_cols]:
-                item_attribs_data = dict(zip(
-                    column_names[attribs_cols:], row[attribs_cols:]))
+        for attrib_data, item_attrib_data in tables_rows:
+            print(f"attrib_data={attrib_data}, item_attrib_data={item_attrib_data}")
+            if item_attrib_data.attrib_id:
                 current_item_data.setdefault('attribs', []).append(
-                    item_attribs_data)
-            items_data.append(item_data)
+                    item_attrib_data)
             game_data.attribs.append(Attrib.from_json(attrib_data))
-        sources_data = DbSerializable.execute_select(f"""
+        sources_data = DbSerializable.execute_select("""
             SELECT *
             FROM item_sources
             WHERE game_token = %s

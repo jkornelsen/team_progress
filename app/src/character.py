@@ -23,7 +23,7 @@ tables_to_create = {
         location_id integer,
         progress_id integer,
         destination_id integer,
-        position integer[2]
+        position integer[2],
         FOREIGN KEY (game_token, progress_id)
             REFERENCES progress (game_token, id)
     """,
@@ -59,7 +59,9 @@ class Character(Identifiable):
         }
 
     @classmethod
-    def from_json(cls, data, _):
+    def from_json(cls, data, _=None):
+        if not isinstance(data, dict):
+            data = vars(data)
         instance = cls(int(data['id']))
         instance.name = data['name']
         instance.description = data.get('description', '')

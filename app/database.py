@@ -1,6 +1,5 @@
 import psycopg2
 from flask import Flask, g
-from src.db_serializable import pretty
 
 def get_db():
     if 'db' not in g:
@@ -17,6 +16,15 @@ def close_db(ctx=None):
     db = g.pop('db', None)
     if db is not None:
         db.close()
+
+def pretty(text):
+    """Pretty-print SQL by indenting consistently and removing extra
+    newlines."""
+    text = text.strip('\r\n')
+    lines = text.split('\n')
+    indented_lines = [' ' * 8 + line.strip() for line in lines]
+    indented_text = '\n'.join(indented_lines)
+    return indented_text
 
 def create_all():
     import importlib

@@ -50,6 +50,8 @@ class UserInteraction(DbSerializable):
 
     @classmethod
     def from_json(cls, data):
+        if not isinstance(data, dict):
+            data = vars(data)
         instance = cls(data['username'])
         instance.timestamp = data['timestamp']
         char_id = int(data['char_id'])

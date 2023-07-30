@@ -48,6 +48,8 @@ class Overall(DbSerializable):
 
     @classmethod
     def from_json(cls, data):
+        if not isinstance(data, dict):
+            data = vars(data)
         instance = cls()
         instance.title = data['title']
         instance.description = data['description']

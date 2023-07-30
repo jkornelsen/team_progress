@@ -71,7 +71,7 @@ tables_to_create = {
         position integer[2],
         PRIMARY KEY (game_token, location_id, item_id),
         FOREIGN KEY (game_token, location_id)
-            REFERENCES location (game_token, id),
+            REFERENCES locations (game_token, id),
         FOREIGN KEY (game_token, item_id)
             REFERENCES items (game_token, id)
     """,

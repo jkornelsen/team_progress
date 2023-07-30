@@ -15,7 +15,7 @@ tables_to_create = {
         {coldef('id')},
         {coldef('name')},
         {coldef('description')},
-        dimensions integer[2],
+        dimensions integer[2]
     """
 }
 
@@ -40,14 +40,17 @@ class Location(Identifiable):
         }
 
     @classmethod
-    def from_json(cls, data, id_refs):
+    def from_json(cls, data, id_refs=None):
+        if not isinstance(data, dict):
+            data = vars(data)
         instance = cls(int(data['id']))
         instance.name = data['name']
         instance.description = data.get('description', '')
-        id_refs.setdefault('dest', {})[instance.id] = {
-            int(dest_id): distance
-            for dest_id, distance in data['destinations'].items()
-        }
+        if id_refs is not None:
+            id_refs.setdefault('dest', {})[instance.id] = {
+                int(dest_id): distance
+                for dest_id, distance in data['destinations'].items()
+            }
         return instance
 
     @classmethod

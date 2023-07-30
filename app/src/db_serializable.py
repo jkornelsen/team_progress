@@ -1,6 +1,7 @@
 from flask import g
 from types import SimpleNamespace
 from psycopg2.extras import RealDictCursor
+from database import column_counts, pretty
 
 def coldef(which):
     """Definitions for commonly used columns for creating a table."""
@@ -20,18 +21,24 @@ def coldef(which):
     else:
         raise Exception(f"Unexpected coldef type '{which}'")
 
-def pretty(text):
-    """Pretty-print SQL by indenting consistently and removing extra
-    newlines."""
-    text = text.strip('\r\n')
-    lines = text.split('\n')
-    indented_lines = [' ' * 8 + line.strip() for line in lines]
-    indented_text = '\n'.join(indented_lines)
-    return indented_text
+def new_game_data():
+    from src.game_data import GameData
+    return GameData()
 
 def load_game_data():
     from src.game_data import GameData
-    GameData.from_db()
+    return GameData.from_db()
+
+class MutableNamespace(SimpleNamespace):
+    def __setattr__(self, key, value):
+        """Allow setting attributes dynamically"""
+        object.__setattr__(self, key, value)
+
+    def setdefault(self, key, default):
+        """Simulate the setdefault() behavior for a MutableNamespace object"""
+        if not hasattr(self, key):
+            setattr(self, key, default)
+        return getattr(self, key)
 
 class DbSerializable():
     """Parent class with methods for serializing to database along with some
@@ -59,7 +66,7 @@ class DbSerializable():
         with g.db.cursor(cursor_factory=RealDictCursor) as cursor:
             cursor.execute(query, tuple(values))
             if fetch:
-                result = SimpleNamespace(**cursor.fetchone())
+                result = MutableNamespace(**cursor.fetchone())
         if commit:
             g.db.commit()
         return result
@@ -74,17 +81,51 @@ class DbSerializable():
         with g.db.cursor(cursor_factory=RealDictCursor) as cursor:
             cursor.execute(query, values)
             if fetch_all:
-                result = [SimpleNamespace(**row) for row in cursor.fetchall()]
+                result = [MutableNamespace(**row) for row in cursor.fetchall()]
             else:
-                result = SimpleNamespace(**cursor.fetchone())
+                result = MutableNamespace(**cursor.fetchone())
             return result
+
+    @classmethod
+    def select_tables(cls, query_without_tables, values, tables):
+        """Query to grab all values for more than one table and separate
+        results by table.
+        Returns a list of rows arranged by table, for example:
+            [item_data, progress_data]
+        """
+        query = query_without_tables.format(tables=tables)
+        print(pretty(query), values)
+        results = []
+        with g.db.cursor() as cursor:
+            cursor.execute(query, values)
+            rows = cursor.fetchall()
+            column_names = [desc[0] for desc in cursor.description]
+            table_column_indices = {}
+            current_column = 0
+            for table in tables:
+                num_cols = column_counts(table)
+                table_column_indices[table] = (current_column, current_column + num_cols)
+                current_column += num_cols
+            for row in rows:
+                result = []
+                for table in tables:
+                    start_idx, end_idx = table_column_indices[table]
+                    table_data = MutableNamespace(**dict(zip(
+                        column_names[start_idx:end_idx],
+                        row[start_idx:end_idx])))
+                    result.append(table_data)
+                results.append(result)
+        return results
 
 class Identifiable(DbSerializable):
     __abstract__ = True
 
-    def __init__(self, id):
+    def __init__(self, new_id=0):
         super().__init__()
-        self.id = id
+        if isinstance(new_id, int):
+            self.id = new_id
+        else:
+            self.id = 0
 
     @classmethod
     def get_by_id(cls, id_to_get):
@@ -113,8 +154,8 @@ class Identifiable(DbSerializable):
         doc['game_token'] = g.game_token
         fields = list(doc.keys())
         fields = [field for field in doc.keys()
-            if not isinstance(doc[field], dict]
-        if doc.get('id') in ('auto', ''):
+            if not isinstance(doc[field], dict)]
+        if not doc.get('id'):
             # Remove the 'id' field from the fields to be inserted
             fields = [field for field in fields if field != 'id']
         placeholders = ','.join(['%s'] * len(fields))
@@ -145,6 +186,10 @@ class Identifiable(DbSerializable):
         entity_list = self.get_list()
         if self in entity_list:
             entity_list.remove(self)
+
+    @classmethod
+    def from_json(cls, json_data, id_refs=None):
+        raise NotImplementedError()
 
     @classmethod
     def list_from_json(cls, json_data, id_references=None):

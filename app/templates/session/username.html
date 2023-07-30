@@ -5,11 +5,12 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <h1>Choose Username</h1>
+    <h1>Enter Username</h1>
+    <p>Can either be a new one or the name you've been using for this game.
     <p>This is your ID to access the game,
     not the name of your player's character.
     For example, your username could be tom123
-    while the main character you play might be named "Carpenter Bob".</p>
+    while the main character you play might be named "Thunderfist Joe".</p>
     <p>As with many places on the internet,
     it's best to avoid giving personal information.</p>
     <form method="POST" action="{{ url_for('set_username') }}">
