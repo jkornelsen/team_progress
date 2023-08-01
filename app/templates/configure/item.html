@@ -22,27 +22,28 @@
         <div>
             <input type="checkbox" id="top_level" name="top_level" {% if current.toplevel %}checked{% endif %}>
             <label for="top_level">Show in Overview</label><br>
-            <input type="radio" id="growable-gain-over_time" name="growable" value="over_time" {% if current.growable != "instantly" and current.growable != "not_growable" %}checked{% endif %}>
-            <label for="growable-gain-over_time">Gain over time</label>
-            <input type="radio" id="growable-gain-instantly" name="growable" value="instantly" {% if current.growable == "instantly" %}checked{% endif %}>
-            <label for="growable-gain-instantly">Gain instantly</label>
-            <input type="radio" id="growable-not_growable" name="growable" value="not_growable" {% if current.growable == "not_growable" %}checked{% endif %}>
-            <label for="growable-not_growable">Not growable</label>
         </div>
+        <input type="checkbox" id="producible" name="producible" {% if current.growable != "instantly" and current.growable != "not_growable" %}checked{% endif %}>
+        <label for="producible">Can be Increased</label><br>
+<!--
         <div id="rate-container" {% if current.growable == "instantly" or current.growable == "not_growable" %}style="display: none;"{% endif %}>
-            <label for="rate-amount">Rate:</label>
+            <label for="rate-amount">Gain per Batch:</label>
             <input type="number" id="rate-amount" name="rate_amount" value="{{ current.progress.rate_amount }}" required>
-            <span>per</span>
+            <label for="rate-duration">Duration:</label>
             <input type="text" size="6" id="rate-duration" name="rate_duration" value="{{ current.progress.rate_duration }}" required>
-            <span>seconds</span><br>
+            <span>seconds</span>
         </div>
+-->
 
         <div id="source-container" style="border: 1px solid #ccc; padding: 10px;">
-            <div class="source flexdiv" data-source-id="result">
-                <label for="result-quantity">Gives</label>
-                <input type="number" id="result-quantity" name="result_quantity" value="{{ current.result_qty }}">
-            </div>
-                {% for source_item, source_qty in current.sources.items() %}
+            {% for recipe_id, recipe in current.recipes.items() %}
+                <div class="recipe-container">
+                <input type="radio" id="growable-gain-over_time" name="growable" value="over_time" {% if current.growable != "instantly" and current.growable != "not_growable" %}checked{% endif %}>
+                <label for="growable-gain-over_time">Gain over time</label>
+                <input type="radio" id="growable-gain-instantly" name="growable" value="instantly" {% if current.growable == "instantly" %}checked{% endif %}>
+                <label for="growable-gain-instantly">Gain instantly</label>
+                <input type="hidden" name="recipe_id" value="{{ recipe_id }}">
+                {% for source_item, source_qty in recipe.items() %}
                     <div class="source flexdiv" data-source-id="{{ source_item.id }}">
                         <input type="hidden" name="source_id" value="{{ source_item.id }}">
                         <label>Takes</label>
@@ -54,28 +55,23 @@
 
                 <!-- Placeholder for appending new sources -->
                 <div id="sourcelist_end" style="width: 0; height: 0; opacity: 0;"></div>
-                {% set outerscope = namespace(has_other_item = false) %}
-                {% for item in current.instances %}
-                    {% if item.id != current.id %}
-                        {% set outerscope.has_other_item = true %}
-                    {% endif %}
-                {% endfor %}
-                {% if outerscope.has_other_item %}
+                {% if len(game_data.items) > 0 %}
                     <!-- Select box for adding another source -->
                     <div class="select-box">
                         <select id="add-source-select">
                             <option value="" selected>(Select item)</option>
-                            {% for item in current.instances %}
-                                {% if item.id != current.id %}
+                            {% for item in game_data.items %}
                                 <option value="{{ item.id }}">{{ item.name }}</option>
-                                {% endif %}
                             {% endfor %}
                         </select>
                         <button type="button" id="add-source-btn" class="lesser-button">Add Source</button>
                     </div>
                 {% else %}
-                    <p class="no-items">(No other items)</p>
+                    <p class="no-items">(No items)</p>
                 {% endif %}
+                </div>
+            {% endfor %}
+            <button type="button" id="add-recipe-btn" class="lesser-button">Add Another Recipe</button>
             </div>
         </div>
 
@@ -134,31 +130,32 @@
                 $('#running-label').text('(Running)');
             }
 
-            function updateGrowableVisibility() {
+            function updateProducibleVisibility() {
                 // Toggle visibility of rate-related elements based on the selected option
-                if ($('#growable-gain-over_time').is(':checked')) {
+                if ($('#producible').is(':checked')) {
                     $('#rate-container').show();
+                    $('#source-container').show();
                 } else {
                     $('#rate-container').hide();
-                }
-                if ($('#growable-not_growable').is(':checked')) {
                     $('#source-container').hide();
-                    //$('#source-container input').prop('disabled', true);
-                } else {
-                    $('#source-container').show();
                 }
             }
-            $('input[name="growable"]').change(updateGrowableVisibility);
-            updateGrowableVisibility();
+            $('#producible').change(updateProducibleVisibility);
+            updateProducibleVisibility();
 
             $('#add-source-btn').click(function() {
-                const selectedOption = $('#add-source-select option:selected');
+                const recipeContainer = $(this).closest('.recipe-container');
+                const selectedOption = recipeContainer.find(
+                    '.add-source-select option:selected');
+                //const selectedOption = $('#add-source-select option:selected');
                 const sourceId = selectedOption.val();
                 const sourceName = selectedOption.text();
                 if (sourceId == "") {
                     return; // don't add if the selected option is the placeholder
                 }
-                const existingSource = $('.source[data-source-id="' + sourceId + '"]');
+                //const existingSource = $('.source[data-source-id="' + sourceId + '"]');
+                const existingSource = recipeContainer.find(
+                    '.source[data-source-id="' + sourceId + '"]');
                 if (existingSource.length > 0) {
                     alert('Source already exists.');
                     return;
@@ -173,12 +170,13 @@
                         <button class="remove-source-btn lesser-button">Remove Source</button>
                     </div>
                 `;
-                $('#sourcelist_end').before(sourceHtml);
+                //$('#sourcelist_end').before(sourceHtml);
+                recipeContainer.find('.sourcelist_end').before(sourceHtml);
             });
 
             $('#source-container').on('click', '.remove-source-btn', function() {
                 const sourceContainer = $(this).closest('.source');
-                const sourceId = sourceContainer.data('source-id');
+                //const sourceId = sourceContainer.data('source-id');
 
                 // Remove the source from the DOM
                 sourceContainer.remove();
@@ -214,16 +212,6 @@
 
                 // Remove the attrib from the DOM
                 attribContainer.remove();
-            });
-
-            $('#btn-save').click(function() {
-                const growable = $('input[name="growable"]:checked').val();
-                const rateAmount = parseFloat($('#rate-amount').val());
-                const resultQty = parseInt($('#result-quantity').val(), 10);
-                if (growable === "over_time" && rateAmount < resultQty) {
-                    alert('Rate amount must be at least as high as the result quantity (labeled "Gives").');
-                    return false; // Prevent form submission
-                }
             });
         });
     </script>

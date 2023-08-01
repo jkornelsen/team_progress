@@ -43,9 +43,13 @@ tables_to_create = {
     'item_sources': f"""
         {coldef('game_token')},
         item_id integer,
+        recipe_id integer,
         source_id integer,
-        quantity integer NOT NULL,
-        PRIMARY KEY (game_token, item_id, source_id),
+        src_qty integer NOT NULL,
+        rate_amount integer NOT NULL,
+        rate_duration float(2) NOT NULL,
+        instant boolean,
+        PRIMARY KEY (game_token, item_id, recipe_id, source_id),
         FOREIGN KEY (game_token, item_id)
             REFERENCES items (game_token, id),
         FOREIGN KEY (game_token, source_id)
@@ -76,10 +80,14 @@ tables_to_create = {
             REFERENCES items (game_token, id)
     """,
     # Overall
-    'winning_items': f"""
+    'win_requirements': f"""
         {coldef('game_token')},
         item_id integer,
-        quantity integer NOT NULL,
+        quantity integer,
+        location_id integer,
+        character_id integer,
+        attrib_id integer,
+        attrib_value integer,
         PRIMARY KEY (game_token, item_id),
         FOREIGN KEY (game_token, item_id)
             REFERENCES items (game_token, id)

@@ -9,12 +9,10 @@ from .db_serializable import Identifiable, coldef
 tables_to_create = {
     'progress': f"""
         {coldef('id')},
-        quantity float(2) NOT NULL,
-        q_limit float(2) NOT NULL,
-        step_size float(2) NOT NULL,
-        rate_amount float(2) NOT NULL,
+        quantity integer NOT NULL,
+        q_limit integer NOT NULL,
+        rate_amount integer NOT NULL,
         rate_duration float(2) NOT NULL,
-        sources_json text NOT NULL,
         start_time timestamp,
         stop_time timestamp,
         batches_processed integer NOT NULL,
@@ -23,22 +21,14 @@ tables_to_create = {
 }
 
 class Progress(Identifiable):
-    """Track progress, such as over time.
-    Instead of its own table, the data for this class will be stored in
-    the database for the entity that contains it.
-    """
-    def __init__(self, entity, step_size=1.0,
-            rate_amount=1.0, rate_duration=1.0, quantity=0.0, sources=None):
+    """Track progress, such as over time."""
+    def __init__(self, entity):
         self.entity = entity  # Item or other entity that uses this object
-        self.quantity = quantity  # the main value tracked
-        self.q_limit = 0.0  # limit the quantity if not 0
-        self.step_size = step_size
-        self.rate_amount = rate_amount
-        self.rate_duration = rate_duration
-        if sources:
-            self.sources = sources
-        else:
-            self.sources = {}
+        self.quantity = 0  # the main value tracked
+        self.q_limit = 0  # limit the quantity if not 0
+        self.rate_amount = 1
+        self.rate_duration = 1.0
+        self.sources = {}
         self.start_time = None
         self.stop_time = None
         self.batches_processed = 0
@@ -49,7 +39,6 @@ class Progress(Identifiable):
         return {
             'quantity': self.quantity,
             'q_limit': self.q_limit,
-            'step_size': self.step_size,
             'rate_amount': self.rate_amount,
             'rate_duration': self.rate_duration,
             'start_time': self.start_time,
@@ -63,16 +52,19 @@ class Progress(Identifiable):
         if not isinstance(data, dict):
             data = vars(data)
         instance = cls(entity)
-        instance.quantity = data.get('quantity', 0.0)
-        instance.q_limit = data.get('q_limit', 0.0)
-        instance.step_size = data.get('step_size', 0)
-        instance.rate_amount = data.get('rate_amount', 1.0)
+        instance.quantity = data.get('quantity', 0)
+        instance.q_limit = data.get('q_limit', 0)
+        instance.rate_amount = data.get('rate_amount', 1)
         instance.rate_duration = data.get('rate_duration', 1.0)
         instance.start_time = data.get('start_time')
         instance.stop_time = data.get('stop_time')
         instance.batches_processed = data.get('batches_processed', 0)
         instance.is_ongoing = data.get('is_ongoing', False)
         return instance
+
+    @classmethod
+    def tablename(cls):
+        return 'progress'  # no extra 's' at the end
 
     # returns true if able to change quantity
     def change_quantity(self, batches_requested):
@@ -82,11 +74,11 @@ class Progress(Identifiable):
             if batches_requested == 0:
                 raise Exception("Expected non-zero number of batches.")
             num_batches = batches_requested
-            eff_result_qty = num_batches * self.step_size
+            eff_result_qty = num_batches * self.rate_amount
             new_quantity = self.quantity + eff_result_qty
             if ((self.q_limit > 0.0 and new_quantity > self.q_limit)
                     or (self.q_limit < 0.0 and new_quantity < self.q_limit)):
-                num_batches = (self.q_limit - self.quantity) // self.step_size
+                num_batches = (self.q_limit - self.quantity) // self.rate_amount
                 stop_here = True  # can't process the full amount
             eff_source_qtys = {}
             for source_item, source_qty in self.sources.items():
@@ -105,7 +97,7 @@ class Progress(Identifiable):
                     eff_source_qty = num_batches * source_qty
                     source_item.progress.quantity -= eff_source_qty
                     source_item.to_db()
-                eff_result_qty = num_batches * self.step_size
+                eff_result_qty = num_batches * self.rate_amount
                 self.quantity += eff_result_qty
                 self.batches_processed += num_batches
                 self.entity.to_db()
@@ -115,8 +107,7 @@ class Progress(Identifiable):
 
     def determine_current_quantity(self):
         elapsed_time = self.calculate_elapsed_time()
-        total_batches_needed = math.floor(
-            elapsed_time * (self.rate_amount * self.rate_duration))
+        total_batches_needed = math.floor(elapsed_time / self.rate_duration)
         batches_to_do = total_batches_needed - self.batches_processed
         print(f"determine_current_quantity: batches_to_do={batches_to_do}")
         if batches_to_do > 0:

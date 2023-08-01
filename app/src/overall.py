@@ -36,14 +36,16 @@ class Overall(DbSerializable):
             " To start with, change the title and this description"
             " in the Overall settings, and do some basic"
             " setup such as adding some items.")
-        self.winning_items = {}  # Item objects and their quantity required
+        self.winning_items = {}  # Items with qty and Location or Character
+        self.winning_characters = {} # Characters with Location or Attrib
 
     def to_json(self):
         return {
             'title': self.title,
             'description': self.description,
-            'winning_item': self.winning_item.id if self.winning_item else None,
-            'winning_quantity': self.winning_quantity
+            'winning_items': {
+                str(item.id): quantity
+                for item, quantity in self.winning_items.items()},
         }
 
     @classmethod
@@ -53,13 +55,9 @@ class Overall(DbSerializable):
         instance = cls()
         instance.title = data['title']
         instance.description = data['description']
-        winning_item_id = data['winning_item']
-        if winning_item_id is not None:
-            instance.winning_item = Item.get_by_id(int(winning_item_id))
-            instance.winning_quantity = data['winning_quantity']
-        else:
-            instance.winning_item = None
-            instance.winning_quantity = 0
+        instance.winning_items = {
+            Item.get_by_id(int(item_id)): quantity
+            for item_id, quantity in data.get('winning_items', {}).items()}
         return instance
 
     @classmethod

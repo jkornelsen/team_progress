@@ -21,7 +21,7 @@ password *d***
 
 start postgreSQL
 chdir "C:\Program Files\PostgreSQL\15\bin"
-./psql -U postgres -d postgres
+psql -U postgres -d postgres
 drop schema public cascade; create schema public;
 
 

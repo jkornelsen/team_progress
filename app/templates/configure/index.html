@@ -29,12 +29,12 @@
     </style>
     {% for entity_type in ['item', 'location', 'character', 'attrib', 'event'] %}
         <div class="flexdiv">
-            {% set entity_data_list = entities_data[entity_type + 's'] %}
-            {% if entity_data_list %}
+            {% set entity_list = game_data[entity_type + 's'] %}
+            {% if entity_list %}
                 <div class="select-box">
                     <select id="{{ entity_type }}-select">
-                        {% for entity_data in entity_data_list %}
-                            <option value="{{ entity_data.id }}">{{ entity_data.name }}</option>
+                        {% for entity in entity_list %}
+                            <option value="{{ entity.id }}">{{ entity.name }}</option>
                         {% endfor %}
                     </select>
                 </div>

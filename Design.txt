@@ -150,15 +150,34 @@ or simply allow duplicating
 keep track of how many produced (for xp) as well as how many in inventory
 age could be similar to xp, increasing over time
 
-can set a win condition to defeat a boss
+win requirements
+Item quantity optionally at a Location or held by Character
+Character at required Location or with required Attribute
+attrib could be Defeated >= 1
+on config screen, have select boxes to add a requirement
+select for example and Item, specify a quantity, and a Location,
+then press Add Requirement
+button to Remove requirement
+can modify quantity or val of attrib?
+table win_requirements
+item_id, quantity, location_id, character_id, attrib_id, attrib_val
+
 ability to replay a game
 
-quantity may be unlimited
 items may have different sets of materials
 for example, wood could come from a log or from disassembling a shelf
 or by purchasing
-On item screen, specify max number of items gainable.
-this could be useful for unique items, where max is 1. 
+purchasing would be instant, while producing would take time
+each recipe has a "gives" quantity, instant checkbox, and duration
+these would need to be columns in a relation table
+perhaps repeat the same values for all sources of a recipe,
+to avoid the need for a separate recipe table
+
+adding a source item means it gets added to the most recently created recipe
+button to remove each recipe
+buttons to remove items for most recently added recipe
+on item play page, have start/stop button or gain button for each recipe,
+and show all source quantities for all recipes of that item
 
 to cover more cases, we'd need to differentiate between materials and contained items.
 for example, a wooden box requires planks and nails to build, but could contain clothes.

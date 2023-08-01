@@ -7,19 +7,34 @@
 {% endblock %}
 
 {% block content %}
-    {% if current.winning_item and current.winning_item.progress.quantity >= current.winning_quantity %}
-    <h1 style="color:green">&#10004; <!-- Checkmark symbol -->
+    {% if current.winning_items %}
+        {% set can_win = true %}
+        {% for winning_item, winning_quantity in current.winning_items.items() %}
+            {% if not current.items[winning_item.name] or current.items[winning_item.name].progress.quantity < winning_quantity %}
+                {% set can_win = false %}
+                {% break %}
+            {% endif %}
+        {% endfor %}
+        {% if can_win %}
+            <h1 style="color:green">&#10004; <!-- Checkmark symbol -->
         {% else %}
-    <h1>
+            <h1>
         {% endif %}
-        {{ current.title }}
-    </h1>
-    <p><center>{{ current.description }}</center></p>
-    {% if current.winning_item %}
-<!--
-    <p>Need {{ current.winning_quantity }} {{ current.winning_item.name }} to win.</p>
-    <p>Currently have {{ current.winning_item.progress.quantity }}.</p>
--->
+            {{ current.title }}
+        </h1>
+        <p><center>{{ current.description }}</center></p>
+        {% if current.winning_items %}
+            <p>Need to collect:</p>
+            <ul>
+                {% for winning_item, winning_quantity in current.winning_items.items() %}
+                    {% set remaining_quantity = winning_quantity - (current.items[winning_item.name].progress.quantity if current.items[winning_item.name] else 0) %}
+                    <li>{{ remaining_quantity }} more {{ winning_item.name }}(s)</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% else %}
+        <h1>{{ current.title }}</h1>
+        <p><center>{{ current.description }}</center></p>
     {% endif %}
     {% if other_entities.items %}
         <table cellspacing="0" cellpadding="5">

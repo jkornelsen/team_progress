@@ -14,6 +14,7 @@ from flask import (
 from tkinter import Tk, filedialog
 
 from src.game_data import GameData
+from src.db_serializable import DbSerializable
 from src.overall import Overall
 
 def generate_filename(title):
@@ -47,22 +48,30 @@ def set_routes(app):
     @app.route('/configure')
     def configure():
         file_message = session.pop('file_message', False)
-        entities_data = {}
-        game_data = GameData.from_db()
-        for entity_cls in game_data.ENTITIES:
-            listname = entity_cls.listname()
-            entities_data[listname] = [
-                SimpleNamespace(name=entity.name, id=entity.id)
-                for entity in getattr(game_data, listname)]
+        query_parts = []
+        for entity_cls in GameData.ENTITIES:
+            query_parts.append(f"""
+                SELECT id, name, '{entity_cls.tablename()}' AS tablename
+                FROM {entity_cls.tablename()}
+                WHERE game_token = '{g.game_token}'
+            """)
+        rows = DbSerializable.execute_select(
+            " UNION ".join(query_parts))
+        game_data = GameData()
+        for row in rows:
+            entity_cls = game_data.entity_for(row.tablename)
+            entity = entity_cls.from_json(row)
+            game_data.get_list(entity_cls).append(entity)
         return render_template(
             'configure/index.html',
-            entities_data=entities_data,
+            game_data=game_data,
             file_message=file_message)
 
     @app.route('/save_to_file')
     def save_to_file():
-        data_to_save = g.game_data.to_json()
-        filename = generate_filename(g.game_data.overall.title)
+        game_data = GameData.from_db()
+        data_to_save = game_data.to_json()
+        filename = generate_filename(game_data.overall.title)
         with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
             filepath = temp_file.name
             json.dump(data_to_save, temp_file, indent=4)

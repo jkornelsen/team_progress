@@ -20,13 +20,20 @@ tables_to_create = {
         {coldef('name')},
         {coldef('description')},
         {coldef('toplevel')},
-        growable boolean,
-        result_qty float(2) NOT NULL,
+        producible boolean,
         progress_id integer,
         FOREIGN KEY (game_token, progress_id)
             REFERENCES progress (game_token, id)
     """
 }
+
+class Recipe:
+    def __init__(self):
+        self.id = 0
+        self.instant = False
+        self.rate_amount = 1  # quantity produced per batch
+        self.rate_duration = 1.0  # seconds for a batch
+        self.sources = {}  # Items and their quantity
 
 class Item(Identifiable):
     def __init__(self, id=""):
@@ -35,10 +42,8 @@ class Item(Identifiable):
         self.description = ""
         self.toplevel = False if len(self.get_list()) > 1 else True
         self.attribs = {}  # keys are Attrib object, values are stat val
+        self.recipes = {}  # Recipe IDs and their objects
         self.progress = Progress(self)
-        self.growable = 'over_time'
-        self.sources = {}  # keys Item object, values quantity required
-        self.result_qty = 1  # how many one batch yields
 
     def to_json(self):
         return {
@@ -46,11 +51,15 @@ class Item(Identifiable):
             'name': self.name,
             'description': self.description,
             'toplevel': self.toplevel,
-            'growable': self.growable,
-            'result_qty': self.result_qty,
-            'sources': {
-                str(item.id): quantity
-                for item, quantity in self.sources.items()},
+            'recipes': {
+                str(recipe_id): {
+                    'instant': recipe.instant,
+                    'rate_amount': recipe.rate_amount,
+                    'rate_duration': recipe.duration,
+                    'sources': {
+                        str(item.id): quantity
+                        for item, quantity in recipe.sources.items()}}
+                for recipe_id, recipe in self.recipes.items()},
             'attribs': {
                 str(attrib.id): val
                 for attrib, val in self.attribs.items()},
@@ -58,7 +67,7 @@ class Item(Identifiable):
         }
 
     @classmethod
-    def from_json(cls, data, id_refs=None):
+    def from_json(cls, data):
         if not isinstance(data, dict):
             data = vars(data)
         instance = cls(int(data.get('id', 0)))
@@ -66,50 +75,51 @@ class Item(Identifiable):
         instance.description = data.get('description', "")
         instance.toplevel = data.get('toplevel', False)
         instance.attribs = {
-            Attrib.get_by_id(int(attrib_id)): val
-            for attrib_id, val in data.get('attribs', {}).items()
-        }
+            Attrib(int(attrib_id)): val
+            for attrib_id, val in data.get('attribs', {}).items()}
         instance.progress = Progress.from_json(
             data.get('progress', {}), instance)
-        instance.progress.step_size = instance.result_qty
-        instance.growable = data.get('growable', 'over_time')
-        if id_refs is not None:
-            id_refs.setdefault('source', {})[instance.id] = {
+        instance.recipes = {}
+        for recipe_id, recipe in data.get('recipes', {}).items():
+            recipe = Recipe()
+            recipe.instant = recipe.get('instant', False),
+            recipe.rate_amount = recipe.get('rate_amount', 1),
+            recipe.rate_duration = recipe.get('duration', 1.0),
+            recipe.sources = {
                 int(source_id): quantity
-                for source_id, quantity in data.get('sources', {}).items()}
-        instance.result_qty = data.get('result_qty', 1)
+                for source_id, quantity in recipe.get('sources', {}).items()}
+            instance.recipes[recipe_id] = recipe
         return instance
 
     def to_db(self):
         super().to_db()
         progress_data = self.to_json()['progress']
-        super().json_to_db(progress_data)
+        self.progress.json_to_db(progress_data)
+        # TODO: populate item_attribs and item_sources
 
     @classmethod
-    def list_with_references(cls, callback):
-        id_refs = {}
-        callback(id_refs)
+    def list_with_references(cls, json_data=None):
+        if json_data:
+            super(cls, cls).list_from_json(json_data)
+        else:
+            instances = super(cls, cls).list_from_db()
         # replace IDs with actual object referencess now that all entities
         # have been loaded
         entity_list = cls.get_list()
         for instance in entity_list:
-            instance.sources = {
-                cls.get_by_id(source_id): quantity
-                for source_id, quantity in
-                id_refs.get('source', {}).get(instance.id, {}).items()}
+            instance.sources = [
+                {cls.get_by_id(source_id): quantity
+                for source_id, quantity in recipe.items()}
+                for recipe in id_refs.get('sources', {}).get(instance.id, {})]
             instance.progress.sources = instance.sources
         return entity_list
 
     @classmethod
     def list_from_json(cls, json_data):
-        def callback(id_refs):
-            super(cls, cls).list_from_json(json_data, id_refs)
-        return cls.list_with_references(callback)
+        return cls.list_with_references(json_data)
 
     @classmethod
     def list_from_db(cls):
-        def callback(id_refs):
-            super(cls, cls).list_from_db(id_refs)
         return cls.list_with_references(callback)
 
     @classmethod
@@ -145,9 +155,10 @@ class Item(Identifiable):
     @classmethod
     def data_for_configure(cls, item_id):
         print(f"{cls.__name__}.data_for_configure()")
-        game_data = new_game_data()
         if item_id == 'new':
             item_id = 0
+        else:
+            item_id = int(item_id)
         tables_rows = DbSerializable.select_tables("""
             SELECT *
             FROM {tables[0]}
@@ -157,16 +168,13 @@ class Item(Identifiable):
                 AND {tables[0]}.id = %s
             WHERE {tables[0]}.game_token = %s
         """, (item_id, g.game_token), ['items', 'progress'])
-        game_data.items = []
+        g.game_data.items = []
         current_item_data = {}
         for item_data, progress_data in tables_rows:
             if item_data.id == item_id:
                 current_item_data = item_data
                 item_data.progress = progress_data
-            game_data.items.append(Item.from_json(item_data))
-        if current_item_data and 'progress' not in current_item_data:
-            raise Exception(
-                f"Did not find progress data for item {current_item_data.id}.")
+            g.game_data.items.append(Item.from_json(item_data))
         tables_rows = DbSerializable.select_tables("""
             SELECT *
             FROM {tables[0]}
@@ -182,15 +190,15 @@ class Item(Identifiable):
             if item_attrib_data.attrib_id:
                 current_item_data.setdefault('attribs', []).append(
                     item_attrib_data)
-            game_data.attribs.append(Attrib.from_json(attrib_data))
-        sources_data = DbSerializable.execute_select("""
+            g.game_data.attribs.append(Attrib.from_json(attrib_data))
+        recipes_data = DbSerializable.execute_select("""
             SELECT *
             FROM item_sources
             WHERE game_token = %s
                 AND item_id = %s
         """, (g.game_token, item_id))
-        for row in sources_data:
-            current_item_data.setdefault('sources', []).append(row)
+        for row in recipes_data:
+            current_item_data.setdefault('recipes', []).append(row)
         current_item = Item.from_json(current_item_data)
         return current_item
 
@@ -206,13 +214,13 @@ class Item(Identifiable):
             instance.name = request.form.get('item_name')
             instance.description = request.form.get('item_description')
             instance.toplevel = bool(request.form.get('top_level'))
-            instance.growable = request.form.get('growable')
-            instance.result_qty = float(request.form.get('result_quantity'))
+            instance.instant = bool(request.form.get('instant'))
+            #instance.result_qty = int(request.form.get('result_quantity'))
             source_ids = request.form.getlist('source_id')
             print(f"Source IDs: {source_ids}")
             instance.sources = {}
             for source_id in source_ids:
-                source_quantity = float(
+                source_quantity = int(
                     request.form.get(f'source_quantity_{source_id}', 0))
                 source_item = instance.get_by_id(source_id)
                 instance.sources[source_item] = source_quantity
@@ -224,25 +232,24 @@ class Item(Identifiable):
             for attrib_id in attrib_ids:
                 attrib_val = int(
                     request.form.get(f'attrib_val_{attrib_id}', 0))
-                attrib_item = Attrib.get_by_id(attrib_id)
+                attrib_item = Attrib(attrib_id)
                 instance.attribs[attrib_item] = attrib_val
-            print("attribs: ", {attrib.name: val
+            print("attribs: ", {attrib.id: val
                 for attrib, val in instance.attribs.items()})
             was_ongoing = instance.progress.is_ongoing
             if was_ongoing:
                 instance.progress.stop()
             else:
-                instance.progress.quantity = float(
+                instance.progress.quantity = int(
                     request.form.get('item_quantity'))
             prev_quantity = instance.progress.quantity
-            instance.progress = Progress(
-                instance,
-                quantity=prev_quantity,
-                step_size=instance.result_qty,
-                rate_amount=float(request.form.get('rate_amount')),
-                rate_duration=float(request.form.get('rate_duration')),
-                sources=instance.sources)
-            instance.progress.q_limit = float(request.form.get('item_limit'))
+            instance.progress = Progress.from_json({
+                    'quantity': prev_quantity,
+                    'rate_amount': int(request.form.get('rate_amount')),
+                    'rate_duration': int(request.form.get('rate_duration')),
+                    'sources': instance.sources},
+                instance)
+            instance.progress.q_limit = int(request.form.get('item_limit'))
             if was_ongoing:
                 instance.progress.start()
             instance.to_db()
@@ -262,6 +269,7 @@ class Item(Identifiable):
 def set_routes(app):
     @app.route('/configure/item/<item_id>', methods=['GET', 'POST'])
     def configure_item(item_id):
+        new_game_data()
         if request.method == 'GET':
             session['referrer'] = request.referrer
             print(f"Referrer in configure_item(): {request.referrer}")
@@ -286,7 +294,7 @@ def set_routes(app):
 
     @app.route('/item/gain/<int:item_id>', methods=['POST'])
     def gain_item(item_id):
-        quantity = float(request.form.get('quantity'))
+        quantity = int(request.form.get('quantity'))
         item = Item.get_by_id(item_id)
         num_batches = math.floor(quantity / item.progress.step_size)
         changed = item.progress.change_quantity(num_batches)

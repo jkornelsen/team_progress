@@ -24,6 +24,18 @@ class GameData:
             self.set_list(entity_cls, [])
         self.overall = Overall()
 
+    def __getitem__(self, key):
+        """Allow attributes to be read with square bracket notation,
+        easier for Jinja."""
+        return getattr(self, key)
+
+    @classmethod
+    def entity_for(cls, listname):
+        for entity_cls in cls.ENTITIES:
+            if entity_cls.listname() == listname:
+                return entity_cls
+        return None
+
     def get_list(self, entity_cls):
         return getattr(self, entity_cls.listname())
 
