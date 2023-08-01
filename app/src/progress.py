@@ -11,8 +11,6 @@ tables_to_create = {
         {coldef('id')},
         quantity integer NOT NULL,
         q_limit integer NOT NULL,
-        rate_amount integer NOT NULL,
-        rate_duration float(2) NOT NULL,
         start_time timestamp,
         stop_time timestamp,
         batches_processed integer NOT NULL,
@@ -22,25 +20,25 @@ tables_to_create = {
 
 class Progress(Identifiable):
     """Track progress, such as over time."""
-    def __init__(self, entity):
+    def __init__(self, entity=None):
         self.entity = entity  # Item or other entity that uses this object
         self.quantity = 0  # the main value tracked
         self.q_limit = 0  # limit the quantity if not 0
-        self.rate_amount = 1
-        self.rate_duration = 1.0
-        self.sources = {}
         self.start_time = None
         self.stop_time = None
         self.batches_processed = 0
         self.is_ongoing = False
         self.lock = threading.Lock()
+        ## attributes for a specific action
+        self.instant = False
+        self.rate_amount = 1
+        self.rate_duration = 1.0
+        self.sources = {}
 
     def to_json(self):
         return {
             'quantity': self.quantity,
             'q_limit': self.q_limit,
-            'rate_amount': self.rate_amount,
-            'rate_duration': self.rate_duration,
             'start_time': self.start_time,
             'stop_time': self.stop_time,
             'batches_processed': self.batches_processed,
@@ -48,14 +46,12 @@ class Progress(Identifiable):
         }
 
     @classmethod
-    def from_json(cls, data, entity):
+    def from_json(cls, data, entity=None):
         if not isinstance(data, dict):
             data = vars(data)
         instance = cls(entity)
         instance.quantity = data.get('quantity', 0)
         instance.q_limit = data.get('q_limit', 0)
-        instance.rate_amount = data.get('rate_amount', 1)
-        instance.rate_duration = data.get('rate_duration', 1.0)
         instance.start_time = data.get('start_time')
         instance.stop_time = data.get('stop_time')
         instance.batches_processed = data.get('batches_processed', 0)

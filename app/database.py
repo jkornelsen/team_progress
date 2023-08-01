@@ -62,19 +62,20 @@ def column_counts(table_name):
     """
     lookup = {
         'attribs': 4,
-        'char_attribs': 3,
-        'char_items': 3,
-        'characters': 8,
+        'char_attribs': 4,
+        'char_items': 4,
+        'characters': 9,
         'events': 7,
-        'item_attribs': 3,
-        'item_sources': 3,
-        'items': 8,
-        'location_destinations': 3,
-        'locations': 4,
+        'item_attribs': 4,
+        'item_sources': 8,
+        'items': 6,
+        'loc_items': 5,
+        'location_destinations': 4,
+        'locations': 5,
         'overall': 3,
-        'progress': 12,
+        'progress': 8,
         'user_interactions': 6,
-        'winning_items': 3,
+        'win_requirements': 7,
     }
     return lookup[table_name]
 

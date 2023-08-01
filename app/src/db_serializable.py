@@ -153,8 +153,9 @@ class Identifiable(DbSerializable):
     def json_to_db(self, doc):
         doc['game_token'] = g.game_token
         fields = list(doc.keys())
+        NONSCALAR_TYPES = (dict, list, tuple, set)
         fields = [field for field in doc.keys()
-            if not isinstance(doc[field], dict)]
+            if not isinstance(doc[field], NONSCALAR_TYPES)]
         if not doc.get('id'):
             # Remove the 'id' field from the fields to be inserted
             fields = [field for field in fields if field != 'id']

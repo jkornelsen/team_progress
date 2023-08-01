@@ -12,31 +12,11 @@ so add a dropdown list of characters on that screen
 also require worn item
 maybe have a checkbox that the item won't get consumed during the exchange
 
-Use GameData to load everything,
-which will also be useful for JSON file serialization.
-The user_interactions table wouldn't go into the file or
-be part of GameData.
-When loading GameData, perhaps we wouldn't need to select join the far
-side of relation tables, because we could join to the near side and
-then use get_by_id() in python to get the object reference.
-Joining relation tables fully might be useful when only grabbing specific
-information.
-
-for /configure/item/:
-    query to select all items and their progress data
-        only need to get progress data for current item
-    query to select all attribute name and id and whether attached to current item
-    add attached attrs to current item object data
-    create all attribute objects by calling from_json() with only name and id
-        use dict.get('field', '') to handle unspecified vals
-        i.e. partial loading
-        the list is held by game_data
-    query to select id and quantity of all source items for current item
-    add attached sources to current item object data
-    create item object using from_json()
-
-Add code to insert relationships in db.
+Item.configure_by_form(): write items.progress_id to db
+currently item.progress is an object, so it gets ignored
 
 
 ---- Issues ----
+
+"Add Alternative Recipe" button shouldn't be displayed until there are sources added.
 

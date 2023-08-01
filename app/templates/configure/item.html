@@ -23,27 +23,18 @@
             <input type="checkbox" id="top_level" name="top_level" {% if current.toplevel %}checked{% endif %}>
             <label for="top_level">Show in Overview</label><br>
         </div>
-        <input type="checkbox" id="producible" name="producible" {% if current.growable != "instantly" and current.growable != "not_growable" %}checked{% endif %}>
-        <label for="producible">Can be Increased</label><br>
-<!--
-        <div id="rate-container" {% if current.growable == "instantly" or current.growable == "not_growable" %}style="display: none;"{% endif %}>
-            <label for="rate-amount">Gain per Batch:</label>
-            <input type="number" id="rate-amount" name="rate_amount" value="{{ current.progress.rate_amount }}" required>
-            <label for="rate-duration">Duration:</label>
-            <input type="text" size="6" id="rate-duration" name="rate_duration" value="{{ current.progress.rate_duration }}" required>
-            <span>seconds</span>
-        </div>
--->
 
         <div id="source-container" style="border: 1px solid #ccc; padding: 10px;">
-            {% for recipe_id, recipe in current.recipes.items() %}
+            {% for recipe in current.recipes %}
                 <div class="recipe-container">
-                <input type="radio" id="growable-gain-over_time" name="growable" value="over_time" {% if current.growable != "instantly" and current.growable != "not_growable" %}checked{% endif %}>
-                <label for="growable-gain-over_time">Gain over time</label>
-                <input type="radio" id="growable-gain-instantly" name="growable" value="instantly" {% if current.growable == "instantly" %}checked{% endif %}>
-                <label for="growable-gain-instantly">Gain instantly</label>
-                <input type="hidden" name="recipe_id" value="{{ recipe_id }}">
-                {% for source_item, source_qty in recipe.items() %}
+                <input type="checkbox" id="instant" name="instant" {% if current.instant %}checked{% endif %}>
+                <label for="instant">Instant</label><br>
+                <label for="rate-amount">Gain per Batch:</label>
+                <input type="number" id="rate-amount" name="rate_amount" value="{{ current.progress.rate_amount }}" required>
+                <label for="rate-duration">Duration:</label>
+                <input type="text" size="6" id="rate-duration" name="rate_duration" value="{{ current.progress.rate_duration }}" required>
+                <span>seconds</span>
+                {% for source_item, source_qty in recipe.sources %}
                     <div class="source flexdiv" data-source-id="{{ source_item.id }}">
                         <input type="hidden" name="source_id" value="{{ source_item.id }}">
                         <label>Takes</label>
@@ -55,23 +46,23 @@
 
                 <!-- Placeholder for appending new sources -->
                 <div id="sourcelist_end" style="width: 0; height: 0; opacity: 0;"></div>
-                {% if len(game_data.items) > 0 %}
-                    <!-- Select box for adding another source -->
-                    <div class="select-box">
-                        <select id="add-source-select">
-                            <option value="" selected>(Select item)</option>
-                            {% for item in game_data.items %}
-                                <option value="{{ item.id }}">{{ item.name }}</option>
-                            {% endfor %}
-                        </select>
-                        <button type="button" id="add-source-btn" class="lesser-button">Add Source</button>
-                    </div>
-                {% else %}
-                    <p class="no-items">(No items)</p>
-                {% endif %}
                 </div>
             {% endfor %}
-            <button type="button" id="add-recipe-btn" class="lesser-button">Add Another Recipe</button>
+            {% if game_data.items | length > 0 %}
+                <!-- Select box for adding another source -->
+                <div class="select-box">
+                    <select id="add-source-select">
+                        <option value="" selected>(Select item)</option>
+                        {% for item in game_data.items %}
+                            <option value="{{ item.id }}">{{ item.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="button" id="add-source-btn" class="lesser-button">Add Source</button>
+                </div>
+            {% else %}
+                <p class="no-items">(No items)</p>
+            {% endif %}
+            <button type="button" id="add-recipe-btn" class="lesser-button" {% if current.recipes | length == 0 %}style="display: none;"{% endif %}>Add Alternative Recipe</button>
             </div>
         </div>
 
@@ -129,19 +120,6 @@
                 itemQuantityInput.prop('disabled', true);
                 $('#running-label').text('(Running)');
             }
-
-            function updateProducibleVisibility() {
-                // Toggle visibility of rate-related elements based on the selected option
-                if ($('#producible').is(':checked')) {
-                    $('#rate-container').show();
-                    $('#source-container').show();
-                } else {
-                    $('#rate-container').hide();
-                    $('#source-container').hide();
-                }
-            }
-            $('#producible').change(updateProducibleVisibility);
-            updateProducibleVisibility();
 
             $('#add-source-btn').click(function() {
                 const recipeContainer = $(this).closest('.recipe-container');

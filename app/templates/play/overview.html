@@ -12,7 +12,6 @@
         {% for winning_item, winning_quantity in current.winning_items.items() %}
             {% if not current.items[winning_item.name] or current.items[winning_item.name].progress.quantity < winning_quantity %}
                 {% set can_win = false %}
-                {% break %}
             {% endif %}
         {% endfor %}
         {% if can_win %}
