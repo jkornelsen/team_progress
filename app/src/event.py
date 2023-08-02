@@ -37,8 +37,8 @@ tables_to_create = {
 }
 
 class Event(Identifiable):
-    def __init__(self, id=""):
-        super().__init__(id)
+    def __init__(self, new_id=""):
+        super().__init__(new_id)
         self.name = ""
         self.description = ""
         self.toplevel = False if len(self.get_list()) > 1 else True

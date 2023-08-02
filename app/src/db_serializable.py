@@ -1,6 +1,6 @@
 from flask import g
 from types import SimpleNamespace
-from psycopg2.extras import RealDictCursor
+from psycopg2.extras import RealDictCursor, execute_values
 from database import column_counts, pretty
 
 def coldef(which):
@@ -72,6 +72,20 @@ class DbSerializable():
         return result
 
     @classmethod
+    def insert_multiple(cls, table, column_names, values, commit=True):
+        if not values:
+            return
+        sql = f"""
+            INSERT INTO {table} ({column_names})
+            VALUES %s
+        """
+        print(pretty(sql), values)
+        with g.db.cursor() as cursor:
+            execute_values(cursor, sql, values, template=None, page_size=100)
+        if commit:
+            g.db.commit()
+
+    @classmethod
     def execute_select(cls, query, values=None, fetch_all=True):
         """Returns data as a list of objects with attributes that are
         column names.
@@ -87,7 +101,7 @@ class DbSerializable():
             return result
 
     @classmethod
-    def select_tables(cls, query_without_tables, values, tables):
+    def select_tables(cls, query_without_tables, values, tables, fetch_all=True):
         """Query to grab all values for more than one table and separate
         results by table.
         Returns a list of rows arranged by table, for example:
@@ -98,7 +112,10 @@ class DbSerializable():
         results = []
         with g.db.cursor() as cursor:
             cursor.execute(query, values)
-            rows = cursor.fetchall()
+            if fetch_all:
+                rows = cursor.fetchall()
+            else:
+                rows = [cursor.fetchone()]
             column_names = [desc[0] for desc in cursor.description]
             table_column_indices = {}
             current_column = 0
@@ -115,17 +132,20 @@ class DbSerializable():
                         row[start_idx:end_idx])))
                     result.append(table_data)
                 results.append(result)
-        return results
+        if fetch_all:
+            return results
+        else:
+            return results[0]
 
 class Identifiable(DbSerializable):
     __abstract__ = True
 
     def __init__(self, new_id=0):
         super().__init__()
-        if isinstance(new_id, int):
-            self.id = new_id
-        else:
+        if new_id == 'new' or new_id == '':
             self.id = 0
+        else:
+            self.id = int(new_id)
 
     @classmethod
     def get_by_id(cls, id_to_get):
@@ -189,16 +209,16 @@ class Identifiable(DbSerializable):
             entity_list.remove(self)
 
     @classmethod
-    def from_json(cls, json_data, id_refs=None):
+    def from_json(cls, json_data):
         raise NotImplementedError()
 
     @classmethod
-    def list_from_json(cls, json_data, id_references=None):
+    def list_from_json(cls, json_data):
         print(f"{cls.__name__}.list_from_json()")
         instances = []
         for entity_data in json_data:
             instances.append(
-                cls.from_json(entity_data, id_references))
+                cls.from_json(entity_data))
         return instances
 
     @classmethod
@@ -217,14 +237,25 @@ class Identifiable(DbSerializable):
                 cls.remove_from_db(doc_id)
 
     @classmethod
-    def list_from_db(cls, id_references=None):
+    def list_from_db(cls):
         print(f"{cls.__name__}.list_from_db()")
-        table = cls.tablename()
         data = DbSerializable.execute_select(f"""
             SELECT *
-            FROM {table}
+            FROM {cls.tablename()}
             WHERE game_token = %s
         """, (g.game_token,))
-        instances = [cls.from_json(vars(dat), id_references) for dat in data]
+        instances = [cls.from_json(vars(dat)) for dat in data]
         return instances
+
+    @classmethod
+    def from_db(cls, id_to_get):
+        print(f"{cls.__name__}.from_db()")
+        data = DbSerializable.execute_select(f"""
+            SELECT *
+            FROM {cls.tablename()}
+            WHERE game_token = %s
+                AND id = %s
+        """, (g.game_token, id_to_get), fetch_all=False)
+        instance = cls.from_json(vars(data))
+        return instance
 

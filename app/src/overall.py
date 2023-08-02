@@ -186,12 +186,14 @@ def get_items_and_events():
         SELECT id, name
         FROM items
         WHERE toplevel = TRUE
-    """)
+            AND game_token = %s
+    """, (g.game_token,))
     event_data = DbSerializable.execute_select("""
         SELECT id, name
         FROM events
         WHERE toplevel = TRUE
-    """)
+            AND game_token = %s
+    """, (g.game_token,))
     return SimpleNamespace(items=item_data, events=event_data)
 
 def set_routes(app):

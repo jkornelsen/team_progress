@@ -28,8 +28,8 @@ tables_to_create = {
 }
 
 class Recipe:
-    def __init__(self, id=0):
-        self.id = id
+    def __init__(self, new_id=0):
+        self.id = new_id
         self.instant = False
         self.rate_amount = 1  # quantity produced per batch
         self.rate_duration = 1.0  # seconds for a batch
@@ -57,14 +57,14 @@ class Recipe:
         return instance
 
 class Item(Identifiable):
-    def __init__(self, id=""):
-        super().__init__(id)
+    def __init__(self, new_id=""):
+        super().__init__(new_id)
         self.name = ""
         self.description = ""
         self.toplevel = False if len(self.get_list()) > 1 else True
         self.attribs = {}  # Attrib objects and their stat val
         self.recipes = []
-        self.progress = Progress(self)
+        self.progress = Progress(entity=self)
 
     def to_json(self):
         return {
@@ -76,7 +76,7 @@ class Item(Identifiable):
                 recipe.to_json()
                 for recipe in self.recipes],
             'attribs': {
-                str(attrib.id): val
+                attrib.id: val
                 for attrib, val in self.attribs.items()},
             'progress': self.progress.to_json(),
         }
@@ -99,11 +99,56 @@ class Item(Identifiable):
             for recipe_data in data.get('recipes', {}).items()]
         return instance
 
-    def to_db(self):
-        super().to_db()
-        progress_data = self.to_json()['progress']
-        self.progress.json_to_db(progress_data)
-        # TODO: populate item_attribs and item_sources
+    def json_to_db(self, doc):
+        self.progress.json_to_db(doc['progress'])
+        doc['progress_id'] = self.progress.id
+        super().json_to_db(doc)
+        for rel_table in ('item_attribs', 'item_sources'):
+            self.execute_change(f"""
+                DELETE FROM {rel_table}
+                WHERE item_id = %s AND game_token = %s
+            """, (self.id, self.game_token))
+        if doc['attribs']:
+            values = [
+                (g.game_token, self.id, attrib_id, val)
+                for attrib_id, val in doc['attribs'].items()]
+            self.insert_multiple(
+                "item_attribs",
+                "game_token, item_id, attrib_id, value",
+                values)
+        if doc['recipes']:
+            values = []
+            for recipe_id, recipe in enumerate(doc['recipes']):
+                for source_id, src_qty in recipe['sources'].items():
+                    values.append((
+                        g.game_token, item_id, recipe_id, source_id,
+                        src_qty,
+                        recipe.rate_amount,
+                        recipe.rate_duration,
+                        recipe.instant
+                        ))
+            self.insert_multiple(
+                "item_sources",
+                "game_token, item_id, recipe_id, source_id,"
+                " src_qty, rate_amount, rate_duration, instant",
+                values)
+
+    @classmethod
+    def from_db(cls, id_to_get):
+        print(f"{cls.__name__}.from_db()")
+        tables_rows = DbSerializable.select_tables("""
+            SELECT *
+            FROM {tables[0]}
+            LEFT JOIN {tables[1]}
+                ON {tables[0]}.progress_id = {tables[1]}.id
+                AND {tables[0]}.game_token = {tables[1]}.game_token
+                AND {tables[0]}.id = %s
+            WHERE {tables[0]}.game_token = %s
+        """, (id_to_get, g.game_token), ['items', 'progress'], fetch_all=False)
+        item_data, progress_data = tables_rows
+        item_data.progress = progress_data
+        instance = cls.from_json(vars(item_data))
+        return instance
 
     @classmethod
     def list_with_references(cls, json_data=None):
@@ -193,12 +238,12 @@ class Item(Identifiable):
                 AND {tables[1]}.item_id = %s
             WHERE {tables[0]}.game_token = %s
         """, (item_id, g.game_token), ['attribs', 'item_attribs'])
-        attribs_data = []
         for attrib_data, item_attrib_data in tables_rows:
             print(f"attrib_data={attrib_data}, item_attrib_data={item_attrib_data}")
             if item_attrib_data.attrib_id:
-                current_item_data.setdefault('attribs', []).append(
-                    item_attrib_data)
+                current_item_data.setdefault(
+                    'attribs', {})[attrib_data.id] = item_attrib_data.value
+                print(f"current_item_data.attribs={current_item_data.attribs}")
             g.game_data.attribs.append(Attrib.from_json(attrib_data))
         recipes_data = DbSerializable.execute_select("""
             SELECT *
@@ -215,6 +260,12 @@ class Item(Identifiable):
             recipe_data.get('sources', []).append({row.source_id: row.src_qty})
         current_item_data.recipes = recipes_data
         current_item = Item.from_json(current_item_data)
+        # replace partial objects with fully populated objects
+        populated_objs = {}
+        for partial_attrib, val in current_item.attribs.items():
+            attrib = Attrib.get_by_id(partial_attrib.id)
+            populated_objs[attrib] = val
+        current_item.attribs = populated_objs
         return current_item
 
     @classmethod
@@ -315,7 +366,7 @@ def set_routes(app):
 
     @app.route('/item/progress_data/<int:item_id>')
     def item_progress_data(item_id):
-        item = Item.get_by_id(item_id)
+        item = Item.from_db(item_id)
         if item:
             if item.progress.is_ongoing:
                 item.progress.determine_current_quantity()

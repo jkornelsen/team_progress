@@ -26,8 +26,8 @@ class Attrib(Identifiable):
     Values of the attrib can be stored as values in attrib dicts of other
     entities.
     """
-    def __init__(self, id=""):
-        super().__init__(id)
+    def __init__(self, new_id=""):
+        super().__init__(new_id)
         self.name = ""
         self.description = ""
 

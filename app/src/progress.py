@@ -20,7 +20,8 @@ tables_to_create = {
 
 class Progress(Identifiable):
     """Track progress, such as over time."""
-    def __init__(self, entity=None):
+    def __init__(self, new_id="", entity=None):
+        super().__init__(new_id)
         self.entity = entity  # Item or other entity that uses this object
         self.quantity = 0  # the main value tracked
         self.q_limit = 0  # limit the quantity if not 0
@@ -37,6 +38,7 @@ class Progress(Identifiable):
 
     def to_json(self):
         return {
+            'id': self.id,
             'quantity': self.quantity,
             'q_limit': self.q_limit,
             'start_time': self.start_time,
@@ -49,7 +51,7 @@ class Progress(Identifiable):
     def from_json(cls, data, entity=None):
         if not isinstance(data, dict):
             data = vars(data)
-        instance = cls(entity)
+        instance = cls(entity=entity)
         instance.quantity = data.get('quantity', 0)
         instance.q_limit = data.get('q_limit', 0)
         instance.start_time = data.get('start_time')

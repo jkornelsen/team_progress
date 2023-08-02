@@ -30,15 +30,15 @@ tables_to_create = {
 }
 
 class Character(Identifiable):
-    def __init__(self, id=""):
-        super().__init__(id)
+    def __init__(self, new_id=""):
+        super().__init__(new_id)
         self.name = ""
         self.description = ""
         self.toplevel = False if len(self.get_list()) > 1 else True
         self.attribs = {}  # keys are Attrib object, values are stat val
         self.items = {}  # Item objects and their slot name
         self.location = None  # Location object
-        self.progress = Progress(self)  # for travel or perhaps other actions
+        self.progress = Progress(entity=self)  # for travel or perhaps other actions
         self.destination = None  # Location object to travel to
 
     def to_json(self):

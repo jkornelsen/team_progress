@@ -20,8 +20,8 @@ tables_to_create = {
 }
 
 class Location(Identifiable):
-    def __init__(self, id=""):
-        super().__init__(id)
+    def __init__(self, new_id=""):
+        super().__init__(new_id)
         self.name = ""
         self.description = ""
         self.destinations = {}  # Location objects and their distance
@@ -54,9 +54,11 @@ class Location(Identifiable):
         return instance
 
     @classmethod
-    def list_with_references(cls, callback):
-        id_refs = {}
-        callback(id_refs)
+    def list_with_references(cls, json_data=None):
+        if json_data:
+            super(cls, cls).list_from_json(json_data)
+        else:
+            instances = super(cls, cls).list_from_db()
         # replace IDs with actual object referencess now that all entities
         # have been loaded
         entity_list = cls.get_list()
@@ -69,15 +71,11 @@ class Location(Identifiable):
 
     @classmethod
     def list_from_json(cls, json_data):
-        def callback(id_refs):
-            super(cls, cls).list_from_json(json_data, id_refs)
-        return cls.list_with_references(callback)
+        return cls.list_with_references(json_data)
 
     @classmethod
     def list_from_db(cls):
-        def callback(id_refs):
-            super(cls, cls).list_from_db(id_refs)
-        return cls.list_with_references(callback)
+        return cls.list_with_references()
 
     def configure_by_form(self):
         if request.method == 'POST':
