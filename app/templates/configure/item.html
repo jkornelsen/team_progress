@@ -24,30 +24,9 @@
             <label for="top_level">Show in Overview</label><br>
         </div>
 
-        <div id="source-container" style="border: 1px solid #ccc; padding: 10px;">
-            {% for recipe in current.recipes %}
-                <div class="recipe-container">
-                <input type="checkbox" id="instant" name="instant" {% if current.instant %}checked{% endif %}>
-                <label for="instant">Instant</label><br>
-                <label for="rate-amount">Gain per Batch:</label>
-                <input type="number" id="rate-amount" name="rate_amount" value="{{ current.progress.rate_amount }}" required>
-                <label for="rate-duration">Duration:</label>
-                <input type="text" size="6" id="rate-duration" name="rate_duration" value="{{ current.progress.rate_duration }}" required>
-                <span>seconds</span>
-                {% for source_item, source_qty in recipe.sources %}
-                    <div class="source flexdiv" data-source-id="{{ source_item.id }}">
-                        <input type="hidden" name="source_id" value="{{ source_item.id }}">
-                        <label>Takes</label>
-                        <input type="number" id="source-{{ source_item.id }}-quantity" name="source_quantity_{{ source_item.id }}" value="{{ source_qty }}">
-                        {{ source_item.name }}
-                        <button class="remove-source-btn lesser-button">Remove Source</button>
-                    </div>
-                {% endfor %}
-
-                <!-- Placeholder for appending new sources -->
-                <div id="sourcelist_end" style="width: 0; height: 0; opacity: 0;"></div>
-                </div>
-            {% endfor %}
+        <div class="sources-container" style="border: 1px solid #ccc; padding: 10px;">
+            <!-- Placeholder for appending new recipes -->
+            <div id="recipelist_end" style="width: 0; height: 0; opacity: 0;"></div>
             {% if game_data.items | length > 0 %}
                 <!-- Select box for adding another source -->
                 <div class="select-box">
@@ -63,35 +42,34 @@
                 <p class="no-items">(No items)</p>
             {% endif %}
             <button type="button" id="add-recipe-btn" class="lesser-button" {% if current.recipes | length == 0 %}style="display: none;"{% endif %}>Add Alternative Recipe</button>
-            </div>
         </div>
 
-        <div id="attrib-container" style="border: 1px solid #ccc; padding: 10px;">
-                {% for attrib, attrib_val in current.attribs.items() %}
-                    <div class="attrib flexdiv" data-attrib-id="{{ attrib.id }}">
-                        <input type="hidden" name="attrib_id" value="{{ attrib.id }}">
-                        {{ attrib.name }}
-                        <input type="number" id="attrib-{{ attrib.id }}-val" name="attrib_val_{{ attrib.id }}" value="{{ attrib_val }}">
-                        <button class="remove-attrib-btn lesser-button">Remove Attribute</button>
-                    </div>
-                {% endfor %}
+        <div class="attrib-container" style="border: 1px solid #ccc; padding: 10px;">
+            {% for attrib, attrib_val in current.attribs.items() %}
+                <div class="attrib flexdiv" data-attrib-id="{{ attrib.id }}">
+                    <input type="hidden" name="attrib_id" value="{{ attrib.id }}">
+                    {{ attrib.name }}
+                    <input type="number" id="attrib-{{ attrib.id }}-val" name="attrib_val_{{ attrib.id }}" value="{{ attrib_val }}">
+                    <button class="remove-attrib-btn lesser-button">Remove Attribute</button>
+                </div>
+            {% endfor %}
 
-                <!-- Placeholder for appending new attribs -->
-                <div id="attriblist_end" style="width: 0; height: 0; opacity: 0;"></div>
-                {% if game_data.attribs %}
-                    <!-- Select box for adding another attrib -->
-                    <div class="select-box">
-                        <select id="add-attrib-select">
-                            <option value="" selected>(Select item)</option>
-                            {% for attrib in game_data.attribs %}
-                                <option value="{{ attrib.id }}">{{ attrib.name }}</option>
-                            {% endfor %}
-                        </select>
-                        <button type="button" id="add-attrib-btn" class="lesser-button">Add Attribute</button>
-                    </div>
-                {% else %}
-                    <p class="no-attributes">(No attributes)</p>
-                {% endif %}
+            <!-- Placeholder for appending new attribs -->
+            <div id="attriblist_end" style="width: 0; height: 0; opacity: 0;"></div>
+            {% if game_data.attribs %}
+                <!-- Select box for adding another attrib -->
+                <div class="select-box">
+                    <select id="add-attrib-select">
+                        <option value="" selected>(Select item)</option>
+                        {% for attrib in game_data.attribs %}
+                            <option value="{{ attrib.id }}">{{ attrib.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="button" id="add-attrib-btn" class="lesser-button">Add Attribute</button>
+                </div>
+            {% else %}
+                <p class="no-attributes">(No attributes)</p>
+            {% endif %}
             </div>
         </div>
 
@@ -100,6 +78,17 @@
         <button type="submit" id="btn-delete" name="delete_item" class="dangerous-button">Delete Item</button>
     </form>
     <script>
+        function updateInstantVisibility(checkbox) {
+            const recipeContainer = $(checkbox).closest('.recipe-container');
+            if ($(checkbox).is(':checked')) {
+                const overTimeContainer = recipeContainer.find('#over-time-container');
+                overTimeContainer.hide();
+            } else {
+                const overTimeContainer = recipeContainer.find('#over-time-container');
+                overTimeContainer.show();
+            }
+        }
+
         $(document).ready(function() {
             // Enable button if the current entity has been configured before.
             {% set outerscope = namespace(has_current = false) %}
@@ -121,43 +110,114 @@
                 $('#running-label').text('(Running)');
             }
 
+            let num_recipes = {{ current.recipes | length }};
+
+            function addRecipe(rate_amount = 1, rate_duration = 1.0, instant = false) {
+                const sourceHtml = `
+                    <div class="recipe-container">
+                        <label for="rate-amount">Gain per Batch:</label>
+                        <input type="number" id="rate-amount" name="rate_amount" value="{{ rate_amount }}" required>
+                        <span id="over-time-container">
+                            <label for="rate-duration">Duration:</label>
+                            <input type="text" size="6" id="rate-duration" name="rate_duration" value="{{ rate_duration }}" required>
+                            <span>seconds</span>
+                        </span>
+                        <input type="checkbox" id="instant" name="instant"
+                            {% if instant %}checked{% endif %} onChange="updateInstantVisibility(this);">
+                        <label for="instant">Instant</label>
+                        <button class="remove-recipe-btn lesser-button">Remove Recipe</button>
+                        <!-- Placeholder for appending new sources -->
+                        <div class="sourcelist_end" style="width: 0; height: 0; opacity: 0;"></div>
+                        </div>
+                    </div>
+                `;
+                $('#recipelist_end').before(sourceHtml);
+                num_recipes++;
+                toggleAddRecipeButtonVisibility();
+            }
+
+            function addSource(sourceId, sourceName, sourceQuantity = 1) {
+                const recipeContainer = $('.recipe-container').last();
+                const existingSource = recipeContainer.find(`.source[data-source-id="${sourceId}"]`);
+                if (existingSource.length > 0) {
+                    alert('Source already exists.');
+                    return;
+                }
+                const sourceHtml = `
+                    <div class="source flexdiv" data-source-id="${sourceId}">
+                        <input type="hidden" name="source_id" value="${sourceId}">
+                        <label>Takes:</label>
+                        <input type="number" id="source-${sourceId}-quantity" name="source_quantity_${sourceId}" value="{{ sourceQuantity }}">
+                        ${sourceName}
+                        <button class="remove-source-btn lesser-button">Remove Source</button>
+                    </div>
+                `;
+                recipeContainer.find('.sourcelist_end').before(sourceHtml);
+                console.log("added sourceHtml before sourcelist_end");
+                toggleAddRecipeButtonVisibility();
+            }
+
             $('#add-source-btn').click(function() {
-                const recipeContainer = $(this).closest('.recipe-container');
-                const selectedOption = recipeContainer.find(
-                    '.add-source-select option:selected');
-                //const selectedOption = $('#add-source-select option:selected');
+                const selectedOption = $('#add-source-select option:selected');
                 const sourceId = selectedOption.val();
                 const sourceName = selectedOption.text();
                 if (sourceId == "") {
                     return; // don't add if the selected option is the placeholder
                 }
-                //const existingSource = $('.source[data-source-id="' + sourceId + '"]');
-                const existingSource = recipeContainer.find(
-                    '.source[data-source-id="' + sourceId + '"]');
-                if (existingSource.length > 0) {
-                    alert('Source already exists.');
-                    return;
+                if (num_recipes == 0) {
+                    addRecipe();
+                } else {
+                    const recipeContainer = $(this).closest('.recipe-container');
+                    const existingSource = recipeContainer.find(
+                        '.source[data-source-id="' + sourceId + '"]');
+                    if (existingSource.length > 0) {
+                        alert('Source already exists.');
+                        return;
+                    }
                 }
-                // Create HTML elements for the source
-                const sourceHtml = `
-                    <div class="source flexdiv" data-source-id="${sourceId}">
-                        <input type="hidden" name="source_id" value="${sourceId}">
-                        <label>Takes:</label>
-                        <input type="number" id="source-${sourceId}-quantity" name="source_quantity_${sourceId}" value="1">
-                        ${sourceName}
-                        <button class="remove-source-btn lesser-button">Remove Source</button>
-                    </div>
-                `;
-                //$('#sourcelist_end').before(sourceHtml);
-                recipeContainer.find('.sourcelist_end').before(sourceHtml);
+                addSource(sourceId, sourceName);
+                toggleAddRecipeButtonVisibility();
+            });
+            {% for recipe in current.recipes %}
+                addRecipe(recipe.rate_amount, recipe.rate_duration, recipe.instant);
+                {% for source_item, source_qty in recipe.sources %}
+                    addSource(source_item.id, source_item.name, source_qty);
+                {% endfor %}
+            {% endfor %}
+
+            $('.sources-container').on('click', '.remove-source-btn', function() {
+                const recipeContainer = $(this).closest('.recipe-container');
+                const sourceContainer = $(this).closest('.source');
+                sourceContainer.remove();
+                if (recipeContainer.find('.source').length == 0) {
+                    recipeContainer.remove();
+                    num_recipes--;
+                }
+                toggleAddRecipeButtonVisibility();
             });
 
-            $('#source-container').on('click', '.remove-source-btn', function() {
-                const sourceContainer = $(this).closest('.source');
-                //const sourceId = sourceContainer.data('source-id');
+            $('.sources-container').on('click', '.remove-recipe-btn', function() {
+                const recipeContainer = $(this).closest('.recipe-container');
+                recipeContainer.remove();
+                num_recipes--;
+                toggleAddRecipeButtonVisibility();
+            });
 
-                // Remove the source from the DOM
-                sourceContainer.remove();
+            function toggleAddRecipeButtonVisibility() {
+                const recipeContainer = $('.recipe-container').last();
+                const numSources = recipeContainer.find('.source').length;
+                console.log("toggleAddRecipeButtonVisibility(): ", numSources);
+                if (numSources > 0) {
+                    $('#add-recipe-btn').show();
+                } else {
+                    $('#add-recipe-btn').hide();
+                }
+            }
+            toggleAddRecipeButtonVisibility();
+
+            $('#add-recipe-btn').click(function() {
+                console.log("add-recipe-btn.click()");
+                addRecipe();
             });
 
             $('#add-attrib-btn').click(function() {

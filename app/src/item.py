@@ -12,7 +12,8 @@ import math
 
 from .attrib import Attrib
 from .progress import Progress
-from .db_serializable import DbSerializable, Identifiable, coldef, new_game_data
+from .db_serializable import (
+    DbSerializable, Identifiable, MutableNamespace, coldef, new_game_data)
 
 tables_to_create = {
     'items': f"""
@@ -96,8 +97,6 @@ class Item(Identifiable):
         instance.recipes = [
             Recipe.from_json(recipe_data)
             for recipe_data in data.get('recipes', {}).items()]
-        if not len(instance.recipes):
-            instance.recipes = [Recipe(id=1)]
         return instance
 
     def to_db(self):
@@ -177,7 +176,7 @@ class Item(Identifiable):
             WHERE {tables[0]}.game_token = %s
         """, (item_id, g.game_token), ['items', 'progress'])
         g.game_data.items = []
-        current_item_data = {}
+        current_item_data = MutableNamespace()
         for item_data, progress_data in tables_rows:
             print(f"item_data={item_data}")
             if item_data.id == item_id:
