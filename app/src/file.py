@@ -56,7 +56,7 @@ def set_routes(app):
                 WHERE game_token = '{g.game_token}'
             """)
         rows = DbSerializable.execute_select(
-            " UNION ".join(query_parts))
+            " UNION ".join(query_parts) + " ORDER BY name")
         game_data = GameData()
         for row in rows:
             entity_cls = game_data.entity_for(row.tablename)

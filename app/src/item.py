@@ -99,6 +99,10 @@ class Item(Identifiable):
             for recipe_data in data.get('recipes', {}).items()]
         return instance
 
+    @classmethod
+    def list_from_json(cls, json_data):
+        return cls.list_with_references(json_data)
+
     def json_to_db(self, doc):
         self.progress.json_to_db(doc['progress'])
         doc['progress_id'] = self.progress.id
@@ -135,74 +139,80 @@ class Item(Identifiable):
 
     @classmethod
     def from_db(cls, id_to_get):
-        print(f"{cls.__name__}.from_db()")
-        tables_rows = DbSerializable.select_tables("""
-            SELECT *
-            FROM {tables[0]}
-            LEFT JOIN {tables[1]}
-                ON {tables[0]}.progress_id = {tables[1]}.id
-                AND {tables[0]}.game_token = {tables[1]}.game_token
-                AND {tables[0]}.id = %s
-            WHERE {tables[0]}.game_token = %s
-        """, (id_to_get, g.game_token), ['items', 'progress'], fetch_all=False)
-        item_data, progress_data = tables_rows
-        item_data.progress = progress_data
-        instance = cls.from_json(vars(item_data))
-        return instance
-
-    @classmethod
-    def list_with_references(cls, json_data=None):
-        if json_data:
-            super(cls, cls).list_from_json(json_data)
-        else:
-            instances = super(cls, cls).list_from_db()
-        # replace IDs with actual object referencess now that all entities
-        # have been loaded
-        entity_list = cls.get_list()
-        for instance in entity_list:
-            instance.sources = [
-                {cls.get_by_id(source_id): quantity
-                for source_id, quantity in recipe.items()}
-                for recipe in id_refs.get('sources', {}).get(instance.id, {})]
-            instance.progress.sources = instance.sources
-        return entity_list
-
-    @classmethod
-    def list_from_json(cls, json_data):
-        return cls.list_with_references(json_data)
+        return cls._from_db(id_to_get)
 
     @classmethod
     def list_from_db(cls):
-        return cls.list_with_references()
+        return cls._from_db()
 
     @classmethod
-    def list_from_db_with_rels(cls):
-        print(f"{cls.__name__}.list_from_db()")
+    def _from_db(cls, id_to_get=None):
+        print(f"{cls.__name__}._from_db_data()")
         query = """
             SELECT *
-            FROM items
-            JOIN progress ON items.progress_id = progress.id
-                AND items.game_token = progress.game_token
+            FROM {tables[0]}
+            LEFT JOIN {tables[1]}
+                ON {tables[1]}.id = {tables[0]}.progress_id
+                AND {tables[1]}.game_token = {tables[0]}.game_token
+            LEFT JOIN {tables[2]}
+                ON {tables[2]}.item_id = {tables[0]}.id
+                AND {tables[2]}.game_token = {tables[0]}.game_token
+            LEFT JOIN {tables[3]}
+                ON {tables[3]}.item_id = {tables[0]}.id
+                AND {tables[3]}.game_token = {tables[0]}.game_token
+            WHERE {tables[0]}.game_token = %s
         """
-        cursor.execute(query, (game_token,))
-        rows = cursor.fetchall()
-        items = []
-        column_names = [desc[0] for desc in cursor.description]
-        items_cols = column_counts('items')
-        for row in rows:
-            item_data = dict(zip(
-                column_names[:items_cols], row[:items_cols]))
-            progress_data = dict(zip(
-                column_names[items_cols:], row[items_cols:]))
-        table = cls.tablename()
-        data = DbSerializable.execute_select(f"""
-            SELECT *
-            FROM {table}
-            WHERE game_token = %s
-        """, (g.game_token,))
-        #instances = [cls.from_json(dat, id_refs) for dat in data]
-        #return instances
-        return cls.list_with_references()
+        values = [g.game_token]
+        if id_to_get:
+            query = f"{query}\nAND {{tables[0]}}.id = %s"
+            values.append(id_to_get);
+        tables_rows = DbSerializable.select_tables(
+            query, values,
+            ['items', 'progress', 'item_attribs', 'item_sources'])
+        instances = {}  # keyed by ID
+        for item_data, progress_data, attribs_data, source_data in tables_rows:
+            instance = instances.get(item_data.id)
+            if not instance:
+                instance = cls.from_json(vars(item_data))
+                instances[item_data.id] = instance
+            if progress_data.id:
+                instance.progress = Progress.from_json(progress_data, instance)
+            if attribs_data.attrib_id:
+                instance.attribs[attribs_data.attrib_id] = attribs_data.value
+            if source_data.recipe_id:
+                if (recipe := instance.recipes.get(source_data.recipe_id)) is None:
+                    recipe = Recipe.from_json(source_data)
+                    instance.recipes[source_data.recipe_id] = recipe
+                recipe.sources[source_data.source_id] = source_data.src_qty
+        # replace IDs with partial objects
+        for instance in instances.values():
+            attrib_objs = {}
+            for attrib_id in instance.attribs:
+                attrib_obj = Attrib(attrib_id)
+                attrib_objs[attrib_obj] = instance.attribs[attrib_id]
+            instance.attribs = attrib_objs
+        instances = list(instances.values())
+        return instances[0] if len(instances) == 1 else instances
+
+    @classmethod
+    def list_with_references(cls, json_data=None):
+        """Replace ID references or partial objects with filled objects 
+        using cls.get_by_id()."""
+        #if json_data:
+        #    super(cls, cls).list_from_json(json_data)
+        #else:
+        #    instances = super(cls, cls).list_from_db()
+        # replace IDs with actual object referencess now that all entities
+        # have been loaded
+        #entity_list = cls.get_list()
+        #for instance in entity_list:
+        #    instance.sources = [
+        #        {cls.get_by_id(source_id): quantity
+        #        for source_id, quantity in recipe.items()}
+        #        for recipe in id_refs.get('sources', {}).get(instance.id, {})]
+        #    instance.progress.sources = instance.sources
+        #return entity_list
+        pass
 
     @classmethod
     def data_for_configure(cls, item_id):
@@ -302,8 +312,8 @@ class Item(Identifiable):
             for attrib_id in attrib_ids:
                 attrib_val = int(
                     request.form.get(f'attrib_val_{attrib_id}', 0))
-                attrib_item = Attrib(attrib_id)
-                instance.attribs[attrib_item] = attrib_val
+                attrib_obj = Attrib(attrib_id)
+                instance.attribs[attrib_obj] = attrib_val
             print("attribs: ", {attrib.id: val
                 for attrib, val in instance.attribs.items()})
             instance.progress = Progress.from_json({

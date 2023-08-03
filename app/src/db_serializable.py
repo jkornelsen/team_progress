@@ -61,8 +61,8 @@ class DbSerializable():
         auto-generated IDs.
         """
         query = query_without_table.format(table=cls.tablename())
+        print(pretty(query, values))
         result = None
-        print(pretty(query), values)
         with g.db.cursor(cursor_factory=RealDictCursor) as cursor:
             cursor.execute(query, tuple(values))
             if fetch:
@@ -79,7 +79,7 @@ class DbSerializable():
             INSERT INTO {table} ({column_names})
             VALUES %s
         """
-        print(pretty(sql), values)
+        print(pretty(sql, values))
         with g.db.cursor() as cursor:
             execute_values(cursor, sql, values, template=None, page_size=100)
         if commit:
@@ -91,7 +91,7 @@ class DbSerializable():
         column names.
         For example, to get the name column of the first row: result[0].name
         """
-        print(pretty(query), values)
+        print(pretty(query, values))
         with g.db.cursor(cursor_factory=RealDictCursor) as cursor:
             cursor.execute(query, values)
             if fetch_all:
@@ -108,7 +108,7 @@ class DbSerializable():
             [item_data, progress_data]
         """
         query = query_without_tables.format(tables=tables)
-        print(pretty(query), values)
+        print(pretty(query, values))
         results = []
         with g.db.cursor() as cursor:
             cursor.execute(query, values)

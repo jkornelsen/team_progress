@@ -17,13 +17,15 @@ def close_db(ctx=None):
     if db is not None:
         db.close()
 
-def pretty(text):
+def pretty(text, values=None):
     """Pretty-print SQL by indenting consistently and removing extra
-    newlines."""
-    text = text.strip('\r\n')
+    spaces and newlines."""
+    text = text.strip()
     lines = text.split('\n')
     indented_lines = [' ' * 8 + line.strip() for line in lines]
     indented_text = '\n'.join(indented_lines)
+    if values:
+        indented_text += f"\nvalues={values}"
     return indented_text
 
 def create_all():

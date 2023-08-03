@@ -43,17 +43,19 @@ class GameData:
         setattr(self, entity_cls.listname(), newval)
 
     def to_json(self):
+        print(f"{self.__class__.__name__}.to_json()")
         data = {}
         for entity_cls in self.ENTITIES:
             entity_data = [
-                entity.to_json()
-                for entity in self.get_list(entity_cls)]
+                entity_obj.to_json()
+                for entity_obj in self.get_list(entity_cls)]
             data[entity_cls.listname()] = entity_data
         data['overall'] = self.overall.to_json()
         return data
 
     @classmethod
     def from_json(cls, data):
+        print(f"{cls.__name__}.from_json()")
         instance = cls()
         # Load in order to correctly get references to other entities. 
         for entity_cls in cls.ENTITIES:
