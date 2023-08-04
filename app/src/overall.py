@@ -9,7 +9,8 @@ from flask import (
     session,
     url_for
 )
-from .db_serializable import DbSerializable, coldef
+from .db_serializable import (
+    DbSerializable, coldef, new_game_data, load_game_data)
 
 from .attrib import Attrib
 from .character import Character
@@ -62,6 +63,15 @@ class WinRequirement:
             ) if data['attrib_id'] else None,
         instance.attrib_value = data.get('attrib_value', 0),
         return instance
+
+    def id_to_refs_from_game_data(self):
+        for attr_name in ['item', 'character', 'location', 'attrib']:
+            entity_list = getattr(g.game_data, attr_name + "s")
+            entity = getattr(self, attr_name)
+            if entity is not None:
+                entity_id = entity.id
+                if entity_id in entity_list:
+                    setattr(self, attr_name, entity_list[entity_id])
 
 class Overall(DbSerializable):
     """Overall scenario settings such as scenario title and goal,
@@ -144,6 +154,16 @@ class Overall(DbSerializable):
         self.insert_multiple_from_dict(
             "win_requirements", doc['win_reqs'])
 
+    @classmethod
+    def data_for_configure(cls):
+        print(f"{cls.__name__}.data_for_configure()")
+        from .game_data import GameData
+        game_data = GameData.entity_names_from_db()
+        game_data.overall = cls.from_db()
+        for win_req in game_data.overall.win_reqs:
+            win_req.id_to_refs_from_game_data()
+        return game_data
+
     def configure_by_form(self):
         if request.method == 'POST':
             if 'save_changes' in request.form:
@@ -169,7 +189,7 @@ class Overall(DbSerializable):
                 else:
                     instance.winning_item = None
                     instance.winning_quantity = 1
-                self.to_db()
+                instance.to_db()
             elif 'cancel_changes' in request.form:
                 print("Cancelling changes.")
             else:
@@ -278,5 +298,6 @@ def set_routes(app):
 
     @app.route('/configure/overall', methods=['GET', 'POST'])
     def configure_overall():
-        return g.game_data.overall.configure_by_form()
+        game_data = Overall.data_for_configure()
+        return game_data.overall.configure_by_form()
 

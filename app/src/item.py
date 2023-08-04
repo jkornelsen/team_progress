@@ -227,11 +227,11 @@ class Item(Identifiable):
             WHERE {tables[0]}.game_token = %s
         """, (item_id, g.game_token), ['items', 'progress'])
         g.game_data.items = []
-        current_item_data = MutableNamespace()
+        current_data = MutableNamespace()
         for item_data, progress_data in tables_rows:
             print(f"item_data={item_data}")
             if item_data.id == item_id:
-                current_item_data = item_data
+                current_data = item_data
                 if progress_data.id:
                     item_data.progress = progress_data
             g.game_data.items.append(Item.from_json(item_data))
@@ -247,9 +247,9 @@ class Item(Identifiable):
         for attrib_data, item_attrib_data in tables_rows:
             print(f"attrib_data={attrib_data}, item_attrib_data={item_attrib_data}")
             if item_attrib_data.attrib_id:
-                current_item_data.setdefault(
+                current_data.setdefault(
                     'attribs', {})[attrib_data.id] = item_attrib_data.value
-                print(f"current_item_data.attribs={current_item_data.attribs}")
+                print(f"current_data.attribs={current_data.attribs}")
             g.game_data.attribs.append(Attrib.from_json(attrib_data))
         recipes_data = DbSerializable.execute_select("""
             SELECT *
@@ -264,8 +264,8 @@ class Item(Identifiable):
             else:
                 recipe_data = row
             recipe_data.get('sources', []).append({row.source_id: row.src_qty})
-        current_item_data.recipes = recipes_data
-        current_item = Item.from_json(current_item_data)
+        current_data.recipes = recipes_data
+        current_item = Item.from_json(current_data)
         # replace partial objects with fully populated objects
         populated_objs = {}
         for partial_attrib, val in current_item.attribs.items():

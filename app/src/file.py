@@ -42,26 +42,12 @@ def load_data_from_file(filepath):
         g.game_data = GameData.from_json(data)
     g.game_data.to_db()
     session['file_message'] = 'Loaded from file.'
-    return redirect(url_for('configure'))
 
 def set_routes(app):
     @app.route('/configure')
     def configure():
         file_message = session.pop('file_message', False)
-        query_parts = []
-        for entity_cls in GameData.ENTITIES:
-            query_parts.append(f"""
-                SELECT id, name, '{entity_cls.tablename()}' AS tablename
-                FROM {entity_cls.tablename()}
-                WHERE game_token = '{g.game_token}'
-            """)
-        rows = DbSerializable.execute_select(
-            " UNION ".join(query_parts) + " ORDER BY name")
-        game_data = GameData()
-        for row in rows:
-            entity_cls = game_data.entity_for(row.tablename)
-            entity = entity_cls.from_json(row)
-            game_data.get_list(entity_cls).append(entity)
+        game_data = GameData.entity_names_from_db()
         return render_template(
             'configure/index.html',
             game_data=game_data,
@@ -85,7 +71,8 @@ def set_routes(app):
         if not filepath:
             # No file selected
             return redirect(url_for('configure'))
-        return load_data_from_file(filepath)
+        load_data_from_file(filepath)
+        return redirect(url_for('configure'))
 
     EXAMPLES_DIR = 'data'
 

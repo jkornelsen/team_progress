@@ -1,6 +1,7 @@
 from flask import g
 
 from .db_serializable import DbSerializable
+from .db_relations import tables_to_create as relation_tables
 
 from src.attrib import Attrib
 from src.character import Character
@@ -86,11 +87,36 @@ class GameData:
                 entity.to_db()
         self.overall.to_db()
 
+    @classmethod
+    def entity_names_from_db(cls):
+        query_parts = []
+        for entity_cls in cls.ENTITIES:
+            query_parts.append(f"""
+                SELECT id, name, '{entity_cls.tablename()}' AS tablename
+                FROM {entity_cls.tablename()}
+                WHERE game_token = '{g.game_token}'
+            """)
+        rows = DbSerializable.execute_select(
+            " UNION ".join(query_parts) + " ORDER BY name")
+        instance = cls()
+        for row in rows:
+            entity_cls = instance.entity_for(row.tablename)
+            entity = entity_cls.from_json(row)
+            instance.get_list(entity_cls).append(entity)
+        return instance
+
     @staticmethod
     def clear_db_for_token():
-        for entity_cls in GameData.ENTITIES + [Overall]:
-            entity_cls.execute_change("""
-                DELETE FROM {table}
+        tablenames = [
+                tablename
+                for tablename in relation_tables
+            ] + [
+                entity_cls.tablename()
+                for entity_cls in GameData.ENTITIES + [Overall]
+            ]
+        for tablename in tablenames:
+            DbSerializable.execute_change(f"""
+                DELETE FROM {tablename}
                 WHERE game_token = %s
             """, (g.game_token,))
 

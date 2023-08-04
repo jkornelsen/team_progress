@@ -55,48 +55,6 @@ class DbSerializable():
         return "{}s".format(cls.__name__.lower())
 
     @classmethod
-    def execute_change(cls, query_without_table, values,
-            commit=True, fetch=False):
-        """Returning a value is useful when inserting
-        auto-generated IDs.
-        """
-        query = query_without_table.format(table=cls.tablename())
-        print(pretty(query, values))
-        result = None
-        with g.db.cursor(cursor_factory=RealDictCursor) as cursor:
-            cursor.execute(query, tuple(values))
-            if fetch:
-                result = MutableNamespace(**cursor.fetchone())
-        if commit:
-            g.db.commit()
-        return result
-
-    @classmethod
-    def insert_multiple(cls, table, column_names, values, commit=True):
-        if not values:
-            return
-        sql = f"""
-            INSERT INTO {table} ({column_names})
-            VALUES %s
-        """
-        print(pretty(sql, values))
-        with g.db.cursor() as cursor:
-            execute_values(cursor, sql, values, template=None, page_size=100)
-        if commit:
-            g.db.commit()
-
-    @classmethod
-    def insert_multiple_from_dict(cls, table, data, commit=True):
-        if len(data) == 0:
-            return
-        column_keys = data[0].keys()
-        values = [
-            tuple([g.game_token] + [req[key] for key in column_keys])
-            for req in data]
-        column_names = ", ".join(['game_token'] + list(column_keys))
-        cls.insert_multiple(table, column_names, values, commit)
-
-    @classmethod
     def execute_select(cls, query, values=None, fetch_all=True):
         """Returns data as a list of objects with attributes that are
         column names.
@@ -148,6 +106,48 @@ class DbSerializable():
         else:
             return results[0]
 
+    @classmethod
+    def execute_change(cls, query_without_table, values,
+            commit=True, fetch=False):
+        """Returning a value is useful when inserting
+        auto-generated IDs.
+        """
+        query = query_without_table.format(table=cls.tablename())
+        print(pretty(query, values))
+        result = None
+        with g.db.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute(query, tuple(values))
+            if fetch:
+                result = MutableNamespace(**cursor.fetchone())
+        if commit:
+            g.db.commit()
+        return result
+
+    @classmethod
+    def insert_multiple(cls, table, column_names, values, commit=True):
+        if not values:
+            return
+        sql = f"""
+            INSERT INTO {table} ({column_names})
+            VALUES %s
+        """
+        print(pretty(sql, values))
+        with g.db.cursor() as cursor:
+            execute_values(cursor, sql, values, template=None, page_size=100)
+        if commit:
+            g.db.commit()
+
+    @classmethod
+    def insert_multiple_from_dict(cls, table, data, commit=True):
+        if len(data) == 0:
+            return
+        column_keys = data[0].keys()
+        values = [
+            tuple([g.game_token] + [req[key] for key in column_keys])
+            for req in data]
+        column_names = ", ".join(['game_token'] + list(column_keys))
+        cls.insert_multiple(table, column_names, values, commit)
+
     def to_db(self):
         self.json_to_db(
             self.to_json())
@@ -172,7 +172,7 @@ class DbSerializable():
         """
         values = [doc[field] for field in fields]
         update_values = [doc[field] for field in update_fields]
-        row = self.execute_change(query, values + update_values, fetch=True)
+        row = self.execute_change(query, values + update_values)
 
 
 class Identifiable(DbSerializable):
