@@ -1,6 +1,6 @@
 from flask import g
 
-from .db_serializable import Identifiable
+from .db_serializable import DbSerializable
 
 from src.attrib import Attrib
 from src.character import Character
@@ -79,7 +79,9 @@ class GameData:
         return instance
 
     def to_db(self):
+        print(f"{self.__class__.__name__}.to_db()")
         for entity_cls in self.ENTITIES:
+            print(f"entity {entity_cls.listname()}")
             for entity in self.get_list(entity_cls):
                 entity.to_db()
         self.overall.to_db()
@@ -87,6 +89,8 @@ class GameData:
     @staticmethod
     def clear_db_for_token():
         for entity_cls in GameData.ENTITIES + [Overall]:
-            query = {'game_token': g.game_token}
-            table = entity_cls.tablename()
-            table.delete_many(query)
+            entity_cls.execute_change("""
+                DELETE FROM {table}
+                WHERE game_token = %s
+            """, (g.game_token,))
+

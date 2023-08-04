@@ -55,7 +55,7 @@ class Location(Identifiable):
 
     @classmethod
     def list_with_references(cls, json_data=None):
-        if json_data:
+        if json_data is not None:
             super(cls, cls).list_from_json(json_data)
         else:
             instances = super(cls, cls).list_from_db()

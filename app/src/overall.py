@@ -11,9 +11,11 @@ from flask import (
 )
 from .db_serializable import DbSerializable, coldef
 
-from .item import Item
+from .attrib import Attrib
 from .character import Character
 from .event import Event
+from .item import Item
+from .location import Location
 
 tables_to_create = {
     'overall': f"""
@@ -24,28 +26,67 @@ tables_to_create = {
     """
 }
 
+class WinRequirement:
+    """One of:
+        * Items with qty and Attrib, at Location or Character
+        * Characters with Attrib at Location
+    """
+    def __init__(self, new_id=0):
+        self.item = None
+        self.quantity = 0
+        self.character = None
+        self.location = None
+        self.attrib = None
+        self.attrib_value = 0
+
+    def to_json(self):
+        return {
+            'item_id': self.item.id if self.item else None,
+            'quantity': self.quantity,
+            'char_id': self.character.id if self.character else None,
+            'loc_id': self.location.id if self.location else None,
+            'attrib_id': self.attrib.id if self.attrib else None,
+            'attrib_value': self.attrib_value}
+
+    @classmethod
+    def from_json(cls, data):
+        instance = cls()
+        instance.item = Item(int(data['item_id'])
+            ) if data['item_id'] else None,
+        instance.quantity = data.get('quantity', 0),
+        instance.character = Character(int(data['char_id'])
+            ) if data['char_id'] else None,
+        instance.location = Location(int(data['loc_id'])
+            ) if data['loc_id'] else None,
+        instance.attrib = Attrib(int(data['attrib_id'])
+            ) if data['attrib_id'] else None,
+        instance.attrib_value = data.get('attrib_value', 0),
+        return instance
+
 class Overall(DbSerializable):
     """Overall scenario settings such as scenario title and goal,
     and app settings."""
 
     def __init__(self):
-        g.overall = self
         self.title = "Generic Adventure"
         self.description = (
             "An empty scenario."
             " To start with, change the title and this description"
             " in the Overall settings, and do some basic"
             " setup such as adding some items.")
-        self.winning_items = {}  # Items with qty and Location or Character
-        self.winning_characters = {} # Characters with Location or Attrib
+        self.win_reqs = []
+
+    @classmethod
+    def tablename(cls):
+        return 'overall'
 
     def to_json(self):
         return {
             'title': self.title,
             'description': self.description,
-            'winning_items': {
-                str(item.id): quantity
-                for item, quantity in self.winning_items.items()},
+            'win_reqs': [
+                win_req.to_json()
+                for win_req in self.win_reqs],
         }
 
     @classmethod
@@ -55,15 +96,13 @@ class Overall(DbSerializable):
         instance = cls()
         instance.title = data['title']
         instance.description = data['description']
-        instance.winning_items = {
-            Item.get_by_id(int(item_id)): quantity
-            for item_id, quantity in data.get('winning_items', {}).items()}
+        instance.win_reqs = [
+            WinRequirement.from_json(winreq_data)
+            for winreq_data in data.get('win_reqs', [])]
         return instance
 
     @classmethod
     def from_db(cls):
-        if 'overall' in g:
-            return g.overall
         data = DbSerializable.execute_select("""
             SELECT *
             FROM overall
@@ -74,33 +113,63 @@ class Overall(DbSerializable):
             return cls()
         return cls.from_json(data)
 
+    @classmethod
+    def from_db(cls):
+        print(f"{cls.__name__}._from_db()")
+        #if 'overall' in g:
+        #    return g.overall
+        values = [g.game_token]
+        tables_rows = DbSerializable.select_tables("""
+            SELECT *
+            FROM {tables[0]}
+            LEFT JOIN {tables[1]}
+                ON {tables[1]}.game_token = {tables[0]}.game_token
+            WHERE {tables[0]}.game_token = %s
+        """, (g.game_token,), ('overall', 'win_requirements'))
+        instance = None
+        for overall_data, winreq_data in tables_rows:
+            if not instance:
+                instance = cls.from_json(vars(overall_data))
+            if winreq_data.item_id or winreq_data.char_id:
+                instance.win_reqs.append(
+                    WinRequirement.from_json(winreq_data))
+        return instance
+
+    def json_to_db(self, doc):
+        super().json_to_db(doc)
+        self.execute_change(f"""
+            DELETE FROM win_requirements
+            WHERE game_token = %s
+        """, (g.game_token,))
+        self.insert_multiple_from_dict(
+            "win_requirements", doc['win_reqs'])
+
     def configure_by_form(self):
         if request.method == 'POST':
             if 'save_changes' in request.form:
                 print("Saving changes.")
                 print(request.form)
-                self.title = request.form.get('scenario_title')
-                self.description = request.form.get('scenario_description')
+                instance = Overall()
+                instance.title = request.form.get('scenario_title')
+                instance.description = request.form.get('scenario_description')
                 winning_item_ids = request.form.getlist('winning_item_id')
                 print(f"Source IDs: {winning_item_ids}")
-                self.winning_items = {}
+                instance.win_reqs = {}
                 for winning_item_id in winning_item_ids:
                     winning_item_quantity = int(
                         request.form.get(f'winning_item_quantity_{winning_item_id}', 0))
                     winning_item = self.get_by_id(winning_item_id)
-                    self.winning_items[winning_item] = winning_item_quantity
+                    instance.win_reqs[winning_item] = winning_item_quantity
                 print("Sources: ", {winning_item.name: quantity
-                    for winning_item, quantity in self.winning_items.items()})
-
+                    for winning_item, quantity in instance.win_reqs.items()})
                 winning_item_id = request.form.get('winning_item')
                 if winning_item_id:
-                    self.winning_item = Item.get_by_id(int(winning_item_id))
-                    self.winning_quantity = int(request.form.get('winning_quantity'))
+                    instance.winning_item = Item.get_by_id(int(winning_item_id))
+                    instance.winning_quantity = int(request.form.get('winning_quantity'))
                 else:
-                    self.winning_item = None
-                    self.winning_quantity = 1
-                db.session.commit()
-                #self.to_db()
+                    instance.winning_item = None
+                    instance.winning_quantity = 1
+                self.to_db()
             elif 'cancel_changes' in request.form:
                 print("Cancelling changes.")
             else:

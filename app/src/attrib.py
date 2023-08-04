@@ -49,6 +49,7 @@ class Attrib(Identifiable):
 
     @classmethod
     def list_from_json(cls, json_data):
+        print(f"{cls.__name__}.list_from_json()")
         instances = []
         for attrib_data in json_data:
             instances.append(cls.from_json(attrib_data, None))

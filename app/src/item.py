@@ -52,7 +52,7 @@ class Recipe:
         instance.rate_amount = data.get('rate_amount', 1),
         instance.rate_duration = data.get('duration', 1.0),
         instance.sources = {
-            int(source_id): quantity
+            Item(int(source_id)): quantity
             for source_id, quantity in data.get('sources', {}).items()}
         return instance
 
@@ -96,12 +96,8 @@ class Item(Identifiable):
             data.get('progress', {}), instance)
         instance.recipes = [
             Recipe.from_json(recipe_data)
-            for recipe_data in data.get('recipes', {}).items()]
+            for recipe_data in data.get('recipes', [])]
         return instance
-
-    @classmethod
-    def list_from_json(cls, json_data):
-        return cls.list_with_references(json_data)
 
     def json_to_db(self, doc):
         self.progress.json_to_db(doc['progress'])
@@ -147,7 +143,7 @@ class Item(Identifiable):
 
     @classmethod
     def _from_db(cls, id_to_get=None):
-        print(f"{cls.__name__}._from_db_data()")
+        print(f"{cls.__name__}._from_db()")
         query = """
             SELECT *
             FROM {tables[0]}
@@ -212,7 +208,7 @@ class Item(Identifiable):
         #        for recipe in id_refs.get('sources', {}).get(instance.id, {})]
         #    instance.progress.sources = instance.sources
         #return entity_list
-        pass
+        raise NotImplementedError()
 
     @classmethod
     def data_for_configure(cls, item_id):

@@ -86,6 +86,17 @@ class DbSerializable():
             g.db.commit()
 
     @classmethod
+    def insert_multiple_from_dict(cls, table, data, commit=True):
+        if len(data) == 0:
+            return
+        column_keys = data[0].keys()
+        values = [
+            tuple([g.game_token] + [req[key] for key in column_keys])
+            for req in data]
+        column_names = ", ".join(['game_token'] + list(column_keys))
+        cls.insert_multiple(table, column_names, values, commit)
+
+    @classmethod
     def execute_select(cls, query, values=None, fetch_all=True):
         """Returns data as a list of objects with attributes that are
         column names.
@@ -137,6 +148,33 @@ class DbSerializable():
         else:
             return results[0]
 
+    def to_db(self):
+        self.json_to_db(
+            self.to_json())
+
+    def json_to_db(self, doc):
+        doc['game_token'] = g.game_token
+        fields = list(doc.keys())
+        NONSCALAR_TYPES = (dict, list, tuple, set)
+        fields = [field for field in doc.keys()
+            if not isinstance(doc[field], NONSCALAR_TYPES)]
+        placeholders = ','.join(['%s'] * len(fields))
+        update_fields = [
+            field for field in fields
+            if field != 'game_token']
+        update_placeholders = ', '.join(
+            [f"{field}=%s" for field in update_fields])
+        query = f"""
+            INSERT INTO {{table}} ({', '.join(fields)})
+            VALUES ({placeholders})
+            ON CONFLICT (game_token) DO UPDATE
+            SET {update_placeholders}
+        """
+        values = [doc[field] for field in fields]
+        update_values = [doc[field] for field in update_fields]
+        row = self.execute_change(query, values + update_values, fetch=True)
+
+
 class Identifiable(DbSerializable):
     __abstract__ = True
 
@@ -165,10 +203,6 @@ class Identifiable(DbSerializable):
         if 'game_data' in g:
             return g.game_data.get_list(cls)
         return []
-
-    def to_db(self):
-        self.json_to_db(
-            self.to_json())
 
     def json_to_db(self, doc):
         doc['game_token'] = g.game_token
