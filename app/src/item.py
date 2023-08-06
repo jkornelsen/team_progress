@@ -211,12 +211,13 @@ class Item(Identifiable):
         raise NotImplementedError()
 
     @classmethod
-    def data_for_configure(cls, item_id):
+    def data_for_configure(cls, config_id):
         print(f"{cls.__name__}.data_for_configure()")
-        if item_id == 'new':
-            item_id = 0
+        if config_id == 'new':
+            config_id = 0
         else:
-            item_id = int(item_id)
+            config_id = int(config_id)
+        # Get all item data and the current item's progress data
         tables_rows = DbSerializable.select_tables("""
             SELECT *
             FROM {tables[0]}
@@ -225,16 +226,16 @@ class Item(Identifiable):
                 AND {tables[0]}.game_token = {tables[1]}.game_token
                 AND {tables[0]}.id = %s
             WHERE {tables[0]}.game_token = %s
-        """, (item_id, g.game_token), ['items', 'progress'])
+        """, (config_id, g.game_token), ['items', 'progress'])
         g.game_data.items = []
         current_data = MutableNamespace()
         for item_data, progress_data in tables_rows:
-            print(f"item_data={item_data}")
-            if item_data.id == item_id:
+            if item_data.id == config_id:
                 current_data = item_data
                 if progress_data.id:
                     item_data.progress = progress_data
             g.game_data.items.append(Item.from_json(item_data))
+        # Get all attrib data and the current item's attrib relation data
         tables_rows = DbSerializable.select_tables("""
             SELECT *
             FROM {tables[0]}
@@ -243,30 +244,31 @@ class Item(Identifiable):
                 AND {tables[0]}.game_token = {tables[1]}.game_token
                 AND {tables[1]}.item_id = %s
             WHERE {tables[0]}.game_token = %s
-        """, (item_id, g.game_token), ['attribs', 'item_attribs'])
+        """, (config_id, g.game_token), ['attribs', 'item_attribs'])
         for attrib_data, item_attrib_data in tables_rows:
-            print(f"attrib_data={attrib_data}, item_attrib_data={item_attrib_data}")
             if item_attrib_data.attrib_id:
                 current_data.setdefault(
                     'attribs', {})[attrib_data.id] = item_attrib_data.value
-                print(f"current_data.attribs={current_data.attribs}")
             g.game_data.attribs.append(Attrib.from_json(attrib_data))
-        recipes_data = DbSerializable.execute_select("""
+        # Get the current item's source relation data
+        sources_data = DbSerializable.execute_select("""
             SELECT *
             FROM item_sources
             WHERE game_token = %s
                 AND item_id = %s
-        """, (g.game_token, item_id))
+        """, (g.game_token, config_id))
         recipes_data = {}
-        for row in recipes_data:
+        for row in sources_data:
             if row.recipe_id in recipes_data:
                 recipe_data = recipes_data[row.recipe_id]
             else:
                 recipe_data = row
+                recipes_data[row.recipe_id] = recipe_data
             recipe_data.get('sources', []).append({row.source_id: row.src_qty})
         current_data.recipes = recipes_data
+        # Create item from data
         current_item = Item.from_json(current_data)
-        # replace partial objects with fully populated objects
+        # Replace partial objects with fully populated objects
         populated_objs = {}
         for partial_attrib, val in current_item.attribs.items():
             attrib = Attrib.get_by_id(partial_attrib.id)
@@ -274,50 +276,47 @@ class Item(Identifiable):
         current_item.attribs = populated_objs
         return current_item
 
-    @classmethod
-    def configure_by_form(cls, old_instance):
+    def configure_by_form(self):
         if 'save_changes' in request.form:  # button was clicked
             print("Saving changes.")
             print(request.form)
-            if old_instance.progress.is_ongoing:
-                old_instance.progress.stop()
-                item_qty = old_instance.quantity
+            if self.progress.is_ongoing:
+                self.progress.stop()
             else:
-                item_qty = int(request.form.get('item_quantity'))
-            instance = Item(old_instance.id)
-            instance.name = request.form.get('item_name')
-            instance.description = request.form.get('item_description')
-            instance.toplevel = bool(request.form.get('top_level'))
-            instance.instant = bool(request.form.get('instant'))
-            #instance.result_qty = int(request.form.get('result_quantity'))
+                self.progress.quantity = int(request.form.get('item_quantity'))
+            self.name = request.form.get('item_name')
+            self.description = request.form.get('item_description')
+            self.toplevel = bool(request.form.get('top_level'))
+            self.instant = bool(request.form.get('instant'))
+            #self.result_qty = int(request.form.get('result_quantity'))
             source_ids = request.form.getlist('source_id')
             print(f"Source IDs: {source_ids}")
-            instance.sources = {}
+            self.sources = {}
             for source_id in source_ids:
                 source_quantity = int(
                     request.form.get(f'source_quantity_{source_id}', 0))
-                source_item = instance.get_by_id(source_id)
-                instance.sources[source_item] = source_quantity
+                source_item = self.get_by_id(source_id)
+                self.sources[source_item] = source_quantity
             print("Sources: ", {source.name: quantity
-                for source, quantity in instance.sources.items()})
+                for source, quantity in self.sources.items()})
             #'rate_amount': int(request.form.get('rate_amount')),
             #'rate_duration': int(request.form.get('rate_duration')),
             attrib_ids = request.form.getlist('attrib_id')
             print(f"Attrib IDs: {attrib_ids}")
-            instance.attribs = {}
+            self.attribs = {}
             for attrib_id in attrib_ids:
                 attrib_val = int(
                     request.form.get(f'attrib_val_{attrib_id}', 0))
                 attrib_obj = Attrib(attrib_id)
-                instance.attribs[attrib_obj] = attrib_val
+                self.attribs[attrib_obj] = attrib_val
             print("attribs: ", {attrib.id: val
-                for attrib, val in instance.attribs.items()})
-            instance.progress = Progress.from_json({
-                'quantity': item_qty,
+                for attrib, val in self.attribs.items()})
+            self.progress = Progress.from_json({
+                'quantity': self.progress.quantity,
                 'q_limit': int(request.form.get('item_limit'))})
-            instance.to_db()
+            self.to_db()
         elif 'delete_item' in request.form:
-            instance.remove_from_db(instance.id)
+            self.remove_from_db()
         elif 'cancel_changes' in request.form:
             print("Cancelling changes.")
         else:
@@ -333,16 +332,15 @@ def set_routes(app):
     @app.route('/configure/item/<item_id>', methods=['GET', 'POST'])
     def configure_item(item_id):
         new_game_data()
-        item = Item.data_for_configure(item_id)
+        instance = Item.data_for_configure(item_id)
         if request.method == 'GET':
             session['referrer'] = request.referrer
-            print(f"Referrer in configure_item(): {request.referrer}")
             return render_template(
                 'configure/item.html',
-                current=item,
+                current=instance,
                 game_data=g.game_data)
         else:
-            return Item.configure_by_form(item)
+            return instance.configure_by_form()
 
     @app.route('/play/item/<int:item_id>')
     def play_item(item_id):

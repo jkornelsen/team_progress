@@ -10,7 +10,7 @@ from flask import (
 )
 import random
 
-from .db_serializable import Identifiable, coldef
+from .db_serializable import Identifiable, coldef, new_game_data
 
 OUTCOMES = [
     "Critical Failure",

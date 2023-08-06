@@ -8,7 +8,7 @@ from flask import (
     session,
     url_for
 )
-from .db_serializable import Identifiable, coldef, load_game_data
+from .db_serializable import Identifiable, coldef, new_game_data
 
 tables_to_create = {
     'attribs': f"""
@@ -55,44 +55,42 @@ class Attrib(Identifiable):
             instances.append(cls.from_json(attrib_data, None))
         return instances
 
+    @classmethod
+    def data_for_configure(cls, attrib_id):
+        print(f"{cls.__name__}.data_for_configure()")
+        return cls.from_db(attrib_id)
+
     def configure_by_form(self):
-        if request.method == 'POST':
-            if 'save_changes' in request.form:  # button was clicked
-                print("Saving changes.")
-                print(request.form)
-                entity_list = self.get_list()
-                if self not in entity_list:
-                    entity_list.append(self)
-                self.name = request.form.get('attrib_name')
-                self.description = request.form.get('attrib_description')
-                self.to_db()
-            elif 'delete_attrib' in request.form:
-                self.remove_from_db(self.id)
-            elif 'cancel_changes' in request.form:
-                print("Cancelling changes.")
-            else:
-                print("Neither button was clicked.")
-            referrer = session.pop('referrer', None)
-            print(f"Referrer in configure_by_form(): {referrer}")
-            if referrer:
-                return redirect(referrer)
-            else:
-                return redirect(url_for('configure'))
+        if 'save_changes' in request.form:  # button was clicked
+            print("Saving changes.")
+            print(request.form)
+            self.name = request.form.get('attrib_name')
+            self.description = request.form.get('attrib_description')
+            self.to_db()
+        elif 'delete_attrib' in request.form:
+            self.remove_from_db()
+        elif 'cancel_changes' in request.form:
+            print("Cancelling changes.")
         else:
-            return render_template('configure/attrib.html', current=self)
+            print("Neither button was clicked.")
+        referrer = session.pop('referrer', None)
+        print(f"Referrer in configure_by_form(): {referrer}")
+        if referrer:
+            return redirect(referrer)
+        else:
+            return redirect(url_for('configure'))
 
 def set_routes(app):
     @app.route('/configure/attrib/<attrib_id>', methods=['GET', 'POST'])
     def configure_attrib(attrib_id):
-        load_game_data()
         if request.method == 'GET':
             session['referrer'] = request.referrer
-            print(f"Referrer in configure_attrib(): {request.referrer}")
-        if attrib_id == "new":
-            print("Creating a new attrib.")
-            attrib = Attrib()
+            new_game_data()
+            instance = Attrib.data_for_configure(attrib_id)
+            return render_template(
+                'configure/attrib.html',
+                current=instance,
+                game_data=g.game_data)
         else:
-            print(f"Retrieving attrib with ID: {attrib_id}")
-            attrib = Attrib.get_by_id(int(attrib_id))
-        return attrib.configure_by_form()
+            return instance.configure_by_form()
 

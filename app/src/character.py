@@ -8,7 +8,7 @@ from flask import (
     session,
     url_for
 )
-from .db_serializable import Identifiable, coldef
+from .db_serializable import Identifiable, coldef, new_game_data
 from .attrib import Attrib
 from .item import Item
 from .location import Location
@@ -29,6 +29,33 @@ tables_to_create = {
     """,
 }
 
+class OwnedItem:
+    def __init__(self, item=None):
+        self.item = item
+        if not item:
+            self.item = Item()
+        self.quantity = 0
+        self.slot = ''  # for example, "main hand"
+
+    def to_json(self):
+        return {
+            'id': self.item.id,
+            'quantity': self.quantity,
+            'slot': self.slot,
+        }
+
+    @classmethod
+    def from_json(cls, item):
+        instance = cls(Item(int(data.get('id', 0))))
+        instance.quantity = data['quantity']
+        instance.slot = data['slot']
+        return instance
+
+    def worn(self):
+        """If not worn, then it's assumed to be carried in inventory,
+        such as a backpack."""
+        return bool(self.slot)
+
 class Character(Identifiable):
     def __init__(self, new_id=""):
         super().__init__(new_id)
@@ -36,7 +63,7 @@ class Character(Identifiable):
         self.description = ""
         self.toplevel = False if len(self.get_list()) > 1 else True
         self.attribs = {}  # keys are Attrib object, values are stat val
-        self.items = {}  # Item objects and their slot name
+        self.items = []  # OwnedItem objects
         self.location = None  # Location object
         self.progress = Progress(entity=self)  # for travel or perhaps other actions
         self.destination = None  # Location object to travel to
@@ -51,8 +78,7 @@ class Character(Identifiable):
                 str(attrib.id): val
                 for attrib, val in self.attribs.items()},
             'items': {
-                str(item.id): slot
-                for item, slot in self.items.items()},
+                owned.to_json() for owned in self.items},
             'location_id': self.location.id if self.location else None,
             'progress': self.progress.to_json(),
             'dest_id': self.destination.id if self.destination else None
@@ -66,9 +92,9 @@ class Character(Identifiable):
         instance.name = data['name']
         instance.description = data.get('description', '')
         instance.toplevel = data['toplevel']
-        instance.items = {
-            Item.get_by_id(int(item_id)): slot
-            for item_id, slot in data['items'].items()}
+        instance.items = [
+            OwnedItem.from_json(owned_data)
+            for owned_data in data['items']]
         instance.attribs = {
             Attrib.get_by_id(int(attrib_id)): val
             for attrib_id, val in data['attribs'].items()}
@@ -79,69 +105,65 @@ class Character(Identifiable):
             int(data['dest_id'])) if data['dest_id'] else None
         return instance
 
+    @classmethod
+    def data_for_configure(cls, attrib_id):
+        print(f"{cls.__name__}.data_for_configure()")
+        return cls.from_db(attrib_id)
+
     def configure_by_form(self):
-        if request.method == 'POST':
-            if 'save_changes' in request.form:  # button was clicked
-                print("Saving changes.")
-                print(request.form)
-                entity_list = self.get_list()
-                if self not in entity_list:
-                    entity_list.append(self)
-                self.name = request.form.get('char_name')
-                self.description = request.form.get('char_description')
-                self.toplevel = bool(request.form.get('top_level'))
-                item_ids = request.form.getlist('item_id[]')
-                item_slots = request.form.getlist('item_slot[]')
-                self.items = {}
-                for item_id, item_slot in zip(item_ids, item_slots):
-                    item = Item.get_by_id(int(item_id))
-                    if item:
-                        self.items[item] = item_slot
-                location_id = request.form.get('char_location')
-                self.location = Location.get_by_id(
-                    int(location_id)) if location_id else None
-                attrib_ids = request.form.getlist('attrib_id')
-                print(f"Attrib IDs: {attrib_ids}")
-                self.attribs = {}
-                for attrib_id in attrib_ids:
-                    attrib_val = int(
-                        request.form.get(f'attrib_val_{attrib_id}', 0))
-                    attrib_item = Attrib.get_by_id(attrib_id)
-                    self.attribs[attrib_item] = attrib_val
-                print("attribs: ", {attrib.name: val
-                    for attrib, val in self.attribs.items()})
-                self.to_db()
-            elif 'delete_character' in request.form:
-                self.remove_from_db(self.id)
-            elif 'cancel_changes' in request.form:
-                print("Cancelling changes.")
-            else:
-                print("Neither button was clicked.")
-            referrer = session.pop('referrer', None)
-            print(f"Referrer in configure_by_form(): {referrer}")
-            if referrer:
-                return redirect(referrer)
-            else:
-                return redirect(url_for('configure'))
+        if 'save_changes' in request.form:  # button was clicked
+            print("Saving changes.")
+            print(request.form)
+            self.name = request.form.get('char_name')
+            self.description = request.form.get('char_description')
+            self.toplevel = bool(request.form.get('top_level'))
+            item_ids = request.form.getlist('item_id[]')
+            item_slots = request.form.getlist('item_slot[]')
+            self.items = {}
+            for item_id, item_slot in zip(item_ids, item_slots):
+                item = Item.get_by_id(int(item_id))
+                if item:
+                    self.items[item] = item_slot
+            location_id = request.form.get('char_location')
+            self.location = Location.get_by_id(
+                int(location_id)) if location_id else None
+            attrib_ids = request.form.getlist('attrib_id')
+            print(f"Attrib IDs: {attrib_ids}")
+            self.attribs = {}
+            for attrib_id in attrib_ids:
+                attrib_val = int(
+                    request.form.get(f'attrib_val_{attrib_id}', 0))
+                attrib_item = Attrib.get_by_id(attrib_id)
+                self.attribs[attrib_item] = attrib_val
+            print("attribs: ", {attrib.name: val
+                for attrib, val in self.attribs.items()})
+            self.to_db()
+        elif 'delete_character' in request.form:
+            self.remove_from_db()
+        elif 'cancel_changes' in request.form:
+            print("Cancelling changes.")
         else:
-            return render_template(
-                'configure/character.html',
-                current=self,
-                game_data=g.game_data)
+            print("Neither button was clicked.")
+        referrer = session.pop('referrer', None)
+        print(f"Referrer in configure_by_form(): {referrer}")
+        if referrer:
+            return redirect(referrer)
+        else:
+            return redirect(url_for('configure'))
 
 def set_routes(app):
     @app.route('/configure/char/<char_id>', methods=['GET', 'POST'])
     def configure_char(char_id):
+        new_game_data()
+        instance = Character.data_for_configure(char_id)
         if request.method == 'GET':
             session['referrer'] = request.referrer
-            print(f"Referrer in configure_char(): {request.referrer}")
-        if char_id == "new":
-            print("Creating a new character.")
-            char = Character()
+            return render_template(
+                'configure/character.html',
+                current=instance,
+                game_data=g.game_data)
         else:
-            print(f"Retrieving character with ID: {char_id}")
-            char = Character.get_by_id(int(char_id))
-        return char.configure_by_form()
+            return instance.configure_by_form()
 
     @app.route('/play/char/<int:char_id>')
     def play_char(char_id):

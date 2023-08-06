@@ -22,6 +22,7 @@ tables_to_create = {
         char_id integer,
         item_id integer,
         quantity integer NOT NULL,
+        slot varchar(50),
         PRIMARY KEY (game_token, char_id, item_id),
         FOREIGN KEY (game_token, char_id)
             REFERENCES characters (game_token, id),

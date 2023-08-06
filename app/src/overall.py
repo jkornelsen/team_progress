@@ -9,8 +9,7 @@ from flask import (
     session,
     url_for
 )
-from .db_serializable import (
-    DbSerializable, coldef, new_game_data, load_game_data)
+from .db_serializable import DbSerializable, coldef
 
 from .attrib import Attrib
 from .character import Character
@@ -165,41 +164,34 @@ class Overall(DbSerializable):
         return game_data
 
     def configure_by_form(self):
-        if request.method == 'POST':
-            if 'save_changes' in request.form:
-                print("Saving changes.")
-                print(request.form)
-                instance = Overall()
-                instance.title = request.form.get('scenario_title')
-                instance.description = request.form.get('scenario_description')
-                winning_item_ids = request.form.getlist('winning_item_id')
-                print(f"Source IDs: {winning_item_ids}")
-                instance.win_reqs = {}
-                for winning_item_id in winning_item_ids:
-                    winning_item_quantity = int(
-                        request.form.get(f'winning_item_quantity_{winning_item_id}', 0))
-                    winning_item = self.get_by_id(winning_item_id)
-                    instance.win_reqs[winning_item] = winning_item_quantity
-                print("Sources: ", {winning_item.name: quantity
-                    for winning_item, quantity in instance.win_reqs.items()})
-                winning_item_id = request.form.get('winning_item')
-                if winning_item_id:
-                    instance.winning_item = Item.get_by_id(int(winning_item_id))
-                    instance.winning_quantity = int(request.form.get('winning_quantity'))
-                else:
-                    instance.winning_item = None
-                    instance.winning_quantity = 1
-                instance.to_db()
-            elif 'cancel_changes' in request.form:
-                print("Cancelling changes.")
+        if 'save_changes' in request.form:
+            print("Saving changes.")
+            print(request.form)
+            self.title = request.form.get('scenario_title')
+            self.description = request.form.get('scenario_description')
+            winning_item_ids = request.form.getlist('winning_item_id')
+            print(f"Source IDs: {winning_item_ids}")
+            self.win_reqs = {}
+            for winning_item_id in winning_item_ids:
+                winning_item_quantity = int(
+                    request.form.get(f'winning_item_quantity_{winning_item_id}', 0))
+                winning_item = self.get_by_id(winning_item_id)
+                self.win_reqs[winning_item] = winning_item_quantity
+            print("Sources: ", {winning_item.name: quantity
+                for winning_item, quantity in self.win_reqs.items()})
+            winning_item_id = request.form.get('winning_item')
+            if winning_item_id:
+                self.winning_item = Item.get_by_id(int(winning_item_id))
+                self.winning_quantity = int(request.form.get('winning_quantity'))
             else:
-                print("Neither button was clicked.")
-            return redirect(url_for('configure'))
+                self.winning_item = None
+                self.winning_quantity = 1
+            self.to_db()
+        elif 'cancel_changes' in request.form:
+            print("Cancelling changes.")
         else:
-            return render_template(
-                'configure/overall.html',
-                current=self,
-                game_data=g.game_data)
+            print("Neither button was clicked.")
+        return redirect(url_for('configure'))
 
 CharacterRow = namedtuple('CharacterRow',
     ['char_id', 'char_name', 'loc_id', 'loc_name',
@@ -286,6 +278,17 @@ def get_items_and_events():
     return SimpleNamespace(items=item_data, events=event_data)
 
 def set_routes(app):
+    @app.route('/configure/overall', methods=['GET', 'POST'])
+    def configure_overall():
+        if request.method == 'GET':
+            game_data = Overall.data_for_configure()
+            return render_template(
+                'configure/overall.html',
+                current=game_data.overall,
+                game_data=game_data)
+        else:
+            return Overall().configure_by_form()
+
     @app.route('/overview')
     def overview():
         other_entities = get_items_and_events()
@@ -295,9 +298,4 @@ def set_routes(app):
             current=overall,
             charlist=get_charlist_display(),
             other_entities=get_items_and_events())
-
-    @app.route('/configure/overall', methods=['GET', 'POST'])
-    def configure_overall():
-        game_data = Overall.data_for_configure()
-        return game_data.overall.configure_by_form()
 

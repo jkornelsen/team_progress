@@ -232,12 +232,10 @@ class Identifiable(DbSerializable):
         self.id = row.id
 
     def remove_from_db(self):
-        self.execute_change(
-            """
-                DELETE FROM {table}
-                WHERE id = %s AND game_token = %s
-            """,
-            (self.id, self.game_token))
+        self.execute_change("""
+            DELETE FROM {table}
+            WHERE id = %s AND game_token = %s
+        """, (self.id, self.game_token))
         entity_list = self.get_list()
         if self in entity_list:
             entity_list.remove(self)
@@ -268,7 +266,7 @@ class Identifiable(DbSerializable):
         for doc_id in existing_ids:
             if doc_id not in (str(instance.id) for instance in entity_list):
                 print(f"Removing document with id {doc_id}")
-                cls.remove_from_db(doc_id)
+                cls(doc_id).remove_from_db()
 
     @classmethod
     def list_from_db(cls):
