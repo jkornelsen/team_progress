@@ -48,7 +48,7 @@
                 <div class="attrib flexdiv" data-attrib-id="{{ attrib.id }}">
                     <input type="hidden" name="attrib_id" value="{{ attrib.id }}">
                     {{ attrib.name }}
-                    <input type="number" id="attrib-{{ attrib.id }}-val" name="attrib_val_{{ attrib.id }}" value="{{ attrib_val }}">
+                    <input type="number" id="attrib-{{ attrib.id }}-val" name="attrib_{{ attrib.id }}_val" value="{{ attrib_val }}">
                     <button class="remove-attrib-btn lesser-button">Remove Attribute</button>
                 </div>
             {% endfor %}
@@ -109,19 +109,21 @@
                 $('#running-label').text('(Running)');
             }
 
-            let num_recipes = {{ current.recipes | length }};
+            let recipeCounter = 1;
 
             function addRecipe(rate_amount = 1, rate_duration = 1.0, instant = false) {
+                recipeCounter++;
                 const sourceHtml = `
                     <div class="recipe-container">
+                        <input type="hidden" name="recipe_id" value="${recipeCounter}">
                         <label for="rate-amount">Gain per Batch:</label>
-                        <input type="number" id="rate-amount" name="rate_amount" value="{{ rate_amount }}" required>
+                        <input type="number" id="rate-amount" name="recipe_${recipeCounter}_rate_amount" value="${rate_amount}" required>
                         <span id="over-time-container">
                             <label for="rate-duration">Duration:</label>
-                            <input type="text" size="6" id="rate-duration" name="rate_duration" value="{{ rate_duration }}" required>
+                            <input type="text" size="6" id="rate-duration" name="recipe_${recipeCounter}_rate_duration" value="${rate_duration}" required>
                             <span>seconds</span>
                         </span>
-                        <input type="checkbox" id="instant" name="instant"
+                        <input type="checkbox" id="instant" name="recipe_${recipeCounter}_instant"
                             {% if instant %}checked{% endif %} onChange="updateInstantVisibility(this);">
                         <label for="instant">Instant</label>
                         <button class="remove-recipe-btn lesser-button">Remove Recipe</button>
@@ -131,11 +133,10 @@
                     </div>
                 `;
                 $('#recipelist_end').before(sourceHtml);
-                num_recipes++;
                 toggleAddRecipeButtonVisibility();
             }
 
-            function addSource(sourceId, sourceName, sourceQuantity = 1) {
+            function addSource(recipeId, sourceId, sourceName, sourceQuantity = 1) {
                 const recipeContainer = $('.recipe-container').last();
                 const existingSource = recipeContainer.find(`.source[data-source-id="${sourceId}"]`);
                 if (existingSource.length > 0) {
@@ -143,10 +144,10 @@
                     return;
                 }
                 const sourceHtml = `
-                    <div class="source flexdiv" data-source-id="${sourceId}">
-                        <input type="hidden" name="source_id" value="${sourceId}">
+                    <div class="source flexdiv" data-source-id="${sourceId}" data-recipe-id="${recipeId}">
+                        <input type="hidden" name="recipe_${recipeId}_source_id" value="${sourceId}">
                         <label>Takes:</label>
-                        <input type="number" id="source-${sourceId}-quantity" name="source_quantity_${sourceId}" value="{{ sourceQuantity }}">
+                        <input type="number" id="recipe-${recipeId}-source-${sourceId}-quantity" name="recipe_${recipeId}_source_${sourceId}_quantity" value="{{ sourceQuantity }}">
                         ${sourceName}
                         <button class="remove-source-btn lesser-button">Remove Source</button>
                     </div>
@@ -161,26 +162,31 @@
                 const sourceId = selectedOption.val();
                 const sourceName = selectedOption.text();
                 if (sourceId == "") {
-                    return; // don't add if the selected option is the placeholder
+                    return; // Don't add if the selected option is the placeholder
                 }
-                if (num_recipes == 0) {
-                    addRecipe();
-                } else {
-                    const recipeContainer = $(this).closest('.recipe-container');
+                let recipeId;
+                const recipeContainer = $(this).closest('.recipe-container');
+                if (recipeContainer.length) {
                     const existingSource = recipeContainer.find(
                         '.source[data-source-id="' + sourceId + '"]');
                     if (existingSource.length > 0) {
                         alert('Source already exists.');
                         return;
                     }
+                    recipeId = recipeContainer.data('recipe-id');
+                } else {
+                    // No recipe yet, so add one
+                    addRecipe();
+                    recipeId = recipeCounter;
                 }
-                addSource(sourceId, sourceName);
+                addSource(recipeId, sourceId, sourceName);
                 toggleAddRecipeButtonVisibility();
             });
+
             {% for recipe in current.recipes %}
                 addRecipe(recipe.rate_amount, recipe.rate_duration, recipe.instant);
                 {% for source_item, source_qty in recipe.sources %}
-                    addSource(source_item.id, source_item.name, source_qty);
+                    addSource(recipeCounter, source_item.id, source_item.name, source_qty);
                 {% endfor %}
             {% endfor %}
 
@@ -190,7 +196,7 @@
                 sourceContainer.remove();
                 if (recipeContainer.find('.source').length == 0) {
                     recipeContainer.remove();
-                    num_recipes--;
+                    recipeCounter--;
                 }
                 toggleAddRecipeButtonVisibility();
             });
@@ -198,7 +204,7 @@
             $('.sources-container').on('click', '.remove-recipe-btn', function() {
                 const recipeContainer = $(this).closest('.recipe-container');
                 recipeContainer.remove();
-                num_recipes--;
+                recipeCounter--;
                 toggleAddRecipeButtonVisibility();
             });
 
@@ -236,7 +242,7 @@
                     <div class="attrib flexdiv" data-attrib-id="${attribId}">
                         <input type="hidden" name="attrib_id" value="${attribId}">
                         ${attribName}
-                        <input type="number" id="attrib-${attribId}-val" name="attrib_val_${attribId}" value="1">
+                        <input type="number" id="attrib-${attribId}-val" name="attrib_${attribId}_val" value="1">
                         <button class="remove-attrib-btn lesser-button">Remove Attribute</button>
                     </div>
                 `;

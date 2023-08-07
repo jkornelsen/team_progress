@@ -40,9 +40,9 @@ class Recipe:
             'id': self.id,
             'instant': self.instant,
             'rate_amount': self.rate_amount,
-            'rate_duration': self.duration,
+            'rate_duration': self.rate_duration,
             'sources': {
-                str(item.id): quantity
+                item.id: quantity
                 for item, quantity in self.sources.items()}}
 
     @classmethod
@@ -63,7 +63,7 @@ class Item(Identifiable):
         self.description = ""
         self.toplevel = False if len(self.get_list()) > 1 else True
         self.attribs = {}  # Attrib objects and their stat val
-        self.recipes = []
+        self.recipes = []  # list of Recipe objects
         self.progress = Progress(entity=self)
 
     def to_json(self):
@@ -117,15 +117,16 @@ class Item(Identifiable):
                 "game_token, item_id, attrib_id, value",
                 values)
         if doc['recipes']:
+            print(f"recipes: {doc['recipes']}")
             values = []
             for recipe_id, recipe in enumerate(doc['recipes']):
                 for source_id, src_qty in recipe['sources'].items():
                     values.append((
-                        g.game_token, item_id, recipe_id, source_id,
+                        g.game_token, self.id, recipe_id, source_id,
                         src_qty,
-                        recipe.rate_amount,
-                        recipe.rate_duration,
-                        recipe.instant
+                        recipe['rate_amount'],
+                        recipe['rate_duration'],
+                        recipe['instant']
                         ))
             self.insert_multiple(
                 "item_sources",
@@ -226,6 +227,7 @@ class Item(Identifiable):
                 AND {tables[0]}.game_token = {tables[1]}.game_token
                 AND {tables[0]}.id = %s
             WHERE {tables[0]}.game_token = %s
+            ORDER BY {tables[0]}.name
         """, (config_id, g.game_token), ['items', 'progress'])
         g.game_data.items = []
         current_data = MutableNamespace()
@@ -244,6 +246,7 @@ class Item(Identifiable):
                 AND {tables[0]}.game_token = {tables[1]}.game_token
                 AND {tables[1]}.item_id = %s
             WHERE {tables[0]}.game_token = %s
+            ORDER BY {tables[0]}.name
         """, (config_id, g.game_token), ['attribs', 'item_attribs'])
         for attrib_data, item_attrib_data in tables_rows:
             if item_attrib_data.attrib_id:
@@ -265,7 +268,7 @@ class Item(Identifiable):
                 recipe_data = row
                 recipes_data[row.recipe_id] = recipe_data
             recipe_data.get('sources', []).append({row.source_id: row.src_qty})
-        current_data.recipes = recipes_data
+        current_data.recipes = list(recipes_data.values())
         # Create item from data
         current_item = Item.from_json(current_data)
         # Replace partial objects with fully populated objects
@@ -280,40 +283,46 @@ class Item(Identifiable):
         if 'save_changes' in request.form:  # button was clicked
             print("Saving changes.")
             print(request.form)
+            self.name = request.form.get('item_name')
+            self.description = request.form.get('item_description')
+            self.toplevel = bool(request.form.get('top_level'))
             if self.progress.is_ongoing:
                 self.progress.stop()
             else:
                 self.progress.quantity = int(request.form.get('item_quantity'))
-            self.name = request.form.get('item_name')
-            self.description = request.form.get('item_description')
-            self.toplevel = bool(request.form.get('top_level'))
-            self.instant = bool(request.form.get('instant'))
-            #self.result_qty = int(request.form.get('result_quantity'))
-            source_ids = request.form.getlist('source_id')
-            print(f"Source IDs: {source_ids}")
-            self.sources = {}
-            for source_id in source_ids:
-                source_quantity = int(
-                    request.form.get(f'source_quantity_{source_id}', 0))
-                source_item = self.get_by_id(source_id)
-                self.sources[source_item] = source_quantity
-            print("Sources: ", {source.name: quantity
-                for source, quantity in self.sources.items()})
-            #'rate_amount': int(request.form.get('rate_amount')),
-            #'rate_duration': int(request.form.get('rate_duration')),
+            self.progress = Progress.from_json({
+                'quantity': self.progress.quantity,
+                'q_limit': int(request.form.get('item_limit'))})
+            recipe_ids = request.form.getlist('recipe_id')
+            for recipe_id in recipe_ids:
+                recipe = Recipe()
+                self.recipes.append(recipe)
+                recipe.rate_amount = int(request.form.get(
+                    f'recipe_{recipe_id}_rate_amount'))
+                recipe.rate_duration = int(request.form.get(
+                    f'recipe_{recipe_id}_rate_duration'))
+                recipe.instant = bool(request.form.get(
+                    f'recipe_{recipe_id}_instant'))
+                source_ids = request.form.getlist(
+                    f'recipe_{recipe_id}_source_id')
+                print(f"Source IDs: {source_ids}")
+                for source_id in source_ids:
+                    source_quantity = int(request.form.get(
+                        f'recipe_{recipe_id}_source_{source_id}_quantity', 0))
+                    source_item = Item(source_id)
+                    recipe.sources[source_item] = source_quantity
+                    print(f"Sources for {recipe_id}: ", {source.id: quantity
+                        for source, quantity in recipe.sources.items()})
             attrib_ids = request.form.getlist('attrib_id')
             print(f"Attrib IDs: {attrib_ids}")
             self.attribs = {}
             for attrib_id in attrib_ids:
                 attrib_val = int(
-                    request.form.get(f'attrib_val_{attrib_id}', 0))
+                    request.form.get(f'attrib_{attrib_id}_val', 0))
                 attrib_obj = Attrib(attrib_id)
                 self.attribs[attrib_obj] = attrib_val
             print("attribs: ", {attrib.id: val
                 for attrib, val in self.attribs.items()})
-            self.progress = Progress.from_json({
-                'quantity': self.progress.quantity,
-                'q_limit': int(request.form.get('item_limit'))})
             self.to_db()
         elif 'delete_item' in request.form:
             self.remove_from_db()

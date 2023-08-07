@@ -40,6 +40,10 @@ class MutableNamespace(SimpleNamespace):
             setattr(self, key, default)
         return getattr(self, key)
 
+    def get(self, key, default=None):
+        """Get the value of an attribute or return default"""
+        return getattr(self, key, default)
+
 class DbSerializable():
     """Parent class with methods for serializing to database along with some
     other things that entities have in common.
@@ -66,7 +70,7 @@ class DbSerializable():
             if fetch_all:
                 result = [MutableNamespace(**row) for row in cursor.fetchall()]
             else:
-                result = MutableNamespace(**cursor.fetchone())
+                result = MutableNamespace(**(cursor.fetchone() or {}))
             return result
 
     @classmethod
@@ -84,7 +88,8 @@ class DbSerializable():
             if fetch_all:
                 rows = cursor.fetchall()
             else:
-                rows = [cursor.fetchone()]
+                row = cursor.fetchone()
+                rows = [row] if row else []
             column_names = [desc[0] for desc in cursor.description]
             table_column_indices = {}
             current_column = 0

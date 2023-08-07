@@ -42,9 +42,9 @@ class Attrib(Identifiable):
     def from_json(cls, data, _=None):
         if not isinstance(data, dict):
             data = vars(data)
-        instance = cls(int(data['id']))
-        instance.name = data['name']
-        instance.description = data.get('description', '')
+        instance = cls(int(data.get('id', 0)))
+        instance.name = data.get('name', "")
+        instance.description = data.get('description', "")
         return instance
 
     @classmethod
@@ -56,9 +56,13 @@ class Attrib(Identifiable):
         return instances
 
     @classmethod
-    def data_for_configure(cls, attrib_id):
+    def data_for_configure(cls, config_id):
         print(f"{cls.__name__}.data_for_configure()")
-        return cls.from_db(attrib_id)
+        if config_id == 'new':
+            config_id = 0
+        else:
+            config_id = int(config_id)
+        return cls.from_db(config_id)
 
     def configure_by_form(self):
         if 'save_changes' in request.form:  # button was clicked
@@ -92,5 +96,5 @@ def set_routes(app):
                 current=instance,
                 game_data=g.game_data)
         else:
-            return instance.configure_by_form()
+            return Attrib(attrib_id).configure_by_form()
 
