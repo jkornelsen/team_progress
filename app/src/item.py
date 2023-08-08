@@ -50,7 +50,7 @@ class Recipe:
         instance = cls()
         instance.instant = data.get('instant', False)
         instance.rate_amount = data.get('rate_amount', 1)
-        instance.rate_duration = data.get('duration', 1.0)
+        instance.rate_duration = data.get('rate_duration', 1.0)
         instance.sources = {
             Item(int(source_id)): quantity
             for source_id, quantity in data.get('sources', {}).items()}
@@ -178,9 +178,12 @@ class Item(Identifiable):
             if attribs_data.attrib_id:
                 instance.attribs[attribs_data.attrib_id] = attribs_data.value
             if source_data.recipe_id:
-                if (recipe := instance.recipes.get(source_data.recipe_id)) is None:
+                recipe = next(
+                    (recipe for recipe in instance.recipes
+                    if recipe.id == source_data.recipe_id), None)
+                if not recipe:
                     recipe = Recipe.from_json(source_data)
-                    instance.recipes[source_data.recipe_id] = recipe
+                    instance.recipes.append(recipe)
                 recipe.sources[source_data.source_id] = source_data.src_qty
         # replace IDs with partial objects
         for instance in instances.values():
@@ -273,20 +276,26 @@ class Item(Identifiable):
         current_data.recipes = list(recipes_data.values())
         # Create item from data
         current_item = Item.from_json(current_data)
-        print(f"found {len(current_item.recipes)} recipes")
-        if len(current_item.recipes):
-            recipe = current_item.recipes[0]
-            print(recipe.rate_amount)
-            print(list(recipe.sources.keys())[0])
-            print(list(recipe.sources.values())[0])
-            for source_item, source_qty in recipe.sources.items():
-                print(f"item {source_item} qty {source_qty}")
         # Replace partial objects with fully populated objects
         populated_objs = {}
         for partial_attrib, val in current_item.attribs.items():
             attrib = Attrib.get_by_id(partial_attrib.id)
             populated_objs[attrib] = val
         current_item.attribs = populated_objs
+        for recipe in current_item.recipes:
+            populated_objs = {}
+            for partial_item, qty in recipe.sources.items():
+                item = Item.get_by_id(partial_item.id)
+                populated_objs[item] = qty
+            recipe.sources = populated_objs
+        # Print debugging info
+        print(f"found {len(current_item.recipes)} recipes")
+        if len(current_item.recipes):
+            recipe = current_item.recipes[0]
+            print(f"rate_amount={recipe.rate_amount}")
+            print(f"instant={recipe.instant}")
+            for source_item, source_qty in recipe.sources.items():
+                print(f"item id {source_item.id} name {source_item.name} qty {source_qty}")
         return current_item
 
     def configure_by_form(self):
@@ -304,6 +313,7 @@ class Item(Identifiable):
                 'quantity': self.progress.quantity,
                 'q_limit': int(request.form.get('item_limit'))})
             recipe_ids = request.form.getlist('recipe_id')
+            self.recipes = []
             for recipe_id in recipe_ids:
                 recipe = Recipe()
                 self.recipes.append(recipe)

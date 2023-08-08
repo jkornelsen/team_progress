@@ -16,17 +16,6 @@ maybe have a checkbox that the item won't get consumed during the exchange
 
 ---- TODO Upcoming ----
 
-In item.py, the following code expects Item.recipes to be a dict,
-but it is (now) a list:
-            if source_data.recipe_id:
-                if (recipe := instance.recipes.get(source_data.recipe_id)) is None:
-                    recipe = Recipe.from_json(source_data)
-                    instance.recipes[source_data.recipe_id] = recipe
-                recipe.sources[source_data.source_id] = source_data.src_qty
-AttributeError: 'list' object has no attribute 'get'
-To fix, either create a separate dict to help combine the values correctly,
-or insert the values into the array sequentially.
-
 Configure Locations.
 Configure Characters.
 Test serializing recipes and win requirements.
