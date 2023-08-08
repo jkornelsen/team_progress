@@ -113,6 +113,7 @@
 
             function addRecipe(rate_amount = 1, rate_duration = 1.0, instant = false) {
                 recipeCounter++;
+                console.log("addRecipe() " + recipeCounter);
                 const sourceHtml = `
                     <div class="recipe-container">
                         <input type="hidden" name="recipe_id" value="${recipeCounter}">
@@ -183,10 +184,18 @@
                 toggleAddRecipeButtonVisibility();
             });
 
+            console.log("number of recipes=" + {{ current.recipes | length }});
             {% for recipe in current.recipes %}
-                addRecipe(recipe.rate_amount, recipe.rate_duration, recipe.instant);
-                {% for source_item, source_qty in recipe.sources %}
-                    addSource(recipeCounter, source_item.id, source_item.name, source_qty);
+                console.log("rate_amount='" + {{ recipe.rate_amount }} + "'");
+                addRecipe(
+                    {{ recipe.rate_amount }},
+                    {{ recipe.rate_duration }},
+                    {{ recipe.instant | lower }});
+                {% for source_item, source_qty in recipe.sources.items() %}
+                    addSource(recipeCounter,
+                    {{ source_item.id }},
+                    "{{ source_item.name }}",
+                    "{{ source_qty}}");
                 {% endfor %}
             {% endfor %}
 

@@ -48,9 +48,9 @@ class Recipe:
     @classmethod
     def from_json(cls, data):
         instance = cls()
-        instance.instant = data.get('instant', False),
-        instance.rate_amount = data.get('rate_amount', 1),
-        instance.rate_duration = data.get('duration', 1.0),
+        instance.instant = data.get('instant', False)
+        instance.rate_amount = data.get('rate_amount', 1)
+        instance.rate_duration = data.get('duration', 1.0)
         instance.sources = {
             Item(int(source_id)): quantity
             for source_id, quantity in data.get('sources', {}).items()}
@@ -100,6 +100,7 @@ class Item(Identifiable):
         return instance
 
     def json_to_db(self, doc):
+        print(f"{self.__class__.__name__}.json_to_db()")
         self.progress.json_to_db(doc['progress'])
         doc['progress_id'] = self.progress.id
         super().json_to_db(doc)
@@ -267,10 +268,19 @@ class Item(Identifiable):
             else:
                 recipe_data = row
                 recipes_data[row.recipe_id] = recipe_data
-            recipe_data.get('sources', []).append({row.source_id: row.src_qty})
+            recipe_data.setdefault(
+                'sources', {})[row.source_id] = row.src_qty
         current_data.recipes = list(recipes_data.values())
         # Create item from data
         current_item = Item.from_json(current_data)
+        print(f"found {len(current_item.recipes)} recipes")
+        if len(current_item.recipes):
+            recipe = current_item.recipes[0]
+            print(recipe.rate_amount)
+            print(list(recipe.sources.keys())[0])
+            print(list(recipe.sources.values())[0])
+            for source_item, source_qty in recipe.sources.items():
+                print(f"item {source_item} qty {source_qty}")
         # Replace partial objects with fully populated objects
         populated_objs = {}
         for partial_attrib, val in current_item.attribs.items():

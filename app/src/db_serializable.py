@@ -35,13 +35,13 @@ class MutableNamespace(SimpleNamespace):
         object.__setattr__(self, key, value)
 
     def setdefault(self, key, default):
-        """Simulate the setdefault() behavior for a MutableNamespace object"""
+        """Get the value of an attribute after setting default if needed."""
         if not hasattr(self, key):
             setattr(self, key, default)
         return getattr(self, key)
 
     def get(self, key, default=None):
-        """Get the value of an attribute or return default"""
+        """Get the value of an attribute or return default."""
         return getattr(self, key, default)
 
 class DbSerializable():
