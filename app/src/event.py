@@ -76,39 +76,38 @@ class Event(Identifiable):
         instance.difficulty_values = data['difficulty_values']
         return instance
 
+    @classmethod
+    def data_for_configure(cls, event_id):
+        print(f"{cls.__name__}.data_for_configure()")
+        return cls.from_db(event_id)
+
     def configure_by_form(self):
-        if request.method == 'POST':
-            if 'save_changes' in request.form:  # button was clicked
-                print("Saving changes.")
-                print(request.form)
-                entity_list = self.get_list()
-                if self not in entity_list:
-                    entity_list.append(self)
-                self.name = request.form.get('event_name')
-                self.description = request.form.get('event_description')
-                self.toplevel = bool(request.form.get('top_level'))
-                for difficulty in self.difficulty_values:
-                    new_value = int(request.form.get(f'difficulty_{difficulty}'))
-                    self.difficulty_values[difficulty] = new_value
-                self.outcome_margin = int(request.form.get('event_outcome_margin'))
-                self.to_db()
-            elif 'delete_event' in request.form:
-                self.remove_from_db(self.id)
-            elif 'cancel_changes' in request.form:
-                print("Cancelling changes.")
-            else:
-                print("Neither button was clicked.")
-            
-            referrer = session.pop('referrer', None)
-            print(f"Referrer in configure_by_form(): {referrer}")
-            if referrer:
-                return redirect(referrer)
-            else:
-                return redirect(url_for('configure'))
+        if 'save_changes' in request.form:  # button was clicked
+            print("Saving changes.")
+            print(request.form)
+            entity_list = self.get_list()
+            if self not in entity_list:
+                entity_list.append(self)
+            self.name = request.form.get('event_name')
+            self.description = request.form.get('event_description')
+            self.toplevel = bool(request.form.get('top_level'))
+            for difficulty in self.difficulty_values:
+                new_value = int(request.form.get(f'difficulty_{difficulty}'))
+                self.difficulty_values[difficulty] = new_value
+            self.outcome_margin = int(request.form.get('event_outcome_margin'))
+            self.to_db()
+        elif 'delete_event' in request.form:
+            self.remove_from_db()
+        elif 'cancel_changes' in request.form:
+            print("Cancelling changes.")
         else:
-            return render_template(
-                'configure/event.html',
-                current=self)
+            print("Neither button was clicked.")
+        referrer = session.pop('referrer', None)
+        print(f"Referrer in configure_by_form(): {referrer}")
+        if referrer:
+            return redirect(referrer)
+        else:
+            return redirect(url_for('configure'))
 
     def play_by_form(self):
         if request.method == 'POST':
@@ -154,16 +153,16 @@ class Event(Identifiable):
 def set_routes(app):
     @app.route('/configure/event/<event_id>', methods=['GET', 'POST'])
     def configure_event(event_id):
+        new_game_data()
+        instance = Event.data_for_configure(event_id)
         if request.method == 'GET':
             session['referrer'] = request.referrer
-            print(f"Referrer in configure_event(): {request.referrer}")
-        if event_id == "new":
-            print("Creating a new event.")
-            event = Event()
+            return render_template(
+                'configure/event.html',
+                current=instance,
+                game_data=g.game_data)
         else:
-            print(f"Retrieving event with ID: {event_id}")
-            event = Event.get_by_id(int(event_id))
-        return event.configure_by_form()
+            return instance.configure_by_form()
 
     @app.route('/play/event/<int:event_id>', methods=['GET', 'POST'])
     def play_event(event_id):

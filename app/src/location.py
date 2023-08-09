@@ -8,7 +8,9 @@ from flask import (
     session,
     url_for
 )
-from .db_serializable import Identifiable, coldef, new_game_data
+from .db_serializable import (
+    Identifiable, MutableNamespace, coldef, new_game_data)
+from .item import Item
 
 tables_to_create = {
     'locations': f"""
@@ -66,40 +68,123 @@ class Location(Identifiable):
     def from_json(cls, data):
         if not isinstance(data, dict):
             data = vars(data)
-        instance = cls(int(data['id']))
-        instance.name = data['name']
-        instance.description = data.get('description', '')
+        instance = cls(int(data.get('id', 0)))
+        instance.name = data.get('name', "")
+        instance.description = data.get('description', "")
         instance.destinations = {
-            int(dest_id): distance
-            for dest_id, distance in data['destinations'].items()}
+            Location(int(dest_id)): distance
+            for dest_id, distance in data.get('destinations', {}).items()}
         instance.items = [
             ItemAt.from_json(item_data)
-            for item_data in data['items']]
+            for item_data in data.get('items', [])]
         return instance
 
-    #@classmethod
-    #def list_with_references(cls, json_data=None):
-    #    if json_data is not None:
-    #        super(cls, cls).list_from_json(json_data)
-    #    else:
-    #        instances = super(cls, cls).list_from_db()
-    #    # replace IDs with actual object referencess now that all entities
-    #    # have been loaded
-    #    entity_list = cls.get_list()
-    #    for instance in entity_list:
-    #        instance.destinations = {
-    #            cls.get_by_id(destination_id): distance
-    #            for destination_id, distance in
-    #            id_refs.get('dest', {}).get(instance.id, {}).items()}
-    #    return entity_list
+    def json_to_db(self, doc):
+        print(f"{self.__class__.__name__}.json_to_db()")
+        super().json_to_db(doc)
+        for rel_table in ('loc_destinations', 'loc_items'):
+            self.execute_change(f"""
+                DELETE FROM {rel_table}
+                WHERE loc_id = %s AND game_token = %s
+            """, (self.id, self.game_token))
+        if doc['destinations']:
+            values = [
+                (g.game_token, self.id, dest_id, distance)
+                for dest_id, distance in doc['destinations'].items()]
+            self.insert_multiple(
+                "loc_destinations",
+                "game_token, loc_id, dest_id, distance",
+                values)
+        if doc['items']:
+            print(f"items: {doc['items']}")
+            values = []
+            for item_at in doc['items']:
+                values.append((
+                    g.game_token, self.id,
+                    item_at['item_id'],
+                    item_at['quantity'],
+                    item_at['position']
+                    ))
+            self.insert_multiple(
+                "item_sources",
+                "game_token, loc_id, item_id, quantity, position",
+                values)
 
-    #@classmethod
-    #def list_from_json(cls, json_data):
-    #    return cls.list_with_references(json_data)
+    @classmethod
+    def from_db(cls, id_to_get):
+        return cls._from_db(id_to_get)
 
-    #@classmethod
-    #def list_from_db(cls):
-    #    return cls.list_with_references()
+    @classmethod
+    def list_from_db(cls):
+        return cls._from_db()
+
+    @classmethod
+    def _from_db(cls, id_to_get=None):
+        print(f"{cls.__name__}._from_db()")
+        query = """
+            SELECT *
+            FROM {tables[0]}
+            LEFT JOIN {tables[1]}
+                ON {tables[1]}.loc_id = {tables[0]}.id
+                AND {tables[1]}.game_token = {tables[0]}.game_token
+            LEFT JOIN {tables[2]}
+                ON {tables[2]}.loc_id = {tables[0]}.id
+                AND {tables[2]}.game_token = {tables[0]}.game_token
+            WHERE {tables[0]}.game_token = %s
+        """
+        values = [g.game_token]
+        if id_to_get:
+            query = f"{query}\nAND {{tables[0]}}.id = %s"
+            values.append(id_to_get);
+        tables_rows = cls.select_tables(
+            query, values,
+            ['locations', 'loc_destinations', 'loc_items'])
+        instances = {}  # keyed by ID
+        for loc_data, dest_data, loc_item_data in tables_rows:
+            print(f"loc_data {loc_data}")
+            print(f"dest_data {dest_data}")
+            print(f"loc_item_data {loc_item_data}")
+            instance = instances.get(loc_data.id)
+            if not instance:
+                instance = cls.from_json(vars(loc_data))
+                instances[loc_data.id] = instance
+            if dest_data.dest_id:
+                instance.destinations[dest_data.dest_id] = dest_data.distance
+            if loc_item_data.item_id:
+                current_data.setdefault(
+                    'items', []).append(ItemAt.from_json(loc_item_data))
+        # Replace IDs with partial objects
+        for instance in instances.values():
+            loc_objs = {}
+            for dest_id, distance in instance.destinations.items():
+                loc_obj = Location(dest_id)
+                loc_objs[loc_obj] = distance
+            instance.destinations = loc_objs
+        # Print debugging info
+        print(f"found {len(instances)} locations")
+        for instance in instances.values():
+            print(f"location {instance.id} ({instance.name})"
+                " has {len(instance.destinations)} destinations")
+        # Convert and return
+        instances = list(instances.values())
+        return instances[0] if len(instances) == 1 else instances
+
+    @classmethod
+    def list_with_references(cls, json_data=None):
+        #if json_data is not None:
+        #    super(cls, cls).list_from_json(json_data)
+        #else:
+        #    instances = super(cls, cls).list_from_db()
+        ## replace IDs with actual object referencess now that all entities
+        ## have been loaded
+        #entity_list = cls.get_list()
+        #for instance in entity_list:
+        #    instance.destinations = {
+        #        cls.get_by_id(destination_id): distance
+        #        for destination_id, distance in
+        #        id_refs.get('dest', {}).get(instance.id, {}).items()}
+        #return entity_list
+        raise NotImplementedError()
 
     @classmethod
     def data_for_configure(cls, config_id):
@@ -109,9 +194,9 @@ class Location(Identifiable):
         else:
             config_id = int(config_id)
         # Get all location data
-        locations_data = DbSerializable.execute_select("""
+        locations_data = cls.execute_select("""
             SELECT *
-            FROM {cls.tablename()}
+            FROM {table}
             WHERE game_token = %s
         """, (g.game_token,))
         g.game_data.locations = []
@@ -121,41 +206,46 @@ class Location(Identifiable):
                 current_data = loc_data
             g.game_data.locations.append(Location.from_json(loc_data))
         # Get the current location's destination data
-        loc_dest_data = DbSerializable.execute_select("""
+        loc_dest_data = cls.execute_select("""
             SELECT *
-            FROM location_destinations
+            FROM loc_destinations
             WHERE game_token = %s
-                AND origin_id = %s
+                AND loc_id = %s
         """, (g.game_token, config_id))
         dests_data = {}
         for row in loc_dest_data:
             dests_data[row.dest_id] = row.distance
         current_data.destinations = dests_data
         # Get all item data and the current location's item relation data
-        tables_rows = DbSerializable.select_tables("""
+        tables_rows = cls.select_tables("""
             SELECT *
             FROM {tables[0]}
             LEFT JOIN {tables[1]}
                 ON {tables[0]}.id = {tables[1]}.item_id
                 AND {tables[0]}.game_token = {tables[1]}.game_token
-                AND {tables[1]}.location_id = %s
+                AND {tables[1]}.loc_id = %s
             WHERE {tables[0]}.game_token = %s
         """, (config_id, g.game_token), ['items', 'loc_items'])
         for item_data, loc_item_data in tables_rows:
-            if loc_item_data.location_id:
+            if loc_item_data.loc_id:
                 current_data.setdefault(
                     'items', []).append(ItemAt.from_json(loc_item_data))
             g.game_data.items.append(Item.from_json(item_data))
         # Create item from data
-        current_loc = Location.from_json(current_data)
+        current_obj = Location.from_json(current_data)
         # Replace partial objects with fully populated objects
+        populated_objs = {}
+        for partial_item, distance in current_obj.destinations.items():
+            loc = Location.get_by_id(partial_item.id)
+            populated_objs[loc] = distance
+        current_obj.destinations = populated_objs
         populated_objs = []
-        for item_at in current_loc.items:
+        for item_at in current_obj.items:
             partial_item = item_at.item
             item = Item.get_by_id(partial_item.id)
             populated_objs.append(item)
-        current_loc.items = populated_objs
-        return current_loc
+        current_obj.items = populated_objs
+        return current_obj
 
     def configure_by_form(self):
         if request.method == 'POST':
@@ -170,13 +260,13 @@ class Location(Identifiable):
                 destination_ids = request.form.getlist('destination_id[]')
                 destination_distances = request.form.getlist('destination_distance[]')
                 self.destinations = {}
-                for dest_id, dest_dist in zip(destination_ids, destination_distances):
-                    dest_location = Location.get_by_id(int(dest_id))
-                    if dest_location:
-                        self.destinations[dest_location] = int(dest_dist)
+                for dest_id, dest_dist in zip(
+                        destination_ids, destination_distances):
+                    dest_location = Location(int(dest_id))
+                    self.destinations[dest_location] = int(dest_dist)
                 self.to_db()
             elif 'delete_location' in request.form:
-                self.remove_from_db(self.id)
+                self.remove_from_db()
             elif 'cancel_changes' in request.form:
                 print("Cancelling changes.")
             else:
@@ -198,16 +288,16 @@ class Location(Identifiable):
 def set_routes(app):
     @app.route('/configure/location/<location_id>',methods=['GET', 'POST'])
     def configure_location(location_id):
+        new_game_data()
+        instance = Location.data_for_configure(location_id)
         if request.method == 'GET':
             session['referrer'] = request.referrer
-            new_game_data()
-            instance = Location.data_for_configure(location_id)
             return render_template(
                 'configure/location.html',
                 current=instance,
                 game_data=g.game_data)
         else:
-            return Location().configure_by_form()
+            return instance.configure_by_form()
 
     @app.route('/play/location/<int:location_id>')
     def play_location(location_id):

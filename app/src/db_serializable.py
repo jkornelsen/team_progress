@@ -59,11 +59,12 @@ class DbSerializable():
         return "{}s".format(cls.__name__.lower())
 
     @classmethod
-    def execute_select(cls, query, values=None, fetch_all=True):
+    def execute_select(cls, query_without_table, values=None, fetch_all=True):
         """Returns data as a list of objects with attributes that are
         column names.
         For example, to get the name column of the first row: result[0].name
         """
+        query = query_without_table.format(table=cls.tablename())
         print(pretty(query, values))
         with g.db.cursor(cursor_factory=RealDictCursor) as cursor:
             cursor.execute(query, values)
@@ -72,6 +73,23 @@ class DbSerializable():
             else:
                 result = MutableNamespace(**(cursor.fetchone() or {}))
             return result
+
+    @classmethod
+    def execute_change(cls, query_without_table, values,
+            commit=True, fetch=False):
+        """Returning a value is useful when inserting
+        auto-generated IDs.
+        """
+        query = query_without_table.format(table=cls.tablename())
+        print(pretty(query, values))
+        result = None
+        with g.db.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute(query, tuple(values))
+            if fetch:
+                result = MutableNamespace(**cursor.fetchone())
+        if commit:
+            g.db.commit()
+        return result
 
     @classmethod
     def select_tables(cls, query_without_tables, values, tables, fetch_all=True):
@@ -110,23 +128,6 @@ class DbSerializable():
             return results
         else:
             return results[0]
-
-    @classmethod
-    def execute_change(cls, query_without_table, values,
-            commit=True, fetch=False):
-        """Returning a value is useful when inserting
-        auto-generated IDs.
-        """
-        query = query_without_table.format(table=cls.tablename())
-        print(pretty(query, values))
-        result = None
-        with g.db.cursor(cursor_factory=RealDictCursor) as cursor:
-            cursor.execute(query, tuple(values))
-            if fetch:
-                result = MutableNamespace(**cursor.fetchone())
-        if commit:
-            g.db.commit()
-        return result
 
     @classmethod
     def insert_multiple(cls, table, column_names, values, commit=True):
@@ -276,9 +277,9 @@ class Identifiable(DbSerializable):
     @classmethod
     def list_from_db(cls):
         print(f"{cls.__name__}.list_from_db()")
-        data = DbSerializable.execute_select(f"""
+        data = cls.execute_select(f"""
             SELECT *
-            FROM {cls.tablename()}
+            FROM {{table}}
             WHERE game_token = %s
         """, (g.game_token,))
         instances = [cls.from_json(vars(dat)) for dat in data]
@@ -287,9 +288,9 @@ class Identifiable(DbSerializable):
     @classmethod
     def from_db(cls, id_to_get):
         print(f"{cls.__name__}.from_db()")
-        data = DbSerializable.execute_select(f"""
+        data = cls.execute_select(f"""
             SELECT *
-            FROM {cls.tablename()}
+            FROM {{table}}
             WHERE game_token = %s
                 AND id = %s
         """, (g.game_token, id_to_get), fetch_all=False)

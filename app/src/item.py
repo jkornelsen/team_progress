@@ -13,7 +13,7 @@ import math
 from .attrib import Attrib
 from .progress import Progress
 from .db_serializable import (
-    DbSerializable, Identifiable, MutableNamespace, coldef, new_game_data)
+    Identifiable, MutableNamespace, coldef, new_game_data)
 
 tables_to_create = {
     'items': f"""
@@ -29,7 +29,7 @@ tables_to_create = {
 
 class Recipe:
     def __init__(self, new_id=0):
-        self.id = new_id
+        self.id = new_id  # needed in db, not useful in JSON files
         self.instant = False
         self.rate_amount = 1  # quantity produced per batch
         self.rate_duration = 1.0  # seconds for a batch
@@ -48,6 +48,7 @@ class Recipe:
     @classmethod
     def from_json(cls, data):
         instance = cls()
+        instance.id = data.get('id', 0)
         instance.instant = data.get('instant', False)
         instance.rate_amount = data.get('rate_amount', 1)
         instance.rate_duration = data.get('rate_duration', 1.0)
@@ -120,7 +121,7 @@ class Item(Identifiable):
         if doc['recipes']:
             print(f"recipes: {doc['recipes']}")
             values = []
-            for recipe_id, recipe in enumerate(doc['recipes']):
+            for recipe_id, recipe in enumerate(doc['recipes'], start=1):
                 for source_id, src_qty in recipe['sources'].items():
                     values.append((
                         g.game_token, self.id, recipe_id, source_id,
@@ -164,11 +165,15 @@ class Item(Identifiable):
         if id_to_get:
             query = f"{query}\nAND {{tables[0]}}.id = %s"
             values.append(id_to_get);
-        tables_rows = DbSerializable.select_tables(
+        tables_rows = cls.select_tables(
             query, values,
             ['items', 'progress', 'item_attribs', 'item_sources'])
         instances = {}  # keyed by ID
         for item_data, progress_data, attribs_data, source_data in tables_rows:
+            print(f"item_data {item_data}")
+            print(f"progress_data {progress_data}")
+            print(f"attribs_data {attribs_data}")
+            print(f"source_data {source_data}")
             instance = instances.get(item_data.id)
             if not instance:
                 instance = cls.from_json(vars(item_data))
@@ -185,13 +190,33 @@ class Item(Identifiable):
                     recipe = Recipe.from_json(source_data)
                     instance.recipes.append(recipe)
                 recipe.sources[source_data.source_id] = source_data.src_qty
-        # replace IDs with partial objects
+        # Replace IDs with partial objects
         for instance in instances.values():
             attrib_objs = {}
-            for attrib_id in instance.attribs:
+            for attrib_id, attrib_val in instance.attribs.items():
                 attrib_obj = Attrib(attrib_id)
-                attrib_objs[attrib_obj] = instance.attribs[attrib_id]
+                attrib_objs[attrib_obj] = attrib_val
             instance.attribs = attrib_objs
+        for instance in instances.values():
+            for recipe in instance.recipes:
+                source_objs = {}
+                for source_id, source_qty in recipe.sources.items():
+                    source_obj = Item(source_id)
+                    source_objs[source_obj] = source_qty
+                recipe.sources = source_objs
+        # Print debugging info
+        print(f"found {len(instances)} items")
+        for instance in instances.values():
+            print(f"item {instance.id} ({instance.name})"
+                " has {len(instance.recipes)} recipes")
+            if len(instance.recipes):
+                recipe = instance.recipes[0]
+                print(f"rate_amount={recipe.rate_amount}")
+                print(f"instant={recipe.instant}")
+                for source_item, source_qty in recipe.sources.items():
+                    print(f"item id {source_item.id} name {source_item.name}"
+                        " qty {source_qty}")
+        # Convert and return
         instances = list(instances.values())
         return instances[0] if len(instances) == 1 else instances
 
@@ -223,7 +248,7 @@ class Item(Identifiable):
         else:
             config_id = int(config_id)
         # Get all item data and the current item's progress data
-        tables_rows = DbSerializable.select_tables("""
+        tables_rows = cls.select_tables("""
             SELECT *
             FROM {tables[0]}
             LEFT JOIN {tables[1]}
@@ -242,7 +267,7 @@ class Item(Identifiable):
                     item_data.progress = progress_data
             g.game_data.items.append(Item.from_json(item_data))
         # Get all attrib data and the current item's attrib relation data
-        tables_rows = DbSerializable.select_tables("""
+        tables_rows = cls.select_tables("""
             SELECT *
             FROM {tables[0]}
             LEFT JOIN {tables[1]}
@@ -258,7 +283,7 @@ class Item(Identifiable):
                     'attribs', {})[attrib_data.id] = item_attrib_data.value
             g.game_data.attribs.append(Attrib.from_json(attrib_data))
         # Get the current item's source relation data
-        sources_data = DbSerializable.execute_select("""
+        sources_data = cls.execute_select("""
             SELECT *
             FROM item_sources
             WHERE game_token = %s
@@ -275,28 +300,28 @@ class Item(Identifiable):
                 'sources', {})[row.source_id] = row.src_qty
         current_data.recipes = list(recipes_data.values())
         # Create item from data
-        current_item = Item.from_json(current_data)
+        current_obj = Item.from_json(current_data)
         # Replace partial objects with fully populated objects
         populated_objs = {}
-        for partial_attrib, val in current_item.attribs.items():
+        for partial_attrib, val in current_obj.attribs.items():
             attrib = Attrib.get_by_id(partial_attrib.id)
             populated_objs[attrib] = val
-        current_item.attribs = populated_objs
-        for recipe in current_item.recipes:
+        current_obj.attribs = populated_objs
+        for recipe in current_obj.recipes:
             populated_objs = {}
             for partial_item, qty in recipe.sources.items():
                 item = Item.get_by_id(partial_item.id)
                 populated_objs[item] = qty
             recipe.sources = populated_objs
         # Print debugging info
-        print(f"found {len(current_item.recipes)} recipes")
-        if len(current_item.recipes):
-            recipe = current_item.recipes[0]
+        print(f"found {len(current_obj.recipes)} recipes")
+        if len(current_obj.recipes):
+            recipe = current_obj.recipes[0]
             print(f"rate_amount={recipe.rate_amount}")
             print(f"instant={recipe.instant}")
             for source_item, source_qty in recipe.sources.items():
                 print(f"item id {source_item.id} name {source_item.name} qty {source_qty}")
-        return current_item
+        return current_obj
 
     def configure_by_form(self):
         if 'save_changes' in request.form:  # button was clicked

@@ -142,6 +142,8 @@ class Overall(DbSerializable):
             if winreq_data.item_id or winreq_data.char_id:
                 instance.win_reqs.append(
                     WinRequirement.from_json(winreq_data))
+        if not instance:
+            instance = cls()
         return instance
 
     def json_to_db(self, doc):

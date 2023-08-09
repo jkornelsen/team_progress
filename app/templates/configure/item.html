@@ -2,13 +2,13 @@
 
 {% block content %}
     <h1>Item Setup</h1>
-    <p>In addition to typical items such as resources, money, or gear,
+    <p>In addition to typical items such as resources, money, or equipment,
     they can also represent an upgrade in production speed,
     or concepts such as reputation.
     They could even be people if they don't need to perform any actions.
     For more ideas on how items can be used, browse the pre-built scenarios.
     </p>
-    <p>Incidentally, progress could be determined in a pen and paper game from a clock,
+    <p>Incidentally, in a pen-and-paper game, item progress could be determined from a clock,
     by writing the start and stop time of an action and computing elapsed progress.</p>
     <form method="post">
         <label for="item-name">Name:</label>
@@ -92,13 +92,7 @@
 
         $(document).ready(function() {
             // Enable button if the current entity has been configured before.
-            {% set outerscope = namespace(has_current = false) %}
-            {% for item in current.instances %}
-                {% if item.id == current.id %}
-                    {% set outerscope.has_current = true %}
-                {% endif %}
-            {% endfor %}
-            {% if outerscope.has_current %}
+            {% if current.id > 0 %}
                 $('#btn-delete').removeAttr('disabled');
             {% else %}
                 $('#btn-delete').attr('disabled', 'disabled');

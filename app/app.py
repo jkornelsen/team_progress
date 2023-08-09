@@ -8,12 +8,16 @@ from flask import (
     session,
     url_for
 )
+import os
 import uuid
+
 from database import get_db, close_db
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'team-progress'
 app.config['TITLE'] = 'Team Progress'
+app.config['SECRET_KEY'] = 'team-progress'
+app.config['DATA_DIR'] = 'data'
+app.config['UPLOAD_DIR'] = os.path.join(app.config['DATA_DIR'], 'uploads')
 app.config['TEMPLATES_AUTO_RELOAD'] = True  # set to False for production
 
 from src.user_interaction import UserInteraction
@@ -33,18 +37,20 @@ with app.app_context():
 def before_request():
     print("before_request()")
     if request.endpoint and (
-            request.endpoint in ('new_session', 'set_username')
+            request.endpoint in ('set_username',)
             or request.endpoint.startswith('static')):
-        # probably we just ran this method, so don't keep repeating
+        # Maybe we just ran this method, so don't keep repeating.
         return
     if 'game_token' not in session:
-        return redirect(url_for('new_session'))
+        # Create new session automatically. If someone wants to join an
+        # existing game, this won't prevent them from doing so afterwards.
+        generate_game_token()
     g.game_token = session.get('game_token')
     if 'username' not in session:
         return redirect(url_for('set_username'))
     username = session.get('username')
     g.db = get_db()
-    # make sure the user is listed in the db as recently connected
+    # Make sure the user is listed in the db as recently connected
     interaction = UserInteraction(username)
     interaction.to_db()
 
@@ -52,14 +58,6 @@ def before_request():
 def index():  # endpoint
     print("index()")
     return redirect(url_for('overview'))  # name of endpoint
-
-@app.route('/new-session', methods=['GET', 'POST'])
-def new_session():
-    print("new_session()")
-    if request.method == 'POST':
-        generate_game_token()
-        return redirect(url_for('index'))
-    return render_template('session/new_session.html')
 
 def generate_game_token():
     """Generate a new unique token to keep games separate."""
@@ -78,10 +76,10 @@ def join_game():
 
 @app.route('/session-link')
 def get_session_link():
-    if game_token not in session:
+    if 'game_token' not in session:
         return "Session not found"
     game_token = session.get('game_token')
-    url = url_for('join-game', game_token=game_token, _external=True)
+    url = url_for('join_game', game_token=game_token, _external=True)
     return render_template(
         'session/session_link.html',
         url=url)

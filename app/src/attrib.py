@@ -87,14 +87,14 @@ class Attrib(Identifiable):
 def set_routes(app):
     @app.route('/configure/attrib/<attrib_id>', methods=['GET', 'POST'])
     def configure_attrib(attrib_id):
+        new_game_data()
+        instance = Attrib.data_for_configure(attrib_id)
         if request.method == 'GET':
             session['referrer'] = request.referrer
-            new_game_data()
-            instance = Attrib.data_for_configure(attrib_id)
             return render_template(
                 'configure/attrib.html',
                 current=instance,
                 game_data=g.game_data)
         else:
-            return Attrib(attrib_id).configure_by_form()
+            return instance.configure_by_form()
 

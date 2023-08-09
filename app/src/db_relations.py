@@ -57,25 +57,25 @@ tables_to_create = {
             REFERENCES items (game_token, id)
     """,
     # Location
-    'location_destinations': f"""
+    'loc_destinations': f"""
         {coldef('game_token')},
-        origin_id integer,
+        loc_id integer,
         dest_id integer,
         distance integer NOT NULL,
-        PRIMARY KEY (game_token, origin_id, dest_id),
-        FOREIGN KEY (game_token, origin_id)
+        PRIMARY KEY (game_token, loc_id, dest_id),
+        FOREIGN KEY (game_token, loc_id)
             REFERENCES locations (game_token, id),
         FOREIGN KEY (game_token, dest_id)
             REFERENCES locations (game_token, id)
     """,
     'loc_items': f"""
         {coldef('game_token')},
-        location_id integer,
+        loc_id integer,
         item_id integer,
         quantity integer NOT NULL,
         position integer[2],
-        PRIMARY KEY (game_token, location_id, item_id),
-        FOREIGN KEY (game_token, location_id)
+        PRIMARY KEY (game_token, loc_id, item_id),
+        FOREIGN KEY (game_token, loc_id)
             REFERENCES locations (game_token, id),
         FOREIGN KEY (game_token, item_id)
             REFERENCES items (game_token, id)

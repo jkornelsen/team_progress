@@ -1,4 +1,5 @@
 import os
+import datetime
 import tempfile
 from types import SimpleNamespace
 from flask import (
@@ -11,7 +12,7 @@ from flask import (
     session,
     url_for
 )
-from tkinter import Tk, filedialog
+from werkzeug.utils import secure_filename
 
 from src.game_data import GameData
 from src.db_serializable import DbSerializable
@@ -63,39 +64,51 @@ def set_routes(app):
             json.dump(data_to_save, temp_file, indent=4)
         return send_file(filepath, as_attachment=True, download_name=filename)
 
-    @app.route('/load_from_file')
+    @app.route('/load_from_file', methods=['GET', 'POST'])
     def load_from_file():
-        root = Tk()
-        root.withdraw()
-        filepath = filedialog.askopenfilename()
-        if not filepath:
-            # No file selected
-            return redirect(url_for('configure'))
+        UPLOAD_DIR = app.config['UPLOAD_DIR']
+        if request.method == 'GET':
+            return render_template('session/upload.html')
+        uploaded_file = request.files['file']
+        if not uploaded_file.filename.endswith('.json'):
+            return "Please upload a file with .json extension."
+        filename = secure_filename(uploaded_file.filename)
+        filepath = os.path.join(UPLOAD_DIR, filename)
+        uploaded_file.save(filepath)
         load_data_from_file(filepath)
+        # Get rid of old files
+        MAX_FILE_AGE = datetime.timedelta(minutes=5)
+        current_time = datetime.datetime.now()
+        for filename in os.listdir(UPLOAD_DIR):
+            file_path = os.path.join(UPLOAD_DIR, filename)
+            file_mtime = datetime.datetime.fromtimestamp(os.path.getmtime(file_path))
+            file_age = current_time - file_mtime
+            if file_age > MAX_FILE_AGE:
+                os.remove(file_path)
+                print(f"Deleted {filename} (age: {file_age})")
         return redirect(url_for('configure'))
-
-    EXAMPLES_DIR = 'data'
 
     @app.route('/browse_scenarios', methods=['GET', 'POST'])
     def browse_scenarios():
-        if request.method == 'POST':
-            scenario_file = request.form.get('scenario_file')
-            scenario_title = request.form.get('scenario_title')
-            if scenario_file:
-                filepath = os.path.join(EXAMPLES_DIR, scenario_file)
-                load_data_from_file(filepath)
-                session['file_message'] = 'Loaded scenario "{}"'.format(scenario_title)
-                return redirect(url_for('configure'))
-        scenarios = []
-        for filename in os.listdir(EXAMPLES_DIR):
-            if filename.endswith('.json'):
-                filepath = os.path.join(EXAMPLES_DIR, filename)
-                scenario = load_scenario_metadata(filepath)
-                scenarios.append(scenario)
-        scenarios = sorted(scenarios, key=lambda sc: sc['filename'])
-        return render_template(
-            'configure/scenarios.html',
-            scenarios=scenarios)
+        DATA_DIR = app.config['DATA_DIR']
+        if request.method == 'GET':
+            scenarios = []
+            for filename in os.listdir(DATA_DIR):
+                if filename.endswith('.json'):
+                    filepath = os.path.join(DATA_DIR, filename)
+                    scenario = load_scenario_metadata(filepath)
+                    scenarios.append(scenario)
+            scenarios = sorted(scenarios, key=lambda sc: sc['filename'])
+            return render_template(
+                'configure/scenarios.html',
+                scenarios=scenarios)
+        scenario_file = request.form.get('scenario_file')
+        scenario_title = request.form.get('scenario_title')
+        if scenario_file:
+            filepath = os.path.join(DATA_DIR, scenario_file)
+            load_data_from_file(filepath)
+            session['file_message'] = 'Loaded scenario "{}"'.format(scenario_title)
+            return redirect(url_for('configure'))
 
     @app.route('/blank_scenario')
     def blank_scenario():

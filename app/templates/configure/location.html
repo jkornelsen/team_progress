@@ -23,7 +23,7 @@
             {% endfor %}
             <div>
                 {% set outerscope = namespace(has_other_location = false) %}
-                {% for location in game.locations %}
+                {% for location in game_data.locations %}
                     {% if location.id != current.id %}
                         {% set outerscope.has_other_location = true %}
                     {% endif %}
@@ -43,7 +43,7 @@
                     <div class="select-box">
                         <select id="destination-select">
                             <option value="" selected>(Select location)</option>
-                            {% for location in game.locations %}
+                            {% for location in game_data.locations %}
                                 {% if location.id != current.id %}
                                 <option value="{{ location.id }}">{{ location.name }}</option>
                                 {% endif %}
@@ -59,9 +59,17 @@
 
         <button type="submit" id="btn-save" name="save_changes">Save and Continue</button>
         <button type="submit" id="btn-cancel" name="cancel_changes" formnovalidate>Cancel Changes</button>
+        <button type="submit" id="btn-delete" name="delete_location" class="dangerous-button">Delete Location</button>
     </form>
     <script>
         $(document).ready(function() {
+            // Enable button if the current entity has been configured before.
+            {% if current.id > 0 %}
+                $('#btn-delete').removeAttr('disabled');
+            {% else %}
+                $('#btn-delete').attr('disabled', 'disabled');
+            {% endif %}
+
             $('#add-destination-btn').click(function() {
                 var selectedOption = $('#destination-select option:selected');
                 var destinationId = selectedOption.val();

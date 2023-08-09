@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Upload a Game File</h1>
+<p>Restore a game by loading a file that was downloaded to your computer previously.</p>
+<form action="{{ url_for('load_from_file') }}" method="POST" enctype="multipart/form-data">
+    <input type="file" name="file" accept=".json">
+    <button type="submit">Upload</button>
+</form>
+{% endblock %}
