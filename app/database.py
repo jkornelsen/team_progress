@@ -10,6 +10,7 @@ def get_db():
             host='localhost',
             port='5432'
         )
+    g.commit_db = True
     return g.db
 
 def close_db(ctx=None):
@@ -65,7 +66,7 @@ def column_counts(table_name):
     lookup = {
         'attribs': 4,
         'char_attribs': 4,
-        'char_items': 4,
+        'char_items': 5,
         'characters': 9,
         'events': 7,
         'item_attribs': 4,

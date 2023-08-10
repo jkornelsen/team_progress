@@ -14,8 +14,8 @@ class GameData:
     # In this order for from_json().
     ENTITIES = [
             Attrib,
-            Location,
             Item,
+            Location,
             Character,
             Event]
 

@@ -4,25 +4,17 @@
     <h1>Attribute Setup</h1>
     <form method="post">
         <label for="attrib-name">Name:</label>
-        <input type="text" id="attrib-name" name="attrib_name" value="{{ current.name }}" required>
-        ID: {{ current.id }}<br>
+        <input type="text" id="attrib-name" name="attrib_name" value="{{ current.name }}" required><br>
         <label for="attrib-description" >Description:</label>
         <textarea id="attrib-description" name="attrib_description" rows="4" cols="50">{{ current.description }}</textarea><br>
 
         <button type="submit" id="btn-save" name="save_changes">Save and Continue</button>
         <button type="submit" id="btn-cancel" name="cancel_changes" formnovalidate>Cancel Changes</button>
-        <button type="submit" id="btn-delete" name="delete_attrib" class="dangerous-button">Delete attrib</button>
+        <button type="submit" id="btn-delete" name="delete_attrib" class="dangerous-button">Delete Attribute</button>
     </form>
     <script>
         $(document).ready(function() {
-            // Enable button if the current entity has been configured before.
-            {% set outerscope = namespace(has_current = false) %}
-            {% for attrib in current.__class__.instances %}
-                {% if attrib.id == current.id %}
-                    {% set outerscope.has_current = true %}
-                {% endif %}
-            {% endfor %}
-            {% if outerscope.has_current %}
+            {% if current.id > 0 %}
                 $('#btn-delete').removeAttr('disabled');
             {% else %}
                 $('#btn-delete').attr('disabled', 'disabled');

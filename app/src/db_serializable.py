@@ -75,23 +75,6 @@ class DbSerializable():
             return result
 
     @classmethod
-    def execute_change(cls, query_without_table, values,
-            commit=True, fetch=False):
-        """Returning a value is useful when inserting
-        auto-generated IDs.
-        """
-        query = query_without_table.format(table=cls.tablename())
-        print(pretty(query, values))
-        result = None
-        with g.db.cursor(cursor_factory=RealDictCursor) as cursor:
-            cursor.execute(query, tuple(values))
-            if fetch:
-                result = MutableNamespace(**cursor.fetchone())
-        if commit:
-            g.db.commit()
-        return result
-
-    @classmethod
     def select_tables(cls, query_without_tables, values, tables, fetch_all=True):
         """Query to grab all values for more than one table and separate
         results by table.
@@ -130,7 +113,23 @@ class DbSerializable():
             return results[0]
 
     @classmethod
-    def insert_multiple(cls, table, column_names, values, commit=True):
+    def execute_change(cls, query_without_table, values, fetch=False):
+        """Returning a value is useful when inserting
+        auto-generated IDs.
+        """
+        query = query_without_table.format(table=cls.tablename())
+        print(pretty(query, values))
+        result = None
+        with g.db.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute(query, tuple(values))
+            if fetch:
+                result = MutableNamespace(**cursor.fetchone())
+        if g.commit_db:
+            g.db.commit()
+        return result
+
+    @classmethod
+    def insert_multiple(cls, table, column_names, values):
         if not values:
             return
         sql = f"""
@@ -140,11 +139,11 @@ class DbSerializable():
         print(pretty(sql, values))
         with g.db.cursor() as cursor:
             execute_values(cursor, sql, values, template=None, page_size=100)
-        if commit:
+        if g.commit_db:
             g.db.commit()
 
     @classmethod
-    def insert_multiple_from_dict(cls, table, data, commit=True):
+    def insert_multiple_from_dict(cls, table, data):
         if len(data) == 0:
             return
         column_keys = data[0].keys()
@@ -152,7 +151,7 @@ class DbSerializable():
             tuple([g.game_token] + [req[key] for key in column_keys])
             for req in data]
         column_names = ", ".join(['game_token'] + list(column_keys))
-        cls.insert_multiple(table, column_names, values, commit)
+        cls.insert_multiple(table, column_names, values)
 
     def to_db(self):
         self.json_to_db(

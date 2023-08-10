@@ -2,24 +2,23 @@
 
 {% block content %}
     <h1>Item Setup</h1>
-    <p>In addition to typical items such as resources, money, or equipment,
+    <p class="info">In addition to typical items such as resources, money, or equipment,
     they can also represent an upgrade in production speed,
     or concepts such as reputation.
     They could even be people if they don't need to perform any actions.
     For more ideas on how items can be used, browse the pre-built scenarios.
     </p>
-    <p>Incidentally, in a pen-and-paper game, item progress could be determined from a clock,
+    <p class="info">Incidentally, in a pen-and-paper game, item progress could be determined from a clock,
     by writing the start and stop time of an action and computing elapsed progress.</p>
     <form method="post">
         <label for="item-name">Name:</label>
-        <input type="text" id="item-name" name="item_name" value="{{ current.name }}" required>
-        ID: {{ current.id }}<br>
+        <input type="text" id="item-name" name="item_name" value="{{ current.name }}" required><br>
         <label for="item-description" >Description:</label>
         <textarea id="item-description" name="item_description" rows="4" cols="50">{{ current.description }}</textarea><br>
         <label for="item-quantity">Quantity:</label>
         <input type="number" id="item-quantity" name="item_quantity" value="{{ current.progress.quantity }}"><span id="running-label"></span>
         <label for="item-limit">Limit:</label>
-        <input type="number" id="item-limit" name="item_limit" value="{{ current.progress.q_limit }}"> 0 for unlimited<br>
+        <input type="number" id="item-limit" name="item_limit" value="{{ current.progress.q_limit }}"> <span class="label-like">0 for unlimited</span><br>
         <div>
             <input type="checkbox" id="top_level" name="top_level" {% if current.toplevel %}checked{% endif %}>
             <label for="top_level">Show in Overview</label><br>
@@ -91,7 +90,6 @@
         }
 
         $(document).ready(function() {
-            // Enable button if the current entity has been configured before.
             {% if current.id > 0 %}
                 $('#btn-delete').removeAttr('disabled');
             {% else %}
@@ -118,7 +116,7 @@
                         <span id="over-time-container">
                             <label for="rate-duration">Duration:</label>
                             <input type="text" size="6" id="rate-duration" name="recipe_${recipeCounter}_rate_duration" value="${rate_duration}" required>
-                            <span>seconds</span>
+                            <span class="label-like">seconds</span>
                         </span>
                         <input type="checkbox" id="instant" name="recipe_${recipeCounter}_instant"
                             ${instant ? 'checked' : ''} onChange="updateInstantVisibility(this);">

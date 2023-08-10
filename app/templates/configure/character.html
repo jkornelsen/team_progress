@@ -4,8 +4,7 @@
     <h1>Character Setup</h1>
     <form method="post">
         <label for="character-name">Name:</label>
-        <input type="text" id="character-name" name="char_name" value="{{ current.name }}" required>
-        ID: {{ current.id }}<br>
+        <input type="text" id="character-name" name="char_name" value="{{ current.name }}" required><br>
         <label for="character-description">Description:</label>
         <textarea id="character-description" name="char_description" rows="4" cols="50">{{ current.description }}</textarea><br>
         <input type="checkbox" id="top_level" name="top_level" {% if current.toplevel %}checked{% endif %}>
@@ -21,19 +20,7 @@
             {% endfor %}
         </select><br>
 
-<!--
-        <h2>Attributes</h2>
-        <div id="attributes-container">
-            <label for="character-xp">XP:</label>
-            <input type="number" id="character-xp" name="char_xp" value="{{ current.xp }}" class="attribute-field"><br>
-            <label for="character-int">Intelligence:</label>
-            <input type="number" id="character-int" name="char_int" value="{{ current.intelligence }}" class="attribute-field"><br>
-            <label for="character-charisma">Charisma:</label>
-            <input type="number" id="character-charisma" name="char_charisma" value="{{ current.charisma }}" class="attribute-field"><br>
-        </div>
--->
-
-        <div id="attrib-container" style="border: 1px solid #ccc; padding: 10px;">
+        <div id="attrib-container" class="outer-border">
                 {% for attrib, attrib_val in current.attribs.items() %}
                     <div class="attrib flexdiv" data-attrib-id="{{ attrib.id }}">
                         <input type="hidden" name="attrib_id" value="{{ attrib.id }}">
@@ -62,87 +49,100 @@
             </div>
         </div>
 
-        <table id="items-table">
-            <thead>
-                <tr>
-                    <th>Item</th>
-                    <th>Worn Slot</th>
-                    <th class="transparent-col"></th>
-                </tr>
-            </thead>
-            <tbody id="items-container">
-                {% for item, slot in current.items.items() %}
-                    <tr class="item">
-                        <td>{{ item.name }}</td>
-                        <td>
-                            <input type="hidden" name="item_id[]" value="{{ item.id }}">
-                            <input type="text" name="item_slot[]" value="{{ slot }}" size="8">
-                        </td>
-                        <td>
-                            <button class="remove-item-btn">Remove Item</button>
-                        </td>
+        <div id="items-container" class="outer-border">
+            <table id="items-table" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Quantity</th>
+                        <th>Worn Slot</th>
+                        <th class="transparent-col"></th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <div>
-            {% if game_data.items %}
-                <!-- Select box for adding another source -->
-                <div class="select-box">
-                    <select class="item-select" name="item_select">
-                        <option value="" selected>(Select item)</option>
-                        {% for item in game_data.items %}
-                            {% if item not in current.items %}
-                                <option value="{{ item.id }}">{{ item.name }}</option>
-                            {% endif %}
-                        {% endfor %}
-                    </select>
-                    <button type="button" class="add-item-btn lesser-button">Add Item</button>
-                </div>
-            {% else %}
-                <p class="no-items">(No other items)</p>
-            {% endif %}
+                </thead>
+                <tbody id="items-rows">
+                </tbody>
+            </table>
+            <div>
+                {% if game_data.items %}
+                    <!-- Select box for adding another source -->
+                    <div class="select-box">
+                        <select class="item-select" name="item_select">
+                            <option value="" selected>(Select item)</option>
+                            {% for item in game_data.items %}
+                                {% if item not in current.items %}
+                                    <option value="{{ item.id }}">{{ item.name }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                        <button type="button" class="add-item-btn lesser-button">Add Item</button>
+                    </div>
+                {% else %}
+                    <p class="no-items">(No other items)</p>
+                {% endif %}
+            </div>
         </div>
 
         <button type="submit" id="btn-save" name="save_changes">Save and Continue</button>
         <button type="submit" id="btn-cancel" name="cancel_changes" formnovalidate>Cancel Changes</button>
+        <button type="submit" id="btn-delete" name="delete_character" class="dangerous-button">Delete Character</button>
     </form>
 
     <script>
         $(document).ready(function() {
-            // Add an item select box and corresponding add button
-            $('.add-item-btn').click(function() {
-                var selectBox = $(this).prev('.item-select');
-                var selectedOption = selectBox.find(':selected');
-                var itemId = selectedOption.val();
-                var itemName = selectedOption.text();
-                if (itemId === '') {
-                    return; // don't add if the selected option is the placeholder
-                }
-                var existingItem = $('.item input[value="' + itemId + '"]').closest('.item');
-                if (existingItem.length > 0) {
-                    alert('Item already exists.');
-                    return;
-                }
-                // Create HTML elements for the item
-                var itemHtml = `
+            {% if current.id > 0 %}
+                $('#btn-delete').removeAttr('disabled');
+            {% else %}
+                $('#btn-delete').attr('disabled', 'disabled');
+            {% endif %}
+
+            function addItem(itemId, itemName, itemQty = 1, itemSlot = "") {
+                const recipeContainer = $('.recipe-container').last();
+                const itemHtml = `
                     <tr>
-                        <td>${itemName}</td>
-                        <td>
+                        <td>${itemName}
                             <input type="hidden" name="item_id[]" value="${itemId}">
-                            <input type="text" name="item_slot[]" value="" size="10">
-                        </td>
-                        <td>
+                        </td><td>
+                            <input type="number" name="item_qty[]" value="${itemQty}" size="8">
+                        </td><td>
+                            <input type="text" name="item_slot[]" value="${itemSlot}" size="8">
+                        </td><td>
                             <button class="remove-item-btn">Remove Item</button>
                         </td>
                     </tr>
                 `;
-                $('#items-container').prepend(itemHtml);
+                $('#items-rows').prepend(itemHtml);
+                $('#items-table').show();
+            }
+
+            $('.add-item-btn').click(function() {
+                const selectBox = $(this).prev('.item-select');
+                const selectedOption = selectBox.find(':selected');
+                const itemId = selectedOption.val();
+                const itemName = selectedOption.text();
+                if (itemId === '') {
+                    return; // don't add if the selected option is the placeholder
+                }
+                const existingItem = $('.item input[value="' + itemId + '"]').closest('.item');
+                if (existingItem.length > 0) {
+                    alert('Item already exists.');
+                    return;
+                }
+                addItem(itemId, itemName);
             });
 
-            // Remove an item from the list
-            $('#items-container').on('click', '.remove-item-btn', function() {
-                var itemContainer = $(this).closest('.item');
+            console.log("number of items={{ current.items | length }}");
+            {% for owned_item in current.items %}
+                console.log("name={{owned_item.item.name}}");
+                console.log("slot={{owned_item.slot}}");
+                addItem(
+                    {{ owned_item.item.id }},
+                    "{{ owned_item.item.name }}",
+                    "{{ owned_item.quantity }}",
+                    "{{ owned_item.slot }}");
+            {% endfor %}
+
+            $('#items-rows').on('click', '.remove-item-btn', function() {
+                const itemContainer = $(this).closest('.item');
                 itemContainer.remove();
             });
 
@@ -158,7 +158,6 @@
                     alert('Attribute already exists.');
                     return;
                 }
-                // Create HTML elements for the attrib
                 const attribHtml = `
                     <div class="attrib flexdiv" data-attrib-id="${attribId}">
                         <input type="hidden" name="attrib_id" value="${attribId}">
@@ -173,8 +172,6 @@
             $('#attrib-container').on('click', '.remove-attrib-btn', function() {
                 const attribContainer = $(this).closest('.attrib');
                 const attribId = attribContainer.data('attrib-id');
-
-                // Remove the attrib from the DOM
                 attribContainer.remove();
             });
         });

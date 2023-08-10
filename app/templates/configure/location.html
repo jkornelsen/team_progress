@@ -4,8 +4,7 @@
     <h1>Location Setup</h1>
     <form method="post">
         <label for="location-name">Name:</label>
-        <input type="text" id="location-name" name="location_name" value="{{ current.name }}" required>
-        ID: {{ current.id }}<br>
+        <input type="text" id="location-name" name="location_name" value="{{ current.name }}" required><br>
         <label for="location-description">Description:</label>
         <textarea id="location-description" name="location_description" rows="4" cols="50">{{ current.description }}</textarea><br>
 
@@ -63,7 +62,6 @@
     </form>
     <script>
         $(document).ready(function() {
-            // Enable button if the current entity has been configured before.
             {% if current.id > 0 %}
                 $('#btn-delete').removeAttr('disabled');
             {% else %}

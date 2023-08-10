@@ -5,6 +5,31 @@ the keys depend on their prior existence.
 from .db_serializable import coldef
 
 tables_to_create = {
+    # Item
+    'item_attribs': f"""
+        {coldef('game_token')},
+        item_id integer,
+        attrib_id integer,
+        value integer,
+        PRIMARY KEY (game_token, item_id, attrib_id),
+        FOREIGN KEY (game_token, item_id)
+            REFERENCES items (game_token, id),
+        FOREIGN KEY (game_token, attrib_id)
+            REFERENCES attribs (game_token, id)
+    """,
+    'item_sources': f"""
+        {coldef('game_token')},
+        item_id integer,
+        recipe_id integer,
+        source_id integer,
+        src_qty integer NOT NULL,
+        rate_amount integer NOT NULL,
+        rate_duration float(2) NOT NULL,
+        instant boolean,
+        PRIMARY KEY (game_token, item_id, recipe_id, source_id),
+        FOREIGN KEY (game_token, item_id)
+            REFERENCES items (game_token, id)
+    """,
     # Character
     'char_attribs': f"""
         {coldef('game_token')},
@@ -29,33 +54,6 @@ tables_to_create = {
         FOREIGN KEY (game_token, item_id)
             REFERENCES items (game_token, id)
     """,
-    # Item
-    'item_attribs': f"""
-        {coldef('game_token')},
-        item_id integer,
-        attrib_id integer,
-        value integer,
-        PRIMARY KEY (game_token, item_id, attrib_id),
-        FOREIGN KEY (game_token, item_id)
-            REFERENCES items (game_token, id),
-        FOREIGN KEY (game_token, attrib_id)
-            REFERENCES attribs (game_token, id)
-    """,
-    'item_sources': f"""
-        {coldef('game_token')},
-        item_id integer,
-        recipe_id integer,
-        source_id integer,
-        src_qty integer NOT NULL,
-        rate_amount integer NOT NULL,
-        rate_duration float(2) NOT NULL,
-        instant boolean,
-        PRIMARY KEY (game_token, item_id, recipe_id, source_id),
-        FOREIGN KEY (game_token, item_id)
-            REFERENCES items (game_token, id),
-        FOREIGN KEY (game_token, source_id)
-            REFERENCES items (game_token, id)
-    """,
     # Location
     'loc_destinations': f"""
         {coldef('game_token')},
@@ -64,8 +62,6 @@ tables_to_create = {
         distance integer NOT NULL,
         PRIMARY KEY (game_token, loc_id, dest_id),
         FOREIGN KEY (game_token, loc_id)
-            REFERENCES locations (game_token, id),
-        FOREIGN KEY (game_token, dest_id)
             REFERENCES locations (game_token, id)
     """,
     'loc_items': f"""

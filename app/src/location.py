@@ -37,7 +37,7 @@ class ItemAt:
         }
 
     @classmethod
-    def from_json(cls, item):
+    def from_json(cls, data):
         instance = cls(Item(int(data.get('item_id', 0))))
         instance.quantity = data['quantity']
         instance.position = data['position']
@@ -151,8 +151,7 @@ class Location(Identifiable):
             if dest_data.dest_id:
                 instance.destinations[dest_data.dest_id] = dest_data.distance
             if loc_item_data.item_id:
-                current_data.setdefault(
-                    'items', []).append(ItemAt.from_json(loc_item_data))
+                current_data.setdefault('items', []).append(loc_item_data)
         # Replace IDs with partial objects
         for instance in instances.values():
             loc_objs = {}
@@ -167,24 +166,9 @@ class Location(Identifiable):
                 " has {len(instance.destinations)} destinations")
         # Convert and return
         instances = list(instances.values())
-        return instances[0] if len(instances) == 1 else instances
-
-    @classmethod
-    def list_with_references(cls, json_data=None):
-        #if json_data is not None:
-        #    super(cls, cls).list_from_json(json_data)
-        #else:
-        #    instances = super(cls, cls).list_from_db()
-        ## replace IDs with actual object referencess now that all entities
-        ## have been loaded
-        #entity_list = cls.get_list()
-        #for instance in entity_list:
-        #    instance.destinations = {
-        #        cls.get_by_id(destination_id): distance
-        #        for destination_id, distance in
-        #        id_refs.get('dest', {}).get(instance.id, {}).items()}
-        #return entity_list
-        raise NotImplementedError()
+        if id_to_get is not None and len(instances) == 1:
+            return instances[0]
+        return instances
 
     @classmethod
     def data_for_configure(cls, config_id):
@@ -198,6 +182,7 @@ class Location(Identifiable):
             SELECT *
             FROM {table}
             WHERE game_token = %s
+            ORDER BY {table}.name
         """, (g.game_token,))
         g.game_data.locations = []
         current_data = MutableNamespace()
@@ -225,6 +210,7 @@ class Location(Identifiable):
                 AND {tables[0]}.game_token = {tables[1]}.game_token
                 AND {tables[1]}.loc_id = %s
             WHERE {tables[0]}.game_token = %s
+            ORDER BY {tables[0]}.name
         """, (config_id, g.game_token), ['items', 'loc_items'])
         for item_data, loc_item_data in tables_rows:
             if loc_item_data.loc_id:
@@ -239,57 +225,48 @@ class Location(Identifiable):
             loc = Location.get_by_id(partial_item.id)
             populated_objs[loc] = distance
         current_obj.destinations = populated_objs
-        populated_objs = []
         for item_at in current_obj.items:
-            partial_item = item_at.item
-            item = Item.get_by_id(partial_item.id)
-            populated_objs.append(item)
-        current_obj.items = populated_objs
+            item_at.item = Item.get_by_id(item_at.item.id)
         return current_obj
 
     def configure_by_form(self):
-        if request.method == 'POST':
-            if 'save_changes' in request.form:  # button was clicked
-                print("Saving changes.")
-                print(request.form)
-                entity_list = self.get_list()
-                if self not in entity_list:
-                    entity_list.append(self)
-                self.name = request.form.get('location_name')
-                self.description = request.form.get('location_description')
-                destination_ids = request.form.getlist('destination_id[]')
-                destination_distances = request.form.getlist('destination_distance[]')
-                self.destinations = {}
-                for dest_id, dest_dist in zip(
-                        destination_ids, destination_distances):
-                    dest_location = Location(int(dest_id))
-                    self.destinations[dest_location] = int(dest_dist)
-                self.to_db()
-            elif 'delete_location' in request.form:
-                self.remove_from_db()
-            elif 'cancel_changes' in request.form:
-                print("Cancelling changes.")
-            else:
-                print("Neither button was clicked.")
-            referrer = session.pop('referrer', None)
-            print(f"Referrer in configure_by_form(): {referrer}")
-            if referrer:
-                return redirect(referrer)
-            else:
-                return redirect(url_for('configure'))
+        if 'save_changes' in request.form:  # button was clicked
+            print("Saving changes.")
+            print(request.form)
+            entity_list = self.get_list()
+            if self not in entity_list:
+                entity_list.append(self)
+            self.name = request.form.get('location_name')
+            self.description = request.form.get('location_description')
+            destination_ids = request.form.getlist('destination_id[]')
+            destination_distances = request.form.getlist('destination_distance[]')
+            self.destinations = {}
+            for dest_id, dest_dist in zip(
+                    destination_ids, destination_distances):
+                dest_location = Location(int(dest_id))
+                self.destinations[dest_location] = int(dest_dist)
+            self.to_db()
+        elif 'delete_location' in request.form:
+            self.remove_from_db()
+        elif 'cancel_changes' in request.form:
+            print("Cancelling changes.")
         else:
-            return render_template(
-                'configure/location.html', current=self,
-                game=self.game_data)
+            print("Neither button was clicked.")
+        referrer = session.pop('referrer', None)
+        print(f"Referrer in configure_by_form(): {referrer}")
+        if referrer:
+            return redirect(referrer)
+        else:
+            return redirect(url_for('configure'))
 
     def distance(self, other_location):
         return self.destinations.get(other_location, -1)
 
 def set_routes(app):
-    @app.route('/configure/location/<location_id>',methods=['GET', 'POST'])
-    def configure_location(location_id):
+    @app.route('/configure/location/<loc_id>',methods=['GET', 'POST'])
+    def configure_location(loc_id):
         new_game_data()
-        instance = Location.data_for_configure(location_id)
+        instance = Location.data_for_configure(loc_id)
         if request.method == 'GET':
             session['referrer'] = request.referrer
             return render_template(
@@ -299,9 +276,9 @@ def set_routes(app):
         else:
             return instance.configure_by_form()
 
-    @app.route('/play/location/<int:location_id>')
-    def play_location(location_id):
-        location = Location.get_by_id(location_id)
+    @app.route('/play/location/<int:loc_id>')
+    def play_location(loc_id):
+        location = Location.get_by_id(loc_id)
         if location:
             return render_template(
                 'play/location.html',

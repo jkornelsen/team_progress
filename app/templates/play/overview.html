@@ -33,7 +33,7 @@
         {% endif %}
     {% else %}
         <h1>{{ current.title }}</h1>
-        <p><center>{{ current.description }}</center></p>
+        <p class="info">{{ current.description }}</p>
     {% endif %}
     {% if other_entities.items %}
         <table cellspacing="0" cellpadding="5">
@@ -69,11 +69,11 @@
                 </td>
                 <td>
                     {% if char.loc_id %}
-                        <a href="{{ url_for('play_location', location_id=char.loc_id) }}">{{ char.loc_name }}</a>
+                        <a href="{{ url_for('play_location', loc_id=char.loc_id) }}">{{ char.loc_name }}</a>
                     {% endif %}
                 </td>
                 <td>{{ char.action_name }}</td>
-                <td{% if char.username == current_username %} class="userid"{% endif %}>{{ char.username }}</td>
+                <td{% if char.username == current_username %} class="username"{% endif %}>{{ char.username }}</td>
 
             </tr>
         {% endfor %}

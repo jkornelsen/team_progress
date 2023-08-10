@@ -8,8 +8,7 @@
     then the result is a major success, because 15 - 5 &gt; 9.</p>
     <form method="post">
         <label for="event-name">Name:</label>
-        <input type="text" id="event-name" name="event_name" value="{{ current.name }}" required>
-        ID: {{ current.id }}<br>
+        <input type="text" id="event-name" name="event_name" value="{{ current.name }}" required><br>
         <label for="event-description" >Description:</label>
         <textarea id="event-description" name="event_description" rows="4" cols="50">{{ current.description }}</textarea><br>
         <input type="checkbox" id="top_level" name="top_level" {% if current.toplevel %}checked{% endif %}>
@@ -28,14 +27,7 @@
     </form>
     <script>
         $(document).ready(function() {
-            // Enable button if the current entity has been configured before.
-            {% set outerscope = namespace(has_current = false) %}
-            {% for event in current.__class__.instances %}
-                {% if event.id == current.id %}
-                    {% set outerscope.has_current = true %}
-                {% endif %}
-            {% endfor %}
-            {% if outerscope.has_current %}
+            {% if current.id > 0 %}
                 $('#btn-delete').removeAttr('disabled');
             {% else %}
                 $('#btn-delete').attr('disabled', 'disabled');
