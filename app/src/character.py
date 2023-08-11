@@ -92,7 +92,7 @@ class Character(Identifiable):
         instance = cls(int(data.get('id', 0)))
         instance.name = data.get('name', "")
         instance.description = data.get('description', '')
-        instance.toplevel = data.get('toplevel')
+        instance.toplevel = data.get('toplevel', False)
         instance.items = [
             OwnedItem.from_json(owned_data)
             for owned_data in data.get('items', [])]
@@ -263,16 +263,16 @@ class Character(Identifiable):
                 current_data.setdefault(
                     'items', []).append(char_item_data)
             g.game_data.items.append(Item.from_json(item_data))
-        # Get all location data
+        # Get all location names
         locations_data = cls.execute_select("""
-            SELECT *
+            SELECT id, name
             FROM locations
             WHERE game_token = %s
             ORDER BY name
         """, (g.game_token,))
-        g.game_data.locations = []
-        for loc_data in locations_data:
-            g.game_data.locations.append(Location.from_json(loc_data))
+        g.game_data.locations = [
+            Location.from_json(loc_data)
+            for loc_data in locations_data]
         # Create character from data
         current_obj = Character.from_json(current_data)
         # Replace partial objects with fully populated objects

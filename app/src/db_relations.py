@@ -76,6 +76,18 @@ tables_to_create = {
         FOREIGN KEY (game_token, item_id)
             REFERENCES items (game_token, id)
     """,
+    # Event
+    'event_attribs': f"""
+        {coldef('game_token')},
+        event_id integer,
+        attrib_id integer,
+        determining boolean,
+        PRIMARY KEY (game_token, event_id, attrib_id),
+        FOREIGN KEY (game_token, event_id)
+            REFERENCES events (game_token, id),
+        FOREIGN KEY (game_token, attrib_id)
+            REFERENCES attribs (game_token, id)
+    """,
     # Overall
     'win_requirements': f"""
         {coldef('game_token')},

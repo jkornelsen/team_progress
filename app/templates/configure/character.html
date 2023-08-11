@@ -21,15 +21,6 @@
         </select><br>
 
         <div id="attrib-container" class="outer-border">
-                {% for attrib, attrib_val in current.attribs.items() %}
-                    <div class="attrib flexdiv" data-attrib-id="{{ attrib.id }}">
-                        <input type="hidden" name="attrib_id" value="{{ attrib.id }}">
-                        {{ attrib.name }}
-                        <input type="number" id="attrib-{{ attrib.id }}-val" name="attrib_val_{{ attrib.id }}" value="{{ attrib_val }}">
-                        <button class="remove-attrib-btn lesser-button">Remove Attribute</button>
-                    </div>
-                {% endfor %}
-
                 <!-- Placeholder for appending new attribs -->
                 <div id="attriblist_end" style="width: 0; height: 0; opacity: 0;"></div>
                 {% if game_data.attribs %}
@@ -96,7 +87,6 @@
             {% endif %}
 
             function addItem(itemId, itemName, itemQty = 1, itemSlot = "") {
-                const recipeContainer = $('.recipe-container').last();
                 const itemHtml = `
                     <tr>
                         <td>${itemName}
@@ -106,7 +96,7 @@
                         </td><td>
                             <input type="text" name="item_slot[]" value="${itemSlot}" size="8">
                         </td><td>
-                            <button class="remove-item-btn">Remove Item</button>
+                            <button class="remove-item-btn">Remove</button>
                         </td>
                     </tr>
                 `;
@@ -146,6 +136,17 @@
                 itemContainer.remove();
             });
 
+            function addAttrib(attribId, attribName, attribVal = 1) {
+                const attribHtml = `
+                    <div class="attrib flexdiv" data-attrib-id="${attribId}">
+                        <input type="hidden" name="attrib_id" value="${attribId}">
+                        ${attribName}
+                        <input type="number" id="attrib-${attribId}-val" name="attrib_${attribId}_val" value="${attribVal}">
+                        <button class="remove-attrib-btn lesser-button">Remove</button>
+                    </div>
+                `;
+                $('#attriblist_end').before(attribHtml);
+            }
             $('#add-attrib-btn').click(function() {
                 const selectedOption = $('#add-attrib-select option:selected');
                 const attribId = selectedOption.val();
@@ -158,20 +159,18 @@
                     alert('Attribute already exists.');
                     return;
                 }
-                const attribHtml = `
-                    <div class="attrib flexdiv" data-attrib-id="${attribId}">
-                        <input type="hidden" name="attrib_id" value="${attribId}">
-                        ${attribName}
-                        <input type="number" id="attrib-${attribId}-val" name="attrib_val_${attribId}" value="1">
-                        <button class="remove-attrib-btn lesser-button">Remove Attribute</button>
-                    </div>
-                `;
-                $('#attriblist_end').before(attribHtml);
+                addAttrib(attribId, attribName);
             });
+            console.log("number of attribs={{ current.attribs.keys() | length }}");
+            {% for attrib, attrib_val in current.attribs.items() %}
+                addAttrib(
+                    {{ attrib.id }},
+                    "{{ attrib.name }}",
+                    "{{ attrib_val }}");
+            {% endfor %}
 
             $('#attrib-container').on('click', '.remove-attrib-btn', function() {
                 const attribContainer = $(this).closest('.attrib');
-                const attribId = attribContainer.data('attrib-id');
                 attribContainer.remove();
             });
         });

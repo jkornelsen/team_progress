@@ -2,9 +2,9 @@
 
 {% block content %}
     <h1>Event Setup</h1>
-    <p>Chance of something happening. Four-outcome rolls use a d20 die.
+    <p class="info">Chance of something happening. Four-outcome rolls use a d20 die.
     If the result is greater than the outcome margin,
-    for example if difficulty is 5, margin is 9, and roll is 15,
+    for example if roll is 15, difficulty is 5, and margin is 9,
     then the result is a major success, because 15 - 5 &gt; 9.</p>
     <form method="post">
         <label for="event-name">Name:</label>
@@ -13,13 +13,83 @@
         <textarea id="event-description" name="event_description" rows="4" cols="50">{{ current.description }}</textarea><br>
         <input type="checkbox" id="top_level" name="top_level" {% if current.toplevel %}checked{% endif %}>
         <label for="top_level">Show in Overview</label><br>
-        <label>Base Difficulty:</label>
-        {% for difficulty in current.difficulty_values %}
-            <label for="difficulty-{{ difficulty }}">{{ difficulty }}</label>
-            <input type="number" id="difficulty-{{ difficulty }}" name="difficulty_{{ difficulty }}" value="{{ current.difficulty_values[difficulty] }}" required>
-        {% endfor %}<br>
-        <label for="event-outcome-margin">Outcome Margin:</label>
-        <input type="number" id="event-outcome-margin" name="event_outcome_margin" value="{{ current.outcome_margin }}"><br>
+        <div id="outcome-type-container">
+            <label>Outcome Type:</label>
+            <label>
+                <input type="radio" name="outcome_type" value="fourway"
+                    {% if current.outcome_type == 'fourway' %} checked {% endif %}>
+                Four-Way
+            </label>
+            <label>
+                <input type="radio" name="outcome_type" value="numeric"
+                    {% if current.outcome_type == 'numeric' %} checked {% endif %}>
+                Number
+            </label>
+            <label>
+                <input type="radio" name="outcome_type" value="selection"
+                    {% if current.outcome_type == 'selection' %} checked {% endif %}>
+                Selection
+            </label><br>
+        </div>
+        <div id="trigger-chance-container">
+            <label>Trigger Chance:</label>
+            <input type="number" id="trigger-numerator" name="trigger_numerator" value="{{ current.trigger_chance[0] }}">
+            <label for="trigger-denominator">out of</label>
+            <input type="number" id="trigger-denominator" name="trigger_denominator" value="{{ current.trigger_chance[1] }}">
+            <span class="label-like">To make an event trigger automatically, add it to an item or location.</span>
+        </div>
+
+        <div id="numeric-factors">
+            <label for="numeric-min">Min:</label>
+            <input type="number" id="numeric-min" name="numeric_min" value="{{ current.numeric_range[0] }}">
+            <label for="numeric-max">Max:</label>
+            <input type="number" id="numeric-max" name="numeric_max" value="{{ current.numeric_range[1] }}">
+        </div>
+        <div id="selection-container">
+            <label for="selection-strings">Enter a list to choose from (one per line):</label>
+            <textarea id="selection-strings" name="selection_strings" rows="10" cols="30"></textarea>
+        </div>
+
+        <div class="attrib-container outer-border" id="determining-attrib-container">
+            <label>Determining Attributes:</label>
+            <!-- Placeholder for appending new attribs -->
+            <div id="determining_attriblist_end" style="unobtrusive"></div>
+            {% if game_data.attribs %}
+                <div class="select-box">
+                    <select class="add-attrib-select">
+                        <option value="" selected>(Select attribute)</option>
+                        {% for attrib in game_data.attribs %}
+                            <option value="{{ attrib.id }}">{{ attrib.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="button" class="add-attrib-btn" class="lesser-button">Add</button>
+                </div>
+            {% else %}
+                <p class="no-attributes">(No attributes)</p>
+            {% endif %}
+            </div>
+        </div>
+
+        <div class="attrib-container outer-border" id="changed-attrib-container">
+            <label>Attributes Changed:</label>
+            <span class="info">(Changes need to be made manually.)</span>
+            <!-- Placeholder for appending new attribs -->
+            <div id="changed_attriblist_end" style="unobtrusive"></div>
+            {% if game_data.attribs %}
+                <div class="select-box">
+                    <select class="add-attrib-select">
+                        <option value="" selected>(Select attribute)</option>
+                        {% for attrib in game_data.attribs %}
+                            <option value="{{ attrib.id }}">{{ attrib.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="button" class="add-attrib-btn" class="lesser-button">Add</button>
+                </div>
+            {% else %}
+                <p class="no-attributes">(No attributes)</p>
+            {% endif %}
+            </div>
+        </div>
 
         <button type="submit" id="btn-save" name="save_changes">Save and Continue</button>
         <button type="submit" id="btn-cancel" name="cancel_changes" formnovalidate>Cancel Changes</button>
@@ -33,13 +103,83 @@
                 $('#btn-delete').attr('disabled', 'disabled');
             {% endif %}
 
-            $('#btn-save').click(function() {
-                var difficulty = $('#event-difficulty').val();
-                var outcomeMargin = $('#event-outcome-margin').val();
-                var statAdjustment = $('#event-stat-adjustment').val();
-
-                // Perform validation or additional checks if needed
+            function addAttrib(relType, attribId, attribName, attribVal = 1) {
+                const attribHtml = `
+                    <div class="attrib flexdiv" data-attrib-id="${attribId}">
+                        <input type="hidden" name="attrib_id" value="${attribId}">
+                        ${attribName}
+                        <button type="button" class="remove-attrib-btn lesser-button">Remove</button>
+                    </div>
+                `;
+                const attribListId = `${relType}_attriblist_end`;
+                $('#' + attribListId).before(attribHtml);
+            }
+            $('.add-attrib-btn').click(function() {
+                const container = $(this).closest('.attrib-container');
+                const selectedOption = container.find('.add-attrib-select option:selected');
+                const attribId = selectedOption.val();
+                const attribName = selectedOption.text();
+                if (attribId == "") {
+                    return; // Don't add if the selected option is the placeholder
+                }
+                const existingAttrib = container.find(`.attrib[data-attrib-id="${attribId}"]`);
+                if (existingAttrib.length > 0) {
+                    alert('Attribute already exists.');
+                    return;
+                }
+                const relType = container.attr('id').split('-')[0];
+                addAttrib(relType, attribId, attribName);
             });
+            console.log("number of attribs={{ current.determining_attrs | length }}");
+            {% for attrib in current.determining_attrs %}
+                addAttrib(
+                    'determining',
+                    {{ attrib.id }},
+                    "{{ attrib.name }}");
+            {% endfor %}
+            {% for attrib in current.changed_attrs %}
+                addAttrib(
+                    'changed',
+                    {{ attrib.id }},
+                    "{{ attrib.name }}");
+            {% endfor %}
         });
+
+        $('.attrib-container').on('click', '.remove-attrib-btn', function() {
+            const attribContainer = $(this).closest('.attrib');
+            attribContainer.remove();
+        });
+
+        const outcomeTypeContainer = document.getElementById("outcome-type-container");
+        function outcomeTypeVisibility() {
+            const outcomeType = outcomeTypeContainer.querySelector(
+                'input[name="outcome_type"]:checked').value;
+            console.log(`outcomeType=${outcomeType}`);
+            const numericFactorsDiv = document.getElementById("numeric-factors");
+            const selectionStringsDiv = document.getElementById("selection-container");
+            const determiningAttribsDiv = document.getElementById("determining-attrib-container");
+            const changedAttribsDiv = document.getElementById("changed-attrib-container");
+            if (outcomeType === "numeric") {
+                numericFactorsDiv.style.display = "block";
+                selectionStringsDiv.style.display = "none";
+                determiningAttribsDiv.style.display = "block";
+                changedAttribsDiv.style.display = "block";
+            } else if (outcomeType === "selection") {
+                numericFactorsDiv.style.display = "none";
+                selectionStringsDiv.style.display = "block";
+                determiningAttribsDiv.style.display = "none";
+                changedAttribsDiv.style.display = "none";
+            } else {
+                numericFactorsDiv.style.display = "none";
+                selectionStringsDiv.style.display = "none";
+                determiningAttribsDiv.style.display = "block";
+                changedAttribsDiv.style.display = "block";
+            }
+        }
+        outcomeTypeContainer.querySelectorAll('input[name="outcome_type"]').forEach(
+            radio => {
+            radio.addEventListener("change", outcomeTypeVisibility);
+        });
+        outcomeTypeVisibility();
     </script>
 {% endblock %}

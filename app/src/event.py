@@ -9,9 +9,18 @@ from flask import (
     url_for
 )
 import random
+from types import SimpleNamespace
 
 from .db_serializable import Identifiable, coldef, new_game_data
+from .attrib import Attrib
 
+OUTCOME_TYPES = [
+    'fourway',  # critical/minor failure or success
+    'numeric',  # such as a damage number
+    'selection']  # random selection from a list
+(OUTCOME_FOURWAY,
+ OUTCOME_NUMERIC,
+ OUTCOME_SELECTION) = OUTCOME_TYPES
 OUTCOMES = [
     "Critical Failure",
     "Minor Failure",
@@ -21,6 +30,16 @@ OUTCOMES = [
  OUTCOME_MINOR_FAILURE,
  OUTCOME_MINOR_SUCCESS,
  OUTCOME_MAJOR_SUCCESS) = range(len(OUTCOMES))
+BASE_DIFFICULTY = [
+    SimpleNamespace(name='Easy', val=5),
+    SimpleNamespace(name='Moderate', val=10),
+    SimpleNamespace(name='Hard', val=15),
+    SimpleNamespace(name='Very Hard', val=20)]
+(DIFFICULTY_EASY,
+ DIFFICULTY_MODERATE,
+ DIFFICULTY_HARD,
+ DIFFICULTY_VERY_HARD) = BASE_DIFFICULTY
+OUTCOME_MARGIN = 9  # difference required to get major or critical
 
 def roll_dice(sides):
     return random.randint(1, sides)
@@ -31,8 +50,9 @@ tables_to_create = {
         {coldef('name')},
         {coldef('description')},
         {coldef('toplevel')},
-        outcome_margin integer,
-        difficulty_values json
+        outcome_type varchar(20) not null,
+        trigger_chance integer[],
+        numeric_range integer[],
     """
 }
 
@@ -42,13 +62,12 @@ class Event(Identifiable):
         self.name = ""
         self.description = ""
         self.toplevel = False if len(self.get_list()) > 1 else True
-        self.outcome_margin = 9  # difference required to get major or critical
-        self.difficulty_values = {  # specified on configure screen
-                'Easy': 5,
-                'Moderate': 10,
-                'Hard': 15,
-                'Very Hard': 20,
-            }
+        self.outcome_type = OUTCOME_FOURWAY
+        self.trigger_chance = (0, 1) # tuple (numerator, denominator)
+        self.numeric_range = (0, 10)  # tuple (min, max)
+        self.determining_attrs = []  # Attrib objects determining the outcome
+        self.changed_attrs = []  # Attrib objects changed by the outcome
+        ## For a particular occurrence, not stored in Event table
         self.difficulty = 'Moderate'  # which one for a particular occurrence
         self.stat_adjustment = 0  # for example, 5 for perception
         self.advantage = 0  # for example +1 means best of two rolls
@@ -60,26 +79,38 @@ class Event(Identifiable):
             'name': self.name,
             'description': self.description,
             'toplevel': self.toplevel,
-            'difficulty_values': self.difficulty_values,
-            'outcome_margin': self.outcome_margin,
+            'outcome_type': self.outcome_type,
         }
 
     @classmethod
     def from_json(cls, data, _=None):
         if not isinstance(data, dict):
             data = vars(data)
-        instance = cls(data['id'])
-        instance.name = data['name']
-        instance.description = data['description']
-        instance.toplevel = data['toplevel']
-        instance.outcome_margin = data['outcome_margin']
-        instance.difficulty_values = data['difficulty_values']
+        instance = cls(int(data.get('id', 0)))
+        instance.name = data.get('name', "")
+        instance.description = data.get('description', "")
+        instance.toplevel = data.get('toplevel', False)
+        instance.outcome_type = data.get('outcome_type', OUTCOME_FOURWAY)
         return instance
 
     @classmethod
-    def data_for_configure(cls, event_id):
+    def data_for_configure(cls, config_id):
         print(f"{cls.__name__}.data_for_configure()")
-        return cls.from_db(event_id)
+        if config_id == 'new':
+            config_id = 0
+        else:
+            config_id = int(config_id)
+        # Get all attrib names
+        attribs_data = cls.execute_select("""
+            SELECT id, name
+            FROM attribs
+            WHERE game_token = %s
+            ORDER BY name
+        """, (g.game_token,))
+        g.game_data.attribs = [
+            Attrib.from_json(attrib_data)
+            for attrib_data in attribs_data]
+        return cls.from_db(config_id)
 
     def configure_by_form(self):
         if 'save_changes' in request.form:  # button was clicked
