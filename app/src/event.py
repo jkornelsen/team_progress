@@ -63,10 +63,11 @@ class Event(Identifiable):
         self.description = ""
         self.toplevel = False if len(self.get_list()) > 1 else True
         self.outcome_type = OUTCOME_FOURWAY
-        self.trigger_chance = (0, 1) # tuple (numerator, denominator)
-        self.numeric_range = (0, 10)  # tuple (min, max)
+        self.numeric_range = (0, 10)  # (min, max)
         self.determining_attrs = []  # Attrib objects determining the outcome
         self.changed_attrs = []  # Attrib objects changed by the outcome
+        self.trigger_chance = (0, 1) # (numerator, denominator)
+        self.triggers = []  # Item or Location objects that can trigger
         ## For a particular occurrence, not stored in Event table
         self.difficulty = 'Moderate'  # which one for a particular occurrence
         self.stat_adjustment = 0  # for example, 5 for perception

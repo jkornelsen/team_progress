@@ -23,6 +23,7 @@ tables_to_create = {
         recipe_id integer,
         source_id integer,
         src_qty integer NOT NULL,
+        src_preserve boolean NOT NULL,
         rate_amount integer NOT NULL,
         rate_duration float(2) NOT NULL,
         instant boolean,
@@ -87,6 +88,19 @@ tables_to_create = {
             REFERENCES events (game_token, id),
         FOREIGN KEY (game_token, attrib_id)
             REFERENCES attribs (game_token, id)
+    """,
+    'event_triggers': f"""
+        {coldef('game_token')},
+        event_id integer,
+        item_id integer,
+        loc_id integer,
+        PRIMARY KEY (game_token, event_id, item_id, loc_id),
+        FOREIGN KEY (game_token, event_id)
+            REFERENCES events (game_token, id),
+        FOREIGN KEY (game_token, item_id)
+            REFERENCES items (game_token, id)
+        FOREIGN KEY (game_token, loc_id)
+            REFERENCES locations (game_token, id)
     """,
     # Overall
     'win_requirements': f"""

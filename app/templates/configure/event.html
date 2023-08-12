@@ -31,13 +31,6 @@
                 Selection
             </label><br>
         </div>
-        <div id="trigger-chance-container">
-            <label>Trigger Chance:</label>
-            <input type="number" id="trigger-numerator" name="trigger_numerator" value="{{ current.trigger_chance[0] }}">
-            <label for="trigger-denominator">out of</label>
-            <input type="number" id="trigger-denominator" name="trigger_denominator" value="{{ current.trigger_chance[1] }}">
-            <span class="label-like">To make an event trigger automatically, add it to an item or location.</span>
-        </div>
 
         <div id="numeric-factors">
             <label for="numeric-min">Min:</label>
@@ -87,6 +80,47 @@
                 </div>
             {% else %}
                 <p class="no-attributes">(No attributes)</p>
+            {% endif %}
+            </div>
+        </div>
+
+        <div id="trigger-chance-container">
+            <label>Trigger Chance:</label>
+            <input type="number" id="trigger-numerator" name="trigger_numerator" value="{{ current.trigger_chance[0] }}">
+            <label for="trigger-denominator">out of</label>
+            <input type="number" id="trigger-denominator" name="trigger_denominator" value="{{ current.trigger_chance[1] }}">
+            <span class="label-like">To make an event trigger automatically, add it to an item or location.</span>
+        </div>
+
+        <div class="entity-trigger-container outer-border" id="entity-trigger-container">
+            <label>Triggered During Progress For:</label>
+            <!-- Placeholder for appending new attribs -->
+            <div id="trigger_entitylist_end" style="unobtrusive"></div>
+            {% if game_data.items %}
+                <div class="select-box">
+                    <select class="add-item-select">
+                        <option value="" selected>(Select item)</option>
+                        {% for item in game_data.items %}
+                            <option value="{{ item.id }}">{{ item.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="button" class="add-item-btn" class="lesser-button">Add</button>
+                </div>
+            {% else %}
+                <p class="no-items">(No items)</p>
+            {% endif %}
+            {% if game_data.locations %}
+                <div class="select-box">
+                    <select class="add-loc-select">
+                        <option value="" selected>(Select location)</option>
+                        {% for loc in game_data.locations %}
+                            <option value="{{ loc.id }}">{{ loc.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="button" class="add-loc-btn" class="lesser-button">Add</button>
+                </div>
+            {% else %}
+                <p class="no-locs">(No locations)</p>
             {% endif %}
             </div>
         </div>

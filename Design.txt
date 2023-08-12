@@ -119,6 +119,15 @@ before the event is shown, event params are shown which can either be
 accepted or changed, and then roll for the event
 no random event can occur when progress is paused
 
+chance of Event to occur during Item progress
+on Event config screen, add all items and locations where the event can trigger
+chance of 1 out of x seconds to trigger while progress is running
+e.g. chance of beast showing up during suzy's trip through the forest
+
+maybe only one event can trigger while not viewing the item or location,
+which will be shown when viewed
+because elapsed time isn't calculated until viewed
+
 randomized progress
 for example if str is 10 then hit on tree is from 8 to 10
 chance of success for incrementing
@@ -163,6 +172,10 @@ can modify quantity or val of attrib?
 table win_requirements
 item_id, quantity, location_id, character_id, attrib_id, attrib_val
 
+win requirement: character has a certain item
+win requirement: character is in a certain location
+all conditions must be met to win
+
 ability to replay a game
 
 items may have different sets of materials
@@ -174,15 +187,63 @@ these would need to be columns in a relation table
 repeat the same values for all sources of a recipe,
 to avoid the need for a separate recipe table
 
+require character in location with attribute for item progress
+the operation can be continued as long as the requirement is met
+doesn't matter if there are multiple matches
+as long as at least one character meets the requirements
+also require owned item
+checkbox that the item won't get consumed during the exchange
+
+we don't necessarily tie a character to an action
+list of characters and their location but not action
+
+shared game log
+shown in a scrollable text box on overview screen
+load recent history when page is loaded
+check every few seconds for new entries that need to be added at the top
+    added item1
+    modified item1
+    gained 22 item1
+    char1 travelled 22 distance
+    char2 arrived at loc2
+    event1 (minor success)
+repeated actions such as item progress get merged into one
+would be nice to move it to the top of the list in that case
+
+separate lists
+- players and their most recent action
+- chars and their loc
+- items in general storage
+- log of game changes without mentioning player
+log is in separate column on overview screen
+remove some columns from user_interactions tbl and create new game_log tbl
+if it's ajax, get the page from request to store as the interaction
+
 on item play page, have start/stop button or gain button for each recipe,
 and show all source quantities for all recipes of that item
 
-to cover more cases, we'd need to differentiate between materials and contained items.
+differentiate between materials and contained items of an item
 for example, a wooden box requires planks and nails to build, but could contain clothes.
 or perhaps only locations need to contain things, and a wooden box could be a location
     it may still be possible to build a location, perhaps by brute force with an event
-    we could manufacture a wooded box item, then destroy it and create the unique location
+    we could manufacture a wooden box item, then destroy it and create the unique location
 characters (players and npcs) could also contain (i.e. wear or hold) items
+
+can move items from owned/carried or floor to general storage
+the difference is whether the game tracks location
+so general storage boils down to less automation
+buttons Drop to Location, Put in General Storage
+overview shows general storage
+button to transfer quantity to a character
+
+location required is wherever the source item is found
+that is, if pigs are located in a sty,
+and bacon requires pigs,
+then everything needed for making bacon must be in the same location,
+including a character
+a station is a required item on the floor at a location
+if nothing required is at a specific location, then use general storage
+"floor" means not carried -- could be thought of as e.g. on a shelf
 
 entity classes might have superclasses for partially shared behavior
     players and npcs are both actors and can potentially gain xp from an action
