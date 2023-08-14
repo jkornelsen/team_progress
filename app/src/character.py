@@ -320,7 +320,7 @@ class Character(Identifiable):
             self.attribs = {}
             for attrib_id in attrib_ids:
                 attrib_val = int(
-                    request.form.get(f'attrib_val_{attrib_id}', 0))
+                    request.form.get(f'attrib_{attrib_id}_val', 0))
                 attrib_item = Attrib.get_by_id(attrib_id)
                 self.attribs[attrib_item] = attrib_val
             print("attribs: ", {attrib.name: val

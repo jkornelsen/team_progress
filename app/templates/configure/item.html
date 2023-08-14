@@ -95,7 +95,6 @@
             }
 
             let recipeCounter = 1;
-
             function addRecipe(rate_amount = 1, rate_duration = 1.0, instant = false) {
                 recipeCounter++;
                 console.log(`addRecipe() ${recipeCounter}`);
@@ -138,7 +137,7 @@
                         <label>Takes:</label>
                         <input type="number" id="recipe-${recipeId}-source-${sourceId}-quantity" name="recipe_${recipeId}_source_${sourceId}_quantity" value="${sourceQuantity}">
                         ${sourceName}
-                        <input type="checkbox" id="preserve" name="recipe_${recipeCounter}_preserve"
+                        <input type="checkbox" id="recipe-${recipeId}-source-${sourceId}-preserve" name="recipe_${recipeId}_source_${sourceId}_preserve"
                             ${preserve ? 'checked' : ''}>
                         <label for="preserve">Preserve</label>
                         <button class="remove-source-btn lesser-button">Remove</button>
@@ -148,7 +147,6 @@
                 console.log("added sourceHtml before sourcelist_end");
                 toggleAddRecipeButtonVisibility();
             }
-
             $('#add-source-btn').click(function() {
                 const selectedOption = $('#add-source-select option:selected');
                 const sourceId = selectedOption.val();
@@ -182,11 +180,12 @@
                     {{ recipe.rate_duration }},
                     {{ recipe.instant | lower }});
                 {% for source in recipe.sources %}
-                    addSource(recipeCounter,
-                    {{ source.item.id }},
-                    "{{ source.item.name }}",
-                    "{{ source.quantity}}",
-                    {{ source.preserve | lower }});
+                    addSource(
+                        recipeCounter,
+                        {{ source.item.id }},
+                        "{{ source.item.name }}",
+                        "{{ source.quantity}}",
+                        {{ source.preserve | lower }});
                 {% endfor %}
             {% endfor %}
 

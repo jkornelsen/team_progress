@@ -2,10 +2,13 @@
 
 {% block content %}
     <h1>Event Setup</h1>
-    <p class="info">Chance of something happening. Four-outcome rolls use a d20 die.
+    <p class="info">Chance of something happening. Four-outcome rolls use
+    a 20-sided die.
     If the result is greater than the outcome margin,
     for example if roll is 15, difficulty is 5, and margin is 9,
     then the result is a major success, because 15 - 5 &gt; 9.</p>
+    <p class="info">Show in Overview so an event can be run manually.
+    Or, they can be set up to trigger during ongoing actions.</p>
     <form method="post">
         <label for="event-name">Name:</label>
         <input type="text" id="event-name" name="event_name" value="{{ current.name }}" required><br>
@@ -55,7 +58,7 @@
                             <option value="{{ attrib.id }}">{{ attrib.name }}</option>
                         {% endfor %}
                     </select>
-                    <button type="button" class="add-attrib-btn" class="lesser-button">Add</button>
+                    <button type="button" class="add-attrib-btn lesser-button">Add</button>
                 </div>
             {% else %}
                 <p class="no-attributes">(No attributes)</p>
@@ -65,7 +68,7 @@
 
         <div class="attrib-container outer-border" id="changed-attrib-container">
             <label>Attributes Changed:</label>
-            <span class="info">(Changes need to be made manually.)</span>
+            <span class="info">(Currently changes need to be made manually.)</span>
             <!-- Placeholder for appending new attribs -->
             <div id="changed_attriblist_end" style="unobtrusive"></div>
             {% if game_data.attribs %}
@@ -76,7 +79,7 @@
                             <option value="{{ attrib.id }}">{{ attrib.name }}</option>
                         {% endfor %}
                     </select>
-                    <button type="button" class="add-attrib-btn" class="lesser-button">Add</button>
+                    <button type="button" class="add-attrib-btn lesser-button">Add</button>
                 </div>
             {% else %}
                 <p class="no-attributes">(No attributes)</p>
@@ -85,16 +88,15 @@
         </div>
 
         <div id="trigger-chance-container">
-            <label>Trigger Chance:</label>
+            <label>Automatic Trigger Chance:</label>
             <input type="number" id="trigger-numerator" name="trigger_numerator" value="{{ current.trigger_chance[0] }}">
             <label for="trigger-denominator">out of</label>
             <input type="number" id="trigger-denominator" name="trigger_denominator" value="{{ current.trigger_chance[1] }}">
-            <span class="label-like">To make an event trigger automatically, add it to an item or location.</span>
         </div>
 
         <div class="entity-trigger-container outer-border" id="entity-trigger-container">
             <label>Triggered During Progress For:</label>
-            <!-- Placeholder for appending new attribs -->
+            <!-- Placeholder for appending new triggering entities -->
             <div id="trigger_entitylist_end" style="unobtrusive"></div>
             {% if game_data.items %}
                 <div class="select-box">
@@ -104,7 +106,7 @@
                             <option value="{{ item.id }}">{{ item.name }}</option>
                         {% endfor %}
                     </select>
-                    <button type="button" class="add-item-btn" class="lesser-button">Add</button>
+                    <button type="button" class="add-item-btn lesser-button">Add</button>
                 </div>
             {% else %}
                 <p class="no-items">(No items)</p>
@@ -117,7 +119,7 @@
                             <option value="{{ loc.id }}">{{ loc.name }}</option>
                         {% endfor %}
                     </select>
-                    <button type="button" class="add-loc-btn" class="lesser-button">Add</button>
+                    <button type="button" class="add-loc-btn lesser-button">Add</button>
                 </div>
             {% else %}
                 <p class="no-locs">(No locations)</p>
@@ -136,6 +138,38 @@
             {% else %}
                 $('#btn-delete').attr('disabled', 'disabled');
             {% endif %}
+
+            const outcomeTypeContainer = document.getElementById("outcome-type-container");
+            function outcomeTypeVisibility() {
+                const outcomeType = outcomeTypeContainer.querySelector(
+                    'input[name="outcome_type"]:checked').value;
+                console.log(`outcomeType=${outcomeType}`);
+                const numericFactorsDiv = document.getElementById("numeric-factors");
+                const selectionStringsDiv = document.getElementById("selection-container");
+                const determiningAttribsDiv = document.getElementById("determining-attrib-container");
+                const changedAttribsDiv = document.getElementById("changed-attrib-container");
+                if (outcomeType === "numeric") {
+                    numericFactorsDiv.style.display = "block";
+                    selectionStringsDiv.style.display = "none";
+                    determiningAttribsDiv.style.display = "block";
+                    changedAttribsDiv.style.display = "block";
+                } else if (outcomeType === "selection") {
+                    numericFactorsDiv.style.display = "none";
+                    selectionStringsDiv.style.display = "block";
+                    determiningAttribsDiv.style.display = "none";
+                    changedAttribsDiv.style.display = "none";
+                } else {
+                    numericFactorsDiv.style.display = "none";
+                    selectionStringsDiv.style.display = "none";
+                    determiningAttribsDiv.style.display = "block";
+                    changedAttribsDiv.style.display = "block";
+                }
+            }
+            outcomeTypeContainer.querySelectorAll('input[name="outcome_type"]').forEach(
+                radio => {
+                radio.addEventListener("change", outcomeTypeVisibility);
+            });
+            outcomeTypeVisibility();
 
             function addAttrib(relType, attribId, attribName, attribVal = 1) {
                 const attribHtml = `
@@ -177,43 +211,68 @@
                     {{ attrib.id }},
                     "{{ attrib.name }}");
             {% endfor %}
-        });
+            $('.attrib-container').on('click', '.remove-attrib-btn', function() {
+                const attribContainer = $(this).closest('.attrib');
+                attribContainer.remove();
+            });
 
-        $('.attrib-container').on('click', '.remove-attrib-btn', function() {
-            const attribContainer = $(this).closest('.attrib');
-            attribContainer.remove();
-        });
-
-        const outcomeTypeContainer = document.getElementById("outcome-type-container");
-        function outcomeTypeVisibility() {
-            const outcomeType = outcomeTypeContainer.querySelector(
-                'input[name="outcome_type"]:checked').value;
-            console.log(`outcomeType=${outcomeType}`);
-            const numericFactorsDiv = document.getElementById("numeric-factors");
-            const selectionStringsDiv = document.getElementById("selection-container");
-            const determiningAttribsDiv = document.getElementById("determining-attrib-container");
-            const changedAttribsDiv = document.getElementById("changed-attrib-container");
-            if (outcomeType === "numeric") {
-                numericFactorsDiv.style.display = "block";
-                selectionStringsDiv.style.display = "none";
-                determiningAttribsDiv.style.display = "block";
-                changedAttribsDiv.style.display = "block";
-            } else if (outcomeType === "selection") {
-                numericFactorsDiv.style.display = "none";
-                selectionStringsDiv.style.display = "block";
-                determiningAttribsDiv.style.display = "none";
-                changedAttribsDiv.style.display = "none";
-            } else {
-                numericFactorsDiv.style.display = "none";
-                selectionStringsDiv.style.display = "none";
-                determiningAttribsDiv.style.display = "block";
-                changedAttribsDiv.style.display = "block";
+            function addTrigger(entityType, entityId, entityName) {
+                const entityHtml = `
+                    <div class="entity flexdiv" data-entity-type="${entityType}" data-entity-id="${entityId}">
+                        <input type="hidden" name="entity_type[]" value="${entityType}">
+                        <input type="hidden" name="entity_id[]" value="${entityId}">
+                        ${entityName}
+                        <button type="button" class="remove-entity-btn lesser-button">Remove</button>
+                    </div>
+                `;
+                $('#trigger_entitylist_end').prepend(entityHtml);
             }
-        }
-        outcomeTypeContainer.querySelectorAll('input[name="outcome_type"]').forEach(
-            radio => {
-            radio.addEventListener("change", outcomeTypeVisibility);
+            $('.add-item-btn').click(function() {
+                const selectBox = $(this).prev('.add-item-select');
+                const selectedOption = selectBox.find(':selected');
+                const itemId = selectedOption.val();
+                const itemName = selectedOption.text();
+                const entityType = "item"
+                if (itemId === '') {
+                    return; // don't add if the selected option is the placeholder
+                }
+                const existingItem = $(`.entity-trigger-container`)
+                    .find(`.entity[data-entity-id="${itemId}"][data-entity-type="${entityType}"]`);
+                if (existingItem.length > 0) {
+                    alert('Item already added.');
+                    return;
+                }
+                addTrigger(entityType, itemId, itemName);
+            });
+            $('.add-loc-btn').click(function() {
+                const selectBox = $(this).prev('.add-loc-select');
+                const selectedOption = selectBox.find(':selected');
+                const locId = selectedOption.val();
+                const locName = selectedOption.text();
+                const entityType = "location"
+                if (locId === '') {
+                    return; // don't add if the selected option is the placeholder
+                }
+                const existingLoc = $(`.entity-trigger-container`)
+                    .find(`.entity[data-entity-id="${locId}"][data-entity-type="${entityType}"]`);
+                if (existingLoc.length > 0) {
+                    alert('Location already added.');
+                    return;
+                }
+                addTrigger(entityType, locId, locName);
+            });
+            console.log("number of triggers={{ current.triggers | length }}");
+            {% for entity in current.triggers %}
+                console.log("name={{entity.name}}");
+                addTrigger(
+                    "{{ entity.__class__.__name__ | lower }}",
+                    {{ entity.id }},
+                    "{{ entity.name }}");
+            {% endfor %}
+            $('#entity-trigger-container').on('click', '.remove-entity-btn', function() {
+                const entityContainer = $(this).closest('.entity');
+                entityContainer.remove();
+            });
         });
-        outcomeTypeVisibility();
     </script>
 {% endblock %}

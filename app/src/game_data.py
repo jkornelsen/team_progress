@@ -12,12 +12,12 @@ from src.overall import Overall
 
 class GameData:
     # In this order for from_json().
-    ENTITIES = [
+    ENTITIES = (
             Attrib,
             Item,
             Location,
             Character,
-            Event]
+            Event)
 
     def __init__(self):
         g.game_data = self
@@ -112,7 +112,7 @@ class GameData:
                 for tablename in relation_tables
             ] + [
                 entity_cls.tablename()
-                for entity_cls in GameData.ENTITIES + [Overall]
+                for entity_cls in list(GameData.ENTITIES) + [Overall]
             ]
         for tablename in tablenames:
             DbSerializable.execute_change(f"""

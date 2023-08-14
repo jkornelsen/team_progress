@@ -12,7 +12,7 @@
 
         <label for="character-location">Location:</label>
         <select id="character-location" name="char_location">
-            <option value="" selected>(Select location)</option>
+            <option value="" selected>(Nowhere in particular)</option>
             {% for location in game_data.locations %}
                 <option value="{{ location.id }}" {% if current.location.id == location.id %}selected{% endif %}>
                     {{ location.name }}
@@ -96,14 +96,13 @@
                         </td><td>
                             <input type="text" name="item_slot[]" value="${itemSlot}" size="8">
                         </td><td>
-                            <button class="remove-item-btn">Remove</button>
+                            <button class="remove-item-btn lesser-button">Remove</button>
                         </td>
                     </tr>
                 `;
                 $('#items-rows').prepend(itemHtml);
                 $('#items-table').show();
             }
-
             $('.add-item-btn').click(function() {
                 const selectBox = $(this).prev('.item-select');
                 const selectedOption = selectBox.find(':selected');
@@ -119,7 +118,6 @@
                 }
                 addItem(itemId, itemName);
             });
-
             console.log("number of items={{ current.items | length }}");
             {% for owned_item in current.items %}
                 console.log("name={{owned_item.item.name}}");
@@ -130,7 +128,6 @@
                     "{{ owned_item.quantity }}",
                     "{{ owned_item.slot }}");
             {% endfor %}
-
             $('#items-rows').on('click', '.remove-item-btn', function() {
                 const itemContainer = $(this).closest('.item');
                 itemContainer.remove();
@@ -168,7 +165,6 @@
                     "{{ attrib.name }}",
                     "{{ attrib_val }}");
             {% endfor %}
-
             $('#attrib-container').on('click', '.remove-attrib-btn', function() {
                 const attribContainer = $(this).closest('.attrib');
                 attribContainer.remove();

@@ -29,21 +29,21 @@ tables_to_create = {
 
 class Source:
     def __init__(self, new_id=0):
-        self.item = 0
+        self.item = Item(new_id)
         self.preserve = False  # if true then source will not be consumed
         self.quantity = 1
 
     def to_json(self):
         return {
-            'item_id': self.item_id,
+            'source_id': self.item.id,
             'preserve': self.preserve,
             'quantity': self.quantity}
 
     @classmethod
     def from_json(cls, data):
         instance = cls()
-        instance.item = Item(int(data.get('item_id', 0)))
-        instance.perserve = data.get('perserve', False)
+        instance.item = Item(int(data.get('source_id', 0)))
+        instance.preserve = data.get('preserve', False)
         instance.quantity = data.get('quantity', 1)
         return instance
 
@@ -64,7 +64,7 @@ class Recipe:
             'rate_duration': self.rate_duration,
             'sources': [
                 source.to_json()
-                for source in self.sources()]}
+                for source in self.sources]}
 
     @classmethod
     def from_json(cls, data):
@@ -142,23 +142,23 @@ class Item(Identifiable):
         if doc['recipes']:
             print(f"recipes: {doc['recipes']}")
             values = []
-            for recipe_id, recipe in enumerate(doc['recipes'], start=1):
-                for source in recipe['sources']:
+            for recipe_id, recipe_data in enumerate(doc['recipes'], start=1):
+                for source_data in recipe_data['sources']:
                     values.append((
                         g.game_token,
                         self.id,
                         recipe_id,
-                        source.item.id,
-                        source.quantity,
-                        source.preserve,
-                        recipe['rate_amount'],
-                        recipe['rate_duration'],
-                        recipe['instant']
+                        source_data['source_id'],
+                        source_data['quantity'],
+                        source_data['preserve'],
+                        recipe_data['rate_amount'],
+                        recipe_data['rate_duration'],
+                        recipe_data['instant']
                         ))
             self.insert_multiple(
                 "item_sources",
                 "game_token, item_id, recipe_id, source_id,"
-                " src_qty, src_preserve, rate_amount, rate_duration, instant",
+                " quantity, preserve, rate_amount, rate_duration, instant",
                 values)
 
     @classmethod
@@ -306,7 +306,7 @@ class Item(Identifiable):
             populated_objs[attrib] = val
         current_obj.attribs = populated_objs
         for recipe in current_obj.recipes:
-            for source in recipe.sources():
+            for source in recipe.sources:
                 source.item = Item.get_by_id(source.item.id)
         # Print debugging info
         print(f"found {len(current_obj.recipes)} recipes")
@@ -316,7 +316,7 @@ class Item(Identifiable):
             print(f"instant={recipe.instant}")
             for source in recipe.sources:
                 print(f"item id {source.item.id} name {source.item.name}"
-                    " qty {source.qty}")
+                    f" qty {source.quantity}")
         return current_obj
 
     def configure_by_form(self):
@@ -349,7 +349,7 @@ class Item(Identifiable):
                 print(f"Source IDs: {source_ids}")
                 for source_id in source_ids:
                     source = Source.from_json({
-                        'item_id': int(source_id),
+                        'source_id': int(source_id),
                         'quantity': int(request.form.get(
                             f'recipe_{recipe_id}_source_{source_id}_quantity', 0)),
                         'preserve': bool(request.form.get(
@@ -357,7 +357,7 @@ class Item(Identifiable):
                     })
                     recipe.sources.append(source)
                     print(f"Sources for {recipe_id}: ",
-                        {source.item_id: source.quantity
+                        {source.item.id: source.quantity
                         for source in recipe.sources})
             attrib_ids = request.form.getlist('attrib_id')
             print(f"Attrib IDs: {attrib_ids}")

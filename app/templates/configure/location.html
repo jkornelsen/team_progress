@@ -10,16 +10,6 @@
 
         <h2>Destinations</h2>
         <div id="destinations-container">
-            {% for destination, distance in current.destinations.items() %}
-                <div class="destination">
-                    <input type="hidden" name="destination_id[]" value="{{ destination.id }}">
-                    <p>{{ destination.name }}
-                    <label for="destination-distance">Distance:</label>
-                    <input type="number" id="destination-distance" name="destination_distance[]" value="{{ distance }}" class="distance-field">
-                    <button class="remove-destination-btn">Remove Destination</button>
-                    </p>
-                </div>
-            {% endfor %}
             <div>
                 {% set outerscope = namespace(has_other_location = false) %}
                 {% for location in game_data.locations %}
@@ -68,31 +58,39 @@
                 $('#btn-delete').attr('disabled', 'disabled');
             {% endif %}
 
-            $('#add-destination-btn').click(function() {
-                var selectedOption = $('#destination-select option:selected');
-                var destinationId = selectedOption.val();
-                var destinationName = selectedOption.text();
-                if (destinationId == "") {
-                    return; // don't add if the selected option is the placeholder
-                }
-                var existingDestination = $('.destination input[value="' + destinationId + '"]').closest('.destination');
-                if (existingDestination.length > 0) {
-                    alert('Destination already exists.');
-                    return;
-                }
-                // Create HTML elements for the destination
-                var destinationHtml = `
+            function addDestination(destinationId, destinationName, distance = 1) {
+                const destinationHtml = `
                     <div class="destination">
                         <input type="hidden" name="destination_id[]" value="${destinationId}">
                         <p>${destinationName}
                         <label for="destination-distance">Distance:</label>
-                        <input type="number" id="destination-distance" name="destination_distance[]" value="1" class="distance-field">
-                        <button class="remove-destination-btn">Remove Destination</button>
+                        <input type="number" id="destination-distance" name="destination_distance[]" value="${distance}" class="distance-field">
+                        <button class="remove-destination-btn lesser-button">Remove Destination</button>
                         </p>
                     </div>
                 `;
                 $('#destinations-container').prepend(destinationHtml);
+            }
+            $('#add-destination-btn').click(function() {
+                const selectedOption = $('#destination-select option:selected');
+                const destinationId = selectedOption.val();
+                const destinationName = selectedOption.text();
+                if (destinationId == "") {
+                    return; // don't add if the selected option is the placeholder
+                }
+                const existingDestination = $('.destination input[value="' + destinationId + '"]').closest('.destination');
+                if (existingDestination.length > 0) {
+                    alert('Destination already exists.');
+                    return;
+                }
+                addDestination(destinationId, destinationName);
             });
+            {% for destination, distance in current.destinations.items() %}
+                addDestination(
+                    {{ destination.id }},
+                    "{{ destination.name }}",
+                    "{{ distance }}");
+            {% endfor %}
 
             $('#destinations-container').on('click', '.remove-destination-btn', function() {
                 var destinationContainer = $(this).closest('.destination');

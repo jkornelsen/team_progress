@@ -22,8 +22,8 @@ tables_to_create = {
         item_id integer,
         recipe_id integer,
         source_id integer,
-        src_qty integer NOT NULL,
-        src_preserve boolean NOT NULL,
+        quantity integer NOT NULL,
+        preserve boolean NOT NULL,
         rate_amount integer NOT NULL,
         rate_duration float(2) NOT NULL,
         instant boolean,
@@ -98,7 +98,7 @@ tables_to_create = {
         FOREIGN KEY (game_token, event_id)
             REFERENCES events (game_token, id),
         FOREIGN KEY (game_token, item_id)
-            REFERENCES items (game_token, id)
+            REFERENCES items (game_token, id),
         FOREIGN KEY (game_token, loc_id)
             REFERENCES locations (game_token, id)
     """,

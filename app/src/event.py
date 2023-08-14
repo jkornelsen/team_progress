@@ -13,6 +13,8 @@ from types import SimpleNamespace
 
 from .db_serializable import Identifiable, coldef, new_game_data
 from .attrib import Attrib
+from .item import Item
+from .location import Location
 
 OUTCOME_TYPES = [
     'fourway',  # critical/minor failure or success
@@ -52,7 +54,7 @@ tables_to_create = {
         {coldef('toplevel')},
         outcome_type varchar(20) not null,
         trigger_chance integer[],
-        numeric_range integer[],
+        numeric_range integer[]
     """
 }
 
@@ -61,7 +63,7 @@ class Event(Identifiable):
         super().__init__(new_id)
         self.name = ""
         self.description = ""
-        self.toplevel = False if len(self.get_list()) > 1 else True
+        self.toplevel = True
         self.outcome_type = OUTCOME_FOURWAY
         self.numeric_range = (0, 10)  # (min, max)
         self.determining_attrs = []  # Attrib objects determining the outcome
@@ -101,16 +103,19 @@ class Event(Identifiable):
             config_id = 0
         else:
             config_id = int(config_id)
-        # Get all attrib names
-        attribs_data = cls.execute_select("""
-            SELECT id, name
-            FROM attribs
-            WHERE game_token = %s
-            ORDER BY name
-        """, (g.game_token,))
-        g.game_data.attribs = [
-            Attrib.from_json(attrib_data)
-            for attrib_data in attribs_data]
+        # Get all names of needed entities
+        for entity_cls in (Attrib, Item, Location):
+            entities_data = cls.execute_select(f"""
+                SELECT id, name
+                FROM {entity_cls.tablename()}
+                WHERE game_token = %s
+                ORDER BY name
+            """, (g.game_token,))
+            setattr(
+                g.game_data,
+                entity_cls.listname(), [
+                    entity_cls.from_json(entity_data)
+                    for entity_data in entities_data])
         return cls.from_db(config_id)
 
     def configure_by_form(self):
