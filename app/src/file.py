@@ -48,10 +48,10 @@ def set_routes(app):
     @app.route('/configure')
     def configure():
         file_message = session.pop('file_message', False)
-        game_data = GameData.entity_names_from_db()
+        GameData.entity_names_from_db()
         return render_template(
             'configure/index.html',
-            game_data=game_data,
+            game_data=g.game_data,
             file_message=file_message)
 
     @app.route('/save_to_file')

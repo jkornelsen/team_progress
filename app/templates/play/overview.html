@@ -35,10 +35,49 @@
         <h1>{{ current.title }}</h1>
         <p class="info">{{ current.description }}</p>
     {% endif %}
+
+    <!-- Players -->
+    {% if interactions %}
+    <table>
+        <tr>
+            <th>Player</th>
+            <th>Most Recent Interaction</th>
+        </tr>
+        {% for interaction in interactions %}
+            <tr>
+                <td{% if interaction.username == current_username %} class="username"{% endif %}>{{ interaction.username }}</td>
+                <td><a href="{{ interaction.action_link() }}">{{ interaction.action_display() }}</a></td>
+            </td></tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+
+    <!-- Top-level Characters and their Location -->
+    {% if charlist %}
+        <table>
+            <tr>
+                <th>Characters</th>
+                <th>At</th>
+            </tr>
+            {% for char in charlist %}
+                <tr><td>
+                    {% if char.char_id %}
+                        <a href="{{ url_for('play_char', char_id=char.char_id) }}">{{ char.char_name }}</a>
+                    {% endif %}
+                </td><td>
+                    {% if char.loc_id %}
+                        <a href="{{ url_for('play_location', loc_id=char.loc_id) }}">{{ char.loc_name }}</a>
+                    {% endif %}
+                </td></tr>
+            {% endfor %}
+        </table>
+    {% endif %}
+
+    <!-- Items in General Storage -->
     {% if other_entities.items %}
         <table cellspacing="0" cellpadding="5">
             <tr>
-                <th>Item</th>
+                <th>General Storage</th>
                 <th>Quantity</th>
             </tr>
             {% for item in other_entities.items %}
@@ -53,45 +92,21 @@
             {% endfor %}
         </table>
     {% endif %}
-    <table>
-        <tr>
-            <th>Character</th>
-            <th>Location</th>
-            <th>Recent Action</th>
-            <th>Player</th>
-        </tr>
-        {% for char in charlist %}
-            <tr>
-                <td>
-                    {% if char.char_id %}
-                        <a href="{{ url_for('play_char', char_id=char.char_id) }}">{{ char.char_name }}</a>
-                    {% endif %}
-                </td>
-                <td>
-                    {% if char.loc_id %}
-                        <a href="{{ url_for('play_location', loc_id=char.loc_id) }}">{{ char.loc_name }}</a>
-                    {% endif %}
-                </td>
-                <td>{{ char.action_name }}</td>
-                <td{% if char.username == current_username %} class="username"{% endif %}>{{ char.username }}</td>
 
+    <!-- Top-level Events -->
+    {% if other_entities.events %}
+        <table>
+            <tr>
+                <th>Events</th>
             </tr>
-        {% endfor %}
-    </table>
-    {% set outerscope = namespace(display_section = false) %}
-    {% for event in other_entities.events %}
-        {% set outerscope.display_section = true %}
-    {% endfor %}
-    {% if outerscope.display_section %}
-        <h2>Events</h2>
-        <ul>
             {% for event in other_entities.events %}
-                <li>
+                <tr><td>
                     <a href="{{ url_for('play_event', event_id=event.id) }}">{{ event.name }}</a>
-                </li>
+                </td></tr>
             {% endfor %}
-        </ul>
+        </table>
     {% endif %}
+
     <script>
         $(document).ready(function() {
             function updateQuantities() {

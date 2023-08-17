@@ -3,15 +3,9 @@
 
 ---- TODO Upcoming ----
 
-Serialize and deserialize Events.
-Test serializing Overall settings.
+/play/item
 
 
 ---- Issues ----
 
-How is from_db supposed to return 1 instance if there aren't any in db yet?
-    instances = list(instances.values())
-    if id_to_get is not None and len(instances) == 1:
-        return instances[0]
-    return instances
-
+Serializing win requirements caused an error.

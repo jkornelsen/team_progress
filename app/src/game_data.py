@@ -79,16 +79,13 @@ class GameData:
         instance.overall = Overall.from_db()
         return instance
 
-    def to_db(self):
-        print(f"{self.__class__.__name__}.to_db()")
-        for entity_cls in self.ENTITIES:
-            print(f"entity {entity_cls.listname()}")
-            for entity in self.get_list(entity_cls):
-                entity.to_db()
-        self.overall.to_db()
-
     @classmethod
     def entity_names_from_db(cls):
+        if 'game_data' in g:
+            print("game data already loaded")
+            return g.game_data
+        print("loading partial game data from db")
+        instance = cls()
         query_parts = []
         for entity_cls in cls.ENTITIES:
             query_parts.append(f"""
@@ -98,12 +95,19 @@ class GameData:
             """)
         rows = DbSerializable.execute_select(
             " UNION ".join(query_parts) + " ORDER BY name")
-        instance = cls()
         for row in rows:
             entity_cls = instance.entity_for(row.tablename)
             entity = entity_cls.from_json(row)
             instance.get_list(entity_cls).append(entity)
         return instance
+
+    def to_db(self):
+        print(f"{self.__class__.__name__}.to_db()")
+        for entity_cls in self.ENTITIES:
+            print(f"entity {entity_cls.listname()}")
+            for entity in self.get_list(entity_cls):
+                entity.to_db()
+        self.overall.to_db()
 
     @staticmethod
     def clear_db_for_token():

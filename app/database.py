@@ -79,7 +79,7 @@ def column_counts(table_name):
         'locations': 5,
         'overall': 3,
         'progress': 8,
-        'user_interactions': 6,
+        'user_interactions': 5,
         'win_requirements': 7,
     }
     return lookup[table_name]

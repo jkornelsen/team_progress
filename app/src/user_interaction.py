@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from flask import g
+from flask import g, request, url_for
 
 from .db_serializable import DbSerializable, coldef
 from src.game_data import GameData
@@ -11,15 +11,29 @@ from .item import Item
 from .location import Location
 from .overall import Overall
 
+def determine_entity_type(endpoint):
+    """Determine the entity type based on the endpoint.
+    For example, if endpoint is '/configure/item/<item_id>', return 'items'
+    """
+    if endpoint.startswith('/configure/') or endpoint.startswith('/play/'):
+        entity_name = endpoint.split('/')[2]  # Get the part after the match
+        entity_name = entity_name.capitalize()
+        try:
+            return globals()[entity_name]
+            if issubclass(entity_class, DbSerializable):
+                return entity_class
+        except KeyError:
+            pass
+    return None
+
 tables_to_create = {
     'user_interactions': f"""
-        game_token varchar(50) NOT NULL,
-        username varchar(50),
+        {coldef('game_token')},
+        username varchar(50) NOT NULL,
         timestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        char_id integer,
-        action_id integer,
-        action_type varchar(50),
-        UNIQUE (game_token, username, char_id)
+        route varchar(50) NOT NULL,
+        entity_id varchar(20),
+        UNIQUE (game_token, username, route, entity_id)
     """
 }
 
@@ -31,9 +45,9 @@ class UserInteraction(DbSerializable):
         self.game_token = g.game_token
         self.username = username
         self.timestamp = datetime.min
-        self.char = None
-        self.action_obj = None  # object of most recent interaction
-        self.action_type = None  # class such as Item or Location
+        self.route_endpoint = ""  # for example "configure_item"
+        self.entity_id = ""
+        self.entity_name = ""
 
     @classmethod
     def tablename(cls):
@@ -43,9 +57,8 @@ class UserInteraction(DbSerializable):
         return {
             'username': self.username,
             'timestamp': datetime.now(),
-            'char_id': self.char.id if self.char else -1,
-            'action_id': self.action_obj.id if self.action_obj else -1,
-            'action_type': self.action_type.__name__ if self.action_type else None
+            'route': self.route_endpoint,
+            'entity_id': self.entity_id,
         }
 
     @classmethod
@@ -53,14 +66,14 @@ class UserInteraction(DbSerializable):
         if not isinstance(data, dict):
             data = vars(data)
         instance = cls(data['username'])
-        instance.timestamp = data['timestamp']
-        char_id = int(data['char_id'])
-        if char_id >= 0: 
-            instance.char = Character.get_by_id(char_id)
-        action_id = int(data['action_id'])
-        instance.action_type = globals().get(data['action_type'], None)
-        if action_id >= 0 and instance.action_type:
-            instance.action_obj = instance.action_type.get_by_id(action_id)
+        instance.timestamp = data.get('timestamp', datetime.min)
+        instance.route_endpoint = data.get('route', "")
+        instance.entity_id = data.get('entity_id', "")
+        if instance.entity_id and instance.entity_id != "new":
+            entity_cls = determine_entity_type(instance.route_endpoint)
+            if entity_cls:
+                entity_obj = entity_cls.get_by_id(instance.entity_id)
+                instance.entity_name = entity_obj.name
         return instance
 
     def to_db(self):
@@ -69,38 +82,77 @@ class UserInteraction(DbSerializable):
         fields = list(doc.keys())
         placeholders = ','.join(['%s'] * len(fields))
         update_fields = [field for field in fields
-            if field not in ('game_token', 'username', 'char_id')]
+            if field not in ('game_token', 'username', 'route', 'entity_id')]
         update_placeholders = ', '.join(
             [f"{field}=%s" for field in update_fields])
         query = f"""
             INSERT INTO {{table}} ({', '.join(fields)})
             VALUES ({placeholders})
-            ON CONFLICT (game_token, username, char_id) DO UPDATE
+            ON CONFLICT (game_token, username, route, entity_id) DO UPDATE
             SET {update_placeholders}
         """
         values = [doc[field] for field in fields]
         update_values = [doc[field] for field in update_fields]
         self.execute_change(query, values + update_values)
 
-    def action_name(self):
-        return self.action_obj.name if self.action_obj else ""
+    def action_display(self):
+        def format_name(name):
+            words = name.split('_')
+            words = [word.capitalize() for word in words]
+            return ' '.join(words)
+        display_parts = [format_name(self.route_endpoint)]
+        if self.entity_name:
+            entity_display = self.entity_name
+            MAX_NAME_LEN = 100
+            if len(entity_display) > MAX_NAME_LEN:
+                entity_display = f"{entity_display[:MAX_NAME_LEN]}..."
+            display_parts.append(entity_display)
+        return " ".join(display_parts)
 
     def action_link(self):
-        return (
-            f"/play/{self.action_type.name}/{self.action_obj.id}"
-            if self.action_obj else "")
+        from app import get_parameter_name  # avoid circular import
+        parameter_name = get_parameter_name(self.route_endpoint)
+        kwargs = {parameter_name: self.entity_id
+            } if parameter_name and self.entity_id else {}
+        return url_for(self.route_endpoint, **kwargs)
+
+    @classmethod
+    def log_visit(cls, username):
+        """Make sure the user is listed in the db as recently connected,
+        and keep track of the route so that users can click to return
+        there."""
+        interaction = cls(username)
+        interaction.route_endpoint = request.endpoint
+        if not interaction.route_endpoint:
+            print(f"No endpoint of request object")
+            interaction.route_endpoint = "/"
+        from app import get_parameter_name  # avoid circular import
+        parameter_name = get_parameter_name(interaction.route_endpoint)
+        view_args = request.view_args
+        if view_args:
+            entity_id = view_args.get(parameter_name)
+            if entity_id is not None:
+                interaction.entity_id = entity_id
+        else:
+            print(f"No view_args for {interaction.route_endpoint}")
+        interaction.to_db()
 
     @classmethod
     def recent_interactions(cls, threshold_minutes=2):
+        GameData.entity_names_from_db()
         threshold_time = datetime.now() - timedelta(minutes=threshold_minutes)
         query = f"""
-            SELECT DISTINCT ON (game_token, username, char_id)
-                username, char_id, timestamp, action_id, action_type
+            SELECT DISTINCT ON (game_token, username)
+                username, route, entity_id, timestamp
             FROM {cls.tablename()}
-            WHERE game_token = %s AND timestamp > %s
-            ORDER BY game_token, username, char_id, timestamp DESC
+            WHERE game_token = %s
+                AND timestamp > %s
+            ORDER BY game_token, username, timestamp DESC
         """
         values = (g.game_token, threshold_time,)
         rows = cls.execute_select(query, values)
-        GameData.from_db()
+        if len(rows) < 2:
+            # No need to display info for a single user
+            return []
         return [UserInteraction.from_json(vars(row)) for row in rows]
+

@@ -11,7 +11,8 @@ from flask import (
 import random
 from types import SimpleNamespace
 
-from .db_serializable import Identifiable, coldef, new_game_data
+from .db_serializable import (
+    Identifiable, MutableNamespace, coldef, new_game_data)
 from .attrib import Attrib
 from .item import Item
 from .location import Location
@@ -116,7 +117,7 @@ class Event(Identifiable):
         instance.outcome_type = data.get('outcome_type', OUTCOME_FOURWAY)
         instance.numeric_range = data.get('numeric_range', (0, 10))
         instance.selection_strings = data.get('selection_strings', "")
-        instance.determing_attrs = [
+        instance.determining_attrs = [
             Attrib(int(attrib_id))
             for attrib_id in data.get('determining_attrs', [])]
         instance.changed_attrs = [
@@ -172,15 +173,13 @@ class Event(Identifiable):
     @classmethod
     def _from_db(cls, id_to_get=None):
         print(f"{cls.__name__}._from_db()")
+        # Get event data with attrib relation data
         query = """
             SELECT *
             FROM {tables[0]}
             LEFT JOIN {tables[1]}
                 ON {tables[1]}.event_id = {tables[0]}.id
                 AND {tables[1]}.game_token = {tables[0]}.game_token
-            LEFT JOIN {tables[2]}
-                ON {tables[2]}.event_id = {tables[0]}.id
-                AND {tables[2]}.game_token = {tables[0]}.game_token
             WHERE {tables[0]}.game_token = %s
         """
         values = [g.game_token]
@@ -188,33 +187,46 @@ class Event(Identifiable):
             query = f"{query}\nAND {{tables[0]}}.id = %s"
             values.append(id_to_get);
         tables_rows = cls.select_tables(
-            query, values,
-            ['events', 'event_attribs', 'event_triggers'])
+            query, values, ['events', 'event_attribs'])
         instances = {}  # keyed by ID
-        for event_data, attrib_data, trigger_data in tables_rows:
+        for event_data, attrib_data in tables_rows:
             print(f"event_data {event_data}")
             print(f"attrib_data {attrib_data}")
-            print(f"trigger_data {trigger_data}")
             instance = instances.get(event_data.id)
             if not instance:
                 instance = cls.from_json(vars(event_data))
                 instances[event_data.id] = instance
             if attrib_data.attrib_id:
                 if attrib_data.determining:
-                    attriblist = instance.determining_attribs
+                    attriblist = instance.determining_attrs
                 else:
-                    attriblist = instance.changed_attribs
+                    attriblist = instance.changed_attrs
                 attriblist.append(Attrib(attrib_data.attrib_id))
-            if trigger_data.event_id:
-                instance.triggers.append(
-                    Item(trigger_data.item_id) if trigger_data.item_id
-                    else Location(trigger_data.loc_id) if trigger_data.loc_id
-                    else None)
+        # Get event data with trigger relation data
+        query = """
+            SELECT *
+            FROM event_triggers
+            WHERE game_token = %s
+        """
+        if id_to_get:
+            query = f"{query}\nAND event_id = %s"
+        triggers_data = cls.execute_select(query, values)
+        for trigger_data in triggers_data:
+            print(f"trigger_data {trigger_data}")
+            instance = instances.get(trigger_data.event_id)
+            if not instance:
+                raise Exception(
+                    f"Could not get instance for event id {event_data.id}")
+            instance.triggers.append(
+                Item(trigger_data.item_id) if trigger_data.item_id
+                else Location(trigger_data.loc_id) if trigger_data.loc_id
+                else None)
         # Print debugging info
         print(f"found {len(instances)} events")
         for instance in instances.values():
             print(f"event {instance.id} ({instance.name})"
-                " has {len(instance.triggers)} triggers")
+                f" has {len(instance.triggers)} triggers"
+                f" and {len(instance.determining_attrs)} det attrs")
         # Convert and return
         instances = list(instances.values())
         if id_to_get is not None and len(instances) == 1:
@@ -228,28 +240,93 @@ class Event(Identifiable):
             config_id = 0
         else:
             config_id = int(config_id)
-        # Get all names of needed entities
-        for entity_cls in (Attrib, Item, Location):
-            entities_data = cls.execute_select(f"""
-                SELECT id, name
-                FROM {entity_cls.tablename()}
-                WHERE game_token = %s
-                ORDER BY name
-            """, (g.game_token,))
-            setattr(
-                g.game_data,
-                entity_cls.listname(), [
-                    entity_cls.from_json(entity_data)
-                    for entity_data in entities_data])
-        return cls.from_db(config_id)
+        # Get all event data
+        events_data = cls.execute_select("""
+            SELECT *
+            FROM {table}
+            WHERE game_token = %s
+            ORDER BY {table}.name
+        """, (g.game_token,))
+        g.game_data.events = []
+        current_data = MutableNamespace()
+        for evt_data in events_data:
+            if evt_data.id == config_id:
+                current_data = evt_data
+            g.game_data.events.append(Event.from_json(evt_data))
+        # Get all attrib data and the current event's attrib relation data
+        tables_rows = cls.select_tables("""
+            SELECT *
+            FROM {tables[0]}
+            LEFT JOIN {tables[1]}
+                ON {tables[1]}.attrib_id = {tables[0]}.id
+                AND {tables[1]}.game_token = {tables[0]}.game_token
+                AND {tables[1]}.event_id = %s
+            WHERE {tables[0]}.game_token = %s
+            ORDER BY {tables[0]}.name
+        """, (config_id, g.game_token), ['attribs', 'event_attribs'])
+        for attrib_data, evt_attrib_data in tables_rows:
+            if evt_attrib_data.attrib_id:
+                if evt_attrib_data.determining:
+                    listname = 'determining_attrs'
+                else:
+                    listname = 'changed_attrs'
+                current_data.setdefault(listname, []).append(attrib_data.id)
+                print(f"current_data.{listname} = {current_data.get(listname)}")
+            g.game_data.attribs.append(Attrib.from_json(attrib_data))
+        # Get all item and location data and
+        # the current events's trigger relation data
+        for entity_cls in (Item, Location):
+            join_key = "loc_id" if entity_cls == Location else "item_id"
+            tables_rows = cls.select_tables("""
+                SELECT *
+                FROM {tables[0]}
+                LEFT JOIN {tables[1]}
+                    ON {tables[0]}.id = {tables[1]}.""" + join_key + """
+                    AND {tables[0]}.game_token = {tables[1]}.game_token
+                    AND {tables[1]}.event_id = %s
+                WHERE {tables[0]}.game_token = %s
+                ORDER BY {tables[0]}.name
+            """, (config_id, g.game_token),
+                [entity_cls.tablename(), 'event_triggers'])
+            for entity_data, trigger_data in tables_rows:
+                if trigger_data.event_id:
+                    trigger_tup = (
+                        entity_cls.basename(), trigger_data.get(join_key))
+                    current_data.setdefault('triggers', []).append(trigger_tup)
+                entity_cls.get_list().append(
+                    entity_cls.from_json(entity_data))
+        # Create event from data
+        current_obj = Event.from_json(current_data)
+        # Replace partial objects with fully populated objects
+        for attrlist in (
+                current_obj.determining_attrs,
+                current_obj.changed_attrs):
+            populated_objs = []
+            for partial_attrib in attrlist:
+                attrib = Attrib.get_by_id(partial_attrib.id)
+                populated_objs.append(attrib)
+            attrlist.clear()
+            attrlist.extend(populated_objs)
+        populated_objs = []
+        for partial_obj in current_obj.triggers:
+            cls = partial_obj.__class__
+            lookup_obj = cls.get_by_id(partial_obj.id)
+            populated_objs.append(lookup_obj)
+        current_obj.triggers = populated_objs
+        # Print debugging info
+        print(f"found {len(current_obj.triggers)} triggers")
+        print(f"found {len(current_obj.determining_attrs)} det att")
+        if len(current_obj.triggers):
+            trigger = current_obj.triggers[0]
+            print(f"type={trigger.__class__.__name__}")
+            print(f"id={trigger.id}")
+            print(f"name={trigger.name}")
+        return current_obj
 
     def configure_by_form(self):
         if 'save_changes' in request.form:  # button was clicked
             print("Saving changes.")
             print(request.form)
-            entity_list = self.get_list()
-            if self not in entity_list:
-                entity_list.append(self)
             self.name = request.form.get('event_name')
             self.description = request.form.get('event_description')
             self.toplevel = bool(request.form.get('top_level'))

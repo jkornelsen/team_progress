@@ -15,7 +15,7 @@ optionally sort scenarios based on popularity
 keep track of scenarios played by a game token with at least 10 interactions
 
 no matter what the scenario, there will be a list of the following entities:
-    overview -- scenario description and win requirements
+    overall -- scenario description and win requirements
     items -- can be used; variety of types such as upgrades, sources
     locations -- e.g. first room to the north
     characters -- player or npc, with select box to specify "user 1" etc
@@ -100,7 +100,7 @@ turn-based, not with a time delay
 different players may be given different authority (rights, privileges),
 for example, only managers can spend money to open new stores
 an easy distinction would be that only the gamemaster can change setup
-checkbox on overview screen to say I am the gamemaster (like an admin)
+checkbox on overall config screen to say I am the gamemaster (like an admin)
 checkbox to prevent all others from making setup changes
 can also set config permissions for a particular player on a particular entity
 or play permissions -- might even be more helpful than setup permissions
@@ -194,11 +194,18 @@ as long as at least one character meets the requirements
 also require owned item
 checkbox that the item won't get consumed during the exchange
 
-we don't necessarily tie a character to an action
-list of characters and their location but not action
+separate lists on overview screen
+- players and their most recent route
+    if it's ajax, get the page from request to store as the interaction
+- chars and their loc
+- items in general storage
+- events that can be run
+- log of game changes without mentioning player
+log is in separate column
+create new game_log tbl
 
 shared game log
-shown in a scrollable text box on overview screen
+shown in a scrollable text box
 load recent history when page is loaded
 check every few seconds for new entries that need to be added at the top
     added item1
@@ -210,17 +217,9 @@ check every few seconds for new entries that need to be added at the top
 repeated actions such as item progress get merged into one
 would be nice to move it to the top of the list in that case
 
-separate lists
-- players and their most recent action
-- chars and their loc
-- items in general storage
-- log of game changes without mentioning player
-log is in separate column on overview screen
-remove some columns from user_interactions tbl and create new game_log tbl
-if it's ajax, get the page from request to store as the interaction
-
 on item play page, have start/stop button or gain button for each recipe,
 and show all source quantities for all recipes of that item
+global stop button on overview screen, but no other ability to manufacture anything
 
 differentiate between materials and contained items of an item
 for example, a wooden box requires planks and nails to build, but could contain clothes.
@@ -246,11 +245,8 @@ if nothing required is at a specific location, then use general storage
 "floor" means not carried -- could be thought of as e.g. on a shelf
 
 entity classes might have superclasses for partially shared behavior
-    players and npcs are both actors and can potentially gain xp from an action
+    items and characters have progress
     items and locations can both have a position, such as inside another one
-    items and characters can be incremented over time
-
-global stop button on overview screen, but no other ability to manufacture anything
 
 likely too, no items are top-level, but rather locations,
 perhaps a backpack or chest,

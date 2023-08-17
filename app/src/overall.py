@@ -195,109 +195,72 @@ class Overall(DbSerializable):
             print("Neither button was clicked.")
         return redirect(url_for('configure'))
 
-CharacterRow = namedtuple('CharacterRow',
-    ['char_id', 'char_name', 'loc_id', 'loc_name',
-    'action_name', 'action_link', 'username'])
-
-def get_charlist_display():
-    char_data = DbSerializable.execute_select("""
-        SELECT c.name, c.id, c.toplevel, c.location_id,
-            l.name as location_name
-        FROM characters c
-        LEFT OUTER JOIN locations l
-            ON c.location_id = l.id AND c.game_token = l.game_token
-        WHERE c.game_token = %s
-    """, (g.game_token,))
-    # SELECT B.name, B.id
-    # FROM Character A, Location B
-    # WHERE B.id = A.location_id
-    character_rows = [] # Create a list to hold the character rows
-    for char in char_data:
-        if char.toplevel:
+    @classmethod
+    def data_for_overview(cls):
+        print("data_for_overview()")
+        tables_rows = cls.select_tables("""
+            SELECT *
+            FROM {tables[0]}
+            LEFT JOIN {tables[1]}
+                ON {tables[1]}.id = {tables[0]}.location_id
+                AND {tables[1]}.game_token = {tables[0]}.game_token
+            WHERE {tables[0]}.game_token = %s
+                AND {tables[0]}.toplevel = TRUE
+            ORDER BY {tables[0]}.name
+        """, (g.game_token,), ['characters', 'locations'])
+        CharacterRow = namedtuple('CharacterRow',
+            ['char_id', 'char_name', 'loc_id', 'loc_name'])
+        character_list = []
+        for char_data, loc_data in tables_rows:
             row = CharacterRow(
-                char_id=char.id,
-                char_name=char.name,
-                loc_id=char.location_id,
-                loc_name=char.location_name,
-                action_name="TODO",
-                action_link="TODO",
-                username=None
-            )
-            character_rows.append(row)
-    from .user_interaction import UserInteraction  # avoid circular import
-    interactions = UserInteraction.recent_interactions()
-    # Combine user records with rows containing the same character.
-    for interaction in interactions:
-        if interaction.char:
-            modified_rows = []
-            for row in character_rows:
-                if row.char_id == interaction.char.id:
-                    modified_row = row._replace(
-                        username=interaction.username,
-                        action_name=interaction.action_name(),
-                        action_link=interaction.action_link())
-                    modified_rows.append(modified_row)
-                else:
-                    modified_rows.append(row)
-            character_rows = modified_rows
-    # Add separate rows for each username of the same the game token
-    # that is not in the character list
-    for interaction in interactions:
-        if interaction.username not in [row.username for row in character_rows]:
-            row = CharacterRow(
-                char_id=interaction.char.id if interaction.char else -1,
-                char_name=interaction.char.name if interaction.char else "",
-                loc_id=None,
-                loc_name=None,
-                action_name=interaction.action_name(),
-                action_link=interaction.action_link(),
-                username=interaction.username)
-            character_rows.append(row)
-    # not row.username ensures that rows without a username (empty or None) come
-    # before rows with a username.
-    # row.username or '' handles the case where row.username is None or an empty
-    # string, ensuring consistent sorting within rows without a username.
-    # row.char_name is used as the primary sorting criterion, ensuring
-    # alphabetical sorting within rows.
-    character_rows.sort(key=lambda row:
-        (not row.username, row.username or '', row.char_name))
-    print(f"character_rows={character_rows}")
-    return character_rows
-
-def get_items_and_events():
-    item_data = DbSerializable.execute_select("""
-        SELECT id, name
-        FROM items
-        WHERE toplevel = TRUE
-            AND game_token = %s
-    """, (g.game_token,))
-    event_data = DbSerializable.execute_select("""
-        SELECT id, name
-        FROM events
-        WHERE toplevel = TRUE
-            AND game_token = %s
-    """, (g.game_token,))
-    return SimpleNamespace(items=item_data, events=event_data)
+                char_id=char_data.id,
+                char_name=char_data.name,
+                loc_id=loc_data.id,
+                loc_name=loc_data.name)
+            character_list.append(row)
+        print(f"character_list={character_list}")
+        item_data = cls.execute_select("""
+            SELECT id, name
+            FROM items
+            WHERE toplevel = TRUE
+                AND game_token = %s
+        """, (g.game_token,))
+        event_data = cls.execute_select("""
+            SELECT id, name
+            FROM events
+            WHERE toplevel = TRUE
+                AND game_token = %s
+        """, (g.game_token,))
+        other_toplevel_entities = SimpleNamespace(
+            items=item_data, events=event_data)
+        from .user_interaction import UserInteraction  # avoid circular import
+        interactions_list = UserInteraction.recent_interactions()
+        g.game_data.overall = cls.from_db()
+        for win_req in g.game_data.overall.win_reqs:
+            win_req.id_to_refs_from_game_data()
+        return character_list, other_toplevel_entities, interactions_list
 
 def set_routes(app):
     @app.route('/configure/overall', methods=['GET', 'POST'])
     def configure_overall():
+        game_data = Overall.data_for_configure()
         if request.method == 'GET':
-            game_data = Overall.data_for_configure()
+            session['referrer'] = request.referrer
             return render_template(
                 'configure/overall.html',
                 current=game_data.overall,
                 game_data=game_data)
         else:
-            return Overall().configure_by_form()
+            return game_data.overall.configure_by_form()
 
     @app.route('/overview')
     def overview():
-        other_entities = get_items_and_events()
-        overall = Overall()
+        charlist, other_entities, interactions = Overall.data_for_overview()
         return render_template(
             'play/overview.html',
-            current=overall,
-            charlist=get_charlist_display(),
-            other_entities=get_items_and_events())
+            current=g.game_data.overall,
+            game_data=g.game_data,
+            charlist=charlist,
+            other_entities=other_entities,
+            interactions=interactions)
 
