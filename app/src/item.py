@@ -329,10 +329,10 @@ class Item(Identifiable):
             if self.progress.is_ongoing:
                 self.progress.stop()
             else:
-                self.progress.quantity = int(request.form.get('item_quantity'))
+                self.progress.quantity = self.form_int(request, 'item_quantity')
             self.progress = Progress.from_json({
                 'quantity': self.progress.quantity,
-                'q_limit': int(request.form.get('item_limit'))})
+                'q_limit': self.form_int(request, 'item_limit')})
             recipe_ids = request.form.getlist('recipe_id')
             self.recipes = []
             for recipe_id in recipe_ids:

@@ -183,17 +183,10 @@ class Character(Identifiable):
             if progress_data.id:
                 instance.progress = Progress.from_json(progress_data, instance)
             if attrib_data.attrib_id:
-                instance.attribs[attrib_data.attrib_id] = attrib_data.value
+                instance.attribs[Attrib(attrib_data.attrib_id)] = attrib_data.value
             if char_item_data.item_id:
                 instance.items.append(
                     OwnedItem.from_json(char_item_data))
-        # Replace IDs with partial objects
-        for instance in instances.values():
-            attrib_objs = {}
-            for attrib_id, attrib_val in instance.attribs.items():
-                attrib_obj = Attrib(attrib_id)
-                attrib_objs[attrib_obj] = attrib_val
-            instance.attribs = attrib_objs
         # Print debugging info
         print(f"found {len(instances)} characters")
         for instance in instances.values():

@@ -29,6 +29,23 @@ def load_game_data():
     from src.game_data import GameData
     return GameData.from_db()
 
+def tuples_to_lists(values):
+    """Prepare for insertion into db."""
+    return [
+        list(val) if isinstance(val, tuple)
+        else val
+        for val in values]
+
+def db_type_fields(doc):
+    """Objects may have types such as dicts
+    that aren't for inserting into the db.
+    """
+    #NON_DB_TYPES = (dict, list, tuple, set)
+    NON_DB_TYPES = (dict, list, set)
+    return [
+        field for field in doc.keys()
+        if not isinstance(doc[field], NON_DB_TYPES)]
+
 class MutableNamespace(SimpleNamespace):
     def __setattr__(self, key, value):
         """Allow setting attributes dynamically"""
@@ -55,8 +72,12 @@ class DbSerializable():
         self.game_data = None
 
     @classmethod
+    def basename(cls):
+        return cls.__name__.lower()
+
+    @classmethod
     def tablename(cls):
-        return "{}s".format(cls.__name__.lower())
+        return "{}s".format(cls.basename())
 
     @classmethod
     def execute_select(cls, query_without_table, values=None, fetch_all=True):
@@ -159,10 +180,7 @@ class DbSerializable():
 
     def json_to_db(self, doc):
         doc['game_token'] = g.game_token
-        fields = list(doc.keys())
-        NONSCALAR_TYPES = (dict, list, tuple, set)
-        fields = [field for field in doc.keys()
-            if not isinstance(doc[field], NONSCALAR_TYPES)]
+        fields = db_type_fields(doc)
         placeholders = ','.join(['%s'] * len(fields))
         update_fields = [
             field for field in fields
@@ -175,10 +193,20 @@ class DbSerializable():
             ON CONFLICT (game_token) DO UPDATE
             SET {update_placeholders}
         """
-        values = [doc[field] for field in fields]
-        update_values = [doc[field] for field in update_fields]
+        values = tuples_to_lists([doc[field] for field in fields])
+        update_values = tuples_to_lists(
+            [doc[field] for field in update_fields])
         row = self.execute_change(query, values + update_values)
 
+    @classmethod
+    def form_int(cls, request, field, default=0):
+        """Get int from html form, handling empty strings."""
+        val = request.form.get(field, default)
+        try:
+            val = int(val)
+        except ValueError:
+            val = 0
+        return val
 
 class Identifiable(DbSerializable):
     __abstract__ = True
@@ -211,10 +239,7 @@ class Identifiable(DbSerializable):
 
     def json_to_db(self, doc):
         doc['game_token'] = g.game_token
-        fields = list(doc.keys())
-        NONSCALAR_TYPES = (dict, list, tuple, set)
-        fields = [field for field in doc.keys()
-            if not isinstance(doc[field], NONSCALAR_TYPES)]
+        fields = db_type_fields(doc)
         if not doc.get('id'):
             # Remove the 'id' field from the fields to be inserted
             fields = [field for field in fields if field != 'id']
@@ -231,8 +256,9 @@ class Identifiable(DbSerializable):
             SET {update_placeholders}
             RETURNING id
         """
-        values = [doc[field] for field in fields]
-        update_values = [doc[field] for field in update_fields]
+        values = tuples_to_lists([doc[field] for field in fields])
+        update_values = tuples_to_lists(
+            [doc[field] for field in update_fields])
         row = self.execute_change(query, values + update_values, fetch=True)
         self.id = row.id
 

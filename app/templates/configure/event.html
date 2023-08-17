@@ -43,7 +43,7 @@
         </div>
         <div id="selection-container">
             <label for="selection-strings">Enter a list to choose from (one per line):</label>
-            <textarea id="selection-strings" name="selection_strings" rows="10" cols="30"></textarea>
+            <textarea id="selection-strings" name="selection_strings" rows="10" cols="30">{{ current.selection_strings }}</textarea>
         </div>
 
         <div class="attrib-container outer-border" id="determining-attrib-container">
@@ -174,7 +174,7 @@
             function addAttrib(relType, attribId, attribName, attribVal = 1) {
                 const attribHtml = `
                     <div class="attrib flexdiv" data-attrib-id="${attribId}">
-                        <input type="hidden" name="attrib_id" value="${attribId}">
+                        <input type="hidden" name="${relType}_attr_id[]" value="${attribId}">
                         ${attribName}
                         <button type="button" class="remove-attrib-btn lesser-button">Remove</button>
                     </div>

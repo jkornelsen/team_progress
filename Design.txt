@@ -257,8 +257,17 @@ perhaps a backpack or chest,
 and clicking on it would show its contents.
 a room could serve this purpose as well, containing npcs for example.
 
-travel could optionally take a resource such as food for each distance step
-the character object would have this food
+travel could take a resource such as food for each distance step
+the character object would have this resource
+or use an instant item to do this manually
+that would make it easier to take 1 ticket or Rs.5 per x distance
+
+add Characters to a group to travel together -- group_name string
+strip spaces and case insensitive
+only works if all in the list are at starting loc
+otherwise display missing member in alert
+checkbox "Group1 Together" to travel,
+if group_name isn't empty and there are at least 2 members
 
 attributes would be the main thing determining event chances,
 and attributes could be members of characters, items, or top-level
@@ -504,7 +513,7 @@ Travel from Chennai to Dehradun.
 limited money
 during a strike and an election, so many things might go wrong
 Possibly allow other forms of transportation for part of the trip: bus, plane, auto, taxi.
-english, tamil, hindi - transliterated?
+english, tamil, hindi -- transliterated? Spoken lines could be item sources.
 encounter with cross-dressers begging
 buy food
 train may break down or be full and have to change

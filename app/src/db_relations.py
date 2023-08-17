@@ -94,7 +94,7 @@ tables_to_create = {
         event_id integer,
         item_id integer,
         loc_id integer,
-        PRIMARY KEY (game_token, event_id, item_id, loc_id),
+        UNIQUE (game_token, event_id, item_id, loc_id),
         FOREIGN KEY (game_token, event_id)
             REFERENCES events (game_token, id),
         FOREIGN KEY (game_token, item_id)
