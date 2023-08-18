@@ -47,42 +47,61 @@
         {% if current.growable == 'over_time' %}
         <tr>
             <td>
-                Rate: <span id="rate-amount">{{ current.progress.rate_amount }}</span> per 
-                <span id="rate-duration">{{ current.progress.rate_duration }}</span> seconds
-            </td>
-        </tr>
-        <tr>
-            <td>
                 Elapsed Time: <span id="elapsed-time">...</span>
             </td>
         </tr>
         {% endif %}
-        {% if current.growable != 'not_growable' %}
-        <tr>
-            <td>
-                Gives: {{ current.result_qty }}
-            </td>
-        </tr>
-        {% endif %}
-        {% if current.sources %}
+        {% if current.recipes %}
         <tr>
             <td>
                 <table class="inner-table" cellspacing="0" cellpadding="5">
                     <tr>
+                        <th></th>
+                        <th>Rate</th>
                         <th>Source Item</th>
                         <th>In Stock</th>
                         <th>Required</th>
                     </tr>
-                    {% for source_item, quantity in current.sources.items() %}
+                    {% for recipe in current.recipes %}
+                        {% set rowspan = recipe.sources | length %}
+                    <tr>
+                        <td rowspan="{{ rowspan }}">
+                            {% if recipe.instant %}
+                            <input type="number" id="quantity_to_gain" size="10" value="{{ current.result_qty }}">
+                            <button id="gain-btn">Gain</button>
+                            {% else %}
+                            <button id="toggle-btn">Start</button>
+                            {% endif %}
+                        </td>
+                        <td rowspan="{{ rowspan }}">
+                            {% if recipe.instant %}
+                            &ndash;
+                            {% else %}
+                            <span id="rate-amount">{{ recipe.rate_amount }}</span> per 
+                            <span id="rate-duration">{{ recipe.rate_duration }}</span>s
+                            {% endif %}
+                        </td>
+                        {% if rowspan > 0 %}
+                            <td>
+                                <a href="{{ url_for('play_item', item_id=recipe.sources[0].item.id) }}">
+                                    {{ recipe.sources[0].item.name }}
+                                </a>
+                            </td>
+                            <td id="source-{{ recipe.sources[0].item.id }}-quantity">...</td>
+                            <td>{{ recipe.sources[0].quantity }}</td>
+                        {% endif %}
+                    </tr>
+                    {% for source in recipe.sources[1:] %}
                     <tr>
                         <td>
-                            <a href="{{ url_for('play_item', item_id=source_item.id) }}">
-                                {{ source_item.name }}
+                            <a href="{{ url_for('play_item', item_id=source.item.id) }}">
+                                {{ source.item.name }}
                             </a>
                         </td>
-                        <td id="source-{{ source_item.id }}-quantity">...</td>
-                        <td>{{ quantity }}</td>
+                        <td id="source-{{ source.item.id }}-quantity">...</td>
+                        <td>{{ source.quantity }}</td>
                     </tr>
+                    {% endfor %}
                     {% endfor %}
                 </table>
             </td>
@@ -91,9 +110,13 @@
 
         {% set outerscope = namespace(used_for_items=[]) %}
         {% for other_item in game_data.items %}
-            {% if current in other_item.sources %}
-                {% set _ = outerscope.used_for_items.append(other_item) %}
-            {% endif %}
+            {% for recipe in other_item.recipes %}
+                {% for source in recipe.sources %}
+                    {% if current.id == source.item.id %}
+                        {% set _ = outerscope.used_for_items.append(other_item) %}
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
         {% endfor %}
         {% if outerscope.used_for_items %}
         <tr>
@@ -104,14 +127,13 @@
                         <th>Required</th>
                     </tr>
                     {% for used_for_item in outerscope.used_for_items %}
-                    {% set quantity = used_for_item.sources[current] %}
                     <tr>
                         <td>
                             <a href="{{ url_for('play_item', item_id=used_for_item.id) }}">
                                 {{ used_for_item.name }}
                             </a>
                         </td>
-                        <td>{{ quantity }}</td>
+                        <td>quantity TODO</td>
                     </tr>
                     {% endfor %}
                 </table>
@@ -120,14 +142,6 @@
         {% endif %}
     </table>
 
-    {% if current.growable == 'over_time' %}
-    <button id="start-btn">Start</button>
-    <button id="stop-btn">Stop</button>
-    {% elif current.growable == 'instantly' %}
-    <input type="number" id="quantity_to_gain" size="10" value="{{ current.result_qty }}">
-    <button id="gain-btn">Gain</button>
-    {% endif %}
-
     <script>
         $(document).ready(function() {
             function updateQuantity(data) {
@@ -135,11 +149,11 @@
                 $('#quantity-{{ current.id }}').text(data.quantity
                     {% if current.progress.q_limit != 0 %} + " / " + {{ current.progress.q_limit }}{% endif %});
                 // Source item quantities
-                {% for source_item, _ in current.sources.items() %}
-                $.get('/item/progress_data/{{ source_item.id }}', function(data) {
-                    $('#source-{{ source_item.id }}-quantity').text(data.quantity);
-                });
-                {% endfor %}
+                {# {% for source_item, _ in current.sources.items() %}
+                //$.get('/item/progress_data/{{ source_item.id }}', function(data) {
+                //    $('#source-{{ source_item.id }}-quantity').text(data.quantity);
+                //});
+                {% endfor %} #}
             }
 
             // Global variable to store the elapsed time.
@@ -173,18 +187,13 @@
                 $('#dest-time').text(formatTime(elapsedTime));
             }
 
-            // the Start button may change to "Running..."
-            function updateStartbuttonLabel(data) {
-                const startBtn = document.getElementById("start-btn");
-                const stopBtn = document.getElementById("stop-btn");
+            // the Start button can change to "Stop"
+            function updateToggleButtonLabel(data) {
+                const toggleBtn = document.getElementById("toggle-btn");
                 if (data && data.is_ongoing) {
-                    startBtn.innerHTML = "Running...";
-                    startBtn.disabled = true;
-                    stopBtn.disabled = false;
+                    toggleBtn.innerHTML = "Stop";
                 } else {
-                    startBtn.innerHTML = "Start";
-                    startBtn.disabled = false;
-                    stopBtn.disabled = true;
+                    toggleBtn.innerHTML = "Start";
                 }
             }
 
@@ -192,11 +201,11 @@
             function fetchProgressData() {
                 $.get('/item/progress_data/{{ current.id }}', function(data) {
                     updateQuantity(data);
-                    {% if current.growable == 'over_time' %}
-                    in_progress = data.is_ongoing
+                    {# {% if current.growable == 'over_time' %} #}
+                    in_progress = data.is_ongoing;
                     reconcileElapsedTime(data);
-                    updateStartbuttonLabel(data);
-                    {% endif %}
+                    updateToggleButtonLabel(data);
+                    {# {% endif %} #}
                 });
             }
 
@@ -205,21 +214,20 @@
             updateElapsedTime();
 
             // Client-side update loops 
-            {% if current.growable == 'over_time' %}
+            {# {% if current.growable == 'over_time' %} #}
             setInterval(updateElapsedTime, 1000);
-            {% endif %}
+            {# {% endif %} #}
             setInterval(fetchProgressData, 2000);
 
             // Button click event handlers
             $('#gain-btn').click(function() {
-                var quantity = parseInt($('#quantity_to_gain').val(), 10);
-                var minResultQty = parseInt('{{ current.result_qty }}', 10);
+                const quantity = parseInt($('#quantity_to_gain').val(), 10);
+                const minResultQty = parseInt('{{ current.result_qty }}', 10);
                 if (quantity < minResultQty) {
                     alert('Minimum quantity to gain is ' + minResultQty + '.');
                     return; // Stop further processing
                 }
-                item_id = {{ current.id }}
-                quantity = $('#quantity_to_gain').val();
+                const item_id = {{ current.id }}
                 $.ajax({
                     url: '/item/gain/' + item_id,
                     method: 'POST',
@@ -238,31 +246,27 @@
                     }
                 });
             });
-            $('#start-btn').click(function() {
+
+            $('#toggle-btn').click(function() {
                 const current_id = {{ current.id }};
-                console.log('startItem(): ' + current_id);
-                fetch('/item/start/' + current_id)
+                const toggleBtn = document.getElementById("toggle-btn");
+                console.log('toggleItem(): ' + current_id);
+                //toggleBtn.disabled = true;
+                let endpoint;
+                if (toggleBtn.innerHTML === "Start") {
+                    endpoint = '/item/start/';
+                } else {
+                    endpoint = '/item/stop/';
+                }
+                fetch(endpoint + current_id)
                     .then(response => response.json())
                     .then(data => {
                         console.log(data.message);
                         if (data.status === 'error') {
-                            console.error('Could not start:', data.message);
+                            console.error('Could not toggle:', data.message);
                             alert(data.message);
                         }
-                        updateStartbuttonLabel();
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                    });
-            });
-            $('#stop-btn').click(function() {
-                const current_id = {{ current.id }}
-                console.log('stopItem(): ' + current_id);
-                fetch('/item/stop/' + current_id)
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log(data.message);
-                        updateStartbuttonLabel();
+                        updateToggleButtonLabel(data);
                     })
                     .catch(error => {
                         console.error('Error:', error);

@@ -1,8 +1,7 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 from flask import jsonify
 import math
 import threading
-import time
 
 from .db_serializable import Identifiable, coldef
 
@@ -117,7 +116,7 @@ class Progress(Identifiable):
     def start(self):
         if self.rate_amount == 0 or self.is_ongoing:
             return False
-        self.start_time = time.time()
+        self.start_time = datetime.now()
         self.batches_processed = 0
         self.is_ongoing = True
         self.entity.to_db()
@@ -126,18 +125,19 @@ class Progress(Identifiable):
     def stop(self):
         if self.is_ongoing:
             self.is_ongoing = False
-            self.stop_time = time.time()
+            self.stop_time = datetime.now()
             self.entity.to_db()
             return True
         else:
             return False
 
     def calculate_elapsed_time(self):
+        """Returns number of seconds between start and stop time."""
         if self.is_ongoing:
-            elapsed_time = time.time() - self.start_time
+            elapsed_time = datetime.now() - self.start_time
         elif self.start_time is not None and self.stop_time is not None:
             elapsed_time = self.stop_time - self.start_time
         else:
-            elapsed_time = 0
-        return elapsed_time
+            elapsed_time = timedelta(seconds=0)
+        return elapsed_time.total_seconds()
 

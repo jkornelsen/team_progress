@@ -319,6 +319,11 @@ class Item(Identifiable):
                     f" qty {source.quantity}")
         return current_obj
 
+    @classmethod
+    def data_for_play(cls, config_id):
+        print(f"{cls.__name__}.data_for_play()")
+        return cls.data_for_configure(config_id)
+
     def configure_by_form(self):
         if 'save_changes' in request.form:  # button was clicked
             print("Saving changes.")
@@ -399,14 +404,14 @@ def set_routes(app):
 
     @app.route('/play/item/<int:item_id>')
     def play_item(item_id):
-        item = Item.get_by_id(item_id)
-        if item:
-            return render_template(
-                'play/item.html',
-                current=item,
-                game_data=g.game_data)
-        else:
+        new_game_data()
+        instance = Item.data_for_play(item_id)
+        if not instance:
             return 'Item not found'
+        return render_template(
+            'play/item.html',
+            current=instance,
+            game_data=g.game_data)
 
     @app.route('/item/gain/<int:item_id>', methods=['POST'])
     def gain_item(item_id):
@@ -438,7 +443,7 @@ def set_routes(app):
 
     @app.route('/item/start/<int:item_id>')
     def start_item(item_id):
-        item = Item.get_by_id(item_id)
+        item = Item.from_db(item_id)
         if item.progress.start():
             item.to_db()
             return jsonify({'status': 'success', 'message': 'Progress started.'})
@@ -447,7 +452,7 @@ def set_routes(app):
 
     @app.route('/item/stop/<int:item_id>')
     def stop_item(item_id):
-        item = Item.get_by_id(item_id)
+        item = Item.from_db(item_id)
         if item.progress.stop():
             item.to_db()
             return jsonify({'message': 'Progress paused.'})
