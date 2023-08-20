@@ -31,6 +31,14 @@ tables_to_create = {
         FOREIGN KEY (game_token, item_id)
             REFERENCES items (game_token, id)
     """,
+    'recipe_counters': f"""
+        {coldef('game_token')},
+        item_id integer,
+        highest_recipe_id integer NOT NULL,
+        PRIMARY KEY (game_token, item_id),
+        FOREIGN KEY (game_token, item_id)
+            REFERENCES items (game_token, id)
+    """,
     # Character
     'char_attribs': f"""
         {coldef('game_token')},

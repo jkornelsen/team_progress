@@ -8,6 +8,7 @@ from .db_serializable import Identifiable, coldef
 tables_to_create = {
     'progress': f"""
         {coldef('id')},
+        recipe_id integer,
         quantity integer NOT NULL,
         q_limit integer NOT NULL,
         start_time timestamp,
@@ -19,9 +20,14 @@ tables_to_create = {
 
 class Progress(Identifiable):
     """Track progress, such as over time."""
-    def __init__(self, new_id="", entity=None):
+    def __init__(self, new_id="", entity=None, recipe=None):
         super().__init__(new_id)
         self.entity = entity  # Item or other entity that uses this object
+        if recipe:
+            self.recipe = recipe
+        else:
+            from .item import Recipe
+            self.recipe = Recipe()
         self.quantity = 0  # the main value tracked
         self.q_limit = 0  # limit the quantity if not 0
         self.start_time = None
@@ -29,15 +35,11 @@ class Progress(Identifiable):
         self.batches_processed = 0
         self.is_ongoing = False
         self.lock = threading.Lock()
-        ## attributes for a specific action
-        self.instant = False
-        self.rate_amount = 1
-        self.rate_duration = 1.0
-        self.sources = {}
 
     def to_json(self):
         return {
             'id': self.id,
+            'recipe_id': self.recipe.id,
             'quantity': self.quantity,
             'q_limit': self.q_limit,
             'start_time': self.start_time,
@@ -51,6 +53,8 @@ class Progress(Identifiable):
         if not isinstance(data, dict):
             data = vars(data)
         instance = cls(int(data.get('id', 0),), entity=entity)
+        from .item import Recipe
+        instance.recipe = Recipe(int(data.get('recipe_id', 0)))
         instance.quantity = data.get('quantity', 0)
         instance.q_limit = data.get('q_limit', 0)
         instance.start_time = data.get('start_time')
@@ -66,22 +70,25 @@ class Progress(Identifiable):
     # returns true if able to change quantity
     def change_quantity(self, batches_requested):
         with self.lock:
-            print(f"Changing quantity: batches_requested={batches_requested}")
+            print(f"change_quantity() for {self.id}:"
+                f" batches_requested={batches_requested}")
             stop_here = False
             if batches_requested == 0:
                 raise Exception("Expected non-zero number of batches.")
             num_batches = batches_requested
-            eff_result_qty = num_batches * self.rate_amount
+            eff_result_qty = num_batches * self.recipe.rate_amount
             new_quantity = self.quantity + eff_result_qty
             if ((self.q_limit > 0.0 and new_quantity > self.q_limit)
                     or (self.q_limit < 0.0 and new_quantity < self.q_limit)):
-                num_batches = (self.q_limit - self.quantity) // self.rate_amount
+                num_batches = (self.q_limit - self.quantity) // self.recipe.rate_amount
                 stop_here = True  # can't process the full amount
             eff_source_qtys = {}
-            for source_item, source_qty in self.sources.items():
+            for source_item, source_qty in self.recipe.sources.items():
                 eff_source_qty = num_batches * source_qty
                 eff_source_qtys[source_item] = eff_source_qty
-            for source_item, source_qty in self.sources.items():
+                print(f"change_quantity() for {self.id}:"
+                    f" eff_source_qty for {source_item}={eff_source_qty}")
+            for source_item, source_qty in self.recipe.sources.items():
                 eff_source_qty = num_batches * source_qty
                 if (eff_source_qty > 0
                         and source_item.progress.quantity < eff_source_qty):
@@ -89,12 +96,14 @@ class Progress(Identifiable):
                     num_batches = min(
                         num_batches,
                         math.floor(source_item.progress.quantity / eff_source_qty))
+            print(f"change_quantity() for {self.id}:"
+                f" num_batches={num_batches}")
             if num_batches > 0:
-                for source_item, source_qty in self.sources.items():
+                for source_item, source_qty in self.recipe.sources.items():
                     eff_source_qty = num_batches * source_qty
                     source_item.progress.quantity -= eff_source_qty
                     source_item.to_db()
-                eff_result_qty = num_batches * self.rate_amount
+                eff_result_qty = num_batches * self.recipe.rate_amount
                 self.quantity += eff_result_qty
                 self.batches_processed += num_batches
                 self.entity.to_db()
@@ -104,7 +113,7 @@ class Progress(Identifiable):
 
     def determine_current_quantity(self):
         elapsed_time = self.calculate_elapsed_time()
-        total_batches_needed = math.floor(elapsed_time / self.rate_duration)
+        total_batches_needed = math.floor(elapsed_time / self.recipe.rate_duration)
         batches_to_do = total_batches_needed - self.batches_processed
         print(f"determine_current_quantity: batches_to_do={batches_to_do}")
         if batches_to_do > 0:
@@ -113,8 +122,13 @@ class Progress(Identifiable):
             self.stop()
             return False
 
-    def start(self):
-        if self.rate_amount == 0 or self.is_ongoing:
+    def start(self, recipe_id=0):
+        if recipe_id:
+            for recipe in self.entity.recipes:
+                if recipe.id == recipe_id:
+                    self.recipe = recipe
+                    break
+        if self.recipe.rate_amount == 0 or self.is_ongoing:
             return False
         self.start_time = datetime.now()
         self.batches_processed = 0

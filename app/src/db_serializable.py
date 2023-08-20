@@ -6,7 +6,7 @@ from database import column_counts, pretty
 def coldef(which):
     """Definitions for commonly used columns for creating a table."""
     if which == 'game_token':
-        return "game_token varchar(50) NOT NULL"
+        return "game_token varchar(50)"
     elif which == 'id':
         # include game token as well
         return f"""id SERIAL,

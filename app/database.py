@@ -78,7 +78,7 @@ def column_counts(table_name):
         'loc_items': 5,
         'locations': 5,
         'overall': 3,
-        'progress': 8,
+        'progress': 9,
         'user_interactions': 5,
         'win_requirements': 7,
     }

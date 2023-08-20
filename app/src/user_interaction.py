@@ -28,7 +28,7 @@ def determine_entity_type(endpoint):
 
 tables_to_create = {
     'user_interactions': f"""
-        {coldef('game_token')},
+        {coldef('game_token')} NOT NULL,
         username varchar(50) NOT NULL,
         timestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
         route varchar(50) NOT NULL,

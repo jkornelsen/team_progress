@@ -64,14 +64,13 @@
                     </tr>
                     {% for recipe in current.recipes %}
                         {% set rowspan = recipe.sources | length %}
-                        {% set recipe_index = loop.index %}
                     <tr>
                         <td rowspan="{{ rowspan }}">
                             {% if recipe.instant %}
                             <input type="number" id="quantity_to_gain" size="10" value="{{ current.result_qty }}">
                             <button id="gain-btn" class="go-button">Gain</button>
                             {% else %}
-                            <button id="toggle-btn" class="go-button">Start</button>
+                            <button class="toggle-btn go-button" data-recipe-id="{{ recipe.id }}">Start</button>
                             {% endif %}
                         </td>
                         <td rowspan="{{ rowspan }}">
@@ -88,8 +87,14 @@
                                     {{ recipe.sources[0].item.name }}
                                 </a>
                             </td>
-                            <td id="recipe-{{ recipe_index }}-source-{{ recipe.sources[0].item.id }}-quantity">...</td>
-                            <td>{{ recipe.sources[0].quantity }}</td>
+                            <td id="recipe-{{ recipe.id }}-source-{{ recipe.sources[0].item.id }}-quantity">...</td>
+                            <td>
+                                {% if recipe.sources[0].preserve %}
+                                    ({{ recipe.sources[0].quantity }})
+                                {% else %}
+                                    {{ recipe.sources[0].quantity }}
+                                {% endif %}
+                            </td>
                         {% endif %}
                     </tr>
                     {% for source in recipe.sources[1:] %}
@@ -99,8 +104,14 @@
                                 {{ source.item.name }}
                             </a>
                         </td>
-                        <td id="recipe-{{ recipe_index }}-source-{{ source.item.id }}-quantity">...</td>
-                        <td>{{ source.quantity }}</td>
+                        <td id="recipe-{{ recipe.id }}-source-{{ source.item.id }}-quantity">...</td>
+                        <td>
+                            {% if source.preserve %}
+                                ({{ source.quantity }})
+                            {% else %}
+                                {{ source.quantity }}
+                            {% endif %}
+                        </td>
                     </tr>
                     {% endfor %}
                     {% endfor %}
@@ -195,16 +206,21 @@
             }
 
             // the Start button can change to "Stop"
-            function updateToggleButtonLabel(data) {
-                const toggleBtn = document.getElementById("toggle-btn");
-                if (data && data.is_ongoing) {
-                    toggleBtn.innerHTML = "Stop";
-                    toggleBtn.classList.add("dangerous-button");
-                    toggleBtn.classList.remove("go-button");
-                } else {
-                    toggleBtn.innerHTML = "Start";
-                    toggleBtn.classList.add("go-button");
-                    toggleBtn.classList.remove("dangerous-button");
+            function updateToggleButtonLabel(data, recipe_id) {
+                const toggleBtns = document.querySelectorAll(".toggle-btn");
+                for (const toggleBtn of toggleBtns) {
+                    const btnRecipeId = toggleBtn.getAttribute("data-recipe-id");
+                    if (btnRecipeId && parseInt(btnRecipeId) === recipe_id) {
+                        if (data && data.is_ongoing) {
+                            toggleBtn.innerHTML = "Stop";
+                            toggleBtn.classList.add("dangerous-button");
+                            toggleBtn.classList.remove("go-button");
+                        } else {
+                            toggleBtn.innerHTML = "Start";
+                            toggleBtn.classList.add("go-button");
+                            toggleBtn.classList.remove("dangerous-button");
+                        }
+                    }
                 }
             }
 
@@ -215,7 +231,7 @@
                     {# {% if current.growable == 'over_time' %} #}
                     in_progress = data.is_ongoing;
                     reconcileElapsedTime(data);
-                    updateToggleButtonLabel(data);
+                    updateToggleButtonLabel(data, data.recipe_id);
                     {# {% endif %} #}
                 });
             }
@@ -229,7 +245,7 @@
             setInterval(updateElapsedTime, 1000);
             {# {% endif %} #}
             //setInterval(fetchProgressData, 2000);
-            setInterval(fetchProgressData, 5000);
+            setInterval(fetchProgressData, 15000);
 
             // Button click event handlers
             $('#gain-btn').click(function() {
@@ -259,18 +275,18 @@
                 });
             });
 
-            $('#toggle-btn').click(function() {
+            $('.toggle-btn').click(function() {
                 const current_id = {{ current.id }};
-                const toggleBtn = document.getElementById("toggle-btn");
+                const toggleBtn = this;
+                const recipe_id = $(this).data('recipe-id'); // Get from data attribute
                 console.log('toggleItem(): ' + current_id);
                 //toggleBtn.disabled = true;
-                let endpoint;
+                const urlParts = ['/item/stop', current_id];
                 if (toggleBtn.innerHTML === "Start") {
-                    endpoint = '/item/start/';
-                } else {
-                    endpoint = '/item/stop/';
+                    urlParts[0] = '/item/start';
+                    urlParts.push(recipe_id);
                 }
-                fetch(endpoint + current_id)
+                fetch(urlParts.join('/'))
                     .then(response => response.json())
                     .then(data => {
                         console.log(data.message);
@@ -278,7 +294,7 @@
                             console.error('Could not toggle:', data.message);
                             alert(data.message);
                         }
-                        updateToggleButtonLabel(data);
+                        updateToggleButtonLabel(data, recipe_id);
                     })
                     .catch(error => {
                         console.error('Error:', error);

@@ -426,8 +426,10 @@ def set_routes(app):
 
     @app.route('/item/gain/<int:item_id>', methods=['POST'])
     def gain_item(item_id):
+        print(f"gain_item({item_id})")
         quantity = int(request.form.get('quantity'))
         item = Item.get_by_id(item_id)
+        print(f"Retrieved item {item.id} from DB: {len(item.recipes)} recipes")
         num_batches = math.floor(quantity / item.progress.step_size)
         changed = item.progress.change_quantity(num_batches)
         if changed:
@@ -443,23 +445,24 @@ def set_routes(app):
     def item_progress_data(item_id):
         print(f"item_progress_data({item_id})")
         item = Item.from_db(item_id)
-        print(f"Retrieved item from DB: {item.recipes}")
+        print(f"Retrieved item {item.id} from DB: {len(item.recipes)} recipes")
         if item:
             if item.progress.is_ongoing:
                 item.progress.determine_current_quantity()
             return jsonify({
                 'is_ongoing': item.progress.is_ongoing,
+                'recipe_id': item.progress.recipe.id,
                 'quantity': item.progress.quantity,
                 'elapsed_time': item.progress.calculate_elapsed_time()})
         else:
             return jsonify({'error': 'Item not found'})
 
-    @app.route('/item/start/<int:item_id>')
-    def start_item(item_id):
-        print(f"start_item({item_id})")
+    @app.route('/item/start/<int:item_id>/<int:recipe_id>')
+    def start_item(item_id, recipe_id):
+        print(f"start_item({item_id}, {recipe_id})")
         item = Item.from_db(item_id)
-        print(f"Retrieved item from DB: {item.recipes}")
-        if item.progress.start():
+        print(f"Retrieved item {item.id} from DB: {len(item.recipes)} recipes")
+        if item.progress.start(recipe_id):
             item.to_db()
             return jsonify({
                 'status': 'success',
@@ -475,7 +478,7 @@ def set_routes(app):
     def stop_item(item_id):
         print(f"stop_item({item_id})")
         item = Item.from_db(item_id)
-        print(f"Retrieved item from DB: {item.recipes}")
+        print(f"Retrieved item {item.id} from DB: {len(item.recipes)} recipes")
         if item.progress.stop():
             item.to_db()
             return jsonify({
