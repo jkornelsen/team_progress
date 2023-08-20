@@ -64,13 +64,14 @@
                     </tr>
                     {% for recipe in current.recipes %}
                         {% set rowspan = recipe.sources | length %}
+                        {% set recipe_index = loop.index %}
                     <tr>
                         <td rowspan="{{ rowspan }}">
                             {% if recipe.instant %}
                             <input type="number" id="quantity_to_gain" size="10" value="{{ current.result_qty }}">
-                            <button id="gain-btn">Gain</button>
+                            <button id="gain-btn" class="go-button">Gain</button>
                             {% else %}
-                            <button id="toggle-btn">Start</button>
+                            <button id="toggle-btn" class="go-button">Start</button>
                             {% endif %}
                         </td>
                         <td rowspan="{{ rowspan }}">
@@ -87,7 +88,7 @@
                                     {{ recipe.sources[0].item.name }}
                                 </a>
                             </td>
-                            <td id="source-{{ recipe.sources[0].item.id }}-quantity">...</td>
+                            <td id="recipe-{{ recipe_index }}-source-{{ recipe.sources[0].item.id }}-quantity">...</td>
                             <td>{{ recipe.sources[0].quantity }}</td>
                         {% endif %}
                     </tr>
@@ -98,7 +99,7 @@
                                 {{ source.item.name }}
                             </a>
                         </td>
-                        <td id="source-{{ source.item.id }}-quantity">...</td>
+                        <td id="recipe-{{ recipe_index }}-source-{{ source.item.id }}-quantity">...</td>
                         <td>{{ source.quantity }}</td>
                     </tr>
                     {% endfor %}
@@ -146,14 +147,19 @@
         $(document).ready(function() {
             function updateQuantity(data) {
                 // Main item quantity
-                $('#quantity-{{ current.id }}').text(data.quantity
-                    {% if current.progress.q_limit != 0 %} + " / " + {{ current.progress.q_limit }}{% endif %});
+                $('#quantity-{{ current.id }}').text(
+                    data.quantity
+                    {% if current.progress.q_limit != 0 %} + " / " + {{ current.progress.q_limit }}{% endif %}
+                );
                 // Source item quantities
-                {# {% for source_item, _ in current.sources.items() %}
-                //$.get('/item/progress_data/{{ source_item.id }}', function(data) {
-                //    $('#source-{{ source_item.id }}-quantity').text(data.quantity);
-                //});
-                {% endfor %} #}
+                {% for recipe in current.recipes %}
+                    {% set recipe_index = loop.index %}
+                    {% for source in recipe.sources %}
+                        $.get('/item/progress_data/{{ source.item.id }}', function(data) {
+                            $('#recipe-{{ recipe_index }}-source-{{ source.item.id }}-quantity').text(data.quantity);
+                        });
+                    {% endfor %}
+                {% endfor %}
             }
 
             // Global variable to store the elapsed time.
@@ -192,8 +198,12 @@
                 const toggleBtn = document.getElementById("toggle-btn");
                 if (data && data.is_ongoing) {
                     toggleBtn.innerHTML = "Stop";
+                    toggleBtn.classList.add("dangerous-button");
+                    toggleBtn.classList.remove("go-button");
                 } else {
                     toggleBtn.innerHTML = "Start";
+                    toggleBtn.classList.add("go-button");
+                    toggleBtn.classList.remove("dangerous-button");
                 }
             }
 
@@ -217,7 +227,8 @@
             {# {% if current.growable == 'over_time' %} #}
             setInterval(updateElapsedTime, 1000);
             {# {% endif %} #}
-            setInterval(fetchProgressData, 2000);
+            //setInterval(fetchProgressData, 2000);
+            setInterval(fetchProgressData, 5000);
 
             // Button click event handlers
             $('#gain-btn').click(function() {

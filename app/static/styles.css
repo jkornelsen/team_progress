@@ -133,7 +133,6 @@ button {
     border: none;
     margin-left: 5px;
     padding: 5px 10px;
-    cursor: pointer;
     border-radius: 5px;
     box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
 }
@@ -146,11 +145,21 @@ button:hover {
     background-color: rgba(255, 0, 0, 0.5);
     border: none;
     padding: 3px 6px;
-    cursor: pointer;
 }
 
 .dangerous-button:hover {
     background-color: #dd0000;
+}
+
+.go-button {
+    color: #ffffff;
+    background-color: rgba(0, 255, 0, 0.5);
+    border: none;
+    padding: 3px 6px;
+}
+
+.go-button:hover {
+    background-color: #00dd00;
 }
 
 .lesser-button {
@@ -158,7 +167,6 @@ button:hover {
     color: #ffffff;
     border: none;
     padding: 5px 10px;
-    cursor: pointer;
 }
 
 .lesser-button:hover {

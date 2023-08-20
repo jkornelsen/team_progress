@@ -252,7 +252,7 @@ class Identifiable(DbSerializable):
         query = f"""
             INSERT INTO {{table}} ({', '.join(fields)})
             VALUES ({placeholders})
-            ON CONFLICT (id, game_token) DO UPDATE
+            ON CONFLICT (game_token, id) DO UPDATE
             SET {update_placeholders}
             RETURNING id
         """

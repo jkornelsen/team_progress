@@ -50,7 +50,7 @@ class Progress(Identifiable):
     def from_json(cls, data, entity=None):
         if not isinstance(data, dict):
             data = vars(data)
-        instance = cls(entity=entity)
+        instance = cls(int(data.get('id', 0),), entity=entity)
         instance.quantity = data.get('quantity', 0)
         instance.q_limit = data.get('q_limit', 0)
         instance.start_time = data.get('start_time')

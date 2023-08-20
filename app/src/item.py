@@ -172,61 +172,69 @@ class Item(Identifiable):
     @classmethod
     def _from_db(cls, id_to_get=None):
         print(f"{cls.__name__}._from_db()")
+        # Get item and progress data
         query = """
             SELECT *
             FROM {tables[0]}
             LEFT JOIN {tables[1]}
                 ON {tables[1]}.id = {tables[0]}.progress_id
                 AND {tables[1]}.game_token = {tables[0]}.game_token
-            LEFT JOIN {tables[2]}
-                ON {tables[2]}.item_id = {tables[0]}.id
-                AND {tables[2]}.game_token = {tables[0]}.game_token
-            LEFT JOIN {tables[3]}
-                ON {tables[3]}.item_id = {tables[0]}.id
-                AND {tables[3]}.game_token = {tables[0]}.game_token
             WHERE {tables[0]}.game_token = %s
         """
         values = [g.game_token]
         if id_to_get:
             query = f"{query}\nAND {{tables[0]}}.id = %s"
             values.append(id_to_get);
-        tables_rows = cls.select_tables(
-            query, values,
-            ['items', 'progress', 'item_attribs', 'item_sources'])
+        tables_rows = cls.select_tables(query, values, ['items', 'progress'])
         instances = {}  # keyed by ID
-        for item_data, progress_data, attrib_data, source_data in tables_rows:
-            print(f"item_data {item_data}")
-            print(f"progress_data {progress_data}")
-            print(f"attrib_data {attrib_data}")
-            print(f"source_data {source_data}")
-            instance = instances.get(item_data.id)
-            if not instance:
-                instance = cls.from_json(vars(item_data))
-                instances[item_data.id] = instance
+        for item_data, progress_data in tables_rows:
+            instance = instances.setdefault(
+                item_data.id, cls.from_json(vars(item_data)))
             if progress_data.id:
                 instance.progress = Progress.from_json(progress_data, instance)
-            if attrib_data.attrib_id:
-                instance.attribs[attrib_data.attrib_id] = attrib_data.value
-            if source_data.recipe_id:
-                recipe = next(
-                    (recipe for recipe in instance.recipes
-                    if recipe.id == source_data.recipe_id), None)
-                if not recipe:
-                    recipe = Recipe.from_json(source_data)
-                    instance.recipes.append(recipe)
-                recipe.sources.append(Source.from_json(source_data))
-        # Replace IDs with partial objects
-        for instance in instances.values():
-            attrib_objs = {}
-            for attrib_id, attrib_val in instance.attribs.items():
-                attrib_obj = Attrib(attrib_id)
-                attrib_objs[attrib_obj] = attrib_val
-            instance.attribs = attrib_objs
+        # Get attrib data
+        query = """
+            SELECT *
+            FROM {tables[0]}, {tables[1]}
+            WHERE {tables[0]}.game_token = %s
+                AND {tables[1]}.game_token = {tables[0]}.game_token
+                AND {tables[1]}.id = {tables[0]}.attrib_id
+        """
+        values = [g.game_token]
+        if id_to_get:
+            query = f"{query}\nAND {{tables[0]}}.item_id = %s"
+            values.append(id_to_get);
+        tables_rows = cls.select_tables(query, values, ['item_attribs', 'attribs'])
+        for item_attrib_data, attrib_data in tables_rows:
+            instance = instances[item_attrib_data.item_id]
+            attrib_obj = Attrib(attrib_data.id)
+            instance.attribs[attrib_obj] = item_attrib_data.value
+        # Get source data
+        query = """
+            SELECT *
+            FROM item_sources
+            WHERE game_token = %s
+        """
+        values = [g.game_token]
+        if id_to_get:
+            query = f"{query}\nAND item_id = %s"
+            values.append(id_to_get);
+        sources_data = cls.execute_select(query, values)
+        item_recipes_data = {}
+        for row in sources_data:
+            recipes_data = item_recipes_data.setdefault(row.item_id, {})
+            recipe_data = recipes_data.setdefault(row.recipe_id, row)
+            recipe_data.setdefault('sources', []).append(row)
+        for item_id, recipes_data in item_recipes_data.items():
+            instance = instances[item_id]
+            instance.recipes = [
+                Recipe.from_json(recipe_data)
+                for recipe_data in recipes_data.values()]
         # Print debugging info
         print(f"found {len(instances)} items")
         for instance in instances.values():
             print(f"item {instance.id} ({instance.name})"
-                " has {len(instance.recipes)} recipes")
+                f" has {len(instance.recipes)} recipes")
             if len(instance.recipes):
                 recipe = instance.recipes[0]
                 print(f"rate_amount={recipe.rate_amount}")
@@ -290,11 +298,7 @@ class Item(Identifiable):
         """, (g.game_token, config_id))
         recipes_data = {}
         for row in sources_data:
-            if row.recipe_id in recipes_data:
-                recipe_data = recipes_data[row.recipe_id]
-            else:
-                recipe_data = row
-                recipes_data[row.recipe_id] = recipe_data
+            recipe_data = recipes_data.setdefault(row.recipe_id, row)
             recipe_data.setdefault('sources', []).append(row)
         current_data.recipes = list(recipes_data.values())
         # Create item from data
@@ -322,7 +326,27 @@ class Item(Identifiable):
     @classmethod
     def data_for_play(cls, config_id):
         print(f"{cls.__name__}.data_for_play()")
-        return cls.data_for_configure(config_id)
+        current_obj = cls.data_for_configure(config_id)
+        # Get source relation data for items 
+        sources_data = cls.execute_select("""
+            SELECT *
+            FROM item_sources
+            WHERE game_token = %s
+                AND source_id = %s
+        """, (g.game_token, config_id))
+        items_data = {}
+        for row in sources_data:
+            print(f"source_data {row}")
+            recipes_data = items_data.setdefault(row.item_id, {})
+            recipe_data = recipes_data.setdefault(row.recipe_id, row)
+            recipe_data.setdefault('sources', []).append(row)
+        for item_id, recipes_data in items_data.items():
+            print(f"item_id {item_id}, recipes_data {recipes_data}")
+            item = Item.get_by_id(item_id)
+            item.recipes = [
+                Recipe.from_json(recipe_data)
+                for recipe_id, recipe_data in recipes_data.items()]
+        return current_obj
 
     def configure_by_form(self):
         if 'save_changes' in request.form:  # button was clicked
@@ -336,6 +360,7 @@ class Item(Identifiable):
             else:
                 self.progress.quantity = self.form_int(request, 'item_quantity')
             self.progress = Progress.from_json({
+                'id': self.progress.id,
                 'quantity': self.progress.quantity,
                 'q_limit': self.form_int(request, 'item_limit')})
             recipe_ids = request.form.getlist('recipe_id')
@@ -430,7 +455,9 @@ def set_routes(app):
 
     @app.route('/item/progress_data/<int:item_id>')
     def item_progress_data(item_id):
+        print(f"item_progress_data({item_id})")
         item = Item.from_db(item_id)
+        print(f"Retrieved item from DB: {item.recipes}")
         if item:
             if item.progress.is_ongoing:
                 item.progress.determine_current_quantity()
@@ -443,18 +470,35 @@ def set_routes(app):
 
     @app.route('/item/start/<int:item_id>')
     def start_item(item_id):
+        print(f"start_item({item_id})")
         item = Item.from_db(item_id)
+        print(f"Retrieved item from DB: {item.recipes}")
         if item.progress.start():
             item.to_db()
-            return jsonify({'status': 'success', 'message': 'Progress started.'})
+            return jsonify({
+                'status': 'success',
+                'message': 'Progress started.',
+                'is_ongoing': item.progress.is_ongoing})
         else:
-            return jsonify({'status': 'error', 'message': 'Could not start.'})
+            return jsonify({
+                'status': 'error',
+                'message': 'Could not start.',
+                'is_ongoing': item.progress.is_ongoing})
 
     @app.route('/item/stop/<int:item_id>')
     def stop_item(item_id):
+        print(f"stop_item({item_id})")
         item = Item.from_db(item_id)
+        print(f"Retrieved item from DB: {item.recipes}")
         if item.progress.stop():
             item.to_db()
-            return jsonify({'message': 'Progress paused.'})
+            return jsonify({
+                'status': 'success',
+                'message': 'Progress paused.',
+                'is_ongoing': item.progress.is_ongoing})
         else:
-            return jsonify({'message': 'Progress is already paused.'})
+            return jsonify({
+                'status': 'success',
+                'message': 'Progress is already paused.',
+                'is_ongoing': item.progress.is_ongoing})
+

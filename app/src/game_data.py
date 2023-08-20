@@ -3,12 +3,13 @@ from flask import g
 from .db_serializable import DbSerializable
 from .db_relations import tables_to_create as relation_tables
 
-from src.attrib import Attrib
-from src.character import Character
-from src.event import Event
-from src.item import Item
-from src.location import Location
-from src.overall import Overall
+from .attrib import Attrib
+from .character import Character
+from .event import Event
+from .item import Item
+from .location import Location
+from .overall import Overall
+from .progress import Progress
 
 class GameData:
     # In this order for from_json().
@@ -116,7 +117,8 @@ class GameData:
                 for tablename in relation_tables
             ] + [
                 entity_cls.tablename()
-                for entity_cls in list(GameData.ENTITIES) + [Overall]
+                for entity_cls in list(GameData.ENTITIES) + [
+                    Overall, Progress]
             ]
         for tablename in tablenames:
             DbSerializable.execute_change(f"""
