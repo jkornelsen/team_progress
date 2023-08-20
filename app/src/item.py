@@ -162,6 +162,65 @@ class Item(Identifiable):
                 values)
 
     @classmethod
+    def db_item_and_progress_data(cls, id_to_get=None):
+        query = """
+            SELECT *
+            FROM {tables[0]}
+            LEFT JOIN {tables[1]}
+                ON {tables[1]}.id = {tables[0]}.progress_id
+                AND {tables[1]}.game_token = {tables[0]}.game_token
+            WHERE {tables[0]}.game_token = %s
+        """
+        values = [g.game_token]
+        if id_to_get:
+            query += f"AND {{tables[0]}}.id = %s\n"
+            values.append(id_to_get);
+        query += "ORDER BY {tables[0]}.name\n"
+        return cls.select_tables(
+            query, values, ['items', 'progress'])
+
+    @classmethod
+    def db_attrib_data(cls, id_to_get=None, include_all=False):
+        query = """
+            SELECT *
+            FROM {tables[0]}
+            LEFT JOIN {tables[1]}
+                ON {tables[1]}.game_token = {tables[0]}.game_token
+                AND {tables[1]}.attrib_id = {tables[0]}.id
+        """
+        values = [g.game_token]
+        if id_to_get:
+            query += "AND {tables[1]}.item_id = %s\n"
+            values = [id_to_get] + values
+        query += "WHERE {tables[0]}.game_token = %s\n"
+        if include_all:
+            query += "ORDER BY {tables[0]}.name\n"
+        else:
+            query += "AND {tables[1]}.item_id IS NOT NULL\n"
+        return cls.select_tables(
+            query, values, ['attribs', 'item_attribs'])
+
+    @classmethod
+    def db_source_data(cls, id_to_get=None, get_by_source=False):
+        query = """
+            SELECT *
+            FROM item_sources
+            WHERE game_token = %s
+        """
+        values = [g.game_token]
+        if id_to_get:
+            id_field = 'source_id' if get_by_source else 'item_id'
+            query = f"{query}\nAND {id_field} = %s"
+            values.append(id_to_get);
+        sources_data = cls.execute_select(query, values)
+        item_recipes_data = {}
+        for row in sources_data:
+            recipes_data = item_recipes_data.setdefault(row.item_id, {})
+            recipe_data = recipes_data.setdefault(row.recipe_id, row)
+            recipe_data.setdefault('sources', []).append(row)
+        return item_recipes_data
+
+    @classmethod
     def from_db(cls, id_to_get):
         return cls._from_db(id_to_get)
 
@@ -173,58 +232,21 @@ class Item(Identifiable):
     def _from_db(cls, id_to_get=None):
         print(f"{cls.__name__}._from_db()")
         # Get item and progress data
-        query = """
-            SELECT *
-            FROM {tables[0]}
-            LEFT JOIN {tables[1]}
-                ON {tables[1]}.id = {tables[0]}.progress_id
-                AND {tables[1]}.game_token = {tables[0]}.game_token
-            WHERE {tables[0]}.game_token = %s
-        """
-        values = [g.game_token]
-        if id_to_get:
-            query = f"{query}\nAND {{tables[0]}}.id = %s"
-            values.append(id_to_get);
-        tables_rows = cls.select_tables(query, values, ['items', 'progress'])
+        tables_rows = cls.db_item_and_progress_data(id_to_get)
         instances = {}  # keyed by ID
         for item_data, progress_data in tables_rows:
             instance = instances.setdefault(
                 item_data.id, cls.from_json(vars(item_data)))
             if progress_data.id:
                 instance.progress = Progress.from_json(progress_data, instance)
-        # Get attrib data
-        query = """
-            SELECT *
-            FROM {tables[0]}, {tables[1]}
-            WHERE {tables[0]}.game_token = %s
-                AND {tables[1]}.game_token = {tables[0]}.game_token
-                AND {tables[1]}.id = {tables[0]}.attrib_id
-        """
-        values = [g.game_token]
-        if id_to_get:
-            query = f"{query}\nAND {{tables[0]}}.item_id = %s"
-            values.append(id_to_get);
-        tables_rows = cls.select_tables(query, values, ['item_attribs', 'attribs'])
-        for item_attrib_data, attrib_data in tables_rows:
+        # Get attrib data for items
+        tables_rows = cls.db_attrib_data(id_to_get)
+        for attrib_data, item_attrib_data in tables_rows:
             instance = instances[item_attrib_data.item_id]
             attrib_obj = Attrib(attrib_data.id)
             instance.attribs[attrib_obj] = item_attrib_data.value
-        # Get source data
-        query = """
-            SELECT *
-            FROM item_sources
-            WHERE game_token = %s
-        """
-        values = [g.game_token]
-        if id_to_get:
-            query = f"{query}\nAND item_id = %s"
-            values.append(id_to_get);
-        sources_data = cls.execute_select(query, values)
-        item_recipes_data = {}
-        for row in sources_data:
-            recipes_data = item_recipes_data.setdefault(row.item_id, {})
-            recipe_data = recipes_data.setdefault(row.recipe_id, row)
-            recipe_data.setdefault('sources', []).append(row)
+        # Get source data for items
+        item_recipes_data = cls.db_source_data(id_to_get)
         for item_id, recipes_data in item_recipes_data.items():
             instance = instances[item_id]
             instance.recipes = [
@@ -255,16 +277,7 @@ class Item(Identifiable):
         else:
             config_id = int(config_id)
         # Get all item data and the current item's progress data
-        tables_rows = cls.select_tables("""
-            SELECT *
-            FROM {tables[0]}
-            LEFT JOIN {tables[1]}
-                ON {tables[1]}.id = {tables[0]}.progress_id
-                AND {tables[1]}.game_token = {tables[0]}.game_token
-                AND {tables[0]}.id = %s
-            WHERE {tables[0]}.game_token = %s
-            ORDER BY {tables[0]}.name
-        """, (config_id, g.game_token), ['items', 'progress'])
+        tables_rows = cls.db_item_and_progress_data()
         g.game_data.items = []
         current_data = MutableNamespace()
         for item_data, progress_data in tables_rows:
@@ -274,33 +287,17 @@ class Item(Identifiable):
                     item_data.progress = progress_data
             g.game_data.items.append(Item.from_json(item_data))
         # Get all attrib data and the current item's attrib relation data
-        tables_rows = cls.select_tables("""
-            SELECT *
-            FROM {tables[0]}
-            LEFT JOIN {tables[1]}
-                ON {tables[1]}.attrib_id = {tables[0]}.id
-                AND {tables[1]}.game_token = {tables[0]}.game_token
-                AND {tables[1]}.item_id = %s
-            WHERE {tables[0]}.game_token = %s
-            ORDER BY {tables[0]}.name
-        """, (config_id, g.game_token), ['attribs', 'item_attribs'])
+        tables_rows = cls.db_attrib_data(config_id, include_all=True)
         for attrib_data, item_attrib_data in tables_rows:
             if item_attrib_data.attrib_id:
                 current_data.setdefault(
                     'attribs', {})[attrib_data.id] = item_attrib_data.value
             g.game_data.attribs.append(Attrib.from_json(attrib_data))
         # Get the current item's source relation data
-        sources_data = cls.execute_select("""
-            SELECT *
-            FROM item_sources
-            WHERE game_token = %s
-                AND item_id = %s
-        """, (g.game_token, config_id))
-        recipes_data = {}
-        for row in sources_data:
-            recipe_data = recipes_data.setdefault(row.recipe_id, row)
-            recipe_data.setdefault('sources', []).append(row)
-        current_data.recipes = list(recipes_data.values())
+        item_recipes_data = cls.db_source_data(config_id)
+        if item_recipes_data:
+            recipes_data = list(item_recipes_data.values())[0]
+            current_data.recipes = list(recipes_data.values())
         # Create item from data
         current_obj = Item.from_json(current_data)
         # Replace partial objects with fully populated objects
@@ -327,20 +324,9 @@ class Item(Identifiable):
     def data_for_play(cls, config_id):
         print(f"{cls.__name__}.data_for_play()")
         current_obj = cls.data_for_configure(config_id)
-        # Get source relation data for items 
-        sources_data = cls.execute_select("""
-            SELECT *
-            FROM item_sources
-            WHERE game_token = %s
-                AND source_id = %s
-        """, (g.game_token, config_id))
-        items_data = {}
-        for row in sources_data:
-            print(f"source_data {row}")
-            recipes_data = items_data.setdefault(row.item_id, {})
-            recipe_data = recipes_data.setdefault(row.recipe_id, row)
-            recipe_data.setdefault('sources', []).append(row)
-        for item_id, recipes_data in items_data.items():
+        # Get relation data for items that use this item as a source
+        item_recipes_data = cls.db_source_data(config_id, get_by_source=True)
+        for item_id, recipes_data in item_recipes_data.items():
             print(f"item_id {item_id}, recipes_data {recipes_data}")
             item = Item.get_by_id(item_id)
             item.recipes = [

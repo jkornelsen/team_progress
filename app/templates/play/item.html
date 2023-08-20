@@ -109,17 +109,18 @@
         </tr>
         {% endif %}
 
-        {% set outerscope = namespace(used_for_items=[]) %}
+        {% set outerscope = namespace(used_as_source=[]) %}
         {% for other_item in game_data.items %}
             {% for recipe in other_item.recipes %}
                 {% for source in recipe.sources %}
                     {% if current.id == source.item.id %}
-                        {% set _ = outerscope.used_for_items.append(other_item) %}
+                        {% set _ = outerscope.used_as_source.append(
+                            {'item': other_item, 'quantity': source.quantity}) %}
                     {% endif %}
                 {% endfor %}
             {% endfor %}
         {% endfor %}
-        {% if outerscope.used_for_items %}
+        {% if outerscope.used_as_source %}
         <tr>
             <td>
                 <table class="inner-table" cellspacing="0" cellpadding="5">
@@ -127,14 +128,14 @@
                         <th>Used For</th>
                         <th>Required</th>
                     </tr>
-                    {% for used_for_item in outerscope.used_for_items %}
+                    {% for used_for in outerscope.used_as_source %}
                     <tr>
                         <td>
-                            <a href="{{ url_for('play_item', item_id=used_for_item.id) }}">
-                                {{ used_for_item.name }}
+                            <a href="{{ url_for('play_item', item_id=used_for.item.id) }}">
+                                {{ used_for.item.name }}
                             </a>
                         </td>
-                        <td>quantity TODO</td>
+                        <td>{{ used_for.quantity }}</td>
                     </tr>
                     {% endfor %}
                 </table>
