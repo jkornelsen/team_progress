@@ -52,7 +52,7 @@ class Progress(Identifiable):
     def from_json(cls, data, entity=None):
         if not isinstance(data, dict):
             data = vars(data)
-        instance = cls(int(data.get('id', 0),), entity=entity)
+        instance = cls(int(data.get('id', 0)), entity=entity)
         from .item import Recipe
         instance.recipe = Recipe(int(data.get('recipe_id', 0)))
         instance.quantity = data.get('quantity', 0)
@@ -83,26 +83,26 @@ class Progress(Identifiable):
                 num_batches = (self.q_limit - self.quantity) // self.recipe.rate_amount
                 stop_here = True  # can't process the full amount
             eff_source_qtys = {}
-            for source_item, source_qty in self.recipe.sources.items():
-                eff_source_qty = num_batches * source_qty
-                eff_source_qtys[source_item] = eff_source_qty
+            for source in self.recipe.sources:
+                eff_source_qty = num_batches * source.quantity
+                eff_source_qtys[source.item] = eff_source_qty
                 print(f"change_quantity() for {self.id}:"
-                    f" eff_source_qty for {source_item}={eff_source_qty}")
-            for source_item, source_qty in self.recipe.sources.items():
-                eff_source_qty = num_batches * source_qty
+                    f" eff_source_qty for {source.item}={eff_source_qty}")
+            for source in self.recipe.sources:
+                eff_source_qty = num_batches * source.quantity
                 if (eff_source_qty > 0
-                        and source_item.progress.quantity < eff_source_qty):
+                        and source.item.progress.quantity < eff_source_qty):
                     stop_here = True  # can't process the full amount
                     num_batches = min(
                         num_batches,
-                        math.floor(source_item.progress.quantity / eff_source_qty))
+                        math.floor(source.item.progress.quantity / eff_source_qty))
             print(f"change_quantity() for {self.id}:"
                 f" num_batches={num_batches}")
             if num_batches > 0:
-                for source_item, source_qty in self.recipe.sources.items():
-                    eff_source_qty = num_batches * source_qty
-                    source_item.progress.quantity -= eff_source_qty
-                    source_item.to_db()
+                for source in self.recipe.sources:
+                    eff_source_qty = num_batches * source.quantity
+                    source.item.progress.quantity -= eff_source_qty
+                    source.item.to_db()
                 eff_result_qty = num_batches * self.recipe.rate_amount
                 self.quantity += eff_result_qty
                 self.batches_processed += num_batches
@@ -115,7 +115,10 @@ class Progress(Identifiable):
         elapsed_time = self.calculate_elapsed_time()
         total_batches_needed = math.floor(elapsed_time / self.recipe.rate_duration)
         batches_to_do = total_batches_needed - self.batches_processed
-        print(f"determine_current_quantity: batches_to_do={batches_to_do}")
+        print("-" * 80)
+        print(f"determine_current_quantity:"
+            f" batches_to_do={batches_to_do}"
+            f" ({elapsed_time} / {self.recipe.rate_duration})")
         if batches_to_do > 0:
             return self.change_quantity(batches_to_do)
         else:

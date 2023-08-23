@@ -24,7 +24,16 @@ tables_to_create = {
         progress_id integer,
         FOREIGN KEY (game_token, progress_id)
             REFERENCES progress (game_token, id)
-    """
+    """,
+    'recipes': f"""
+        {coldef('id')},
+        item_id integer NOT NULL,
+        rate_amount integer NOT NULL,
+        rate_duration float(2) NOT NULL,
+        instant boolean,
+        FOREIGN KEY (game_token, item_id)
+            REFERENCES items (game_token, id)
+    """,
 }
 
 class Source:
@@ -47,9 +56,9 @@ class Source:
         instance.quantity = data.get('quantity', 1)
         return instance
 
-class Recipe:
-    def __init__(self, new_id=0):
-        self.id = new_id  # needed in db, not useful in JSON files
+class Recipe(Identifiable):
+    def __init__(self, new_id=""):
+        super().__init__(new_id)
         self.instant = False
         self.rate_amount = 1  # quantity produced per batch
         self.rate_duration = 1.0  # seconds for a batch
@@ -77,6 +86,24 @@ class Recipe:
             Source.from_json(src_data)
             for src_data in data.get('sources', [])]
         return instance
+
+    def json_to_db(self, doc):
+        print(f"{self.__class__.__name__}.json_to_db()")
+        super().json_to_db(doc)
+        if doc['sources']:
+            print(f"sources: {doc['sources']}")
+            values = []
+            for source in doc['sources']:
+                values.append((
+                    g.game_token, self.id,
+                    source['source_id'],
+                    source['quantity'],
+                    source['preserve']
+                    ))
+            self.insert_multiple(
+                "recipe_sources",
+                "game_token, recipe_id, source_id, quantity, preserve",
+                values)
 
 class Item(Identifiable):
     def __init__(self, new_id=""):
@@ -126,7 +153,15 @@ class Item(Identifiable):
         self.progress.json_to_db(doc['progress'])
         doc['progress_id'] = self.progress.id
         super().json_to_db(doc)
-        for rel_table in ('item_attribs', 'item_sources'):
+        self.execute_change(f"""
+            DELETE FROM recipe_sources
+            WHERE recipe_id IN (
+                SELECT id
+                FROM recipes
+                WHERE item_id = %s AND game_token = %s)
+            AND game_token = %s
+        """, [self.id, self.game_token, self.game_token])
+        for rel_table in ('item_attribs', 'recipes'):
             self.execute_change(f"""
                 DELETE FROM {rel_table}
                 WHERE item_id = %s AND game_token = %s
@@ -142,24 +177,11 @@ class Item(Identifiable):
         if doc['recipes']:
             print(f"recipes: {doc['recipes']}")
             values = []
-            for recipe_id, recipe_data in enumerate(doc['recipes'], start=1):
-                for source_data in recipe_data['sources']:
-                    values.append((
-                        g.game_token,
-                        self.id,
-                        recipe_id,
-                        source_data['source_id'],
-                        source_data['quantity'],
-                        source_data['preserve'],
-                        recipe_data['rate_amount'],
-                        recipe_data['rate_duration'],
-                        recipe_data['instant']
-                        ))
-            self.insert_multiple(
-                "item_sources",
-                "game_token, item_id, recipe_id, source_id,"
-                " quantity, preserve, rate_amount, rate_duration, instant",
-                values)
+            # Handle existing ids first and SERIAL will generate others
+            sorted_recipe_data = sorted(doc['recipes'],
+                key=lambda x: x['id'] if x['id'] else float('inf'))
+            for recipe_data in sorted_recipe_data:
+                Recipe.from_json(recipe_data).to_db()
 
     @classmethod
     def db_item_and_progress_data(cls, id_to_get=None):
@@ -202,22 +224,29 @@ class Item(Identifiable):
 
     @classmethod
     def db_source_data(cls, id_to_get=None, get_by_source=False):
+        values = []
         query = """
             SELECT *
-            FROM item_sources
-            WHERE game_token = %s
+            FROM {tables[0]}
+            LEFT JOIN {tables[1]}
+                ON {tables[1]}.id = {tables[0]}.progress_id
+                AND {tables[1]}.game_token = {tables[0]}.game_token
         """
-        values = [g.game_token]
-        if id_to_get:
-            id_field = 'source_id' if get_by_source else 'item_id'
-            query = f"{query}\nAND {id_field} = %s"
+        if id_to_get and get_by_source:
+            query += "AND {tables[1]}.source_id = %s"
             values.append(id_to_get);
-        sources_data = cls.execute_select(query, values)
+        query += "WHERE {tables[0]}.game_token = %s"
+        if id_to_get and not get_by_source:
+            query += "AND {tables[0]}.item_id = %s"
+            values.append(id_to_get);
+        values += [g.game_token]
+        sources_data = cls.select_tables(
+            query, values, ['recipes', 'recipe_sources'])
         item_recipes_data = {}
-        for row in sources_data:
-            recipes_data = item_recipes_data.setdefault(row.item_id, {})
-            recipe_data = recipes_data.setdefault(row.recipe_id, row)
-            recipe_data.setdefault('sources', []).append(row)
+        for row_recipe, row_recipe_source in sources_data:
+            recipes_data = item_recipes_data.setdefault(row_recipe.item_id, {})
+            recipe_data = recipes_data.setdefault(row.recipe_id, row_recipe)
+            recipe_data.setdefault('sources', []).append(row_recipe_source)
         return item_recipes_data
 
     @classmethod
@@ -252,6 +281,12 @@ class Item(Identifiable):
             instance.recipes = [
                 Recipe.from_json(recipe_data)
                 for recipe_data in recipes_data.values()]
+            # Get the recipe that is currently in progress
+            recipe_id = instance.progress.recipe.id
+            if recipe_id:
+                instance.progress.recipe = next(
+                    (recipe for recipe in instance.recipes
+                     if recipe.id == recipe_id), Recipe())
         # Print debugging info
         print(f"found {len(instances)} items")
         for instance in instances.values():
@@ -259,10 +294,13 @@ class Item(Identifiable):
                 f" has {len(instance.recipes)} recipes")
             if len(instance.recipes):
                 recipe = instance.recipes[0]
-                print(f"rate_amount={recipe.rate_amount}")
-                print(f"instant={recipe.instant}")
+                print(f"recipe id {recipe.id}")
+                print(f"    rate_amount={recipe.rate_amount},"
+                    f" rate_duration={recipe.rate_duration},"
+                    f" instant={recipe.instant}")
                 for source in recipe.sources:
-                    print(f"item id {source.item.id} qty {source.quantity}")
+                    print(f"    source item id {source.item.id},"
+                        f" qty {source.quantity}")
         # Convert and return
         instances = list(instances.values())
         if id_to_get is not None and len(instances) == 1:
@@ -313,8 +351,9 @@ class Item(Identifiable):
         print(f"found {len(current_obj.recipes)} recipes")
         if len(current_obj.recipes):
             recipe = current_obj.recipes[0]
-            print(f"rate_amount={recipe.rate_amount}")
-            print(f"instant={recipe.instant}")
+            print(f"recipe {recipe.id}"
+                f" rate_amount={recipe.rate_amount}"
+                f" instant={recipe.instant}")
             for source in recipe.sources:
                 print(f"item id {source.item.id} name {source.item.name}"
                     f" qty {source.quantity}")
@@ -352,7 +391,7 @@ class Item(Identifiable):
             recipe_ids = request.form.getlist('recipe_id')
             self.recipes = []
             for recipe_id in recipe_ids:
-                recipe = Recipe()
+                recipe = Recipe(int(recipe_id))
                 self.recipes.append(recipe)
                 recipe.rate_amount = int(request.form.get(
                     f'recipe_{recipe_id}_rate_amount'))

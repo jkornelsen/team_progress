@@ -23,10 +23,11 @@ def pretty(text, values=None):
     spaces and newlines."""
     text = text.strip()
     lines = text.split('\n')
-    indented_lines = [' ' * 8 + line.strip() for line in lines]
+    indent = ' ' * 8
+    indented_lines = [indent + line.strip() for line in lines]
     indented_text = '\n'.join(indented_lines)
     if values:
-        indented_text += f"\nvalues={values}"
+        indented_text += f"\n{indent}values={values}"
     return indented_text
 
 def create_all():

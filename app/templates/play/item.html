@@ -165,10 +165,9 @@
                 );
                 // Source item quantities
                 {% for recipe in current.recipes %}
-                    {% set recipe_index = loop.index %}
                     {% for source in recipe.sources %}
                         $.get('/item/progress_data/{{ source.item.id }}', function(data) {
-                            $('#recipe-{{ recipe_index }}-source-{{ source.item.id }}-quantity').text(data.quantity);
+                            $('#recipe-{{ recipe.id }}-source-{{ source.item.id }}-quantity').text(data.quantity);
                         });
                     {% endfor %}
                 {% endfor %}
@@ -286,7 +285,9 @@
                     urlParts[0] = '/item/start';
                     urlParts.push(recipe_id);
                 }
-                fetch(urlParts.join('/'))
+                const url = urlParts.join('/');
+                console.log(`url ${url}`);
+                fetch(url)
                     .then(response => response.json())
                     .then(data => {
                         console.log(data.message);

@@ -17,27 +17,13 @@ tables_to_create = {
         FOREIGN KEY (game_token, attrib_id)
             REFERENCES attribs (game_token, id)
     """,
-    'item_sources': f"""
+    'recipe_sources': f"""
         {coldef('game_token')},
-        item_id integer,
         recipe_id integer,
         source_id integer,
         quantity integer NOT NULL,
         preserve boolean NOT NULL,
-        rate_amount integer NOT NULL,
-        rate_duration float(2) NOT NULL,
-        instant boolean,
-        PRIMARY KEY (game_token, item_id, recipe_id, source_id),
-        FOREIGN KEY (game_token, item_id)
-            REFERENCES items (game_token, id)
-    """,
-    'recipe_counters': f"""
-        {coldef('game_token')},
-        item_id integer,
-        highest_recipe_id integer NOT NULL,
-        PRIMARY KEY (game_token, item_id),
-        FOREIGN KEY (game_token, item_id)
-            REFERENCES items (game_token, id)
+        PRIMARY KEY (game_token, recipe_id, source_id)
     """,
     # Character
     'char_attribs': f"""

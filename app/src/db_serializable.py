@@ -196,7 +196,7 @@ class DbSerializable():
         values = tuples_to_lists([doc[field] for field in fields])
         update_values = tuples_to_lists(
             [doc[field] for field in update_fields])
-        row = self.execute_change(query, values + update_values)
+        self.execute_change(query, values + update_values)
 
     @classmethod
     def form_int(cls, request, field, default=0):
