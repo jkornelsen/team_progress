@@ -27,7 +27,7 @@ class Progress(Identifiable):
             self.recipe = recipe
         else:
             from .item import Recipe
-            self.recipe = Recipe()
+            self.recipe = Recipe()  # use default values
         self.quantity = 0  # the main value tracked
         self.q_limit = 0  # limit the quantity if not 0
         self.start_time = None

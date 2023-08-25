@@ -6,7 +6,7 @@ from .db_relations import tables_to_create as relation_tables
 from .attrib import Attrib
 from .character import Character
 from .event import Event
-from .item import Item
+from .item import Item, Recipe
 from .location import Location
 from .overall import Overall
 from .progress import Progress
@@ -112,13 +112,14 @@ class GameData:
 
     @staticmethod
     def clear_db_for_token():
+        print(f"game_data.clear_db_for_token()")
         tablenames = [
                 tablename
                 for tablename in relation_tables
             ] + [
                 entity_cls.tablename()
-                for entity_cls in list(GameData.ENTITIES) + [
-                    Overall, Progress]
+                for entity_cls in [Recipe
+                    ] + list(GameData.ENTITIES) + [Overall, Progress]
             ]
         for tablename in tablenames:
             DbSerializable.execute_change(f"""

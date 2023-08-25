@@ -38,7 +38,7 @@ tables_to_create = {
 
 class Source:
     def __init__(self, new_id=0):
-        self.item = Item(new_id)
+        self.item = Item(new_id)  # source item, not result item
         self.preserve = False  # if true then source will not be consumed
         self.quantity = 1
 
@@ -57,31 +57,36 @@ class Source:
         return instance
 
 class Recipe(Identifiable):
-    def __init__(self, new_id=""):
+    def __init__(self, new_id="", item=None):
         super().__init__(new_id)
-        self.instant = False
+        self.item_produced = item
         self.rate_amount = 1  # quantity produced per batch
         self.rate_duration = 1.0  # seconds for a batch
+        self.instant = False
         self.sources = []  # Source objects
         self.attrib = None  # tuple (attrib_id, val)
 
     def to_json(self):
         return {
             'id': self.id,
-            'instant': self.instant,
+            'item_id': self.item_produced.id if self.item_produced else 0,
             'rate_amount': self.rate_amount,
             'rate_duration': self.rate_duration,
+            'instant': self.instant,
             'sources': [
                 source.to_json()
                 for source in self.sources]}
 
     @classmethod
-    def from_json(cls, data):
+    def from_json(cls, data, item_produced=None):
         instance = cls()
         instance.id = data.get('id', 0)
-        instance.instant = data.get('instant', False)
+        instance.item_produced = (
+            item_produced if item_produced
+            else Item(int(data.get('item_id', 0))))
         instance.rate_amount = data.get('rate_amount', 1)
         instance.rate_duration = data.get('rate_duration', 1.0)
+        instance.instant = data.get('instant', False)
         instance.sources = [
             Source.from_json(src_data)
             for src_data in data.get('sources', [])]
@@ -144,7 +149,7 @@ class Item(Identifiable):
         instance.progress = Progress.from_json(
             data.get('progress', {}), instance)
         instance.recipes = [
-            Recipe.from_json(recipe_data)
+            Recipe.from_json(recipe_data, instance)
             for recipe_data in data.get('recipes', [])]
         return instance
 
@@ -153,14 +158,19 @@ class Item(Identifiable):
         self.progress.json_to_db(doc['progress'])
         doc['progress_id'] = self.progress.id
         super().json_to_db(doc)
+        # Delete from recipe_sources for recipes of this item_id
         self.execute_change(f"""
             DELETE FROM recipe_sources
-            WHERE recipe_id IN (
-                SELECT id
-                FROM recipes
-                WHERE item_id = %s AND game_token = %s)
-            AND game_token = %s
-        """, [self.id, self.game_token, self.game_token])
+            USING recipe_sources AS rs
+            LEFT OUTER JOIN recipes ON
+                recipes.game_token = rs.game_token
+                AND recipes.id = rs.recipe_id
+            WHERE recipe_sources.game_token = rs.game_token
+                AND recipe_sources.recipe_id = rs.recipe_id
+                AND recipe_sources.source_id = rs.source_id
+                AND recipes.item_id = %s
+                AND recipes.game_token = %s
+        """, [self.id, self.game_token])
         for rel_table in ('item_attribs', 'recipes'):
             self.execute_change(f"""
                 DELETE FROM {rel_table}
@@ -181,10 +191,12 @@ class Item(Identifiable):
             sorted_recipe_data = sorted(doc['recipes'],
                 key=lambda x: x['id'] if x['id'] else float('inf'))
             for recipe_data in sorted_recipe_data:
-                Recipe.from_json(recipe_data).to_db()
+                Recipe.from_json(recipe_data, self).to_db()
 
     @classmethod
     def db_item_and_progress_data(cls, id_to_get=None):
+        if id_to_get == 0:
+            return []
         query = """
             SELECT *
             FROM {tables[0]}
@@ -194,7 +206,7 @@ class Item(Identifiable):
             WHERE {tables[0]}.game_token = %s
         """
         values = [g.game_token]
-        if id_to_get:
+        if id_to_get is not None:
             query += f"AND {{tables[0]}}.id = %s\n"
             values.append(id_to_get);
         query += "ORDER BY {tables[0]}.name\n"
@@ -203,6 +215,8 @@ class Item(Identifiable):
 
     @classmethod
     def db_attrib_data(cls, id_to_get=None, include_all=False):
+        if id_to_get == 0:
+            return []
         query = """
             SELECT *
             FROM {tables[0]}
@@ -211,7 +225,7 @@ class Item(Identifiable):
                 AND {tables[1]}.attrib_id = {tables[0]}.id
         """
         values = [g.game_token]
-        if id_to_get:
+        if id_to_get is not None:
             query += "AND {tables[1]}.item_id = %s\n"
             values = [id_to_get] + values
         query += "WHERE {tables[0]}.game_token = %s\n"
@@ -224,28 +238,31 @@ class Item(Identifiable):
 
     @classmethod
     def db_source_data(cls, id_to_get=None, get_by_source=False):
-        values = []
+        if id_to_get == 0:
+            return {}
         query = """
             SELECT *
             FROM {tables[0]}
             LEFT JOIN {tables[1]}
-                ON {tables[1]}.id = {tables[0]}.progress_id
-                AND {tables[1]}.game_token = {tables[0]}.game_token
+                ON {tables[1]}.game_token = {tables[0]}.game_token
+                AND {tables[1]}.recipe_id = {tables[0]}.id
         """
-        if id_to_get and get_by_source:
-            query += "AND {tables[1]}.source_id = %s"
+        item_conditions = [
+            "WHERE {tables[0]}.game_token = %s"]
+        values = [g.game_token]
+        if id_to_get is not None:
+            if get_by_source:
+                item_conditions.insert(0, "AND {tables[1]}.source_id = %s")
+            else:
+                item_conditions.append("AND {tables[0]}.item_id = %s")
             values.append(id_to_get);
-        query += "WHERE {tables[0]}.game_token = %s"
-        if id_to_get and not get_by_source:
-            query += "AND {tables[0]}.item_id = %s"
-            values.append(id_to_get);
-        values += [g.game_token]
+        query += "\n".join(item_conditions)
         sources_data = cls.select_tables(
             query, values, ['recipes', 'recipe_sources'])
         item_recipes_data = {}
         for row_recipe, row_recipe_source in sources_data:
             recipes_data = item_recipes_data.setdefault(row_recipe.item_id, {})
-            recipe_data = recipes_data.setdefault(row.recipe_id, row_recipe)
+            recipe_data = recipes_data.setdefault(row_recipe.id, row_recipe)
             recipe_data.setdefault('sources', []).append(row_recipe_source)
         return item_recipes_data
 
@@ -279,14 +296,14 @@ class Item(Identifiable):
         for item_id, recipes_data in item_recipes_data.items():
             instance = instances[item_id]
             instance.recipes = [
-                Recipe.from_json(recipe_data)
+                Recipe.from_json(recipe_data, instance)
                 for recipe_data in recipes_data.values()]
             # Get the recipe that is currently in progress
             recipe_id = instance.progress.recipe.id
             if recipe_id:
                 instance.progress.recipe = next(
                     (recipe for recipe in instance.recipes
-                     if recipe.id == recipe_id), Recipe())
+                     if recipe.id == recipe_id), Recipe(item=instance))
         # Print debugging info
         print(f"found {len(instances)} items")
         for instance in instances.values():
@@ -369,7 +386,7 @@ class Item(Identifiable):
             print(f"item_id {item_id}, recipes_data {recipes_data}")
             item = Item.get_by_id(item_id)
             item.recipes = [
-                Recipe.from_json(recipe_data)
+                Recipe.from_json(recipe_data, item)
                 for recipe_id, recipe_data in recipes_data.items()]
         return current_obj
 
@@ -391,7 +408,7 @@ class Item(Identifiable):
             recipe_ids = request.form.getlist('recipe_id')
             self.recipes = []
             for recipe_id in recipe_ids:
-                recipe = Recipe(int(recipe_id))
+                recipe = Recipe(int(recipe_id), self)
                 self.recipes.append(recipe)
                 recipe.rate_amount = int(request.form.get(
                     f'recipe_{recipe_id}_rate_amount'))

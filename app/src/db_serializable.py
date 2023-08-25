@@ -9,7 +9,7 @@ def coldef(which):
         return "game_token varchar(50)"
     elif which == 'id':
         # include game token as well
-        return f"""id SERIAL,
+        return f"""id integer,
         {coldef('game_token')},
         PRIMARY KEY (id, game_token)"""
     elif which == 'name':
@@ -184,9 +184,9 @@ class DbSerializable():
         placeholders = ','.join(['%s'] * len(fields))
         update_fields = [
             field for field in fields
-            if field != 'game_token']
+            if field not in ('game_token',)]
         update_placeholders = ', '.join(
-            [f"{field}=%s" for field in update_fields])
+            [f"{field}=EXCLUDED.{field}" for field in update_fields])
         query = f"""
             INSERT INTO {{table}} ({', '.join(fields)})
             VALUES ({placeholders})
@@ -194,9 +194,7 @@ class DbSerializable():
             SET {update_placeholders}
         """
         values = tuples_to_lists([doc[field] for field in fields])
-        update_values = tuples_to_lists(
-            [doc[field] for field in update_fields])
-        self.execute_change(query, values + update_values)
+        self.execute_change(query, values)
 
     @classmethod
     def form_int(cls, request, field, default=0):
@@ -240,15 +238,20 @@ class Identifiable(DbSerializable):
     def json_to_db(self, doc):
         doc['game_token'] = g.game_token
         fields = db_type_fields(doc)
+        placeholders = ['%s'] * len(fields)
+        values = tuples_to_lists([doc[field] for field in fields])
         if not doc.get('id'):
-            # Remove the 'id' field from the fields to be inserted
-            fields = [field for field in fields if field != 'id']
-        placeholders = ','.join(['%s'] * len(fields))
+            # Generate new id after max instead of specifying value
+            id_index = fields.index('id')
+            placeholders[id_index] = (
+                "COALESCE((SELECT MAX(id) + 1 FROM {table}), 1)")
+            values.pop(id_index)
+        placeholders = ','.join(placeholders)
         update_fields = [
             field for field in fields
-            if field not in ('id', 'game_token')]
+            if field not in ('game_token', 'id')]
         update_placeholders = ', '.join(
-            [f"{field}=%s" for field in update_fields])
+            [f"{field}=EXCLUDED.{field}" for field in update_fields])
         query = f"""
             INSERT INTO {{table}} ({', '.join(fields)})
             VALUES ({placeholders})
@@ -256,16 +259,13 @@ class Identifiable(DbSerializable):
             SET {update_placeholders}
             RETURNING id
         """
-        values = tuples_to_lists([doc[field] for field in fields])
-        update_values = tuples_to_lists(
-            [doc[field] for field in update_fields])
-        row = self.execute_change(query, values + update_values, fetch=True)
+        row = self.execute_change(query, values, fetch=True)
         self.id = row.id
 
     def remove_from_db(self):
         self.execute_change("""
             DELETE FROM {table}
-            WHERE id = %s AND game_token = %s
+            WHERE game_token = %s AND id = %s
         """, (self.id, self.game_token))
         entity_list = self.get_list()
         if self in entity_list:
