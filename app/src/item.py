@@ -93,7 +93,7 @@ class Recipe(Identifiable):
         return instance
 
     def json_to_db(self, doc):
-        print(f"{self.__class__.__name__}.json_to_db()")
+        print(f"{self.__class__.__name__}({self.id}).json_to_db()")
         super().json_to_db(doc)
         if doc['sources']:
             print(f"sources: {doc['sources']}")
@@ -154,7 +154,7 @@ class Item(Identifiable):
         return instance
 
     def json_to_db(self, doc):
-        print(f"{self.__class__.__name__}.json_to_db()")
+        print(f"{self.__class__.__name__}({self.id}).json_to_db()")
         self.progress.json_to_db(doc['progress'])
         doc['progress_id'] = self.progress.id
         super().json_to_db(doc)
@@ -237,7 +237,7 @@ class Item(Identifiable):
             query, values, ['attribs', 'item_attribs'])
 
     @classmethod
-    def db_source_data(cls, id_to_get=None, get_by_source=False):
+    def db_recipe_data(cls, id_to_get=None, get_by_source=False):
         if id_to_get == 0:
             return {}
         query = """
@@ -263,7 +263,8 @@ class Item(Identifiable):
         for row_recipe, row_recipe_source in sources_data:
             recipes_data = item_recipes_data.setdefault(row_recipe.item_id, {})
             recipe_data = recipes_data.setdefault(row_recipe.id, row_recipe)
-            recipe_data.setdefault('sources', []).append(row_recipe_source)
+            if row_recipe_source.source_id:
+                recipe_data.setdefault('sources', []).append(row_recipe_source)
         return item_recipes_data
 
     @classmethod
@@ -292,7 +293,7 @@ class Item(Identifiable):
             attrib_obj = Attrib(attrib_data.id)
             instance.attribs[attrib_obj] = item_attrib_data.value
         # Get source data for items
-        item_recipes_data = cls.db_source_data(id_to_get)
+        item_recipes_data = cls.db_recipe_data(id_to_get)
         for item_id, recipes_data in item_recipes_data.items():
             instance = instances[item_id]
             instance.recipes = [
@@ -349,7 +350,7 @@ class Item(Identifiable):
                     'attribs', {})[attrib_data.id] = item_attrib_data.value
             g.game_data.attribs.append(Attrib.from_json(attrib_data))
         # Get the current item's source relation data
-        item_recipes_data = cls.db_source_data(config_id)
+        item_recipes_data = cls.db_recipe_data(config_id)
         if item_recipes_data:
             recipes_data = list(item_recipes_data.values())[0]
             current_data.recipes = list(recipes_data.values())
@@ -381,7 +382,7 @@ class Item(Identifiable):
         print(f"{cls.__name__}.data_for_play()")
         current_obj = cls.data_for_configure(config_id)
         # Get relation data for items that use this item as a source
-        item_recipes_data = cls.db_source_data(config_id, get_by_source=True)
+        item_recipes_data = cls.db_recipe_data(config_id, get_by_source=True)
         for item_id, recipes_data in item_recipes_data.items():
             print(f"item_id {item_id}, recipes_data {recipes_data}")
             item = Item.get_by_id(item_id)
@@ -411,21 +412,21 @@ class Item(Identifiable):
                 recipe = Recipe(int(recipe_id), self)
                 self.recipes.append(recipe)
                 recipe.rate_amount = int(request.form.get(
-                    f'recipe_{recipe_id}_rate_amount'))
+                    f'recipe{recipe_id}_rate_amount'))
                 recipe.rate_duration = int(request.form.get(
-                    f'recipe_{recipe_id}_rate_duration'))
+                    f'recipe{recipe_id}_rate_duration'))
                 recipe.instant = bool(request.form.get(
-                    f'recipe_{recipe_id}_instant'))
+                    f'recipe{recipe_id}_instant'))
                 source_ids = request.form.getlist(
-                    f'recipe_{recipe_id}_source_id')
+                    f'recipe{recipe_id}_source_id')
                 print(f"Source IDs: {source_ids}")
                 for source_id in source_ids:
                     source = Source.from_json({
                         'source_id': int(source_id),
                         'quantity': int(request.form.get(
-                            f'recipe_{recipe_id}_source_{source_id}_quantity', 0)),
+                            f'recipe{recipe_id}_source{source_id}_quantity', 0)),
                         'preserve': bool(request.form.get(
-                            f'recipe_{recipe_id}_source_{source_id}_preserve')),
+                            f'recipe{recipe_id}_source{source_id}_preserve')),
                     })
                     recipe.sources.append(source)
                     print(f"Sources for {recipe_id}: ",
@@ -436,7 +437,7 @@ class Item(Identifiable):
             self.attribs = {}
             for attrib_id in attrib_ids:
                 attrib_val = int(
-                    request.form.get(f'attrib_{attrib_id}_val', 0))
+                    request.form.get(f'attrib{attrib_id}_val', 0))
                 attrib_obj = Attrib(attrib_id)
                 self.attribs[attrib_obj] = attrib_val
             print("attribs: ", {attrib.id: val

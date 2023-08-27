@@ -99,19 +99,19 @@
                 recipeCounter++;
                 console.log(`addRecipe() ${recipeCounter}`);
                 const recipeHtml = `
-                    <div class="recipe-container">
+                    <div class="recipe-container separated-div">
                         <input type="hidden" name="recipe_id" value="${recipeCounter}">
                         <label for="rate-amount">Gain per Batch:</label>
-                        <input type="number" id="rate-amount" name="recipe_${recipeCounter}_rate_amount" value="${rate_amount}" required>
+                        <input type="number" id="rate-amount" name="recipe${recipeCounter}_rate_amount" value="${rate_amount}" required>
                         <span id="over-time-container">
                             <label for="rate-duration">Duration:</label>
-                            <input type="text" size="6" id="rate-duration" name="recipe_${recipeCounter}_rate_duration" value="${rate_duration}" required>
+                            <input type="text" size="6" id="rate-duration" name="recipe${recipeCounter}_rate_duration" value="${rate_duration}" required>
                             <span class="label-like">seconds</span>
                         </span>
-                        <input type="checkbox" id="instant" name="recipe_${recipeCounter}_instant"
+                        <input type="checkbox" id="instant" name="recipe${recipeCounter}_instant"
                             ${instant ? 'checked' : ''} onChange="updateInstantVisibility(this);">
                         <label for="instant">Instant</label>
-                        <button type="button" class="remove-recipe-btn lesser-button" id="remove-recipe-${recipeCounter}">Remove Recipe</button>
+                        <button type="button" class="remove-recipe-btn lesser-button" id="remove-recipe${recipeCounter}">Remove Recipe</button>
                         <!-- Placeholder for appending new sources -->
                         <div class="sourcelist_end" style="width: 0; height: 0; opacity: 0;"></div>
                         </div>
@@ -119,7 +119,7 @@
                 `;
                 $('#recipelist_end').before(recipeHtml);
                 toggleAddRecipeButtonVisibility();
-                const newCheckbox = $(`#instant[name="recipe_${recipeCounter}_instant"]`)[0];
+                const newCheckbox = $(`#instant[name="recipe${recipeCounter}_instant"]`)[0];
                 $(newCheckbox).trigger('change');
             }
 
@@ -132,17 +132,16 @@
                     alert('Source already exists.');
                     return;
                 }
-                const idArray = ["recipe", recipeId, "source", sourceId];
+                const idArray = [`recipe${recipeId}`, `source${sourceId}`];
                 const uniqueId = idArray.join('-');
                 const uniqueName = idArray.join('_');
                 const sourceHtml = `
-                    <div class="source flexdiv" data-source-id="${sourceId}" data-recipe-id="${recipeId}">
-                        <input type="hidden" name="recipe_${recipeId}_source_id" value="${sourceId}">
+                    <div class="source flexdiv" data-source-id="${sourceId}">
+                        <input type="hidden" name="recipe${recipeId}_source_id" value="${sourceId}">
                         <label>Takes:</label>
                         <input type="number" id="${uniqueId}-quantity" name="${uniqueName}_quantity" value="${sourceQuantity}">
                         ${sourceName}
-                        <input type="checkbox" id="{uniqueId}-preserve" name="${uniqueName}_preserve"
-                            ${preserve ? 'checked' : ''}>
+                        <input type="checkbox" id="{uniqueId}-preserve" name="${uniqueName}_preserve" ${preserve ? 'checked' : ''}>
                         <label for="preserve">Preserve</label>
                         <button type="button" class="remove-source-btn lesser-button" id="remove-${uniqueId}">Remove</button>
                     </div>
@@ -167,10 +166,12 @@
                         alert('Source already exists.');
                         return;
                     }
-                    recipeId = recipeContainer.data('recipe-id');
+                    const hiddenInput = recipeContainer.find('input[type="hidden"][name="recipe_id"]');
+                    recipeId = hiddenInput.val();
+                    console.log(`recipe container for id ${recipeId}`);
                 } else {
                     // No recipe yet, so add one
-                    console.log("no recipe containers found")
+                    console.log("no recipe containers found");
                     addRecipe();
                     recipeId = recipeCounter;
                 }
@@ -234,8 +235,8 @@
                     <div class="attrib flexdiv" data-attrib-id="${attribId}">
                         <input type="hidden" name="attrib_id" value="${attribId}">
                         ${attribName}
-                        <input type="number" id="attrib-${attribId}-val" name="attrib_${attribId}_val" value="${attribVal}">
-                        <button type="button" class="remove-attrib-btn lesser-button" id="remove-attrib-${attribId}">Remove</button>
+                        <input type="number" id="attrib${attribId}-val" name="attrib${attribId}_val" value="${attribVal}">
+                        <button type="button" class="remove-attrib-btn lesser-button" id="remove-attrib${attribId}">Remove</button>
                     </div>
                 `;
                 $('#attriblist_end').before(attribHtml);
