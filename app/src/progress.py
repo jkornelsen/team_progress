@@ -90,12 +90,16 @@ class Progress(Identifiable):
                     f" eff_source_qty for {source.item}={eff_source_qty}")
             for source in self.recipe.sources:
                 eff_source_qty = num_batches * source.quantity
-                if (eff_source_qty > 0
-                        and source.item.progress.quantity < eff_source_qty):
-                    stop_here = True  # can't process the full amount
-                    num_batches = min(
-                        num_batches,
-                        math.floor(source.item.progress.quantity / eff_source_qty))
+                if eff_source_qty > 0:
+                    if (source.item.progress.quantity < eff_source_qty
+                            and not source.preserve):
+                        stop_here = True  # can't process the full amount
+                        num_batches = min(
+                            num_batches,
+                            math.floor(source.item.progress.quantity / eff_source_qty))
+                    elif source.item.progress.quantity < source.quantity:
+                        stop_here = True
+                        num_batches = 0
             print(f"change_quantity() for {self.id}:"
                 f" num_batches={num_batches}")
             if num_batches > 0:
@@ -112,26 +116,56 @@ class Progress(Identifiable):
             return num_batches > 0
 
     def determine_current_quantity(self):
+        self.set_recipe_by_id()
         elapsed_time = self.calculate_elapsed_time()
         total_batches_needed = math.floor(elapsed_time / self.recipe.rate_duration)
         batches_to_do = total_batches_needed - self.batches_processed
-        print("-" * 80)
         print(f"determine_current_quantity:"
             f" batches_to_do={batches_to_do}"
             f" ({elapsed_time} / {self.recipe.rate_duration})")
         if batches_to_do > 0:
             return self.change_quantity(batches_to_do)
-        else:
-            self.stop()
+        self.stop()
+        return False
+
+    def set_recipe_by_id(self, recipe_id=0):
+        if not recipe_id:
+            recipe_id = self.recipe.id
+            if not recipe_id:
+                return
+        for recipe in self.entity.recipes:
+            if recipe.id == recipe_id:
+                self.recipe = recipe
+                return
+
+    def can_produce(self):
+        """True if at least one batch can be produced."""
+        if self.recipe is None:
+            print("no recipe")
             return False
+        if not self.recipe.rate_amount:
+            print("no rate amount")
+            return False
+        if ((self.q_limit > 0.0 and self.quantity >= self.q_limit)
+                or (self.q_limit < 0.0 and self.quantity <= self.q_limit)):
+            print("would pass limit")
+            return False
+        for source in self.recipe.sources:
+            eff_source_qty = source.quantity
+            if (eff_source_qty > 0
+                    and source.item.progress.quantity < eff_source_qty):
+                print(f"requires {source.quantity} of item id {source.item.id}"
+                    f" but only have {source.item.progress.quantity}")
+                return False
+        print("can produce")
+        return True
 
     def start(self, recipe_id=0):
-        if recipe_id:
-            for recipe in self.entity.recipes:
-                if recipe.id == recipe_id:
-                    self.recipe = recipe
-                    break
+        self.set_recipe_by_id(recipe_id)
         if self.recipe.rate_amount == 0 or self.is_ongoing:
+            return False
+        if not self.can_produce():
+            self.stop()
             return False
         self.start_time = datetime.now()
         self.batches_processed = 0

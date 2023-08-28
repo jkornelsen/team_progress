@@ -253,9 +253,10 @@ class Item(Identifiable):
         if id_to_get is not None:
             if get_by_source:
                 item_conditions.insert(0, "AND {tables[1]}.source_id = %s")
+                values.insert(0, id_to_get);
             else:
                 item_conditions.append("AND {tables[0]}.item_id = %s")
-            values.append(id_to_get);
+                values.append(id_to_get);
         query += "\n".join(item_conditions)
         sources_data = cls.select_tables(
             query, values, ['recipes', 'recipe_sources'])
@@ -339,8 +340,8 @@ class Item(Identifiable):
         for item_data, progress_data in tables_rows:
             if item_data.id == config_id:
                 current_data = item_data
-                if progress_data.id:
-                    item_data.progress = progress_data
+            if progress_data.id:
+                item_data.progress = progress_data
             g.game_data.items.append(Item.from_json(item_data))
         # Get all attrib data and the current item's attrib relation data
         tables_rows = cls.db_attrib_data(config_id, include_all=True)
@@ -373,7 +374,7 @@ class Item(Identifiable):
                 f" rate_amount={recipe.rate_amount}"
                 f" instant={recipe.instant}")
             for source in recipe.sources:
-                print(f"item id {source.item.id} name {source.item.name}"
+                print(f"source item id {source.item.id} name {source.item.name}"
                     f" qty {source.quantity}")
         return current_obj
 
@@ -459,6 +460,7 @@ class Item(Identifiable):
 def set_routes(app):
     @app.route('/configure/item/<item_id>', methods=['GET', 'POST'])
     def configure_item(item_id):
+        print("-" * 80)
         new_game_data()
         instance = Item.data_for_configure(item_id)
         if request.method == 'GET':
@@ -472,6 +474,7 @@ def set_routes(app):
 
     @app.route('/play/item/<int:item_id>')
     def play_item(item_id):
+        print("-" * 80)
         new_game_data()
         instance = Item.data_for_play(item_id)
         if not instance:
@@ -483,6 +486,7 @@ def set_routes(app):
 
     @app.route('/item/gain/<int:item_id>', methods=['POST'])
     def gain_item(item_id):
+        print("-" * 80)
         print(f"gain_item({item_id})")
         quantity = int(request.form.get('quantity'))
         item = Item.get_by_id(item_id)
@@ -500,8 +504,10 @@ def set_routes(app):
 
     @app.route('/item/progress_data/<int:item_id>')
     def item_progress_data(item_id):
+        print("-" * 80)
         print(f"item_progress_data({item_id})")
-        item = Item.from_db(item_id)
+        new_game_data()
+        item = Item.data_for_configure(item_id)
         print(f"Retrieved item {item.id} from DB: {len(item.recipes)} recipes")
         if item:
             if item.progress.is_ongoing:
@@ -516,8 +522,10 @@ def set_routes(app):
 
     @app.route('/item/start/<int:item_id>/<int:recipe_id>')
     def start_item(item_id, recipe_id):
+        print("-" * 80)
         print(f"start_item({item_id}, {recipe_id})")
-        item = Item.from_db(item_id)
+        new_game_data()
+        item = Item.data_for_configure(item_id)
         print(f"Retrieved item {item.id} from DB: {len(item.recipes)} recipes")
         if item.progress.start(recipe_id):
             item.to_db()
@@ -533,10 +541,14 @@ def set_routes(app):
 
     @app.route('/item/stop/<int:item_id>')
     def stop_item(item_id):
+        print("-" * 80)
         print(f"stop_item({item_id})")
-        item = Item.from_db(item_id)
+        new_game_data()
+        item = Item.data_for_configure(item_id)
         print(f"Retrieved item {item.id} from DB: {len(item.recipes)} recipes")
-        if item.progress.stop():
+        if item.progress.is_ongoing:
+            item.progress.determine_current_quantity()
+            item.progress.stop()
             item.to_db()
             return jsonify({
                 'status': 'success',
