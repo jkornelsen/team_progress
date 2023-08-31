@@ -333,7 +333,7 @@ class Item(Identifiable):
             config_id = 0
         else:
             config_id = int(config_id)
-        # Get all item data and the current item's progress data
+        # Get all item and progress data
         tables_rows = cls.db_item_and_progress_data()
         g.game_data.items = []
         current_data = MutableNamespace()
@@ -461,6 +461,7 @@ def set_routes(app):
     @app.route('/configure/item/<item_id>', methods=['GET', 'POST'])
     def configure_item(item_id):
         print("-" * 80)
+        print(f"configure_item({item_id})")
         new_game_data()
         instance = Item.data_for_configure(item_id)
         if request.method == 'GET':
@@ -475,6 +476,7 @@ def set_routes(app):
     @app.route('/play/item/<int:item_id>')
     def play_item(item_id):
         print("-" * 80)
+        print(f"play_item({item_id})")
         new_game_data()
         instance = Item.data_for_play(item_id)
         if not instance:

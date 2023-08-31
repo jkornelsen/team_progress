@@ -70,7 +70,7 @@ class Progress(Identifiable):
     # returns true if able to change quantity
     def change_quantity(self, batches_requested):
         with self.lock:
-            print(f"change_quantity() for {self.id}:"
+            print(f"change_quantity() for progress {self.id}:"
                 f" batches_requested={batches_requested}")
             stop_here = False
             if batches_requested == 0:
@@ -82,31 +82,35 @@ class Progress(Identifiable):
                     or (self.q_limit < 0.0 and new_quantity < self.q_limit)):
                 num_batches = (self.q_limit - self.quantity) // self.recipe.rate_amount
                 stop_here = True  # can't process the full amount
-            eff_source_qtys = {}
-            for source in self.recipe.sources:
-                eff_source_qty = num_batches * source.quantity
-                eff_source_qtys[source.item] = eff_source_qty
-                print(f"change_quantity() for {self.id}:"
-                    f" eff_source_qty for {source.item}={eff_source_qty}")
+                print(f"change_quantity():"
+                    f" num_batches={num_batches} due to limit {self.q_limit}")
             for source in self.recipe.sources:
                 eff_source_qty = num_batches * source.quantity
                 if eff_source_qty > 0:
+                    print(f"change_quantity():"
+                        f" source {source.item.id},"
+                        f" source.quantity={source.quantity},"
+                        f" eff_source_qty={eff_source_qty},"
+                        f" source.item.progress.quantity={source.item.progress.quantity}")
                     if (source.item.progress.quantity < eff_source_qty
                             and not source.preserve):
                         stop_here = True  # can't process the full amount
                         num_batches = min(
                             num_batches,
-                            math.floor(source.item.progress.quantity / eff_source_qty))
+                            math.floor(source.item.progress.quantity / source.quantity))
                     elif source.item.progress.quantity < source.quantity:
                         stop_here = True
                         num_batches = 0
-            print(f"change_quantity() for {self.id}:"
+            print(f"change_quantity():"
                 f" num_batches={num_batches}")
             if num_batches > 0:
                 for source in self.recipe.sources:
-                    eff_source_qty = num_batches * source.quantity
-                    source.item.progress.quantity -= eff_source_qty
-                    source.item.to_db()
+                    if not source.preserve:
+                        # Deduct source quantity used
+                        eff_source_qty = num_batches * source.quantity
+                        source.item.progress.quantity -= eff_source_qty
+                        source.item.progress.to_db()
+                # Add quantity produced
                 eff_result_qty = num_batches * self.recipe.rate_amount
                 self.quantity += eff_result_qty
                 self.batches_processed += num_batches
@@ -122,7 +126,8 @@ class Progress(Identifiable):
         batches_to_do = total_batches_needed - self.batches_processed
         print(f"determine_current_quantity:"
             f" batches_to_do={batches_to_do}"
-            f" ({elapsed_time} / {self.recipe.rate_duration})")
+            f" ({elapsed_time} / {self.recipe.rate_duration}"
+            f" - {self.batches_processed})")
         if batches_to_do > 0:
             return self.change_quantity(batches_to_do)
         self.stop()
