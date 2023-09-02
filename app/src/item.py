@@ -13,7 +13,7 @@ import math
 from .attrib import Attrib
 from .progress import Progress
 from .db_serializable import (
-    Identifiable, MutableNamespace, coldef, new_game_data)
+    DbSerializable, Identifiable, MutableNamespace, coldef, new_game_data)
 
 tables_to_create = {
     'items': f"""
@@ -24,15 +24,6 @@ tables_to_create = {
         progress_id integer,
         FOREIGN KEY (game_token, progress_id)
             REFERENCES progress (game_token, id)
-    """,
-    'recipes': f"""
-        {coldef('id')},
-        item_id integer NOT NULL,
-        rate_amount integer NOT NULL,
-        rate_duration float(2) NOT NULL,
-        instant boolean,
-        FOREIGN KEY (game_token, item_id)
-            REFERENCES items (game_token, id)
     """,
 }
 
@@ -56,19 +47,19 @@ class Source:
         instance.quantity = data.get('quantity', 1)
         return instance
 
-class Recipe(Identifiable):
-    def __init__(self, new_id="", item=None):
-        super().__init__(new_id)
+class Recipe(DbSerializable):
+    def __init__(self, new_id=0, item=None):
+        self.id = int(new_id)  # only unique for a particular item
         self.item_produced = item
         self.rate_amount = 1  # quantity produced per batch
-        self.rate_duration = 1.0  # seconds for a batch
+        self.rate_duration = 2.0  # seconds for a batch
         self.instant = False
         self.sources = []  # Source objects
         self.attrib = None  # tuple (attrib_id, val)
 
     def to_json(self):
         return {
-            'id': self.id,
+            'recipe_id': self.id,
             'item_id': self.item_produced.id if self.item_produced else 0,
             'rate_amount': self.rate_amount,
             'rate_duration': self.rate_duration,
@@ -80,12 +71,12 @@ class Recipe(Identifiable):
     @classmethod
     def from_json(cls, data, item_produced=None):
         instance = cls()
-        instance.id = data.get('id', 0)
+        instance.id = data.get('recipe_id', 0)
         instance.item_produced = (
             item_produced if item_produced
             else Item(int(data.get('item_id', 0))))
         instance.rate_amount = data.get('rate_amount', 1)
-        instance.rate_duration = data.get('rate_duration', 1.0)
+        instance.rate_duration = data.get('rate_duration', 2.0)
         instance.instant = data.get('instant', False)
         instance.sources = [
             Source.from_json(src_data)
@@ -94,20 +85,29 @@ class Recipe(Identifiable):
 
     def json_to_db(self, doc):
         print(f"{self.__class__.__name__}({self.id}).json_to_db()")
-        super().json_to_db(doc)
+        self.insert_single(
+            "recipes",
+            "game_token, item_id, recipe_id,"
+            " rate_amount, rate_duration, instant", (
+                g.game_token, doc['item_id'], self.id,
+                doc['rate_amount'],
+                doc['rate_duration'],
+                doc['instant']
+                ))
         if doc['sources']:
             print(f"sources: {doc['sources']}")
             values = []
             for source in doc['sources']:
                 values.append((
-                    g.game_token, self.id,
+                    g.game_token, doc['item_id'], self.id,
                     source['source_id'],
                     source['quantity'],
                     source['preserve']
                     ))
             self.insert_multiple(
                 "recipe_sources",
-                "game_token, recipe_id, source_id, quantity, preserve",
+                "game_token, item_id, recipe_id,"
+                " source_id, quantity, preserve",
                 values)
 
 class Item(Identifiable):
@@ -164,8 +164,10 @@ class Item(Identifiable):
             USING recipe_sources AS rs
             LEFT OUTER JOIN recipes ON
                 recipes.game_token = rs.game_token
-                AND recipes.id = rs.recipe_id
+                AND recipes.item_id = rs.item_id
+                AND recipes.recipe_id = rs.recipe_id
             WHERE recipe_sources.game_token = rs.game_token
+                AND recipe_sources.item_id = rs.item_id
                 AND recipe_sources.recipe_id = rs.recipe_id
                 AND recipe_sources.source_id = rs.source_id
                 AND recipes.item_id = %s
@@ -245,7 +247,8 @@ class Item(Identifiable):
             FROM {tables[0]}
             LEFT JOIN {tables[1]}
                 ON {tables[1]}.game_token = {tables[0]}.game_token
-                AND {tables[1]}.recipe_id = {tables[0]}.id
+                AND {tables[1]}.item_id = {tables[0]}.item_id
+                AND {tables[1]}.recipe_id = {tables[0]}.recipe_id
         """
         item_conditions = [
             "WHERE {tables[0]}.game_token = %s"]
@@ -263,7 +266,8 @@ class Item(Identifiable):
         item_recipes_data = {}
         for row_recipe, row_recipe_source in sources_data:
             recipes_data = item_recipes_data.setdefault(row_recipe.item_id, {})
-            recipe_data = recipes_data.setdefault(row_recipe.id, row_recipe)
+            recipe_data = recipes_data.setdefault(
+                row_recipe.recipe_id, row_recipe)
             if row_recipe_source.source_id:
                 recipe_data.setdefault('sources', []).append(row_recipe_source)
         return item_recipes_data

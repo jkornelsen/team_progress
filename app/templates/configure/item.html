@@ -20,8 +20,7 @@
         <label for="item-limit">Limit:</label>
         <input type="number" id="item-limit" name="item_limit" value="{{ current.progress.q_limit }}"> <span class="label-like">0 for unlimited</span><br>
         <div>
-            <input type="checkbox" id="top_level" name="top_level" {% if current.toplevel %}checked{% endif %}>
-            <label for="top_level">Show in Overview</label><br>
+            <input type="checkbox" id="top_level" name="top_level" {% if current.toplevel %}checked{% endif %}><label for="top_level">Show in Overview</label><br>
         </div>
 
         <div id="sources-container" class="outer-border">
@@ -94,8 +93,8 @@
                 $('#running-label').text('(Running)');
             }
 
-            let recipeCounter = 1;
-            function addRecipe(rate_amount = 1, rate_duration = 1.0, instant = false) {
+            let recipeCounter = 0;
+            function addRecipe(rate_amount = 1, rate_duration = 2.0, instant = false) {
                 recipeCounter++;
                 console.log(`addRecipe() ${recipeCounter}`);
                 const recipeHtml = `
@@ -108,9 +107,11 @@
                             <input type="text" size="6" id="rate-duration" name="recipe${recipeCounter}_rate_duration" value="${rate_duration}" required>
                             <span class="label-like">seconds</span>
                         </span>
+                        <span class="spaced-checkbox">
                         <input type="checkbox" id="instant" name="recipe${recipeCounter}_instant"
-                            ${instant ? 'checked' : ''} onChange="updateInstantVisibility(this);">
-                        <label for="instant">Instant</label>
+                            ${instant ? 'checked' : ''} onChange="updateInstantVisibility(this);"
+                            ><label for="instant">Instant</label>
+                        </span>
                         <button type="button" class="remove-recipe-btn lesser-button" id="remove-recipe${recipeCounter}">Remove Recipe</button>
                         <!-- Placeholder for appending new sources -->
                         <div class="sourcelist_end" style="width: 0; height: 0; opacity: 0;"></div>
@@ -136,13 +137,15 @@
                 const uniqueId = idArray.join('-');
                 const uniqueName = idArray.join('_');
                 const sourceHtml = `
-                    <div class="source flexdiv" data-source-id="${sourceId}">
+                    <div class="source" data-source-id="${sourceId}">
                         <input type="hidden" name="recipe${recipeId}_source_id" value="${sourceId}">
                         <label>Takes:</label>
                         <input type="number" id="${uniqueId}-quantity" name="${uniqueName}_quantity" value="${sourceQuantity}">
                         ${sourceName}
-                        <input type="checkbox" id="{uniqueId}-preserve" name="${uniqueName}_preserve" ${preserve ? 'checked' : ''}>
-                        <label for="preserve">Preserve</label>
+                        <span class="spaced-checkbox">
+                            <input type="checkbox" id="{uniqueId}-preserve" name="${uniqueName}_preserve" ${preserve ? 'checked' : ''}
+                            ><label for="preserve">Preserve</label>
+                        </span>
                         <button type="button" class="remove-source-btn lesser-button" id="remove-${uniqueId}">Remove</button>
                     </div>
                 `;

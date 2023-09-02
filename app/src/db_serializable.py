@@ -164,6 +164,10 @@ class DbSerializable():
             g.db.commit()
 
     @classmethod
+    def insert_single(cls, table, column_names, values):
+        cls.insert_multiple(table, column_names, (values,))
+
+    @classmethod
     def insert_multiple_from_dict(cls, table, data):
         if len(data) == 0:
             return
@@ -182,6 +186,7 @@ class DbSerializable():
         doc['game_token'] = g.game_token
         fields = db_type_fields(doc)
         placeholders = ','.join(['%s'] * len(fields))
+        values = tuples_to_lists([doc[field] for field in fields])
         update_fields = [
             field for field in fields
             if field not in ('game_token',)]
@@ -193,7 +198,6 @@ class DbSerializable():
             ON CONFLICT (game_token) DO UPDATE
             SET {update_placeholders}
         """
-        values = tuples_to_lists([doc[field] for field in fields])
         self.execute_change(query, values)
 
     @classmethod

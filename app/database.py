@@ -78,7 +78,7 @@ def column_counts(table_name):
         'locations': 5,
         'overall': 3,
         'progress': 9,
-        'recipe_sources': 5,
+        'recipe_sources': 6,
         'recipes': 6,
         'user_interactions': 5,
         'win_requirements': 7,
