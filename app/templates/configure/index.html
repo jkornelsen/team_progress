@@ -34,7 +34,15 @@
                 <div class="select-box">
                     <select id="{{ entity_type }}-select">
                         {% for entity in entity_list %}
-                            <option value="{{ entity.id }}">{{ entity.name }}</option>
+                            {% set selected = '' %}
+                            {% if request.referrer %}
+                                <!-- Select the entity ID that was just configured -->
+                                {% set referrer_entity_type, referrer_entity_id = request.referrer.split('/')[-2:] %}
+                                {% if referrer_entity_type == entity_type and referrer_entity_id == entity.id|string %}
+                                    {% set selected = 'selected' %}
+                                {% endif %}
+                            {% endif %}
+                            <option value="{{ entity.id }}" {{ selected }}>{{ entity.name }}</option>
                         {% endfor %}
                     </select>
                 </div>

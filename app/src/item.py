@@ -186,14 +186,8 @@ class Item(Identifiable):
                 "item_attribs",
                 "game_token, item_id, attrib_id, value",
                 values)
-        if doc['recipes']:
-            print(f"recipes: {doc['recipes']}")
-            values = []
-            # Handle existing ids first and SERIAL will generate others
-            sorted_recipe_data = sorted(doc['recipes'],
-                key=lambda x: x['id'] if x['id'] else float('inf'))
-            for recipe_data in sorted_recipe_data:
-                Recipe.from_json(recipe_data, self).to_db()
+        for recipe_data in doc.get('recipes', []):
+            Recipe.from_json(recipe_data, self).to_db()
 
     @classmethod
     def db_item_and_progress_data(cls, id_to_get=None):

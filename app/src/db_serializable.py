@@ -222,6 +222,8 @@ class Identifiable(DbSerializable):
 
     @classmethod
     def get_by_id(cls, id_to_get):
+        if not id_to_get:
+            return None
         id_to_get = int(id_to_get)
         entity_list = g.game_data.get_list(cls)
         return next(

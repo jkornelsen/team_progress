@@ -17,56 +17,27 @@
         <div class="winning-container">
             <!-- List of added requirements -->
             <div id="req-list" class="outer-border" {% if current.win_reqs|length == 0 %}style="display: none;"{% endif %}>
-                {% for req in current.win_reqs %}
-                    <div class="req flexdiv">
-                        {% if req.item %}
-                            <input type="hidden" name="item_id" value="{{ req.item.id }}">
-                            {{ req.item.quantity }} of 
-                            {{ req.item.name }}
-                            {% if req.location %}
-                                <input type="hidden" name="loc_id" value="{{ req.location.id }}">
-                                at {{ req.location.name }}
-                            {% elif req.character %}
-                                <input type="hidden" name="char_id" value="{{ req.character.id }}">
-                                owned by {{ req.character.name }}
-                            {% endif %}
-                        {% elif req.character %}
-                            <input type="hidden" name="char_id" value="{{ req.character.id }}">
-                            {{ req.character.name }}
-                            {% if req.location %}
-                                at {{ req.location.name }}
-                            {% endif %}
-                            {% if req.attrib %}
-                                with {{ req.attrib_value }}
-                                {{ req.attrib.name }}
-                            {% endif %}
-                        {% else %}
-                            (could not display requirement)
-                        {% endif %}
-                        <button type="button" class="remove-req-button lesser-button">Remove Requirement</button>
-                    </div>
-                {% endfor %}
             </div>
             <button type="button" id="add-item-req-button" class="lesser-button">Set Up Item Requirement</button>
             <button type="button" id="add-char-req-button" class="lesser-button">Set Up Character Requirement</button>
             <!-- Form to add Character requirement -->
             <div class="char-req-container" style="display: none;">
-                <label for="character-select">Character:</label>
-                <select id="character-select" name="character_select">
+                <label>Character:</label>
+                <select class="character-select">
                     <option value="" selected>(None)</option>
                     {% for character in game_data.characters %}
                         <option value="{{ character.id }}" {% if current.win_reqs.character and current.win_reqs.character.id == character.id %}selected{% endif %}>{{ character.name }}</option>
                     {% endfor %}
                 </select>
-                <label for="location-select">At Location:</label>
-                <select id="location-select" name="location_select">
+                <label>At Location:</label>
+                <select class="location-select">
                     <option value="" selected>(None)</option>
                     {% for location in game_data.locations %}
                         <option value="{{ location.id }}" {% if current.win_reqs.location and current.win_reqs.location.id == location.id %}selected{% endif %}>{{ location.name }}</option>
                     {% endfor %}
                 </select>
-                <label for="attrib-select">Has Attribute:</label>
-                <select id="attrib-select" name="attrib_select">
+                <label>Has Attribute:</label>
+                <select class="attrib-select">
                     <option value="" selected>(None)</option>
                     {% for attrib in game_data.attribs %}
                         <option value="{{ attrib.id }}" {% if current.win_reqs.attrib and current.win_reqs.attrib.id == attrib.id %}selected{% endif %}>{{ attrib.name }}</option>
@@ -79,8 +50,8 @@
             
             <!-- Form to add Item requirement -->
             <div class="item-req-container" style="display: none;">
-                <label for="item-select">Item:</label>
-                <select id="item-select" name="item_select">
+                <label>Item:</label>
+                <select class="item-select">
                     <option value="" selected>(None)</option>
                     {% for item in game_data.items %}
                         <option value="{{ item.id }}">{{ item.name }}</option>
@@ -88,15 +59,15 @@
                 </select>
                 <label for="item-quantity">Quantity:</label>
                 <input type="number" id="item-quantity" name="item_quantity" value="0">
-                <label for="location-select">At Location:</label>
-                <select id="location-select" name="item_location">
+                <label>At Location:</label>
+                <select class="location-select">
                     <option value="" selected>(None)</option>
                     {% for location in game_data.locations %}
                         <option value="{{ location.id }}">{{ location.name }}</option>
                     {% endfor %}
                 </select>
-                <label for="character-select">Owned by Character:</label>
-                <select id="character-select" name="character_select">
+                <label>Owned by Character:</label>
+                <select class="character-select">
                     <option value="" selected>(None)</option>
                     {% for character in game_data.characters %}
                         <option value="{{ character.id }}">{{ character.name }}</option>
@@ -125,58 +96,52 @@
                 document.querySelector('#add-char-req').style.display = 'none';
             });
 
-            function addRequirement() {
-                const itemId = document.getElementById('item-select').value;
-                const itemName = document.querySelector('#item-select option:checked').textContent;
-                const itemQuantity = document.getElementById('item-quantity').value;
-                if (itemId !== "" && itemQuantity == 0) {
-                    alert("Please specify a winning quantity for the item.");
-                    return;
-                }
-                const locationId = document.getElementById('location-select').value;
-                const locationName = document.querySelector('#location-select option:checked').textContent;
-                const characterId = document.getElementById('character-select').value;
-                const characterName = document.querySelector('#character-select option:checked').textContent;
-                const attribId = document.getElementById('attrib-select').value;
-                const attribName = document.querySelector('#attrib-select option:checked').textContent;
-                const attribValue = document.getElementById('attrib-value').value;
-                if (attribId !== "" && attribValue == "") {
-                    alert("Please specify a winning value for the attribute.");
-                    return;
-                }
+            let winreqCounter = 0;
+            function addRequirement(params) {
+                const {
+                    itemId, itemName, itemQuantity,
+                    locationId, locationName,
+                    characterId, characterName,
+                    attribId, attribName, attribValue
+                } = params;
+                winreqCounter++;
+                const winreqPrefix = `winreq${winreqCounter}_`;
                 const reqList = document.getElementById('req-list');
                 reqList.style.display = 'block';
-                let newRow = '<div class="req flexdiv">';
+                let newRow = `<div class="req flexdiv">
+                    <input type="hidden" name="winreq_id" value="${winreqCounter}">`;
                 if (itemId !== "") {
                     newRow += `
-                        <input type="hidden" name="item_id" value="${itemId}">
+                        <input type="hidden" name="${winreqPrefix}item_id" value="${itemId}">
+                        <input type="hidden" name="${winreqPrefix}quantity" value="${itemQuantity}">
                         ${itemQuantity} of ${itemName}
                     `;
                     if (locationId !== "") {
                         newRow += `
-                            <input type="hidden" name="loc_id" value="${locationId}">
+                            <input type="hidden" name="${winreqPrefix}loc_id" value="${locationId}">
                             at ${locationName}
                         `;
                     } else if (characterId !== "") {
                         newRow += `
-                            <input type="hidden" name="char_id" value="${characterId}">
+                            <input type="hidden" name="${winreqPrefix}char_id" value="${characterId}">
                             owned by ${characterName}
                         `;
                     }
                 } else {
                     newRow += `
-                        <input type="hidden" name="char_id" value="${charId}">
+                        <input type="hidden" name="${winreqPrefix}char_id" value="${charId}">
                         ${characterName}
                     `;
                     if (locationId !== "") {
                         newRow += `
-                            <input type="hidden" name="loc_id" value="${locationId}">
+                            <input type="hidden" name="${winreqPrefix}loc_id" value="${locationId}">
                             at ${locationName}
                         `;
                     }
                     if (attribId !== "" && attribValue != 0) {
                         newRow += `
-                            <input type="hidden" name="attrib_id" value="${attribId}">
+                            <input type="hidden" name="${winreqPrefix}attrib_id" value="${attribId}">
+                            <input type="hidden" name="${winreqPrefix}attribValue" value="${attribValue}">
                             with ${attribValue} ${attribName}
                         `;
                     }
@@ -186,29 +151,87 @@
                 </div>`;
                 document.getElementById('req-list').insertAdjacentHTML('beforeend', newRow);
                 document.getElementById('req-list').style.display = 'block';
+            }
+
+            function getSelectData(className) {
+                const selects = document.querySelectorAll(`.${className}`);
+                for (const select of selects) {
+                    const parentDiv = select.closest('div');
+                    if (parentDiv.style.display !== 'none') {
+                        const id = select.value;
+                        const name = select.querySelector('option:checked').textContent;
+                        return { id, name };
+                    }
+                }
+                return { id: '', name: '' };
+            }
+
+            function addSelectedRequirement() {
+                const item = getSelectData('item-select');
+                const loc = getSelectData('location-select');
+                const character = getSelectData('character-select');
+                const attrib = getSelectData('attrib-select');
+                item.quantity = document.getElementById('item-quantity').value;
+                attrib.value = document.getElementById('attrib-value').value;
+                if (item.id !== "" && item.quantity == 0) {
+                    alert("Please specify a winning quantity for the item.");
+                    return;
+                }
+                if (attrib.id !== "" && attrib.value === "") { // Use strict equality (===) for comparison
+                    alert("Please specify a winning value for the attribute.");
+                    return;
+                }
+                const paramsToSend = {
+                    itemId: item.id,
+                    itemName: item.name,
+                    itemQuantity: item.quantity,
+                    locationId: loc.id,
+                    locationName: loc.name,
+                    characterId: character.id,
+                    characterName: character.name,
+                    attribId: attrib.id,
+                    attribName: attrib.name,
+                    attribValue: attrib.value
+                };
+                addRequirement(paramsToSend);
                 document.querySelector('.item-req-container').style.display = 'none';
                 document.querySelector('.char-req-container').style.display = 'none';
-            };
+            }
+
+            {% for req in current.win_reqs %}
+                const paramsToSend = {
+                    'itemId': "{{ req.item.id }}",
+                    'itemName': "{{ req.item.name }}",
+                    'itemQuantity': "{{ req.quantity }}",
+                    'locationId': "{{ req.location.id }}",
+                    'locationName': "{{ req.location.name }}",
+                    'characterId': "{{ req.character.id }}",
+                    'characterName': "{{ req.character.name }}",
+                    'attribId': "{{ req.attrib.id }}",
+                    'attribName': "{{ req.attrib.name }}",
+                    'attribValue': "{{ req.attrib.value }}"
+                };
+                addRequirement(paramsToSend);
+            {% endfor %}
 
             document.getElementById('add-item-req').addEventListener('click', function () {
-                const itemId = document.getElementById('item-select').value;
-                if (itemId === "") {
+                const item = getSelectData('item-select');
+                if (item.id === "") {
                     alert("Please select an item.");
                     return;
                 }
-                addRequirement();
+                addSelectedRequirement();
             });
 
             document.getElementById('add-char-req').addEventListener('click', function () {
-                const characterId = document.getElementById('character-select').value;
-                if (characterId === "") {
+                const character = getSelectData('character-select');
+                if (character.id === "") {
                     alert("Please select a character.");
                     return;
                 }
-                addRequirement();
+                addSelectedRequirement();
             });
 
-            //document.querySelector('.winning-container').addEventListener('click', function (event) {
             document.querySelector('#req-list').addEventListener('click', function (event) {
                 if (event.target.classList.contains('remove-req-button')) {
                     const reqDiv = event.target.closest('.req');

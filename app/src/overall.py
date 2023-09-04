@@ -31,7 +31,7 @@ class WinRequirement:
         * Items with qty and Attrib, at Location or Character
         * Characters with Attrib at Location
     """
-    def __init__(self, new_id=0):
+    def __init__(self):
         self.item = None
         self.quantity = 0
         self.character = None
@@ -50,27 +50,33 @@ class WinRequirement:
 
     @classmethod
     def from_json(cls, data):
+        if not isinstance(data, dict):
+            data = vars(data)
         instance = cls()
         instance.item = Item(int(data['item_id'])
-            ) if data['item_id'] else None,
-        instance.quantity = data.get('quantity', 0),
+            ) if data['item_id'] else None
+        instance.quantity = data.get('quantity', 0)
         instance.character = Character(int(data['char_id'])
-            ) if data['char_id'] else None,
+            ) if data['char_id'] else None
         instance.location = Location(int(data['loc_id'])
-            ) if data['loc_id'] else None,
+            ) if data['loc_id'] else None
         instance.attrib = Attrib(int(data['attrib_id'])
-            ) if data['attrib_id'] else None,
-        instance.attrib_value = data.get('attrib_value', 0),
+            ) if data['attrib_id'] else None
+        instance.attrib_value = data.get('attrib_value', 0)
         return instance
 
     def id_to_refs_from_game_data(self):
-        for attr_name in ['item', 'character', 'location', 'attrib']:
-            entity_list = getattr(g.game_data, attr_name + "s")
+        print(f"{self.__class__.__name__}.id_to_refs_from_game_data()")
+        for entity_cls in (Item, Character, Location, Attrib):
+            attr_name = entity_cls.basename()
             entity = getattr(self, attr_name)
             if entity is not None:
-                entity_id = entity.id
-                if entity_id in entity_list:
-                    setattr(self, attr_name, entity_list[entity_id])
+                entity_obj = entity_cls.get_by_id(entity.id)
+                if entity_obj:
+                    setattr(self, attr_name, entity_obj)
+                    print(f"{attr_name} {entity.id} name {entity_obj.name}")
+                else:
+                    print(f"could not find {attr_name} {entity.id}")
 
 class Overall(DbSerializable):
     """Overall scenario settings such as scenario title and goal,
@@ -124,7 +130,7 @@ class Overall(DbSerializable):
 
     @classmethod
     def from_db(cls):
-        print(f"{cls.__name__}._from_db()")
+        print(f"{cls.__name__}.from_db()")
         #if 'overall' in g:
         #    return g.overall
         values = [g.game_token]
@@ -171,23 +177,27 @@ class Overall(DbSerializable):
             print(request.form)
             self.title = request.form.get('scenario_title')
             self.description = request.form.get('scenario_description')
-            winning_item_ids = request.form.getlist('winning_item_id')
-            print(f"Source IDs: {winning_item_ids}")
-            self.win_reqs = {}
-            for winning_item_id in winning_item_ids:
-                winning_item_quantity = int(
-                    request.form.get(f'winning_item_quantity_{winning_item_id}', 0))
-                winning_item = self.get_by_id(winning_item_id)
-                self.win_reqs[winning_item] = winning_item_quantity
-            print("Sources: ", {winning_item.name: quantity
-                for winning_item, quantity in self.win_reqs.items()})
-            winning_item_id = request.form.get('winning_item')
-            if winning_item_id:
-                self.winning_item = Item.get_by_id(int(winning_item_id))
-                self.winning_quantity = int(request.form.get('winning_quantity'))
-            else:
-                self.winning_item = None
-                self.winning_quantity = 1
+            winreq_ids = request.form.getlist('winreq_id')
+            self.win_reqs = []
+            for winreq_id in winreq_ids:
+                prefix = f"winreq{winreq_id}_"
+                req = WinRequirement()
+                self.win_reqs.append(req)
+                req.quantity = int(request.form.get(f"{prefix}quantity", 0))
+                item_id = int(request.form.get(f"{prefix}item_id", 0))
+                if item_id:
+                    req.item = Item(item_id)
+                char_id = int(request.form.get(f"{prefix}char_id", 0))
+                if char_id:
+                    req.character = Character(char_id)
+                loc_id = int(request.form.get(f"{prefix}loc_id", 0))
+                if loc_id:
+                    req.location = Location(loc_id)
+                attrib_id = int(request.form.get(f"{prefix}attrib_id", 0))
+                if attrib_id:
+                    req.attrib = Attrib(attrib_id)
+                req.attrib_value = int(
+                    request.form.get(f"{prefix}attribValue", 0))
             self.to_db()
         elif 'cancel_changes' in request.form:
             print("Cancelling changes.")
