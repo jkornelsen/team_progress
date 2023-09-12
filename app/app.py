@@ -10,6 +10,8 @@ from flask import (
 )
 from inspect import signature
 import os
+import random
+import string
 import uuid
 
 from database import get_db, close_db
@@ -37,30 +39,34 @@ with app.app_context():
 @app.before_request
 def before_request():
     print("before_request()")
-    if request.endpoint and (
-            request.endpoint in ('set_username',)
-            or request.endpoint.startswith('static')):
-        # Maybe we just ran this method, so don't keep repeating.
+    if request.endpoint and request.endpoint.startswith('static'):
         return
     if 'game_token' not in session:
         # Create new session automatically. If someone wants to join an
         # existing game, this won't prevent them from doing so afterwards.
-        generate_game_token()
+        session['game_token'] = generate_game_token()
     g.game_token = session.get('game_token')
     if 'username' not in session:
-        return redirect(url_for('set_username'))
+        # This can be changed later by the user.
+        session['username'] = generate_username()
     g.db = get_db()
     UserInteraction.log_visit(session.get('username'))
 
-@app.route('/')  # route
-def index():  # endpoint
+@app.route('/')  # route name
+def index():  # endpoint name
     print("index()")
-    return redirect(url_for('overview'))  # name of endpoint
+    return redirect(url_for('overview'))  # endpoint name
 
 def generate_game_token():
     """Generate a new unique token to keep games separate."""
     print("generate_game_token()")
-    session['game_token'] = str(uuid.uuid4())
+    return str(uuid.uuid4())
+
+def generate_username():
+    """Generate a new likely-to-be-unique username."""
+    print("generate_username()")
+    consonants = ''.join(c for c in string.ascii_lowercase if c not in 'aeiouyl')
+    return ''.join(random.choice(consonants) for _ in range(10))
 
 @app.route('/join-game', methods=['GET', 'POST'])
 def join_game():
@@ -83,21 +89,19 @@ def get_session_link():
         'session/session_link.html',
         url=url)
 
-@app.route('/set-username', methods=['GET', 'POST'])
-def set_username():
+@app.route('/change-user', methods=['GET', 'POST'])
+def change_user():
     game_token = session.get('game_token')
+    if 'username' in session:
+        session.pop('username', None)
     if request.method == 'POST':
         username = request.form.get('username')
-        if username:
-            # Store the user ID specific to the game token
-            session['username'] = username
-            return redirect(url_for('index'))
+        if not username:
+            username = generate_username()
+        # Store the user ID specific to the game token
+        session['username'] = username
+        return redirect(url_for('index'))
     return render_template('session/username.html')
-
-@app.route('/change_user')
-def logout():
-    session.pop('username', None)
-    return redirect(url_for('set_username'))
 
 _set_routes_attrib(app)
 _set_routes_character(app)

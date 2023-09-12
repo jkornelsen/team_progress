@@ -5,11 +5,13 @@
     <p class="info">In addition to typical items such as resources, money, or equipment,
     they can also represent an upgrade in production speed,
     or concepts such as reputation.
-    They could even be people if they don't need to perform any actions.
+    They could even be people if they don't do much.
     For more ideas on how items can be used, browse the pre-built scenarios.
     </p>
+    <!--
     <p class="info">Incidentally, in a pen-and-paper game, item progress could be determined from a clock,
     by writing the start and stop time of an action and computing elapsed progress.</p>
+    -->
     <form method="post">
         <label for="item-name">Name:</label>
         <input type="text" id="item-name" name="item_name" value="{{ current.name }}" required><br>
@@ -38,7 +40,7 @@
                     <button type="button" id="add-source-btn" class="lesser-button">Add Source</button>
                 </div>
             {% else %}
-                <p class="no-items">(No items)</p>
+                <p class="no-entities">(No items)</p>
             {% endif %}
             <button type="button" id="add-recipe-btn" class="lesser-button" {% if current.recipes | length == 0 %}style="display: none;"{% endif %}>Add Alternative Recipe</button>
         </div>
@@ -58,7 +60,7 @@
                     <button type="button" id="add-attrib-btn" class="lesser-button">Add Attribute</button>
                 </div>
             {% else %}
-                <p class="no-attributes">(No attributes)</p>
+                <p class="no-entities">(No attributes)</p>
             {% endif %}
             </div>
         </div>
@@ -94,7 +96,7 @@
             }
 
             let recipeCounter = 0;
-            function addRecipe(rate_amount = 1, rate_duration = 2.0, instant = false) {
+            function addRecipe(rate_amount = 1, rate_duration = 3.0, instant = false) {
                 recipeCounter++;
                 console.log(`addRecipe() ${recipeCounter}`);
                 const recipeHtml = `

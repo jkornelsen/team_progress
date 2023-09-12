@@ -4,11 +4,12 @@
     <h1>Event Setup</h1>
     <p class="info">Chance of something happening. Four-outcome rolls use
     a 20-sided die.
-    If the result is greater than the outcome margin,
-    for example if roll is 15, difficulty is 5, and margin is 9,
-    then the result is a major success, because 15 - 5 &gt; 9.</p>
-    <p class="info">Show in Overview so an event can be run manually.
-    Or, they can be set up to trigger during ongoing actions.</p>
+    For example, if the die roll comes up as 15
+    and the difficulty selected is easy (5),
+    then 15 - 5 is greater than the major/minor threshold of 9,
+    so the outcome is a major success.</p>
+    <p class="info">Show in Overview so the event can be run manually.
+    Or, set a chance to trigger during ongoing actions.</p>
     <form method="post">
         <label for="event-name">Name:</label>
         <input type="text" id="event-name" name="event_name" value="{{ current.name }}" required><br>
@@ -61,14 +62,14 @@
                     <button type="button" class="add-attrib-btn lesser-button">Add</button>
                 </div>
             {% else %}
-                <p class="no-attributes">(No attributes)</p>
+                <p class="no-entities">(No attributes)</p>
             {% endif %}
             </div>
         </div>
 
         <div class="attrib-container outer-border" id="changed-attrib-container">
             <label>Attributes Changed:</label>
-            <span class="info">(Currently changes need to be made manually.)</span>
+            <span class="info">(Currently, this has no functional effect &mdash; changes must be made manually.)</span>
             <!-- Placeholder for appending new attribs -->
             <div id="changed_attriblist_end" style="unobtrusive"></div>
             {% if game_data.attribs %}
@@ -82,7 +83,7 @@
                     <button type="button" class="add-attrib-btn lesser-button">Add</button>
                 </div>
             {% else %}
-                <p class="no-attributes">(No attributes)</p>
+                <p class="no-entities">(No attributes)</p>
             {% endif %}
             </div>
         </div>
@@ -109,7 +110,7 @@
                     <button type="button" class="add-item-btn lesser-button">Add</button>
                 </div>
             {% else %}
-                <p class="no-items">(No items)</p>
+                <p class="no-entities">(No items)</p>
             {% endif %}
             {% if game_data.locations %}
                 <div class="select-box">
@@ -122,7 +123,7 @@
                     <button type="button" class="add-loc-btn lesser-button">Add</button>
                 </div>
             {% else %}
-                <p class="no-locs">(No locations)</p>
+                <p class="no-entities">(No locations)</p>
             {% endif %}
             </div>
         </div>

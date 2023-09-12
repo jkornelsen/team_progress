@@ -27,7 +27,7 @@
             margin-top: 20px;
         }
     </style>
-    {% for entity_type in ['item', 'location', 'character', 'attrib', 'event'] %}
+    {% for entity_type in ['item', 'character', 'location', 'attrib', 'event'] %}
         <div class="flexdiv">
             {% set entity_list = game_data[entity_type + 's'] %}
             {% if entity_list %}

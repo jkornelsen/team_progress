@@ -244,6 +244,20 @@ a station is a required item on the floor at a location
 if nothing required is at a specific location, then use general storage
 "floor" means not carried -- could be thought of as e.g. on a shelf
 
+first check if source item is carried,
+then if on floor,
+and finally, if in general storage
+deduct whichever is found first
+might be a bit tricky to implement if say 5 are required,
+and two are held and three are on floor,
+to draw from both,
+but it might be fine to just fail in that case,
+and require the character to either pick up three or drop two.
+also output to that same place.
+if different source items are in different places,
+then again follow that order -- if any are carried,
+then that's the output, otherwise floor, otherwise general.
+
 entity classes might have superclasses for partially shared behavior
     items and characters have progress
     items and locations can both have a position, such as inside another one

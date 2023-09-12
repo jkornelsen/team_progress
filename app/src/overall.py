@@ -48,6 +48,45 @@ class WinRequirement:
             'attrib_id': self.attrib.id if self.attrib else None,
             'attrib_value': self.attrib_value}
 
+    def fulfilled(self):
+        """Is the conditions fulfilled?"""
+        print(f"{self.__class__.__name__}.fulfilled()")
+        if self.item and self.quantity > 0:
+            print(f"require {self.quantity} of item {self.item.name}")
+            have_qty = 0
+            if self.location:
+                for item_at in self.location.items:
+                    if item_at.item.id == self.item.id:
+                        have_qty += item_at.quantity
+                for char in g.game_data.characters:
+                    if char.location.id == self.location.id:
+                        for owned_item in self.character.items:
+                            if owned_item.item.id == self.item.id:
+                                have_qty += owned_item.quantity
+                print(f"have_qty={have_qty} at location")
+            elif self.character:
+                for owned_item in self.character.items:
+                    if owned_item.item.id == self.item.id:
+                        have_qty += owned_item.quantity
+                print(f"have_qty={have_qty} owned by character")
+            else:
+                have_qty = self.item.progress.quantity
+                print(f"have_qty={have_qty} in general storage")
+            return have_qty >= self.quantity
+        elif self.character:
+            if self.location:
+                print(f"require character {self.character.name}"
+                    f" at location {self.location.name}")
+                if (not self.character.location or
+                        self.character.location.id != self.location.id):
+                    return False
+            if self.attrib:
+                print(f"require character {self.character.name}"
+                    f" attrib {self.attrib.name} value {self.attrib_value}")
+                return self.character.attribs.get(
+                    self.attrib, 0) > self.attrib_value
+            return True
+
     @classmethod
     def from_json(cls, data):
         if not isinstance(data, dict):
@@ -86,14 +125,24 @@ class Overall(DbSerializable):
         self.title = "Generic Adventure"
         self.description = (
             "An empty scenario."
-            " To start with, change the title and this description"
-            " in the Overall settings, and do some basic"
-            " setup such as adding some items.")
+            " To start from scratch, change the title and this description"
+            " in the Overall settings, and do initial"
+            " setup such as adding a few items."
+            "\r\n\r\n"
+            "More setup can be done as the game goes along.")
         self.win_reqs = []
 
     @classmethod
     def tablename(cls):
         return 'overall'
+
+    def have_won(self):
+        if not self.win_reqs:
+            return False
+        for win_req in self.win_reqs:
+            if not win_req.fulfilled():
+                return False
+        return True
 
     def to_json(self):
         return {
@@ -118,18 +167,6 @@ class Overall(DbSerializable):
 
     @classmethod
     def from_db(cls):
-        data = DbSerializable.execute_select("""
-            SELECT *
-            FROM overall
-            WHERE game_token = %s
-        """, (g.game_token,))
-        if not data:
-            print("overall data not found -- returning generic object")
-            return cls()
-        return cls.from_json(data)
-
-    @classmethod
-    def from_db(cls):
         print(f"{cls.__name__}.from_db()")
         #if 'overall' in g:
         #    return g.overall
@@ -149,6 +186,7 @@ class Overall(DbSerializable):
                 instance.win_reqs.append(
                     WinRequirement.from_json(winreq_data))
         if not instance:
+            print("overall data not found -- returning generic object")
             instance = cls()
         return instance
 
@@ -245,9 +283,43 @@ class Overall(DbSerializable):
             items=item_data, events=event_data)
         from .user_interaction import UserInteraction  # avoid circular import
         interactions_list = UserInteraction.recent_interactions()
-        g.game_data.overall = cls.from_db()
-        for win_req in g.game_data.overall.win_reqs:
+        instance = cls.from_db()
+        g.game_data.overall = instance
+        # Win requirement results
+        for win_req in instance.win_reqs:
             win_req.id_to_refs_from_game_data()
+        # TODO: split up into separate queries so rows don't multiply
+        rows = cls.execute_select("""
+            SELECT A.item_id, A.quantity,
+                A.char_id, A.loc_id, A.attrib_id, A.attrib_value,
+                B.quantity, C.quantity, D.quantity,
+                E.char_id, F.attrib_value
+            FROM win_requirements A
+            LEFT JOIN items B  -- general storage
+                ON B.id = A.item_id
+                AND B.game_token = A.game_token
+            LEFT JOIN loc_items C  -- at location
+                ON C.loc_id = A.loc_id
+                AND C.item_id = A.item_id
+                AND C.game_token = A.game_token
+            LEFT JOIN characters Dchar
+                ON Dchar.location_id = A.loc_id
+                AND Dchar.game_token = A.game_token
+            LEFT JOIN char_items D  -- owned by character at location
+                ON D.char_id = Dchar.id
+                AND D.item_id = A.item_id
+                AND D.game_token = A.game_token
+            LEFT JOIN characters E  -- character at location
+                ON E.char_id = A.char_id
+                AND E.location_id = A.loc_id
+                AND E.game_token = A.game_token
+            LEFT JOIN char_attribs F  -- character at location
+                ON F.char_id = A.char_id
+                AND F.attrib_id = A.attrib_id
+            WHERE A.game_token = %s
+        """, (g.game_token,))
+        for row in rows:
+            pass
         return character_list, other_toplevel_entities, interactions_list
 
 def set_routes(app):

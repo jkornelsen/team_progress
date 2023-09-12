@@ -1,9 +1,21 @@
 ---- Goals ----
 
+Currently, item progress can only be done in general storage,
+even though items can also be owned by a character or at a location.
+The issue is that progress.quantity is used for general storage.
+General storage should be in items.quantity instead,
+and progress.quantity could be used for quantity anywhere.
+Because loc_items and char_items each have their own quantity field already.
+I guess it's okay that they would all share the same limit?
+Or maybe there should never be a limit on the floor.
+
 
 ---- TODO Upcoming ----
+
+Load data for win requirement results on Overview screen.
 
 
 ---- Issues ----
 
 Failed to add 2 destinations consecutively.
+

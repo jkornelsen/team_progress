@@ -151,8 +151,12 @@ class UserInteraction(DbSerializable):
         """
         values = (g.game_token, threshold_time,)
         rows = cls.execute_select(query, values)
-        if len(rows) < 2:
+        # Don't include usernames which have later been changed
+        interactions = [
+            UserInteraction.from_json(vars(row))
+            for row in rows
+            if row.route != 'change_user']
+        if len(interactions) < 2:
             # No need to display info for a single user
             return []
-        return [UserInteraction.from_json(vars(row)) for row in rows]
-
+        return interactions

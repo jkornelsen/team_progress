@@ -52,7 +52,7 @@ class Recipe(DbSerializable):
         self.id = int(new_id)  # only unique for a particular item
         self.item_produced = item
         self.rate_amount = 1  # quantity produced per batch
-        self.rate_duration = 2.0  # seconds for a batch
+        self.rate_duration = 3.0  # seconds for a batch
         self.instant = False
         self.sources = []  # Source objects
         self.attrib = None  # tuple (attrib_id, val)
@@ -76,7 +76,7 @@ class Recipe(DbSerializable):
             item_produced if item_produced
             else Item(int(data.get('item_id', 0))))
         instance.rate_amount = data.get('rate_amount', 1)
-        instance.rate_duration = data.get('rate_duration', 2.0)
+        instance.rate_duration = data.get('rate_duration', 3.0)
         instance.instant = data.get('instant', False)
         instance.sources = [
             Source.from_json(src_data)

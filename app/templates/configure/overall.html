@@ -2,6 +2,8 @@
 
 {% block content %}
     <h1>Overall Settings</h1>
+    <p class="info">If all win conditions are fulfilled,
+    a checkmark will be shown by the title on the Overview screen.</p>
     <form method="post">
         <label for="title">Scenario Title:</label>
         <input type="text" id="title" name="scenario_title" value="{{ current.title }}" required><br>
@@ -16,6 +18,7 @@
         </style>
         <div class="winning-container">
             <!-- List of added requirements -->
+            <label>Win Conditions:</label>
             <div id="req-list" class="outer-border" {% if current.win_reqs|length == 0 %}style="display: none;"{% endif %}>
             </div>
             <button type="button" id="add-item-req-button" class="lesser-button">Set Up Item Requirement</button>
@@ -45,7 +48,7 @@
                 </select>
                 <label for="attrib-value">Attribute Value:</label>
                 <input type="number" id="attrib-value" name="attrib_value" value="{{ current.win_reqs.attrib_value|default(0) }}">
-                <button type="button" id="add-char-req" class="lesser-button">Add Requirement</button>
+                <button type="button" id="add-char-req" class="lesser-button">Save Requirement</button>
             </div>
             
             <!-- Form to add Item requirement -->
@@ -73,7 +76,7 @@
                         <option value="{{ character.id }}">{{ character.name }}</option>
                     {% endfor %}
                 </select>
-                <button type="button" id="add-item-req" class="lesser-button">Add Requirement</button>
+                <button type="button" id="add-item-req" class="lesser-button">Save Requirement</button>
         </div>
         <div style="margin-top: 20px;">
             <button type="submit" id="btn-save" name="save_changes">Save and Continue</button>
@@ -236,6 +239,11 @@
                 if (event.target.classList.contains('remove-req-button')) {
                     const reqDiv = event.target.closest('.req');
                     reqDiv.remove();
+                    const reqElements = document.querySelectorAll('.req');
+                    if (reqElements.length === 0) {
+                        // If there are no .req elements, set req-list display to none
+                        document.querySelector('#req-list').style.display = 'none';
+                    }
                 }
             });
         });

@@ -2,6 +2,8 @@
 
 {% block content %}
     <h1>Character Setup</h1>
+    <p class="info">Participant in the story such as a team member, enemy, or NPC.
+    Typically performs actions of some kind.</p>
     <form method="post">
         <label for="character-name">Name:</label>
         <input type="text" id="character-name" name="char_name" value="{{ current.name }}" required><br>
@@ -35,7 +37,7 @@
                         <button type="button" id="add-attrib-btn" class="lesser-button">Add Attribute</button>
                     </div>
                 {% else %}
-                    <p class="no-attributes">(No attributes)</p>
+                    <p class="no-entities">(No attributes)</p>
                 {% endif %}
             </div>
         </div>
@@ -68,7 +70,7 @@
                         <button type="button" class="add-item-btn lesser-button">Add Item</button>
                     </div>
                 {% else %}
-                    <p class="no-items">(No other items)</p>
+                    <p class="no-entities">(No other items)</p>
                 {% endif %}
             </div>
         </div>

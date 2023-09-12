@@ -272,7 +272,7 @@ class Identifiable(DbSerializable):
         self.execute_change("""
             DELETE FROM {table}
             WHERE game_token = %s AND id = %s
-        """, (self.id, self.game_token))
+        """, (self.game_token, self.id))
         entity_list = self.get_list()
         if self in entity_list:
             entity_list.remove(self)

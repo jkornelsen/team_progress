@@ -2,6 +2,17 @@
 
 {% block content %}
     <h1>Attribute Setup</h1>
+    <p class="info">Stat or state of a character or item. For example, it could be something like these:
+    <li>Strength &mdash; character trait used to determine outcomes
+    <li>Damage Bonus &mdash; multiplier for an item
+    <li>Current HP &mdash; state
+    <li>Max HP &mdash; character statistic, or item stat that affects the character stat
+    <li>Poisoned &mdash; temporary status condition, a number that goes to 0 after a few turns
+    <li>Satiation &mdash; status such as Very Full (95) that slowly decreases over time
+    <li>Posture &mdash; state such as standing or crawling</p>
+    <p class="info">Alternatively, it may be easier to set up an item to represent a status
+    that needs to be incremented,
+    such as the remaining HP of a tree to be felled.</p>
     <form method="post">
         <label for="attrib-name">Name:</label>
         <input type="text" id="attrib-name" name="attrib_name" value="{{ current.name }}" required><br>
