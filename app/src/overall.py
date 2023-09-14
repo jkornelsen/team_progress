@@ -26,21 +26,24 @@ tables_to_create = {
     """
 }
 
-class WinRequirement:
+class WinRequirement(Identifiable):
     """One of:
         * Items with qty and Attrib, at Location or Character
         * Characters with Attrib at Location
     """
-    def __init__(self):
+    def __init__(self, new_id=""):
+        super().__init__(new_id)
         self.item = None
         self.quantity = 0
         self.character = None
         self.location = None
         self.attrib = None
         self.attrib_value = 0
+        self.fulfilled = False  # is the condition met
 
     def to_json(self):
         return {
+            'id': self.id,
             'item_id': self.item.id if self.item else None,
             'quantity': self.quantity,
             'char_id': self.character.id if self.character else None,
@@ -48,50 +51,11 @@ class WinRequirement:
             'attrib_id': self.attrib.id if self.attrib else None,
             'attrib_value': self.attrib_value}
 
-    def fulfilled(self):
-        """Is the conditions fulfilled?"""
-        print(f"{self.__class__.__name__}.fulfilled()")
-        if self.item and self.quantity > 0:
-            print(f"require {self.quantity} of item {self.item.name}")
-            have_qty = 0
-            if self.location:
-                for item_at in self.location.items:
-                    if item_at.item.id == self.item.id:
-                        have_qty += item_at.quantity
-                for char in g.game_data.characters:
-                    if char.location.id == self.location.id:
-                        for owned_item in self.character.items:
-                            if owned_item.item.id == self.item.id:
-                                have_qty += owned_item.quantity
-                print(f"have_qty={have_qty} at location")
-            elif self.character:
-                for owned_item in self.character.items:
-                    if owned_item.item.id == self.item.id:
-                        have_qty += owned_item.quantity
-                print(f"have_qty={have_qty} owned by character")
-            else:
-                have_qty = self.item.progress.quantity
-                print(f"have_qty={have_qty} in general storage")
-            return have_qty >= self.quantity
-        elif self.character:
-            if self.location:
-                print(f"require character {self.character.name}"
-                    f" at location {self.location.name}")
-                if (not self.character.location or
-                        self.character.location.id != self.location.id):
-                    return False
-            if self.attrib:
-                print(f"require character {self.character.name}"
-                    f" attrib {self.attrib.name} value {self.attrib_value}")
-                return self.character.attribs.get(
-                    self.attrib, 0) > self.attrib_value
-            return True
-
     @classmethod
     def from_json(cls, data):
         if not isinstance(data, dict):
             data = vars(data)
-        instance = cls()
+        instance = cls(int(data.get('id', 0)))
         instance.item = Item(int(data['item_id'])
             ) if data['item_id'] else None
         instance.quantity = data.get('quantity', 0)
@@ -140,7 +104,7 @@ class Overall(DbSerializable):
         if not self.win_reqs:
             return False
         for win_req in self.win_reqs:
-            if not win_req.fulfilled():
+            if not win_req.fulfilled:
                 return False
         return True
 
@@ -196,8 +160,8 @@ class Overall(DbSerializable):
             DELETE FROM win_requirements
             WHERE game_token = %s
         """, (g.game_token,))
-        self.insert_multiple_from_dict(
-            "win_requirements", doc['win_reqs'])
+        for win_req in doc.get('win_reqs', []):
+            WinRequirement.from_json(win_req, self).to_db()
 
     @classmethod
     def data_for_configure(cls):
@@ -286,41 +250,68 @@ class Overall(DbSerializable):
         instance = cls.from_db()
         g.game_data.overall = instance
         # Win requirement results
+        req_by_id = {}
         for win_req in instance.win_reqs:
             win_req.id_to_refs_from_game_data()
-        # TODO: split up into separate queries so rows don't multiply
+            req_by_id[win_req.id] = win_req
+        NUM_QUERIES = 5
         rows = cls.execute_select("""
-            SELECT A.item_id, A.quantity,
-                A.char_id, A.loc_id, A.attrib_id, A.attrib_value,
-                B.quantity, C.quantity, D.quantity,
-                E.char_id, F.attrib_value
-            FROM win_requirements A
-            LEFT JOIN items B  -- general storage
-                ON B.id = A.item_id
-                AND B.game_token = A.game_token
-            LEFT JOIN loc_items C  -- at location
-                ON C.loc_id = A.loc_id
-                AND C.item_id = A.item_id
-                AND C.game_token = A.game_token
-            LEFT JOIN characters Dchar
-                ON Dchar.location_id = A.loc_id
-                AND Dchar.game_token = A.game_token
-            LEFT JOIN char_items D  -- owned by character at location
-                ON D.char_id = Dchar.id
-                AND D.item_id = A.item_id
-                AND D.game_token = A.game_token
-            LEFT JOIN characters E  -- character at location
-                ON E.char_id = A.char_id
-                AND E.location_id = A.loc_id
-                AND E.game_token = A.game_token
-            LEFT JOIN char_attribs F  -- character at location
-                ON F.char_id = A.char_id
-                AND F.attrib_id = A.attrib_id
+            SELECT A.id  -- item general storage
+            FROM win_requirements A, items B
             WHERE A.game_token = %s
-        """, (g.game_token,))
+                AND A.char_id IS NULL
+                AND A.loc_id IS NULL
+                AND B.game_token = A.game_token
+                AND B.id = A.item_id
+                AND B.quantity >= A.quantity
+            UNION
+            SELECT A.id  -- item at location
+            FROM win_requirements A, loc_items B
+            WHERE A.game_token = %s
+                AND A.char_id IS NULL
+                AND B.game_token = A.game_token
+                AND B.loc_id = A.loc_id
+                AND B.item_id = A.item_id
+                AND B.quantity >= A.quantity
+            UNION
+            SELECT A.id  -- item owned by character at location
+            FROM win_requirements A, characters B, char_items C
+            WHERE A.game_token = %s
+                AND A.loc_id IS NOT NULL
+                AND B.game_token = A.game_token
+                AND B.location_id = A.loc_id
+                AND C.game_token = A.game_token
+                AND C.char_id = B.id
+                AND C.item_id = A.item_id
+                AND C.quantity >= A.quantity
+            UNION
+            SELECT A.id  -- character at location
+            FROM win_requirements A, characters B
+            WHERE A.game_token = %s
+                AND A.item_id IS NULL
+                AND A.loc_id IS NOT NULL
+                AND B.game_token = A.game_token
+                AND B.id = A.char_id
+                AND B.location_id = A.loc_id
+            UNION
+            SELECT A.id  -- character with attribute
+            FROM win_requirements A, char_attribs B
+            WHERE A.game_token = %s
+                AND A.item_id IS NULL
+                AND A.attrib_id IS NOT NULL
+                AND B.game_token = A.game_token
+                AND B.char_id = A.char_id
+                AND B.attrib_id = A.attrib_id
+                AND B.attrib_value >= A.attrib_value
+        """, (g.game_token,) * NUM_QUERIES)
         for row in rows:
-            pass
-        return character_list, other_toplevel_entities, interactions_list
+            win_req = req_by_id[row.get("A.id")]
+            win_req.fulfilled = True
+        return (
+            instance,
+            character_list,
+            other_toplevel_entities,
+            interactions_list)
 
 def set_routes(app):
     @app.route('/configure/overall', methods=['GET', 'POST'])
@@ -337,11 +328,11 @@ def set_routes(app):
 
     @app.route('/overview')
     def overview():
-        charlist, other_entities, interactions = Overall.data_for_overview()
+        overall, charlist, other_entities, interactions = (
+            Overall.data_for_overview())
         return render_template(
             'play/overview.html',
-            current=g.game_data.overall,
-            game_data=g.game_data,
+            current=overall,
             charlist=charlist,
             other_entities=other_entities,
             interactions=interactions)

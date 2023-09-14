@@ -21,6 +21,7 @@ tables_to_create = {
         {coldef('name')},
         {coldef('description')},
         {coldef('toplevel')},
+        quantity integer NOT NULL,
         progress_id integer,
         FOREIGN KEY (game_token, progress_id)
             REFERENCES progress (game_token, id)
@@ -118,6 +119,7 @@ class Item(Identifiable):
         self.toplevel = False if len(self.get_list()) > 1 else True
         self.attribs = {}  # Attrib objects and their stat val
         self.recipes = []  # list of Recipe objects
+        self.quantity = 0  # general storage -- not owned or at location
         self.progress = Progress(entity=self)
 
     def to_json(self):
@@ -132,6 +134,7 @@ class Item(Identifiable):
             'attribs': {
                 attrib.id: val
                 for attrib, val in self.attribs.items()},
+            'quantity': self.quantity,
             'progress': self.progress.to_json(),
         }
 
@@ -146,6 +149,7 @@ class Item(Identifiable):
         instance.attribs = {
             Attrib(int(attrib_id)): val
             for attrib_id, val in data.get('attribs', {}).items()}
+        instance.quantity = data.get('quantity', 0)
         instance.progress = Progress.from_json(
             data.get('progress', {}), instance)
         instance.recipes = [
@@ -397,10 +401,11 @@ class Item(Identifiable):
             self.name = request.form.get('item_name')
             self.description = request.form.get('item_description')
             self.toplevel = bool(request.form.get('top_level'))
+            self.quantity = self.form_int(request, 'item_quantity')
             if self.progress.is_ongoing:
                 self.progress.stop()
             else:
-                self.progress.quantity = self.form_int(request, 'item_quantity')
+                self.progress.quantity = self.quantity
             self.progress = Progress.from_json({
                 'id': self.progress.id,
                 'quantity': self.progress.quantity,

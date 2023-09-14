@@ -110,13 +110,14 @@ tables_to_create = {
     """,
     # Overall
     'win_requirements': f"""
-        {coldef('game_token')},
+        {coldef('id')},
         item_id integer,
         quantity integer,
         char_id integer,
         loc_id integer,
         attrib_id integer,
         attrib_value integer,
+        UNIQUE (game_token, item_id, char_id, loc_id, attrib_id)
         FOREIGN KEY (game_token, item_id)
             REFERENCES items (game_token, id)
     """,

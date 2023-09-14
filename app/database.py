@@ -72,7 +72,7 @@ def column_counts(table_name):
         'event_triggers': 4,
         'events': 9,
         'item_attribs': 4,
-        'items': 6,
+        'items': 7,
         'loc_destinations': 4,
         'loc_items': 5,
         'locations': 5,
