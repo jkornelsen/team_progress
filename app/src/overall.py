@@ -9,7 +9,7 @@ from flask import (
     session,
     url_for
 )
-from .db_serializable import DbSerializable, coldef
+from .db_serializable import DbSerializable, Identifiable, coldef
 
 from .attrib import Attrib
 from .character import Character
@@ -40,6 +40,10 @@ class WinRequirement(Identifiable):
         self.attrib = None
         self.attrib_value = 0
         self.fulfilled = False  # is the condition met
+
+    @classmethod
+    def tablename(cls):
+        return 'win_requirements'
 
     def to_json(self):
         return {
@@ -161,7 +165,7 @@ class Overall(DbSerializable):
             WHERE game_token = %s
         """, (g.game_token,))
         for win_req in doc.get('win_reqs', []):
-            WinRequirement.from_json(win_req, self).to_db()
+            WinRequirement.from_json(win_req).to_db()
 
     @classmethod
     def data_for_configure(cls):
@@ -302,7 +306,7 @@ class Overall(DbSerializable):
                 AND B.game_token = A.game_token
                 AND B.char_id = A.char_id
                 AND B.attrib_id = A.attrib_id
-                AND B.attrib_value >= A.attrib_value
+                AND B.value >= A.attrib_value
         """, (g.game_token,) * NUM_QUERIES)
         for row in rows:
             win_req = req_by_id[row.get("A.id")]

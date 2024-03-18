@@ -8,8 +8,7 @@ from flask import (
     session,
     url_for
 )
-from .db_serializable import (
-    Identifiable, MutableNamespace, coldef, new_game_data)
+from .db_serializable import Identifiable, MutableNamespace, coldef
 from .item import Item
 
 tables_to_create = {
@@ -265,7 +264,6 @@ class Location(Identifiable):
 def set_routes(app):
     @app.route('/configure/location/<loc_id>',methods=['GET', 'POST'])
     def configure_location(loc_id):
-        new_game_data()
         instance = Location.data_for_configure(loc_id)
         if request.method == 'GET':
             session['referrer'] = request.referrer
@@ -278,12 +276,13 @@ def set_routes(app):
 
     @app.route('/play/location/<int:loc_id>')
     def play_location(loc_id):
-        location = Location.get_by_id(loc_id)
-        if location:
-            return render_template(
-                'play/location.html',
-                current=location,
-                game_data=g.game_data)
-        else:
+        print("-" * 80)
+        print(f"play_location({loc_id})")
+        instance = Location.data_for_configure(loc_id)
+        if not instance:
             return 'Location not found'
+        return render_template(
+            'play/location.html',
+            current=instance,
+            game_data=g.game_data)
 

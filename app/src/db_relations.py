@@ -117,7 +117,7 @@ tables_to_create = {
         loc_id integer,
         attrib_id integer,
         attrib_value integer,
-        UNIQUE (game_token, item_id, char_id, loc_id, attrib_id)
+        UNIQUE (game_token, item_id, char_id, loc_id, attrib_id),
         FOREIGN KEY (game_token, item_id)
             REFERENCES items (game_token, id)
     """,

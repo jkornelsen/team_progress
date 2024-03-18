@@ -24,6 +24,7 @@ app.config['UPLOAD_DIR'] = os.path.join(app.config['DATA_DIR'], 'uploads')
 app.config['TEMPLATES_AUTO_RELOAD'] = True  # set to False for production
 
 from src.user_interaction import UserInteraction
+from src.game_data import GameData
 
 from src.attrib    import set_routes as _set_routes_attrib
 from src.character import set_routes as _set_routes_character
@@ -51,6 +52,8 @@ def before_request():
         session['username'] = generate_username()
     g.db = get_db()
     UserInteraction.log_visit(session.get('username'))
+    GameData()
+    g.entity_names_loaded = False
 
 @app.route('/')  # route name
 def index():  # endpoint name

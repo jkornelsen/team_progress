@@ -11,8 +11,7 @@ from flask import (
 import random
 from types import SimpleNamespace
 
-from .db_serializable import (
-    Identifiable, MutableNamespace, coldef, new_game_data)
+from .db_serializable import Identifiable, MutableNamespace, coldef
 from .attrib import Attrib
 from .item import Item
 from .location import Location
@@ -33,15 +32,6 @@ OUTCOMES = [
  OUTCOME_MINOR_FAILURE,
  OUTCOME_MINOR_SUCCESS,
  OUTCOME_MAJOR_SUCCESS) = range(len(OUTCOMES))
-BASE_DIFFICULTY = [
-    SimpleNamespace(name='Easy', val=5),
-    SimpleNamespace(name='Moderate', val=10),
-    SimpleNamespace(name='Hard', val=15),
-    SimpleNamespace(name='Very Hard', val=20)]
-(DIFFICULTY_EASY,
- DIFFICULTY_MODERATE,
- DIFFICULTY_HARD,
- DIFFICULTY_VERY_HARD) = BASE_DIFFICULTY
 OUTCOME_MARGIN = 9  # difference required to get major or critical
 
 def roll_dice(sides):
@@ -82,7 +72,7 @@ class Event(Identifiable):
         self.trigger_chance = (0, 1) # (numerator, denominator)
         self.triggers = []  # Item or Location objects that can trigger
         ## For a particular occurrence, not stored in Event table
-        self.difficulty = 'Moderate'  # which one for a particular occurrence
+        self.difficulty = 10  # Moderate
         self.stat_adjustment = 0  # for example, 5 for perception
         self.advantage = 0  # for example +1 means best of two rolls
         self.outcome = 0
@@ -367,8 +357,8 @@ class Event(Identifiable):
         if request.method == 'POST':
             print("Saving changes.")
             print(request.form)
-            self.difficulty = request.form.get('event_difficulty')
-            self.stat_adjustment = int(request.form.get('event_stat_adjustment'))
+            self.difficulty = int(request.form.get('difficulty'))
+            self.stat_adjustment = int(request.form.get('stat_adjustment'))
             self.to_db()
             return render_template(
                 'play/event.html',
@@ -380,14 +370,13 @@ class Event(Identifiable):
                 current=self)
 
     def get_outcome(self):
-        difficulty_value = self.difficulty_values[self.difficulty]
         roll = roll_dice(20)
-        total = roll + self.stat_adjustment - difficulty_value
-        if total <= -self.outcome_margin:
+        total = roll + self.stat_adjustment - self.difficulty
+        if total <= -OUTCOME_MARGIN:
             self.outcome = OUTCOME_CRITICAL_FAILURE
         elif total <= 0:
             self.outcome = OUTCOME_MINOR_FAILURE
-        elif total < self.outcome_margin:
+        elif total < OUTCOME_MARGIN:
             self.outcome = OUTCOME_MINOR_SUCCESS
         else:
             self.outcome = OUTCOME_MAJOR_SUCCESS
@@ -397,7 +386,7 @@ class Event(Identifiable):
         ).format(
             roll,
             self.stat_adjustment,
-            difficulty_value,
+            self.difficulty,
             total,
             OUTCOMES[self.outcome],
         )
@@ -407,7 +396,6 @@ class Event(Identifiable):
 def set_routes(app):
     @app.route('/configure/event/<event_id>', methods=['GET', 'POST'])
     def configure_event(event_id):
-        new_game_data()
         instance = Event.data_for_configure(event_id)
         if request.method == 'GET':
             session['referrer'] = request.referrer
@@ -420,9 +408,9 @@ def set_routes(app):
 
     @app.route('/play/event/<int:event_id>', methods=['GET', 'POST'])
     def play_event(event_id):
-        event = Event.get_by_id(event_id)
-        if event:
-            return event.play_by_form()
-        else:
+        print("-" * 80)
+        print(f"play_event({event_id})")
+        instance = Event.data_for_configure(event_id)
+        if not instance:
             return 'Event not found'
-
+        return instance.play_by_form()

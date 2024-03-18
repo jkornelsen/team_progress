@@ -22,6 +22,7 @@ password *d***
 start postgreSQL
 "C:\Program Files\PostgreSQL\15\bin\psql" -U postgres -d postgres
 drop schema public cascade; create schema public;
+python database.py
 
 
 ---- reload app ----

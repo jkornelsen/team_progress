@@ -6,7 +6,7 @@
         <span class="separator">|</span>
         <a class="upper-left" href="{{ url_for('configure') }}">General Setup</a>
         <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for('configure_location', location_id=current.id) }}">Location Setup</a>
+        <a class="upper-left" href="{{ url_for('configure_location', loc_id=current.id) }}">Location Setup</a>
     </div>
 {% endblock %}
 
@@ -55,7 +55,7 @@
     <ul>
         {% for destination, distance in current.destinations.items() %}
             <li>
-                <a href="{{ url_for('play_location', location_id=destination.id) }}">{{ destination.name }}</a> -
+                <a href="{{ url_for('play_location', loc_id=destination.id) }}">{{ destination.name }}</a> -
                 Distance: {{ distance }}
             </li>
         {% endfor %}

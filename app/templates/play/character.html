@@ -21,7 +21,7 @@
     -->
 
     {% if current.location %}
-        <p>Location: <a href="{{ url_for('play_location', location_id=current.location.id) }}">{{ current.location.name }}</a></p>
+        <p>Location: <a href="{{ url_for('play_location', loc_id=current.location.id) }}">{{ current.location.name }}</a></p>
         {% if current.location.destinations %}
             <div class="flexdiv">
                 <label for="destination-select">Travel To</label>
@@ -63,12 +63,13 @@
     {% endif %}
 
     {% if current.items %}
-    <h2>Worn Items</h2>
+    <h2>Equipped Items</h2>
     <ul>
-        {% for item, slot in current.items.items() if slot %}
+        {% for owned in current.items if owned.slot %}
+            {% set item = owned.item %}
             <li>
                 <a href="{{ url_for('play_item', item_id=item.id) }}">{{ item.name }}</a>
-                &mdash; {{ slot }}
+                &mdash; {{ owned.slot }}
             </li>
         {% else %}
             (None)
@@ -77,7 +78,8 @@
 
     <h2>Inventory Items</h2>
     <ul>
-        {% for item, slot in current.items.items() if not slot %}
+        {% for owned in current.items if not owned.slot %}
+            {% set item = owned.item %}
             <li>
                 <a href="{{ url_for('play_item', item_id=item.id) }}">{{ item.name }}</a>
             </li>

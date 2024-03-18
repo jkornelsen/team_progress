@@ -53,6 +53,7 @@ perhaps could offer some users on Pythonanywhere and also option to download
 code for playing on a LAN
 another option would be, in addition to LAN multiplayer from GitHub,
 offer an online single-player version that doesn't require a database
+maybe to get something working, it would be better to change to Solo Progress
 socket.io (e.g. Flask-SocketIO) is another tech often mentioned for
 synching between multiple players, like Scribbl.io
 
@@ -217,6 +218,8 @@ check every few seconds for new entries that need to be added at the top
 repeated actions such as item progress get merged into one
 would be nice to move it to the top of the list in that case
 
+chat pane in case not in person
+
 on item play page, have start/stop button or gain button for each recipe,
 and show all source quantities for all recipes of that item
 global stop button on overview screen, but no other ability to manufacture anything
@@ -228,7 +231,7 @@ or perhaps only locations need to contain things, and a wooden box could be a lo
     we could manufacture a wooden box item, then destroy it and create the unique location
 characters (players and npcs) could also contain (i.e. wear or hold) items
 
-can move items from owned/carried or floor to general storage
+can move items from owned/carried to general storage
 the difference is whether the game tracks location
 so general storage boils down to less automation
 buttons Drop to Location, Put in General Storage
@@ -260,6 +263,11 @@ then that's the output, otherwise floor, otherwise general.
 
 I guess it's okay that they would all share the same limit?
 Or maybe there should never be a limit on the floor.
+
+items could be categorized by source type
+general -- can be anywhere and used as material from general or character storage
+carried -- can be moved to general storage but not used as material from there
+local -- can only be on floor
 
 entity classes might have superclasses for partially shared behavior
     items and characters have progress
@@ -609,6 +617,13 @@ Today, an eccentric couple from the backwoods asked you
 to take care of their 15 children for a week.
 They warned, though, that children can be a handful -- you've gotta watch 'em.
 Inspired by the works of Betty MacDonald.
+
+scenario: how to live a happy life
+or maybe the reverse would be more interesting:
+keys to unhappiness
+diet and exercise
+goals and belief
+connect with others
 
 scenario: Design House
 Various room locations and items in those rooms.

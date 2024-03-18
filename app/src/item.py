@@ -13,7 +13,7 @@ import math
 from .attrib import Attrib
 from .progress import Progress
 from .db_serializable import (
-    DbSerializable, Identifiable, MutableNamespace, coldef, new_game_data)
+    DbSerializable, Identifiable, MutableNamespace, coldef)
 
 tables_to_create = {
     'items': f"""
@@ -465,7 +465,6 @@ def set_routes(app):
     def configure_item(item_id):
         print("-" * 80)
         print(f"configure_item({item_id})")
-        new_game_data()
         instance = Item.data_for_configure(item_id)
         if request.method == 'GET':
             session['referrer'] = request.referrer
@@ -480,7 +479,6 @@ def set_routes(app):
     def play_item(item_id):
         print("-" * 80)
         print(f"play_item({item_id})")
-        new_game_data()
         instance = Item.data_for_play(item_id)
         if not instance:
             return 'Item not found'
@@ -511,7 +509,6 @@ def set_routes(app):
     def item_progress_data(item_id):
         print("-" * 80)
         print(f"item_progress_data({item_id})")
-        new_game_data()
         item = Item.data_for_configure(item_id)
         print(f"Retrieved item {item.id} from DB: {len(item.recipes)} recipes")
         if item:
@@ -529,7 +526,6 @@ def set_routes(app):
     def start_item(item_id, recipe_id):
         print("-" * 80)
         print(f"start_item({item_id}, {recipe_id})")
-        new_game_data()
         item = Item.data_for_configure(item_id)
         print(f"Retrieved item {item.id} from DB: {len(item.recipes)} recipes")
         if item.progress.start(recipe_id):
@@ -548,7 +544,6 @@ def set_routes(app):
     def stop_item(item_id):
         print("-" * 80)
         print(f"stop_item({item_id})")
-        new_game_data()
         item = Item.data_for_configure(item_id)
         print(f"Retrieved item {item.id} from DB: {len(item.recipes)} recipes")
         if item.progress.is_ongoing:

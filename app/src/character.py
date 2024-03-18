@@ -8,8 +8,7 @@ from flask import (
     session,
     url_for
 )
-from .db_serializable import (
-    Identifiable, MutableNamespace, coldef, new_game_data)
+from .db_serializable import Identifiable, MutableNamespace, coldef
 from .attrib import Attrib
 from .item import Item
 from .location import Location
@@ -52,9 +51,9 @@ class OwnedItem:
         instance.slot = data.get('slot', "")
         return instance
 
-    def worn(self):
-        """If not worn, then it's assumed to be carried in inventory,
-        such as a backpack."""
+    def equipped(self):
+        """If not equipped (worn or held), then it's assumed to be carried in
+        inventory, such as a backpack."""
         return bool(self.slot)
 
 class Character(Identifiable):
@@ -335,7 +334,6 @@ class Character(Identifiable):
 def set_routes(app):
     @app.route('/configure/character/<char_id>', methods=['GET', 'POST'])
     def configure_char(char_id):
-        new_game_data()
         instance = Character.data_for_configure(char_id)
         if request.method == 'GET':
             session['referrer'] = request.referrer
@@ -348,13 +346,15 @@ def set_routes(app):
 
     @app.route('/play/char/<int:char_id>')
     def play_char(char_id):
-        char = Character.get_by_id(char_id)
-        if char:
-            return render_template(
-                'play/character.html',
-                current=char)
-        else:
+        print("-" * 80)
+        print(f"play_char({char_id})")
+        instance = Character.data_for_configure(char_id)
+        if not instance:
             return 'Character not found'
+        return render_template(
+            'play/character.html',
+            current=instance,
+            game_data=g.game_data)
 
     @app.route('/char/start/<int:char_id>', methods=['POST'])
     def start_char(char_id):

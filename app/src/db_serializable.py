@@ -21,9 +21,9 @@ def coldef(which):
     else:
         raise Exception(f"Unexpected coldef type '{which}'")
 
-def new_game_data():
-    from src.game_data import GameData
-    return GameData()
+#def new_game_data():
+#    from src.game_data import GameData
+#    return GameData()
 
 def load_game_data():
     from src.game_data import GameData
