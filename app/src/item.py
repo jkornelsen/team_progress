@@ -21,7 +21,7 @@ tables_to_create = {
         {coldef('name')},
         {coldef('description')},
         {coldef('toplevel')},
-        quantity integer NOT NULL,
+        quantity float(4) NOT NULL,
         progress_id integer,
         FOREIGN KEY (game_token, progress_id)
             REFERENCES progress (game_token, id)
@@ -32,7 +32,7 @@ class Source:
     def __init__(self, new_id=0):
         self.item = Item(new_id)  # source item, not result item
         self.preserve = False  # if true then source will not be consumed
-        self.quantity = 1
+        self.quantity = 1.0
 
     def to_json(self):
         return {
@@ -45,14 +45,14 @@ class Source:
         instance = cls()
         instance.item = Item(int(data.get('source_id', 0)))
         instance.preserve = data.get('preserve', False)
-        instance.quantity = data.get('quantity', 1)
+        instance.quantity = data.get('quantity', 1.0)
         return instance
 
 class Recipe(DbSerializable):
     def __init__(self, new_id=0, item=None):
         self.id = int(new_id)  # only unique for a particular item
         self.item_produced = item
-        self.rate_amount = 1  # quantity produced per batch
+        self.rate_amount = 1.0  # quantity produced per batch
         self.rate_duration = 3.0  # seconds for a batch
         self.instant = False
         self.sources = []  # Source objects
@@ -76,7 +76,7 @@ class Recipe(DbSerializable):
         instance.item_produced = (
             item_produced if item_produced
             else Item(int(data.get('item_id', 0))))
-        instance.rate_amount = data.get('rate_amount', 1)
+        instance.rate_amount = data.get('rate_amount', 1.0)
         instance.rate_duration = data.get('rate_duration', 3.0)
         instance.instant = data.get('instant', False)
         instance.sources = [
@@ -119,7 +119,7 @@ class Item(Identifiable):
         self.toplevel = False if len(self.get_list()) > 1 else True
         self.attribs = {}  # Attrib objects and their stat val
         self.recipes = []  # list of Recipe objects
-        self.quantity = 0  # general storage -- not owned or at location
+        #self.quantity = 0.0  # general storage -- not owned or at location
         self.progress = Progress(entity=self)
 
     def to_json(self):
@@ -149,7 +149,7 @@ class Item(Identifiable):
         instance.attribs = {
             Attrib(int(attrib_id)): val
             for attrib_id, val in data.get('attribs', {}).items()}
-        instance.quantity = data.get('quantity', 0)
+        instance.quantity = data.get('quantity', 0.0)
         instance.progress = Progress.from_json(
             data.get('progress', {}), instance)
         instance.recipes = [
@@ -401,7 +401,7 @@ class Item(Identifiable):
             self.name = request.form.get('item_name')
             self.description = request.form.get('item_description')
             self.toplevel = bool(request.form.get('top_level'))
-            self.quantity = self.form_int(request, 'item_quantity')
+            self.quantity = self.form_dec(request, 'item_quantity')
             if self.progress.is_ongoing:
                 self.progress.stop()
             else:
@@ -409,15 +409,15 @@ class Item(Identifiable):
             self.progress = Progress.from_json({
                 'id': self.progress.id,
                 'quantity': self.progress.quantity,
-                'q_limit': self.form_int(request, 'item_limit')})
+                'q_limit': self.form_dec(request, 'item_limit')})
             recipe_ids = request.form.getlist('recipe_id')
             self.recipes = []
             for recipe_id in recipe_ids:
                 recipe = Recipe(int(recipe_id), self)
                 self.recipes.append(recipe)
-                recipe.rate_amount = int(request.form.get(
+                recipe.rate_amount = float(request.form.get(
                     f'recipe{recipe_id}_rate_amount'))
-                recipe.rate_duration = int(request.form.get(
+                recipe.rate_duration = float(request.form.get(
                     f'recipe{recipe_id}_rate_duration'))
                 recipe.instant = bool(request.form.get(
                     f'recipe{recipe_id}_instant'))
@@ -427,8 +427,9 @@ class Item(Identifiable):
                 for source_id in source_ids:
                     source = Source.from_json({
                         'source_id': int(source_id),
-                        'quantity': int(request.form.get(
-                            f'recipe{recipe_id}_source{source_id}_quantity', 0)),
+                        'quantity': float(request.form.get(
+                            f'recipe{recipe_id}_source{source_id}_quantity',
+                            0.0)),
                         'preserve': bool(request.form.get(
                             f'recipe{recipe_id}_source{source_id}_preserve')),
                     })
@@ -491,7 +492,7 @@ def set_routes(app):
     def gain_item(item_id):
         print("-" * 80)
         print(f"gain_item({item_id})")
-        quantity = int(request.form.get('quantity'))
+        quantity = float(request.form.get('quantity'))
         item = Item.get_by_id(item_id)
         print(f"Retrieved item {item.id} from DB: {len(item.recipes)} recipes")
         num_batches = math.floor(quantity / item.progress.step_size)

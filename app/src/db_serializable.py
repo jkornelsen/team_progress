@@ -210,6 +210,16 @@ class DbSerializable():
             val = 0
         return val
 
+    @classmethod
+    def form_dec(cls, request, field, default=0.0):
+        """Get decimal number from html form, handling empty strings."""
+        val = request.form.get(field, default)
+        try:
+            val = float(val)
+        except ValueError:
+            val = 0.0
+        return val
+
 class Identifiable(DbSerializable):
     __abstract__ = True
 
@@ -327,4 +337,10 @@ class Identifiable(DbSerializable):
         """, (g.game_token, id_to_get), fetch_all=False)
         instance = cls.from_json(vars(data))
         return instance
+
+def precision(numstr, places):
+    """Convert string to float with specified number of decimal places."""
+    num = float(numstr)
+    truncated_str = f'{num:.{places}f}'
+    return float(truncated_str)
 

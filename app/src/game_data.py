@@ -69,10 +69,12 @@ class GameData:
 
     @classmethod
     def from_db(cls):
-        if 'game_data' in g:
-            print("game data already loaded")
+        LOADED = 'full from db'
+        if g.loaded == LOADED:
+            print(f"{LOADED} already loaded")
             return g.game_data
-        print("loading all game data from db")
+        print("loading {LOADED}")
+        g.loaded = LOADED
         instance = cls()
         for entity_cls in cls.ENTITIES:
             instance.set_list(
@@ -82,11 +84,12 @@ class GameData:
 
     @classmethod
     def entity_names_from_db(cls):
-        if g.entity_names_loaded:
-            print("entity names already loaded")
+        LOADED = 'entity names'
+        if g.loaded == LOADED:
+            print(f"{LOADED} already loaded")
             return g.game_data
-        print("loading partial game data from db")
-        g.entity_names_loaded = True
+        print("loading {LOADED}")
+        g.loaded = LOADED
         instance = cls()
         query_parts = []
         for entity_cls in cls.ENTITIES:

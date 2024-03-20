@@ -9,8 +9,8 @@ tables_to_create = {
     'progress': f"""
         {coldef('id')},
         recipe_id integer,
-        quantity integer NOT NULL,
-        q_limit integer NOT NULL,
+        quantity float(4) NOT NULL,
+        q_limit float(4) NOT NULL,
         start_time timestamp,
         stop_time timestamp,
         batches_processed integer NOT NULL,
@@ -28,8 +28,8 @@ class Progress(Identifiable):
         else:
             from .item import Recipe
             self.recipe = Recipe()  # use default values
-        self.quantity = 0  # the main value tracked
-        self.q_limit = 0  # limit the quantity if not 0
+        self.quantity = 0.0  # the main value tracked
+        self.q_limit = 0.0  # limit the quantity if not 0
         self.start_time = None
         self.stop_time = None
         self.batches_processed = 0
@@ -55,8 +55,8 @@ class Progress(Identifiable):
         instance = cls(int(data.get('id', 0)), entity=entity)
         from .item import Recipe
         instance.recipe = Recipe(int(data.get('recipe_id', 0)))
-        instance.quantity = data.get('quantity', 0)
-        instance.q_limit = data.get('q_limit', 0)
+        instance.quantity = data.get('quantity', 0.0)
+        instance.q_limit = data.get('q_limit', 0.0)
         instance.start_time = data.get('start_time')
         instance.stop_time = data.get('stop_time')
         instance.batches_processed = data.get('batches_processed', 0)

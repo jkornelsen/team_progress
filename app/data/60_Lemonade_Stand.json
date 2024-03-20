@@ -1,0 +1,212 @@
+{
+    "attribs": [],
+    "characters": [],
+    "events": [],
+    "items": [
+        {
+            "attribs": {},
+            "description": "",
+            "id": 13,
+            "name": "Dollars",
+            "progress": {
+                "batches_processed": 0,
+                "id": 21,
+                "is_ongoing": false,
+                "q_limit": 0.0,
+                "quantity": 5.0,
+                "recipe_id": 0,
+                "start_time": null,
+                "stop_time": null
+            },
+            "quantity": 5.0,
+            "recipes": [
+                {
+                    "instant": true,
+                    "item_id": 13,
+                    "rate_amount": 0.5,
+                    "rate_duration": 3.0,
+                    "recipe_id": 1,
+                    "sources": [
+                        {
+                            "preserve": false,
+                            "quantity": 1.0,
+                            "source_id": 15
+                        }
+                    ]
+                }
+            ],
+            "toplevel": true
+        },
+        {
+            "attribs": {},
+            "description": "number of glasses",
+            "id": 15,
+            "name": "Lemonade",
+            "progress": {
+                "batches_processed": 0,
+                "id": 23,
+                "is_ongoing": false,
+                "q_limit": 0.0,
+                "quantity": 0.0,
+                "recipe_id": 0,
+                "start_time": null,
+                "stop_time": null
+            },
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "instant": false,
+                    "item_id": 15,
+                    "rate_amount": 1.0,
+                    "rate_duration": 10.0,
+                    "recipe_id": 1,
+                    "sources": [
+                        {
+                            "preserve": false,
+                            "quantity": 1.0,
+                            "source_id": 14
+                        },
+                        {
+                            "preserve": false,
+                            "quantity": 1.0,
+                            "source_id": 16
+                        },
+                        {
+                            "preserve": false,
+                            "quantity": 2.0,
+                            "source_id": 17
+                        }
+                    ]
+                }
+            ],
+            "toplevel": true
+        },
+        {
+            "attribs": {},
+            "description": "",
+            "id": 14,
+            "name": "Lemons",
+            "progress": {
+                "batches_processed": 0,
+                "id": 22,
+                "is_ongoing": false,
+                "q_limit": 0.0,
+                "quantity": 0.0,
+                "recipe_id": 0,
+                "start_time": null,
+                "stop_time": null
+            },
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "instant": true,
+                    "item_id": 14,
+                    "rate_amount": 1.0,
+                    "rate_duration": 3.0,
+                    "recipe_id": 1,
+                    "sources": [
+                        {
+                            "preserve": false,
+                            "quantity": 0.5,
+                            "source_id": 13
+                        }
+                    ]
+                }
+            ],
+            "toplevel": false
+        },
+        {
+            "attribs": {},
+            "description": "cups",
+            "id": 16,
+            "name": "Sugar",
+            "progress": {
+                "batches_processed": 0,
+                "id": 24,
+                "is_ongoing": false,
+                "q_limit": 0.0,
+                "quantity": 0.0,
+                "recipe_id": 0,
+                "start_time": null,
+                "stop_time": null
+            },
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "instant": true,
+                    "item_id": 16,
+                    "rate_amount": 10.0,
+                    "rate_duration": 3.0,
+                    "recipe_id": 1,
+                    "sources": [
+                        {
+                            "preserve": false,
+                            "quantity": 1.0,
+                            "source_id": 13
+                        }
+                    ]
+                }
+            ],
+            "toplevel": false
+        },
+        {
+            "attribs": {},
+            "description": "source of water",
+            "id": 18,
+            "name": "Tap",
+            "progress": {
+                "batches_processed": 0,
+                "id": 26,
+                "is_ongoing": false,
+                "q_limit": 1.0,
+                "quantity": 1.0,
+                "recipe_id": 0,
+                "start_time": null,
+                "stop_time": null
+            },
+            "quantity": 1.0,
+            "recipes": [],
+            "toplevel": false
+        },
+        {
+            "attribs": {},
+            "description": "cups",
+            "id": 17,
+            "name": "Water",
+            "progress": {
+                "batches_processed": 0,
+                "id": 25,
+                "is_ongoing": false,
+                "q_limit": 0.0,
+                "quantity": 0.0,
+                "recipe_id": 0,
+                "start_time": null,
+                "stop_time": null
+            },
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "instant": false,
+                    "item_id": 17,
+                    "rate_amount": 1.0,
+                    "rate_duration": 2.0,
+                    "recipe_id": 1,
+                    "sources": [
+                        {
+                            "preserve": true,
+                            "quantity": 1.0,
+                            "source_id": 18
+                        }
+                    ]
+                }
+            ],
+            "toplevel": false
+        }
+    ],
+    "locations": [],
+    "overall": {
+        "description": "You are 10 years old and found a 5 dollar bill on the sidewalk. You decide to start a lemonade stand with this money.",
+        "title": "Lemonade Stand",
+        "win_reqs": []
+    }
+}

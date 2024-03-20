@@ -5,6 +5,15 @@
     <title>{{ config['TITLE'] }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script defer>
+        // Only show decimal places that are nonzero.
+        function dec2str_js(num) {
+            if (num === null || num === undefined || num === '') {
+                return '';
+            }
+            return num.toString().replace(/\.0+$/, '');
+        }
+    </script>
 </head>
 <body>
     <!-- Upper Left menu block -->

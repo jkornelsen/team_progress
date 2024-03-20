@@ -18,9 +18,9 @@
         <label for="item-description" >Description:</label>
         <textarea id="item-description" name="item_description" rows="4" cols="50">{{ current.description }}</textarea><br>
         <label for="item-quantity">Quantity:</label>
-        <input type="number" id="item-quantity" name="item_quantity" value="{{ current.progress.quantity }}"><span id="running-label"></span>
+        <input type="number" step="any" id="item-quantity" name="item_quantity" value="{{ current.progress.quantity | dec2str }}"><span id="running-label"></span>
         <label for="item-limit">Limit:</label>
-        <input type="number" id="item-limit" name="item_limit" value="{{ current.progress.q_limit }}"> <span class="label-like">0 for unlimited</span><br>
+        <input type="number" step="any" id="item-limit" name="item_limit" value="{{ current.progress.q_limit | dec2str }}"> <span class="label-like">0 for unlimited</span><br>
         <div>
             <input type="checkbox" id="top_level" name="top_level" {% if current.toplevel %}checked{% endif %}><label for="top_level">Show in Overview</label><br>
         </div>
@@ -96,17 +96,17 @@
             }
 
             let recipeCounter = 0;
-            function addRecipe(rate_amount = 1, rate_duration = 3.0, instant = false) {
+            function addRecipe(rate_amount = 1.0, rate_duration = 3.0, instant = false) {
                 recipeCounter++;
                 console.log(`addRecipe() ${recipeCounter}`);
                 const recipeHtml = `
                     <div class="recipe-container separated-div">
                         <input type="hidden" name="recipe_id" value="${recipeCounter}">
                         <label for="rate-amount">Gain per Batch:</label>
-                        <input type="number" id="rate-amount" name="recipe${recipeCounter}_rate_amount" value="${rate_amount}" required>
+                        <input type="number" step="any" id="rate-amount" name="recipe${recipeCounter}_rate_amount" value="${rate_amount}" required>
                         <span id="over-time-container">
                             <label for="rate-duration">Duration:</label>
-                            <input type="text" size="6" id="rate-duration" name="recipe${recipeCounter}_rate_duration" value="${rate_duration}" required>
+                            <input type="number" step="any" id="rate-duration" name="recipe${recipeCounter}_rate_duration" value="${rate_duration}" required>
                             <span class="label-like">seconds</span>
                         </span>
                         <span class="spaced-checkbox">
@@ -127,7 +127,7 @@
             }
 
             function addSource(recipeId, sourceId, sourceName,
-                    sourceQuantity = 1, preserve = false) {
+                    sourceQuantity = 1.0, preserve = false) {
                 console.log(`addSource() ${sourceId}`);
                 const recipeContainer = $('.recipe-container').last();
                 const existingSource = recipeContainer.find(`.source[data-source-id="${sourceId}"]`);
@@ -142,7 +142,7 @@
                     <div class="source" data-source-id="${sourceId}">
                         <input type="hidden" name="recipe${recipeId}_source_id" value="${sourceId}">
                         <label>Takes:</label>
-                        <input type="number" id="${uniqueId}-quantity" name="${uniqueName}_quantity" value="${sourceQuantity}">
+                        <input type="number" step="any" id="${uniqueId}-quantity" name="${uniqueName}_quantity" value="${sourceQuantity}">
                         ${sourceName}
                         <span class="spaced-checkbox">
                             <input type="checkbox" id="{uniqueId}-preserve" name="${uniqueName}_preserve" ${preserve ? 'checked' : ''}
@@ -187,15 +187,15 @@
             console.log("number of recipes={{ current.recipes | length }}");
             {% for recipe in current.recipes %}
                 addRecipe(
-                    {{ recipe.rate_amount }},
-                    {{ recipe.rate_duration }},
+                    {{ recipe.rate_amount | dec2str }},
+                    {{ recipe.rate_duration | dec2str }},
                     {{ recipe.instant | lower }});
                 {% for source in recipe.sources %}
                     addSource(
                         recipeCounter,
                         {{ source.item.id }},
                         "{{ source.item.name }}",
-                        "{{ source.quantity}}",
+                        {{ source.quantity | dec2str}},
                         {{ source.preserve | lower }});
                 {% endfor %}
             {% endfor %}
@@ -240,7 +240,7 @@
                     <div class="attrib flexdiv" data-attrib-id="${attribId}">
                         <input type="hidden" name="attrib_id" value="${attribId}">
                         ${attribName}
-                        <input type="number" id="attrib${attribId}-val" name="attrib${attribId}_val" value="${attribVal}">
+                        <input type="number" step="any" id="attrib${attribId}-val" name="attrib${attribId}_val" value="${attribVal}">
                         <button type="button" class="remove-attrib-btn lesser-button" id="remove-attrib${attribId}">Remove</button>
                     </div>
                 `;

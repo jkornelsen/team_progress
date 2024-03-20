@@ -8,7 +8,7 @@
     and the difficulty selected is easy (5),
     then 15 - 5 is greater than the major/minor threshold of 9,
     so the outcome is a major success.</p>
-    <p class="info">Show in Overview so the event can be run manually.
+    <p class="info">Show in Overview so the event can be started manually.
     Or, set a chance to trigger during ongoing actions.</p>
     <form method="post">
         <label for="event-name">Name:</label>
@@ -69,7 +69,7 @@
 
         <div class="attrib-container outer-border" id="changed-attrib-container">
             <label>Attributes Changed:</label>
-            <span class="info">(Currently, this has no functional effect &mdash; changes must be made manually.)</span>
+            <span class="info">Currently, this has no functional effect &mdash; changes must be made manually.</span>
             <!-- Placeholder for appending new attribs -->
             <div id="changed_attriblist_end" style="unobtrusive"></div>
             {% if game_data.attribs %}
@@ -88,14 +88,14 @@
             </div>
         </div>
 
+        <div class="entity-trigger-container outer-border" id="entity-trigger-container">
         <div id="trigger-chance-container">
-            <label>Automatic Trigger Chance:</label>
+            <label>Trigger Chance:</label>
             <input type="number" id="trigger-numerator" name="trigger_numerator" value="{{ current.trigger_chance[0] }}">
             <label for="trigger-denominator">out of</label>
-            <input type="number" id="trigger-denominator" name="trigger_denominator" value="{{ current.trigger_chance[1] }}">
+            <input type="number" id="trigger-denominator" name="trigger_denominator" value="{{ current.trigger_chance[1] }}"><span class="info">Set a value only if triggering automatically.</span>
         </div>
 
-        <div class="entity-trigger-container outer-border" id="entity-trigger-container">
             <label>Triggered During Progress For:</label>
             <!-- Placeholder for appending new triggering entities -->
             <div id="trigger_entitylist_end" style="unobtrusive"></div>

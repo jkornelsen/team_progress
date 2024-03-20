@@ -67,7 +67,7 @@
                     <tr>
                         <td rowspan="{{ rowspan }}">
                             {% if recipe.instant %}
-                            <input type="number" id="quantity_to_gain" size="10" value="{{ current.result_qty }}">
+                            <input type="number" step="any" id="quantity_to_gain" size="10" value="{{ current.result_qty | dec2str }}">
                             <button id="gain-btn" class="go-button">Gain</button>
                             {% else %}
                             <button class="toggle-btn go-button" data-recipe-id="{{ recipe.id }}">Start</button>
@@ -75,10 +75,10 @@
                         </td>
                         <td rowspan="{{ rowspan }}">
                             {% if recipe.instant %}
-                            &ndash;
+                            instant
                             {% else %}
-                            <span id="rate-amount">{{ recipe.rate_amount }}</span> per 
-                            <span id="rate-duration">{{ recipe.rate_duration }}</span>s
+                            <span id="rate-amount">{{ recipe.rate_amount | dec2str }}</span> per 
+                            <span id="rate-duration">{{ recipe.rate_duration | dec2str }}</span>s
                             {% endif %}
                         </td>
                         {% if rowspan > 0 %}
@@ -90,9 +90,9 @@
                             <td id="recipe-{{ recipe.id }}-source-{{ recipe.sources[0].item.id }}-quantity">...</td>
                             <td>
                                 {% if recipe.sources[0].preserve %}
-                                    ({{ recipe.sources[0].quantity }})
+                                    ({{ recipe.sources[0].quantity | dec2str }})
                                 {% else %}
-                                    {{ recipe.sources[0].quantity }}
+                                    {{ recipe.sources[0].quantity | dec2str }}
                                 {% endif %}
                             </td>
                         {% endif %}
@@ -107,9 +107,9 @@
                         <td id="recipe-{{ recipe.id }}-source-{{ source.item.id }}-quantity">...</td>
                         <td>
                             {% if source.preserve %}
-                                ({{ source.quantity }})
+                                ({{ source.quantity | dec2str }})
                             {% else %}
-                                {{ source.quantity }}
+                                {{ source.quantity | dec2str }}
                             {% endif %}
                         </td>
                     </tr>
@@ -146,7 +146,7 @@
                                 {{ used_for.item.name }}
                             </a>
                         </td>
-                        <td>{{ used_for.quantity }}</td>
+                        <td>{{ used_for.quantity | dec2str }}</td>
                     </tr>
                     {% endfor %}
                 </table>

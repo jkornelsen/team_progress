@@ -11,6 +11,7 @@ from flask import (
 from inspect import signature
 import os
 import random
+import re
 import string
 import uuid
 
@@ -53,7 +54,7 @@ def before_request():
     g.db = get_db()
     UserInteraction.log_visit(session.get('username'))
     GameData()
-    g.entity_names_loaded = False
+    g.loaded = ''
 
 @app.route('/')  # route name
 def index():  # endpoint name
@@ -129,6 +130,15 @@ def get_parameter_name(endpoint):
 @app.context_processor
 def inject_username():
     return {'current_username': session.get('username')}
+
+# Define a custom filter function
+def dec2str_filter(value):
+    """Convert the value to a string and remove trailing ".0" if present."""
+    if value is None or value == '':
+        return ''
+    return re.sub(r'\.0+$', '', str(value))
+
+app.jinja_env.filters['dec2str'] = dec2str_filter
 
 @app.teardown_appcontext
 def teardown(ctx):
