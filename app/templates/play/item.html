@@ -44,19 +44,17 @@
             </td>
         </tr>
         {% endif %}
-        {% if current.growable == 'over_time' %}
         <tr>
             <td>
                 Elapsed Time: <span id="elapsed-time">...</span>
             </td>
         </tr>
-        {% endif %}
         {% if current.recipes %}
         <tr>
             <td>
                 <table class="inner-table" cellspacing="0" cellpadding="5">
                     <tr>
-                        <th></th>
+                        <th>Batches</th>
                         <th>Rate</th>
                         <th>Source Item</th>
                         <th>In Stock</th>
@@ -67,18 +65,16 @@
                     <tr>
                         <td rowspan="{{ rowspan }}">
                             {% if recipe.instant %}
-                            <input type="number" step="any" id="quantity_to_gain" size="10" value="{{ current.result_qty | dec2str }}">
-                            <button id="gain-btn" class="go-button">Gain</button>
+                            <input type="number" step="any" id="quantity_to_gain" size="10" value="1">
+                            <button id="gain-btn" data-recipe-id="{{ recipe.id }}" data-rate-amount="{{ recipe.rate_amount }}" class="go-button">Gain</button>
                             {% else %}
                             <button class="toggle-btn go-button" data-recipe-id="{{ recipe.id }}">Start</button>
                             {% endif %}
                         </td>
                         <td rowspan="{{ rowspan }}">
-                            {% if recipe.instant %}
-                            instant
-                            {% else %}
-                            <span id="rate-amount">{{ recipe.rate_amount | dec2str }}</span> per 
-                            <span id="rate-duration">{{ recipe.rate_duration | dec2str }}</span>s
+                            <span id="rate-amount">{{ recipe.rate_amount | dec2str }}</span>
+                            {% if not recipe.instant %}
+                            per <span id="rate-duration">{{ recipe.rate_duration | dec2str }}</span>s
                             {% endif %}
                         </td>
                         {% if rowspan > 0 %}
@@ -227,11 +223,9 @@
             function fetchProgressData() {
                 $.get('/item/progress_data/{{ current.id }}', function(data) {
                     updateQuantity(data);
-                    {# {% if current.growable == 'over_time' %} #}
                     in_progress = data.is_ongoing;
                     reconcileElapsedTime(data);
                     updateToggleButtonLabel(data, data.recipe_id);
-                    {# {% endif %} #}
                 });
             }
 
@@ -240,23 +234,37 @@
             updateElapsedTime();
 
             // Client-side update loops 
-            {# {% if current.growable == 'over_time' %} #}
             setInterval(updateElapsedTime, 1000);
-            {# {% endif %} #}
-            //setInterval(fetchProgressData, 2000);
-            setInterval(fetchProgressData, 15000);
+            startFetchingProgress();
 
+            var fetchProgressInterval;
+            function startFetchingProgress() {
+                if (fetchProgressInterval) {
+                    stopFetchingProgress();
+                }
+                const duration = 2000;
+                //const duration = 15000;  // for development only
+                fetchProgressInterval = setInterval(fetchProgressData, duration);
+            }
+            function stopFetchingProgress() {
+                clearInterval(fetchProgressInterval);
+                fetchProgressInterval = null;
+            }
             // Button click event handlers
             $('#gain-btn').click(function() {
-                const quantity = parseInt($('#quantity_to_gain').val(), 10);
-                const minResultQty = parseInt('{{ current.result_qty }}', 10);
-                if (quantity < minResultQty) {
-                    alert('Minimum quantity to gain is ' + minResultQty + '.');
-                    return; // Stop further processing
+                const quantityInput = $(this).prev('#quantity_to_gain');
+                const quantity = parseInt(quantityInput.val(), 10);
+                const recipe_id = $(this).data('recipe-id');
+                const rate_amount = $(this).data('rate-amount');
+                const minResultQty = parseInt(rate_amount, 10);
+                if (isNaN(quantity) || quantity < 1) {
+                    alert('Please enter a valid number for the quantity.');
+                    return;
                 }
                 const item_id = {{ current.id }}
+                stopFetchingProgress();
                 $.ajax({
-                    url: '/item/gain/' + item_id,
+                    url: '/item/gain/' + item_id + '/' + recipe_id,
                     method: 'POST',
                     data: { quantity: quantity },
                     success: function(response) {
@@ -267,9 +275,11 @@
                     },
                     error: function(error) {
                         console.error('Error:', error);
+                        alert('Error: ' + error);
                     },
                     complete: function() {
-                        updateQuantity();
+                        fetchProgressData();
+                        startFetchingProgress();
                     }
                 });
             });
@@ -277,7 +287,7 @@
             $('.toggle-btn').click(function() {
                 const current_id = {{ current.id }};
                 const toggleBtn = this;
-                const recipe_id = $(this).data('recipe-id'); // Get from data attribute
+                const recipe_id = $(this).data('recipe-id');
                 console.log('toggleItem(): ' + current_id);
                 //toggleBtn.disabled = true;
                 const urlParts = ['/item/stop', current_id];
@@ -287,6 +297,7 @@
                 }
                 const url = urlParts.join('/');
                 console.log(`url ${url}`);
+                stopFetchingProgress();
                 fetch(url)
                     .then(response => response.json())
                     .then(data => {
@@ -296,9 +307,12 @@
                             alert(data.message);
                         }
                         updateToggleButtonLabel(data, recipe_id);
+                        fetchProgressData();
+                        startFetchingProgress();
                     })
                     .catch(error => {
                         console.error('Error:', error);
+                        startFetchingProgress();
                     });
             });
         });

@@ -130,7 +130,6 @@ class Progress(Identifiable):
             f" - {self.batches_processed})")
         if batches_to_do > 0:
             return self.change_quantity(batches_to_do)
-        self.stop()
         return False
 
     def set_recipe_by_id(self, recipe_id=0):

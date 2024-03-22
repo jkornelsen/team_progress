@@ -488,14 +488,14 @@ def set_routes(app):
             current=instance,
             game_data=g.game_data)
 
-    @app.route('/item/gain/<int:item_id>', methods=['POST'])
-    def gain_item(item_id):
+    @app.route('/item/gain/<int:item_id>/<int:recipe_id>', methods=['POST'])
+    def gain_item(item_id, recipe_id):
         print("-" * 80)
         print(f"gain_item({item_id})")
-        quantity = float(request.form.get('quantity'))
-        item = Item.get_by_id(item_id)
+        num_batches = int(request.form.get('quantity'))
+        item = Item.data_for_configure(item_id)
         print(f"Retrieved item {item.id} from DB: {len(item.recipes)} recipes")
-        num_batches = math.floor(quantity / item.progress.step_size)
+        item.progress.set_recipe_by_id(recipe_id)
         changed = item.progress.change_quantity(num_batches)
         if changed:
             return jsonify({
