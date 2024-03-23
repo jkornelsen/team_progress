@@ -21,14 +21,16 @@
     -->
 
     {% if current.location %}
-        <p>Location: <a href="{{ url_for('play_location', loc_id=current.location.id) }}">{{ current.location.name }}</a></p>
+    <h2>Location</h2>
+    <ul>
+    <a href="{{ url_for('play_location', loc_id=current.location.id) }}">{{ current.location.name }}</a>
         {% if current.location.destinations %}
             <div class="flexdiv">
                 <label for="destination-select">Travel To</label>
                 <select id="destination-select" class="select-box">
                     <option value="" data-distance="-1">(Select destination)</option>
                     {% for destination, distance in current.location.destinations.items() %}
-                        <option value="{{ destination.id }}" data-distance="{{ distance }}"
+                        <option value="{{ destination.id }}" data-distance="{{ distance | dec2str }}"
                             {% if current.destination and destination.id == current.destination.id %}
                                 selected
                             {% endif %}
@@ -37,29 +39,15 @@
                         </option>
                     {% endfor %}
                 </select>
-                <div id="destination-info" class="flexdiv">
-                    <p id="destination-distance">Distance: ... of ...</p>
-                    <p>Elapsed Time: <span id="dest-time">...</span></p>
-                    <button id="start-travel-btn">Start</button>
-                    <button id="stop-travel-btn">Stop</button>
-                </div>
+            </div>
+            <div id="destination-info" class="flexdiv">
+                <p id="destination-distance">Distance: ... of ...</p>
+                <p>&nbsp;(Elapsed <span id="dest-time">...</span>)</p>
+                <button id="start-travel-btn">Start</button>
+                <button id="stop-travel-btn">Stop</button>
             </div>
         {% endif %}
-    {% endif %}
-
-    {% if current.attribs %}
-    <table>
-        <tr>
-            <th>Attribute</th>
-            <th>Value</th>
-        </tr>
-        {% for attrib, attrib_val in current.attribs.items() %}
-        <tr>
-            <td>{{ attrib.name }}</td>
-            <td>{{ attrib_val }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+        </ul>
     {% endif %}
 
     {% if current.items %}
@@ -89,14 +77,21 @@
     </ul>
     {% endif %}
 
-    {% if current.attributes %}
-    <h2>Attributes (Not Implemented Yet)</h2>
+    {% if current.attribs %}
+    <h2>Attributes</h2>
     <ul>
-        <!-- Loop over current.attributes once they are implemented -->
+        {% for attrib, attrib_val in current.attribs.items() %}
+            <li>{{ attrib.name }} {{ attrib_val | dec2str }}</li>
+        {% endfor %}
     </ul>
     {% endif %}
+
     <script>
         $(document).ready(function() {
+            // Global variables
+            let elapsedTime = 0;
+            let is_ongoing = false;
+
             function updateTravelProgress(data) {
                 const destSel = $('#destination-select');
                 const selectedOption = destSel.find(":selected");
@@ -110,7 +105,7 @@
                     } else if (data.hasOwnProperty('error') && data.error === 'No travel destination.') {
                         console.log(data.error);
                     } else {
-                        const quantity = data.hasOwnProperty('quantity') ? data.quantity : -1;
+                        const quantity = data.hasOwnProperty('quantity') ? data.quantity : 0;
                         destDist.text('Distance: ' + quantity + ' of ' + distance);
                         destInfo.show();
                     }
@@ -119,21 +114,20 @@
                 }
             }
 
-            // Global variable to store the current elapsed time
-            let elapsedTime = 0;
-
             // Update the elapsed time on the client.
             function updateElapsedTime() {
-              elapsedTime += 1;  // Increment by 1 second
-              $('#dest-time').text(formatTime(elapsedTime));
+                if (!is_ongoing)
+                    return;
+                elapsedTime += 1;  // Increment by 1 second
+                $('#dest-time').text(formatTime(elapsedTime));
             }
 
             // Function to format the time in HH:MM:SS format.
             function formatTime(time) {
-              const hours = Math.floor(time / 3600);
-              const minutes = Math.floor((time % 3600) / 60);
-              const seconds = Math.floor(time % 60);
-              return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                const hours = Math.floor(time / 3600);
+                const minutes = Math.floor((time % 3600) / 60);
+                const seconds = Math.floor(time % 60);
+                return `${minutes.toString()}:${seconds.toString().padStart(2, '0')}`;
             }
 
             // Reconcile the elapsed time with the server-side progress time.
@@ -157,6 +151,7 @@
                     startBtn.disabled = true;
                     stopBtn.disabled = false;
                     destSel.disabled = true;
+                    is_ongoing = true;
                 } else {
                     startBtn.innerHTML = "Start";
                     startBtn.disabled = false;
@@ -188,7 +183,11 @@
             // Client-side update loops 
             setInterval(updateElapsedTime, 1000);
             setInterval(fetchProgressData, 2000);
+            //setInterval(fetchProgressData, 15000);  // for development only
 
+            $('#destination-select').change(function() {
+                fetchProgressData();
+            });
             $('#start-travel-btn').click(function() {
                 // Start the progress for the selected destination
                 const destinationId = $('#destination-select').val();
@@ -208,7 +207,7 @@
                         console.error('Error:', error);
                     },
                     complete: function() {
-                        updateTravelProgress();
+                        fetchProgressData();
                     }
                 });
             });

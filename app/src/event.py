@@ -153,16 +153,8 @@ class Event(Identifiable):
                 values)
 
     @classmethod
-    def from_db(cls, id_to_get):
-        return cls._from_db(id_to_get)
-
-    @classmethod
-    def list_from_db(cls):
-        return cls._from_db()
-
-    @classmethod
-    def _from_db(cls, id_to_get=None):
-        print(f"{cls.__name__}._from_db()")
+    def data_for_file(cls):
+        print(f"{cls.__name__}.data_for_file()")
         # Get event data with attrib relation data
         query = """
             SELECT *
@@ -173,9 +165,6 @@ class Event(Identifiable):
             WHERE {tables[0]}.game_token = %s
         """
         values = [g.game_token]
-        if id_to_get:
-            query = f"{query}\nAND {{tables[0]}}.id = %s"
-            values.append(id_to_get);
         tables_rows = cls.select_tables(
             query, values, ['events', 'event_attribs'])
         instances = {}  # keyed by ID
@@ -198,8 +187,6 @@ class Event(Identifiable):
             FROM event_triggers
             WHERE game_token = %s
         """
-        if id_to_get:
-            query = f"{query}\nAND event_id = %s"
         triggers_data = cls.execute_select(query, values)
         for trigger_data in triggers_data:
             print(f"trigger_data {trigger_data}")
@@ -217,19 +204,15 @@ class Event(Identifiable):
             print(f"event {instance.id} ({instance.name})"
                 f" has {len(instance.triggers)} triggers"
                 f" and {len(instance.determining_attrs)} det attrs")
-        # Convert and return
-        instances = list(instances.values())
-        if id_to_get is not None and len(instances) == 1:
-            return instances[0]
-        return instances
+        return list(instances.values())
 
     @classmethod
-    def data_for_configure(cls, config_id):
+    def data_for_configure(cls, id_to_get):
         print(f"{cls.__name__}.data_for_configure()")
-        if config_id == 'new':
-            config_id = 0
+        if id_to_get == 'new':
+            id_to_get = 0
         else:
-            config_id = int(config_id)
+            id_to_get = int(id_to_get)
         # Get all event data
         events_data = cls.execute_select("""
             SELECT *
@@ -240,7 +223,7 @@ class Event(Identifiable):
         g.game_data.events = []
         current_data = MutableNamespace()
         for evt_data in events_data:
-            if evt_data.id == config_id:
+            if evt_data.id == id_to_get:
                 current_data = evt_data
             g.game_data.events.append(Event.from_json(evt_data))
         # Get all attrib data and the current event's attrib relation data
@@ -253,7 +236,7 @@ class Event(Identifiable):
                 AND {tables[1]}.event_id = %s
             WHERE {tables[0]}.game_token = %s
             ORDER BY {tables[0]}.name
-        """, (config_id, g.game_token), ['attribs', 'event_attribs'])
+        """, (id_to_get, g.game_token), ['attribs', 'event_attribs'])
         for attrib_data, evt_attrib_data in tables_rows:
             if evt_attrib_data.attrib_id:
                 if evt_attrib_data.determining:
@@ -276,7 +259,7 @@ class Event(Identifiable):
                     AND {tables[1]}.event_id = %s
                 WHERE {tables[0]}.game_token = %s
                 ORDER BY {tables[0]}.name
-            """, (config_id, g.game_token),
+            """, (id_to_get, g.game_token),
                 [entity_cls.tablename(), 'event_triggers'])
             for entity_data, trigger_data in tables_rows:
                 if trigger_data.event_id:
@@ -341,7 +324,13 @@ class Event(Identifiable):
                 for entity_name, entity_id in zip(trigger_types, trigger_ids)]
             self.to_db()
         elif 'delete_event' in request.form:
-            self.remove_from_db()
+            try:
+                self.remove_from_db()
+                session['file_message'] = 'Removed event.'
+            except Exception as e:
+                return render_template('error.html',
+                    message="Could not delete event.",
+                    details=str(e))
         elif 'cancel_changes' in request.form:
             print("Cancelling changes.")
         else:
@@ -357,8 +346,8 @@ class Event(Identifiable):
         if request.method == 'POST':
             print("Saving changes.")
             print(request.form)
-            self.difficulty = int(request.form.get('difficulty'))
-            self.stat_adjustment = int(request.form.get('stat_adjustment'))
+            self.difficulty = self.form_int(request, 'difficulty')
+            self.stat_adjustment = self.form_int(request, 'stat_adjustment')
             self.to_db()
             return render_template(
                 'play/event.html',
@@ -370,26 +359,48 @@ class Event(Identifiable):
                 current=self)
 
     def get_outcome(self):
-        roll = roll_dice(20)
-        total = roll + self.stat_adjustment - self.difficulty
-        if total <= -OUTCOME_MARGIN:
-            self.outcome = OUTCOME_CRITICAL_FAILURE
-        elif total <= 0:
-            self.outcome = OUTCOME_MINOR_FAILURE
-        elif total < OUTCOME_MARGIN:
-            self.outcome = OUTCOME_MINOR_SUCCESS
+        if self.outcome_type == OUTCOME_FOURWAY:
+            roll = roll_dice(20)
+            total = roll + self.stat_adjustment - self.difficulty
+            if total <= -OUTCOME_MARGIN:
+                self.outcome = OUTCOME_CRITICAL_FAILURE
+            elif total <= 0:
+                self.outcome = OUTCOME_MINOR_FAILURE
+            elif total < OUTCOME_MARGIN:
+                self.outcome = OUTCOME_MINOR_SUCCESS
+            else:
+                self.outcome = OUTCOME_MAJOR_SUCCESS
+            display = (
+                "1d20 ({}) + Stat Adjustment {} - Difficulty {} = {}<br>"
+                "Outcome is a {}."
+            ).format(
+                roll,
+                self.stat_adjustment,
+                self.difficulty,
+                total,
+                OUTCOMES[self.outcome],
+            )
+        elif self.outcome_type == OUTCOME_NUMERIC:
+            range_min, range_max = self.numeric_range
+            sides = range_max - range_min
+            roll = roll_dice(sides)
+            total = roll + range_min + self.stat_adjustment
+            display = (
+                "1d{} ({}) + Min {} + Stat Adjustment {}<br>"
+                "Outcome = {}"
+            ).format(
+                sides,
+                roll,
+                range_min,
+                self.stat_adjustment,
+                total
+            )
+        elif self.outcome_type == OUTCOME_SELECTION:
+            strings_list = selection_strings.split('\n')
+            random_string = random.choice(strings_list)
+            display = f"Outcome: {random_string}"
         else:
-            self.outcome = OUTCOME_MAJOR_SUCCESS
-        display = (
-            "1d20 ({}) + Stat Adjustment {} - Difficulty {} = {}<br>"
-            "Outcome is a {}."
-        ).format(
-            roll,
-            self.stat_adjustment,
-            self.difficulty,
-            total,
-            OUTCOMES[self.outcome],
-        )
+            raise(f"Unexpected outcome_type {self.outcome_type}")
         return display
 
 

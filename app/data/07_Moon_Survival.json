@@ -1,0 +1,338 @@
+{
+    "attribs": [
+        {
+            "description": "Whether a minor character sees a main character as an enemy.",
+            "id": 1,
+            "name": "Hostility"
+        },
+        {
+            "description": "Affects damage.",
+            "id": 2,
+            "name": "Strength"
+        },
+        {
+            "description": "Affects accuracy. Hampered by space suits.",
+            "id": 3,
+            "name": "Dexterity"
+        },
+        {
+            "description": "",
+            "id": 6,
+            "name": "HP Head"
+        },
+        {
+            "description": "health of legs",
+            "id": 7,
+            "name": "HP Legs"
+        },
+        {
+            "description": "left arm's health",
+            "id": 5,
+            "name": "HP Arm Left"
+        },
+        {
+            "description": "",
+            "id": 4,
+            "name": "HP Arm Right"
+        }
+    ],
+    "characters": [
+        {
+            "attribs": {
+                "1": 3.0,
+                "2": 1.0,
+                "3": 3.0,
+                "4": 10.0,
+                "5": 10.0,
+                "6": 10.0,
+                "7": 3.0
+            },
+            "description": "Renegade robot that lives underground. Solar powered.",
+            "dest_id": null,
+            "id": 2,
+            "items": [],
+            "location_id": 3,
+            "name": "Selen",
+            "progress": {
+                "batches_processed": 5,
+                "id": 30,
+                "is_ongoing": false,
+                "q_limit": 0.0,
+                "quantity": 0.0,
+                "recipe_id": 0,
+                "start_time": "Fri, 22 Mar 2024 20:01:18 GMT",
+                "stop_time": "Fri, 22 Mar 2024 20:01:34 GMT"
+            },
+            "toplevel": true
+        },
+        {
+            "attribs": {
+                "2": 3.0,
+                "3": 1.0,
+                "4": 10.0,
+                "5": 1.0,
+                "6": 10.0,
+                "7": 10.0
+            },
+            "description": "Astronaut",
+            "dest_id": null,
+            "id": 1,
+            "items": [
+                {
+                    "item_id": 21,
+                    "quantity": 1.0,
+                    "slot": "hands"
+                },
+                {
+                    "item_id": 21,
+                    "quantity": 1.0,
+                    "slot": "hands"
+                },
+                {
+                    "item_id": 21,
+                    "quantity": 1.0,
+                    "slot": "hands"
+                },
+                {
+                    "item_id": 21,
+                    "quantity": 1.0,
+                    "slot": "hands"
+                },
+                {
+                    "item_id": 21,
+                    "quantity": 1.0,
+                    "slot": "hands"
+                },
+                {
+                    "item_id": 21,
+                    "quantity": 1.0,
+                    "slot": "hands"
+                }
+            ],
+            "location_id": 1,
+            "name": "Bill",
+            "progress": {
+                "batches_processed": 5,
+                "id": 27,
+                "is_ongoing": false,
+                "q_limit": 0.0,
+                "quantity": 0.0,
+                "recipe_id": 0,
+                "start_time": "Fri, 22 Mar 2024 22:01:55 GMT",
+                "stop_time": "Fri, 22 Mar 2024 22:02:10 GMT"
+            },
+            "toplevel": true
+        }
+    ],
+    "events": [
+        {
+            "changed_attrs": [],
+            "description": "Failures are likely to increase hostility.",
+            "determining_attrs": [],
+            "id": 1,
+            "name": "Keep Peaceful",
+            "numeric_range": [
+                0,
+                10
+            ],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": true,
+            "trigger_chance": [
+                0,
+                1
+            ],
+            "triggers": []
+        },
+        {
+            "changed_attrs": [],
+            "description": "Damage done by an attack.",
+            "determining_attrs": [],
+            "id": 2,
+            "name": "Damage",
+            "numeric_range": [
+                1,
+                10
+            ],
+            "outcome_type": "numeric",
+            "selection_strings": "",
+            "toplevel": true,
+            "trigger_chance": [
+                0,
+                1
+            ],
+            "triggers": []
+        },
+        {
+            "changed_attrs": [],
+            "description": "Attempt to repair robot's body. Could also be used to treat a living creature's wounds.",
+            "determining_attrs": [],
+            "id": 4,
+            "name": "Repair or Heal",
+            "numeric_range": [
+                0,
+                10
+            ],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": true,
+            "trigger_chance": [
+                0,
+                1
+            ],
+            "triggers": []
+        },
+        {
+            "changed_attrs": [],
+            "description": "Escape or advance",
+            "determining_attrs": [],
+            "id": 5,
+            "name": "Move",
+            "numeric_range": [
+                0,
+                10
+            ],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": true,
+            "trigger_chance": [
+                0,
+                1
+            ],
+            "triggers": []
+        },
+        {
+            "changed_attrs": [],
+            "description": "Whether the attack misses or otherwise fails.",
+            "determining_attrs": [],
+            "id": 3,
+            "name": "Attack Success",
+            "numeric_range": [
+                0,
+                10
+            ],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": true,
+            "trigger_chance": [
+                0,
+                1
+            ],
+            "triggers": []
+        }
+    ],
+    "items": [
+        {
+            "attribs": {},
+            "description": "",
+            "id": 20,
+            "name": "Empty Helium-3 Container",
+            "progress": {
+                "batches_processed": 0,
+                "id": 29,
+                "is_ongoing": false,
+                "q_limit": 0.0,
+                "quantity": 0.0,
+                "recipe_id": 0,
+                "start_time": null,
+                "stop_time": null
+            },
+            "quantity": 0.0,
+            "recipes": [],
+            "toplevel": false
+        },
+        {
+            "attribs": {},
+            "description": "Transfer the extracted helium-3 from the processor into storage containers.",
+            "id": 19,
+            "name": "Filled Helium-3 Container",
+            "progress": {
+                "batches_processed": 0,
+                "id": 28,
+                "is_ongoing": false,
+                "q_limit": 0.0,
+                "quantity": 0.0,
+                "recipe_id": 0,
+                "start_time": null,
+                "stop_time": null
+            },
+            "quantity": 0.0,
+            "recipes": [],
+            "toplevel": true
+        },
+        {
+            "attribs": {},
+            "description": "Can be used as a two-handed weapon like a bat.",
+            "id": 21,
+            "name": "Metal Pole",
+            "progress": {
+                "batches_processed": 0,
+                "id": 31,
+                "is_ongoing": false,
+                "q_limit": 0.0,
+                "quantity": 0.0,
+                "recipe_id": 0,
+                "start_time": null,
+                "stop_time": null
+            },
+            "quantity": 0.0,
+            "recipes": [],
+            "toplevel": false
+        }
+    ],
+    "locations": [
+        {
+            "description": "An area rich in regolith with high concentrations of helium-3. The facility covers several acres and includes the processing equipment, storage units for helium-3, and solar panels for power.",
+            "destinations": {
+                "3": 1.0
+            },
+            "id": 2,
+            "items": [],
+            "name": "Regolith Processing Plant"
+        },
+        {
+            "description": "Food, bed, shower.  Life support systems, a greenhouse for food production, and laboratories for scientific research.",
+            "destinations": {
+                "3": 1.0
+            },
+            "id": 1,
+            "items": [],
+            "name": "Base"
+        },
+        {
+            "description": "",
+            "destinations": {
+                "3": 5.0,
+                "4": 5.0
+            },
+            "id": 5,
+            "items": [],
+            "name": "Surface 1"
+        },
+        {
+            "description": "Underground.",
+            "destinations": {
+                "5": 1.0
+            },
+            "id": 4,
+            "items": [],
+            "name": "Robot Home"
+        },
+        {
+            "description": "Electric vehicle on a simple pressurized track system to protect against lunar dust.",
+            "destinations": {
+                "1": 5.0,
+                "2": 5.0,
+                "5": 1.0
+            },
+            "id": 3,
+            "items": [],
+            "name": "Track"
+        }
+    ],
+    "overall": {
+        "description": "Astronauts that live on the moon.",
+        "title": "Moon Survival",
+        "win_reqs": []
+    }
+}

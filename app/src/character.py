@@ -108,6 +108,8 @@ class Character(Identifiable):
 
     def json_to_db(self, doc):
         print(f"{self.__class__.__name__}.json_to_db()")
+        self.progress.json_to_db(doc['progress'])
+        doc['progress_id'] = self.progress.id
         super().json_to_db(doc)
         for rel_table in ('char_attribs', 'char_items'):
             self.execute_change(f"""
@@ -138,16 +140,8 @@ class Character(Identifiable):
                 values)
 
     @classmethod
-    def from_db(cls, id_to_get):
-        return cls._from_db(id_to_get)
-
-    @classmethod
-    def list_from_db(cls):
-        return cls._from_db()
-
-    @classmethod
-    def _from_db(cls, id_to_get=None):
-        print(f"{cls.__name__}._from_db()")
+    def data_for_file(cls):
+        print(f"{cls.__name__}.data_for_file()")
         query = """
             SELECT *
             FROM {tables[0]}
@@ -163,9 +157,6 @@ class Character(Identifiable):
             WHERE {tables[0]}.game_token = %s
         """
         values = [g.game_token]
-        if id_to_get:
-            query = f"{query}\nAND {{tables[0]}}.id = %s"
-            values.append(id_to_get);
         tables_rows = cls.select_tables(
             query, values,
             ['characters', 'progress', 'char_attribs', 'char_items'])
@@ -191,19 +182,15 @@ class Character(Identifiable):
         for instance in instances.values():
             print(f"character {instance.id} ({instance.name})"
                 " has {len(instance.attribs)} attribs")
-        # Convert and return
-        instances = list(instances.values())
-        if id_to_get is not None and len(instances) == 1:
-            return instances[0]
-        return instances
+        return list(instances.values())
 
     @classmethod
-    def data_for_configure(cls, config_id):
+    def data_for_configure(cls, id_to_get):
         print(f"{cls.__name__}.data_for_configure()")
-        if config_id == 'new':
-            config_id = 0
+        if id_to_get == 'new':
+            id_to_get = 0
         else:
-            config_id = int(config_id)
+            id_to_get = int(id_to_get)
         # Get all character data and the current character's progress data
         tables_rows = cls.select_tables("""
             SELECT *
@@ -214,11 +201,11 @@ class Character(Identifiable):
                 AND {tables[0]}.id = %s
             WHERE {tables[0]}.game_token = %s
             ORDER BY {tables[0]}.name
-        """, (config_id, g.game_token), ['characters', 'progress'])
+        """, (id_to_get, g.game_token), ['characters', 'progress'])
         g.game_data.characters = []
         current_data = MutableNamespace()
         for char_data, progress_data in tables_rows:
-            if char_data.id == config_id:
+            if char_data.id == id_to_get:
                 current_data = char_data
                 if progress_data.id:
                     char_data.progress = progress_data
@@ -233,7 +220,7 @@ class Character(Identifiable):
                 AND {tables[1]}.char_id = %s
             WHERE {tables[0]}.game_token = %s
             ORDER BY {tables[0]}.name
-        """, (config_id, g.game_token), ['attribs', 'char_attribs'])
+        """, (id_to_get, g.game_token), ['attribs', 'char_attribs'])
         for attrib_data, char_attrib_data in tables_rows:
             if char_attrib_data.attrib_id:
                 current_data.setdefault(
@@ -249,7 +236,7 @@ class Character(Identifiable):
                 AND {tables[1]}.char_id = %s
             WHERE {tables[0]}.game_token = %s
             ORDER BY {tables[0]}.name
-        """, (config_id, g.game_token), ['items', 'char_items'])
+        """, (id_to_get, g.game_token), ['items', 'char_items'])
         for item_data, char_item_data in tables_rows:
             if char_item_data.char_id:
                 current_data.setdefault(
@@ -285,6 +272,30 @@ class Character(Identifiable):
             print(f"slot={owned_item.slot}")
         return current_obj
 
+    @classmethod
+    def data_for_play(cls, id_to_get):
+        print(f"{cls.__name__}.data_for_play()")
+        current_obj = cls.data_for_configure(id_to_get)
+        if current_obj.location:
+            # Get the current location's destination data
+            loc_dest_data = cls.execute_select("""
+                SELECT *
+                FROM loc_destinations
+                WHERE game_token = %s
+                    AND loc_id = %s
+            """, (g.game_token, current_obj.location.id))
+            dests_data = {}
+            for row in loc_dest_data:
+                dests_data[row.dest_id] = row.distance
+            destinations = dests_data
+            # Replace IDs with objects
+            loc_objs = {}
+            for dest_id, distance in destinations.items():
+                loc = Location.get_by_id(dest_id)
+                loc_objs[loc] = distance
+            current_obj.location.destinations = loc_objs
+        return current_obj
+
     def configure_by_form(self):
         if 'save_changes' in request.form:  # button was clicked
             print("Saving changes.")
@@ -302,7 +313,7 @@ class Character(Identifiable):
                     item_ids, item_qtys, item_slots):
                 ownedItem = OwnedItem(Item(int(item_id)))
                 self.items.append(ownedItem)
-                ownedItem.quantity = int(item_qty)
+                ownedItem.quantity = float(item_qty)
                 ownedItem.slot = item_slot
             location_id = request.form.get('char_location')
             self.location = Location.get_by_id(
@@ -311,7 +322,7 @@ class Character(Identifiable):
             print(f"Attrib IDs: {attrib_ids}")
             self.attribs = {}
             for attrib_id in attrib_ids:
-                attrib_val = int(
+                attrib_val = float(
                     request.form.get(f'attrib_{attrib_id}_val', 0))
                 attrib_item = Attrib.get_by_id(attrib_id)
                 self.attribs[attrib_item] = attrib_val
@@ -319,7 +330,13 @@ class Character(Identifiable):
                 for attrib, val in self.attribs.items()})
             self.to_db()
         elif 'delete_character' in request.form:
-            self.remove_from_db()
+            try:
+                self.remove_from_db()
+                session['file_message'] = 'Removed character.'
+            except Exception as e:
+                return render_template('error.html',
+                    message="Could not delete character.",
+                    details=str(e))
         elif 'cancel_changes' in request.form:
             print("Cancelling changes.")
         else:
@@ -334,6 +351,8 @@ class Character(Identifiable):
 def set_routes(app):
     @app.route('/configure/character/<char_id>', methods=['GET', 'POST'])
     def configure_char(char_id):
+        print("-" * 80)
+        print(f"configure_char({char_id})")
         instance = Character.data_for_configure(char_id)
         if request.method == 'GET':
             session['referrer'] = request.referrer
@@ -348,7 +367,7 @@ def set_routes(app):
     def play_char(char_id):
         print("-" * 80)
         print(f"play_char({char_id})")
-        instance = Character.data_for_configure(char_id)
+        instance = Character.data_for_play(char_id)
         if not instance:
             return 'Character not found'
         return render_template(
@@ -358,8 +377,10 @@ def set_routes(app):
 
     @app.route('/char/start/<int:char_id>', methods=['POST'])
     def start_char(char_id):
+        print("-" * 80)
+        print(f"start_char({char_id})")
         dest_id = int(request.form.get('dest_id'))
-        char = Character.get_by_id(char_id)
+        char = Character.data_for_play(char_id)
         if not char.destination or char.destination.id != dest_id:
             char.destination = Location.get_by_id(dest_id)
             char.progress.quantity = 0
@@ -372,7 +393,9 @@ def set_routes(app):
 
     @app.route('/char/stop/<int:char_id>')
     def stop_char(char_id):
-        char = Character.get_by_id(char_id)
+        print("-" * 80)
+        print(f"stop_char({char_id})")
+        char = Character.data_for_play(char_id)
         if char.progress.stop():
             char.to_db()
             return jsonify({'message': 'Progress paused.'})
@@ -381,7 +404,9 @@ def set_routes(app):
 
     @app.route('/char/progress_data/<int:char_id>')
     def char_progress_data(char_id):
-        char = Character.get_by_id(char_id)
+        print("-" * 80)
+        print(f"char_progress_data({char_id})")
+        char = Character.data_for_play(char_id)
         if char:
             if not char.location or not char.destination:
                 return jsonify({

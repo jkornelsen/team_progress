@@ -21,14 +21,6 @@ def coldef(which):
     else:
         raise Exception(f"Unexpected coldef type '{which}'")
 
-#def new_game_data():
-#    from src.game_data import GameData
-#    return GameData()
-
-def load_game_data():
-    from src.game_data import GameData
-    return GameData.from_db()
-
 def tuples_to_lists(values):
     """Prepare for insertion into db."""
     return [
@@ -317,26 +309,11 @@ class Identifiable(DbSerializable):
 
     @classmethod
     def list_from_db(cls):
-        print(f"{cls.__name__}.list_from_db()")
-        data = cls.execute_select(f"""
-            SELECT *
-            FROM {{table}}
-            WHERE game_token = %s
-        """, (g.game_token,))
-        instances = [cls.from_json(vars(dat)) for dat in data]
-        return instances
+        return cls.data_for_file()
 
     @classmethod
-    def from_db(cls, id_to_get):
-        print(f"{cls.__name__}.from_db()")
-        data = cls.execute_select(f"""
-            SELECT *
-            FROM {{table}}
-            WHERE game_token = %s
-                AND id = %s
-        """, (g.game_token, id_to_get), fetch_all=False)
-        instance = cls.from_json(vars(data))
-        return instance
+    def data_for_file(cls):
+        raise NotImplementedError()
 
 def precision(numstr, places):
     """Convert string to float with specified number of decimal places."""

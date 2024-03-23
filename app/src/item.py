@@ -271,18 +271,10 @@ class Item(Identifiable):
         return item_recipes_data
 
     @classmethod
-    def from_db(cls, id_to_get):
-        return cls._from_db(id_to_get)
-
-    @classmethod
-    def list_from_db(cls):
-        return cls._from_db()
-
-    @classmethod
-    def _from_db(cls, id_to_get=None):
-        print(f"{cls.__name__}._from_db()")
+    def data_for_file(cls):
+        print(f"{cls.__name__}.data_for_file()")
         # Get item and progress data
-        tables_rows = cls.db_item_and_progress_data(id_to_get)
+        tables_rows = cls.db_item_and_progress_data()
         instances = {}  # keyed by ID
         for item_data, progress_data in tables_rows:
             instance = instances.setdefault(
@@ -290,13 +282,13 @@ class Item(Identifiable):
             if progress_data.id:
                 instance.progress = Progress.from_json(progress_data, instance)
         # Get attrib data for items
-        tables_rows = cls.db_attrib_data(id_to_get)
+        tables_rows = cls.db_attrib_data()
         for attrib_data, item_attrib_data in tables_rows:
             instance = instances[item_attrib_data.item_id]
             attrib_obj = Attrib(attrib_data.id)
             instance.attribs[attrib_obj] = item_attrib_data.value
         # Get source data for items
-        item_recipes_data = cls.db_recipe_data(id_to_get)
+        item_recipes_data = cls.db_recipe_data()
         for item_id, recipes_data in item_recipes_data.items():
             instance = instances[item_id]
             instance.recipes = [
@@ -322,38 +314,34 @@ class Item(Identifiable):
                 for source in recipe.sources:
                     print(f"    source item id {source.item.id},"
                         f" qty {source.quantity}")
-        # Convert and return
-        instances = list(instances.values())
-        if id_to_get is not None and len(instances) == 1:
-            return instances[0]
-        return instances
+        return list(instances.values())
 
     @classmethod
-    def data_for_configure(cls, config_id):
+    def data_for_configure(cls, id_to_get):
         print(f"{cls.__name__}.data_for_configure()")
-        if config_id == 'new':
-            config_id = 0
+        if id_to_get == 'new':
+            id_to_get = 0
         else:
-            config_id = int(config_id)
+            id_to_get = int(id_to_get)
         # Get all item and progress data
         tables_rows = cls.db_item_and_progress_data()
         g.game_data.items = []
         current_data = MutableNamespace()
         for item_data, progress_data in tables_rows:
-            if item_data.id == config_id:
+            if item_data.id == id_to_get:
                 current_data = item_data
             if progress_data.id:
                 item_data.progress = progress_data
             g.game_data.items.append(Item.from_json(item_data))
         # Get all attrib data and the current item's attrib relation data
-        tables_rows = cls.db_attrib_data(config_id, include_all=True)
+        tables_rows = cls.db_attrib_data(id_to_get, include_all=True)
         for attrib_data, item_attrib_data in tables_rows:
             if item_attrib_data.attrib_id:
                 current_data.setdefault(
                     'attribs', {})[attrib_data.id] = item_attrib_data.value
             g.game_data.attribs.append(Attrib.from_json(attrib_data))
         # Get the current item's source relation data
-        item_recipes_data = cls.db_recipe_data(config_id)
+        item_recipes_data = cls.db_recipe_data(id_to_get)
         if item_recipes_data:
             recipes_data = list(item_recipes_data.values())[0]
             current_data.recipes = list(recipes_data.values())
@@ -381,11 +369,11 @@ class Item(Identifiable):
         return current_obj
 
     @classmethod
-    def data_for_play(cls, config_id):
+    def data_for_play(cls, id_to_get):
         print(f"{cls.__name__}.data_for_play()")
-        current_obj = cls.data_for_configure(config_id)
+        current_obj = cls.data_for_configure(id_to_get)
         # Get relation data for items that use this item as a source
-        item_recipes_data = cls.db_recipe_data(config_id, get_by_source=True)
+        item_recipes_data = cls.db_recipe_data(id_to_get, get_by_source=True)
         for item_id, recipes_data in item_recipes_data.items():
             print(f"item_id {item_id}, recipes_data {recipes_data}")
             item = Item.get_by_id(item_id)
@@ -449,7 +437,13 @@ class Item(Identifiable):
                 for attrib, val in self.attribs.items()})
             self.to_db()
         elif 'delete_item' in request.form:
-            self.remove_from_db()
+            try:
+                self.remove_from_db()
+                session['file_message'] = 'Removed item.'
+            except Exception as e:
+                return render_template('error.html',
+                    message="Could not delete item.",
+                    details=str(e))
         elif 'cancel_changes' in request.form:
             print("Cancelling changes.")
         else:

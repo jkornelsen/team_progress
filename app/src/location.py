@@ -109,17 +109,10 @@ class Location(Identifiable):
                 "game_token, loc_id, item_id, quantity, position",
                 values)
 
-    @classmethod
-    def from_db(cls, id_to_get):
-        return cls._from_db(id_to_get)
 
     @classmethod
-    def list_from_db(cls):
-        return cls._from_db()
-
-    @classmethod
-    def _from_db(cls, id_to_get=None):
-        print(f"{cls.__name__}._from_db()")
+    def data_for_file(cls):
+        print(f"{cls.__name__}.data_for_file()")
         query = """
             SELECT *
             FROM {tables[0]}
@@ -132,9 +125,6 @@ class Location(Identifiable):
             WHERE {tables[0]}.game_token = %s
         """
         values = [g.game_token]
-        if id_to_get:
-            query = f"{query}\nAND {{tables[0]}}.id = %s"
-            values.append(id_to_get);
         tables_rows = cls.select_tables(
             query, values,
             ['locations', 'loc_destinations', 'loc_items'])
@@ -163,19 +153,15 @@ class Location(Identifiable):
         for instance in instances.values():
             print(f"location {instance.id} ({instance.name})"
                 " has {len(instance.destinations)} destinations")
-        # Convert and return
-        instances = list(instances.values())
-        if id_to_get is not None and len(instances) == 1:
-            return instances[0]
-        return instances
+        return list(instances.values())
 
     @classmethod
-    def data_for_configure(cls, config_id):
+    def data_for_configure(cls, id_to_get):
         print(f"{cls.__name__}.data_for_configure()")
-        if config_id == 'new':
-            config_id = 0
+        if id_to_get == 'new':
+            id_to_get = 0
         else:
-            config_id = int(config_id)
+            id_to_get = int(id_to_get)
         # Get all location data
         locations_data = cls.execute_select("""
             SELECT *
@@ -186,7 +172,7 @@ class Location(Identifiable):
         g.game_data.locations = []
         current_data = MutableNamespace()
         for loc_data in locations_data:
-            if loc_data.id == config_id:
+            if loc_data.id == id_to_get:
                 current_data = loc_data
             g.game_data.locations.append(Location.from_json(loc_data))
         # Get the current location's destination data
@@ -195,7 +181,7 @@ class Location(Identifiable):
             FROM loc_destinations
             WHERE game_token = %s
                 AND loc_id = %s
-        """, (g.game_token, config_id))
+        """, (g.game_token, id_to_get))
         dests_data = {}
         for row in loc_dest_data:
             dests_data[row.dest_id] = row.distance
@@ -210,7 +196,7 @@ class Location(Identifiable):
                 AND {tables[1]}.loc_id = %s
             WHERE {tables[0]}.game_token = %s
             ORDER BY {tables[0]}.name
-        """, (config_id, g.game_token), ['items', 'loc_items'])
+        """, (id_to_get, g.game_token), ['items', 'loc_items'])
         for item_data, loc_item_data in tables_rows:
             if loc_item_data.loc_id:
                 current_data.setdefault(
@@ -246,7 +232,13 @@ class Location(Identifiable):
                 self.destinations[dest_location] = int(dest_dist)
             self.to_db()
         elif 'delete_location' in request.form:
-            self.remove_from_db()
+            try:
+                self.remove_from_db()
+                session['file_message'] = 'Removed location.'
+            except Exception as e:
+                return render_template('error.html',
+                    message="Could not delete location.",
+                    details=str(e))
         elif 'cancel_changes' in request.form:
             print("Cancelling changes.")
         else:

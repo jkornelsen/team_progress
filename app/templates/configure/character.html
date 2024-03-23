@@ -127,7 +127,7 @@
                 addItem(
                     {{ owned_item.item.id }},
                     "{{ owned_item.item.name }}",
-                    "{{ owned_item.quantity }}",
+                    {{ owned_item.quantity | dec2str }},
                     "{{ owned_item.slot }}");
             {% endfor %}
             $('#items-rows').on('click', '.remove-item-btn', function() {
@@ -165,7 +165,7 @@
                 addAttrib(
                     {{ attrib.id }},
                     "{{ attrib.name }}",
-                    "{{ attrib_val }}");
+                    {{ attrib_val | dec2str }});
             {% endfor %}
             $('#attrib-container').on('click', '.remove-attrib-btn', function() {
                 const attribContainer = $(this).closest('.attrib');

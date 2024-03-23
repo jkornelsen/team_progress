@@ -56,13 +56,31 @@ class Attrib(Identifiable):
         return instances
 
     @classmethod
-    def data_for_configure(cls, config_id):
+    def data_for_file(cls):
+        print(f"{cls.__name__}.data_for_file()")
+        data = cls.execute_select("""
+            SELECT *
+            FROM {table}
+            WHERE game_token = %s
+        """, (g.game_token,))
+        instances = [cls.from_json(vars(dat)) for dat in data]
+        return instances
+
+    @classmethod
+    def data_for_configure(cls, id_to_get):
         print(f"{cls.__name__}.data_for_configure()")
-        if config_id == 'new':
-            config_id = 0
+        if id_to_get == 'new':
+            id_to_get = 0
         else:
-            config_id = int(config_id)
-        return cls.from_db(config_id)
+            id_to_get = int(id_to_get)
+        data = cls.execute_select("""
+            SELECT *
+            FROM {table}
+            WHERE game_token = %s
+                AND id = %s
+        """, (g.game_token, id_to_get), fetch_all=False)
+        instance = cls.from_json(vars(data))
+        return instance
 
     def configure_by_form(self):
         if 'save_changes' in request.form:  # button was clicked
@@ -72,7 +90,13 @@ class Attrib(Identifiable):
             self.description = request.form.get('attrib_description')
             self.to_db()
         elif 'delete_attrib' in request.form:
-            self.remove_from_db()
+            try:
+                self.remove_from_db()
+                session['file_message'] = 'Removed attribute.'
+            except Exception as e:
+                return render_template('error.html',
+                    message="Could not delete attribute.",
+                    details=str(e))
         elif 'cancel_changes' in request.form:
             print("Cancelling changes.")
         else:

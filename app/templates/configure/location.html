@@ -79,8 +79,15 @@
                 if (destinationId == "") {
                     return; // don't add if the selected option is the placeholder
                 }
-                const existingDestination = $('.destination input[value="' + destinationId + '"]').closest('.destination');
-                if (existingDestination.length > 0) {
+                let destinationExists = false;
+                $('.destination').each(function() {
+                    const existingId = $(this).find('input[name="destination_id[]"]').val();
+                    if (existingId === destinationId) {
+                        destinationExists = true;
+                        return false; // exit the each loop
+                    }
+                });
+                if (destinationExists) {
                     alert('Destination already exists.');
                     return;
                 }
@@ -90,7 +97,7 @@
                 addDestination(
                     {{ destination.id }},
                     "{{ destination.name }}",
-                    "{{ distance }}");
+                    "{{ distance | dec2str }}");
             {% endfor %}
 
             $('#destinations-container').on('click', '.remove-destination-btn', function() {
