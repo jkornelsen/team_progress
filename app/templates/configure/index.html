@@ -31,23 +31,22 @@
         <div class="flexdiv">
             {% set entity_list = game_data[entity_type + 's'] %}
             {% if entity_list %}
-                <div class="select-box">
-                    <select id="{{ entity_type }}-select">
-                        {% for entity in entity_list %}
-                            {% set selected = '' %}
-                            {% if request.referrer %}
-                                <!-- Select the entity ID that was just configured -->
-                                {% set referrer_entity_type, referrer_entity_id = request.referrer.split('/')[-2:] %}
-                                {% if referrer_entity_type == entity_type and referrer_entity_id == entity.id|string %}
-                                    {% set selected = 'selected' %}
-                                {% endif %}
-                            {% endif %}
-                            <option value="{{ entity.id }}" {{ selected }}>{{ entity.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="modify-button">
-                    <button onclick="configureSelected('{{ entity_type }}')">Modify {{ entity_type|title }}</button>
+                <div class="popup-button">
+                    <button>
+                        {% if entity_type|title == "Attrib" %}
+                            Attributes
+                        {% else %}
+                            {{ entity_type|title }}s
+                        {% endif %}
+                        <span class="dropdown-icon">&#9662;</span>
+                    </button>
+                    <div class="popup-frame">
+                        <div class="popup-list">
+                            {% for entity in entity_list %}
+                                <a href="/configure/{{ entity_type }}/{{ entity.id }}">{{ entity.name }}</a>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
             {% else %}
                 <span class="no-items">(No {{ entity_type|title }}s)</span>
@@ -57,12 +56,4 @@
             </div>
         </div>
     {% endfor %}
-    <script>
-        function configureSelected(type) {
-            var selectedId = $("#" + type + "-select").val();
-            if (selectedId) {
-                window.location.href = "/configure/" + type + "/" + selectedId;
-            }
-        }
-    </script>
 {% endblock %}

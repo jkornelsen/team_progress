@@ -32,6 +32,18 @@
     </table>
     {% endif %}
 
+    <!-- Top-level Events -->
+    <div class="popup-button" style="margin-bottom: 20px">
+        <button>Events <span class="dropdown-icon">&#9662;</span></button>
+        <div class="popup-frame">
+            <div class="popup-list">
+                {% for event in other_entities.events %}
+                    <a href="{{ url_for('play_event', event_id=event.id) }}">{{ event.name }}</a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
     <!-- Top-level Characters and their Location -->
     {% if charlist %}
         <table>
@@ -69,20 +81,6 @@
                     </td>
                     <td id="item-{{ item.id }}-quantity">...</td>
                 </tr>
-            {% endfor %}
-        </table>
-    {% endif %}
-
-    <!-- Top-level Events -->
-    {% if other_entities.events %}
-        <table>
-            <tr>
-                <th>Events</th>
-            </tr>
-            {% for event in other_entities.events %}
-                <tr><td>
-                    <a href="{{ url_for('play_event', event_id=event.id) }}">{{ event.name }}</a>
-                </td></tr>
             {% endfor %}
         </table>
     {% endif %}
