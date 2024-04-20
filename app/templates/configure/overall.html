@@ -1,5 +1,11 @@
 {% extends 'base.html' %}
 
+{% block upper_left %}
+    <div class="nav-container">
+        <a href="{{ url_for('configure') }}">General Setup</a>
+    </div>
+{% endblock %}
+
 {% block content %}
     <h1>Overall Settings</h1>
     <p class="info">If all win conditions are fulfilled,

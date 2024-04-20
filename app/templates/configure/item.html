@@ -1,5 +1,11 @@
 {% extends 'base.html' %}
 
+{% block upper_left %}
+    <div class="nav-container">
+        <a href="{{ url_for('configure') }}">General Setup</a>
+    </div>
+{% endblock %}
+
 {% block content %}
     <h1>Item Setup</h1>
     <p class="info">In addition to typical items such as resources, money, or equipment,
@@ -41,6 +47,18 @@
                 </div>
             {% else %}
                 <p class="no-entities">(No items)</p>
+            {% endif %}
+            {% if game_data.attribs %}
+                <!-- Select box for adding another recipe attrib -->
+                <div class="select-box">
+                    <select id="add-recipeattrib-select">
+                        <option value="" selected>(Select item)</option>
+                        {% for attrib in game_data.attribs %}
+                            <option value="{{ attrib.id }}">{{ attrib.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="button" id="add-recipeattrib-btn" class="lesser-button">Add Required Attribute</button>
+                </div>
             {% endif %}
             <button type="button" id="add-recipe-btn" class="lesser-button" {% if current.recipes | length == 0 %}style="display: none;"{% endif %}>Add Alternative Recipe</button>
         </div>
@@ -117,6 +135,8 @@
                         <button type="button" class="remove-recipe-btn lesser-button" id="remove-recipe${recipeCounter}">Remove Recipe</button>
                         <!-- Placeholder for appending new sources -->
                         <div class="sourcelist_end" style="width: 0; height: 0; opacity: 0;"></div>
+                        <!-- Placeholder for appending new attribs required for recipe -->
+                        <div class="recipeattribs_end" style="unobtrusive"></div>
                         </div>
                     </div>
                 `;
@@ -155,6 +175,32 @@
                 console.log("added sourceHtml before sourcelist_end");
                 toggleAddRecipeButtonVisibility();
             }
+            function addRecipeAttrib(recipeId, attribId, attribName, attribValue = 1) {
+                console.log(`addRecipeAttrib() ${attribId}`);
+                console.log(`attribName: ${attribName}`);
+                console.log(`debugging`);
+                const recipeContainer = $('.recipe-container').last();
+                const existingAttrib = recipeContainer.find(`.recipeattrib[data-attrib-id="${attribId}"]`);
+                if (existingAttrib.length > 0) {
+                    alert('Attribute already exists.');
+                    return;
+                }
+                const idArray = [`recipe${recipeId}`, `attrib${attribId}`];
+                const uniqueId = idArray.join('-');
+                const uniqueName = idArray.join('_');
+                const attribHtml = `
+                    <div class="recipeattrib" data-attrib-id="${attribId}">
+                        <input type="hidden" name="recipe${recipeId}_attrib_id" value="${attribId}">
+                        <label>Requires Attribute:</label>
+                        ${attribName}
+                        <input type="number" step="any" id="${uniqueId}_value" name="${uniqueName}_value" value="${attribValue}">
+                        <button type="button" class="remove-recipeattrib-btn lesser-button" id="remove-${uniqueId}">Remove</button>
+                    </div>
+                `;
+                recipeContainer.find('.recipeattribs_end').before(attribHtml);
+                console.log("added attribHtml before recipeattribs_end");
+                toggleAddRecipeButtonVisibility();
+            }
             $('#add-source-btn').click(function() {
                 const selectedOption = $('#add-source-select option:selected');
                 const sourceId = selectedOption.val();
@@ -181,6 +227,34 @@
                     recipeId = recipeCounter;
                 }
                 addSource(recipeId, sourceId, sourceName);
+                toggleAddRecipeButtonVisibility();
+            });
+            $('#add-recipeattrib-btn').click(function() {
+                const selectedOption = $('#add-recipeattrib-select option:selected');
+                const attribId = selectedOption.val();
+                const attribName = selectedOption.text();
+                if (attribId == "") {
+                    return; // Don't add if the selected option is the placeholder
+                }
+                let recipeId;
+                const recipeContainer = $('.recipe-container').last();
+                if (recipeContainer.length) {
+                    const existingAttrib = recipeContainer.find(
+                        `.recipeattrib[data-attrib-id="${attribId}"]`);
+                    if (existingAttrib.length > 0) {
+                        alert('Attribute already exists.');
+                        return;
+                    }
+                    const hiddenInput = recipeContainer.find('input[type="hidden"][name="recipe_id"]');
+                    recipeId = hiddenInput.val();
+                    console.log(`recipe container for id ${recipeId}`);
+                } else {
+                    // No recipe yet, so add one
+                    console.log("no recipe containers found");
+                    addRecipe();
+                    recipeId = recipeCounter;
+                }
+                addRecipeAttrib(recipeId, attribId, attribName);
                 toggleAddRecipeButtonVisibility();
             });
 
@@ -221,8 +295,9 @@
             function toggleAddRecipeButtonVisibility() {
                 const recipeContainer = $('.recipe-container').last();
                 const numSources = recipeContainer.find('.source').length;
-                console.log("toggleAddRecipeButtonVisibility(): ", numSources);
-                if (numSources > 0) {
+                const numRecipeAttribs = recipeContainer.find('.recipeattrib').length;
+                console.log("toggleAddRecipeButtonVisibility(): numSources=", numSources, "numRecipeAttribs=", numRecipeAttribs);
+                if (numSources > 0 || numRecipeAttribs > 0) {
                     $('#add-recipe-btn').show();
                 } else {
                     $('#add-recipe-btn').hide();

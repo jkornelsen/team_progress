@@ -56,7 +56,7 @@ class Recipe(DbSerializable):
         self.rate_duration = 3.0  # seconds for a batch
         self.instant = False
         self.sources = []  # Source objects
-        self.attrib = None  # tuple (attrib_id, val)
+        self.attribs = []  # elements are tuple (attrib_id, val)
 
     def to_json(self):
         return {
@@ -67,7 +67,8 @@ class Recipe(DbSerializable):
             'instant': self.instant,
             'sources': [
                 source.to_json()
-                for source in self.sources]}
+                for source in self.sources]},
+            'attribs': self.attribs
 
     @classmethod
     def from_json(cls, data, item_produced=None):
@@ -82,6 +83,7 @@ class Recipe(DbSerializable):
         instance.sources = [
             Source.from_json(src_data)
             for src_data in data.get('sources', [])]
+        instance.attribs = data.get('attribs', [])
         return instance
 
     def json_to_db(self, doc):
@@ -110,6 +112,21 @@ class Recipe(DbSerializable):
                 "game_token, item_id, recipe_id,"
                 " source_id, quantity, preserve",
                 values)
+        if doc['attribs']:
+            print(f"attribs: {doc['attribs']}")
+            attrib_values = []
+            for attrib_id, attrib_value in doc['attribs']:
+                attrib_values.append((
+                    g.game_token, doc['item_id'], self.id,
+                    attrib_id,
+                    attrib_value
+                ))
+            self.insert_multiple(
+                "recipe_attribs",
+                "game_token, item_id, recipe_id,"
+                " attrib_id, value",
+                attrib_values
+            )
 
 class Item(Identifiable):
     def __init__(self, new_id=""):
@@ -174,6 +191,21 @@ class Item(Identifiable):
                 AND recipe_sources.item_id = rs.item_id
                 AND recipe_sources.recipe_id = rs.recipe_id
                 AND recipe_sources.source_id = rs.source_id
+                AND recipes.item_id = %s
+                AND recipes.game_token = %s
+        """, [self.id, self.game_token])
+        # Delete from recipe_attribs for recipes of this item_id
+        self.execute_change(f"""
+            DELETE FROM recipe_attribs
+            USING recipe_attribs AS ra
+            LEFT OUTER JOIN recipes ON
+                recipes.game_token = ra.game_token
+                AND recipes.item_id = ra.item_id
+                AND recipes.recipe_id = ra.recipe_id
+            WHERE recipe_attribs.game_token = ra.game_token
+                AND recipe_attribs.item_id = ra.item_id
+                AND recipe_attribs.recipe_id = ra.recipe_id
+                AND recipe_attribs.attrib_id = ra.attrib_id
                 AND recipes.item_id = %s
                 AND recipes.game_token = %s
         """, [self.id, self.game_token])
@@ -268,6 +300,33 @@ class Item(Identifiable):
                 row_recipe.recipe_id, row_recipe)
             if row_recipe_source.source_id:
                 recipe_data.setdefault('sources', []).append(row_recipe_source)
+        attribs_data = []
+        if get_by_source:
+            return item_recipes_data
+        query = """
+            SELECT *
+            FROM {tables[0]}
+            LEFT JOIN {tables[1]}
+                ON {tables[1]}.game_token = {tables[0]}.game_token
+                AND {tables[1]}.item_id = {tables[0]}.item_id
+                AND {tables[1]}.recipe_id = {tables[0]}.recipe_id
+        """
+        item_conditions = [
+            "WHERE {tables[0]}.game_token = %s"]
+        values = [g.game_token]
+        if id_to_get is not None:
+            item_conditions.append("AND {tables[0]}.item_id = %s")
+            values.append(id_to_get);
+        query += "\n".join(item_conditions)
+        attribs_data = cls.select_tables(
+            query, values, ['recipes', 'recipe_attribs'])
+        for row_recipe, row_recipe_attrib in attribs_data:
+            recipes_data = item_recipes_data.setdefault(
+                row_recipe.item_id, {})
+            recipe_data = recipes_data.setdefault(
+                row_recipe.recipe_id, row_recipe)
+            if row_recipe_attrib.attrib_id:
+                recipe_data.setdefault('attribs', []).append(row_recipe_attrib)
         return item_recipes_data
 
     @classmethod
@@ -425,6 +484,12 @@ class Item(Identifiable):
                     print(f"Sources for {recipe_id}: ",
                         {source.item.id: source.quantity
                         for source in recipe.sources})
+                recipe_attrib_ids = request.form.getlist(
+                    f'recipe{recipe_id}_attrib_id')
+                for attrib_id in recipe_attrib_ids:
+                    attrib_value = float(request.form.get(
+                        f'recipe{recipe_id}_attrib{attrib_id}_value', 1.0))
+                    recipe.attribs.append((attrib_id, attrib_value))
             attrib_ids = request.form.getlist('attrib_id')
             print(f"Attrib IDs: {attrib_ids}")
             self.attribs = {}

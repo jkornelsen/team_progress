@@ -396,7 +396,7 @@ class Event(Identifiable):
                 total
             )
         elif self.outcome_type == OUTCOME_SELECTION:
-            strings_list = selection_strings.split('\n')
+            strings_list = self.selection_strings.split('\n')
             random_string = random.choice(strings_list)
             display = f"Outcome: {random_string}"
         else:

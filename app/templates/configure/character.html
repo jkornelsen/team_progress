@@ -1,5 +1,11 @@
 {% extends 'base.html' %}
 
+{% block upper_left %}
+    <div class="nav-container">
+        <a href="{{ url_for('configure') }}">General Setup</a>
+    </div>
+{% endblock %}
+
 {% block content %}
     <h1>Character Setup</h1>
     <p class="info">Participant in the story such as a team member, enemy, or NPC.

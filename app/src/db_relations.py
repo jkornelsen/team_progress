@@ -37,6 +37,14 @@ tables_to_create = {
         preserve boolean NOT NULL,
         PRIMARY KEY (game_token, item_id, recipe_id, source_id)
     """,
+    'recipe_attribs': f"""
+        {coldef('game_token')},
+        item_id integer NOT NULL,
+        recipe_id integer NOT NULL,
+        attrib_id integer NOT NULL,
+        value float(4) NOT NULL,
+        PRIMARY KEY (game_token, item_id, recipe_id, attrib_id)
+    """,
     # Character
     'char_attribs': f"""
         {coldef('game_token')},

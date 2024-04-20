@@ -179,15 +179,6 @@ all conditions must be met to win
 
 ability to replay a game
 
-items may have different sets of materials
-for example, wood could come from a log or from disassembling a shelf
-or by purchasing
-purchasing would be instant, while producing would take time
-each recipe has a "gives" quantity, instant checkbox, and duration
-these would need to be columns in a relation table
-repeat the same values for all sources of a recipe,
-to avoid the need for a separate recipe table
-
 require character in location with attribute for item progress
 the operation can be continued as long as the requirement is met
 doesn't matter if there are multiple matches
@@ -217,6 +208,21 @@ check every few seconds for new entries that need to be added at the top
     event1 (minor success)
 repeated actions such as item progress get merged into one
 would be nice to move it to the top of the list in that case
+
+event log to show outcomes
+would be nice for e.g. digging holes competition
+for example, "depth gained: 3.5" where event has chance from 1 to 5
+wouldn't have to keep initiating the event for each step
+or maybe that wouldn't be so bad, if only one button press
+is required for a step
+maybe we can view an event and another page at the same time
+either a separate part of the page,
+or in a different tab
+or maybe the event can automatically update a value and show the
+change as well as the updated value
+
+optionally configure event to add log template: "$x hit $y for $z hp"
+optionally edit result before posting
 
 chat pane in case not in person
 
@@ -369,26 +375,6 @@ maybe display would include destination name: "Distance to Home: 3 of 10"
 since button would simply show "Travelling."
 other buttons would be greyed out if travelling.
 
-instead of a loop, actions in progress can be
-done with elapsed time that gets updated when queried
-optionally they can be regularly queried, e.g. once every second
-
-Progress class would need to remember how long it's been since the last batch
-for example, if batches take 10 seconds, and we query at 15.2 seconds,
-then do one batch and record that we're 5.2 seconds into the next batch
-so then if queried 4.9 seconds later, it should do a second batch
-no, count elapsed time from when the entire task was first started,
-and keep track of how many batches we've registered so far
-when next queried, calculate how many more to do
-
-it would be helpful to see elapsed time since start was last pressed,
-if the action is still in progress
-that could be displayed smoothly on the client side
-clock could update every second, and query for quantity every 2 seconds
-even if progress ends up getting stopped a few seconds before
-the time counter is stopped,
-it should be manageable, as the result count would not change
-
 for locations, have speed as well as distance
 characters would have travel speed for a particular location?
 for example, a swimming speed and a walking speed
@@ -456,20 +442,20 @@ or maybe no offline progress
 the idea of farming for something for hours, hoping for a certain chance,
 is exciting but can also feel like being tied up
 
-event log to show outcomes
-would be nice for e.g. digging holes competition
-for example, "depth gained: 3.5" where event has chance from 1 to 5
-wouldn't have to keep initiating the event for each step
-or maybe that wouldn't be so bad, if only one button press
-is required for a step
-maybe we can view an event and another page at the same time
-either a separate part of the page,
-or in a different tab
-or maybe the event can automatically update a value and show the
-change as well as the updated value
-
-optionally configure event to add log template: "$x hit $y for $z hp"
-optionally edit result before posting
+dialog via item sources
+show sources in overview instead of the produced items
+checkbox to mask if 0 -- replace all non-spaces with "*"
+require characters to be present in order to produce item
+could do by requiring attributes e.g. "Is Hank" > 0 but this would be quirky
+try with only attributes for now and see if it's enough -- it makes sense
+log when item is gained
+what does it mean to be present on the item play screen, especially in
+general storage?
+characters need to be in the same location
+general storage is a wildcard, matching any location
+so we don't need to specify location on item screen
+can we display which entity met the attr requirement?
+if multiple then is it okay to display the first?
 
 
 ---- scenarios ----
