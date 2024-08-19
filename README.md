@@ -7,7 +7,7 @@ including what amounts to an advanced search and replace based on context.
 I often ask it to suggest ideas for potential solutions.
 It can also answer certain questions pretty well,
 such as explaining how something works,
-making it easier for me to make informed decisions or get information I had forgotten,
+making it easier to make informed decisions or get information I had forgotten,
 arguably with less effort than online research would require.
 
 There are plenty of annoyances. Often there's just no way to get it to
@@ -18,22 +18,32 @@ So it requires firm control to be worthwhile.
 
 ## Ideas for a release message &mdash; if that ever happens
 
-Team Progress -- inspired by tRPGs
+Team Progress &mdash; ttRPG + incremental
 ----
+
+So, you can make stuff as well as fight and explore.
 
 Similar to a tabletop RPG,
 the driving forces are narrative and imagination along with chance.
-However, idle/incremental elements are also involved.
-For example, you could set it up to manage a factory,
-and employees from a rival company might suddenly invade
-and attempt to steal equipment or trade secrets.
+For example, set up a factory based on idle/incremental gameplay,
+and employees from a rival company could invade and steal.
 
-This was conceived as a group game,
+If you're not sure where to start,
+try the pre-built scenario "Bacon for Dinner."
+
+Setup can be complex,
+so even if you're playing as a Gamemaster,
+it might be better to do most of the setup as the game progresses
+instead of beforehand.
+Consider setup screens a part of the game.
+
+This was conceived for groups,
 although there is a reason idle games are typically single player.
-Multiplayer generally requires a lot to be handled by the server,
-and many sites do not offer the required infrastructure.
-So, a good way to play is to download the source code and
-run as a home LAN server with friends or family.
+Multiplayer requires a lot to be handled by the server.
+So, a good way to play this game is to download the project
+along with PostgreSQL and Flask,
+then run them on a home network to play with friends or family.
+
 There are some websites such as pythonAnywhere that can host
 this type of game for free,
 so we'll see if it can handle the load.

@@ -33,16 +33,18 @@
     {% endif %}
 
     <!-- Top-level Events -->
-    <div class="popup-button" style="margin-bottom: 20px">
-        <button>Events <span class="dropdown-icon">&#9662;</span></button>
-        <div class="popup-frame">
-            <div class="popup-list">
-                {% for event in other_entities.events %}
-                    <a href="{{ url_for('play_event', event_id=event.id) }}">{{ event.name }}</a>
-                {% endfor %}
+    {% if other_entities.events %}
+        <div class="popup-button" style="margin-bottom: 20px">
+            <button>Events <span class="dropdown-icon">&#9662;</span></button>
+            <div class="popup-frame">
+                <div class="popup-list">
+                    {% for event in other_entities.events %}
+                        <a href="{{ url_for('play_event', event_id=event.id) }}">{{ event.name }}</a>
+                    {% endfor %}
+                </div>
             </div>
         </div>
-    </div>
+    {% endif %}
 
     <!-- Top-level Characters and their Location -->
     {% if charlist %}

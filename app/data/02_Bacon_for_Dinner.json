@@ -4,12 +4,18 @@
             "description": "Knowledge of the woods.",
             "id": 1,
             "name": "Pathfinding"
+        },
+        {
+            "description": "Can do chores.",
+            "id": 2,
+            "name": "Willing to do Odd Jobs"
         }
     ],
     "characters": [
         {
             "attribs": {
-                "1": 2
+                "1": 2.0,
+                "2": 1.0
             },
             "description": "Sent to fetch bacon for dinner by her mother.",
             "dest_id": null,
@@ -140,13 +146,29 @@
                 "batches_processed": 0,
                 "id": 20,
                 "is_ongoing": false,
-                "q_limit": 0,
+                "q_limit": 100.0,
                 "quantity": 0,
                 "recipe_id": 0,
                 "start_time": null,
                 "stop_time": null
             },
-            "recipes": [],
+            "recipes": [
+                {
+                    "attribs": [],
+                    "instant": true,
+                    "item_id": 12,
+                    "rate_amount": 3.0,
+                    "rate_duration": 3.0,
+                    "recipe_id": 1,
+                    "sources": [
+                        {
+                            "preserve": false,
+                            "quantity": 1.0,
+                            "source_id": 11
+                        }
+                    ]
+                }
+            ],
             "toplevel": false
         },
         {
@@ -158,13 +180,23 @@
                 "batches_processed": 0,
                 "id": 19,
                 "is_ongoing": false,
-                "q_limit": 100,
+                "q_limit": 10.0,
                 "quantity": 0,
                 "recipe_id": 0,
                 "start_time": null,
                 "stop_time": null
             },
-            "recipes": [],
+            "recipes": [
+                {
+                    "attribs": [],
+                    "instant": false,
+                    "item_id": 11,
+                    "rate_amount": 1.0,
+                    "rate_duration": 3.0,
+                    "recipe_id": 1,
+                    "sources": []
+                }
+            ],
             "toplevel": false
         },
         {
@@ -238,20 +270,51 @@
         },
         {
             "attribs": {},
-            "description": "Can be raised, and will provide bacon.",
+            "description": "Where bacon comes from. Can be raised or else bought from the market.",
             "id": 8,
             "name": "Pigs",
             "progress": {
                 "batches_processed": 0,
                 "id": 16,
                 "is_ongoing": false,
-                "q_limit": 0,
-                "quantity": 2,
+                "q_limit": 5.0,
+                "quantity": 2.0,
                 "recipe_id": 0,
                 "start_time": null,
                 "stop_time": null
             },
-            "recipes": [],
+            "recipes": [
+                {
+                    "attribs": [],
+                    "instant": false,
+                    "item_id": 8,
+                    "rate_amount": 1.0,
+                    "rate_duration": 8.0,
+                    "recipe_id": 2,
+                    "sources": [
+                        {
+                            "preserve": true,
+                            "quantity": 2.0,
+                            "source_id": 8
+                        }
+                    ]
+                },
+                {
+                    "attribs": [],
+                    "instant": true,
+                    "item_id": 8,
+                    "rate_amount": 1.0,
+                    "rate_duration": 3.0,
+                    "recipe_id": 1,
+                    "sources": [
+                        {
+                            "preserve": false,
+                            "quantity": 60.0,
+                            "source_id": 12
+                        }
+                    ]
+                }
+            ],
             "toplevel": false
         },
         {
@@ -324,7 +387,7 @@
         }
     ],
     "overall": {
-        "description": "Suzy must get bacon from the farm and then return home to cook it.\r\n\r\nThis is a complete, fully playable scenario, although it could easily be extended.",
+        "description": "Suzy must get bacon from the farm and then return home to cook it.\r\n\r\nThis is a complete, fully playable scenario. It could also be extended.",
         "title": "Bacon for Dinner",
         "win_reqs": [
             {

@@ -1,29 +1,29 @@
-
----- install ----
-
-open powershell with admin privs in order to install for all users (C:\Program Files\python)
-pip install flask
-pip show flask
+---- install venv ----
 
 open powershell with standard user
 chdir "C:\OurDocs\family_and_fun\games code by Jim\team_progress\app"
-create app.py with text editor
+Remove-Item -Path .\venv -Recurse -Force
 python -m venv venv
+.\venv\Scripts\activate
 python.exe -m pip install --upgrade pip
+pip install flask
+pip show flask
 pip install psycopg2
 
-chdir "C:\Program Files\PostgreSQL\15\bin"
-./pg_ctl start -D "C:\ProgramData\PostgreSQL\data"
-password *d***
+---- install db ----
 
+download and run PostgreSQL EDB installer
+for suggested password see app/database.py
+chdir "C:\OurDocs\family_and_fun\games code by Jim\team_progress\app"
+& "C:\Program Files\PostgreSQL\16\bin\pg_ctl" initdb -U postgres -D postgres_data
+& "C:\Program Files\PostgreSQL\16\bin\createuser" --superuser postgres
 
----- db ----
+---- start db ----
 
-start postgreSQL
-"C:\Program Files\PostgreSQL\15\bin\psql" -U postgres -d postgres
+& "C:\Program Files\PostgreSQL\16\bin\pg_ctl" start -D postgres_data
+& "C:\Program Files\PostgreSQL\16\bin\psql" -U postgres -d postgres
 drop schema public cascade; create schema public;
 python database.py
-
 
 ---- reload app ----
 
@@ -31,4 +31,3 @@ chdir "C:\OurDocs\family_and_fun\games code by Jim\team_progress\app"
 venv\Scripts\activate
 python app.py
 Open a web browser to http://localhost:5000 
-

@@ -67,8 +67,8 @@ class Recipe(DbSerializable):
             'instant': self.instant,
             'sources': [
                 source.to_json()
-                for source in self.sources]},
-            'attribs': self.attribs
+                for source in self.sources],
+            'attribs': self.attribs}
 
     @classmethod
     def from_json(cls, data, item_produced=None):

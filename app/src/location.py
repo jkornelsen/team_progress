@@ -214,6 +214,23 @@ class Location(Identifiable):
             item_at.item = Item.get_by_id(item_at.item.id)
         return current_obj
 
+    @classmethod
+    def data_for_play(cls, id_to_get):
+        print(f"{cls.__name__}.data_for_play()")
+        from .character import Character
+        current_obj = cls.data_for_configure(id_to_get)
+        characters_data = cls.execute_select("""
+            SELECT *
+            FROM characters
+            WHERE game_token = %s
+                AND location_id = %s
+            ORDER BY name
+        """, (g.game_token, id_to_get))
+        g.game_data.characters = []
+        for char_data in characters_data:
+            g.game_data.characters.append(Character.from_json(char_data))
+        return current_obj
+
     def configure_by_form(self):
         if 'save_changes' in request.form:  # button was clicked
             print("Saving changes.")
@@ -270,7 +287,7 @@ def set_routes(app):
     def play_location(loc_id):
         print("-" * 80)
         print(f"play_location({loc_id})")
-        instance = Location.data_for_configure(loc_id)
+        instance = Location.data_for_play(loc_id)
         if not instance:
             return 'Location not found'
         return render_template(

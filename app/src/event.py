@@ -182,12 +182,11 @@ class Event(Identifiable):
                     attriblist = instance.changed_attrs
                 attriblist.append(Attrib(attrib_data.attrib_id))
         # Get event data with trigger relation data
-        query = """
+        triggers_data = cls.execute_select("""
             SELECT *
             FROM event_triggers
             WHERE game_token = %s
-        """
-        triggers_data = cls.execute_select(query, values)
+        """, values)
         for trigger_data in triggers_data:
             print(f"trigger_data {trigger_data}")
             instance = instances.get(trigger_data.event_id)

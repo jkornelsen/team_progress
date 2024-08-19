@@ -22,6 +22,10 @@ no matter what the scenario, there will be a list of the following entities:
     events -- e.g. axe breaks; random chance that can occur once per second during action
     attributes -- e.g. 100 max hp; also states such as poisoned or 20 hp left
 
+entity classes might have superclasses for partially shared behavior
+    items and characters have progress
+    items and locations can both have a position, such as inside another one
+
 action could be an event, or whatever was the most recent item interacted
 with for a particular character, even if the action is finished
 username and character in the same row doesn't necessarily mean that character
@@ -81,7 +85,128 @@ realistic would be to start with a debt and eventually break even and better
 but can choose to make it easy and simply be given lots of money or resources to start
 fixed limit could be used to give an endpoint to the game
 
-sales can increase in complexity as well, adding stores and store management
+on item play page, have start/stop button or gain button for each recipe,
+and show all source quantities for all recipes of that item
+global stop button on overview screen, but no other ability to manufacture anything
+
+gain all instant could be more convenient than entering e.g. 9999 batches
+maybe a button or 0 for number of batches, or "(A)ll"
+
+materials versus contained items
+for example, a wooden box requires planks and nails to build, but could contain clothes.
+only locations need to contain things, and a wooden box could be a location
+    it may still be possible to build a location, perhaps by brute force with an event
+    we could manufacture a wooden box item, then destroy it and create the unique location
+characters (players and npcs) could also contain (i.e. wear or hold) items
+
+can move items from owned/carried to general storage
+the difference is whether the game tracks location
+so general storage boils down to less automation
+buttons Drop to Location, Put in General Storage
+overview shows general storage
+button to transfer quantity to a character
+
+location required is wherever the source item is found
+that is, if pigs are located in a sty,
+and bacon requires pigs,
+then everything needed for making bacon must be in the same location,
+including a character
+a station is a required item on the floor at a location
+if nothing required is at a specific location, then use general storage
+"floor" means not carried -- could be thought of as e.g. on a shelf
+
+first check if source item is carried,
+then if on floor,
+and finally, if in general storage
+deduct whichever is found first
+might be a bit tricky to implement if say 5 are required,
+and two are held and three are on floor,
+to draw from both,
+but it might be fine to just fail in that case,
+and require the character to either pick up three or drop two.
+also output to that same place.
+if different source items are in different places,
+then again follow that order -- if any are carried,
+then that's the output, otherwise floor, otherwise general.
+
+items could be categorized by source type
+carried -- can be moved to general storage but not used as material from there
+local -- can only be on floor
+general -- can be anywhere and used as material from general or character storage
+radio buttons: <p>Storage:</p>
+() Anywhere is fine
+() Must be carried to use
+() Must be used on floor (at a location)
+
+likely too, no items are top-level, but rather locations,
+perhaps a backpack or chest,
+and clicking on it would show its contents.
+a room could serve this purpose as well, containing npcs for example.
+
+I guess it's okay that items would all share the same limit?
+Or maybe there should never be a limit on the floor.
+no reason to start with a limit -- implement later if needed
+
+dialog via item sources
+show sources in overview instead of the produced items
+checkbox to mask if 0 -- replace all non-spaces with "*"
+
+instead of requiring characters to be present in order to produce item,
+or requiring identifying attributes such as "Is Hank" > 0,
+use descriptive attributes such as "Is Adult Traveler" > 0.
+display all entities that meet the attr requirement
+what does it mean to be present on the item play screen, especially in
+general storage?
+characters need to be in the same location
+general storage is a wildcard, matching any location
+so we don't need to specify location on item screen
+log when item is gained
+
+clicking on an item in a location screen brings up
+the item play screen for the stack at that particular location
+if it's a source then a produced item can then be clicked
+produced item play screen shows two locations to select from,
+either general storage or the location most recently viewed
+record the most recently viewed for each client browser
+viewing a character would set this value to that character's inventory
+
+this would mean that clicking top level items only displays general storage
+
+an item in a character's inventory when the character is not at a location
+can be used with general storage?
+the only difference would be that it is considered carried,
+in case the item is marked as having that requirement
+maybe if there are multiple characters with the needed item,
+pop up an error, saying to move the character to a location
+if we're viewing a location, then the character should be at that location
+of course there could be multiple such matches
+
+inventory of a specific character could be a third option on the play screen
+only the last viewed character would be selectable
+items at the same location as the character would also qualify,
+as of course would general storage
+whereas items of the same type held by other characters would be ignored
+
+so in summary, an item recipe requirement is either another item or an attr
+attrs match either characters or more items
+items and characters must be in the same location in order to be used
+everything must either be in one location (including characters there),
+or one character inventory (plus items on floor at that character's location)
+items in general storage can be used with the other options or independently,
+unless specified as must be carried or must be on floor
+
+steers must be on floor
+stove located in the kitchen so must also be on floor
+Suzy's knife must be carried
+bacon, raw or otherwise, can be stored anywhere,
+but will end up in Suzy's inventory when the raw bacon is picked up,
+and the cooked bacon will be in that same place since
+we will view it starting from Suzy's inventory
+
+locations can be top level or not,
+and location play screen lists clickable destinations
+
+sales can increase in complexity, adding stores and store management
 NPCs can work at stores
 items of a single name are unique
 so if we want multiple stores, make "store 1", "store 2"
@@ -221,68 +346,12 @@ or in a different tab
 or maybe the event can automatically update a value and show the
 change as well as the updated value
 
-optionally configure event to add log template: "$x hit $y for $z hp"
-optionally edit result before posting
+configure event to add log template: "$x hit $y for $z hp"
 
-chat pane in case not in person
-
-on item play page, have start/stop button or gain button for each recipe,
-and show all source quantities for all recipes of that item
-global stop button on overview screen, but no other ability to manufacture anything
-
-differentiate between materials and contained items of an item
-for example, a wooden box requires planks and nails to build, but could contain clothes.
-or perhaps only locations need to contain things, and a wooden box could be a location
-    it may still be possible to build a location, perhaps by brute force with an event
-    we could manufacture a wooden box item, then destroy it and create the unique location
-characters (players and npcs) could also contain (i.e. wear or hold) items
-
-can move items from owned/carried to general storage
-the difference is whether the game tracks location
-so general storage boils down to less automation
-buttons Drop to Location, Put in General Storage
-overview shows general storage
-button to transfer quantity to a character
-
-location required is wherever the source item is found
-that is, if pigs are located in a sty,
-and bacon requires pigs,
-then everything needed for making bacon must be in the same location,
-including a character
-a station is a required item on the floor at a location
-if nothing required is at a specific location, then use general storage
-"floor" means not carried -- could be thought of as e.g. on a shelf
-
-first check if source item is carried,
-then if on floor,
-and finally, if in general storage
-deduct whichever is found first
-might be a bit tricky to implement if say 5 are required,
-and two are held and three are on floor,
-to draw from both,
-but it might be fine to just fail in that case,
-and require the character to either pick up three or drop two.
-also output to that same place.
-if different source items are in different places,
-then again follow that order -- if any are carried,
-then that's the output, otherwise floor, otherwise general.
-
-I guess it's okay that they would all share the same limit?
-Or maybe there should never be a limit on the floor.
-
-items could be categorized by source type
-general -- can be anywhere and used as material from general or character storage
-carried -- can be moved to general storage but not used as material from there
-local -- can only be on floor
-
-entity classes might have superclasses for partially shared behavior
-    items and characters have progress
-    items and locations can both have a position, such as inside another one
-
-likely too, no items are top-level, but rather locations,
-perhaps a backpack or chest,
-and clicking on it would show its contents.
-a room could serve this purpose as well, containing npcs for example.
+be able to type in what happened -- "log entry"
+brighter colors or more bold than automatically logged actions
+general communication can be done in person or with an app such as discord
+so don't design this for chat
 
 travel could take a resource such as food for each distance step
 the character object would have this resource
@@ -442,21 +511,6 @@ or maybe no offline progress
 the idea of farming for something for hours, hoping for a certain chance,
 is exciting but can also feel like being tied up
 
-dialog via item sources
-show sources in overview instead of the produced items
-checkbox to mask if 0 -- replace all non-spaces with "*"
-require characters to be present in order to produce item
-could do by requiring attributes e.g. "Is Hank" > 0 but this would be quirky
-try with only attributes for now and see if it's enough -- it makes sense
-log when item is gained
-what does it mean to be present on the item play screen, especially in
-general storage?
-characters need to be in the same location
-general storage is a wildcard, matching any location
-so we don't need to specify location on item screen
-can we display which entity met the attr requirement?
-if multiple then is it okay to display the first?
-
 
 ---- scenarios ----
 
@@ -529,6 +583,7 @@ buy food
 train may break down or be full and have to change
 navigate train station with coolies and boarding
 sleep is a resource -- too low gives rolls disadvantage
+similar to Oregon Trail
 
 scenario: Hunting
 Bring back enough food to survive.
@@ -629,4 +684,24 @@ such as the U.S. with George Washington
 
 scenario: Honeycomb Raid
 like Winnie-the-Pooh, or more like tribal adventure
+
+scenario: Crystal Gardeners
+In the crystalline gardens of Xanthuria, ethereal beings are tasked with
+cultivating the vibrant crystal flora that sustains their civilization.
+balance the delicate energies of the garden
+plants require light, heat, water, or vibrational rhythm
+invasive crystal pests, erratic energy surges, cosmic disturbances
+create potions, enchantments, and artifacts that aid in their caretaking duties
+and unlock new areas of the garden
+
+scenario: Underwater Abyss
+divers discover a labyrinth created by an unknown race in the past
+many connected locations unfold, including area hints in the descriptions
+legends speak of a Nexus where all currents meet, with healing powers
+bring back water in special container to drink
+to save loved one who is gravely ill
+coral reefs, caverns, pressure
+sea creatures, treasures, ancient ruins, sunken ships
+inventory: diving equipment and submersibles
+or set in desert, with tombs, traps, camels, and mirages
 
