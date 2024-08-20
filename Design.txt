@@ -132,16 +132,18 @@ then that's the output, otherwise floor, otherwise general.
 items could be categorized by source type
 carried -- can be moved to general storage but not used as material from there
 local -- can only be on floor
-general -- can be anywhere and used as material from general or character storage
+universal -- cannot be held in character inventory -- picking up goes to general storage
 radio buttons: <p>Storage:</p>
-() Anywhere is fine
-() Must be carried to use
-() Must be used on floor (at a location)
+() Typically carried (by a character)
+() Stays on floor (at a location)
+() Accessible anywhere
 
-likely too, no items are top-level, but rather locations,
+in many scenarios, no items are top-level, but rather locations,
 perhaps a backpack or chest,
 and clicking on it would show its contents.
 a room could serve this purpose as well, containing npcs for example.
+but general storage top-level items should show on overview screen
+such as for the Pen Factory scenario
 
 I guess it's okay that items would all share the same limit?
 Or maybe there should never be a limit on the floor.
@@ -196,12 +198,22 @@ items in general storage can be used with the other options or independently,
 unless specified as must be carried or must be on floor
 
 steers must be on floor
+pigs producing more pigs should end up on floor
 stove located in the kitchen so must also be on floor
+
 Suzy's knife must be carried
+[but at location seems good enough;
+we can still imagine she would pick it up from the floor to use it]
 bacon, raw or otherwise, can be stored anywhere,
-but will end up in Suzy's inventory when the raw bacon is picked up,
+but will end up in Suzy's inventory
+[when the raw bacon is picked up?
+sounds awkward; expected play would be directly to inventory],
 and the cooked bacon will be in that same place since
 we will view it starting from Suzy's inventory
+
+cooked bacon should end up in character inventory
+a printed page could stay at that location because requirements are the printer
+whereas if Suzy must use a knife, the output would go to her inventory
 
 locations can be top level or not,
 and location play screen lists clickable destinations

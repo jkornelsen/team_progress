@@ -27,8 +27,24 @@
         <input type="number" step="any" id="item-quantity" name="item_quantity" value="{{ current.progress.quantity | dec2str }}"><span id="running-label"></span>
         <label for="item-limit">Limit:</label>
         <input type="number" step="any" id="item-limit" name="item_limit" value="{{ current.progress.q_limit | dec2str }}"> <span class="label-like">0 for unlimited</span><br>
-        <div>
-            <input type="checkbox" id="top_level" name="top_level" {% if current.toplevel %}checked{% endif %}><label for="top_level">Show in Overview</label><br>
+
+        <style>
+            .storage-container {
+                display: flex;
+                align-items: flex-start;
+            }
+        </style>
+        <div class="storage-container">
+            <label for="storage_type">Storage:</label>
+            <div class="storage-options">
+                <input type="radio" id="carried" name="storage_type" value="carried" {% if current.storage_type == 'carried' %}checked{% endif %}>
+                <label for="carried">Typically carried (by a character)</label><br>
+                <input type="radio" id="local" name="storage_type" value="local" {% if current.storage_type == 'local' %}checked{% endif %}>
+                <label for="local">Stays on floor (at a location)</label><br>
+                <input type="radio" id="universal" name="storage_type" value="universal" {% if current.storage_type == 'universal' %}checked{% endif %}>
+                <label for="universal">Accessible anywhere</label>
+                <input type="checkbox" id="top_level" name="top_level" style="margin-left: 10px;" {% if current.toplevel %}checked{% endif %}><label for="top_level">Show in Overview</label><br>
+            </div>
         </div>
 
         <div id="sources-container" class="outer-border">
@@ -346,6 +362,21 @@
             $('#attrib-container').on('click', '.remove-attrib-btn', function() {
                 const attribContainer = $(this).closest('.attrib');
                 attribContainer.remove();
+            });
+
+            function updateTopLevelCheckbox() {
+                const selectedStorageType = $('input[name="storage_type"]:checked').val();
+                if (selectedStorageType === 'universal') {
+                    $('#top_level').prop('disabled', false);
+                } else {
+                    $('#top_level').prop('checked', false);
+                    $('#top_level').prop('disabled', true);
+                }
+            }
+            updateTopLevelCheckbox();
+
+            $('input[name="storage_type"]').on('change', function() {
+                updateTopLevelCheckbox();
             });
         });
     </script>

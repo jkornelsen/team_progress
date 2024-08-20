@@ -15,12 +15,18 @@ from .progress import Progress
 from .db_serializable import (
     DbSerializable, Identifiable, MutableNamespace, coldef)
 
+STORAGE_TYPES = ['carried', 'local', 'universal']
+(STORAGE_CARRIED,
+ STORAGE_LOCAL,
+ STORAGE_UNIVERSAL) = STORAGE_TYPES
+
 tables_to_create = {
     'items': f"""
         {coldef('id')},
         {coldef('name')},
         {coldef('description')},
         {coldef('toplevel')},
+        storage_type varchar(20) not null,
         quantity float(4) NOT NULL,
         progress_id integer,
         FOREIGN KEY (game_token, progress_id)
@@ -133,10 +139,11 @@ class Item(Identifiable):
         super().__init__(new_id)
         self.name = ""
         self.description = ""
+        self.storage_type = STORAGE_UNIVERSAL
         self.toplevel = False if len(self.get_list()) > 1 else True
         self.attribs = {}  # Attrib objects and their stat val
         self.recipes = []  # list of Recipe objects
-        #self.quantity = 0.0  # general storage -- not owned or at location
+        self.quantity = 0.0  # general storage -- not owned or at location
         self.progress = Progress(entity=self)
 
     def to_json(self):
@@ -144,6 +151,7 @@ class Item(Identifiable):
             'id': self.id,
             'name': self.name,
             'description': self.description,
+            'storage_type': self.storage_type,
             'toplevel': self.toplevel,
             'recipes': [
                 recipe.to_json()
@@ -162,6 +170,7 @@ class Item(Identifiable):
         instance = cls(int(data.get('id', 0)))
         instance.name = data.get('name', "")
         instance.description = data.get('description', "")
+        instance.storage_type = data.get('storage_type', STORAGE_UNIVERSAL)
         instance.toplevel = data.get('toplevel', False)
         instance.attribs = {
             Attrib(int(attrib_id)): val
@@ -447,6 +456,7 @@ class Item(Identifiable):
             print(request.form)
             self.name = request.form.get('item_name')
             self.description = request.form.get('item_description')
+            self.storage_type = request.form.get('storage_type')
             self.toplevel = bool(request.form.get('top_level'))
             self.quantity = self.form_dec(request, 'item_quantity')
             if self.progress.is_ongoing:
