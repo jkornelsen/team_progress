@@ -11,12 +11,30 @@
 {% endblock %}
 
 {% block content %}
-    <table>
+    <table style="width: 100%; max-width: 80%; margin: 0 auto;">
+        <tr>
+            <td>
+                <h2 style="margin: 10px 10px; display: flex; align-items: center; flex-wrap: nowrap;">
+                {{ current.name }}:
+                {% if current.progress.q_limit %}
+                    <div id="storage-progress-container-{{ current.id }}" class="progress-container" style="display: inline-flex; align-items: center; margin-left: 10px;">
+                        <progress id="storage-progress-bar-{{ current.id }}" class="progress-bar" value="0" max="100"></progress>
+                        <span class="progress-label" id="storage-progress-label-{{ current.id }}" style="margin-left: 5px; color: white; font-weight: bold;">...</span>
+                    </div>
+                {% else %}
+                    <span id="quantity-{{ current.id }}">...</span>
+                {% endif %}
+                </h2>
+            </td>
+        </tr>
         <tr>
             <td style="background-color: #2a2a2a; border-bottom: 2px solid #ffffff;">
-                <h2 style="margin: 10px 10px">{{ current.name }}:
-                <span id="quantity-{{ current.id }}">...</span>
-                </h2>
+                <span id="recipe-progress-label-{{ current.id }}" style="">Recipe Progress:</span>
+                <div id="action-progress-container-{{ current.id }}" class="progress-container hidden" style="display: inline-flex">
+                    <progress id="action-progress-bar-{{ current.id }}" class="progress-bar" value="0" max="100"></progress>
+                    <span class="progress-label" id="action-progress-label-{{ current.id }}">0%</span>
+                </div>
+                <span id="elapsed-time" class="hidden">...</span>
             </td>
         </tr>
         {% if current.description %}
@@ -44,11 +62,6 @@
             </td>
         </tr>
         {% endif %}
-        <tr>
-            <td>
-                Elapsed Time: <span id="elapsed-time">...</span>
-            </td>
-        </tr>
         {% if current.recipes %}
         <tr>
             <td>
@@ -153,12 +166,31 @@
 
     <script>
         $(document).ready(function() {
+            function updateStorageProgress(data) {
+                const progressBar = $('#storage-progress-bar-{{ current.id }}');
+                const progressLabel = $('#storage-progress-label-{{ current.id }}');
+
+                const quantity = data.quantity || 0;
+                const maxQuantity = data.max_quantity || 0;
+                if (maxQuantity === 0) {
+                    console.error("maxQuantity cannot be zero.");
+                    return;
+                }
+                const progressPercent = (quantity / maxQuantity) * 100;
+                progressBar.attr('value', progressPercent);
+                progressBar.attr('max', 100);
+                progressLabel.text(`${quantity} / ${maxQuantity}`);
+            }
             function updateQuantity(data) {
                 // Main item quantity
                 $('#quantity-{{ current.id }}').text(
                     data.quantity
                     {% if current.progress.q_limit != 0 %} + " / " + {{ current.progress.q_limit }}{% endif %}
                 );
+                updateStorageProgress({
+                    quantity: data.quantity,
+                    max_quantity: {{ current.progress.q_limit or 0 }}
+                });
                 // Source item quantities
                 {% for recipe in current.recipes %}
                     {% for source in recipe.sources %}
@@ -171,7 +203,18 @@
 
             // Global variable to store the elapsed time.
             let elapsedTime = 0;
+            let rateDuration = 1;
             let in_progress = false;
+
+            function updateActionProgress() {
+                console.log('Updating progress:', { elapsedTime, rateDuration });
+                const progressBar = $('#action-progress-bar-{{ current.id }}');
+                const progressLabel = $('#action-progress-label-{{ current.id }}');
+                const effectiveElapsedTime = elapsedTime % rateDuration;
+                const progressPercent = (effectiveElapsedTime / rateDuration) * 100;
+                progressBar.val(progressPercent);
+                progressLabel.text(`${Math.floor(effectiveElapsedTime)}s / ${rateDuration}s`);
+            }
 
             // Update the elapsed time on the client.
             function updateElapsedTime() {
@@ -219,13 +262,33 @@
                 }
             }
 
+            function updateProgressVisibility() {
+                if (!in_progress) {
+                    $('#action-progress-container-{{ current.id }}').addClass('hidden');
+                    $('#elapsed-time').addClass('hidden');
+                    $('#recipe-progress-label-{{ current.id }}').addClass('hidden');
+                    return;
+                }
+                if (rateDuration < 5) {
+                    $('#action-progress-container-{{ current.id }}').addClass('hidden');
+                    $('#elapsed-time').removeClass('hidden');
+                    $('#recipe-progress-label-{{ current.id }}').addClass('hidden');
+                } else {
+                    $('#action-progress-container-{{ current.id }}').removeClass('hidden');
+                    $('#elapsed-time').addClass('hidden');
+                    $('#recipe-progress-label-{{ current.id }}').removeClass('hidden');
+                }
+            }
+
             // Fetch progress data and update all relevant information
             function fetchProgressData() {
                 $.get('/item/progress_data/{{ current.id }}', function(data) {
                     updateQuantity(data);
+                    updateActionProgress();
                     in_progress = data.is_ongoing;
                     reconcileElapsedTime(data);
                     updateToggleButtonLabel(data, data.recipe_id);
+                    updateProgressVisibility();
                 });
             }
 
@@ -288,6 +351,8 @@
                 const current_id = {{ current.id }};
                 const toggleBtn = this;
                 const recipe_id = $(this).data('recipe-id');
+                const row = $(this).closest('tr');
+                rateDuration = parseFloat(row.find('#rate-duration').text()) || 1;
                 console.log('toggleItem(): ' + current_id);
                 //toggleBtn.disabled = true;
                 const urlParts = ['/item/stop', current_id];

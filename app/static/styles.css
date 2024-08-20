@@ -274,3 +274,43 @@ textarea {
     color: #ffffff;
     border: none;
 }
+
+.progress-container {
+    position: relative;
+    background-color: #2a2a2a; /* Dark gray background for the remaining progress */
+    border-radius: 10px; /* Round box */
+    overflow: hidden; /* Ensure that the progress bar stays within the container */
+}
+
+.progress-bar {
+    height: 20px;
+    background-color: transparent;
+    -webkit-appearance: none; /* Remove default styling for WebKit browsers */
+}
+
+.progress-bar::-webkit-progress-bar {
+    background-color: transparent; /* Make the background transparent so the container shows */
+}
+
+.progress-bar::-webkit-progress-value {
+    background-color: blue; /* filled progress */
+}
+
+.progress-bar::-moz-progress-bar {  /* Firefox */
+    background-color: #blue;
+}
+
+.progress-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-weight: bold;
+    z-index: 1; /* Make sure the text stays on top of the progress bar */
+}
+
+.hidden {
+    visibility: hidden; /* Element is hidden but still occupies space */
+    opacity: 0; /* Fully transparent */
+}

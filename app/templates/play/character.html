@@ -41,7 +41,10 @@
                 </select>
             </div>
             <div id="destination-info" class="flexdiv">
-                <p id="destination-distance">Distance: ... of ...</p>
+                <div class="progress-container">
+                    <progress class="progress-bar" max="100" value="0"></progress>
+                    <span class="progress-label">0 / 0</span>
+                </div>
                 <p>&nbsp;(Elapsed <span id="dest-time">...</span>)</p>
                 <button id="start-travel-btn">Start</button>
                 <button id="stop-travel-btn">Stop</button>
@@ -98,7 +101,8 @@
                 const distance = selectedOption.data("distance");
                 const destinationId = destSel.val();
                 const destInfo = $('#destination-info');
-                const destDist = $('#destination-distance');
+                const progressBar = $('.progress-bar');
+                const progressLabel = $('.progress-label');
                 if (destinationId) {
                     if (data.hasOwnProperty('status') && data.status === 'arrived') {
                         location.reload();
@@ -106,7 +110,9 @@
                         console.log(data.error);
                     } else {
                         const quantity = data.hasOwnProperty('quantity') ? data.quantity : 0;
-                        destDist.text('Distance: ' + quantity + ' of ' + distance);
+                        const progressPercentage = (quantity / distance) * 100;
+                        progressBar.attr('value', progressPercentage);
+                        progressLabel.text(quantity + ' / ' + distance);
                         destInfo.show();
                     }
                 } else {
@@ -157,6 +163,7 @@
                     startBtn.disabled = false;
                     stopBtn.disabled = true;
                     destSel.disabled = false;
+                    is_ongoing = false;
                 }
             }
 
