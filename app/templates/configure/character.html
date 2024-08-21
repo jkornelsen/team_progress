@@ -29,10 +29,20 @@
         </select><br>
 
         <div id="attrib-container" class="outer-border">
-                <!-- Placeholder for appending new attribs -->
-                <div id="attriblist_end" style="width: 0; height: 0; opacity: 0;"></div>
+            <table id="attrib-table" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Attribute</th>
+                        <th>Value</th>
+                        <th class="transparent-col"></th>
+                    </tr>
+                </thead>
+                <tbody id="attrib-rows">
+                </tbody>
+            </table>
+            <div>
                 {% if game_data.attribs %}
-                    <!-- Select box for adding another attrib -->
+                    <!-- Select box for adding another attribute -->
                     <div class="select-box">
                         <select id="add-attrib-select">
                             <option value="" selected>(Select attribute)</option>
@@ -54,7 +64,7 @@
                     <tr>
                         <th>Item</th>
                         <th>Quantity</th>
-                        <th>Equipment Slot</th>
+                        <th>Equipped Slot</th>
                         <th class="transparent-col"></th>
                     </tr>
                 </thead>
@@ -119,7 +129,7 @@
                 if (itemId === '') {
                     return; // don't add if the selected option is the placeholder
                 }
-                const existingItem = $('.item input[value="' + itemId + '"]').closest('.item');
+                const existingItem = $('#items-rows input[name="item_id[]"][value="' + itemId + '"]').closest('tr');
                 if (existingItem.length > 0) {
                     alert('Item already exists.');
                     return;
@@ -137,20 +147,24 @@
                     "{{ owned_item.slot }}");
             {% endfor %}
             $('#items-rows').on('click', '.remove-item-btn', function() {
-                const itemContainer = $(this).closest('.item');
+                const itemContainer = $(this).closest('tr');
                 itemContainer.remove();
             });
 
             function addAttrib(attribId, attribName, attribVal = 1) {
                 const attribHtml = `
-                    <div class="attrib flexdiv" data-attrib-id="${attribId}">
-                        <input type="hidden" name="attrib_id" value="${attribId}">
-                        ${attribName}
-                        <input type="number" id="attrib-${attribId}-val" name="attrib_${attribId}_val" value="${attribVal}">
-                        <button class="remove-attrib-btn lesser-button">Remove</button>
-                    </div>
+                    <tr>
+                        <td>${attribName}
+                            <input type="hidden" name="attrib_id[]" value="${attribId}">
+                        </td><td>
+                            <input type="number" name="attrib_val[]" value="${attribVal}" size="8">
+                        </td><td>
+                            <button class="remove-attrib-btn lesser-button">Remove</button>
+                        </td>
+                    </tr>
                 `;
-                $('#attriblist_end').before(attribHtml);
+                $('#attrib-rows').prepend(attribHtml);
+                $('#attrib-table').show();
             }
             $('#add-attrib-btn').click(function() {
                 const selectedOption = $('#add-attrib-select option:selected');
@@ -159,7 +173,7 @@
                 if (attribId == "") {
                     return; // don't add if the selected option is the placeholder
                 }
-                const existingAttrib = $('.attrib[data-attrib-id="' + attribId + '"]');
+                const existingAttrib = $('#attrib-rows input[name="attrib_id[]"][value="' + attribId + '"]').closest('tr');
                 if (existingAttrib.length > 0) {
                     alert('Attribute already exists.');
                     return;
@@ -174,8 +188,11 @@
                     {{ attrib_val | dec2str }});
             {% endfor %}
             $('#attrib-container').on('click', '.remove-attrib-btn', function() {
-                const attribContainer = $(this).closest('.attrib');
-                attribContainer.remove();
+                const attribRow = $(this).closest('tr');
+                attribRow.remove();
+                if ($('#attrib-rows').children().length === 0) {
+                    $('#attrib-table').hide();
+                }
             });
         });
     </script>
