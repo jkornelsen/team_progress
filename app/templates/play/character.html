@@ -59,8 +59,14 @@
         {% for owned in current.items if owned.slot %}
             {% set item = owned.item %}
             <li>
-                <a href="{{ url_for('play_item', item_id=item.id) }}">{{ item.name }}</a>
-                &mdash; {{ owned.slot }}
+                <span class="item-name">
+                    <a href="{{ url_for('play_item', item_id=item.id, char_id=current.id) }}">
+                        {{ item.name }}
+                    </a>
+                </span>
+                <span class="item-slot" id="item-{{ item.id }}-slot">
+                    &mdash; {{ owned.slot }}
+                </span>
             </li>
         {% else %}
             (None)
@@ -72,7 +78,16 @@
         {% for owned in current.items if not owned.slot %}
             {% set item = owned.item %}
             <li>
-                <a href="{{ url_for('play_item', item_id=item.id) }}">{{ item.name }}</a>
+                <span class="item-name">
+                    <a href="{{ url_for('play_item', item_id=item.id, char_id=current.id) }}">
+                        {{ item.name }}
+                    </a>
+                </span>
+                <span class="item-quantity" id="item-{{ item.id }}-quantity">
+                    {% if owned.quantity != -1 %}
+                        {{ owned.quantity | dec2str }}
+                    {% endif %}
+                </span>
             </li>
         {% else %}
             (None)

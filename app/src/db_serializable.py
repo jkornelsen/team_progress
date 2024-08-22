@@ -28,6 +28,14 @@ def tuples_to_lists(values):
         else val
         for val in values]
 
+def tuple_to_pg_array(value):
+    """Convert a tuple to a PostgreSQL array string,
+    for example "{0, 0}".
+    """
+    if isinstance(value, tuple):
+        return f"{{{', '.join(map(str, value))}}}"
+    return value
+
 def db_type_fields(doc):
     """Objects may have types such as dicts
     that aren't for inserting into the db.

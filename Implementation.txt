@@ -10,23 +10,16 @@ Auto start event if triggered.
 
 actions log
 
-show containing char/loc on item play screen
-recipe requires item such as knife in same location as other source items
-to determine the current location, navigate first to the location play page,
-or character play page
-then remember the location when we arrive at the produced item page
+show quantities based on container for item play screen
 
-Allow recipes to only require attribute, not source.
-That can be used instead of a source for e.g. chores.
-Then make sure it can serialize that way.
+q_limit seems like it should be in item table
 
-checkbox to show a particular location on overview screen
+limit to 1 progress table row per character
+whereas items in general storage can each have their own progress
+prompt before overwriting another action in progress
+instead of progress items under everything in json, we need a progress queue
 
 ---- TODO Upcoming ----
-
-pigs are on floor at farm
-make it so in database: loc_items table
-items can be assigned on location setup page
 
 ---- Issues ----
 

@@ -339,6 +339,27 @@ class Item(Identifiable):
         return item_recipes_data
 
     @classmethod
+    def db_container_name(cls, id_to_get, owner_char_id, at_loc_id):
+        query = """
+            SELECT name
+            FROM {table}
+            WHERE id = %s
+        """
+        if owner_char_id is not None:
+            values = [owner_char_id]
+            table = 'characters'
+        elif at_loc_id is not None:
+            values = [at_loc_id]
+            table = 'locations'
+        else:
+            return ""
+        query = query.format(table=table)
+        results = cls.execute_select(query, values)
+        if not results:
+            return ""
+        return results[0].name
+
+    @classmethod
     def data_for_file(cls):
         print(f"{cls.__name__}.data_for_file()")
         # Get item and progress data
@@ -437,9 +458,11 @@ class Item(Identifiable):
         return current_obj
 
     @classmethod
-    def data_for_play(cls, id_to_get):
+    def data_for_play(cls, id_to_get, owner_char_id, at_loc_id):
         print(f"{cls.__name__}.data_for_play()")
         current_obj = cls.data_for_configure(id_to_get)
+        container_name = cls.db_container_name(
+            id_to_get, owner_char_id, at_loc_id)
         # Get relation data for items that use this item as a source
         item_recipes_data = cls.db_recipe_data(id_to_get, get_by_source=True)
         for item_id, recipes_data in item_recipes_data.items():
@@ -448,7 +471,7 @@ class Item(Identifiable):
             item.recipes = [
                 Recipe.from_json(recipe_data, item)
                 for recipe_id, recipe_data in recipes_data.items()]
-        return current_obj
+        return current_obj, container_name
 
     def configure_by_form(self):
         if 'save_changes' in request.form:  # button was clicked
@@ -545,16 +568,32 @@ def set_routes(app):
         else:
             return instance.configure_by_form()
 
-    @app.route('/play/item/<int:item_id>')
-    def play_item(item_id):
+    @app.route('/play/item/<int:item_id>/',
+        defaults={'char_id': None, 'loc_id': None})
+    @app.route('/play/item/<int:item_id>/char/<int:char_id>/',
+        defaults={'loc_id': None})
+    @app.route('/play/item/<int:item_id>/loc/<int:loc_id>/',
+        defaults={'char_id': None})
+    def play_item(item_id, char_id, loc_id):
         print("-" * 80)
-        print(f"play_item({item_id})")
-        instance = Item.data_for_play(item_id)
+        print(f"play_item(item_id={item_id}, char_id={char_id}, loc_id={loc_id})")
+        instance, container_name = Item.data_for_play(item_id, char_id, loc_id)
         if not instance:
             return 'Item not found'
+        if char_id:
+            container_link = (
+                f'Owned by <a href="{url_for("play_char", char_id=char_id)}">'
+                f'{container_name}</a>')
+        elif loc_id:
+            container_link = (
+                f'At <a href="{url_for("play_location", loc_id=loc_id)}">'
+                f'{container_name}</a>')
+        else:
+            container_link = 'General Storage'
         return render_template(
             'play/item.html',
             current=instance,
+            container_link=container_link,
             game_data=g.game_data)
 
     @app.route('/item/gain/<int:item_id>/<int:recipe_id>', methods=['POST'])

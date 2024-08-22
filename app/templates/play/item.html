@@ -14,6 +14,7 @@
     <table style="width: 100%; max-width: 80%; margin: 0 auto;">
         <tr>
             <td>
+                <p>{{ container_link | safe }}</p>
                 <h2 style="margin: 10px 10px; display: flex; align-items: center; flex-wrap: nowrap;">
                 {{ current.name }}:
                 {% if current.progress.q_limit %}

@@ -23,9 +23,7 @@
         <input type="text" id="item-name" name="item_name" value="{{ current.name }}" required><br>
         <label for="item-description" >Description:</label>
         <textarea id="item-description" name="item_description" rows="4" cols="50">{{ current.description }}</textarea><br>
-        <label for="item-quantity">Quantity:</label>
-        <input type="number" step="any" id="item-quantity" name="item_quantity" value="{{ current.progress.quantity | dec2str }}"><span id="running-label"></span>
-        <label for="item-limit">Limit:</label>
+            <label for="item-limit">Limit Per Pile:</label>
         <input type="number" step="any" id="item-limit" name="item_limit" value="{{ current.progress.q_limit | dec2str }}"> <span class="label-like">0 for unlimited</span><br>
 
         <style>
@@ -46,6 +44,8 @@
                 <input type="checkbox" id="top_level" name="top_level" style="margin-left: 10px;" {% if current.toplevel %}checked{% endif %}><label for="top_level">Show in Overview</label><br>
             </div>
         </div>
+        <label for="item-quantity">Quantity in General Storage:</label>
+        <input type="number" step="any" id="item-quantity" name="item_quantity" value="{{ current.progress.quantity | dec2str }}"><span id="running-label"></span><br>
 
         <div id="sources-container" class="outer-border">
             <!-- Placeholder for appending new recipes -->

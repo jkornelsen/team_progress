@@ -8,7 +8,8 @@ from flask import (
     session,
     url_for
 )
-from .db_serializable import Identifiable, MutableNamespace, coldef
+from .db_serializable import (
+    Identifiable, MutableNamespace, coldef, tuple_to_pg_array)
 from .item import Item
 
 tables_to_create = {
@@ -37,9 +38,12 @@ class ItemAt:
 
     @classmethod
     def from_json(cls, data):
-        instance = cls(Item(int(data.get('item_id', 0))))
-        instance.quantity = data['quantity']
-        instance.position = data['position']
+        if not isinstance(data, dict):
+            data = vars(data)
+        item_id = int(data.get('item_id', 0))
+        instance = cls(Item(item_id))
+        instance.quantity = data.get('quantity', 0)
+        instance.position = tuple(data.get('position', (0, 0)))
         return instance
 
 class Location(Identifiable):
@@ -95,20 +99,18 @@ class Location(Identifiable):
                 "game_token, loc_id, dest_id, distance",
                 values)
         if doc['items']:
-            print(f"items: {doc['items']}")
             values = []
-            for item_at in doc['items']:
+            for item_data in doc['items']:
                 values.append((
                     g.game_token, self.id,
-                    item_at['item_id'],
-                    item_at['quantity'],
-                    item_at['position']
-                    ))
+                    item_data['item_id'],
+                    item_data['quantity'],
+                    tuple_to_pg_array(item_data['position'])
+                ))
             self.insert_multiple(
-                "item_sources",
+                "loc_items",
                 "game_token, loc_id, item_id, quantity, position",
                 values)
-
 
     @classmethod
     def data_for_file(cls):
@@ -140,7 +142,7 @@ class Location(Identifiable):
             if dest_data.dest_id:
                 instance.destinations[dest_data.dest_id] = dest_data.distance
             if loc_item_data.item_id:
-                current_data.setdefault('items', []).append(loc_item_data)
+                instance.items.append(ItemAt.from_json(loc_item_data))
         # Replace IDs with partial objects
         for instance in instances.values():
             loc_objs = {}
@@ -199,8 +201,8 @@ class Location(Identifiable):
         """, (id_to_get, g.game_token), ['items', 'loc_items'])
         for item_data, loc_item_data in tables_rows:
             if loc_item_data.loc_id:
-                current_data.setdefault(
-                    'items', []).append(ItemAt.from_json(loc_item_data))
+                current_data.setdefault('items', []).append(
+                    vars(loc_item_data))
             g.game_data.items.append(Item.from_json(item_data))
         # Create item from data
         current_obj = Location.from_json(current_data)
@@ -247,6 +249,14 @@ class Location(Identifiable):
                     destination_ids, destination_distances):
                 dest_location = Location(int(dest_id))
                 self.destinations[dest_location] = int(dest_dist)
+            item_ids = request.form.getlist('item_id[]')
+            item_qtys = request.form.getlist('item_qty[]')
+            self.items = []
+            for item_id, item_qty in zip(item_ids, item_qtys):
+                item = Item(int(item_id))
+                item_at = ItemAt(item)
+                item_at.quantity = int(item_qty)
+                self.items.append(item_at)
             self.to_db()
         elif 'delete_location' in request.form:
             try:

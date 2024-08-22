@@ -23,12 +23,12 @@
             "items": [
                 {
                     "item_id": 9,
-                    "quantity": 1.0,
+                    "quantity": -1.0,
                     "slot": ""
                 },
                 {
                     "item_id": 10,
-                    "quantity": 1.0,
+                    "quantity": -1.0,
                     "slot": ""
                 }
             ],
@@ -97,7 +97,7 @@
                 1
             ],
             "id": 1,
-            "name": "Travel",
+            "name": "Travel Danger",
             "numeric_range": [
                 0,
                 0
@@ -121,7 +121,7 @@
             "description": "Attempt to connect a device. Choose Easy difficulty since we won't be far from civilization.",
             "determining_attrs": [],
             "id": 2,
-            "name": "Connect",
+            "name": "Connect to Service",
             "numeric_range": [
                 0,
                 0
@@ -197,10 +197,36 @@
                     "rate_amount": 1.0,
                     "rate_duration": 3.0,
                     "recipe_id": 1,
-                    "sources": []
+                    "sources": [
+                        {
+                            "preserve": true,
+                            "quantity": 1.0,
+                            "source_id": 13
+                        }
+                    ]
                 }
             ],
             "storage_type": "universal",
+            "toplevel": false
+        },
+        {
+            "attribs": {},
+            "description": "Where chores are done.",
+            "id": 13,
+            "name": "Barn",
+            "progress": {
+                "batches_processed": 0,
+                "id": 33,
+                "is_ongoing": false,
+                "q_limit": 1.0,
+                "quantity": 0.0,
+                "recipe_id": 0,
+                "start_time": null,
+                "stop_time": null
+            },
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "local",
             "toplevel": false
         },
         {
@@ -212,7 +238,7 @@
                 "batches_processed": 0,
                 "id": 14,
                 "is_ongoing": false,
-                "q_limit": 0.0,
+                "q_limit": 30.0,
                 "quantity": 0.0,
                 "recipe_id": 0,
                 "start_time": null,
@@ -248,13 +274,13 @@
                 "batches_processed": 0,
                 "id": 17,
                 "is_ongoing": false,
-                "q_limit": 0.0,
-                "quantity": 1.0,
+                "q_limit": 1.0,
+                "quantity": 0.0,
                 "recipe_id": 0,
                 "start_time": null,
                 "stop_time": null
             },
-            "quantity": 1.0,
+            "quantity": 0.0,
             "recipes": [],
             "storage_type": "carried",
             "toplevel": false
@@ -268,13 +294,13 @@
                 "batches_processed": 0,
                 "id": 18,
                 "is_ongoing": false,
-                "q_limit": 0.0,
-                "quantity": 1.0,
+                "q_limit": 1.0,
+                "quantity": 0.0,
                 "recipe_id": 0,
                 "start_time": null,
                 "stop_time": null
             },
-            "quantity": 1.0,
+            "quantity": 0.0,
             "recipes": [],
             "storage_type": "carried",
             "toplevel": false
@@ -294,7 +320,7 @@
                 "start_time": null,
                 "stop_time": null
             },
-            "quantity": 2.0,
+            "quantity": 0.0,
             "recipes": [
                 {
                     "attribs": [],
@@ -339,7 +365,7 @@
                 "batches_processed": 0,
                 "id": 15,
                 "is_ongoing": false,
-                "q_limit": 20.0,
+                "q_limit": 30.0,
                 "quantity": 0.0,
                 "recipe_id": 0,
                 "start_time": null,
@@ -379,8 +405,25 @@
                 "2": 2.0
             },
             "id": 3,
-            "items": [],
-            "name": "Uncle's Pig Farm"
+            "items": [
+                {
+                    "item_id": 8,
+                    "position": [
+                        0,
+                        0
+                    ],
+                    "quantity": 2.0
+                },
+                {
+                    "item_id": 13,
+                    "position": [
+                        0,
+                        0
+                    ],
+                    "quantity": -1.0
+                }
+            ],
+            "name": "Uncle's Farm"
         },
         {
             "description": "Starting point, and we'll return here at the end.",
