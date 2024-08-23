@@ -9,8 +9,6 @@ tables_to_create = {
     'progress': f"""
         {coldef('id')},
         recipe_id integer,
-        quantity float(4) NOT NULL,
-        q_limit float(4) NOT NULL,
         start_time timestamp,
         stop_time timestamp,
         batches_processed integer NOT NULL,
@@ -19,7 +17,7 @@ tables_to_create = {
 }
 
 class Progress(Identifiable):
-    """Track progress, such as over time."""
+    """Track progress over time."""
     def __init__(self, new_id="", entity=None, recipe=None):
         super().__init__(new_id)
         self.entity = entity  # Item or other entity that uses this object
@@ -28,8 +26,6 @@ class Progress(Identifiable):
         else:
             from .item import Recipe
             self.recipe = Recipe()  # use default values
-        self.quantity = 0.0  # the main value tracked
-        self.q_limit = 0.0  # limit the quantity if not 0
         self.start_time = None
         self.stop_time = None
         self.batches_processed = 0
@@ -40,8 +36,6 @@ class Progress(Identifiable):
         return {
             'id': self.id,
             'recipe_id': self.recipe.id,
-            'quantity': self.quantity,
-            'q_limit': self.q_limit,
             'start_time': self.start_time,
             'stop_time': self.stop_time,
             'batches_processed': self.batches_processed,
@@ -55,8 +49,6 @@ class Progress(Identifiable):
         instance = cls(int(data.get('id', 0)), entity=entity)
         from .item import Recipe
         instance.recipe = Recipe(int(data.get('recipe_id', 0)))
-        instance.quantity = data.get('quantity', 0.0)
-        instance.q_limit = data.get('q_limit', 0.0)
         instance.start_time = data.get('start_time')
         instance.stop_time = data.get('stop_time')
         instance.batches_processed = data.get('batches_processed', 0)
@@ -77,28 +69,29 @@ class Progress(Identifiable):
                 raise Exception("Expected non-zero number of batches.")
             num_batches = batches_requested
             eff_result_qty = num_batches * self.recipe.rate_amount
-            new_quantity = self.quantity + eff_result_qty
+            new_quantity = self.entity.quantity + eff_result_qty
             if ((self.q_limit > 0.0 and new_quantity > self.q_limit)
                     or (self.q_limit < 0.0 and new_quantity < self.q_limit)):
-                num_batches = (self.q_limit - self.quantity) // self.recipe.rate_amount
+                num_batches = ((self.q_limit - self.entity.quantity)
+                    // self.recipe.rate_amount)
                 stop_here = True  # can't process the full amount
                 print(f"change_quantity():"
                     f" num_batches={num_batches} due to limit {self.q_limit}")
             for source in self.recipe.sources:
-                eff_source_qty = num_batches * source.quantity
+                eff_source_qty = num_batches * source.q_required
                 if eff_source_qty > 0:
                     print(f"change_quantity():"
                         f" source {source.item.id},"
-                        f" source.quantity={source.quantity},"
+                        f" source.q_required={source.q_required},"
                         f" eff_source_qty={eff_source_qty},"
-                        f" source.item.progress.quantity={source.item.progress.quantity}")
-                    if (source.item.progress.quantity < eff_source_qty
+                        f" source.item.quantity={source.item.quantity}")
+                    if (source.item.quantity < eff_source_qty
                             and not source.preserve):
                         stop_here = True  # can't process the full amount
                         num_batches = min(
                             num_batches,
-                            math.floor(source.item.progress.quantity / source.quantity))
-                    elif source.item.progress.quantity < source.quantity:
+                            math.floor(source.item.quantity / source.q_required))
+                    elif source.item.quantity < source.q_required:
                         stop_here = True
                         num_batches = 0
             print(f"change_quantity():"
@@ -107,12 +100,12 @@ class Progress(Identifiable):
                 for source in self.recipe.sources:
                     if not source.preserve:
                         # Deduct source quantity used
-                        eff_source_qty = num_batches * source.quantity
-                        source.item.progress.quantity -= eff_source_qty
+                        eff_source_qty = num_batches * source.q_required
+                        source.item.quantity -= eff_source_qty
                         source.item.progress.to_db()
                 # Add quantity produced
                 eff_result_qty = num_batches * self.recipe.rate_amount
-                self.quantity += eff_result_qty
+                self.entity.quantity += eff_result_qty
                 self.batches_processed += num_batches
                 self.entity.to_db()
             if stop_here:
@@ -150,16 +143,16 @@ class Progress(Identifiable):
         if not self.recipe.rate_amount:
             print("no rate amount")
             return False
-        if ((self.q_limit > 0.0 and self.quantity >= self.q_limit)
-                or (self.q_limit < 0.0 and self.quantity <= self.q_limit)):
+        if ((self.q_limit > 0.0 and self.entity.quantity >= self.q_limit)
+                or (self.q_limit < 0.0 and self.entity.quantity <= self.q_limit)):
             print("would pass limit")
             return False
         for source in self.recipe.sources:
-            eff_source_qty = source.quantity
+            eff_source_qty = source.q_required
             if (eff_source_qty > 0
-                    and source.item.progress.quantity < eff_source_qty):
-                print(f"requires {source.quantity} of item id {source.item.id}"
-                    f" but only have {source.item.progress.quantity}")
+                    and source.item.quantity < eff_source_qty):
+                print(f"requires {source.q_required} of item id {source.item.id}"
+                    f" but only have {source.item.quantity}")
                 return False
         print("can produce")
         return True

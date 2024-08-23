@@ -24,7 +24,7 @@
         <label for="item-description" >Description:</label>
         <textarea id="item-description" name="item_description" rows="4" cols="50">{{ current.description }}</textarea><br>
             <label for="item-limit">Limit Per Pile:</label>
-        <input type="number" step="any" id="item-limit" name="item_limit" value="{{ current.progress.q_limit | dec2str }}"> <span class="label-like">0 for unlimited</span><br>
+        <input type="number" step="any" id="item-limit" name="item_limit" value="{{ current.q_limit | dec2str }}"> <span class="label-like">0 for unlimited</span><br>
 
         <style>
             .storage-container {
@@ -45,7 +45,7 @@
             </div>
         </div>
         <label for="item-quantity">Quantity in General Storage:</label>
-        <input type="number" step="any" id="item-quantity" name="item_quantity" value="{{ current.progress.quantity | dec2str }}"><span id="running-label"></span><br>
+        <input type="number" step="any" id="item-quantity" name="item_quantity" value="{{ current.quantity | dec2str }}"><span id="running-label"></span><br>
 
         <div id="sources-container" class="outer-border">
             <!-- Placeholder for appending new recipes -->
@@ -163,7 +163,7 @@
             }
 
             function addSource(recipeId, sourceId, sourceName,
-                    sourceQuantity = 1.0, preserve = false) {
+                    sourceQtyReq = 1.0, preserve = false) {
                 console.log(`addSource() ${sourceId}`);
                 const recipeContainer = $('.recipe-container').last();
                 const existingSource = recipeContainer.find(`.source[data-source-id="${sourceId}"]`);
@@ -178,7 +178,7 @@
                     <div class="source" data-source-id="${sourceId}">
                         <input type="hidden" name="recipe${recipeId}_source_id" value="${sourceId}">
                         <label>Takes:</label>
-                        <input type="number" step="any" id="${uniqueId}-quantity" name="${uniqueName}_quantity" value="${sourceQuantity}">
+                        <input type="number" step="any" id="${uniqueId}-qtyreq" name="${uniqueName}_qtyreq" value="${sourceQtyReq}">
                         ${sourceName}
                         <span class="spaced-checkbox">
                             <input type="checkbox" id="{uniqueId}-preserve" name="${uniqueName}_preserve" ${preserve ? 'checked' : ''}
@@ -285,7 +285,7 @@
                         recipeCounter,
                         {{ source.item.id }},
                         "{{ source.item.name }}",
-                        {{ source.quantity | dec2str}},
+                        {{ source.q_required | dec2str}},
                         {{ source.preserve | lower }});
                 {% endfor %}
             {% endfor %}

@@ -27,6 +27,7 @@ tables_to_create = {
         {coldef('description')},
         {coldef('toplevel')},
         storage_type varchar(20) not null,
+        q_limit float(4) NOT NULL,
         quantity float(4) NOT NULL,
         progress_id integer,
         FOREIGN KEY (game_token, progress_id)
@@ -38,20 +39,20 @@ class Source:
     def __init__(self, new_id=0):
         self.item = Item(new_id)  # source item, not result item
         self.preserve = False  # if true then source will not be consumed
-        self.quantity = 1.0
+        self.q_required = 1.0
 
     def to_json(self):
         return {
             'source_id': self.item.id,
             'preserve': self.preserve,
-            'quantity': self.quantity}
+            'q_required': self.q_required}
 
     @classmethod
     def from_json(cls, data):
         instance = cls()
         instance.item = Item(int(data.get('source_id', 0)))
         instance.preserve = data.get('preserve', False)
-        instance.quantity = data.get('quantity', 1.0)
+        instance.q_required = data.get('q_required', 1.0)
         return instance
 
 class Recipe(DbSerializable):
@@ -110,13 +111,13 @@ class Recipe(DbSerializable):
                 values.append((
                     g.game_token, doc['item_id'], self.id,
                     source['source_id'],
-                    source['quantity'],
+                    source['q_required'],
                     source['preserve']
                     ))
             self.insert_multiple(
                 "recipe_sources",
                 "game_token, item_id, recipe_id,"
-                " source_id, quantity, preserve",
+                " source_id, q_required, preserve",
                 values)
         if doc['attribs']:
             print(f"attribs: {doc['attribs']}")
@@ -143,8 +144,9 @@ class Item(Identifiable):
         self.toplevel = False if len(self.get_list()) > 1 else True
         self.attribs = {}  # Attrib objects and their stat val
         self.recipes = []  # list of Recipe objects
+        self.q_limit = 0.0  # limit the quantity if not 0
         self.quantity = 0.0  # general storage -- not owned or at location
-        self.progress = Progress(entity=self)
+        self.progress = Progress(entity=self)  # for items in general storage
 
     def to_json(self):
         return {
@@ -159,6 +161,7 @@ class Item(Identifiable):
             'attribs': {
                 attrib.id: val
                 for attrib, val in self.attribs.items()},
+            'q_limit': self.q_limit,
             'quantity': self.quantity,
             'progress': self.progress.to_json(),
         }
@@ -175,6 +178,7 @@ class Item(Identifiable):
         instance.attribs = {
             Attrib(int(attrib_id)): val
             for attrib_id, val in data.get('attribs', {}).items()}
+        instance.q_limit = data.get('q_limit', 0.0)
         instance.quantity = data.get('quantity', 0.0)
         instance.progress = Progress.from_json(
             data.get('progress', {}), instance)
@@ -402,7 +406,7 @@ class Item(Identifiable):
                     f" instant={recipe.instant}")
                 for source in recipe.sources:
                     print(f"    source item id {source.item.id},"
-                        f" qty {source.quantity}")
+                        f" qty {source.q_required}")
         return list(instances.values())
 
     @classmethod
@@ -454,7 +458,7 @@ class Item(Identifiable):
                 f" instant={recipe.instant}")
             for source in recipe.sources:
                 print(f"source item id {source.item.id} name {source.item.name}"
-                    f" qty {source.quantity}")
+                    f" qty {source.q_required}")
         return current_obj
 
     @classmethod
@@ -481,15 +485,10 @@ class Item(Identifiable):
             self.description = request.form.get('item_description')
             self.storage_type = request.form.get('storage_type')
             self.toplevel = bool(request.form.get('top_level'))
+            self.q_limit = self.form_dec(request, 'item_limit')
             self.quantity = self.form_dec(request, 'item_quantity')
-            if self.progress.is_ongoing:
-                self.progress.stop()
-            else:
-                self.progress.quantity = self.quantity
-            self.progress = Progress.from_json({
-                'id': self.progress.id,
-                'quantity': self.progress.quantity,
-                'q_limit': self.form_dec(request, 'item_limit')})
+            #if self.progress.is_ongoing:
+            #    self.progress.stop()
             recipe_ids = request.form.getlist('recipe_id')
             self.recipes = []
             for recipe_id in recipe_ids:
@@ -507,15 +506,15 @@ class Item(Identifiable):
                 for source_id in source_ids:
                     source = Source.from_json({
                         'source_id': int(source_id),
-                        'quantity': float(request.form.get(
-                            f'recipe{recipe_id}_source{source_id}_quantity',
+                        'q_required': float(request.form.get(
+                            f'recipe{recipe_id}_source{source_id}_qtyreq',
                             0.0)),
                         'preserve': bool(request.form.get(
                             f'recipe{recipe_id}_source{source_id}_preserve')),
                     })
                     recipe.sources.append(source)
                     print(f"Sources for {recipe_id}: ",
-                        {source.item.id: source.quantity
+                        {source.item.id: source.q_required
                         for source in recipe.sources})
                 recipe_attrib_ids = request.form.getlist(
                     f'recipe{recipe_id}_attrib_id')

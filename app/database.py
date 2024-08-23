@@ -72,17 +72,17 @@ def column_counts(table_name):
         'event_triggers': 4,
         'events': 9,
         'item_attribs': 4,
-        'items': 8,
+        'items': 9,
         'loc_destinations': 4,
         'loc_items': 5,
         'locations': 5,
         'overall': 3,
-        'progress': 9,
+        'progress': 7,
         'recipe_attribs': 5,
         'recipe_sources': 6,
         'recipes': 6,
         'user_interactions': 5,
-        'win_requirements': 7,
+        'win_requirements': 8,
     }
     return lookup[table_name]
 

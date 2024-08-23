@@ -33,7 +33,7 @@ tables_to_create = {
         item_id integer NOT NULL,
         recipe_id integer NOT NULL,
         source_id integer NOT NULL,
-        quantity float(4) NOT NULL,
+        q_required float(4) NOT NULL,
         preserve boolean NOT NULL,
         PRIMARY KEY (game_token, item_id, recipe_id, source_id)
     """,

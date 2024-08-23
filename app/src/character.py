@@ -64,7 +64,8 @@ class Character(Identifiable):
         self.toplevel = False if len(self.get_list()) > 1 else True
         self.attribs = {}  # keys are Attrib object, values are stat val
         self.items = []  # OwnedItem objects
-        self.progress = Progress(entity=self)  # for travel or perhaps other actions
+        self.progress = Progress(entity=self)  # for travel or items
+        self.quantity = 0.0  # for travel progress
         self.location = None  # Location object
         self.destination = None  # Location object to travel to
 
