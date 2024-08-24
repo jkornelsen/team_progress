@@ -20,7 +20,12 @@ class Progress(Identifiable):
     """Track progress over time."""
     def __init__(self, new_id="", entity=None, recipe=None):
         super().__init__(new_id)
-        self.entity = entity  # Item or other entity that uses this object
+        self.entity = entity  # e.g. Character that uses this object
+        self.pile = None  # e.g. char OwnedItem
+        self.q_limit = 0.0
+        if entity:
+            self.pile = entity.pile
+            self.q_limit = self.pile.item.q_limit
         if recipe:
             self.recipe = recipe
         else:
@@ -69,10 +74,10 @@ class Progress(Identifiable):
                 raise Exception("Expected non-zero number of batches.")
             num_batches = batches_requested
             eff_result_qty = num_batches * self.recipe.rate_amount
-            new_quantity = self.entity.quantity + eff_result_qty
+            new_quantity = self.pile.quantity + eff_result_qty
             if ((self.q_limit > 0.0 and new_quantity > self.q_limit)
                     or (self.q_limit < 0.0 and new_quantity < self.q_limit)):
-                num_batches = ((self.q_limit - self.entity.quantity)
+                num_batches = ((self.q_limit - self.pile.quantity)
                     // self.recipe.rate_amount)
                 stop_here = True  # can't process the full amount
                 print(f"change_quantity():"
@@ -105,7 +110,7 @@ class Progress(Identifiable):
                         source.item.progress.to_db()
                 # Add quantity produced
                 eff_result_qty = num_batches * self.recipe.rate_amount
-                self.entity.quantity += eff_result_qty
+                self.pile.quantity += eff_result_qty
                 self.batches_processed += num_batches
                 self.entity.to_db()
             if stop_here:
@@ -130,7 +135,7 @@ class Progress(Identifiable):
             recipe_id = self.recipe.id
             if not recipe_id:
                 return
-        for recipe in self.entity.recipes:
+        for recipe in self.pile.item.recipes:
             if recipe.id == recipe_id:
                 self.recipe = recipe
                 return
@@ -143,8 +148,8 @@ class Progress(Identifiable):
         if not self.recipe.rate_amount:
             print("no rate amount")
             return False
-        if ((self.q_limit > 0.0 and self.entity.quantity >= self.q_limit)
-                or (self.q_limit < 0.0 and self.entity.quantity <= self.q_limit)):
+        if ((self.q_limit > 0.0 and self.pile.quantity >= self.q_limit)
+                or (self.q_limit < 0.0 and self.pile.quantity <= self.q_limit)):
             print("would pass limit")
             return False
         for source in self.recipe.sources:

@@ -67,7 +67,7 @@ def column_counts(table_name):
         'attribs': 4,
         'char_attribs': 4,
         'char_items': 5,
-        'characters': 9,
+        'characters': 10,
         'event_attribs': 4,
         'event_triggers': 4,
         'events': 9,

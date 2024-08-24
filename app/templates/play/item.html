@@ -17,7 +17,7 @@
                 <p>{{ container_link | safe }}</p>
                 <h2 style="margin: 10px 10px; display: flex; align-items: center; flex-wrap: nowrap;">
                 {{ current.name }}:
-                {% if current.progress.q_limit %}
+                {% if current.q_limit %}
                     <div id="storage-progress-container-{{ current.id }}" class="progress-container" style="display: inline-flex; align-items: center; margin-left: 10px;">
                         <progress id="storage-progress-bar-{{ current.id }}" class="progress-bar" value="0" max="100"></progress>
                         <span class="progress-label" id="storage-progress-label-{{ current.id }}" style="margin-left: 5px; color: white; font-weight: bold;">...</span>
@@ -100,9 +100,9 @@
                             <td id="recipe-{{ recipe.id }}-source-{{ recipe.sources[0].item.id }}-quantity">...</td>
                             <td>
                                 {% if recipe.sources[0].preserve %}
-                                    ({{ recipe.sources[0].quantity | dec2str }})
+                                    ({{ recipe.sources[0].q_required | dec2str }})
                                 {% else %}
-                                    {{ recipe.sources[0].quantity | dec2str }}
+                                    {{ recipe.sources[0].q_required | dec2str }}
                                 {% endif %}
                             </td>
                         {% endif %}
@@ -114,12 +114,12 @@
                                 {{ source.item.name }}
                             </a>
                         </td>
-                        <td id="recipe-{{ recipe.id }}-source-{{ source.item.id }}-quantity">...</td>
+                        <td id="recipe-{{ recipe.id }}-source-{{ source.item.id }}-qtyreq">...</td>
                         <td>
                             {% if source.preserve %}
-                                ({{ source.quantity | dec2str }})
+                                ({{ source.q_required | dec2str }})
                             {% else %}
-                                {{ source.quantity | dec2str }}
+                                {{ source.q_required | dec2str }}
                             {% endif %}
                         </td>
                     </tr>
@@ -132,14 +132,16 @@
 
         {% set outerscope = namespace(used_as_source=[]) %}
         {% for other_item in game_data.items %}
-            {% for recipe in other_item.recipes %}
-                {% for source in recipe.sources %}
-                    {% if current.id == source.item.id %}
-                        {% set _ = outerscope.used_as_source.append(
-                            {'item': other_item, 'quantity': source.quantity}) %}
-                    {% endif %}
+            {% if other_item.id != current.id %} <!-- e.g. pigs breeding pigs -->
+                {% for recipe in other_item.recipes %}
+                    {% for source in recipe.sources %}
+                        {% if current.id == source.item.id %}
+                            {% set _ = outerscope.used_as_source.append(
+                                {'item': other_item, 'q_required': source.q_required}) %}
+                        {% endif %}
+                    {% endfor %}
                 {% endfor %}
-            {% endfor %}
+            {% endif %}
         {% endfor %}
         {% if outerscope.used_as_source %}
         <tr>
@@ -156,7 +158,7 @@
                                 {{ used_for.item.name }}
                             </a>
                         </td>
-                        <td>{{ used_for.quantity | dec2str }}</td>
+                        <td>{{ used_for.q_required | dec2str }}</td>
                     </tr>
                     {% endfor %}
                 </table>
@@ -186,17 +188,17 @@
                 // Main item quantity
                 $('#quantity-{{ current.id }}').text(
                     data.quantity
-                    {% if current.progress.q_limit != 0 %} + " / " + {{ current.progress.q_limit }}{% endif %}
+                    {% if current.q_limit != 0 %} + " / " + {{ current.q_limit }}{% endif %}
                 );
                 updateStorageProgress({
                     quantity: data.quantity,
-                    max_quantity: {{ current.progress.q_limit or 0 }}
+                    max_quantity: {{ current.q_limit or 0 }}
                 });
-                // Source item quantities
+                // Source item quantities required
                 {% for recipe in current.recipes %}
                     {% for source in recipe.sources %}
                         $.get('/item/progress_data/{{ source.item.id }}', function(data) {
-                            $('#recipe-{{ recipe.id }}-source-{{ source.item.id }}-quantity').text(data.quantity);
+                            $('#recipe-{{ recipe.id }}-source-{{ source.item.id }}-qtyreq').text(data.q_required);
                         });
                     {% endfor %}
                 {% endfor %}
@@ -283,7 +285,17 @@
 
             // Fetch progress data and update all relevant information
             function fetchProgressData() {
-                $.get('/item/progress_data/{{ current.id }}', function(data) {
+                let itemId = "{{ item_id }}";
+                let charId = "{{ char_id }}";
+                let locId = "{{ loc_id }}";
+                let url = '/item/progress_data/' + itemId;
+                if (charId) {
+                    url += '/char/' + charId;
+                }
+                if (locId) {
+                    url += '/loc/' + locId;
+                }
+                $.get(url, function(data) {
                     updateQuantity(data);
                     updateActionProgress();
                     in_progress = data.is_ongoing;

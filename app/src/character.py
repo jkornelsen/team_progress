@@ -21,6 +21,7 @@ tables_to_create = {
         {coldef('description')},
         {coldef('toplevel')},
         progress_id integer,
+        quantity float(4) NOT NULL,
         location_id integer,
         dest_id integer,
         position integer[2],
@@ -64,8 +65,8 @@ class Character(Identifiable):
         self.toplevel = False if len(self.get_list()) > 1 else True
         self.attribs = {}  # keys are Attrib object, values are stat val
         self.items = []  # OwnedItem objects
-        self.progress = Progress(entity=self)  # for travel or items
-        self.quantity = 0.0  # for travel progress
+        self.pile = OwnedItem()  # for Progress
+        self.progress = Progress(entity=self)  # for travel or item recipes
         self.location = None  # Location object
         self.destination = None  # Location object to travel to
 
@@ -82,6 +83,7 @@ class Character(Identifiable):
                 owned.to_json() for owned in self.items],
             'location_id': self.location.id if self.location else None,
             'progress': self.progress.to_json(),
+            'quantity': self.pile.quantity,
             'dest_id': self.destination.id if self.destination else None
         }
 
@@ -103,6 +105,7 @@ class Character(Identifiable):
             int(data['location_id'])) if data.get('location_id', 0) else None
         instance.progress = Progress.from_json(
             data.get('progress', {}), instance)
+        instance.pile.quantity = data.get('quantity', 0.0)
         instance.destination = Location.get_by_id(
             int(data['dest_id'])) if data.get('dest_id', 0) else None
         return instance
@@ -295,6 +298,10 @@ class Character(Identifiable):
                 loc = Location.get_by_id(dest_id)
                 loc_objs[loc] = distance
             current_obj.location.destinations = loc_objs
+            # Travel distance
+            distance = current_obj.location.destinations.get(
+                current_obj.destination, 0)
+            current_obj.pile.item.q_limit = distance
         return current_obj
 
     def configure_by_form(self):
@@ -304,8 +311,8 @@ class Character(Identifiable):
             self.name = request.form.get('char_name')
             self.description = request.form.get('char_description')
             self.toplevel = bool(request.form.get('top_level'))
-            if self.progress.is_ongoing:
-                self.progress.stop()
+            #if self.progress.is_ongoing:
+            #    self.progress.stop()
             item_ids = request.form.getlist('item_id[]')
             item_qtys = request.form.getlist('item_qty[]')
             item_slots = request.form.getlist('item_slot[]')
@@ -384,7 +391,7 @@ def set_routes(app):
         char = Character.data_for_play(char_id)
         if not char.destination or char.destination.id != dest_id:
             char.destination = Location.get_by_id(dest_id)
-            char.progress.quantity = 0
+            char.pile.quantity = 0
             char.to_db()
         if char.progress.start():
             char.to_db()
@@ -417,11 +424,10 @@ def set_routes(app):
             if char.progress.is_ongoing:
                 char.progress.determine_current_quantity()
                 char.to_db()
-            distance = char.location.destinations[char.destination]
-            if char.progress.quantity >= distance:
+            if char.pile.quantity >= char.pile.item.q_limit:
                 # arrived at the destination
                 char.progress.stop()
-                char.progress.quantity = 0
+                char.pile.quantity = 0
                 char.location = char.destination
                 char.destination = None
                 char.to_db()
@@ -429,7 +435,7 @@ def set_routes(app):
             else:
                 return jsonify({
                     'is_ongoing': char.progress.is_ongoing,
-                    'quantity': int(char.progress.quantity),
+                    'quantity': int(char.pile.quantity),
                     'elapsed_time': char.progress.calculate_elapsed_time()})
         else:
             return jsonify({'error': 'Character not found.'})

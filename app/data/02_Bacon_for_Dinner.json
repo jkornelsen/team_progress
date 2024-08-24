@@ -36,10 +36,8 @@
             "name": "Suzy",
             "progress": {
                 "batches_processed": 0,
-                "id": 0,
+                "id": 34,
                 "is_ongoing": false,
-                "q_limit": 0.0,
-                "quantity": 0.0,
                 "recipe_id": 0,
                 "start_time": null,
                 "stop_time": null
@@ -58,10 +56,8 @@
             "name": "Mom",
             "progress": {
                 "batches_processed": 0,
-                "id": 0,
+                "id": 35,
                 "is_ongoing": false,
-                "q_limit": 0.0,
-                "quantity": 0.0,
                 "recipe_id": 0,
                 "start_time": null,
                 "stop_time": null
@@ -78,10 +74,8 @@
             "name": "Uncle",
             "progress": {
                 "batches_processed": 0,
-                "id": 0,
+                "id": 36,
                 "is_ongoing": false,
-                "q_limit": 0.0,
-                "quantity": 0.0,
                 "recipe_id": 0,
                 "start_time": null,
                 "stop_time": null
@@ -98,17 +92,11 @@
             ],
             "id": 1,
             "name": "Travel Danger",
-            "numeric_range": [
-                0,
-                0
-            ],
+            "numeric_range": null,
             "outcome_type": "fourway",
             "selection_strings": "",
             "toplevel": true,
-            "trigger_chance": [
-                1,
-                15
-            ],
+            "trigger_chance": null,
             "triggers": [
                 [
                     "location",
@@ -122,21 +110,34 @@
             "determining_attrs": [],
             "id": 2,
             "name": "Connect to Service",
-            "numeric_range": [
-                0,
-                0
-            ],
+            "numeric_range": null,
             "outcome_type": "fourway",
             "selection_strings": "",
             "toplevel": true,
-            "trigger_chance": [
-                0,
-                1
-            ],
+            "trigger_chance": null,
             "triggers": []
         }
     ],
     "items": [
+        {
+            "attribs": {},
+            "description": "Where chores are done.",
+            "id": 13,
+            "name": "Barn",
+            "progress": {
+                "batches_processed": 0,
+                "id": 33,
+                "is_ongoing": false,
+                "recipe_id": 0,
+                "start_time": null,
+                "stop_time": null
+            },
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "local",
+            "toplevel": false
+        },
         {
             "attribs": {},
             "description": "Get paid for chores. Useful for purchasing pigs at the market in case breeding doesn't work out.",
@@ -146,12 +147,11 @@
                 "batches_processed": 0,
                 "id": 20,
                 "is_ongoing": false,
-                "q_limit": 100.0,
-                "quantity": 0.0,
                 "recipe_id": 0,
                 "start_time": null,
                 "stop_time": null
             },
+            "q_limit": 100.0,
             "quantity": 0.0,
             "recipes": [
                 {
@@ -164,7 +164,7 @@
                     "sources": [
                         {
                             "preserve": false,
-                            "quantity": 1.0,
+                            "q_required": 1.0,
                             "source_id": 11
                         }
                     ]
@@ -182,12 +182,11 @@
                 "batches_processed": 0,
                 "id": 19,
                 "is_ongoing": false,
-                "q_limit": 10.0,
-                "quantity": 0.0,
                 "recipe_id": 0,
                 "start_time": null,
                 "stop_time": null
             },
+            "q_limit": 10.0,
             "quantity": 0.0,
             "recipes": [
                 {
@@ -200,33 +199,13 @@
                     "sources": [
                         {
                             "preserve": true,
-                            "quantity": 1.0,
+                            "q_required": 1.0,
                             "source_id": 13
                         }
                     ]
                 }
             ],
             "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": {},
-            "description": "Where chores are done.",
-            "id": 13,
-            "name": "Barn",
-            "progress": {
-                "batches_processed": 0,
-                "id": 33,
-                "is_ongoing": false,
-                "q_limit": 1.0,
-                "quantity": 0.0,
-                "recipe_id": 0,
-                "start_time": null,
-                "stop_time": null
-            },
-            "quantity": 0.0,
-            "recipes": [],
-            "storage_type": "local",
             "toplevel": false
         },
         {
@@ -238,12 +217,11 @@
                 "batches_processed": 0,
                 "id": 14,
                 "is_ongoing": false,
-                "q_limit": 30.0,
-                "quantity": 0.0,
                 "recipe_id": 0,
                 "start_time": null,
                 "stop_time": null
             },
+            "q_limit": 30.0,
             "quantity": 0.0,
             "recipes": [
                 {
@@ -256,7 +234,7 @@
                     "sources": [
                         {
                             "preserve": false,
-                            "quantity": 1.0,
+                            "q_required": 1.0,
                             "source_id": 7
                         }
                     ]
@@ -274,12 +252,11 @@
                 "batches_processed": 0,
                 "id": 17,
                 "is_ongoing": false,
-                "q_limit": 1.0,
-                "quantity": 0.0,
                 "recipe_id": 0,
                 "start_time": null,
                 "stop_time": null
             },
+            "q_limit": 1.0,
             "quantity": 0.0,
             "recipes": [],
             "storage_type": "carried",
@@ -294,12 +271,11 @@
                 "batches_processed": 0,
                 "id": 18,
                 "is_ongoing": false,
-                "q_limit": 1.0,
-                "quantity": 0.0,
                 "recipe_id": 0,
                 "start_time": null,
                 "stop_time": null
             },
+            "q_limit": 1.0,
             "quantity": 0.0,
             "recipes": [],
             "storage_type": "carried",
@@ -314,12 +290,11 @@
                 "batches_processed": 0,
                 "id": 16,
                 "is_ongoing": false,
-                "q_limit": 5.0,
-                "quantity": 2.0,
                 "recipe_id": 0,
                 "start_time": null,
                 "stop_time": null
             },
+            "q_limit": 5.0,
             "quantity": 0.0,
             "recipes": [
                 {
@@ -332,7 +307,7 @@
                     "sources": [
                         {
                             "preserve": true,
-                            "quantity": 2.0,
+                            "q_required": 2.0,
                             "source_id": 8
                         }
                     ]
@@ -347,7 +322,7 @@
                     "sources": [
                         {
                             "preserve": false,
-                            "quantity": 60.0,
+                            "q_required": 60.0,
                             "source_id": 12
                         }
                     ]
@@ -365,12 +340,11 @@
                 "batches_processed": 0,
                 "id": 15,
                 "is_ongoing": false,
-                "q_limit": 30.0,
-                "quantity": 0.0,
                 "recipe_id": 0,
                 "start_time": null,
                 "stop_time": null
             },
+            "q_limit": 30.0,
             "quantity": 0.0,
             "recipes": [
                 {
@@ -383,12 +357,12 @@
                     "sources": [
                         {
                             "preserve": false,
-                            "quantity": 1.0,
+                            "q_required": 1.0,
                             "source_id": 8
                         },
                         {
                             "preserve": true,
-                            "quantity": 1.0,
+                            "q_required": 1.0,
                             "source_id": 9
                         }
                     ]
@@ -451,8 +425,9 @@
         "win_reqs": [
             {
                 "attrib_id": null,
-                "attrib_value": 0,
+                "attrib_value": 0.0,
                 "char_id": null,
+                "id": 1,
                 "item_id": 6,
                 "loc_id": 1,
                 "quantity": 30.0
