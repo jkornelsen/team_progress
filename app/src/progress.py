@@ -18,13 +18,13 @@ tables_to_create = {
 
 class Progress(Identifiable):
     """Track progress over time."""
-    def __init__(self, new_id="", entity=None, recipe=None):
+    def __init__(self, new_id="", container=None, recipe=None):
         super().__init__(new_id)
-        self.entity = entity  # e.g. Character that uses this object
+        self.container = container  # e.g. Character that uses this object
         self.pile = None  # e.g. char OwnedItem
         self.q_limit = 0.0
-        if entity:
-            self.pile = entity.pile
+        if container:
+            self.pile = container.pile
             self.q_limit = self.pile.item.q_limit
         if recipe:
             self.recipe = recipe
@@ -48,10 +48,10 @@ class Progress(Identifiable):
         }
 
     @classmethod
-    def from_json(cls, data, entity=None):
+    def from_json(cls, data, container=None):
         if not isinstance(data, dict):
             data = vars(data)
-        instance = cls(int(data.get('id', 0)), entity=entity)
+        instance = cls(int(data.get('id', 0)), container=container)
         from .item import Recipe
         instance.recipe = Recipe(int(data.get('recipe_id', 0)))
         instance.start_time = data.get('start_time')
@@ -112,7 +112,7 @@ class Progress(Identifiable):
                 eff_result_qty = num_batches * self.recipe.rate_amount
                 self.pile.quantity += eff_result_qty
                 self.batches_processed += num_batches
-                self.entity.to_db()
+                self.container.to_db()
             if stop_here:
                 self.stop()
             return num_batches > 0
@@ -172,14 +172,14 @@ class Progress(Identifiable):
         self.start_time = datetime.now()
         self.batches_processed = 0
         self.is_ongoing = True
-        self.entity.to_db()
+        self.container.to_db()
         return True
 
     def stop(self):
         if self.is_ongoing:
             self.is_ongoing = False
             self.stop_time = datetime.now()
-            self.entity.to_db()
+            self.container.to_db()
             return True
         else:
             return False

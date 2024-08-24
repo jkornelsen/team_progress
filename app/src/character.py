@@ -66,7 +66,7 @@ class Character(Identifiable):
         self.attribs = {}  # keys are Attrib object, values are stat val
         self.items = []  # OwnedItem objects
         self.pile = OwnedItem()  # for Progress
-        self.progress = Progress(entity=self)  # for travel or item recipes
+        self.progress = Progress(container=self)  # for travel or item recipes
         self.location = None  # Location object
         self.destination = None  # Location object to travel to
 

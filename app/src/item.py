@@ -148,7 +148,7 @@ class Item(Identifiable):
         self.quantity = 0.0  # general storage -- not owned or at location
         self.pile = self  # referenced by Progress
         self.pile.item = self  # referenced by Progress
-        self.progress = Progress(entity=self)  # for items in general storage
+        self.progress = Progress(container=self)  # for general storage
 
     def to_json(self):
         return {
@@ -447,25 +447,23 @@ class Item(Identifiable):
         print(f"{cls.__name__}.data_for_play()")
         current_obj = cls.data_for_configure(id_to_get)
         # Get item data for the specific container
-        container_name = ""
         if owner_char_id:
             from .character import Character, OwnedItem
-            char = Character.data_for_configure(owner_char_id)
-            container_name = char.name
-            contained = next(
-                (ownedItem for ownedItem in char.items
+            container = Character.data_for_configure(owner_char_id)
+            pile = next(
+                (ownedItem for ownedItem in container.items
                 if ownedItem.item.id == current_obj.id),
                 OwnedItem(current_obj))
         elif at_loc_id:
             from .location import Location, ItemAt
-            loc = Location.data_for_configure(at_loc_id)
-            container_name = loc.name
-            contained = next(
-                (itemAt for itemAt in loc.items
+            container = Location.data_for_configure(at_loc_id)
+            pile = next(
+                (itemAt for itemAt in container.items
                 if itemAt.item.id == current_obj.id),
                 ItemAt(current_obj))
         else:
-            contained = self
+            container = current_obj
+            pile = current_obj
         # Get relation data for items that use this item as a source
         item_recipes_data = cls.db_recipe_data(id_to_get, get_by_source=True)
         for item_id, recipes_data in item_recipes_data.items():
@@ -474,7 +472,7 @@ class Item(Identifiable):
             item.recipes = [
                 Recipe.from_json(recipe_data, item)
                 for recipe_id, recipe_data in recipes_data.items()]
-        return current_obj, contained, container_name
+        return current_obj, pile, container
 
     def configure_by_form(self):
         if 'save_changes' in request.form:  # button was clicked
@@ -566,75 +564,56 @@ def set_routes(app):
         else:
             return instance.configure_by_form()
 
-    @app.route('/play/item/<int:item_id>/',
-        defaults={'char_id': None, 'loc_id': None})
-    @app.route('/play/item/<int:item_id>/char/<int:char_id>/',
-        defaults={'loc_id': None})
-    @app.route('/play/item/<int:item_id>/loc/<int:loc_id>/',
-        defaults={'char_id': None})
-    def play_item(item_id, char_id, loc_id):
+    @app.route('/play/item/<int:item_id>/')
+    def play_item(item_id):
+        char_id = request.args.get('char_id', '')
+        loc_id = request.args.get('loc_id', '')
         print("-" * 80)
         print(f"play_item(item_id={item_id}, char_id={char_id}, loc_id={loc_id})")
-        instance, contained, container_name = Item.data_for_play(
-            item_id, char_id, loc_id)
-        if not instance:
+        item, pile, container = Item.data_for_play(item_id, char_id, loc_id)
+        if not item:
             return 'Item not found'
         if char_id:
             container_link = (
                 f'Owned by <a href="{url_for("play_char", char_id=char_id)}">'
-                f'{container_name}</a>')
+                f'{container.name}</a>')
         elif loc_id:
             container_link = (
                 f'At <a href="{url_for("play_location", loc_id=loc_id)}">'
-                f'{container_name}</a>')
+                f'{container.name}</a>')
         else:
             container_link = 'General Storage'
         return render_template(
             'play/item.html',
-            current=instance,
-            contained=contained,
+            current=item,
+            pile=pile,
             char_id=char_id,
             loc_id=loc_id,
             container_link=container_link,
             game_data=g.game_data)
 
-    @app.route('/item/gain/<int:item_id>/<int:recipe_id>', methods=['POST'])
-    def gain_item(item_id, recipe_id):
-        print("-" * 80)
-        print(f"gain_item({item_id})")
-        num_batches = int(request.form.get('quantity'))
-        item = Item.data_for_configure(item_id)
-        print(f"Retrieved item {item.id} from DB: {len(item.recipes)} recipes")
-        item.progress.set_recipe_by_id(recipe_id)
-        changed = item.progress.change_quantity(num_batches)
-        if changed:
-            return jsonify({
-                'status': 'success', 'message':
-                f'Quantity of {item.name} changed.'})
-        else:
-            return jsonify({
-                'status': 'error',
-                'message': 'Could not change quantity.'})
-
-    @app.route('/item/progress_data/<int:item_id>/',
-        defaults={'char_id': None, 'loc_id': None})
-    @app.route('/item/progress_data/<int:item_id>/char/<int:char_id>/',
-        defaults={'loc_id': None})
-    @app.route('/item/progress_data/<int:item_id>/loc/<int:loc_id>/',
-        defaults={'char_id': None})
-    def item_progress_data(item_id, char_id, loc_id):
+    @app.route('/item/progress_data/<int:item_id>/')
+    def item_progress_data(item_id):
+        char_id = request.args.get('char_id', '')
+        loc_id = request.args.get('loc_id', '')
         print("-" * 80)
         print(f"item_progress_data({item_id})")
-        item = Item.data_for_configure(item_id)
+        item, pile, container = Item.data_for_play(item_id, char_id, loc_id)
         print(f"Retrieved item {item.id} from DB: {len(item.recipes)} recipes")
         if item:
+            if loc_id:
+                return jsonify({
+                    'is_ongoing': False,
+                    'recipe_id': 0,
+                    'quantity': pile.quantity,
+                    'elapsed_time': 0})
             if item.progress.is_ongoing:
                 item.progress.determine_current_quantity()
             return jsonify({
-                'is_ongoing': item.progress.is_ongoing,
-                'recipe_id': item.progress.recipe.id,
-                'quantity': item.quantity,
-                'elapsed_time': item.progress.calculate_elapsed_time()})
+                'is_ongoing': container.progress.is_ongoing,
+                'recipe_id': container.progress.recipe.id,
+                'quantity': pile.quantity,
+                'elapsed_time': container.progress.calculate_elapsed_time()})
         else:
             return jsonify({'error': 'Item not found'})
 
@@ -675,4 +654,22 @@ def set_routes(app):
                 'status': 'success',
                 'message': 'Progress is already paused.',
                 'is_ongoing': item.progress.is_ongoing})
+
+    @app.route('/item/gain/<int:item_id>/<int:recipe_id>', methods=['POST'])
+    def gain_item(item_id, recipe_id):
+        print("-" * 80)
+        print(f"gain_item({item_id})")
+        num_batches = int(request.form.get('quantity'))
+        item = Item.data_for_configure(item_id)
+        print(f"Retrieved item {item.id} from DB: {len(item.recipes)} recipes")
+        item.progress.set_recipe_by_id(recipe_id)
+        changed = item.progress.change_quantity(num_batches)
+        if changed:
+            return jsonify({
+                'status': 'success', 'message':
+                f'Quantity of {item.name} changed.'})
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': 'Could not change quantity.'})
 

@@ -10,7 +10,7 @@
     <h1>Item Setup</h1>
     <p class="info">In addition to typical items such as resources, money, or equipment,
     they can also represent an upgrade in production speed,
-    or concepts such as reputation.
+    or concepts such as reputation, or conversation dialog.
     They could even be people if they don't do much.
     For more ideas on how items can be used, browse the pre-built scenarios.
     </p>
@@ -36,9 +36,9 @@
             <label for="storage_type">Storage:</label>
             <div class="storage-options">
                 <input type="radio" id="carried" name="storage_type" value="carried" {% if current.storage_type == 'carried' %}checked{% endif %}>
-                <label for="carried">Typically carried (by a character)</label><br>
+                <label for="carried">Used when carried</label><br>
                 <input type="radio" id="local" name="storage_type" value="local" {% if current.storage_type == 'local' %}checked{% endif %}>
-                <label for="local">Stays on floor (at a location)</label><br>
+                <label for="local">Resides at a location</label><br>
                 <input type="radio" id="universal" name="storage_type" value="universal" {% if current.storage_type == 'universal' %}checked{% endif %}>
                 <label for="universal">Accessible anywhere</label>
                 <input type="checkbox" id="top_level" name="top_level" style="margin-left: 10px;" {% if current.toplevel %}checked{% endif %}><label for="top_level">Show in Overview</label><br>

@@ -35,13 +35,6 @@
 
     {% if current.items %}
         <h2>Items</h2>
-        <style>
-        .item-quantity {
-            display: inline-block;
-            width: 50px;
-            text-align: right;
-        }
-        </style>
         <ul class="item-list">
             {% for item_at in current.items %}
                 {% set item = item_at.item %}
@@ -52,7 +45,7 @@
                         </a>
                     </span>
                     <span class="item-quantity" id="item-{{ item.id }}-quantity">
-                        {% if item_at.quantity != -1 %}
+                        {% if not (item_at.item.q_limit == 1 and item_at.quantity == 1) %}
                             {{ item_at.quantity | dec2str }}
                         {% endif %}
                     </span>

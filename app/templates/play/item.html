@@ -70,9 +70,10 @@
                     <tr>
                         <th>Batches</th>
                         <th>Rate</th>
-                        <th>Source Item</th>
-                        <th>In Stock</th>
+                        <th>Source</th>
                         <th>Required</th>
+                        <th>In Stock</th>
+                        <th>Where</th>
                     </tr>
                     {% for recipe in current.recipes %}
                         {% set rowspan = recipe.sources | length %}
@@ -93,11 +94,10 @@
                         </td>
                         {% if rowspan > 0 %}
                             <td>
-                                <a href="{{ url_for('play_item', item_id=recipe.sources[0].item.id) }}">
+                                <a href="{{ url_for('play_item', item_id=recipe.sources[0].item.id, char_id=char_id, loc_id=loc_id) }}">
                                     {{ recipe.sources[0].item.name }}
                                 </a>
                             </td>
-                            <td id="recipe-{{ recipe.id }}-source-{{ recipe.sources[0].item.id }}-quantity">...</td>
                             <td>
                                 {% if recipe.sources[0].preserve %}
                                     ({{ recipe.sources[0].q_required | dec2str }})
@@ -105,16 +105,17 @@
                                     {{ recipe.sources[0].q_required | dec2str }}
                                 {% endif %}
                             </td>
+                            <td id="recipe-{{ recipe.id }}-source-{{ recipe.sources[0].item.id }}-quantity">...</td>
+                            <td id="recipe-{{ recipe.id }}-source-{{ recipe.sources[0].item.id }}-at">...</td>
                         {% endif %}
                     </tr>
                     {% for source in recipe.sources[1:] %}
                     <tr>
                         <td>
-                            <a href="{{ url_for('play_item', item_id=source.item.id) }}">
+                            <a href="{{ url_for('play_item', item_id=source.item.id, char_id=char_id, loc_id=loc_id) }}">
                                 {{ source.item.name }}
                             </a>
                         </td>
-                        <td id="recipe-{{ recipe.id }}-source-{{ source.item.id }}-qtyreq">...</td>
                         <td>
                             {% if source.preserve %}
                                 ({{ source.q_required | dec2str }})
@@ -122,6 +123,8 @@
                                 {{ source.q_required | dec2str }}
                             {% endif %}
                         </td>
+                        <td id="recipe-{{ recipe.id }}-source-{{ source.item.id }}-qtyreq">...</td>
+                        <td id="recipe-{{ recipe.id }}-source-{{ source.item.id }}-at">...</td>
                     </tr>
                     {% endfor %}
                     {% endfor %}
@@ -154,7 +157,7 @@
                     {% for used_for in outerscope.used_as_source %}
                     <tr>
                         <td>
-                            <a href="{{ url_for('play_item', item_id=used_for.item.id) }}">
+                            <a href="{{ url_for('play_item', item_id=used_for.item.id, char_id=char_id, loc_id=loc_id) }}">
                                 {{ used_for.item.name }}
                             </a>
                         </td>
@@ -285,15 +288,19 @@
 
             // Fetch progress data and update all relevant information
             function fetchProgressData() {
-                let itemId = "{{ item_id }}";
+                let itemId = "{{ current.id }}";
                 let charId = "{{ char_id }}";
                 let locId = "{{ loc_id }}";
                 let url = '/item/progress_data/' + itemId;
+                let queryParams = [];
                 if (charId) {
-                    url += '/char/' + charId;
+                    queryParams.push('char_id=' + encodeURIComponent(charId));
                 }
                 if (locId) {
-                    url += '/loc/' + locId;
+                    queryParams.push('loc_id=' + encodeURIComponent(locId));
+                }
+                if (queryParams.length > 0) {
+                    url += '?' + queryParams.join('&');
                 }
                 $.get(url, function(data) {
                     updateQuantity(data);

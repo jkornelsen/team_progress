@@ -45,7 +45,7 @@
                     <progress class="progress-bar" max="100" value="0"></progress>
                     <span class="progress-label">0 / 0</span>
                 </div>
-                <p>&nbsp;(Elapsed <span id="dest-time">...</span>)</p>
+                <!--<p>&nbsp;(Elapsed <span id="dest-time">...</span>)</p>-->
                 <button id="start-travel-btn">Start</button>
                 <button id="stop-travel-btn">Stop</button>
             </div>
@@ -84,7 +84,7 @@
                     </a>
                 </span>
                 <span class="item-quantity" id="item-{{ item.id }}-quantity">
-                    {% if owned.quantity != -1 %}
+                    {% if not (owned.item.q_limit == 1 and owned.quantity == 1) %}
                         {{ owned.quantity | dec2str }}
                     {% endif %}
                 </span>
@@ -140,7 +140,7 @@
                 if (!is_ongoing)
                     return;
                 elapsedTime += 1;  // Increment by 1 second
-                $('#dest-time').text(formatTime(elapsedTime));
+                //$('#dest-time').text(formatTime(elapsedTime));
             }
 
             // Function to format the time in HH:MM:SS format.
@@ -158,7 +158,7 @@
                 } else {
                     elapsedTime = 0;
                 }
-                $('#dest-time').text(formatTime(elapsedTime));
+                //$('#dest-time').text(formatTime(elapsedTime));
             }
 
             // the Start button may change to "Running..."

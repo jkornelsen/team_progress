@@ -77,17 +77,18 @@ would that work for multiplayer?
 source of resources: obtained from activities in forest which can be
 unlimited, regenerates periodically, or fixed limit.
 if unlimited, it's equivalent to saying magically produced by an activity,
-so we don't actually have a source
-but a particular location or crafing station can be required
+so we don't actually have a source?
+a particular location or crafing station can be required
 the action stops if requirement is no longer met
 resources could be purchased
 realistic would be to start with a debt and eventually break even and better
 but can choose to make it easy and simply be given lots of money or resources to start
 fixed limit could be used to give an endpoint to the game
 
-on item play page, have start/stop button or gain button for each recipe,
-and show all source quantities for all recipes of that item
-global stop button on overview screen, but no other ability to manufacture anything
+global stop button on overview screen
+
+need a way to lose or destroy items as well as gain them?
+could do this in configure
 
 gain all instant could be more convenient than entering e.g. 9999 batches
 maybe a button or 0 for number of batches, or "(A)ll"
@@ -102,9 +103,9 @@ characters (players and npcs) could also contain (i.e. wear or hold) items
 can move items from owned/carried to general storage
 the difference is whether the game tracks location
 so general storage boils down to less automation
-buttons Drop to Location, Put in General Storage
+buttons Drop (to Location), Put in General Storage, Transfer to Char
+input quantity to transfer
 overview shows general storage
-button to transfer quantity to a character
 
 location required is wherever the source item is found
 that is, if pigs are located in a sty,
@@ -119,7 +120,7 @@ first check if source item is carried,
 then if on floor,
 and finally, if in general storage
 deduct whichever is found first
-might be a bit tricky to implement if say 5 are required,
+might be tricky if say 5 are required,
 and two are held and three are on floor,
 to draw from both,
 but it might be fine to just fail in that case,
@@ -134,26 +135,11 @@ carried -- can be moved to general storage but not used as material from there
 local -- can only be on floor
 universal -- cannot be held in character inventory -- picking up goes to general storage
 radio buttons: <p>Storage:</p>
-() Typically carried (by a character)
-() Stays on floor (at a location)
+() Use when carried
+() Resides at location
 () Accessible anywhere
 
-in many scenarios, no items are top-level, but rather locations,
-perhaps a backpack or chest,
-and clicking on it would show its contents.
-a room could serve this purpose as well, containing npcs for example.
-but general storage top-level items should show on overview screen
-such as for the Pen Factory scenario
-
-I guess it's okay that items would all share the same limit?
-Or maybe there should never be a limit on the floor.
-no reason to start with a limit -- implement later if needed
-
-dialog via item sources
-show sources in overview instead of the produced items
-checkbox to mask if 0 -- replace all non-spaces with "*"
-
-instead of requiring characters to be present in order to produce item,
+instead of requiring specific characters to be present to produce item,
 or requiring identifying attributes such as "Is Hank" > 0,
 use descriptive attributes such as "Is Adult Traveler" > 0.
 display all entities that meet the attr requirement
@@ -214,8 +200,23 @@ cooked bacon should end up in character inventory
 a printed page could stay at that location because requirements are the printer
 whereas if Suzy must use a knife, the output would go to her inventory
 
+items all share the same limit?
+might want to fill large water tank with buckets
+but that could make it too complicated
+
 locations can be top level or not,
 and location play screen lists clickable destinations
+
+in many scenarios, no items are top-level, but rather locations,
+perhaps a backpack or chest,
+and clicking on it would show its contents.
+a room could serve this purpose as well, containing npcs for example.
+but general storage top-level items should show on overview screen
+such as for the Pen Factory scenario
+
+dialog via item sources
+show sources in overview instead of the produced items
+checkbox to mask if 0 -- replace all non-spaces with "*"
 
 sales can increase in complexity, adding stores and store management
 NPCs can work at stores
@@ -498,6 +499,9 @@ not as interesting to see total time spent on this action across starts/stops
 for now, let's eliminate it
 race scenarios would need more than that anyway,
 as each character would need their own time
+
+prompt before overwriting another action in progress
+such as if a character is already doing something else
 
 limit actions in progress to 10 concurrent per session?
 or two per user?
