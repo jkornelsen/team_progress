@@ -2,7 +2,7 @@
 
 {% block upper_left %}
     <div class="nav-container">
-        <a class="upper-left" href="{{ url_for('overview') }}">Overview</a>
+        <a class="upper-left" href="{{ url_for('overview') }}">[O]verview</a>
         <span class="separator">|</span>
         <a class="upper-left" href="{{ url_for('configure') }}">General Setup</a>
         <span class="separator">|</span>
@@ -11,6 +11,19 @@
 {% endblock %}
 
 {% block content %}
+    <script>
+        const linkForKey = {
+            'o': '{{ url_for('overview') }}',
+        };
+        document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('keypress', function (event) {
+                const key = event.key.toLowerCase();
+                if (linkForKey[key]) {
+                    window.location.href = linkForKey[key];
+                }
+            });
+        });
+    </script>
     <h1>{{ current.name }}</h1>
     {% if current.description %}
         <p>{{ current.description }}</p>
@@ -21,9 +34,15 @@
     -->
 
     {% if current.location %}
-    <h2>Location</h2>
-    <ul>
-    <a href="{{ url_for('play_location', loc_id=current.location.id) }}">{{ current.location.name }}</a>
+        <h2>Location</h2>
+        <ul>
+        {% set letter = link_letters.next() %}
+        {% set link = url_for('play_location', loc_id=current.location.id) %}
+        <script>
+            linkForKey['{{ letter }}'] = "{{ link }}";
+        </script>
+        <span>[{{ letter }}]</span>
+        <a href="{{ link }}">{{ current.location.name }}</a>
         {% if current.location.destinations %}
             <div class="flexdiv">
                 <label for="destination-select">Travel To</label>
@@ -58,18 +77,22 @@
     <ul>
         {% for owned in current.items if owned.slot %}
             {% set item = owned.item %}
-            <li>
-                <span class="item-name">
-                    <a href="{{ url_for('play_item', item_id=item.id, char_id=current.id) }}">
-                        {{ item.name }}
-                    </a>
-                </span>
-                <span class="item-slot" id="item-{{ item.id }}-slot">
-                    &mdash; {{ owned.slot }}
-                </span>
-            </li>
+            {% set letter = link_letters.next() %}
+            {% set link = url_for('play_item', item_id=item.id, char_id=current.id) %}
+            <script>
+                linkForKey['{{ letter }}'] = "{{ link }}";
+            </script>
+            <span class="item-name">
+                <span>[{{ letter }}]</span>
+                <a href="{{ link }}">
+                    {{ item.name }}
+                </a>
+            </span>
+            <span class="item-slot" id="item-{{ item.id }}-slot">
+                &mdash; {{ owned.slot }}
+            </span><br>
         {% else %}
-            (None)
+            (None)<br>
         {% endfor %}
     </ul>
 
@@ -77,20 +100,22 @@
     <ul>
         {% for owned in current.items if not owned.slot %}
             {% set item = owned.item %}
-            <li>
-                <span class="item-name">
-                    <a href="{{ url_for('play_item', item_id=item.id, char_id=current.id) }}">
-                        {{ item.name }}
-                    </a>
-                </span>
-                <span class="item-quantity" id="item-{{ item.id }}-quantity">
-                    {% if not (owned.item.q_limit == 1 and owned.quantity == 1) %}
-                        {{ owned.quantity | dec2str }}
-                    {% endif %}
-                </span>
-            </li>
+            {% set letter = link_letters.next() %}
+            {% set link = url_for('play_item', item_id=item.id, char_id=current.id) %}
+            <script>
+                linkForKey['{{ letter }}'] = "{{ link }}";
+            </script>
+            <span class="item-name">
+                <span>[{{ letter }}]</span>
+                <a href="{{ link }}">{{ item.name }}</a>
+            </span>
+            <span class="item-quantity" id="item-{{ item.id }}-quantity">
+                {% if not (owned.item.q_limit == 1 and owned.quantity == 1) %}
+                    {{ owned.quantity | dec2str }}
+                {% endif %}
+            </span><br>
         {% else %}
-            (None)
+            (None)<br>
         {% endfor %}
     </ul>
     {% endif %}

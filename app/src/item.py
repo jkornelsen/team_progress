@@ -13,7 +13,7 @@ import math
 from .attrib import Attrib
 from .progress import Progress
 from .db_serializable import (
-    DbSerializable, Identifiable, MutableNamespace, coldef)
+    DbSerializable, Identifiable, MutableNamespace, coldef, LinkLetters)
 
 STORAGE_TYPES = ['carried', 'local', 'universal']
 (STORAGE_CARRIED,
@@ -573,24 +573,15 @@ def set_routes(app):
         item, pile, container = Item.data_for_play(item_id, char_id, loc_id)
         if not item:
             return 'Item not found'
-        if char_id:
-            container_link = (
-                f'Owned by <a href="{url_for("play_char", char_id=char_id)}">'
-                f'{container.name}</a>')
-        elif loc_id:
-            container_link = (
-                f'At <a href="{url_for("play_location", loc_id=loc_id)}">'
-                f'{container.name}</a>')
-        else:
-            container_link = 'General Storage'
         return render_template(
             'play/item.html',
             current=item,
             pile=pile,
             char_id=char_id,
             loc_id=loc_id,
-            container_link=container_link,
-            game_data=g.game_data)
+            container_name=container.name,
+            game_data=g.game_data,
+            link_letters=LinkLetters(set('do')))
 
     @app.route('/item/progress_data/<int:item_id>/')
     def item_progress_data(item_id):
@@ -673,3 +664,27 @@ def set_routes(app):
                 'status': 'error',
                 'message': 'Could not change quantity.'})
 
+    @app.route('/item/drop/<int:item_id>/char/<int:char_id>', methods=['POST'])
+    def drop_item(item_id, char_id):
+        print("-" * 80)
+        print(f"drop_item(item_id={item_id}, char_id={char_id})")
+        item, pile, container = Item.data_for_play(item_id, char_id, at_loc_id=0)
+        char = container
+        owned_item = next((oi for oi in char.items
+            if oi.item.id == item_id), None)
+        if not owned_item:
+            return jsonify({
+                'status': 'error',
+                'message': f'No item {item.name} in {container.name}\'s inventory.'})
+            return
+        from .location import Location, ItemAt
+        item_at = ItemAt(item=owned_item.item)
+        item_at.quantity = owned_item.quantity
+        loc = Location.data_for_configure(char.location.id)
+        loc.items.append(item_at)  # TODO: check if it already exists
+        char.items.remove(owned_item)
+        loc.to_db()
+        char.to_db()
+        return jsonify({
+            'status': 'success', 'message':
+            f'Dropped {item.name}.'})

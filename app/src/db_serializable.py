@@ -329,3 +329,18 @@ def precision(numstr, places):
     truncated_str = f'{num:.{places}f}'
     return float(truncated_str)
 
+class LinkLetters:
+    """Letters to add before a link for hotkeys."""
+    def __init__(self, excluded={'o'}):
+        self.letter_index = 0
+        self.letters = [
+            chr(c) for c in range(ord('a'), ord('z') + 1)
+            if chr(c) not in excluded]
+
+    def next(self):
+        if self.letter_index < len(self.letters):
+            letter = self.letters[self.letter_index]
+            self.letter_index += 1
+            return letter
+        else:
+            return ''

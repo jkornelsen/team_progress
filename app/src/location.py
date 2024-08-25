@@ -9,7 +9,7 @@ from flask import (
     url_for
 )
 from .db_serializable import (
-    Identifiable, MutableNamespace, coldef, tuple_to_pg_array)
+    Identifiable, MutableNamespace, coldef, tuple_to_pg_array, LinkLetters)
 from .item import Item
 
 tables_to_create = {
@@ -303,5 +303,6 @@ def set_routes(app):
         return render_template(
             'play/location.html',
             current=instance,
-            game_data=g.game_data)
+            game_data=g.game_data,
+            link_letters=LinkLetters())
 

@@ -2,7 +2,7 @@
 
 {% block upper_left %}
     <div class="nav-container">
-        <a class="upper-left" href="{{ url_for('overview') }}">Overview</a>
+        <a class="upper-left" href="{{ url_for('overview') }}">[O]verview</a>
         <span class="separator">|</span>
         <a class="upper-left" href="{{ url_for('configure') }}">General Setup</a>
         <span class="separator">|</span>
@@ -11,6 +11,19 @@
 {% endblock %}
 
 {% block content %}
+    <script>
+        const linkForKey = {
+            'o': '{{ url_for('overview') }}',
+        };
+        document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('keypress', function (event) {
+                const key = event.key.toLowerCase();
+                if (linkForKey[key]) {
+                    window.location.href = linkForKey[key];
+                }
+            });
+        });
+    </script>
     <table>
         <tr>
             <td style="background-color: #2a2a2a; border-bottom: 2px solid #ffffff;">

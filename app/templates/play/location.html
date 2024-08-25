@@ -2,7 +2,7 @@
 
 {% block upper_left %}
     <div class="nav-container">
-        <a class="upper-left" href="{{ url_for('overview') }}">Overview</a>
+        <a class="upper-left" href="{{ url_for('overview') }}">[O]verview</a>
         <span class="separator">|</span>
         <a class="upper-left" href="{{ url_for('configure') }}">General Setup</a>
         <span class="separator">|</span>
@@ -11,6 +11,19 @@
 {% endblock %}
 
 {% block content %}
+    <script>
+        const linkForKey = {
+            'o': '{{ url_for('overview') }}',
+        };
+        document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('keypress', function (event) {
+                const key = event.key.toLowerCase();
+                if (linkForKey[key]) {
+                    window.location.href = linkForKey[key];
+                }
+            });
+        });
+    </script>
     <h1>{{ current.name }}</h1>
     {% if current.description %}
         <p>{{ current.description }}</p>
@@ -26,9 +39,13 @@
     <h2>Characters</h2>
     <ul>
         {% for char in game_data.characters if char.location.id == current.id %}
-            <li>
-                <a href="{{ url_for('play_char', char_id=char.id) }}">{{ char.name }}</a>
-            </li>
+            {% set letter = link_letters.next() %}
+            {% set link = url_for('play_char', char_id=char.id) %}
+            <script>
+                linkForKey['{{ letter }}'] = "{{ link }}";
+            </script>
+            <span>[{{ letter }}]</span>
+            <a href="{{ link }}">{{ char.name }}</a><br>
         {% endfor %}
     </ul>
     {% endif %}
@@ -38,18 +55,20 @@
         <ul class="item-list">
             {% for item_at in current.items %}
                 {% set item = item_at.item %}
-                <li>
-                    <span class="item-name">
-                        <a href="{{ url_for('play_item', item_id=item.id, loc_id=current.id) }}">
-                            {{ item.name }}
-                        </a>
-                    </span>
-                    <span class="item-quantity" id="item-{{ item.id }}-quantity">
-                        {% if not (item_at.item.q_limit == 1 and item_at.quantity == 1) %}
-                            {{ item_at.quantity | dec2str }}
-                        {% endif %}
-                    </span>
-                </li>
+                {% set letter = link_letters.next() %}
+                {% set link = url_for('play_item', item_id=item.id, loc_id=current.id) %}
+                <script>
+                    linkForKey['{{ letter }}'] = "{{ link }}";
+                </script>
+                <span>[{{ letter }}]</span>
+                <span class="item-name">
+                    <a href="{{ link }}">{{ item.name }}</a>
+                </span>
+                <span class="item-quantity" id="item-{{ item.id }}-quantity">
+                    {% if not (item_at.item.q_limit == 1 and item_at.quantity == 1) %}
+                        &nbsp; {{ item_at.quantity | dec2str }}
+                    {% endif %}
+                </span><br>
             {% endfor %}
         </ul>
     {% else %}
@@ -60,10 +79,14 @@
     <h2>Destinations</h2>
     <ul>
         {% for destination, distance in current.destinations.items() %}
-            <li>
-                <a href="{{ url_for('play_location', loc_id=destination.id) }}">{{ destination.name }}</a> —
-                Distance {{ distance | dec2str }}
-            </li>
+            {% set letter = link_letters.next() %}
+            {% set link = url_for('play_location', loc_id=destination.id) %}
+            <script>
+                linkForKey['{{ letter }}'] = "{{ link }}";
+            </script>
+            <span>[{{ letter }}]</span>
+            <a href="{{ link }}">{{ destination.name }}</a> —
+            Distance {{ distance | dec2str }}<br>
         {% endfor %}
     </ul>
     {% endif %}

@@ -8,7 +8,8 @@ from flask import (
     session,
     url_for
 )
-from .db_serializable import Identifiable, MutableNamespace, coldef
+from .db_serializable import (
+    Identifiable, MutableNamespace, coldef, LinkLetters)
 from .attrib import Attrib
 from .item import Item
 from .location import Location
@@ -381,7 +382,8 @@ def set_routes(app):
         return render_template(
             'play/character.html',
             current=instance,
-            game_data=g.game_data)
+            game_data=g.game_data,
+            link_letters=LinkLetters())
 
     @app.route('/char/start/<int:char_id>', methods=['POST'])
     def start_char(char_id):

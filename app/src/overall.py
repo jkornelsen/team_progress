@@ -9,7 +9,8 @@ from flask import (
     session,
     url_for
 )
-from .db_serializable import DbSerializable, Identifiable, coldef
+from .db_serializable import (
+    DbSerializable, Identifiable, coldef, LinkLetters)
 
 from .attrib import Attrib
 from .character import Character
@@ -339,5 +340,6 @@ def set_routes(app):
             current=overall,
             charlist=charlist,
             other_entities=other_entities,
-            interactions=interactions)
+            interactions=interactions,
+            link_letters=LinkLetters())
 

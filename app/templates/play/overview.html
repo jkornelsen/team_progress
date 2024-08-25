@@ -7,6 +7,17 @@
 {% endblock %}
 
 {% block content %}
+    <script>
+        const linkForKey = {};
+        document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('keypress', function (event) {
+                const key = event.key.toLowerCase();
+                if (linkForKey[key]) {
+                    window.location.href = linkForKey[key];
+                }
+            });
+        });
+    </script>
     {% if current.have_won() %}
         <h1 style="color:green">&#10004; <!-- Checkmark -->
     {% else %}
@@ -24,9 +35,17 @@
             <th>Most Recent Interaction</th>
         </tr>
         {% for interaction in interactions %}
+            {% set letter = link_letters.next() %}
+            {% set link = interaction.action_link %}
+            <script>
+                linkForKey['{{ letter }}'] = "{{ link }}";
+            </script>
             <tr>
                 <td{% if interaction.username == current_username %} class="username"{% endif %}>{{ interaction.username }}</td>
-                <td><a href="{{ interaction.action_link() }}">{{ interaction.action_display() }}</a></td>
+                <td>
+                    <span>[{{ letter }}]</span>
+                    <a href="{{ link }}">{{ interaction.action_display() }}</a>
+                </td>
             </td></tr>
         {% endfor %}
     </table>
@@ -56,11 +75,23 @@
             {% for char in charlist %}
                 <tr><td>
                     {% if char.char_id %}
-                        <a href="{{ url_for('play_char', char_id=char.char_id) }}">{{ char.char_name }}</a>
+                        {% set letter = link_letters.next() %}
+                        {% set link = url_for('play_char', char_id=char.char_id) %}
+                        <script>
+                            linkForKey['{{ letter }}'] = "{{ link }}";
+                        </script>
+                        <span>[{{ letter }}]</span>
+                        <a href="{{ link }}">{{ char.char_name }}</a>
                     {% endif %}
                 </td><td>
                     {% if char.loc_id %}
-                        <a href="{{ url_for('play_location', loc_id=char.loc_id) }}">{{ char.loc_name }}</a>
+                        {% set letter = link_letters.next() %}
+                        {% set link = url_for('play_location', loc_id=char.loc_id) %}
+                        <script>
+                            linkForKey['{{ letter }}'] = "{{ link }}";
+                        </script>
+                        <span>[{{ letter }}]</span>
+                        <a href="{{ link }}">{{ char.loc_name }}</a>
                     {% endif %}
                 </td></tr>
             {% endfor %}
@@ -75,11 +106,15 @@
                 <th>Quantity</th>
             </tr>
             {% for item in other_entities.items %}
+                {% set letter = link_letters.next() %}
+                {% set link = url_for('play_item', item_id=item.id) %}
+                <script>
+                    linkForKey['{{ letter }}'] = "{{ link }}";
+                </script>
                 <tr>
                     <td>
-                        <a href="{{ url_for('play_item', item_id=item.id) }}">
-                            {{ item.name }}
-                        </a>
+                        <span>[{{ letter }}]</span>
+                        <a href="{{ link }}">{{ item.name }}</a>
                     </td>
                     <td id="item-{{ item.id }}-quantity">...</td>
                 </tr>
