@@ -76,7 +76,7 @@ def column_counts(table_name):
         'loc_destinations': 4,
         'loc_items': 5,
         'locations': 5,
-        'overall': 3,
+        'overall': 4,
         'progress': 7,
         'recipe_attribs': 5,
         'recipe_sources': 6,

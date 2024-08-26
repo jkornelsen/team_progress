@@ -1,16 +1,8 @@
 from collections import namedtuple
+from flask import g, request
 from types import SimpleNamespace
-from flask import (
-    Flask,
-    g,
-    redirect,
-    render_template,
-    request,
-    session,
-    url_for
-)
-from .db_serializable import (
-    DbSerializable, Identifiable, coldef, LinkLetters)
+
+from .db_serializable import DbSerializable, Identifiable, coldef
 
 from .attrib import Attrib
 from .character import Character
@@ -23,6 +15,7 @@ tables_to_create = {
         {coldef('game_token')},
         title varchar(255) NOT NULL,
         {coldef('description')},
+        slots TEXT[],
         PRIMARY KEY (game_token)
     """
 }
@@ -100,6 +93,7 @@ class Overall(DbSerializable):
             "\r\n\r\n"
             "More setup can be done as the game goes along.")
         self.win_reqs = []
+        self.slots = []
 
     @classmethod
     def tablename(cls):
@@ -120,6 +114,7 @@ class Overall(DbSerializable):
             'win_reqs': [
                 win_req.to_json()
                 for win_req in self.win_reqs],
+            'slots': tuple(self.slots)
         }
 
     @classmethod
@@ -132,6 +127,8 @@ class Overall(DbSerializable):
         instance.win_reqs = [
             WinRequirement.from_json(winreq_data)
             for winreq_data in data.get('win_reqs', [])]
+        DEFAULT_SLOTS = ["Main Hand", "Off Hand", "Body Armor"]
+        instance.slots = list(data.get('slots') or DEFAULT_SLOTS)
         return instance
 
     @classmethod
@@ -155,7 +152,7 @@ class Overall(DbSerializable):
                 instance.win_reqs.append(
                     WinRequirement.from_json(winreq_data))
         if not instance:
-            print("overall data not found -- returning generic object")
+            print("overall data not found -- making generic object")
             instance = cls()
         return instance
 
@@ -190,27 +187,28 @@ class Overall(DbSerializable):
                 prefix = f"winreq{winreq_id}_"
                 req = WinRequirement()
                 self.win_reqs.append(req)
-                req.quantity = int(request.form.get(f"{prefix}quantity", 0))
-                item_id = int(request.form.get(f"{prefix}item_id", 0))
+                req.quantity = self.form_dec(request, f"{prefix}quantity")
+                item_id = self.form_int(request, f"{prefix}item_id")
                 if item_id:
                     req.item = Item(item_id)
-                char_id = int(request.form.get(f"{prefix}char_id", 0))
+                char_id = self.form_int(request, f"{prefix}char_id")
                 if char_id:
                     req.character = Character(char_id)
-                loc_id = int(request.form.get(f"{prefix}loc_id", 0))
+                loc_id = self.form_int(request, f"{prefix}loc_id")
                 if loc_id:
                     req.location = Location(loc_id)
-                attrib_id = int(request.form.get(f"{prefix}attrib_id", 0))
+                attrib_id = self.form_int(request, f"{prefix}attrib_id")
                 if attrib_id:
                     req.attrib = Attrib(attrib_id)
-                req.attrib_value = int(
-                    request.form.get(f"{prefix}attribValue", 0))
+                req.attrib_value = self.form_int(request, f"{prefix}attribValue")
+            self.slots = [slot.strip()
+                for slot in request.form.get('slots').splitlines()
+                if slot.strip()]
             self.to_db()
         elif 'cancel_changes' in request.form:
             print("Cancelling changes.")
         else:
             print("Neither button was clicked.")
-        return redirect(url_for('configure'))
 
     @classmethod
     def data_for_overview(cls):
@@ -317,29 +315,3 @@ class Overall(DbSerializable):
             character_list,
             other_toplevel_entities,
             interactions_list)
-
-def set_routes(app):
-    @app.route('/configure/overall', methods=['GET', 'POST'])
-    def configure_overall():
-        game_data = Overall.data_for_configure()
-        if request.method == 'GET':
-            session['referrer'] = request.referrer
-            return render_template(
-                'configure/overall.html',
-                current=game_data.overall,
-                game_data=game_data)
-        else:
-            return game_data.overall.configure_by_form()
-
-    @app.route('/overview')
-    def overview():
-        overall, charlist, other_entities, interactions = (
-            Overall.data_for_overview())
-        return render_template(
-            'play/overview.html',
-            current=overall,
-            charlist=charlist,
-            other_entities=other_entities,
-            interactions=interactions,
-            link_letters=LinkLetters())
-

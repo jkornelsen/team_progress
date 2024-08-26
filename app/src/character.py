@@ -1,15 +1,5 @@
-from flask import (
-    Flask,
-    g,
-    jsonify,
-    redirect,
-    render_template,
-    request,
-    session,
-    url_for
-)
-from .db_serializable import (
-    Identifiable, MutableNamespace, coldef, LinkLetters)
+from flask import g, request, session
+from .db_serializable import Identifiable, MutableNamespace, coldef
 from .attrib import Attrib
 from .item import Item
 from .location import Location
@@ -342,103 +332,9 @@ class Character(Identifiable):
             try:
                 self.remove_from_db()
                 session['file_message'] = 'Removed character.'
-            except Exception as e:
-                return render_template('error.html',
-                    message="Could not delete character.",
-                    details=str(e))
+            except DbError as e:
+                raise DeletionError(e)
         elif 'cancel_changes' in request.form:
             print("Cancelling changes.")
         else:
             print("Neither button was clicked.")
-        referrer = session.pop('referrer', None)
-        print(f"Referrer in configure_by_form(): {referrer}")
-        if referrer:
-            return redirect(referrer)
-        else:
-            return redirect(url_for('configure'))
-
-def set_routes(app):
-    @app.route('/configure/character/<char_id>', methods=['GET', 'POST'])
-    def configure_char(char_id):
-        print("-" * 80)
-        print(f"configure_char({char_id})")
-        instance = Character.data_for_configure(char_id)
-        if request.method == 'GET':
-            session['referrer'] = request.referrer
-            return render_template(
-                'configure/character.html',
-                current=instance,
-                game_data=g.game_data)
-        else:
-            return instance.configure_by_form()
-
-    @app.route('/play/char/<int:char_id>')
-    def play_char(char_id):
-        print("-" * 80)
-        print(f"play_char({char_id})")
-        instance = Character.data_for_play(char_id)
-        if not instance:
-            return 'Character not found'
-        return render_template(
-            'play/character.html',
-            current=instance,
-            game_data=g.game_data,
-            link_letters=LinkLetters())
-
-    @app.route('/char/start/<int:char_id>', methods=['POST'])
-    def start_char(char_id):
-        print("-" * 80)
-        print(f"start_char({char_id})")
-        dest_id = int(request.form.get('dest_id'))
-        char = Character.data_for_play(char_id)
-        if not char.destination or char.destination.id != dest_id:
-            char.destination = Location.get_by_id(dest_id)
-            char.pile.quantity = 0
-            char.to_db()
-        if char.progress.start():
-            char.to_db()
-            return jsonify({'status': 'success', 'message': 'Progress started.'})
-        else:
-            return jsonify({'status': 'error', 'message': 'Could not start.'})
-
-    @app.route('/char/stop/<int:char_id>')
-    def stop_char(char_id):
-        print("-" * 80)
-        print(f"stop_char({char_id})")
-        char = Character.data_for_play(char_id)
-        if char.progress.stop():
-            char.to_db()
-            return jsonify({'message': 'Progress paused.'})
-        else:
-            return jsonify({'message': 'Progress is already paused.'})
-
-    @app.route('/char/progress_data/<int:char_id>')
-    def char_progress_data(char_id):
-        print("-" * 80)
-        print(f"char_progress_data({char_id})")
-        char = Character.data_for_play(char_id)
-        if char:
-            if not char.location or not char.destination:
-                return jsonify({
-                    'quantity': 0,
-                    'is_ongoing': False,
-                    'message': 'No travel destination.'})
-            if char.progress.is_ongoing:
-                char.progress.determine_current_quantity()
-                char.to_db()
-            if char.pile.quantity >= char.pile.item.q_limit:
-                # arrived at the destination
-                char.progress.stop()
-                char.pile.quantity = 0
-                char.location = char.destination
-                char.destination = None
-                char.to_db()
-                return jsonify({'status': 'arrived'})
-            else:
-                return jsonify({
-                    'is_ongoing': char.progress.is_ongoing,
-                    'quantity': int(char.pile.quantity),
-                    'elapsed_time': char.progress.calculate_elapsed_time()})
-        else:
-            return jsonify({'error': 'Character not found.'})
-

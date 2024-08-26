@@ -1,15 +1,6 @@
-from flask import (
-    Flask,
-    g,
-    jsonify,
-    redirect,
-    render_template,
-    request,
-    session,
-    url_for
-)
+from flask import g, request, session
 from .db_serializable import (
-    Identifiable, MutableNamespace, coldef, tuple_to_pg_array, LinkLetters)
+    Identifiable, MutableNamespace, coldef, tuple_to_pg_array)
 from .item import Item
 
 tables_to_create = {
@@ -262,47 +253,12 @@ class Location(Identifiable):
             try:
                 self.remove_from_db()
                 session['file_message'] = 'Removed location.'
-            except Exception as e:
-                return render_template('error.html',
-                    message="Could not delete location.",
-                    details=str(e))
+            except DbError as e:
+                raise DeletionError(e)
         elif 'cancel_changes' in request.form:
             print("Cancelling changes.")
         else:
             print("Neither button was clicked.")
-        referrer = session.pop('referrer', None)
-        print(f"Referrer in configure_by_form(): {referrer}")
-        if referrer:
-            return redirect(referrer)
-        else:
-            return redirect(url_for('configure'))
 
     def distance(self, other_location):
         return self.destinations.get(other_location, -1)
-
-def set_routes(app):
-    @app.route('/configure/location/<loc_id>',methods=['GET', 'POST'])
-    def configure_location(loc_id):
-        instance = Location.data_for_configure(loc_id)
-        if request.method == 'GET':
-            session['referrer'] = request.referrer
-            return render_template(
-                'configure/location.html',
-                current=instance,
-                game_data=g.game_data)
-        else:
-            return instance.configure_by_form()
-
-    @app.route('/play/location/<int:loc_id>')
-    def play_location(loc_id):
-        print("-" * 80)
-        print(f"play_location({loc_id})")
-        instance = Location.data_for_play(loc_id)
-        if not instance:
-            return 'Location not found'
-        return render_template(
-            'play/location.html',
-            current=instance,
-            game_data=g.game_data,
-            link_letters=LinkLetters())
-

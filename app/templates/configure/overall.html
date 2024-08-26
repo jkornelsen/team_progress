@@ -83,7 +83,10 @@
                     {% endfor %}
                 </select>
                 <button type="button" id="add-item-req" class="lesser-button">Save Requirement</button>
-        </div>
+        </div><br>
+        <br>
+        <label for="slots">Equipment Slots:</label>
+        <textarea id="slots" name="slots" rows="5" cols="15">{{ '\n'.join(current.slots) }}</textarea><br>
         <div style="margin-top: 20px;">
             <button type="submit" id="btn-save" name="save_changes">Save and Continue</button>
             <button type="submit" id="btn-cancel" name="cancel_changes" formnovalidate>Cancel Changes</button>

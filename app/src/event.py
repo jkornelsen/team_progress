@@ -1,13 +1,4 @@
-from flask import (
-    Flask,
-    g,
-    jsonify,
-    redirect,
-    render_template,
-    request,
-    session,
-    url_for
-)
+from flask import g, request, session
 import random
 from types import SimpleNamespace
 
@@ -326,36 +317,19 @@ class Event(Identifiable):
             try:
                 self.remove_from_db()
                 session['file_message'] = 'Removed event.'
-            except Exception as e:
-                return render_template('error.html',
-                    message="Could not delete event.",
-                    details=str(e))
+            except DbError as e:
+                raise DeletionError(e)
         elif 'cancel_changes' in request.form:
             print("Cancelling changes.")
         else:
             print("Neither button was clicked.")
-        referrer = session.pop('referrer', None)
-        print(f"Referrer in configure_by_form(): {referrer}")
-        if referrer:
-            return redirect(referrer)
-        else:
-            return redirect(url_for('configure'))
 
     def play_by_form(self):
-        if request.method == 'POST':
-            print("Saving changes.")
-            print(request.form)
-            self.difficulty = self.form_int(request, 'difficulty')
-            self.stat_adjustment = self.form_int(request, 'stat_adjustment')
-            self.to_db()
-            return render_template(
-                'play/event.html',
-                current=self,
-                outcome=self.get_outcome())
-        else:
-            return render_template(
-                'play/event.html',
-                current=self)
+        print("Saving changes.")
+        print(request.form)
+        self.difficulty = self.form_int(request, 'difficulty')
+        self.stat_adjustment = self.form_int(request, 'stat_adjustment')
+        self.to_db()
 
     def get_outcome(self):
         if self.outcome_type == OUTCOME_FOURWAY:
@@ -401,26 +375,3 @@ class Event(Identifiable):
         else:
             raise(f"Unexpected outcome_type {self.outcome_type}")
         return display
-
-
-def set_routes(app):
-    @app.route('/configure/event/<event_id>', methods=['GET', 'POST'])
-    def configure_event(event_id):
-        instance = Event.data_for_configure(event_id)
-        if request.method == 'GET':
-            session['referrer'] = request.referrer
-            return render_template(
-                'configure/event.html',
-                current=instance,
-                game_data=g.game_data)
-        else:
-            return instance.configure_by_form()
-
-    @app.route('/play/event/<int:event_id>', methods=['GET', 'POST'])
-    def play_event(event_id):
-        print("-" * 80)
-        print(f"play_event({event_id})")
-        instance = Event.data_for_configure(event_id)
-        if not instance:
-            return 'Event not found'
-        return instance.play_by_form()

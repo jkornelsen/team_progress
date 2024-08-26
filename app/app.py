@@ -27,13 +27,8 @@ app.config['TEMPLATES_AUTO_RELOAD'] = True  # set to False for production
 from src.user_interaction import UserInteraction
 from src.game_data import GameData
 
-from src.attrib    import set_routes as _set_routes_attrib
-from src.character import set_routes as _set_routes_character
-from src.event     import set_routes as _set_routes_event
-from src.item      import set_routes as _set_routes_item
-from src.location  import set_routes as _set_routes_location
-from src.overall   import set_routes as _set_routes_overall
-from src.file      import set_routes as _set_routes_file
+from src.game_routes import set_routes as _set_game_routes
+from src.file import set_routes as _set_file_routes
 
 with app.app_context():
     print(f"{__name__}: starting app")
@@ -107,13 +102,8 @@ def change_user():
         return redirect(url_for('index'))
     return render_template('session/username.html')
 
-_set_routes_attrib(app)
-_set_routes_character(app)
-_set_routes_event(app)
-_set_routes_item(app)
-_set_routes_location(app)
-_set_routes_overall(app)
-_set_routes_file(app)
+_set_game_routes(app)
+_set_file_routes(app)
 
 def get_parameter_name(endpoint):
     """Get first parameter name from the route rule for

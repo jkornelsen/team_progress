@@ -1,19 +1,11 @@
-from flask import (
-    Flask,
-    g,
-    jsonify,
-    redirect,
-    render_template,
-    request,
-    session,
-    url_for
-)
+from flask import g, request, session
 import math
 
 from .attrib import Attrib
 from .progress import Progress
 from .db_serializable import (
-    DbSerializable, Identifiable, MutableNamespace, coldef, LinkLetters)
+    DbSerializable, Identifiable, MutableNamespace, coldef,
+    DbError, DeletionError)
 
 STORAGE_TYPES = ['carried', 'local', 'universal']
 (STORAGE_CARRIED,
@@ -534,157 +526,9 @@ class Item(Identifiable):
             try:
                 self.remove_from_db()
                 session['file_message'] = 'Removed item.'
-            except Exception as e:
-                return render_template('error.html',
-                    message="Could not delete item.",
-                    details=str(e))
+            except DbError as e:
+                raise DeletionError(e)
         elif 'cancel_changes' in request.form:
             print("Cancelling changes.")
         else:
             print("Neither button was clicked.")
-        referrer = session.pop('referrer', None)
-        print(f"Referrer in configure_by_form(): {referrer}")
-        if referrer:
-            return redirect(referrer)
-        else:
-            return redirect(url_for('configure'))
-
-def set_routes(app):
-    @app.route('/configure/item/<item_id>', methods=['GET', 'POST'])
-    def configure_item(item_id):
-        print("-" * 80)
-        print(f"configure_item({item_id})")
-        instance = Item.data_for_configure(item_id)
-        if request.method == 'GET':
-            session['referrer'] = request.referrer
-            return render_template(
-                'configure/item.html',
-                current=instance,
-                game_data=g.game_data)
-        else:
-            return instance.configure_by_form()
-
-    @app.route('/play/item/<int:item_id>/')
-    def play_item(item_id):
-        char_id = request.args.get('char_id', '')
-        loc_id = request.args.get('loc_id', '')
-        print("-" * 80)
-        print(f"play_item(item_id={item_id}, char_id={char_id}, loc_id={loc_id})")
-        item, pile, container = Item.data_for_play(item_id, char_id, loc_id)
-        if not item:
-            return 'Item not found'
-        return render_template(
-            'play/item.html',
-            current=item,
-            pile=pile,
-            char_id=char_id,
-            loc_id=loc_id,
-            container_name=container.name,
-            game_data=g.game_data,
-            link_letters=LinkLetters(set('do')))
-
-    @app.route('/item/progress_data/<int:item_id>/')
-    def item_progress_data(item_id):
-        char_id = request.args.get('char_id', '')
-        loc_id = request.args.get('loc_id', '')
-        print("-" * 80)
-        print(f"item_progress_data({item_id})")
-        item, pile, container = Item.data_for_play(item_id, char_id, loc_id)
-        print(f"Retrieved item {item.id} from DB: {len(item.recipes)} recipes")
-        if item:
-            if loc_id:
-                return jsonify({
-                    'is_ongoing': False,
-                    'recipe_id': 0,
-                    'quantity': pile.quantity,
-                    'elapsed_time': 0})
-            if item.progress.is_ongoing:
-                item.progress.determine_current_quantity()
-            return jsonify({
-                'is_ongoing': container.progress.is_ongoing,
-                'recipe_id': container.progress.recipe.id,
-                'quantity': pile.quantity,
-                'elapsed_time': container.progress.calculate_elapsed_time()})
-        else:
-            return jsonify({'error': 'Item not found'})
-
-    @app.route('/item/start/<int:item_id>/<int:recipe_id>')
-    def start_item(item_id, recipe_id):
-        print("-" * 80)
-        print(f"start_item({item_id}, {recipe_id})")
-        item = Item.data_for_configure(item_id)
-        print(f"Retrieved item {item.id} from DB: {len(item.recipes)} recipes")
-        if item.progress.start(recipe_id):
-            item.to_db()
-            return jsonify({
-                'status': 'success',
-                'message': 'Progress started.',
-                'is_ongoing': item.progress.is_ongoing})
-        else:
-            return jsonify({
-                'status': 'error',
-                'message': 'Could not start.',
-                'is_ongoing': item.progress.is_ongoing})
-
-    @app.route('/item/stop/<int:item_id>')
-    def stop_item(item_id):
-        print("-" * 80)
-        print(f"stop_item({item_id})")
-        item = Item.data_for_configure(item_id)
-        print(f"Retrieved item {item.id} from DB: {len(item.recipes)} recipes")
-        if item.progress.is_ongoing:
-            item.progress.determine_current_quantity()
-            item.progress.stop()
-            item.to_db()
-            return jsonify({
-                'status': 'success',
-                'message': 'Progress paused.',
-                'is_ongoing': item.progress.is_ongoing})
-        else:
-            return jsonify({
-                'status': 'success',
-                'message': 'Progress is already paused.',
-                'is_ongoing': item.progress.is_ongoing})
-
-    @app.route('/item/gain/<int:item_id>/<int:recipe_id>', methods=['POST'])
-    def gain_item(item_id, recipe_id):
-        print("-" * 80)
-        print(f"gain_item({item_id})")
-        num_batches = int(request.form.get('quantity'))
-        item = Item.data_for_configure(item_id)
-        print(f"Retrieved item {item.id} from DB: {len(item.recipes)} recipes")
-        item.progress.set_recipe_by_id(recipe_id)
-        changed = item.progress.change_quantity(num_batches)
-        if changed:
-            return jsonify({
-                'status': 'success', 'message':
-                f'Quantity of {item.name} changed.'})
-        else:
-            return jsonify({
-                'status': 'error',
-                'message': 'Could not change quantity.'})
-
-    @app.route('/item/drop/<int:item_id>/char/<int:char_id>', methods=['POST'])
-    def drop_item(item_id, char_id):
-        print("-" * 80)
-        print(f"drop_item(item_id={item_id}, char_id={char_id})")
-        item, pile, container = Item.data_for_play(item_id, char_id, at_loc_id=0)
-        char = container
-        owned_item = next((oi for oi in char.items
-            if oi.item.id == item_id), None)
-        if not owned_item:
-            return jsonify({
-                'status': 'error',
-                'message': f'No item {item.name} in {container.name}\'s inventory.'})
-            return
-        from .location import Location, ItemAt
-        item_at = ItemAt(item=owned_item.item)
-        item_at.quantity = owned_item.quantity
-        loc = Location.data_for_configure(char.location.id)
-        loc.items.append(item_at)  # TODO: check if it already exists
-        char.items.remove(owned_item)
-        loc.to_db()
-        char.to_db()
-        return jsonify({
-            'status': 'success', 'message':
-            f'Dropped {item.name}.'})

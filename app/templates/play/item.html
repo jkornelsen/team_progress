@@ -76,7 +76,12 @@
         <tr>
             <td>
                 {% if char_id %}
-                    <button id="drop-btn" class="go-button">[D]rop</button>
+                    {% if pile.slot %}
+                        <button id="unequip-btn" class="go-button">Un[E]quip</button>
+                    {% else %}
+                        <button id="equip-btn" class="go-button">[E]quip</button>
+                        <button id="drop-btn" class="go-button">[D]rop</button>
+                    {% endif %}
                 {% endif %}
                 {% if loc_id %}
                     <button id="pickup-btn" class="go-button">[P]ick Up</button>

@@ -141,12 +141,17 @@ class DbSerializable():
         query = query_without_table.format(table=cls.tablename())
         print(pretty(query, values))
         result = None
-        with g.db.cursor(cursor_factory=RealDictCursor) as cursor:
-            cursor.execute(query, tuple(values))
-            if fetch:
-                result = MutableNamespace(**cursor.fetchone())
-        if g.commit_db:
-            g.db.commit()
+        try:
+            with g.db.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute(query, tuple(values))
+                if fetch:
+                    result = MutableNamespace(**cursor.fetchone())
+            if g.commit_db:
+                g.db.commit()
+        except (psycopg2.OperationalError, psycopg2.ProgrammingError,
+                psycopg2.IntegrityError, psycopg2.InterfaceError,
+                psycopg2.InternalError) as e:
+            raise DbError(e)
         return result
 
     @classmethod
@@ -184,9 +189,17 @@ class DbSerializable():
 
     def json_to_db(self, doc):
         doc['game_token'] = g.game_token
+        print("Debug - Document Content:")
+        print(doc)
         fields = db_type_fields(doc)
+        print("Debug - Fields:")
+        print(fields)
         placeholders = ','.join(['%s'] * len(fields))
+        print("Debug - Placeholders:")
+        print(placeholders)
         values = tuples_to_lists([doc[field] for field in fields])
+        print("Debug - Values:")
+        print(values)
         update_fields = [
             field for field in fields
             if field not in ('game_token',)]
@@ -323,24 +336,23 @@ class Identifiable(DbSerializable):
     def data_for_file(cls):
         raise NotImplementedError()
 
+class DbError(Exception):
+    """Custom exception for database-related errors."""
+    def __init__(self, original_exception):
+        super().__init__(str(original_exception))
+        self.original_exception = original_exception
+
+class DeletionError(DbError):
+    """Exception raised when an error occurs during deletion."""
+    def __init__(self, original_exception, item_id=None):
+        self.item_id = item_id
+        message = (f"Could not delete item (ID: {item_id})." if item_id
+            else "Could not delete item.")
+        super().__init__(message)
+        self.original_exception = original_exception
+
 def precision(numstr, places):
     """Convert string to float with specified number of decimal places."""
     num = float(numstr)
     truncated_str = f'{num:.{places}f}'
     return float(truncated_str)
-
-class LinkLetters:
-    """Letters to add before a link for hotkeys."""
-    def __init__(self, excluded={'o'}):
-        self.letter_index = 0
-        self.letters = [
-            chr(c) for c in range(ord('a'), ord('z') + 1)
-            if chr(c) not in excluded]
-
-    def next(self):
-        if self.letter_index < len(self.letters):
-            letter = self.letters[self.letter_index]
-            self.letter_index += 1
-            return letter
-        else:
-            return ''

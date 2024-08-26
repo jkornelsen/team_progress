@@ -1,13 +1,4 @@
-from flask import (
-    Flask,
-    g,
-    jsonify,
-    redirect,
-    render_template,
-    request,
-    session,
-    url_for
-)
+from flask import g, request, session
 from .db_serializable import Identifiable, coldef
 
 tables_to_create = {
@@ -93,31 +84,9 @@ class Attrib(Identifiable):
             try:
                 self.remove_from_db()
                 session['file_message'] = 'Removed attribute.'
-            except Exception as e:
-                return render_template('error.html',
-                    message="Could not delete attribute.",
-                    details=str(e))
+            except DbError as e:
+                raise DeletionError(e)
         elif 'cancel_changes' in request.form:
             print("Cancelling changes.")
         else:
             print("Neither button was clicked.")
-        referrer = session.pop('referrer', None)
-        print(f"Referrer in configure_by_form(): {referrer}")
-        if referrer:
-            return redirect(referrer)
-        else:
-            return redirect(url_for('configure'))
-
-def set_routes(app):
-    @app.route('/configure/attrib/<attrib_id>', methods=['GET', 'POST'])
-    def configure_attrib(attrib_id):
-        instance = Attrib.data_for_configure(attrib_id)
-        if request.method == 'GET':
-            session['referrer'] = request.referrer
-            return render_template(
-                'configure/attrib.html',
-                current=instance,
-                game_data=g.game_data)
-        else:
-            return instance.configure_by_form()
-
