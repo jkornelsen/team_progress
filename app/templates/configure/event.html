@@ -102,7 +102,17 @@
             <input type="number" id="trigger-denominator" name="trigger_denominator" value="{{ current.trigger_chance[1] }}"><span class="info">Set a value only if triggering automatically.</span>
         </div>
 
-            <label>Triggered During Progress For:</label>
+            <label>
+                <input type="radio" name="trigger_timing" value="during_progress"
+                    {% if current.trigger_by_duration %}checked{% endif %}>
+                During Progress (Chance Per Second)
+            </label>
+            <label>
+                <input type="radio" name="trigger_timing" value="when_finished"
+                    {% if not current.trigger_by_duration %}checked{% endif %}>
+                When Finished
+            </label><br>
+            <label>Triggered For:</label>
             <!-- Placeholder for appending new triggering entities -->
             <div id="trigger_entitylist_end" style="unobtrusive"></div>
             {% if game_data.items %}

@@ -18,7 +18,9 @@
         document.addEventListener('DOMContentLoaded', function () {
             document.addEventListener('keypress', function (event) {
                 const key = event.key.toLowerCase();
-                if (linkForKey[key]) {
+                if (key === 'r') {
+                    document.getElementById('roll-btn').click();
+                } else if (linkForKey[key]) {
                     window.location.href = linkForKey[key];
                 }
             });
@@ -54,7 +56,7 @@
                     <input type="number" id="stat_adjustment" name="stat_adjustment" value="{{ current.stat_adjustment }}">
                     <br>
                     {% endif %}
-                    <button type="submit" id="roll-btn">Roll</button>
+                    <button type="submit" id="roll-btn">[R]oll</button>
                 </form>
             </td>
         </tr>

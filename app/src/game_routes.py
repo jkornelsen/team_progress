@@ -22,11 +22,15 @@ class LinkLetters:
         self.letters = [
             chr(c) for c in range(ord('a'), ord('z') + 1)
             if chr(c) not in excluded]
+        self.links = {}
 
-    def next(self):
+    def next(self, link):
+        if link in self.links:
+            return self.links[link]
         if self.letter_index < len(self.letters):
             letter = self.letters[self.letter_index]
             self.letter_index += 1
+            self.links[link] = letter
             return letter
         else:
             return ''
@@ -183,13 +187,27 @@ def set_routes(app):
         print(f"char_progress_data({char_id})")
         char = Character.data_for_play(char_id)
         if char:
+            current_loc_id = char.location.id if char.location else 0
             if not char.location or not char.destination:
                 return jsonify({
-                    'quantity': 0,
-                    'is_ongoing': False,
-                    'message': 'No travel destination.'})
+                    'status': 'error',
+                    'message': 'No travel destination.',
+                    'current_loc_id': current_loc_id,
+                    'quantity': 0})
             if char.progress.is_ongoing:
-                char.progress.determine_current_quantity()
+                time_spent = char.progress.determine_current_quantity()
+                events = Event.load_triggers_for_loc(char.location.id)
+                ignore_event_id = request_int(
+                    request, 'ignore_event', '', 'args')
+                for event in events:
+                    if event.id != ignore_event_id:
+                        if (event.trigger_by_duration
+                                and event.check_trigger_for_duration(time_spent)):
+                            return jsonify({
+                                'status': 'interrupt',
+                                'message': f"{char.name} triggered {event.name}!"
+                                " Go to event?",
+                                'event_id': event.id})
                 char.to_db()
             if char.pile.quantity >= char.pile.item.q_limit:
                 # arrived at the destination
@@ -198,14 +216,22 @@ def set_routes(app):
                 char.location = char.destination
                 char.destination = None
                 char.to_db()
-                return jsonify({'status': 'arrived'})
-            else:
                 return jsonify({
+                    'status': 'arrived',
+                    'current_loc_id': char.location.id})
+            else:
+                print(f'dest_id: {char.destination.id}')
+                return jsonify({
+                    'status': 'ongoing',
                     'is_ongoing': char.progress.is_ongoing,
+                    'current_loc_id': current_loc_id,
+                    'dest_id': char.destination.id,
                     'quantity': int(char.pile.quantity),
                     'elapsed_time': char.progress.calculate_elapsed_time()})
         else:
-            return jsonify({'error': 'Character not found.'})
+            return jsonify({
+                'status': 'error',
+                'message': 'Character not found.'})
 
     @app.route('/play/event/<int:event_id>', methods=['GET', 'POST'])
     def play_event(event_id):
@@ -217,12 +243,14 @@ def set_routes(app):
         if request.method == 'GET':
             return render_template(
                 'play/event.html',
-                current=instance)
+                current=instance,
+                link_letters=LinkLetters(set('or')))
         instance.play_by_form()
         return render_template(
             'play/event.html',
             current=instance,
-            outcome=instance.get_outcome())
+            outcome=instance.get_outcome(),
+            link_letters=LinkLetters(set('or')))
 
     @app.route('/play/item/<int:item_id>/')
     def play_item(item_id):

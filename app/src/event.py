@@ -45,6 +45,7 @@ tables_to_create = {
         {coldef('toplevel')},
         outcome_type varchar(20) not null,
         trigger_chance integer[],
+        trigger_by_duration boolean,
         numeric_range integer[],
         selection_strings text
     """
@@ -62,6 +63,7 @@ class Event(Identifiable):
         self.determining_attrs = []  # Attrib objects determining the outcome
         self.changed_attrs = []  # Attrib objects changed by the outcome
         self.trigger_chance = (0, 1) # (numerator, denominator)
+        self.trigger_by_duration = True  # during progress or when finished
         self.triggers = []  # Item or Location objects that can trigger
         ## For a particular occurrence, not stored in Event table
         self.difficulty = 10  # Moderate
@@ -83,6 +85,7 @@ class Event(Identifiable):
             'changed_attrs': [
                 attrib.id for attrib in self.changed_attrs],
             'trigger_chance': self.trigger_chance,
+            'trigger_by_duration': self.trigger_by_duration,
             'triggers': [
                 (entity.basename(), entity.id)
                 for entity in self.triggers]
@@ -106,6 +109,7 @@ class Event(Identifiable):
             Attrib(int(attrib_id))
             for attrib_id in data.get('changed_attrs', [])]
         instance.trigger_chance = data.get('trigger_chance', (0, 1))
+        instance.trigger_by_duration = data.get('trigger_by_duration', True)
         instance.triggers = [
             create_trigger_entity(entity_name, entity_id)
             for entity_name, entity_id in data.get('triggers', [])]
@@ -287,6 +291,23 @@ class Event(Identifiable):
             print(f"name={trigger.name}")
         return current_obj
 
+    @classmethod
+    def load_triggers_for_loc(cls, loc_id):
+        print(f"{cls.__name__}.load_triggers_for_loc()")
+        events_data = cls.execute_select("""
+            SELECT {table}.*
+            FROM event_triggers
+            INNER JOIN {table}
+                ON {table}.id = event_triggers.event_id
+                AND {table}.game_token = event_triggers.game_token
+            WHERE event_triggers.game_token = %s
+                AND event_triggers.loc_id = %s
+        """, (g.game_token, loc_id))
+        g.game_data.events = []
+        for evt_data in events_data:
+            g.game_data.events.append(Event.from_json(evt_data))
+        return g.game_data.events
+
     def configure_by_form(self):
         if 'save_changes' in request.form:  # button was clicked
             print("Saving changes.")
@@ -308,6 +329,8 @@ class Event(Identifiable):
             self.trigger_chance = (
                 request_int(request, 'trigger_numerator', 1),
                 request_int(request, 'trigger_denominator', 10))
+            self.trigger_by_duration = (
+                request.form.get('trigger_timing') == 'during_progress')
             trigger_types = request.form.getlist('entity_type[]')
             trigger_ids = request.form.getlist('entity_id[]')
             self.triggers = [
@@ -376,3 +399,33 @@ class Event(Identifiable):
         else:
             raise(f"Unexpected outcome_type {self.outcome_type}")
         return display
+
+    def check_trigger(self, elapsed_seconds):
+        if self.trigger_by_duration:
+            return self.check_trigger_for_duration(elapsed_seconds)
+        return self.check_trigger_once()
+
+    def check_trigger_once(self):
+        """Returns True if the event triggers."""
+        numerator, denominator = self.trigger_chance
+        if numerator <= 0:
+            return False
+        if denominator <= 0:
+            raise ValueError("Denominator must be greater than 0")
+        probability = numerator / denominator
+        random_value = random.random()  # between 0 and 1
+        return random_value < probability
+
+    def check_trigger_for_duration(self, elapsed_seconds):
+        """Returns True if the event triggers over the given duration."""
+        numerator, denominator = self.trigger_chance
+        if numerator <= 0:
+            return False
+        if denominator <= 0:
+            raise ValueError("Denominator must be greater than 0")
+        p_success = numerator / denominator  # success in a single trial
+        p_failure = 1 - p_success  # failure in a single trial
+        p_overall_failure = p_failure ** elapsed_seconds  # failure over elapsed_seconds trials
+        p_overall_success = 1 - p_overall_failure  # at least one success
+        random_value = random.random()  # between 0 and 1
+        return random_value < p_overall_success

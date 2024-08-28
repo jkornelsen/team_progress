@@ -70,7 +70,7 @@ def column_counts(table_name):
         'characters': 10,
         'event_attribs': 4,
         'event_triggers': 4,
-        'events': 9,
+        'events': 10,
         'item_attribs': 4,
         'items': 9,
         'loc_destinations': 4,

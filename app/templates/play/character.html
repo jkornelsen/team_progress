@@ -45,8 +45,8 @@
     {% if current.location %}
         <h2>Location</h2>
         <ul>
-        {% set letter = link_letters.next() %}
         {% set link = url_for('play_location', loc_id=current.location.id) %}
+        {% set letter = link_letters.next(link) %}
         <script>
             linkForKey['{{ letter }}'] = "{{ link }}";
         </script>
@@ -73,7 +73,6 @@
                     <progress class="progress-bar" max="100" value="0"></progress>
                     <span class="progress-label">0 / 0</span>
                 </div>
-                <!--<p>&nbsp;(Elapsed <span id="dest-time">...</span>)</p>-->
                 <button id="start-travel-btn">[S]tart</button>
                 <button id="stop-travel-btn">Stop</button>
             </div>
@@ -85,8 +84,8 @@
     <ul>
         {% for owned in current.items if owned.slot %}
             {% set item = owned.item %}
-            {% set letter = link_letters.next() %}
             {% set link = url_for('play_item', item_id=item.id, char_id=current.id) %}
+            {% set letter = link_letters.next(link) %}
             <script>
                 linkForKey['{{ letter }}'] = "{{ link }}";
             </script>
@@ -108,8 +107,8 @@
     <ul>
         {% for owned in current.items if not owned.slot %}
             {% set item = owned.item %}
-            {% set letter = link_letters.next() %}
             {% set link = url_for('play_item', item_id=item.id, char_id=current.id) %}
+            {% set letter = link_letters.next(link) %}
             <script>
                 linkForKey['{{ letter }}'] = "{{ link }}";
             </script>
@@ -138,23 +137,44 @@
 
     <script>
         $(document).ready(function() {
-            // Global variables
-            let elapsedTime = 0;
-            let is_ongoing = false;
-
             function updateTravelProgress(data) {
+                if (data.hasOwnProperty('status') && data.status === 'interrupt') {
+                    const userChoice = confirm(data.message);
+                    if (userChoice) {
+                        const baseEventUrl = "{{ url_for('play_event', event_id='-1') }}";
+                        const url = baseEventUrl.replace('-1', data.event_id);
+                        console.log("Confirmed to go to ", url);
+                        document.getElementById('stop-travel-btn').click();
+                        window.location.href = url;
+                    } else {
+                        localStorage.setItem('ignore_event_id', data.event_id);
+                    }
+                    return;
+                }
+                const current_loc_id = {{
+                    current.location.id if current.location else 0 }}
+                if (current_loc_id != data.current_loc_id) {
+                    console.log('Reloading to go to updated location.');
+                    location.reload();
+                    return
+                }
                 const destSel = $('#destination-select');
+                const selectedDestId = destSel.val();
+                const ongoing = (data && data.status === 'ongoing' && data.is_ongoing)
+                if (ongoing && selectedDestId != data.dest_id) {
+                    destSel.val(data.dest_id);
+                }
                 const selectedOption = destSel.find(":selected");
                 const distance = selectedOption.data("distance");
-                const destinationId = destSel.val();
                 const destInfo = $('#destination-info');
                 const progressBar = $('.progress-bar');
                 const progressLabel = $('.progress-label');
-                if (destinationId) {
+                if (selectedDestId || ongoing) {
                     if (data.hasOwnProperty('status') && data.status === 'arrived') {
+                        console.log('Arrived; reloading.');
                         location.reload();
-                    } else if (data.hasOwnProperty('error') && data.error === 'No travel destination.') {
-                        console.log(data.error);
+                    //} else if (data.hasOwnProperty('status') && data.status === 'error' && data.message === 'No travel destination.') {
+                    //    console.log(data.message);
                     } else {
                         const quantity = data.hasOwnProperty('quantity') ? data.quantity : 0;
                         const progressPercentage = (quantity / distance) * 100;
@@ -167,77 +187,40 @@
                 }
             }
 
-            // Update the elapsed time on the client.
-            function updateElapsedTime() {
-                if (!is_ongoing)
-                    return;
-                elapsedTime += 1;  // Increment by 1 second
-                //$('#dest-time').text(formatTime(elapsedTime));
-            }
-
-            // Function to format the time in HH:MM:SS format.
-            function formatTime(time) {
-                const hours = Math.floor(time / 3600);
-                const minutes = Math.floor((time % 3600) / 60);
-                const seconds = Math.floor(time % 60);
-                return `${minutes.toString()}:${seconds.toString().padStart(2, '0')}`;
-            }
-
-            // Reconcile the elapsed time with the server-side progress time.
-            function reconcileElapsedTime(data) {
-                if (data.elapsed_time) {
-                    elapsedTime = data.elapsed_time;
-                } else {
-                    elapsedTime = 0;
-                }
-                //$('#dest-time').text(formatTime(elapsedTime));
-            }
-
             // the Start button may change to "Running..."
             function updateStartbuttonLabel(data) {
-                //const startBtn = $('#start-travel-btn');  // doesn't work
                 const startBtn = document.getElementById("start-travel-btn");
                 const stopBtn = document.getElementById("stop-travel-btn");
                 const destSel = document.getElementById("destination-select");
-                if (data && data.is_ongoing) {
+                const ongoing = (data && data.status === 'ongoing' && data.is_ongoing)
+                if (ongoing) {
                     startBtn.innerHTML = "Travelling...";
                     startBtn.disabled = true;
                     stopBtn.disabled = false;
                     destSel.disabled = true;
-                    is_ongoing = true;
                 } else {
                     startBtn.innerHTML = "[S]tart";
                     startBtn.disabled = false;
                     stopBtn.disabled = true;
                     destSel.disabled = false;
-                    is_ongoing = false;
                 }
             }
 
             // Fetch progress data and update all relevant information
             function fetchProgressData() {
-                const destSel = $('#destination-select');
-                const destinationId = destSel.val();
-                if (destinationId) {
-                    $.get('/char/progress_data/{{ current.id }}', function(data) {
-                        updateTravelProgress(data);
-                        reconcileElapsedTime(data);
-                        updateStartbuttonLabel(data);
-                    });
-                } else {
-                    updateTravelProgress(null);
-                    updateStartbuttonLabel(null);
-                }
+                const ignoreEventId = localStorage.getItem('ignore_event_id') || '';
+                const url = `/char/progress_data/{{ current.id }}${ignoreEventId ? `?ignore_event=${ignoreEventId}` : ''}`;
+                $.get(url, function(data) {
+                    console.log('Received data:', data);
+                    updateTravelProgress(data);
+                    updateStartbuttonLabel(data);
+                });
             }
 
-            // Update initially
+            // Initial setup when page loads
+            localStorage.removeItem('ignore_event_id');
             fetchProgressData();
-            updateElapsedTime();
-
-            // Client-side update loops 
-            setInterval(updateElapsedTime, 1000);
             setInterval(fetchProgressData, 2000);
-            //setInterval(fetchProgressData, 15000);  // for development only
 
             $('#destination-select').change(function() {
                 fetchProgressData();

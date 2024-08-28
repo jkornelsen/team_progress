@@ -118,6 +118,7 @@ class Progress(Identifiable):
             return num_batches > 0
 
     def determine_current_quantity(self):
+        """Returns number of seconds spent if any work gets done."""
         self.set_recipe_by_id()
         elapsed_time = self.calculate_elapsed_time()
         total_batches_needed = math.floor(elapsed_time / self.recipe.rate_duration)
@@ -127,8 +128,11 @@ class Progress(Identifiable):
             f" ({elapsed_time} / {self.recipe.rate_duration}"
             f" - {self.batches_processed})")
         if batches_to_do > 0:
-            return self.change_quantity(batches_to_do)
-        return False
+            success = self.change_quantity(batches_to_do)
+            time_spent = batches_to_do * self.recipe.rate_duration
+            if success:
+                return time_spent
+        return 0
 
     def set_recipe_by_id(self, recipe_id=0):
         if not recipe_id:
