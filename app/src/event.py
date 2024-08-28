@@ -2,10 +2,11 @@ from flask import g, request, session
 import random
 from types import SimpleNamespace
 
-from .db_serializable import Identifiable, MutableNamespace, coldef
 from .attrib import Attrib
+from .db_serializable import Identifiable, MutableNamespace, coldef
 from .item import Item
 from .location import Location
+from .utils import request_bool, request_int
 
 OUTCOME_TYPES = [
     'fourway',  # critical/minor failure or success
@@ -292,11 +293,11 @@ class Event(Identifiable):
             print(request.form)
             self.name = request.form.get('event_name')
             self.description = request.form.get('event_description')
-            self.toplevel = bool(request.form.get('top_level'))
+            self.toplevel = request_bool(request, 'top_level')
             self.outcome_type = request.form.get('outcome_type')
             self.numeric_range = (
-                self.form_int(request, 'numeric_min', 0),
-                self.form_int(request, 'numeric_max', 1))
+                request_int(request, 'numeric_min', 0),
+                request_int(request, 'numeric_max', 1))
             self.selection_strings = request.form.get('selection_strings', "")
             determining_attr_ids = request.form.getlist('determining_attr_id[]')
             changed_attr_ids = request.form.getlist('changed_attr_id[]')
@@ -305,8 +306,8 @@ class Event(Identifiable):
             self.changed_attrs = [
                 Attrib(int(attrib_id)) for attrib_id in changed_attr_ids]
             self.trigger_chance = (
-                self.form_int(request, 'trigger_numerator', 1),
-                self.form_int(request, 'trigger_denominator', 10))
+                request_int(request, 'trigger_numerator', 1),
+                request_int(request, 'trigger_denominator', 10))
             trigger_types = request.form.getlist('entity_type[]')
             trigger_ids = request.form.getlist('entity_id[]')
             self.triggers = [
@@ -327,8 +328,8 @@ class Event(Identifiable):
     def play_by_form(self):
         print("Saving changes.")
         print(request.form)
-        self.difficulty = self.form_int(request, 'difficulty')
-        self.stat_adjustment = self.form_int(request, 'stat_adjustment')
+        self.difficulty = request_int(request, 'difficulty')
+        self.stat_adjustment = request_int(request, 'stat_adjustment')
         self.to_db()
 
     def get_outcome(self):

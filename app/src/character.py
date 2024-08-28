@@ -1,9 +1,11 @@
 from flask import g, request, session
-from .db_serializable import Identifiable, MutableNamespace, coldef
+
 from .attrib import Attrib
+from .db_serializable import Identifiable, MutableNamespace, coldef
 from .item import Item
 from .location import Location
 from .progress import Progress
+from .utils import request_bool, request_float
 
 tables_to_create = {
     'characters': f"""
@@ -301,7 +303,7 @@ class Character(Identifiable):
             print(request.form)
             self.name = request.form.get('char_name')
             self.description = request.form.get('char_description')
-            self.toplevel = bool(request.form.get('top_level'))
+            self.toplevel = request_bool(request, 'top_level')
             #if self.progress.is_ongoing:
             #    self.progress.stop()
             item_ids = request.form.getlist('item_id[]')
@@ -321,8 +323,8 @@ class Character(Identifiable):
             print(f"Attrib IDs: {attrib_ids}")
             self.attribs = {}
             for attrib_id in attrib_ids:
-                attrib_val = float(
-                    request.form.get(f'attrib_{attrib_id}_val', 0))
+                attrib_val = request_float(
+                    request, f'attrib_{attrib_id}_val', 0.0)
                 attrib_item = Attrib.get_by_id(attrib_id)
                 self.attribs[attrib_item] = attrib_val
             print("attribs: ", {attrib.name: val

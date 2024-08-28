@@ -2,10 +2,11 @@ from flask import g, request, session
 import math
 
 from .attrib import Attrib
-from .progress import Progress
 from .db_serializable import (
     DbSerializable, Identifiable, MutableNamespace, coldef,
     DbError, DeletionError)
+from .progress import Progress
+from .utils import request_bool, request_float
 
 STORAGE_TYPES = ['carried', 'local', 'universal']
 (STORAGE_CARRIED,
@@ -435,7 +436,7 @@ class Item(Identifiable):
         return current_obj
 
     @classmethod
-    def data_for_play(cls, id_to_get, owner_char_id, at_loc_id):
+    def data_for_play(cls, id_to_get, owner_char_id=0, at_loc_id=0):
         print(f"{cls.__name__}.data_for_play()")
         current_obj = cls.data_for_configure(id_to_get)
         # Get item data for the specific container
@@ -453,6 +454,7 @@ class Item(Identifiable):
                 (itemAt for itemAt in container.items
                 if itemAt.item.id == current_obj.id),
                 ItemAt(current_obj))
+            Location.load_characters_at_loc(at_loc_id)  # who can pick up
         else:
             container = current_obj
             pile = current_obj
@@ -473,9 +475,9 @@ class Item(Identifiable):
             self.name = request.form.get('item_name')
             self.description = request.form.get('item_description')
             self.storage_type = request.form.get('storage_type')
-            self.toplevel = bool(request.form.get('top_level'))
-            self.q_limit = self.form_dec(request, 'item_limit')
-            self.quantity = self.form_dec(request, 'item_quantity')
+            self.toplevel = request_bool(request, 'top_level')
+            self.q_limit = request_float(request, 'item_limit')
+            self.quantity = request_float(request, 'item_quantity')
             #if self.progress.is_ongoing:
             #    self.progress.stop()
             recipe_ids = request.form.getlist('recipe_id')
@@ -483,23 +485,23 @@ class Item(Identifiable):
             for recipe_id in recipe_ids:
                 recipe = Recipe(int(recipe_id), self)
                 self.recipes.append(recipe)
-                recipe.rate_amount = float(request.form.get(
-                    f'recipe{recipe_id}_rate_amount'))
-                recipe.rate_duration = float(request.form.get(
-                    f'recipe{recipe_id}_rate_duration'))
-                recipe.instant = bool(request.form.get(
-                    f'recipe{recipe_id}_instant'))
+                recipe.rate_amount = request_float(request,
+                    f'recipe{recipe_id}_rate_amount')
+                recipe.rate_duration = request_float(request,
+                    f'recipe{recipe_id}_rate_duration')
+                recipe.instant = request_bool(request,
+                    f'recipe{recipe_id}_instant')
                 source_ids = request.form.getlist(
                     f'recipe{recipe_id}_source_id')
                 print(f"Source IDs: {source_ids}")
                 for source_id in source_ids:
                     source = Source.from_json({
                         'source_id': int(source_id),
-                        'q_required': float(request.form.get(
+                        'q_required': request_float(request,
                             f'recipe{recipe_id}_source{source_id}_qtyreq',
-                            0.0)),
-                        'preserve': bool(request.form.get(
-                            f'recipe{recipe_id}_source{source_id}_preserve')),
+                            0.0),
+                        'preserve': request_bool(request,
+                            f'recipe{recipe_id}_source{source_id}_preserve'),
                     })
                     recipe.sources.append(source)
                     print(f"Sources for {recipe_id}: ",
@@ -508,15 +510,15 @@ class Item(Identifiable):
                 recipe_attrib_ids = request.form.getlist(
                     f'recipe{recipe_id}_attrib_id')
                 for attrib_id in recipe_attrib_ids:
-                    attrib_value = float(request.form.get(
-                        f'recipe{recipe_id}_attrib{attrib_id}_value', 1.0))
+                    attrib_value = request_float(request,
+                        f'recipe{recipe_id}_attrib{attrib_id}_value', 1.0)
                     recipe.attribs.append((attrib_id, attrib_value))
             attrib_ids = request.form.getlist('attrib_id')
             print(f"Attrib IDs: {attrib_ids}")
             self.attribs = {}
             for attrib_id in attrib_ids:
-                attrib_val = int(
-                    request.form.get(f'attrib{attrib_id}_val', 0))
+                attrib_val = request_float(request,
+                    f'attrib{attrib_id}_val', 0.0)
                 attrib_obj = Attrib(attrib_id)
                 self.attribs[attrib_obj] = attrib_val
             print("attribs: ", {attrib.id: val

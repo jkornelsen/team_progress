@@ -20,6 +20,14 @@
                 const key = event.key.toLowerCase();
                 if (key === 'd') {
                     document.getElementById('drop-btn').click();
+                } else if (key === 'p') {
+                    document.getElementById('pickup-btn').click();
+                } else if (key === 'e') {
+                    {% if pile.slot %}
+                        document.getElementById('unequip-btn').click();
+                    {% elif game_data.overall.slots %}
+                        document.getElementById('equip-btn').click();
+                    {% endif %}
                 } else if (linkForKey[key]) {
                     window.location.href = linkForKey[key];
                 }
@@ -74,21 +82,62 @@
             </td>
         </tr>
         <tr>
+            <style>
+                .button-container {
+                    display: flex;
+                    flex-direction: row;
+                    align-items: flex-start;
+                    gap: 10px;
+                }
+
+                .button-column {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+            </style>
             <td>
+                <div class="button-container">
                 {% if char_id %}
                     {% if pile.slot %}
-                        <button id="unequip-btn" class="go-button">Un[E]quip</button>
+                        <div class="button-column, show-if-carried">
+                            <button id="unequip-btn" class="go-button">Un[e]quip</button>
+                        </div>
                     {% else %}
-                        <button id="equip-btn" class="go-button">[E]quip</button>
-                        <button id="drop-btn" class="go-button">[D]rop</button>
+                        {% if game_data.overall.slots %}
+                            <div class="button-column, show-if-carried">
+                                <button id="equip-btn" class="go-button">[E]quip</button><br>
+                                <select id="char-equip-slot">
+                                    {% for slot in game_data.overall.slots %}
+                                        <option value="{{ slot }}" {% if slot == default_slot %}selected{% endif %}>{{ slot }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        {% endif %}
                     {% endif %}
+                    <div class="button-column, show-if-carried, hide-if-slot">
+                        <button id="drop-btn" class="go-button">[D]rop</button>
+                    </div>
                 {% endif %}
                 {% if loc_id %}
-                    <button id="pickup-btn" class="go-button">[P]ick Up</button>
+                    <div class="button-column, show-if-carried">
+                        <button id="pickup-btn" class="go-button">[P]ick Up</button><br>
+                        <select id="char-picking-up">
+                            {% for char in game_data.characters if char.location.id == loc_id %}
+                                <option value="{{ char.id }}" {% if char.id == default_pickup_char %}selected{% endif %}>{{ char.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                 {% endif %}
                 {% if char_id or loc_id %}
-                    <button id="move_to_general-btn" class="go-button">Move to [G]eneral Storage</button>
+                    <div class="button-column, show-if-universal">
+                        <button id="move_to_general-btn" class="go-button">Move to [G]eneral Storage</button>
+                    </div>
                 {% endif %}
+                <div>
+                    <input type="checkbox" id="show-all-buttons" /><label for="show-all-buttons">Show all choices</label>
+                </div>
+                </div>
             </td>
         </tr>
         <tr>
@@ -398,6 +447,7 @@
             // Client-side update loops 
             setInterval(updateElapsedTime, 1000);
             startFetchingProgress();
+            updateVisibility();
 
             var fetchProgressInterval;
             function startFetchingProgress() {
@@ -412,7 +462,9 @@
                 clearInterval(fetchProgressInterval);
                 fetchProgressInterval = null;
             }
+
             // Button click event handlers
+
             $('#gain-btn').click(function() {
                 const quantityInput = $(this).prev('#quantity_to_gain');
                 const quantity = parseInt(quantityInput.val(), 10);
@@ -445,7 +497,6 @@
                     }
                 });
             });
-
             $('.toggle-btn').click(function() {
                 const current_id = {{ current.id }};
                 const toggleBtn = this;
@@ -479,7 +530,6 @@
                         startFetchingProgress();
                     });
             });
-
             $('#drop-btn').click(function() {
                 const itemId = "{{ current.id }}";
                 const charId = "{{ char_id }}";
@@ -501,6 +551,129 @@
                         alert('Error: ' + error);
                     }
                 });
+            });
+            $('#pickup-btn').click(function() {
+                const itemId = "{{ current.id }}";
+                const locId = "{{ loc_id }}";
+                const charId = $('#char-picking-up').val();
+                if (!charId) {
+                    alert('Please select a character to pick up the item.');
+                    return;
+                }
+                $.ajax({
+                    url: `/item/pickup/${itemId}/loc/${locId}/char/${charId}`,
+                    method: 'POST',
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            {% if loc_id %} // Ensure that url_for() does not cause an error, even if the JavaScript code isn't executed.
+                                window.location.href = "{{ url_for('play_location', loc_id=loc_id) }}";
+                            {% endif %}
+                        } else {
+                            console.error(response.message);
+                            alert('Error: ' + response.message);
+                        }
+                    },
+                    error: function(error) {
+                        console.error('Error:', error);
+                        alert('Error: ' + error);
+                    }
+                });
+            });
+            $('#equip-btn').click(function() {
+                const itemId = "{{ current.id }}";
+                const charId = "{{ char_id }}";
+                const slot = $('#char-equip-slot').val();
+                if (!slot) {
+                    alert('Please select a slot to equip the item.');
+                    return;
+                }
+                $.ajax({
+                    url: `/item/equip/${itemId}/char/${charId}/slot/${slot}`,
+                    method: 'POST',
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            {% if char_id %} // Ensure that url_for() does not cause an error, even if the JavaScript code isn't executed.
+                                window.location.href = "{{ url_for('play_char', char_id=char_id) }}";
+                            {% endif %}
+                        } else {
+                            console.error(response.message);
+                            alert('Error: ' + response.message);
+                        }
+                    },
+                    error: function(error) {
+                        console.error('Error:', error);
+                        alert('Error: ' + error);
+                    }
+                });
+            });
+            $('#unequip-btn').click(function() {
+                const itemId = "{{ current.id }}";
+                const charId = "{{ char_id }}";
+                $.ajax({
+                    url: `/item/unequip/${itemId}/char/${charId}`,
+                    method: 'POST',
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            {% if char_id %} // Ensure that url_for() does not cause an error, even if the JavaScript code isn't executed.
+                                window.location.href = "{{ url_for('play_char', char_id=char_id) }}";
+                            {% endif %}
+                        } else {
+                            console.error(response.message);
+                            alert('Error: ' + response.message);
+                        }
+                    },
+                    error: function(error) {
+                        console.error('Error:', error);
+                        alert('Error: ' + error);
+                    }
+                });
+            });
+
+            function updateVisibility() {
+                const storageType = '{{ current.storage_type }}';
+                const showAll = $('#show-all-buttons').is(':checked');
+                const showThese = [];
+                const hideThese = [];
+                $('.show-if-carried').each(function() {
+                    if (showAll || storageType === 'carried') {
+                        showThese.push(this);
+                    } else {
+                        hideThese.push(this);
+                    }
+                });
+                $('.show-if-universal').each(function() {
+                    if (showAll || storageType === 'universal') {
+                        showThese.push(this);
+                    } else {
+                        hideThese.push(this);
+                    }
+                });
+                $('.hide-if-slot').each(function() {
+                    {% if pile.slot %}
+                        if (showAll) {
+                            if (!showThese.includes(this)) {
+                                showThese.push(this);
+                            }
+                            const index = showThese.indexOf(this);
+                            if (index > -1) {
+                                hideThese.splice(index, 1);
+                            }
+                        } else {
+                            const index = showThese.indexOf(this);
+                            if (index > -1) {
+                                showThese.splice(index, 1);
+                            }
+                            if (!hideThese.includes(this)) {
+                                hideThese.push(this);
+                            }
+                        }
+                    {% endif %}
+                });
+                showThese.forEach(el => $(el).show());
+                hideThese.forEach(el => $(el).hide());
+            }
+            $('#show-all-buttons').on('change', function() {
+                updateVisibility();
             });
         });
     </script>

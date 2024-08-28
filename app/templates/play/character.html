@@ -18,7 +18,16 @@
         document.addEventListener('DOMContentLoaded', function () {
             document.addEventListener('keypress', function (event) {
                 const key = event.key.toLowerCase();
-                if (linkForKey[key]) {
+                if (key === 's') {
+                    document.getElementById('start-travel-btn').click();
+                } else if (key === 't') {
+                    const selectBox = document.getElementById('destination-select');
+                    selectBox.focus();
+                    if (selectBox.selectedIndex === 0) {
+                        selectBox.selectedIndex = 1;  // first location in list
+                        fetchProgressData();
+                    }
+                } else if (linkForKey[key]) {
                     window.location.href = linkForKey[key];
                 }
             });
@@ -45,7 +54,7 @@
         <a href="{{ link }}">{{ current.location.name }}</a>
         {% if current.location.destinations %}
             <div class="flexdiv">
-                <label for="destination-select">Travel To</label>
+                <label for="destination-select">[T]ravel To</label>
                 <select id="destination-select" class="select-box">
                     <option value="" data-distance="-1">(Select destination)</option>
                     {% for destination, distance in current.location.destinations.items() %}
@@ -65,14 +74,13 @@
                     <span class="progress-label">0 / 0</span>
                 </div>
                 <!--<p>&nbsp;(Elapsed <span id="dest-time">...</span>)</p>-->
-                <button id="start-travel-btn">Start</button>
+                <button id="start-travel-btn">[S]tart</button>
                 <button id="stop-travel-btn">Stop</button>
             </div>
         {% endif %}
         </ul>
     {% endif %}
 
-    {% if current.items %}
     <h2>Equipped Items</h2>
     <ul>
         {% for owned in current.items if owned.slot %}
@@ -118,16 +126,15 @@
             (None)<br>
         {% endfor %}
     </ul>
-    {% endif %}
 
-    {% if current.attribs %}
     <h2>Attributes</h2>
     <ul>
         {% for attrib, attrib_val in current.attribs.items() %}
             <li>{{ attrib.name }} {{ attrib_val | dec2str }}</li>
+        {% else %}
+            (None)<br>
         {% endfor %}
     </ul>
-    {% endif %}
 
     <script>
         $(document).ready(function() {
@@ -199,7 +206,7 @@
                     destSel.disabled = true;
                     is_ongoing = true;
                 } else {
-                    startBtn.innerHTML = "Start";
+                    startBtn.innerHTML = "[S]tart";
                     startBtn.disabled = false;
                     stopBtn.disabled = true;
                     destSel.disabled = false;

@@ -104,6 +104,20 @@ class Location(Identifiable):
                 values)
 
     @classmethod
+    def load_characters_at_loc(cls, id_to_get):
+        from .character import Character
+        characters_data = cls.execute_select("""
+            SELECT *
+            FROM characters
+            WHERE game_token = %s
+                AND location_id = %s
+            ORDER BY name
+        """, (g.game_token, id_to_get))
+        g.game_data.characters = []
+        for char_data in characters_data:
+            g.game_data.characters.append(Character.from_json(char_data))
+
+    @classmethod
     def data_for_file(cls):
         print(f"{cls.__name__}.data_for_file()")
         query = """
@@ -210,18 +224,8 @@ class Location(Identifiable):
     @classmethod
     def data_for_play(cls, id_to_get):
         print(f"{cls.__name__}.data_for_play()")
-        from .character import Character
         current_obj = cls.data_for_configure(id_to_get)
-        characters_data = cls.execute_select("""
-            SELECT *
-            FROM characters
-            WHERE game_token = %s
-                AND location_id = %s
-            ORDER BY name
-        """, (g.game_token, id_to_get))
-        g.game_data.characters = []
-        for char_data in characters_data:
-            g.game_data.characters.append(Character.from_json(char_data))
+        cls.load_characters_at_loc(id_to_get)
         return current_obj
 
     def configure_by_form(self):

@@ -29,14 +29,7 @@
         <p>{{ current.description }}</p>
     {% endif %}
 
-    {% set outerscope = namespace(display_section = false) %}
-    {% for char in game_data.characters %}
-        {% if char.location.id == current.id %}
-            {% set outerscope.display_section = true %}
-        {% endif %}
-    {% endfor %}
-    {% if outerscope.display_section %}
-    <h2>Characters</h2>
+    <h2>Characters Here</h2>
     <ul>
         {% for char in game_data.characters if char.location.id == current.id %}
             {% set letter = link_letters.next() %}
@@ -46,37 +39,35 @@
             </script>
             <span>[{{ letter }}]</span>
             <a href="{{ link }}">{{ char.name }}</a><br>
+        {% else %}
+            <p>(None)</p>
         {% endfor %}
     </ul>
-    {% endif %}
 
-    {% if current.items %}
-        <h2>Items</h2>
-        <ul class="item-list">
-            {% for item_at in current.items %}
-                {% set item = item_at.item %}
-                {% set letter = link_letters.next() %}
-                {% set link = url_for('play_item', item_id=item.id, loc_id=current.id) %}
-                <script>
-                    linkForKey['{{ letter }}'] = "{{ link }}";
-                </script>
-                <span>[{{ letter }}]</span>
-                <span class="item-name">
-                    <a href="{{ link }}">{{ item.name }}</a>
-                </span>
-                <span class="item-quantity" id="item-{{ item.id }}-quantity">
-                    {% if not (item_at.item.q_limit == 1 and item_at.quantity == 1) %}
-                        &nbsp; {{ item_at.quantity | dec2str }}
-                    {% endif %}
-                </span><br>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No items at this location.</p>
-    {% endif %}
+    <h2>Items Here</h2>
+    <ul class="item-list">
+        {% for item_at in current.items %}
+            {% set item = item_at.item %}
+            {% set letter = link_letters.next() %}
+            {% set link = url_for('play_item', item_id=item.id, loc_id=current.id) %}
+            <script>
+                linkForKey['{{ letter }}'] = "{{ link }}";
+            </script>
+            <span>[{{ letter }}]</span>
+            <span class="item-name">
+                <a href="{{ link }}">{{ item.name }}</a>
+            </span>
+            <span class="item-quantity" id="item-{{ item.id }}-quantity">
+                {% if not (item_at.item.q_limit == 1 and item_at.quantity == 1) %}
+                    &nbsp; {{ item_at.quantity | dec2str }}
+                {% endif %}
+            </span><br>
+        {% else %}
+            <p>(None)</p>
+        {% endfor %}
+    </ul>
 
-    {% if current.destinations %}
-    <h2>Destinations</h2>
+    <h2>Neighboring Locations</h2>
     <ul>
         {% for destination, distance in current.destinations.items() %}
             {% set letter = link_letters.next() %}
@@ -87,9 +78,10 @@
             <span>[{{ letter }}]</span>
             <a href="{{ link }}">{{ destination.name }}</a> —
             Distance {{ distance | dec2str }}<br>
+        {% else %}
+            <p>(None)</p>
         {% endfor %}
     </ul>
-    {% endif %}
 
     <script>
         $(document).ready(function() {

@@ -2,13 +2,13 @@ from collections import namedtuple
 from flask import g, request
 from types import SimpleNamespace
 
-from .db_serializable import DbSerializable, Identifiable, coldef
-
 from .attrib import Attrib
 from .character import Character
+from .db_serializable import DbSerializable, Identifiable, coldef
 from .event import Event
 from .item import Item
 from .location import Location
+from .utils import request_int, request_float
 
 tables_to_create = {
     'overall': f"""
@@ -187,20 +187,21 @@ class Overall(DbSerializable):
                 prefix = f"winreq{winreq_id}_"
                 req = WinRequirement()
                 self.win_reqs.append(req)
-                req.quantity = self.form_dec(request, f"{prefix}quantity")
-                item_id = self.form_int(request, f"{prefix}item_id")
+                req.quantity = request_float(request, f"{prefix}quantity")
+                item_id = request_int(request, f"{prefix}item_id")
                 if item_id:
                     req.item = Item(item_id)
-                char_id = self.form_int(request, f"{prefix}char_id")
+                char_id = request_int(request, f"{prefix}char_id")
                 if char_id:
                     req.character = Character(char_id)
-                loc_id = self.form_int(request, f"{prefix}loc_id")
+                loc_id = request_int(request, f"{prefix}loc_id")
                 if loc_id:
                     req.location = Location(loc_id)
-                attrib_id = self.form_int(request, f"{prefix}attrib_id")
+                attrib_id = request_int(request, f"{prefix}attrib_id")
                 if attrib_id:
                     req.attrib = Attrib(attrib_id)
-                req.attrib_value = self.form_int(request, f"{prefix}attribValue")
+                req.attrib_value = request_float(
+                    request, f"{prefix}attribValue")
             self.slots = [slot.strip()
                 for slot in request.form.get('slots').splitlines()
                 if slot.strip()]

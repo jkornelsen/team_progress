@@ -213,26 +213,6 @@ class DbSerializable():
         """
         self.execute_change(query, values)
 
-    @classmethod
-    def form_int(cls, request, field, default=0):
-        """Get int from html form, handling empty strings."""
-        val = request.form.get(field, default)
-        try:
-            val = int(val)
-        except ValueError:
-            val = 0
-        return val
-
-    @classmethod
-    def form_dec(cls, request, field, default=0.0):
-        """Get decimal number from html form, handling empty strings."""
-        val = request.form.get(field, default)
-        try:
-            val = float(val)
-        except ValueError:
-            val = 0.0
-        return val
-
 class Identifiable(DbSerializable):
     __abstract__ = True
 
