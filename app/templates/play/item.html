@@ -37,7 +37,9 @@
     <table style="width: 100%; max-width: 80%; margin: 0 auto;">
         <tr>
             <td>
-                {% if char_id %}
+                {% if pile.pile_type == 'universal' %}
+                    General Storage<br>
+                {% elif pile.pile_type == 'carried' and char_id %}
                     {% set link = url_for('play_char', char_id=char_id) %}
                     {% set letter = link_letters.next(link) %}
                     <script>
@@ -46,7 +48,7 @@
                     Carried by
                     <a href="{{ link }}">{{ container_name }}</a>
                     <span>[{{ letter }}]</span><br>
-                {% elif loc_id %}
+                {% elif pile.pile_type == 'local' and loc_id %}
                     {% set link = url_for('play_location', loc_id=loc_id) %}
                     {% set letter = link_letters.next(link) %}
                     <script>
@@ -56,7 +58,7 @@
                     <a href="{{ link }}">{{ container_name }}</a>
                     <span>[{{ letter }}]</span><br>
                 {% else %}
-                    General Storage<br>
+                    General Storage (by default)<br>
                 {% endif %}
                 <h2 style="margin: 10px 10px; display: flex; align-items: center; flex-wrap: nowrap;">
                 {{ current.name }}:
@@ -98,7 +100,7 @@
             </style>
             <td>
                 <div class="button-container">
-                {% if char_id %}
+                {% if pile.pile_type == 'carried' and char_id %}
                     {% if pile.slot %}
                         <div class="button-column, show-if-carried">
                             <button id="unequip-btn" class="go-button">Un[e]quip</button>
@@ -109,7 +111,7 @@
                                 <button id="equip-btn" class="go-button">[E]quip</button><br>
                                 <select id="char-equip-slot">
                                     {% for slot in game_data.overall.slots %}
-                                        <option value="{{ slot }}" {% if slot == default_slot %}selected{% endif %}>{{ slot }}</option>
+                                        <option value="{{ slot }}" {% if slot == defaults.slot %}selected{% endif %}>{{ slot }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -119,17 +121,34 @@
                         <button id="drop-btn" class="go-button">[D]rop</button>
                     </div>
                 {% endif %}
-                {% if loc_id %}
+                {% if pile.pile_type == 'local' and loc_id %}
                     <div class="button-column, show-if-carried">
                         <button id="pickup-btn" class="go-button">[P]ick Up</button><br>
                         <select id="char-picking-up">
                             {% for char in game_data.characters if char.location.id == loc_id %}
-                                <option value="{{ char.id }}" {% if char.id == default_pickup_char %}selected{% endif %}>{{ char.name }}</option>
+                                <option value="{{ char.id }}" {% if char.id == defaults.pickup_char %}selected{% endif %}>{{ char.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
                 {% endif %}
-                {% if char_id or loc_id %}
+                {% if pile.pile_type == 'universal' %}
+                    <div class="button-column, show-if-carried">
+                        <button id="move_to_char-btn" class="go-button">Move to [C]haracter</button><br>
+                        <select id="char-moving-to">
+                            {% for char in game_data.characters %}
+                                <option value="{{ char.id }}" {% if char.id == defaults.movingto_char %}selected{% endif %}>{{ char.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="button-column, show-if-local">
+                        <button id="move_to_char-btn" class="go-button">Move to [L]ocation</button><br>
+                        <select id="loc-moving-to">
+                            {% for loc in game_data.locations %}
+                                <option value="{{ loc.id }}" {% if loc.id == defaults.movingto_loc %}selected{% endif %}>{{ loc.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% else %}
                     <div class="button-column, show-if-universal">
                         <button id="move_to_general-btn" class="go-button">Move to [G]eneral Storage</button>
                     </div>
@@ -279,10 +298,10 @@
                         <th>Required</th>
                     </tr>
                     {% for used_for in outerscope.used_as_source %}
-                        {% set link = url_for('play_item', item_id=used_for.item.id, char_id=char_id, loc_id=loc_id) %}
+                        {% set link = url_for('play_item', item_id=used_for.item.id, char_id=char_id, loc_id=loc_id, produced='true') %}
                         {% set letter = link_letters.next(link) %}
                         <script>
-                            linkForKey['{{ letter }}'] = "{{ link }}";
+                            linkForKey['{{ letter }}'] = "{{ link|safe }}";
                         </script>
                     <tr>
                         <td>
@@ -636,6 +655,13 @@
                 const hideThese = [];
                 $('.show-if-carried').each(function() {
                     if (showAll || storageType === 'carried') {
+                        showThese.push(this);
+                    } else {
+                        hideThese.push(this);
+                    }
+                });
+                $('.show-if-local').each(function() {
+                    if (showAll || storageType === 'local') {
                         showThese.push(this);
                     } else {
                         hideThese.push(this);

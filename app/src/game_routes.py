@@ -13,7 +13,7 @@ from .item import Item
 from .event import Event
 from .location import Location, ItemAt
 from .overall import Overall
-from .utils import request_int
+from .utils import request_bool, request_int
 
 class LinkLetters:
     """Letters to add before a link for hotkeys."""
@@ -256,13 +256,25 @@ def set_routes(app):
     def play_item(item_id):
         char_id = request_int(request, 'char_id', '', 'args')
         loc_id = request_int(request, 'loc_id', '', 'args')
+        produced = request_bool(request, 'produced', False, 'args')
+        if char_id:
+            session['last_char_id'] = char_id
+        if loc_id:
+            session['last_loc_id'] = loc_id
+        if not char_id and not loc_id:
+            char_id = session.get('last_char_id', '')
+            loc_id = session.get('last_loc_id', '')
         print("-" * 80)
         print(f"play_item(item_id={item_id}, char_id={char_id}, loc_id={loc_id})")
-        item, pile, container = Item.data_for_play(item_id, char_id, loc_id)
+        item, pile, container = Item.data_for_play(
+            item_id, char_id, loc_id, produced)
         if not item:
             return 'Item not found'
-        default_pickup_char = session.get('default_pickup_char', '')
-        default_slot = session.get('default_slot', '')
+        defaults = {
+            'pickup_char': session.get('default_pickup_char', ''),
+            'movingto_char': session.get('default_movingto_char', ''),
+            'slot': session.get('default_slot', '')
+        }
         g.game_data.overall = Overall.from_db()
         return render_template(
             'play/item.html',
@@ -270,11 +282,10 @@ def set_routes(app):
             pile=pile,
             char_id=char_id,
             loc_id=loc_id,
-            default_pickup_char=default_pickup_char,
-            default_slot=default_slot,
+            defaults=defaults,
             container_name=container.name,
             game_data=g.game_data,
-            link_letters=LinkLetters(set('dop')))
+            link_letters=LinkLetters(set('cdelop')))
 
     @app.route('/item/progress_data/<int:item_id>/')
     def item_progress_data(item_id):
@@ -447,6 +458,11 @@ def set_routes(app):
 
     @app.route('/play/location/<int:loc_id>')
     def play_location(loc_id):
+        char_id = request_int(request, 'char_id', '', 'args')
+        if char_id:
+            session['last_char_id'] = char_id
+        else:
+            char_id = session.get('last_char_id', '')
         print("-" * 80)
         print(f"play_location({loc_id})")
         instance = Location.data_for_play(loc_id)
@@ -455,6 +471,7 @@ def set_routes(app):
         return render_template(
             'play/location.html',
             current=instance,
+            char_id=char_id,
             game_data=g.game_data,
             link_letters=LinkLetters())
 

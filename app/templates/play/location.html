@@ -48,10 +48,14 @@
     <ul class="item-list">
         {% for item_at in current.items %}
             {% set item = item_at.item %}
-            {% set link = url_for('play_item', item_id=item.id, loc_id=current.id) %}
+            {% if item.storage_type == 'local' %}
+                {% set link = url_for('play_item', item_id=item.id, loc_id=current.id, char_id=char_id) %}
+            {% else %}
+                {% set link = url_for('play_item', item_id=item.id, loc_id=current.id) %}
+            {% endif %}
             {% set letter = link_letters.next(link) %}
             <script>
-                linkForKey['{{ letter }}'] = "{{ link }}";
+                linkForKey['{{ letter }}'] = "{{ link|safe }}";
             </script>
             <span>[{{ letter }}]</span>
             <span class="item-name">

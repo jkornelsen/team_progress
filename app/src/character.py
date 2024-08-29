@@ -5,7 +5,7 @@ from .db_serializable import Identifiable, MutableNamespace, coldef
 from .item import Item
 from .location import Location
 from .progress import Progress
-from .utils import request_bool, request_float
+from .utils import Storage, request_bool, request_float
 
 tables_to_create = {
     'characters': f"""
@@ -30,6 +30,7 @@ class OwnedItem:
             self.item = Item()
         self.quantity = 0
         self.slot = ''  # for example, "main hand"
+        self.pile_type = Storage.CARRIED
 
     def to_json(self):
         return {
@@ -240,15 +241,8 @@ class Character(Identifiable):
                     'items', []).append(char_item_data)
             g.game_data.items.append(Item.from_json(item_data))
         # Get all location names
-        locations_data = cls.execute_select("""
-            SELECT id, name
-            FROM locations
-            WHERE game_token = %s
-            ORDER BY name
-        """, (g.game_token,))
-        g.game_data.locations = [
-            Location.from_json(loc_data)
-            for loc_data in locations_data]
+        from .game_data import GameData
+        GameData.entity_names_from_db([Location])
         # Create character from data
         current_obj = Character.from_json(current_data)
         # Replace partial objects with fully populated objects

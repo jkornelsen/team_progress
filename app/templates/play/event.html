@@ -69,14 +69,16 @@
         {% endif %}
     </table>
     <script>
-        let selectedDifficulty = localStorage.getItem('selectedDifficulty');
-        if (selectedDifficulty === null) {
-            selectedDifficulty = '10';
-            localStorage.setItem('selectedDifficulty', selectedDifficulty);
-        }
-        document.getElementById('difficulty').value = selectedDifficulty;
-        document.getElementById('difficulty').addEventListener('change', function() {
-            localStorage.setItem('selectedDifficulty', this.value);
+        $(document).ready(function() {
+            let selectedDifficulty = localStorage.getItem('selectedDifficulty');
+            if (selectedDifficulty === null) {
+                selectedDifficulty = '10';
+                localStorage.setItem('selectedDifficulty', selectedDifficulty);
+            }
+            document.getElementById('difficulty').value = selectedDifficulty;
+            document.getElementById('difficulty').addEventListener('change', function() {
+                localStorage.setItem('selectedDifficulty', this.value);
+            });
         });
     </script>
 {% endblock %}

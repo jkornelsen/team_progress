@@ -68,31 +68,30 @@ class GameData:
         return instance
 
     @classmethod
-    def from_db(cls):
-        LOADED = 'full from db'
-        if g.loaded == LOADED:
-            print(f"{LOADED} already loaded")
-            return g.game_data
-        print("loading {LOADED}")
-        g.loaded = LOADED
-        instance = cls()
-        for entity_cls in cls.ENTITIES:
+    def from_db(cls, entities=None):
+        print(f"{cls.__name__}.from_db()")
+        if entities is None:
+            entities = cls.ENTITIES
+            instance = cls()
+        else:
+            instance = g.game_data
+        for entity_cls in entities:
             instance.set_list(
                 entity_cls, entity_cls.list_from_db())
         instance.overall = Overall.from_db()
         return instance
 
     @classmethod
-    def entity_names_from_db(cls):
-        LOADED = 'entity names'
-        if g.loaded == LOADED:
-            print(f"{LOADED} already loaded")
-            return g.game_data
-        print("loading {LOADED}")
-        g.loaded = LOADED
-        instance = cls()
+    def entity_names_from_db(cls, entities=None):
+        print(f"{cls.__name__}.entity_names_from_db()")
+        if entities is None:
+            entities = cls.ENTITIES
+            instance = cls()
+        else:
+            instance = g.game_data
         query_parts = []
-        for entity_cls in cls.ENTITIES:
+        for entity_cls in entities:
+            instance.set_list(entity_cls, [])
             query_parts.append(f"""
                 SELECT id, name, '{entity_cls.tablename()}' AS tablename
                 FROM {entity_cls.tablename()}

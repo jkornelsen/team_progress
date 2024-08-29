@@ -1,3 +1,9 @@
+class Storage:
+    CARRIED = 'carried'
+    LOCAL = 'local'
+    UNIVERSAL = 'universal'
+    TYPES = [CARRIED, LOCAL, UNIVERSAL]
+
 def _get_from_request(request, key, source):
     """Retrieve a value from the request."""
     if source not in ['form', 'args']:

@@ -6,12 +6,7 @@ from .db_serializable import (
     DbSerializable, Identifiable, MutableNamespace, coldef,
     DbError, DeletionError)
 from .progress import Progress
-from .utils import request_bool, request_float
-
-STORAGE_TYPES = ['carried', 'local', 'universal']
-(STORAGE_CARRIED,
- STORAGE_LOCAL,
- STORAGE_UNIVERSAL) = STORAGE_TYPES
+from .utils import Storage, request_bool, request_float
 
 tables_to_create = {
     'items': f"""
@@ -133,14 +128,15 @@ class Item(Identifiable):
         super().__init__(new_id)
         self.name = ""
         self.description = ""
-        self.storage_type = STORAGE_UNIVERSAL
+        self.storage_type = Storage.UNIVERSAL
         self.toplevel = False if len(self.get_list()) > 1 else True
         self.attribs = {}  # Attrib objects and their stat val
         self.recipes = []  # list of Recipe objects
         self.q_limit = 0.0  # limit the quantity if not 0
         self.quantity = 0.0  # general storage -- not owned or at location
-        self.pile = self  # referenced by Progress
-        self.pile.item = self  # referenced by Progress
+        self.pile = self
+        self.pile.item = self
+        self.pile_type = Storage.UNIVERSAL
         self.progress = Progress(container=self)  # for general storage
 
     def to_json(self):
@@ -168,7 +164,7 @@ class Item(Identifiable):
         instance = cls(int(data.get('id', 0)))
         instance.name = data.get('name', "")
         instance.description = data.get('description', "")
-        instance.storage_type = data.get('storage_type', STORAGE_UNIVERSAL)
+        instance.storage_type = data.get('storage_type', Storage.UNIVERSAL)
         instance.toplevel = data.get('toplevel', False)
         instance.attribs = {
             Attrib(int(attrib_id)): val
@@ -436,28 +432,46 @@ class Item(Identifiable):
         return current_obj
 
     @classmethod
-    def data_for_play(cls, id_to_get, owner_char_id=0, at_loc_id=0):
+    def data_for_play(cls, id_to_get, owner_char_id=0, at_loc_id=0,
+            produced=False):
         print(f"{cls.__name__}.data_for_play()")
         current_obj = cls.data_for_configure(id_to_get)
+        # Get all character and location names
+        from .game_data import GameData
+        from .character import Character
+        from .location import Location
+        GameData.entity_names_from_db([Character, Location])
         # Get item data for the specific container
-        if owner_char_id:
-            from .character import Character, OwnedItem
+        if produced:
+            # Use the pile that will get produced
+            pile_type = current_obj.storage_type
+        elif current_obj.storage_type == Storage.CARRIED and owner_char_id:
+            pile_type = Storage.CARRIED
+        elif current_obj.storage_type == Storage.LOCAL and at_loc_id:
+            pile_type = Storage.LOCAL
+        elif owner_char_id:
+            pile_type = Storage.CARRIED
+        elif at_loc_id:
+            pile_type = Storage.LOCAL
+        else:
+            pile_type = Storage.UNIVERSAL
+        container = current_obj
+        pile = current_obj
+        if pile_type == Storage.CARRIED and owner_char_id:
+            from .character import OwnedItem
             container = Character.data_for_configure(owner_char_id)
             pile = next(
                 (ownedItem for ownedItem in container.items
                 if ownedItem.item.id == current_obj.id),
                 OwnedItem(current_obj))
-        elif at_loc_id:
-            from .location import Location, ItemAt
+        elif pile_type == Storage.LOCAL and at_loc_id:
+            from .location import ItemAt
             container = Location.data_for_configure(at_loc_id)
             pile = next(
                 (itemAt for itemAt in container.items
                 if itemAt.item.id == current_obj.id),
                 ItemAt(current_obj))
             Location.load_characters_at_loc(at_loc_id)  # who can pick up
-        else:
-            container = current_obj
-            pile = current_obj
         # Get relation data for items that use this item as a source
         item_recipes_data = cls.db_recipe_data(id_to_get, get_by_source=True)
         for item_id, recipes_data in item_recipes_data.items():

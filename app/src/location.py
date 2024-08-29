@@ -1,7 +1,9 @@
 from flask import g, request, session
+
 from .db_serializable import (
     Identifiable, MutableNamespace, coldef, tuple_to_pg_array)
 from .item import Item
+from .utils import Storage
 
 tables_to_create = {
     'locations': f"""
@@ -19,6 +21,7 @@ class ItemAt:
             self.item = Item()
         self.quantity = 0
         self.position = (0, 0)
+        self.pile_type = Storage.LOCAL
 
     def to_json(self):
         return {
