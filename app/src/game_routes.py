@@ -205,8 +205,8 @@ def set_routes(app):
                                 and event.check_trigger_for_duration(time_spent)):
                             return jsonify({
                                 'status': 'interrupt',
-                                'message': f"{char.name} triggered {event.name}!"
-                                " Go to event?",
+                                'message': f"<h2>{char.name} triggered {event.name}!</h2>"
+                                " Allow event?",
                                 'event_id': event.id})
                 char.to_db()
             if char.pile.quantity >= char.pile.item.q_limit:

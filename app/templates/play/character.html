@@ -12,11 +12,15 @@
 
 {% block content %}
     <script>
+        let isModalOpen = false;
         const linkForKey = {
             'o': '{{ url_for('overview') }}',
         };
         document.addEventListener('DOMContentLoaded', function () {
             document.addEventListener('keypress', function (event) {
+                if (isModalOpen) {
+                    return;
+                }
                 const key = event.key.toLowerCase();
                 if (key === 's') {
                     document.getElementById('start-travel-btn').click();
@@ -135,20 +139,68 @@
         {% endfor %}
     </ul>
 
+    <div id="custom-confirm-modal" class="modal">
+        <div class="modal-content">
+            <p id="custom-confirm-message"></p>
+            <div class="modal-buttons">
+                <button id="custom-confirm-yes">[Y]es</button>
+                <button id="custom-confirm-no">[N]o</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         $(document).ready(function() {
+            function showCustomConfirm(message) {
+                return new Promise((resolve, reject) => {
+                    const modal = document.getElementById('custom-confirm-modal');
+                    const messageElement = document.getElementById('custom-confirm-message');
+                    const yesButton = document.getElementById('custom-confirm-yes');
+                    const noButton = document.getElementById('custom-confirm-no');
+                    messageElement.innerHTML = message;
+                    modal.style.display = 'block';
+                    isModalOpen = true;
+                    function handleKeydown(event) {
+                        const key = event.key.toLowerCase();
+                        if (event.key === 'y') {
+                            yesButton.click();
+                        } else if (event.key === 'n') {
+                            noButton.click();
+                        }
+                    }
+                    document.addEventListener('keydown', handleKeydown);
+                    yesButton.onclick = function() {
+                        modal.style.display = 'none';
+                        document.removeEventListener('keydown', handleKeydown);
+                        isModalOpen = false;
+                        resolve(true);  // confirm
+                    };
+                    noButton.onclick = function() {
+                        modal.style.display = 'none';
+                        document.removeEventListener('keydown', handleKeydown);
+                        isModalOpen = false;
+                        resolve(false);  // cancel
+                    };
+                });
+            }
+
+            async function handleInterrupt(data) {
+                stopFetchingProgress();
+                const confirmed = await showCustomConfirm(data.message);
+                if (confirmed) {
+                    const baseEventUrl = "{{ url_for('play_event', event_id='-1') }}";
+                    const url = baseEventUrl.replace('-1', data.event_id);
+                    console.log("Confirmed to go to ", url);
+                    stopTravel();
+                    window.location.href = url;
+                } else {
+                    localStorage.setItem('ignore_event_id', data.event_id);
+                    startFetchingProgress();
+                }
+            }
             function updateTravelProgress(data) {
                 if (data.hasOwnProperty('status') && data.status === 'interrupt') {
-                    const userChoice = confirm(data.message);
-                    if (userChoice) {
-                        const baseEventUrl = "{{ url_for('play_event', event_id='-1') }}";
-                        const url = baseEventUrl.replace('-1', data.event_id);
-                        console.log("Confirmed to go to ", url);
-                        document.getElementById('stop-travel-btn').click();
-                        window.location.href = url;
-                    } else {
-                        localStorage.setItem('ignore_event_id', data.event_id);
-                    }
+                    handleInterrupt(data);
                     return;
                 }
                 const current_loc_id = {{
@@ -173,6 +225,7 @@
                     if (data.hasOwnProperty('status') && data.status === 'arrived') {
                         console.log('Arrived; reloading.');
                         location.reload();
+                    //TODO: rethink how this should work
                     //} else if (data.hasOwnProperty('status') && data.status === 'error' && data.message === 'No travel destination.') {
                     //    console.log(data.message);
                     } else {
@@ -216,11 +269,18 @@
                     updateStartbuttonLabel(data);
                 });
             }
+            let intervalId;
+            function startFetchingProgress() {
+                intervalId = setInterval(fetchProgressData, 2000);
+            }
+            function stopFetchingProgress() {
+                clearInterval(intervalId);
+            }
 
             // Initial setup when page loads
             localStorage.removeItem('ignore_event_id');
             fetchProgressData();
-            setInterval(fetchProgressData, 2000);
+            startFetchingProgress();
 
             $('#destination-select').change(function() {
                 fetchProgressData();
@@ -248,7 +308,7 @@
                     }
                 });
             });
-            $('#stop-travel-btn').click(function() {
+            function stopTravel() {
                 // Stop the progress
                 console.log('stopItem(): ' + {{ current.id }});
                 fetch('/char/stop/' + {{ current.id }})
@@ -260,6 +320,9 @@
                     .catch(error => {
                         console.error('Error:', error);
                     });
+            }
+            $('#stop-travel-btn').click(function() {
+                stopTravel();
             });
         });
     </script>

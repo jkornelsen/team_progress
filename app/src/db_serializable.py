@@ -40,7 +40,6 @@ def db_type_fields(doc):
     """Objects may have types such as dicts
     that aren't for inserting into the db.
     """
-    #NON_DB_TYPES = (dict, list, tuple, set)
     NON_DB_TYPES = (dict, list, set)
     return [
         field for field in doc.keys()
@@ -189,17 +188,9 @@ class DbSerializable():
 
     def json_to_db(self, doc):
         doc['game_token'] = g.game_token
-        print("Debug - Document Content:")
-        print(doc)
         fields = db_type_fields(doc)
-        print("Debug - Fields:")
-        print(fields)
         placeholders = ','.join(['%s'] * len(fields))
-        print("Debug - Placeholders:")
-        print(placeholders)
         values = tuples_to_lists([doc[field] for field in fields])
-        print("Debug - Values:")
-        print(values)
         update_fields = [
             field for field in fields
             if field not in ('game_token',)]

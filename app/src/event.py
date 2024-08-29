@@ -100,7 +100,7 @@ class Event(Identifiable):
         instance.description = data.get('description', "")
         instance.toplevel = data.get('toplevel', True)
         instance.outcome_type = data.get('outcome_type', OUTCOME_FOURWAY)
-        instance.numeric_range = data.get('numeric_range', (0, 10))
+        instance.numeric_range = tuple(data.get('numeric_range', (0, 10)))
         instance.selection_strings = data.get('selection_strings', "")
         instance.determining_attrs = [
             Attrib(int(attrib_id))
@@ -108,7 +108,7 @@ class Event(Identifiable):
         instance.changed_attrs = [
             Attrib(int(attrib_id))
             for attrib_id in data.get('changed_attrs', [])]
-        instance.trigger_chance = data.get('trigger_chance', (0, 1))
+        instance.trigger_chance = tuple(data.get('trigger_chance', (0, 1)))
         instance.trigger_by_duration = data.get('trigger_by_duration', True)
         instance.triggers = [
             create_trigger_entity(entity_name, entity_id)
