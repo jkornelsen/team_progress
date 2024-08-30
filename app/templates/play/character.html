@@ -133,7 +133,11 @@
     <h2>Attributes</h2>
     <ul>
         {% for attrib, attrib_val in current.attribs.items() %}
-            <li>{{ attrib.name }} {{ attrib_val | dec2str }}</li>
+            <li>{{ attrib.name }}
+                {% if attrib_val != 1 %}
+                    {{ attrib_val | dec2str }}
+                {% endif %}
+            </li>
         {% else %}
             (None)<br>
         {% endfor %}

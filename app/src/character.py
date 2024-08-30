@@ -24,13 +24,14 @@ tables_to_create = {
 }
 
 class OwnedItem:
+    PILE_TYPE = Storage.CARRIED
     def __init__(self, item=None):
         self.item = item
         if not item:
             self.item = Item()
+        self.container = None  # character who owns item
         self.quantity = 0
         self.slot = ''  # for example, "main hand"
-        self.pile_type = Storage.CARRIED
 
     def to_json(self):
         return {

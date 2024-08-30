@@ -37,9 +37,9 @@
     <table style="width: 100%; max-width: 80%; margin: 0 auto;">
         <tr>
             <td>
-                {% if pile.pile_type == 'universal' %}
+                {% if pile.PILE_TYPE == 'universal' %}
                     General Storage<br>
-                {% elif pile.pile_type == 'carried' and char_id %}
+                {% elif pile.PILE_TYPE == 'carried' and char_id %}
                     {% set link = url_for('play_char', char_id=char_id) %}
                     {% set letter = link_letters.next(link) %}
                     <script>
@@ -48,7 +48,7 @@
                     Carried by
                     <a href="{{ link }}">{{ container_name }}</a>
                     <span>[{{ letter }}]</span><br>
-                {% elif pile.pile_type == 'local' and loc_id %}
+                {% elif pile.PILE_TYPE == 'local' and loc_id %}
                     {% set link = url_for('play_location', loc_id=loc_id) %}
                     {% set letter = link_letters.next(link) %}
                     <script>
@@ -100,7 +100,7 @@
             </style>
             <td>
                 <div class="button-container">
-                {% if pile.pile_type == 'carried' and char_id %}
+                {% if pile.PILE_TYPE == 'carried' and char_id %}
                     {% if pile.slot %}
                         <div class="button-column, show-if-carried">
                             <button id="unequip-btn" class="go-button">Un[e]quip</button>
@@ -121,7 +121,7 @@
                         <button id="drop-btn" class="go-button">[D]rop</button>
                     </div>
                 {% endif %}
-                {% if pile.pile_type == 'local' and loc_id %}
+                {% if pile.PILE_TYPE == 'local' and loc_id %}
                     <div class="button-column, show-if-carried">
                         <button id="pickup-btn" class="go-button">[P]ick Up</button><br>
                         <select id="char-picking-up">
@@ -131,7 +131,7 @@
                         </select>
                     </div>
                 {% endif %}
-                {% if pile.pile_type == 'universal' %}
+                {% if pile.PILE_TYPE == 'universal' %}
                     <div class="button-column, show-if-carried">
                         <button id="move_to_char-btn" class="go-button">Move to [C]haracter</button><br>
                         <select id="char-moving-to">
@@ -201,7 +201,7 @@
                         <th>Where</th>
                     </tr>
                     {% for recipe in current.recipes %}
-                        {% set rowspan = recipe.sources | length %}
+                        {% set rowspan = recipe.sources|length + 1 %}
                     <tr>
                         <td rowspan="{{ rowspan }}">
                             {% if recipe.instant %}
@@ -217,33 +217,9 @@
                             per <span id="rate-duration">{{ recipe.rate_duration | dec2str }}</span>s
                             {% endif %}
                         </td>
-                        {% if rowspan > 0 %}
-                            {% set item = recipe.sources[0].item %}
-                            {% if item.id == current.id %}
-                                <td><strong>{{ item.name}}</strong></td>
-                            {% else %}
-                                {% set link = url_for('play_item', item_id=item.id, char_id=char_id, loc_id=loc_id) %}
-                                {% set letter = link_letters.next(link) %}
-                                <script>
-                                    linkForKey['{{ letter }}'] = "{{ link }}";
-                                </script>
-                                <td>
-                                    <span>[{{ letter }}]</span>
-                                    <a href="{{ link }}">{{ item.name }}</a>
-                                </td>
-                            {% endif %}
-                            <td>
-                                {% if recipe.sources[0].preserve %}
-                                    ({{ recipe.sources[0].q_required | dec2str }})
-                                {% else %}
-                                    {{ recipe.sources[0].q_required | dec2str }}
-                                {% endif %}
-                            </td>
-                            <td id="recipe-{{ recipe.id }}-source-{{ item.id }}-quantity">...</td>
-                            <td id="recipe-{{ recipe.id }}-source-{{ item.id }}-at">...</td>
-                        {% endif %}
+                        <td style="padding: 0; margin: 0;"></td><!-- so we don't need to repeat recipe.sources code for this row only. This is also why rowspan is length + 1. -->
                     </tr>
-                    {% for source in recipe.sources[1:] %}
+                    {% for source in recipe.sources %}
                         {% set item = source.item %}
                     <tr>
                         {% if item.id == current.id %}
@@ -266,8 +242,18 @@
                                 {{ source.q_required | dec2str }}
                             {% endif %}
                         </td>
-                        <td id="recipe-{{ recipe.id }}-source-{{ item.id }}-qtyreq">...</td>
-                        <td id="recipe-{{ recipe.id }}-source-{{ item.id }}-at">...</td>
+                        <td id="recipe-{{ recipe.id }}-source-{{ item.id }}-quantity">...</td>
+                        <td id="recipe-{{ recipe.id }}-source-{{ item.id }}-at">
+                        {% if source.pile %}
+                            {% if source.container %}
+                                {{ source.container.name }}
+                            {% else %}
+                                (General)
+                            {% endif %}
+                        {% else %}
+                            (None)
+                        {% endif %}
+                        </td>
                     </tr>
                     {% endfor %}
                     {% endfor %}
@@ -345,13 +331,13 @@
                     max_quantity: {{ current.q_limit or 0 }}
                 });
                 // Source item quantities required
-                {% for recipe in current.recipes %}
-                    {% for source in recipe.sources %}
-                        $.get('/item/progress_data/{{ source.item.id }}', function(data) {
-                            $('#recipe-{{ recipe.id }}-source-{{ source.item.id }}-qtyreq').text(data.q_required);
-                        });
-                    {% endfor %}
-                {% endfor %}
+                //{% for recipe in current.recipes %}
+                //    {% for source in recipe.sources %}
+                //        $.get('/item/progress_data/{{ source.item.id }}', function(data) {
+                //            $('#recipe-{{ recipe.id }}-source-{{ source.item.id }}-qtyreq').text(data.q_required);
+                //        });
+                //    {% endfor %}
+                //{% endfor %}
             }
 
             // Global variable to store the elapsed time.

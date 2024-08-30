@@ -63,7 +63,7 @@
             </span>
             <span class="item-quantity" id="item-{{ item.id }}-quantity">
                 {% if not (item_at.item.q_limit == 1 and item_at.quantity == 1) %}
-                    &nbsp; {{ item_at.quantity | dec2str }}
+                    {{ item_at.quantity | dec2str }}
                 {% endif %}
             </span><br>
         {% else %}

@@ -26,6 +26,7 @@ tables_to_create = {
 class Source:
     def __init__(self, new_id=0):
         self.item = Item(new_id)  # source item, not result item
+        self.pile = self.item
         self.preserve = False  # if true then source will not be consumed
         self.q_required = 1.0
 
@@ -124,6 +125,7 @@ class Recipe(DbSerializable):
             )
 
 class Item(Identifiable):
+    PILE_TYPE = Storage.UNIVERSAL
     def __init__(self, new_id=""):
         super().__init__(new_id)
         self.name = ""
@@ -136,7 +138,7 @@ class Item(Identifiable):
         self.quantity = 0.0  # general storage -- not owned or at location
         self.pile = self
         self.pile.item = self
-        self.pile_type = Storage.UNIVERSAL
+        self.container = None  # general storage so not contained
         self.progress = Progress(container=self)  # for general storage
 
     def to_json(self):
@@ -230,22 +232,22 @@ class Item(Identifiable):
             Recipe.from_json(recipe_data, self).to_db()
 
     @classmethod
-    def db_item_and_progress_data(cls, id_to_get=None):
-        if id_to_get == 0:
-            return []
+    def db_item_and_progress_data(cls, item_id_for_progress=None):
         query = """
             SELECT *
             FROM {tables[0]}
             LEFT JOIN {tables[1]}
                 ON {tables[1]}.id = {tables[0]}.progress_id
                 AND {tables[1]}.game_token = {tables[0]}.game_token
-            WHERE {tables[0]}.game_token = %s
         """
-        values = [g.game_token]
-        if id_to_get is not None:
-            query += f"AND {{tables[0]}}.id = %s\n"
-            values.append(id_to_get);
-        query += "ORDER BY {tables[0]}.name\n"
+        values = []
+        if item_id_for_progress:
+            query += "AND {tables[0]}.id = %s\n"
+            values.append(item_id_for_progress);
+        values.append(g.game_token);
+        query += """WHERE {tables[0]}.game_token = %s
+            ORDER BY {tables[0]}.name
+            """
         return cls.select_tables(
             query, values, ['items', 'progress'])
 
@@ -261,7 +263,7 @@ class Item(Identifiable):
                 AND {tables[1]}.attrib_id = {tables[0]}.id
         """
         values = [g.game_token]
-        if id_to_get is not None:
+        if id_to_get:
             query += "AND {tables[1]}.item_id = %s\n"
             values = [id_to_get] + values
         query += "WHERE {tables[0]}.game_token = %s\n"
@@ -287,7 +289,7 @@ class Item(Identifiable):
         item_conditions = [
             "WHERE {tables[0]}.game_token = %s"]
         values = [g.game_token]
-        if id_to_get is not None:
+        if id_to_get:
             if get_by_source:
                 item_conditions.insert(0, "AND {tables[1]}.source_id = %s")
                 values.insert(0, id_to_get);
@@ -332,6 +334,58 @@ class Item(Identifiable):
             if row_recipe_attrib.attrib_id:
                 recipe_data.setdefault('attribs', []).append(row_recipe_attrib)
         return item_recipes_data
+
+    #@classmethod
+    #def db_piles_for_sources_data(cls, current_obj, owner_char_id, at_loc_id):
+    #    """Get piles at this loc or char that can be used for sources"""
+    #    id_to_get = current_obj.id
+    #    if id_to_get == 0:
+    #        return {}
+    #    # For carried sources select a char at this loc who owns one
+    #    query = """
+    #        SELECT *
+    #        FROM {tables[0]}
+    #        INNER JOIN {tables[1]}
+    #            ON {tables[1]}.game_token = {tables[0]}.game_token
+    #            AND {tables[1]}.item_id = {tables[0]}.source_id
+    #            AND {tables[1]}.storage_type = 'carried'
+    #        INNER JOIN {tables[2]}
+    #            ON {tables[2]}.game_token = {tables[0]}.game_token
+    #            AND {tables[2]}.location_id = %s
+    #        INNER JOIN {tables[3]}
+    #            ON {tables[3]}.game_token = {tables[0]}.game_token
+    #            AND {tables[3]}.char_id = {tables[2]}.id
+    #            AND {tables[3]}.item_id = {tables[0]}.source_id
+    #            AND {tables[3]}.quantity > 0
+    #        WHERE {tables[0]}.game_token = %s
+    #            AND {tables[0]}.item_id = %s
+    #    """
+    #    piles_data = cls.select_tables(
+    #        query, [at_loc_id, g.game_token, id_to_get],
+    #        ['recipe_sources', 'items', 'characters', 'char_items'])
+    #    piles = {}  # keys are source item id
+    #    from .character import Character, OwnedItem
+    #    for row_recipe_source, row_item, row_char, row_char_item in piles_data:
+    #        pile = OwnedItem()
+    #        pile.quantity = row_char_item.quantity
+    #        pile.container = Character(row_char.id)
+    #        piles[row_recipe_source.source_id] = pile
+    #    # for local sources select an itemAt for this loc
+    #    # for universal sources use the item in general storage
+    #    # also find entities that meet attrib reqs
+
+    @classmethod
+    def load_piles_for_sources_data(cls, current_obj, owner_char_id, at_loc_id):
+        """Get piles at this loc or char that can be used for sources.
+        To do this, load all chars and items at this location
+        by calling methods similar to Location.load_characters_at_loc().
+        Then find piles for each source of this item using python loops.
+        """
+        #TODO
+        # For carried sources select a char at this loc who owns one
+        # for local sources select an itemAt for this loc
+        # for universal sources use the item in general storage
+        # also find entities that meet attrib reqs
 
     @classmethod
     def data_for_file(cls):
@@ -386,8 +440,8 @@ class Item(Identifiable):
             id_to_get = 0
         else:
             id_to_get = int(id_to_get)
-        # Get all item and progress data
-        tables_rows = cls.db_item_and_progress_data()
+        # Get all item data and the current item's progress data
+        tables_rows = cls.db_item_and_progress_data(id_to_get)
         g.game_data.items = []
         current_data = MutableNamespace()
         for item_data, progress_data in tables_rows:
@@ -419,6 +473,7 @@ class Item(Identifiable):
         for recipe in current_obj.recipes:
             for source in recipe.sources:
                 source.item = Item.get_by_id(source.item.id)
+                source.pile = source.item
         # Print debugging info
         print(f"found {len(current_obj.recipes)} recipes")
         if len(current_obj.recipes):
@@ -472,6 +527,9 @@ class Item(Identifiable):
                 if itemAt.item.id == current_obj.id),
                 ItemAt(current_obj))
             Location.load_characters_at_loc(at_loc_id)  # who can pick up
+        # Get piles at this loc or char that can be used for sources
+        #db_piles_for_sources_data(current_obj, owner_char_id, at_loc_id)
+        load_piles_for_sources_data(current_obj, owner_char_id, at_loc_id)
         # Get relation data for items that use this item as a source
         item_recipes_data = cls.db_recipe_data(id_to_get, get_by_source=True)
         for item_id, recipes_data in item_recipes_data.items():

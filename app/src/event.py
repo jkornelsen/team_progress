@@ -418,6 +418,7 @@ class Event(Identifiable):
 
     def check_trigger_for_duration(self, elapsed_seconds):
         """Returns True if the event triggers over the given duration."""
+        print(f"{self.__class__.__name__}.check_trigger_for_duration({elapsed_seconds})")
         numerator, denominator = self.trigger_chance
         if numerator <= 0:
             return False

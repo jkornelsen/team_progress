@@ -15,13 +15,14 @@ tables_to_create = {
 }
 
 class ItemAt:
+    PILE_TYPE = Storage.LOCAL
     def __init__(self, item=None):
         self.item = item
         if not item:
             self.item = Item()
+        self.container = None  # location where item is at
         self.quantity = 0
         self.position = (0, 0)
-        self.pile_type = Storage.LOCAL
 
     def to_json(self):
         return {
