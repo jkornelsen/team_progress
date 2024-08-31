@@ -139,6 +139,41 @@ class Character(Identifiable):
                 values)
 
     @classmethod
+    def load_piles(cls, char_id=0, loc_id=0):
+        query = """
+            SELECT *
+            FROM {tables[0]}
+            LEFT JOIN {tables[1]}
+                ON {tables[1]}.char_id = {tables[0]}.id
+                AND {tables[1]}.game_token = {tables[0]}.game_token
+            LEFT JOIN {tables[2]}
+                ON {tables[2]}.char_id = {tables[0]}.id
+                AND {tables[2]}.game_token = {tables[0]}.game_token
+            WHERE {tables[0].game_token = %s
+        """
+        values = [g.game_token]
+        if char_id:
+            query += "AND {tables[0]}.id = %s\n"
+            values.append(char_id);
+        elif loc_id:
+            query += "AND {tables[0]}.location_id = %s\n"
+            values.append(loc_id);
+        tables_rows = cls.select_tables(
+            query, values, ['characters', 'char_items', 'char_attribs'])
+        instances = {}  # keyed by ID
+        for char_data, item_data, attrib_data in tables_rows:
+            #XXX: Won't this set char.location.id to 0 if locations
+            # haven't been loaded, so Location.get_by_id() won't find anything?
+            instance = instances.setdefault(
+                char_data.id, cls.from_json(vars(char_data)))
+            if attrib_data.attrib_id:
+                attrib = Attrib(attrib_data.attrib_id)
+                instance.attribs[attrib] = attrib_data.value
+            if item_data.item_id:
+                instance.items.append(OwnedItem.from_json(item_data))
+        return instances.values()
+
+    @classmethod
     def data_for_file(cls):
         print(f"{cls.__name__}.data_for_file()")
         query = """
@@ -155,9 +190,8 @@ class Character(Identifiable):
                 AND {tables[3]}.game_token = {tables[0]}.game_token
             WHERE {tables[0]}.game_token = %s
         """
-        values = [g.game_token]
         tables_rows = cls.select_tables(
-            query, values,
+            query, [g.game_token],
             ['characters', 'progress', 'char_attribs', 'char_items'])
         instances = {}  # keyed by ID
         for char_data, progress_data, attrib_data, char_item_data in tables_rows:
@@ -190,25 +224,23 @@ class Character(Identifiable):
             id_to_get = 0
         else:
             id_to_get = int(id_to_get)
-        # Get all character data and the current character's progress data
+        # Get current character's character and progress data
         tables_rows = cls.select_tables("""
             SELECT *
             FROM {tables[0]}
             LEFT JOIN {tables[1]}
                 ON {tables[1]}.id = {tables[0]}.progress_id
                 AND {tables[1]}.game_token = {tables[0]}.game_token
-                AND {tables[0]}.id = %s
             WHERE {tables[0]}.game_token = %s
+                AND {tables[0]}.id = %s
             ORDER BY {tables[0]}.name
-        """, (id_to_get, g.game_token), ['characters', 'progress'])
+        """, (g.game_token, id_to_get), ['characters', 'progress'])
         g.game_data.characters = []
         current_data = MutableNamespace()
         for char_data, progress_data in tables_rows:
-            if char_data.id == id_to_get:
-                current_data = char_data
-                if progress_data.id:
-                    char_data.progress = progress_data
-            g.game_data.characters.append(Character.from_json(char_data))
+            current_data = char_data
+            #if progress_data.id:
+            char_data.progress = progress_data
         # Get all attrib data and the current character's attrib relation data
         tables_rows = cls.select_tables("""
             SELECT *

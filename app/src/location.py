@@ -108,7 +108,7 @@ class Location(Identifiable):
                 values)
 
     @classmethod
-    def load_characters_at_loc(cls, id_to_get):
+    def load_characters_at_loc(cls, id_to_get, load=True):
         from .character import Character
         characters_data = cls.execute_select("""
             SELECT *
@@ -117,9 +117,33 @@ class Location(Identifiable):
                 AND location_id = %s
             ORDER BY name
         """, (g.game_token, id_to_get))
-        g.game_data.characters = []
+        chars = []
         for char_data in characters_data:
-            g.game_data.characters.append(Character.from_json(char_data))
+            chars.append(Character.from_json(char_data))
+        if load:
+            g.game_data.set_list(Character, chars)
+        return chars
+
+    @classmethod
+    def load_piles(cls, loc_id):
+        query = """
+            SELECT *
+            FROM {tables[0]}
+            LEFT JOIN {tables[1]}
+                ON {tables[1]}.loc_id = {tables[0]}.id
+                AND {tables[1]}.game_token = {tables[0]}.game_token
+            WHERE {tables[0].game_token = %s
+                AND {tables[0]}.id = %s
+        """
+        tables_rows = cls.select_tables(
+            query, [g.game_token, loc_id], ['locations', 'loc_items'])
+        instance = None
+        for loc_data, item_data in tables_rows:
+            if not instance:
+                instance = cls.from_json(vars(loc_data))
+            if item_data.item_id:
+                instance.items.append(ItemAt.from_json(item_data))
+        return instance or Location()
 
     @classmethod
     def data_for_file(cls):

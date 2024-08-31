@@ -200,27 +200,27 @@
                         <th>In Stock</th>
                         <th>Where</th>
                     </tr>
-                    {% for recipe in current.recipes %}
-                        {% set rowspan = recipe.sources|length + 1 %}
-                    <tr>
-                        <td rowspan="{{ rowspan }}">
-                            {% if recipe.instant %}
-                            <input type="number" step="any" id="quantity_to_gain" size="10" value="1">
-                            <button id="gain-btn" data-recipe-id="{{ recipe.id }}" data-rate-amount="{{ recipe.rate_amount }}" class="go-button">Gain</button>
-                            {% else %}
-                            <button class="toggle-btn go-button" data-recipe-id="{{ recipe.id }}">Start</button>
-                            {% endif %}
-                        </td>
-                        <td rowspan="{{ rowspan }}">
-                            <span id="rate-amount">{{ recipe.rate_amount | dec2str }}</span>
-                            {% if not recipe.instant %}
-                            per <span id="rate-duration">{{ recipe.rate_duration | dec2str }}</span>s
-                            {% endif %}
-                        </td>
-                        <td style="padding: 0; margin: 0;"></td><!-- so we don't need to repeat recipe.sources code for this row only. This is also why rowspan is length + 1. -->
-                    </tr>
-                    {% for source in recipe.sources %}
-                        {% set item = source.item %}
+            {% for recipe in current.recipes %}
+                {% set rowspan = recipe.sources|length + recipe.attribs|length + 1 %}
+                <tr>
+                    <td rowspan="{{ rowspan }}">
+                        {% if recipe.instant %}
+                        <input type="number" step="any" id="quantity_to_gain" size="10" value="1">
+                        <button id="gain-btn" data-recipe-id="{{ recipe.id }}" data-rate-amount="{{ recipe.rate_amount }}" class="go-button">Gain</button>
+                        {% else %}
+                        <button class="toggle-btn go-button" data-recipe-id="{{ recipe.id }}">Start</button>
+                        {% endif %}
+                    </td>
+                    <td rowspan="{{ rowspan }}">
+                        <span id="rate-amount">{{ recipe.rate_amount | dec2str }}</span>
+                        {% if not recipe.instant %}
+                        per <span id="rate-duration">{{ recipe.rate_duration | dec2str }}</span>s
+                        {% endif %}
+                    </td>
+                    <td style="padding: 0; margin: 0;"></td><!-- so we don't need to repeat recipe.sources code for this row only. This is also why rowspan is length + 1. -->
+                </tr>
+                {% for source in recipe.sources %}
+                    {% set item = source.item %}
                     <tr>
                         {% if item.id == current.id %}
                             <td><strong>{{ item.name}}</strong></td>
@@ -255,8 +255,23 @@
                         {% endif %}
                         </td>
                     </tr>
-                    {% endfor %}
-                    {% endfor %}
+                {% endfor %}
+                {% for req in recipe.attribs %}
+                    <tr>
+                        <td>{{ req.attrib.name }}</td>
+                        <td>
+                            ({{ source.q_required | dec2str }})
+                        </td>
+                        {% if req.entity %}
+                            <td>{{ req.entity.attribs[req.attrib_id] }}</td>
+                            <td>{{ req.entity.name }}</td>
+                        {% else %}
+                            <td>(0)</td>
+                            <td>(None)</td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+            {% endfor %}
                 </table>
             </td>
         </tr>

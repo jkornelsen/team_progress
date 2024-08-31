@@ -44,6 +44,21 @@ class Source:
         instance.q_required = data.get('q_required', 1.0)
         return instance
 
+class AttribReq:
+    def __init__(self, new_id=0, new_val=0):
+        self.attrib = Attrib(new_id)
+        self.val = new_val
+        self.entity = None  # entity that fulfills the requirement
+
+    def to_json(self):
+        return [self.attrib.id, self.val]
+
+    @classmethod
+    def from_json(cls, data):
+        # Expects a JSON array which is deserialized into a Python list
+        instance = cls(data[0], data[1])
+        return instance
+
 class Recipe(DbSerializable):
     def __init__(self, new_id=0, item=None):
         self.id = int(new_id)  # only unique for a particular item
@@ -52,7 +67,7 @@ class Recipe(DbSerializable):
         self.rate_duration = 3.0  # seconds for a batch
         self.instant = False
         self.sources = []  # Source objects
-        self.attribs = []  # elements are tuple (attrib_id, val)
+        self.attribs = []  # AttribReq objects
 
     def to_json(self):
         return {
@@ -61,10 +76,8 @@ class Recipe(DbSerializable):
             'rate_amount': self.rate_amount,
             'rate_duration': self.rate_duration,
             'instant': self.instant,
-            'sources': [
-                source.to_json()
-                for source in self.sources],
-            'attribs': self.attribs}
+            'sources': [source.to_json() for source in self.sources],
+            'attribs': [req.to_json() for req in self.attribs]}
 
     @classmethod
     def from_json(cls, data, item_produced=None):
@@ -79,7 +92,9 @@ class Recipe(DbSerializable):
         instance.sources = [
             Source.from_json(src_data)
             for src_data in data.get('sources', [])]
-        instance.attribs = data.get('attribs', [])
+        instance.attribs = [
+            AttribReq.from_json(src_data)
+            for src_data in data.get('attribs', [])]
         return instance
 
     def json_to_db(self, doc):
@@ -110,19 +125,18 @@ class Recipe(DbSerializable):
                 values)
         if doc['attribs']:
             print(f"attribs: {doc['attribs']}")
-            attrib_values = []
-            for attrib_id, attrib_value in doc['attribs']:
-                attrib_values.append((
+            values = []
+            for req in doc['attribs']:
+                values.append((
                     g.game_token, doc['item_id'], self.id,
-                    attrib_id,
-                    attrib_value
-                ))
+                    req.attrib_id,
+                    req.attrib_val
+                    ))
             self.insert_multiple(
                 "recipe_attribs",
                 "game_token, item_id, recipe_id,"
                 " attrib_id, value",
-                attrib_values
-            )
+                values)
 
 class Item(Identifiable):
     PILE_TYPE = Storage.UNIVERSAL
@@ -312,7 +326,7 @@ class Item(Identifiable):
         query = """
             SELECT *
             FROM {tables[0]}
-            LEFT JOIN {tables[1]}
+            INNER JOIN {tables[1]}
                 ON {tables[1]}.game_token = {tables[0]}.game_token
                 AND {tables[1]}.item_id = {tables[0]}.item_id
                 AND {tables[1]}.recipe_id = {tables[0]}.recipe_id
@@ -335,57 +349,48 @@ class Item(Identifiable):
                 recipe_data.setdefault('attribs', []).append(row_recipe_attrib)
         return item_recipes_data
 
-    #@classmethod
-    #def db_piles_for_sources_data(cls, current_obj, owner_char_id, at_loc_id):
-    #    """Get piles at this loc or char that can be used for sources"""
-    #    id_to_get = current_obj.id
-    #    if id_to_get == 0:
-    #        return {}
-    #    # For carried sources select a char at this loc who owns one
-    #    query = """
-    #        SELECT *
-    #        FROM {tables[0]}
-    #        INNER JOIN {tables[1]}
-    #            ON {tables[1]}.game_token = {tables[0]}.game_token
-    #            AND {tables[1]}.item_id = {tables[0]}.source_id
-    #            AND {tables[1]}.storage_type = 'carried'
-    #        INNER JOIN {tables[2]}
-    #            ON {tables[2]}.game_token = {tables[0]}.game_token
-    #            AND {tables[2]}.location_id = %s
-    #        INNER JOIN {tables[3]}
-    #            ON {tables[3]}.game_token = {tables[0]}.game_token
-    #            AND {tables[3]}.char_id = {tables[2]}.id
-    #            AND {tables[3]}.item_id = {tables[0]}.source_id
-    #            AND {tables[3]}.quantity > 0
-    #        WHERE {tables[0]}.game_token = %s
-    #            AND {tables[0]}.item_id = %s
-    #    """
-    #    piles_data = cls.select_tables(
-    #        query, [at_loc_id, g.game_token, id_to_get],
-    #        ['recipe_sources', 'items', 'characters', 'char_items'])
-    #    piles = {}  # keys are source item id
-    #    from .character import Character, OwnedItem
-    #    for row_recipe_source, row_item, row_char, row_char_item in piles_data:
-    #        pile = OwnedItem()
-    #        pile.quantity = row_char_item.quantity
-    #        pile.container = Character(row_char.id)
-    #        piles[row_recipe_source.source_id] = pile
-    #    # for local sources select an itemAt for this loc
-    #    # for universal sources use the item in general storage
-    #    # also find entities that meet attrib reqs
-
     @classmethod
-    def load_piles_for_sources_data(cls, current_obj, owner_char_id, at_loc_id):
-        """Get piles at this loc or char that can be used for sources.
-        To do this, load all chars and items at this location
-        by calling methods similar to Location.load_characters_at_loc().
-        Then find piles for each source of this item using python loops.
+    def load_piles_for_sources(cls, current_obj, owner_char_id, at_loc_id):
+        """Assign a pile from this location or char inventory
+        that can be used for each recipe source.
+        Also find chars or items that meet recipe attrib requirements.
         """
-        #TODO
-        # For carried sources select a char at this loc who owns one
-        # for local sources select an itemAt for this loc
-        # for universal sources use the item in general storage
-        # also find entities that meet attrib reqs
+        chars = []
+        if owner_char_id and not at_loc_id:
+            # Get current loc of char
+            chars = Characters.load_piles(owner_char_id)
+            char = chars[0]
+            at_loc_id = char.location.id if char.location else 0
+        if at_loc_id:
+            # Get items for all chars at this loc
+            chars = Characters.load_piles(loc_id=at_loc_id)
+            # Get all items at this loc
+            loc = Locations.load_piles(at_loc_id)
+        # Assign the most appropriate pile
+        for recipe in current_obj.recipes:
+            for source in recipe.sources:
+                if source.item.PILE_TYPE = Storage.CARRIED:
+                    # Select a char at this loc who owns one
+                    for char in chars:
+                        for owned_item in char.items:
+                            if owned_item.item.id == source.item.id:
+                                source.pile = owned_item
+                elif source.item.PILE_TYPE = Storage.LOCAL:
+                    # Select an itemAt for this loc
+                    for item_at in loc.items:
+                        if item_at.item.id == source.item.id:
+                            source.pile = item_at
+                elif source.item.PILE_TYPE = Storage.UNIVERSAL:
+                    # Use the item in general storage
+                    source.pile = source.item
+            # Look for entities to meet attrib requirements
+            for req in recipe.attribs:
+                for char in chars:
+                    if char.attribs[req.attrib_id] >= req.attrib_val:
+                        req.entity = char
+                for item in g.game_data.items:
+                    if item.attribs[req.attrib_id] >= req.attrib_val:
+                        req.entity = item
 
     @classmethod
     def data_for_file(cls):
@@ -473,7 +478,8 @@ class Item(Identifiable):
         for recipe in current_obj.recipes:
             for source in recipe.sources:
                 source.item = Item.get_by_id(source.item.id)
-                source.pile = source.item
+            for req in recipe.attribs:
+                req.attrib = Attrib.get_by_id(req.attrib.id)
         # Print debugging info
         print(f"found {len(current_obj.recipes)} recipes")
         if len(current_obj.recipes):
@@ -496,6 +502,8 @@ class Item(Identifiable):
         from .character import Character
         from .location import Location
         GameData.entity_names_from_db([Character, Location])
+        # Get piles at this loc or char that can be used for sources
+        load_piles_for_sources(current_obj, owner_char_id, at_loc_id)
         # Get item data for the specific container
         if produced:
             # Use the pile that will get produced
@@ -526,10 +534,6 @@ class Item(Identifiable):
                 (itemAt for itemAt in container.items
                 if itemAt.item.id == current_obj.id),
                 ItemAt(current_obj))
-            Location.load_characters_at_loc(at_loc_id)  # who can pick up
-        # Get piles at this loc or char that can be used for sources
-        #db_piles_for_sources_data(current_obj, owner_char_id, at_loc_id)
-        load_piles_for_sources_data(current_obj, owner_char_id, at_loc_id)
         # Get relation data for items that use this item as a source
         item_recipes_data = cls.db_recipe_data(id_to_get, get_by_source=True)
         for item_id, recipes_data in item_recipes_data.items():
