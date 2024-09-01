@@ -6,7 +6,7 @@ from .db_serializable import (
     DbSerializable, Identifiable, MutableNamespace, coldef,
     DbError, DeletionError)
 from .progress import Progress
-from .utils import Storage, request_bool, request_float
+from .utils import Pile, Storage, request_bool, request_float
 
 tables_to_create = {
     'items': f"""
@@ -138,21 +138,22 @@ class Recipe(DbSerializable):
                 " attrib_id, value",
                 values)
 
-class Item(Identifiable):
-    PILE_TYPE = Storage.UNIVERSAL
+class Item(Identifiable, Pile):
+    PILE_TYPE = Storage.UNIVERSAL  # constant for this class
     def __init__(self, new_id=""):
-        super().__init__(new_id)
+        Identifiable.__init__(self, new_id)
+        Pile.__init__(self, item=self)
         self.name = ""
         self.description = ""
+        # Varies for different items. Typically,
+        # Item.pile.quantity will be 0 unless storage_type is universal,
+        # but general storage can still be used for other types if needed.
         self.storage_type = Storage.UNIVERSAL
         self.toplevel = False if len(self.get_list()) > 1 else True
         self.attribs = {}  # Attrib objects and their stat val
         self.recipes = []  # list of Recipe objects
         self.q_limit = 0.0  # limit the quantity if not 0
-        self.quantity = 0.0  # general storage -- not owned or at location
-        self.pile = self
-        self.pile.item = self
-        self.container = None  # general storage so not contained
+        self.pile = self  # for Progress
         self.progress = Progress(container=self)  # for general storage
 
     def to_json(self):
@@ -355,33 +356,43 @@ class Item(Identifiable):
         that can be used for each recipe source.
         Also find chars or items that meet recipe attrib requirements.
         """
+        print(f"{cls.__name__}.load_piles_for_sources()")
+        from .character import Character
+        from .location import Location
         chars = []
+        loc = Location()
         if owner_char_id and not at_loc_id:
             # Get current loc of char
-            chars = Characters.load_piles(owner_char_id)
-            char = chars[0]
+            chars = Character.load_piles(owner_char_id)
+            char = next(iter(chars), Character(owner_char_id))
             at_loc_id = char.location.id if char.location else 0
         if at_loc_id:
             # Get items for all chars at this loc
-            chars = Characters.load_piles(loc_id=at_loc_id)
+            chars = Character.load_piles(loc_id=at_loc_id)
             # Get all items at this loc
-            loc = Locations.load_piles(at_loc_id)
+            loc = Location.load_piles(at_loc_id)
         # Assign the most appropriate pile
         for recipe in current_obj.recipes:
             for source in recipe.sources:
-                if source.item.PILE_TYPE = Storage.CARRIED:
+                print(f"source id {source.item.id} type {source.item.storage_type}")
+                if source.item.storage_type == Storage.CARRIED:
                     # Select a char at this loc who owns one
                     for char in chars:
                         for owned_item in char.items:
                             if owned_item.item.id == source.item.id:
                                 source.pile = owned_item
-                elif source.item.PILE_TYPE = Storage.LOCAL:
+                                print(f"assigned ownedItem from {owned_item.container.name}"
+                                    f" to {source.pile.item.id}")
+                elif source.item.storage_type == Storage.LOCAL:
                     # Select an itemAt for this loc
                     for item_at in loc.items:
                         if item_at.item.id == source.item.id:
                             source.pile = item_at
-                elif source.item.PILE_TYPE = Storage.UNIVERSAL:
+                            print(f"assigned itemAt from {item_at.container.name}"
+                                f" to {source.pile.item.id}")
+                elif source.item.storage_type == Storage.UNIVERSAL:
                     # Use the item in general storage
+                    print(f"assigned general storage for {source.pile.item.id}")
                     source.pile = source.item
             # Look for entities to meet attrib requirements
             for req in recipe.attribs:
@@ -482,14 +493,15 @@ class Item(Identifiable):
                 req.attrib = Attrib.get_by_id(req.attrib.id)
         # Print debugging info
         print(f"found {len(current_obj.recipes)} recipes")
-        if len(current_obj.recipes):
-            recipe = current_obj.recipes[0]
+        #if len(current_obj.recipes):
+        #    recipe = current_obj.recipes[0]
+        for recipe in current_obj.recipes:
             print(f"recipe {recipe.id}"
                 f" rate_amount={recipe.rate_amount}"
                 f" instant={recipe.instant}")
             for source in recipe.sources:
                 print(f"source item id {source.item.id} name {source.item.name}"
-                    f" qty {source.q_required}")
+                    f" qty {source.q_required} storage {source.item.storage_type}")
         return current_obj
 
     @classmethod
@@ -503,7 +515,7 @@ class Item(Identifiable):
         from .location import Location
         GameData.entity_names_from_db([Character, Location])
         # Get piles at this loc or char that can be used for sources
-        load_piles_for_sources(current_obj, owner_char_id, at_loc_id)
+        cls.load_piles_for_sources(current_obj, owner_char_id, at_loc_id)
         # Get item data for the specific container
         if produced:
             # Use the pile that will get produced

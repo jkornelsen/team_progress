@@ -3,7 +3,7 @@ from flask import g, request, session
 from .db_serializable import (
     Identifiable, MutableNamespace, coldef, tuple_to_pg_array)
 from .item import Item
-from .utils import Storage
+from .utils import Pile, Storage
 
 tables_to_create = {
     'locations': f"""
@@ -14,14 +14,10 @@ tables_to_create = {
     """
 }
 
-class ItemAt:
+class ItemAt(Pile):
     PILE_TYPE = Storage.LOCAL
     def __init__(self, item=None):
-        self.item = item
-        if not item:
-            self.item = Item()
-        self.container = None  # location where item is at
-        self.quantity = 0
+        super().__init__(item)
         self.position = (0, 0)
 
     def to_json(self):
@@ -126,13 +122,14 @@ class Location(Identifiable):
 
     @classmethod
     def load_piles(cls, loc_id):
+        print(f"{cls.__name__}.load_piles()")
         query = """
             SELECT *
             FROM {tables[0]}
             LEFT JOIN {tables[1]}
                 ON {tables[1]}.loc_id = {tables[0]}.id
                 AND {tables[1]}.game_token = {tables[0]}.game_token
-            WHERE {tables[0].game_token = %s
+            WHERE {tables[0]}.game_token = %s
                 AND {tables[0]}.id = %s
         """
         tables_rows = cls.select_tables(
@@ -142,7 +139,9 @@ class Location(Identifiable):
             if not instance:
                 instance = cls.from_json(vars(loc_data))
             if item_data.item_id:
-                instance.items.append(ItemAt.from_json(item_data))
+                itemAt = ItemAt.from_json(item_data)
+                itemAt.container = cls.get_by_id(loc_data.id)
+                instance.items.append(itemAt)
         return instance or Location()
 
     @classmethod

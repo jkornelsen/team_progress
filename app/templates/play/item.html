@@ -225,10 +225,14 @@
                         {% if item.id == current.id %}
                             <td><strong>{{ item.name}}</strong></td>
                         {% else %}
-                            {% set link = url_for('play_item', item_id=item.id, char_id=char_id, loc_id=loc_id) %}
+                            {% if source.pile and (source.pile.container or source.pile.quantity > 0) %}
+                                {% set link = url_for('play_item', item_id=item.id, char_id=char_id, loc_id=loc_id) %}
+                            {% else %}
+                                {% set link = url_for('play_item', item_id=item.id, char_id=char_id, loc_id=loc_id, produced=true) %}
+                            {% endif %}
                             {% set letter = link_letters.next(link) %}
                             <script>
-                                linkForKey['{{ letter }}'] = "{{ link }}";
+                                linkForKey['{{ letter }}'] = "{{ link|safe }}";
                             </script>
                             <td>
                                 <span>[{{ letter }}]</span>
@@ -242,16 +246,24 @@
                                 {{ source.q_required | dec2str }}
                             {% endif %}
                         </td>
-                        <td id="recipe-{{ recipe.id }}-source-{{ item.id }}-quantity">...</td>
+                        <td id="recipe-{{ recipe.id }}-source-{{ item.id }}-quantity">
+                        {% if source.pile %}
+                            {{ source.pile.quantity | dec2str }}
+                        {% else %}
+                            <center>&mdash;</center>
+                        {% endif %}
+                        </td>
                         <td id="recipe-{{ recipe.id }}-source-{{ item.id }}-at">
                         {% if source.pile %}
-                            {% if source.container %}
-                                {{ source.container.name }}
-                            {% else %}
+                            {% if source.pile.container %}
+                                {{ source.pile.container.name }}
+                            {% elif source.pile.quantity > 0 %}
                                 (General)
+                            {% else %}
+                                <center>&mdash;</center>
                             {% endif %}
                         {% else %}
-                            (None)
+                            <center>&mdash;</center>
                         {% endif %}
                         </td>
                     </tr>

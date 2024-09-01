@@ -4,6 +4,14 @@ class Storage:
     UNIVERSAL = 'universal'
     TYPES = [CARRIED, LOCAL, UNIVERSAL]
 
+class Pile:
+    PILE_TYPE = None  # specify in child classes
+    def __init__(self, item=None):
+        from .item import Item
+        self.item = item if item else Item()
+        self.container = None  # character or location where item is
+        self.quantity = 0
+
 def _get_from_request(request, key, source):
     """Retrieve a value from the request."""
     if source not in ['form', 'args']:

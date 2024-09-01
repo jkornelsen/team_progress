@@ -5,7 +5,7 @@ from .db_serializable import Identifiable, MutableNamespace, coldef
 from .item import Item
 from .location import Location
 from .progress import Progress
-from .utils import Storage, request_bool, request_float
+from .utils import Pile, Storage, request_bool, request_float
 
 tables_to_create = {
     'characters': f"""
@@ -23,14 +23,10 @@ tables_to_create = {
     """,
 }
 
-class OwnedItem:
+class OwnedItem(Pile):
     PILE_TYPE = Storage.CARRIED
     def __init__(self, item=None):
-        self.item = item
-        if not item:
-            self.item = Item()
-        self.container = None  # character who owns item
-        self.quantity = 0
+        super().__init__(item)
         self.slot = ''  # for example, "main hand"
 
     def to_json(self):
@@ -140,6 +136,7 @@ class Character(Identifiable):
 
     @classmethod
     def load_piles(cls, char_id=0, loc_id=0):
+        print(f"{cls.__name__}.load_piles()")
         query = """
             SELECT *
             FROM {tables[0]}
@@ -149,7 +146,7 @@ class Character(Identifiable):
             LEFT JOIN {tables[2]}
                 ON {tables[2]}.char_id = {tables[0]}.id
                 AND {tables[2]}.game_token = {tables[0]}.game_token
-            WHERE {tables[0].game_token = %s
+            WHERE {tables[0]}.game_token = %s
         """
         values = [g.game_token]
         if char_id:
@@ -162,15 +159,15 @@ class Character(Identifiable):
             query, values, ['characters', 'char_items', 'char_attribs'])
         instances = {}  # keyed by ID
         for char_data, item_data, attrib_data in tables_rows:
-            #XXX: Won't this set char.location.id to 0 if locations
-            # haven't been loaded, so Location.get_by_id() won't find anything?
             instance = instances.setdefault(
                 char_data.id, cls.from_json(vars(char_data)))
             if attrib_data.attrib_id:
                 attrib = Attrib(attrib_data.attrib_id)
                 instance.attribs[attrib] = attrib_data.value
             if item_data.item_id:
-                instance.items.append(OwnedItem.from_json(item_data))
+                owned = OwnedItem.from_json(item_data)
+                owned.container = cls.get_by_id(char_data.id)
+                instance.items.append(owned)
         return instances.values()
 
     @classmethod
