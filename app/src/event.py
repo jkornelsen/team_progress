@@ -1,4 +1,5 @@
 from flask import g, request, session
+import logging
 import random
 from types import SimpleNamespace
 
@@ -25,6 +26,8 @@ OUTCOMES = [
  OUTCOME_MINOR_SUCCESS,
  OUTCOME_MAJOR_SUCCESS) = range(len(OUTCOMES))
 OUTCOME_MARGIN = 9  # difference required to get major or critical
+
+logger = logging.getLogger(__name__)
 
 def roll_dice(sides):
     return random.randint(1, sides)
@@ -116,8 +119,8 @@ class Event(Identifiable):
         return instance
 
     def json_to_db(self, doc):
-        print(f"{self.__class__.__name__}.json_to_db()")
-        print(f"doc={doc}")
+        logger.debug("json_to_db()")
+        logger.debug("doc=%s", doc)
         super().json_to_db(doc)
         for rel_table in ('event_attribs', 'event_triggers'):
             self.execute_change(f"""
@@ -126,7 +129,7 @@ class Event(Identifiable):
             """, (self.id, self.game_token))
         for determining in ('determining', 'changed'):
             attr_data = doc[f'{determining}_attrs']
-            print(f"{determining}_attrs={attr_data}")
+            logger.debug("%s_attrs=%s", determining, attr_data)
             if attr_data:
                 values = [
                     (g.game_token, self.id, attrib_id,
@@ -137,7 +140,7 @@ class Event(Identifiable):
                     "game_token, event_id, attrib_id, determining",
                     values)
         if doc['triggers']:
-            print(f"triggers: {doc['triggers']}")
+            logger.debug("triggers: %s", doc['triggers'])
             values = []
             for entity_name, entity_id in doc['triggers']:
                 item_id = entity_id if entity_name == 'item' else None
@@ -150,7 +153,7 @@ class Event(Identifiable):
 
     @classmethod
     def data_for_file(cls):
-        print(f"{cls.__name__}.data_for_file()")
+        logger.debug("data_for_file()")
         # Get event data with attrib relation data
         query = """
             SELECT *
@@ -165,8 +168,8 @@ class Event(Identifiable):
             query, values, ['events', 'event_attribs'])
         instances = {}  # keyed by ID
         for event_data, attrib_data in tables_rows:
-            print(f"event_data {event_data}")
-            print(f"attrib_data {attrib_data}")
+            logger.debug("event_data %s", event_data)
+            logger.debug("attrib_data %s", attrib_data)
             instance = instances.get(event_data.id)
             if not instance:
                 instance = cls.from_json(vars(event_data))
@@ -184,7 +187,7 @@ class Event(Identifiable):
             WHERE game_token = %s
         """, values)
         for trigger_data in triggers_data:
-            print(f"trigger_data {trigger_data}")
+            logger.debug("trigger_data %s", trigger_data)
             instance = instances.get(trigger_data.event_id)
             if not instance:
                 raise Exception(
@@ -194,16 +197,16 @@ class Event(Identifiable):
                 else Location(trigger_data.loc_id) if trigger_data.loc_id
                 else None)
         # Print debugging info
-        print(f"found {len(instances)} events")
+        logger.debug(f"found %d events", len(instances))
         for instance in instances.values():
-            print(f"event {instance.id} ({instance.name})"
-                f" has {len(instance.triggers)} triggers"
-                f" and {len(instance.determining_attrs)} det attrs")
+            logger.debug("event %d (%s) has %d triggers and %d det attrs",
+            instance.id, instance.name, len(instance.triggers),
+            len(instance.determining_attrs))
         return list(instances.values())
 
     @classmethod
     def data_for_configure(cls, id_to_get):
-        print(f"{cls.__name__}.data_for_configure()")
+        logger.debug("data_for_configure(%s)", id_to_get)
         if id_to_get == 'new':
             id_to_get = 0
         else:
@@ -239,7 +242,8 @@ class Event(Identifiable):
                 else:
                     listname = 'changed_attrs'
                 current_data.setdefault(listname, []).append(attrib_data.id)
-                print(f"current_data.{listname} = {current_data.get(listname)}")
+                logger.debug("current_data.%s = %s",
+                    listname, current_data.get(listname))
             g.game_data.attribs.append(Attrib.from_json(attrib_data))
         # Get all item and location data and
         # the current events's trigger relation data
@@ -282,18 +286,18 @@ class Event(Identifiable):
             populated_objs.append(lookup_obj)
         current_obj.triggers = populated_objs
         # Print debugging info
-        print(f"found {len(current_obj.triggers)} triggers")
-        print(f"found {len(current_obj.determining_attrs)} det att")
+        logger.debug("found %d triggers", len(current_obj.triggers))
+        logger.debug("found %d det att", len(current_obj.determining_attrs))
         if len(current_obj.triggers):
             trigger = current_obj.triggers[0]
-            print(f"type={trigger.__class__.__name__}")
-            print(f"id={trigger.id}")
-            print(f"name={trigger.name}")
+            logger.debug("type=%s", trigger.__class__.__name__)
+            logger.debug("id=%d", trigger.id)
+            logger.debug("name=%s", trigger.name)
         return current_obj
 
     @classmethod
     def load_triggers_for_loc(cls, loc_id):
-        print(f"{cls.__name__}.load_triggers_for_loc()")
+        logger.debug("load_triggers_for_loc()")
         events_data = cls.execute_select("""
             SELECT {table}.*
             FROM event_triggers
@@ -310,8 +314,8 @@ class Event(Identifiable):
 
     def configure_by_form(self):
         if 'save_changes' in request.form:  # button was clicked
-            print("Saving changes.")
-            print(request.form)
+            logger.debug("Saving changes.")
+            logger.debug(request.form)
             self.name = request.form.get('event_name')
             self.description = request.form.get('event_description')
             self.toplevel = request_bool(request, 'top_level')
@@ -344,13 +348,13 @@ class Event(Identifiable):
             except DbError as e:
                 raise DeletionError(e)
         elif 'cancel_changes' in request.form:
-            print("Cancelling changes.")
+            logger.debug("Cancelling changes.")
         else:
-            print("Neither button was clicked.")
+            logger.debug("Neither button was clicked.")
 
     def play_by_form(self):
-        print("Saving changes.")
-        print(request.form)
+        logger.debug("Saving changes.")
+        logger.debug(request.form)
         self.difficulty = request_int(request, 'difficulty')
         self.stat_adjustment = request_int(request, 'stat_adjustment')
         self.to_db()
@@ -418,7 +422,7 @@ class Event(Identifiable):
 
     def check_trigger_for_duration(self, elapsed_seconds):
         """Returns True if the event triggers over the given duration."""
-        print(f"{self.__class__.__name__}.check_trigger_for_duration({elapsed_seconds})")
+        logger.debug("check_trigger_for_duration(%f)", elapsed_seconds)
         numerator, denominator = self.trigger_chance
         if numerator <= 0:
             return False

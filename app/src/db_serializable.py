@@ -1,7 +1,12 @@
 from flask import g
-from types import SimpleNamespace
+import logging
 from psycopg2.extras import RealDictCursor, execute_values
+from types import SimpleNamespace
+
 from database import column_counts, pretty
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.CRITICAL)  # turn off for this module
 
 def coldef(which):
     """Definitions for commonly used columns for creating a table."""
@@ -85,7 +90,7 @@ class DbSerializable():
         For example, to get the name column of the first row: result[0].name
         """
         query = query_without_table.format(table=cls.tablename())
-        print(pretty(query, values))
+        logger.debug(pretty(query, values))
         with g.db.cursor(cursor_factory=RealDictCursor) as cursor:
             cursor.execute(query, values)
             if fetch_all:
@@ -102,7 +107,7 @@ class DbSerializable():
             [item_data, progress_data]
         """
         query = query_without_tables.format(tables=tables)
-        print(pretty(query, values))
+        logger.debug(pretty(query, values))
         results = []
         with g.db.cursor() as cursor:
             cursor.execute(query, values)
@@ -138,7 +143,7 @@ class DbSerializable():
         auto-generated IDs.
         """
         query = query_without_table.format(table=cls.tablename())
-        print(pretty(query, values))
+        logger.debug(pretty(query, values))
         result = None
         try:
             with g.db.cursor(cursor_factory=RealDictCursor) as cursor:
@@ -161,7 +166,7 @@ class DbSerializable():
             INSERT INTO {table} ({column_names})
             VALUES %s
         """
-        print(pretty(sql, values))
+        logger.debug(pretty(sql, values))
         with g.db.cursor() as cursor:
             execute_values(cursor, sql, values, template=None, page_size=100)
         if g.commit_db:
@@ -277,7 +282,7 @@ class Identifiable(DbSerializable):
 
     @classmethod
     def list_from_json(cls, json_data):
-        print(f"{cls.__name__}.list_from_json()")
+        logger.debug("list_from_json()")
         instances = []
         for entity_data in json_data:
             instances.append(
@@ -286,7 +291,7 @@ class Identifiable(DbSerializable):
 
     @classmethod
     def list_to_db(cls):
-        print(f"{cls.__name__}.list_to_db()")
+        logger.debug("list_to_db()")
         table = cls.tablename()
         existing_ids = set(
             str(doc['id'])
@@ -296,7 +301,7 @@ class Identifiable(DbSerializable):
             instance.to_db()
         for doc_id in existing_ids:
             if doc_id not in (str(instance.id) for instance in entity_list):
-                print(f"Removing document with id {doc_id}")
+                logger.debug("Removing document with id %d", doc_id)
                 cls(doc_id).remove_from_db()
 
     @classmethod

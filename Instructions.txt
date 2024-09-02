@@ -18,12 +18,13 @@ chdir "C:\OurDocs\family_and_fun\games code by Jim\team_progress\app"
 & "C:\Program Files\PostgreSQL\16\bin\pg_ctl" initdb -U postgres -D postgres_data
 & "C:\Program Files\PostgreSQL\16\bin\createuser" --superuser postgres
 
----- start db ----
+---- start db and rebuild tables ----
 
 & "C:\Program Files\PostgreSQL\16\bin\pg_ctl" start -D postgres_data
 & "C:\Program Files\PostgreSQL\16\bin\psql" -U postgres -d postgres
 drop schema public cascade; create schema public;
 python database.py
+\pset pager off
 
 ---- reload app ----
 

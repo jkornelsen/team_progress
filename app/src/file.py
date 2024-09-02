@@ -1,7 +1,4 @@
-import os
 import datetime
-import tempfile
-from types import SimpleNamespace
 from flask import (
     g,
     json,
@@ -12,11 +9,17 @@ from flask import (
     session,
     url_for
 )
+import logging
+import os
+import tempfile
+from types import SimpleNamespace
 from werkzeug.utils import secure_filename
 
 from src.game_data import GameData
 from src.db_serializable import DbSerializable
 from src.overall import Overall
+
+logger = logging.getLogger(__name__)
 
 def generate_filename(title):
     # Remove special characters and replace with '_'
@@ -85,7 +88,7 @@ def set_routes(app):
             file_age = current_time - file_mtime
             if file_age > MAX_FILE_AGE:
                 os.remove(file_path)
-                print(f"Deleted {filename} (age: {file_age})")
+                logger.info(f"Deleted %s (age: %s)", filename, file_age)
         return redirect(url_for('configure'))
 
     @app.route('/browse_scenarios', methods=['GET', 'POST'])

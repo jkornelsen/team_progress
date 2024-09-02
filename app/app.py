@@ -9,6 +9,7 @@ from flask import (
     url_for
 )
 from inspect import signature
+import logging
 import os
 import random
 import re
@@ -30,12 +31,17 @@ from src.game_data import GameData
 from src.game_routes import set_routes as _set_game_routes
 from src.file import set_routes as _set_file_routes
 
+logging.basicConfig(
+    level=logging.DEBUG, 
+    format=('%(filename)s:%(lineno)d  %(message)s'))
+logger = logging.getLogger(__name__)
+
 with app.app_context():
-    print(f"{__name__}: starting app")
+    logger.debug(f"starting app")
 
 @app.before_request
 def before_request():
-    print("before_request()")
+    logger.debug("before_request()")
     if request.endpoint and request.endpoint.startswith('static'):
         return
     if 'game_token' not in session:
@@ -53,23 +59,23 @@ def before_request():
 
 @app.route('/')  # route name
 def index():  # endpoint name
-    print("index()")
+    logger.debug("index()")
     return redirect(url_for('overview'))  # endpoint name
 
 def generate_game_token():
     """Generate a new unique token to keep games separate."""
-    print("generate_game_token()")
+    logger.debug("generate_game_token()")
     return str(uuid.uuid4())
 
 def generate_username():
     """Generate a new likely-to-be-unique username."""
-    print("generate_username()")
+    logger.debug("generate_username()")
     consonants = ''.join(c for c in string.ascii_lowercase if c not in 'aeiouyl')
     return ''.join(random.choice(consonants) for _ in range(10))
 
 @app.route('/join-game', methods=['GET', 'POST'])
 def join_game():
-    print("join_game()")
+    logger.debug("join_game()")
     # Retrieve game token from URL parameter
     game_token = request.args.get('game_token')
     if game_token:

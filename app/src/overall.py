@@ -1,5 +1,6 @@
 from collections import namedtuple
 from flask import g, request
+import logging
 from types import SimpleNamespace
 
 from .attrib import Attrib
@@ -19,6 +20,7 @@ tables_to_create = {
         PRIMARY KEY (game_token)
     """
 }
+logger = logging.getLogger(__name__)
 
 class WinRequirement(Identifiable):
     """One of:
@@ -67,7 +69,7 @@ class WinRequirement(Identifiable):
         return instance
 
     def id_to_refs_from_game_data(self):
-        print(f"{self.__class__.__name__}.id_to_refs_from_game_data()")
+        logger.debug("id_to_refs_from_game_data()")
         for entity_cls in (Item, Character, Location, Attrib):
             attr_name = entity_cls.basename()
             entity = getattr(self, attr_name)
@@ -75,9 +77,10 @@ class WinRequirement(Identifiable):
                 entity_obj = entity_cls.get_by_id(entity.id)
                 if entity_obj:
                     setattr(self, attr_name, entity_obj)
-                    print(f"{attr_name} {entity.id} name {entity_obj.name}")
+                    logger.debug("%s %d name %s",
+                        attr_name, entity.id, entity_obj.name)
                 else:
-                    print(f"could not find {attr_name} {entity.id}")
+                    logger.debug("could not find %s %d", attr_name, entity.id)
 
 class Overall(DbSerializable):
     """Overall scenario settings such as scenario title and goal,
@@ -133,7 +136,7 @@ class Overall(DbSerializable):
 
     @classmethod
     def from_db(cls):
-        print(f"{cls.__name__}.from_db()")
+        logger.debug(f"{cls.__name__}.from_db()")
         #if 'overall' in g:
         #    return g.overall
         values = [g.game_token]
@@ -152,7 +155,7 @@ class Overall(DbSerializable):
                 instance.win_reqs.append(
                     WinRequirement.from_json(winreq_data))
         if not instance:
-            print("overall data not found -- making generic object")
+            logger.debug("overall data not found -- making generic object")
             instance = cls()
         return instance
 
@@ -167,7 +170,7 @@ class Overall(DbSerializable):
 
     @classmethod
     def data_for_configure(cls):
-        print(f"{cls.__name__}.data_for_configure()")
+        logger.debug("data_for_configure()")
         from .game_data import GameData
         game_data = GameData.entity_names_from_db()
         game_data.overall = cls.from_db()
@@ -177,8 +180,8 @@ class Overall(DbSerializable):
 
     def configure_by_form(self):
         if 'save_changes' in request.form:
-            print("Saving changes.")
-            print(request.form)
+            logger.debug("Saving changes.")
+            logger.debug(request.form)
             self.title = request.form.get('scenario_title')
             self.description = request.form.get('scenario_description')
             winreq_ids = request.form.getlist('winreq_id')
@@ -207,13 +210,13 @@ class Overall(DbSerializable):
                 if slot.strip()]
             self.to_db()
         elif 'cancel_changes' in request.form:
-            print("Cancelling changes.")
+            logger.debug("Cancelling changes.")
         else:
-            print("Neither button was clicked.")
+            logger.debug("Neither button was clicked.")
 
     @classmethod
     def data_for_overview(cls):
-        print("data_for_overview()")
+        logger.debug("data_for_overview()")
         tables_rows = cls.select_tables("""
             SELECT *
             FROM {tables[0]}
@@ -234,7 +237,7 @@ class Overall(DbSerializable):
                 loc_id=loc_data.id,
                 loc_name=loc_data.name)
             character_list.append(row)
-        print(f"character_list={character_list}")
+        logger.debug("character_list=%s", character_list)
         item_data = cls.execute_select("""
             SELECT id, name
             FROM items

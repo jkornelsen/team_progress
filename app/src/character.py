@@ -1,4 +1,5 @@
 from flask import g, request, session
+import logging
 
 from .attrib import Attrib
 from .db_serializable import Identifiable, MutableNamespace, coldef
@@ -22,6 +23,7 @@ tables_to_create = {
             REFERENCES progress (game_token, id)
     """,
 }
+logger = logging.getLogger(__name__)
 
 class OwnedItem(Pile):
     PILE_TYPE = Storage.CARRIED
@@ -102,7 +104,7 @@ class Character(Identifiable):
         return instance
 
     def json_to_db(self, doc):
-        print(f"{self.__class__.__name__}.json_to_db()")
+        logger.debug("json_to_db()")
         self.progress.json_to_db(doc['progress'])
         doc['progress_id'] = self.progress.id
         super().json_to_db(doc)
@@ -120,7 +122,7 @@ class Character(Identifiable):
                 "game_token, char_id, attrib_id, value",
                 values)
         if doc['items']:
-            print(f"items: {doc['items']}")
+            logger.debug("items: %s", doc['items'])
             values = []
             for owned_item in doc['items']:
                 values.append((
@@ -136,7 +138,7 @@ class Character(Identifiable):
 
     @classmethod
     def load_piles(cls, char_id=0, loc_id=0):
-        print(f"{cls.__name__}.load_piles()")
+        logger.debug("load_piles(%d, %d)", char_id, loc_id)
         query = """
             SELECT *
             FROM {tables[0]}
@@ -157,22 +159,27 @@ class Character(Identifiable):
             values.append(loc_id);
         tables_rows = cls.select_tables(
             query, values, ['characters', 'char_items', 'char_attribs'])
-        instances = {}  # keyed by ID
+        chars = {}  # keyed by ID
         for char_data, item_data, attrib_data in tables_rows:
-            instance = instances.setdefault(
+            char = chars.setdefault(
                 char_data.id, cls.from_json(vars(char_data)))
             if attrib_data.attrib_id:
                 attrib = Attrib(attrib_data.attrib_id)
-                instance.attribs[attrib] = attrib_data.value
+                char.attribs[attrib] = attrib_data.value
             if item_data.item_id:
                 owned = OwnedItem.from_json(item_data)
                 owned.container = cls.get_by_id(char_data.id)
-                instance.items.append(owned)
-        return instances.values()
+                char.items.append(owned)
+        for char in chars.values():
+            if char.items:
+                pile = char.items[0]
+                logger.debug("char %s (%d) owns item %d qty %.1f",
+                    char.name, char.id, pile.item.id, pile.quantity)
+        return chars.values()
 
     @classmethod
     def data_for_file(cls):
-        print(f"{cls.__name__}.data_for_file()")
+        logger.debug("data_for_file()")
         query = """
             SELECT *
             FROM {tables[0]}
@@ -192,10 +199,10 @@ class Character(Identifiable):
             ['characters', 'progress', 'char_attribs', 'char_items'])
         instances = {}  # keyed by ID
         for char_data, progress_data, attrib_data, char_item_data in tables_rows:
-            print(f"char_data {char_data}")
-            print(f"progress_data {progress_data}")
-            print(f"attrib_data {attrib_data}")
-            print(f"char_item_data {char_item_data}")
+            logger.debug("char_data %s", char_data)
+            logger.debug("progress_data %s", progress_data)
+            logger.debug("attrib_data %s", attrib_data)
+            logger.debug("char_item_data %s", char_item_data)
             instance = instances.get(char_data.id)
             if not instance:
                 instance = cls.from_json(vars(char_data))
@@ -208,15 +215,15 @@ class Character(Identifiable):
                 instance.items.append(
                     OwnedItem.from_json(char_item_data))
         # Print debugging info
-        print(f"found {len(instances)} characters")
+        logger.debug("found %d characters", len(instances))
         for instance in instances.values():
-            print(f"character {instance.id} ({instance.name})"
-                " has {len(instance.attribs)} attribs")
+            logger.debug("character %d (%s) has %d attribs",
+                instance.id, instance.name, len(instance.attribs))
         return list(instances.values())
 
     @classmethod
     def data_for_configure(cls, id_to_get):
-        print(f"{cls.__name__}.data_for_configure()")
+        logger.debug("data_for_configure(%s)", id_to_get)
         if id_to_get == 'new':
             id_to_get = 0
         else:
@@ -284,18 +291,17 @@ class Character(Identifiable):
         for owned_item in current_obj.items:
             owned_item.item = Item.get_by_id(owned_item.item.id)
         # Print debugging info
-        print(f"found {len(current_obj.items)} owned items")
+        logger.debug("found %d owned items", len(current_obj.items))
         if len(current_obj.items):
             owned_item = current_obj.items[0]
-            print(f"item_id={owned_item.item.id}")
-            print(f"name={owned_item.item.name}")
-            print(f"quantity={owned_item.quantity}")
-            print(f"slot={owned_item.slot}")
+            logger.debug("item_id=%d, name=%s, quantity=%.1f, slot=%s",
+                owned_item.item.id, owned_item.item.name, owned_item.quantity,
+                owned_item.slot)
         return current_obj
 
     @classmethod
     def data_for_play(cls, id_to_get):
-        print(f"{cls.__name__}.data_for_play()")
+        logger.debug("data_for_play()")
         current_obj = cls.data_for_configure(id_to_get)
         if current_obj.location:
             # Get the current location's destination data
@@ -323,8 +329,8 @@ class Character(Identifiable):
 
     def configure_by_form(self):
         if 'save_changes' in request.form:  # button was clicked
-            print("Saving changes.")
-            print(request.form)
+            logger.debug("Saving changes.")
+            logger.debug(request.form)
             self.name = request.form.get('char_name')
             self.description = request.form.get('char_description')
             self.toplevel = request_bool(request, 'top_level')
@@ -344,14 +350,14 @@ class Character(Identifiable):
             self.location = Location.get_by_id(
                 int(location_id)) if location_id else None
             attrib_ids = request.form.getlist('attrib_id')
-            print(f"Attrib IDs: {attrib_ids}")
+            logger.debug(f"Attrib IDs: %s", attrib_ids)
             self.attribs = {}
             for attrib_id in attrib_ids:
                 attrib_val = request_float(
                     request, f'attrib_{attrib_id}_val', 0.0)
                 attrib_item = Attrib.get_by_id(attrib_id)
                 self.attribs[attrib_item] = attrib_val
-            print("attribs: ", {attrib.name: val
+            logger.debug("attribs: %s", {attrib.name: val
                 for attrib, val in self.attribs.items()})
             self.to_db()
         elif 'delete_character' in request.form:
@@ -361,6 +367,6 @@ class Character(Identifiable):
             except DbError as e:
                 raise DeletionError(e)
         elif 'cancel_changes' in request.form:
-            print("Cancelling changes.")
+            logger.debug("Cancelling changes.")
         else:
-            print("Neither button was clicked.")
+            logger.debug("Neither button was clicked.")

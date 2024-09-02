@@ -1,4 +1,5 @@
 from flask import g
+import logging
 
 from .db_serializable import DbSerializable
 from .db_relations import tables_to_create as relation_tables
@@ -10,6 +11,8 @@ from .item import Item, Recipe
 from .location import Location
 from .overall import Overall
 from .progress import Progress
+
+logger = logging.getLogger(__name__)
 
 class GameData:
     # In this order for from_json().
@@ -45,7 +48,7 @@ class GameData:
         setattr(self, entity_cls.listname(), newval)
 
     def to_json(self):
-        print(f"{self.__class__.__name__}.to_json()")
+        logger.debug("to_json()")
         data = {}
         for entity_cls in self.ENTITIES:
             entity_data = [
@@ -57,7 +60,7 @@ class GameData:
 
     @classmethod
     def from_json(cls, data):
-        print(f"{cls.__name__}.from_json()")
+        logger.debug("from_json()")
         instance = cls()
         # Load in order to correctly get references to other entities. 
         for entity_cls in cls.ENTITIES:
@@ -69,7 +72,7 @@ class GameData:
 
     @classmethod
     def from_db(cls, entities=None):
-        print(f"{cls.__name__}.from_db()")
+        logger.debug("from_db()")
         if entities is None:
             entities = cls.ENTITIES
             instance = cls()
@@ -83,7 +86,7 @@ class GameData:
 
     @classmethod
     def entity_names_from_db(cls, entities=None):
-        print(f"{cls.__name__}.entity_names_from_db()")
+        logger.debug("entity_names_from_db()")
         if entities is None:
             entities = cls.ENTITIES
             instance = cls()
@@ -106,16 +109,16 @@ class GameData:
         return instance
 
     def to_db(self):
-        print(f"{self.__class__.__name__}.to_db()")
+        logger.debug("to_db()")
         for entity_cls in self.ENTITIES:
-            print(f"entity {entity_cls.listname()}")
+            logger.debug("entity %s", entity_cls.listname())
             for entity in self.get_list(entity_cls):
                 entity.to_db()
         self.overall.to_db()
 
     @staticmethod
     def clear_db_for_token():
-        print(f"game_data.clear_db_for_token()")
+        logger.debug("clear_db_for_token()")
         tablenames = [
                 tablename
                 for tablename in relation_tables

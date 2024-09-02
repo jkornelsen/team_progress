@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from flask import jsonify
+import logging
 import math
 import threading
 
@@ -15,6 +16,7 @@ tables_to_create = {
         is_ongoing boolean NOT NULL
     """
 }
+logger = logging.getLogger(__name__)
 
 class Progress(Identifiable):
     """Track progress over time."""
@@ -67,8 +69,8 @@ class Progress(Identifiable):
     # returns true if able to change quantity
     def change_quantity(self, batches_requested):
         with self.lock:
-            print(f"change_quantity() for progress {self.id}:"
-                f" batches_requested={batches_requested}")
+            logger.debug("change_quantity() for progress %d: batches_requested=%d",
+                self.id, batches_requested)
             stop_here = False
             if batches_requested == 0:
                 raise Exception("Expected non-zero number of batches.")
@@ -80,34 +82,32 @@ class Progress(Identifiable):
                 num_batches = ((self.q_limit - self.pile.quantity)
                     // self.recipe.rate_amount)
                 stop_here = True  # can't process the full amount
-                print(f"change_quantity():"
-                    f" num_batches={num_batches} due to limit {self.q_limit}")
+                logger.debug("change_quantity(): num_batches=%d due to limit %d",
+                    num_batches, self.q_limit)
             for source in self.recipe.sources:
                 eff_source_qty = num_batches * source.q_required
                 if eff_source_qty > 0:
-                    print(f"change_quantity():"
-                        f" source {source.item.id},"
-                        f" source.q_required={source.q_required},"
-                        f" eff_source_qty={eff_source_qty},"
-                        f" source.item.quantity={source.item.quantity}")
-                    if (source.item.quantity < eff_source_qty
+                    logger.debug("change_quantity(): source %d, source.q_required=%d, "
+                        "eff_source_qty=%.1f, source.pile.quantity=%.1f",
+                        source.item.id, source.q_required, eff_source_qty,
+                        source.pile.quantity)
+                    if (source.pile.quantity < eff_source_qty
                             and not source.preserve):
                         stop_here = True  # can't process the full amount
                         num_batches = min(
                             num_batches,
-                            math.floor(source.item.quantity / source.q_required))
-                    elif source.item.quantity < source.q_required:
+                            math.floor(source.pile.quantity / source.q_required))
+                    elif source.pile.quantity < source.q_required:
                         stop_here = True
                         num_batches = 0
-            print(f"change_quantity():"
-                f" num_batches={num_batches}")
+            logger.debug("change_quantity(): num_batches=%d", num_batches)
             if num_batches > 0:
                 for source in self.recipe.sources:
                     if not source.preserve:
                         # Deduct source quantity used
                         eff_source_qty = num_batches * source.q_required
-                        source.item.quantity -= eff_source_qty
-                        source.item.progress.to_db()
+                        source.pile.quantity -= eff_source_qty
+                        source.pile.container.to_db()
                 # Add quantity produced
                 eff_result_qty = num_batches * self.recipe.rate_amount
                 self.pile.quantity += eff_result_qty
@@ -123,10 +123,10 @@ class Progress(Identifiable):
         elapsed_time = self.calculate_elapsed_time()
         total_batches_needed = math.floor(elapsed_time / self.recipe.rate_duration)
         batches_to_do = total_batches_needed - self.batches_processed
-        print(f"determine_current_quantity:"
-            f" batches_to_do={batches_to_do}"
-            f" ({elapsed_time} / {self.recipe.rate_duration}"
-            f" - {self.batches_processed})")
+        logger.debug(
+            "determine_current_quantity: batches_to_do=%d (%.1f / %.1f - %d)",
+            batches_to_do, elapsed_time, self.recipe.rate_duration,
+            self.batches_processed)
         if batches_to_do > 0:
             success = self.change_quantity(batches_to_do)
             time_spent = batches_to_do * self.recipe.rate_duration
@@ -147,28 +147,31 @@ class Progress(Identifiable):
     def can_produce(self):
         """True if at least one batch can be produced."""
         if self.recipe is None:
-            print("no recipe")
+            logger.debug("no recipe")
             return False
         if not self.recipe.rate_amount:
-            print("no rate amount")
+            logger.debug("no rate amount")
             return False
         if ((self.q_limit > 0.0 and self.pile.quantity >= self.q_limit)
                 or (self.q_limit < 0.0 and self.pile.quantity <= self.q_limit)):
-            print("would pass limit")
+            logger.debug("would pass limit")
             return False
         for source in self.recipe.sources:
             eff_source_qty = source.q_required
             if (eff_source_qty > 0
-                    and source.item.quantity < eff_source_qty):
-                print(f"requires {source.q_required} of item id {source.item.id}"
-                    f" but only have {source.item.quantity}")
+                    and source.pile.quantity < eff_source_qty):
+                logger.debug("requires %.1f of item id %d but only have %.1f",
+                    source.q_required, source.item.id, source.pile.quantity)
                 return False
-        print("can produce")
+        logger.debug("can produce")
         return True
 
     def start(self, recipe_id=0):
         self.set_recipe_by_id(recipe_id)
-        if self.recipe.rate_amount == 0 or self.is_ongoing:
+        if self.is_ongoing:
+            logger.debug("Already ongoing.")
+            return True
+        if self.recipe.rate_amount == 0:
             return False
         if not self.can_produce():
             self.stop()
@@ -197,4 +200,3 @@ class Progress(Identifiable):
         else:
             elapsed_time = timedelta(seconds=0)
         return elapsed_time.total_seconds()
-

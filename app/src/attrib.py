@@ -1,4 +1,6 @@
 from flask import g, request, session
+import logging
+
 from .db_serializable import Identifiable, coldef
 
 tables_to_create = {
@@ -10,6 +12,7 @@ tables_to_create = {
     # example "{10: 'Very Hungry', 50: 'Full'}
     # threshold_names JSON NOT NULL
 }
+logger = logging.getLogger(__name__)
 
 class Attrib(Identifiable):
     """Stat or state or other type of attribute for a character or item.
@@ -40,7 +43,7 @@ class Attrib(Identifiable):
 
     @classmethod
     def list_from_json(cls, json_data):
-        print(f"{cls.__name__}.list_from_json()")
+        logger.debug("list_from_json()")
         instances = []
         for attrib_data in json_data:
             instances.append(cls.from_json(attrib_data, None))
@@ -48,7 +51,7 @@ class Attrib(Identifiable):
 
     @classmethod
     def data_for_file(cls):
-        print(f"{cls.__name__}.data_for_file()")
+        logger.debug("data_for_file()")
         data = cls.execute_select("""
             SELECT *
             FROM {table}
@@ -59,7 +62,7 @@ class Attrib(Identifiable):
 
     @classmethod
     def data_for_configure(cls, id_to_get):
-        print(f"{cls.__name__}.data_for_configure()")
+        logger.debug("data_for_configure(%s)", id_to_get)
         if id_to_get == 'new':
             id_to_get = 0
         else:
@@ -75,8 +78,8 @@ class Attrib(Identifiable):
 
     def configure_by_form(self):
         if 'save_changes' in request.form:  # button was clicked
-            print("Saving changes.")
-            print(request.form)
+            logger.debug("Saving changes.")
+            logger.debug(request.form)
             self.name = request.form.get('attrib_name')
             self.description = request.form.get('attrib_description')
             self.to_db()
@@ -87,6 +90,6 @@ class Attrib(Identifiable):
             except DbError as e:
                 raise DeletionError(e)
         elif 'cancel_changes' in request.form:
-            print("Cancelling changes.")
+            logger.debug("Cancelling changes.")
         else:
-            print("Neither button was clicked.")
+            logger.debug("Neither button was clicked.")

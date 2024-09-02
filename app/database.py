@@ -1,5 +1,8 @@
-import psycopg2
 from flask import Flask, g
+import logging
+import psycopg2
+
+logger = logging.getLogger(__name__)
 
 def get_db():
     if 'db' not in g:
@@ -50,7 +53,7 @@ def create_all():
             command = pretty(
                 "CREATE TABLE {} (\n{})".format(
                 table, pretty(schema)))
-            print(command)
+            logger.debug(command)
             with db.cursor() as cursor:
                 cursor.execute(command)
     db.commit()

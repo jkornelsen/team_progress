@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from flask import g, request, url_for
+import logging
 
 from .db_serializable import DbSerializable, coldef
 from src.game_data import GameData
@@ -10,6 +11,8 @@ from .event import Event
 from .item import Item
 from .location import Location
 from .overall import Overall
+
+logger = logging.getLogger(__name__)
 
 def determine_entity_type(endpoint):
     """Determine the entity type based on the endpoint.
@@ -124,7 +127,7 @@ class UserInteraction(DbSerializable):
         interaction = cls(username)
         interaction.route_endpoint = request.endpoint
         if not interaction.route_endpoint:
-            print(f"No endpoint of request object")
+            logger.debug("No endpoint of request object")
             interaction.route_endpoint = "/"
         from app import get_parameter_name  # avoid circular import
         parameter_name = get_parameter_name(interaction.route_endpoint)
@@ -134,7 +137,7 @@ class UserInteraction(DbSerializable):
             if entity_id is not None:
                 interaction.entity_id = entity_id
         else:
-            print(f"No view_args for {interaction.route_endpoint}")
+            logger.debug("No view_args for %s", interaction.route_endpoint)
         interaction.to_db()
 
     @classmethod

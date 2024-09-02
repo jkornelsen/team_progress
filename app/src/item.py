@@ -1,4 +1,5 @@
 from flask import g, request, session
+import logging
 import math
 
 from .attrib import Attrib
@@ -22,6 +23,7 @@ tables_to_create = {
             REFERENCES progress (game_token, id)
     """,
 }
+logger = logging.getLogger(__name__)
 
 class Source:
     def __init__(self, new_id=0):
@@ -98,7 +100,7 @@ class Recipe(DbSerializable):
         return instance
 
     def json_to_db(self, doc):
-        print(f"{self.__class__.__name__}({self.id}).json_to_db()")
+        logger.debug("json_to_db() for id=%d", self.id)
         self.insert_single(
             "recipes",
             "game_token, item_id, recipe_id,"
@@ -109,7 +111,7 @@ class Recipe(DbSerializable):
                 doc['instant']
                 ))
         if doc['sources']:
-            print(f"sources: {doc['sources']}")
+            logger.debug("sources: %s", doc['sources'])
             values = []
             for source in doc['sources']:
                 values.append((
@@ -124,7 +126,7 @@ class Recipe(DbSerializable):
                 " source_id, q_required, preserve",
                 values)
         if doc['attribs']:
-            print(f"attribs: {doc['attribs']}")
+            logger.debug("attribs: %s", doc['attribs'])
             values = []
             for req in doc['attribs']:
                 values.append((
@@ -196,7 +198,7 @@ class Item(Identifiable, Pile):
         return instance
 
     def json_to_db(self, doc):
-        print(f"{self.__class__.__name__}({self.id}).json_to_db()")
+        logger.debug("json_to_db() for id=%d", self.id)
         self.progress.json_to_db(doc['progress'])
         doc['progress_id'] = self.progress.id
         super().json_to_db(doc)
@@ -351,12 +353,45 @@ class Item(Identifiable, Pile):
         return item_recipes_data
 
     @classmethod
+    def assign_pile(cls, item, chars, loc):
+        logger.debug("item id %d type %s", item.id, item.storage_type)
+        pile = item
+        pile.container = item
+        if item.storage_type == Storage.CARRIED:
+            # Select a char at this loc who owns one
+            for char in chars:
+                for owned_item in char.items:
+                    if (owned_item.item.id == item.id
+                            and owned_item.quantity != 0):
+                        pile = owned_item
+                        pile.container = char
+                        logger.debug("assigned ownedItem from %s qty %.1f", 
+                            owned_item.container.name, pile.quantity)
+        elif item.storage_type == Storage.LOCAL:
+            # Select an itemAt for this loc
+            for item_at in loc.items:
+                if (item_at.item.id == item.id
+                        and item_at.quantity != 0):
+                    pile = item_at
+                    pile.container = loc
+                    logger.debug("assigned itemAt from %s qty %.1f", 
+                        item_at.container.name, pile.quantity)
+        elif item.storage_type == Storage.UNIVERSAL:
+            if pile.quantity == 0:
+                # Use the item in general storage
+                pile = item
+                pile.container = item
+                logger.debug(f"assigned general storage qty %.1f",
+                    pile.quantity)
+        return pile
+
+    @classmethod
     def load_piles_for_sources(cls, current_obj, owner_char_id, at_loc_id):
         """Assign a pile from this location or char inventory
         that can be used for each recipe source.
         Also find chars or items that meet recipe attrib requirements.
         """
-        print(f"{cls.__name__}.load_piles_for_sources()")
+        logger.debug(f"{cls.__name__}.load_piles_for_sources()")
         from .character import Character
         from .location import Location
         chars = []
@@ -374,26 +409,7 @@ class Item(Identifiable, Pile):
         # Assign the most appropriate pile
         for recipe in current_obj.recipes:
             for source in recipe.sources:
-                print(f"source id {source.item.id} type {source.item.storage_type}")
-                if source.item.storage_type == Storage.CARRIED:
-                    # Select a char at this loc who owns one
-                    for char in chars:
-                        for owned_item in char.items:
-                            if owned_item.item.id == source.item.id:
-                                source.pile = owned_item
-                                print(f"assigned ownedItem from {owned_item.container.name}"
-                                    f" to {source.pile.item.id}")
-                elif source.item.storage_type == Storage.LOCAL:
-                    # Select an itemAt for this loc
-                    for item_at in loc.items:
-                        if item_at.item.id == source.item.id:
-                            source.pile = item_at
-                            print(f"assigned itemAt from {item_at.container.name}"
-                                f" to {source.pile.item.id}")
-                elif source.item.storage_type == Storage.UNIVERSAL:
-                    # Use the item in general storage
-                    print(f"assigned general storage for {source.pile.item.id}")
-                    source.pile = source.item
+                source.pile = cls.assign_pile(source.item, chars, loc)
             # Look for entities to meet attrib requirements
             for req in recipe.attribs:
                 for char in chars:
@@ -402,10 +418,11 @@ class Item(Identifiable, Pile):
                 for item in g.game_data.items:
                     if item.attribs[req.attrib_id] >= req.attrib_val:
                         req.entity = item
+        current_obj.pile = cls.assign_pile(current_obj, chars, loc)
 
     @classmethod
     def data_for_file(cls):
-        print(f"{cls.__name__}.data_for_file()")
+        logger.debug("data_for_file()")
         # Get item and progress data
         tables_rows = cls.db_item_and_progress_data()
         instances = {}  # keyed by ID
@@ -434,24 +451,23 @@ class Item(Identifiable, Pile):
                     (recipe for recipe in instance.recipes
                      if recipe.id == recipe_id), Recipe(item=instance))
         # Print debugging info
-        print(f"found {len(instances)} items")
+        logger.debug("found %d items", len(instances))
         for instance in instances.values():
-            print(f"item {instance.id} ({instance.name})"
-                f" has {len(instance.recipes)} recipes")
+            logger.debug("item %d (%s) has %d recipes", 
+                instance.id, instance.name, len(instance.recipes))
             if len(instance.recipes):
                 recipe = instance.recipes[0]
-                print(f"recipe id {recipe.id}")
-                print(f"    rate_amount={recipe.rate_amount},"
-                    f" rate_duration={recipe.rate_duration},"
-                    f" instant={recipe.instant}")
+                logger.debug("recipe id %d", recipe.id)
+                logger.debug("    rate_amount=%d, rate_duration=%d, instant=%s",
+                    recipe.rate_amount, recipe.rate_duration, recipe.instant)
                 for source in recipe.sources:
-                    print(f"    source item id {source.item.id},"
-                        f" qty {source.q_required}")
+                    logger.debug("    source item id %d, qty %d",
+                        source.item.id, source.q_required)
         return list(instances.values())
 
     @classmethod
     def data_for_configure(cls, id_to_get):
-        print(f"{cls.__name__}.data_for_configure()")
+        logger.debug("data_for_configure(%s)", id_to_get)
         if id_to_get == 'new':
             id_to_get = 0
         else:
@@ -492,33 +508,39 @@ class Item(Identifiable, Pile):
             for req in recipe.attribs:
                 req.attrib = Attrib.get_by_id(req.attrib.id)
         # Print debugging info
-        print(f"found {len(current_obj.recipes)} recipes")
+        logger.debug(f"found %d recipes", len(current_obj.recipes))
         #if len(current_obj.recipes):
         #    recipe = current_obj.recipes[0]
         for recipe in current_obj.recipes:
-            print(f"recipe {recipe.id}"
-                f" rate_amount={recipe.rate_amount}"
-                f" instant={recipe.instant}")
+            logger.debug("recipe %d rate_amount=%d instant=%s", 
+                recipe.id, recipe.rate_amount, recipe.instant)
             for source in recipe.sources:
-                print(f"source item id {source.item.id} name {source.item.name}"
-                    f" qty {source.q_required} storage {source.item.storage_type}")
+                logger.debug("source item.id %d, name %s, req %d, storage %s",
+                    source.item.id, source.item.name, source.q_required,
+                    source.item.storage_type)
         return current_obj
 
     @classmethod
     def data_for_play(cls, id_to_get, owner_char_id=0, at_loc_id=0,
-            produced=False):
-        print(f"{cls.__name__}.data_for_play()")
+            default_pile=False):
+        """
+        :param default_pile: False to use the type based on passed params
+            such as current char inventory.
+            True to use pile type that gets produced or used as a source.
+        """
+        logger.debug("data_for_play(%s, %s, %s)",
+            id_to_get, owner_char_id, at_loc_id)
         current_obj = cls.data_for_configure(id_to_get)
         # Get all character and location names
         from .game_data import GameData
         from .character import Character
         from .location import Location
-        GameData.entity_names_from_db([Character, Location])
+        GameData.entity_names_from_db([Location])
+        Location.load_characters_at_loc(at_loc_id)
         # Get piles at this loc or char that can be used for sources
         cls.load_piles_for_sources(current_obj, owner_char_id, at_loc_id)
         # Get item data for the specific container
-        if produced:
-            # Use the pile that will get produced
+        if default_pile:
             pile_type = current_obj.storage_type
         elif current_obj.storage_type == Storage.CARRIED and owner_char_id:
             pile_type = Storage.CARRIED
@@ -530,9 +552,13 @@ class Item(Identifiable, Pile):
             pile_type = Storage.LOCAL
         else:
             pile_type = Storage.UNIVERSAL
+        logger.debug("pile_type=%s", pile_type)
         container = current_obj
         pile = current_obj
-        if pile_type == Storage.CARRIED and owner_char_id:
+        if default_pile:
+            pile = current_obj.pile
+            container = pile.container
+        elif pile_type == Storage.CARRIED and owner_char_id:
             from .character import OwnedItem
             container = Character.data_for_configure(owner_char_id)
             pile = next(
@@ -546,20 +572,23 @@ class Item(Identifiable, Pile):
                 (itemAt for itemAt in container.items
                 if itemAt.item.id == current_obj.id),
                 ItemAt(current_obj))
+        container.pile = pile
+        pile.item = current_obj
+        pile.container = container
         # Get relation data for items that use this item as a source
         item_recipes_data = cls.db_recipe_data(id_to_get, get_by_source=True)
         for item_id, recipes_data in item_recipes_data.items():
-            print(f"item_id {item_id}, recipes_data {recipes_data}")
+            logger.debug("item_id %d, recipes_data %s", item_id, recipes_data)
             item = Item.get_by_id(item_id)
             item.recipes = [
                 Recipe.from_json(recipe_data, item)
                 for recipe_id, recipe_data in recipes_data.items()]
-        return current_obj, pile, container
+        return current_obj, container
 
     def configure_by_form(self):
         if 'save_changes' in request.form:  # button was clicked
-            print("Saving changes.")
-            print(request.form)
+            logger.debug("Saving changes.")
+            logger.debug(request.form)
             self.name = request.form.get('item_name')
             self.description = request.form.get('item_description')
             self.storage_type = request.form.get('storage_type')
@@ -581,7 +610,7 @@ class Item(Identifiable, Pile):
                     f'recipe{recipe_id}_instant')
                 source_ids = request.form.getlist(
                     f'recipe{recipe_id}_source_id')
-                print(f"Source IDs: {source_ids}")
+                logger.debug(f"Source IDs: %s", source_ids)
                 for source_id in source_ids:
                     source = Source.from_json({
                         'source_id': int(source_id),
@@ -592,8 +621,8 @@ class Item(Identifiable, Pile):
                             f'recipe{recipe_id}_source{source_id}_preserve'),
                     })
                     recipe.sources.append(source)
-                    print(f"Sources for {recipe_id}: ",
-                        {source.item.id: source.q_required
+                    logger.debug("Sources for %d: %s",
+                        recipe_id, {source.item.id: source.q_required
                         for source in recipe.sources})
                 recipe_attrib_ids = request.form.getlist(
                     f'recipe{recipe_id}_attrib_id')
@@ -602,14 +631,14 @@ class Item(Identifiable, Pile):
                         f'recipe{recipe_id}_attrib{attrib_id}_value', 1.0)
                     recipe.attribs.append((attrib_id, attrib_value))
             attrib_ids = request.form.getlist('attrib_id')
-            print(f"Attrib IDs: {attrib_ids}")
+            logger.debug("Attrib IDs: %s", attrib_ids)
             self.attribs = {}
             for attrib_id in attrib_ids:
                 attrib_val = request_float(request,
                     f'attrib{attrib_id}_val', 0.0)
                 attrib_obj = Attrib(attrib_id)
                 self.attribs[attrib_obj] = attrib_val
-            print("attribs: ", {attrib.id: val
+            logger.debug("attribs: %s", {attrib.id: val
                 for attrib, val in self.attribs.items()})
             self.to_db()
         elif 'delete_item' in request.form:
@@ -619,6 +648,6 @@ class Item(Identifiable, Pile):
             except DbError as e:
                 raise DeletionError(e)
         elif 'cancel_changes' in request.form:
-            print("Cancelling changes.")
+            logger.debug("Cancelling changes.")
         else:
-            print("Neither button was clicked.")
+            logger.debug("Neither button was clicked.")

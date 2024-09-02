@@ -1,8 +1,10 @@
 from flask import g, request, session
+import logging
 
 from .db_serializable import (
     Identifiable, MutableNamespace, coldef, tuple_to_pg_array)
 from .item import Item
+from .progress import Progress
 from .utils import Pile, Storage
 
 tables_to_create = {
@@ -13,6 +15,7 @@ tables_to_create = {
         dimensions integer[2]
     """
 }
+logger = logging.getLogger(__name__)
 
 class ItemAt(Pile):
     PILE_TYPE = Storage.LOCAL
@@ -44,6 +47,8 @@ class Location(Identifiable):
         self.description = ""
         self.destinations = {}  # Location objects and their distance
         self.items = []  # ItemAt objects
+        self.pile = ItemAt()  # for Progress
+        self.progress = Progress(container=self)
 
     def to_json(self):
         return {
@@ -74,7 +79,7 @@ class Location(Identifiable):
         return instance
 
     def json_to_db(self, doc):
-        print(f"{self.__class__.__name__}.json_to_db()")
+        logger.debug("json_to_db()")
         super().json_to_db(doc)
         for rel_table in ('loc_destinations', 'loc_items'):
             self.execute_change(f"""
@@ -106,14 +111,18 @@ class Location(Identifiable):
     @classmethod
     def load_characters_at_loc(cls, id_to_get, load=True):
         from .character import Character
-        characters_data = cls.execute_select("""
+        query = """
             SELECT *
             FROM characters
             WHERE game_token = %s
-                AND location_id = %s
-            ORDER BY name
-        """, (g.game_token, id_to_get))
+        """
+        values = [g.game_token]
+        if id_to_get:
+            query += " AND location_id = %s"
+            values.append(id_to_get)
+        query += "\nORDER BY name"
         chars = []
+        characters_data = cls.execute_select(query, values)
         for char_data in characters_data:
             chars.append(Character.from_json(char_data))
         if load:
@@ -122,7 +131,7 @@ class Location(Identifiable):
 
     @classmethod
     def load_piles(cls, loc_id):
-        print(f"{cls.__name__}.load_piles()")
+        logger.debug("load_piles(%d)", loc_id)
         query = """
             SELECT *
             FROM {tables[0]}
@@ -134,19 +143,27 @@ class Location(Identifiable):
         """
         tables_rows = cls.select_tables(
             query, [g.game_token, loc_id], ['locations', 'loc_items'])
-        instance = None
+        loc = None
         for loc_data, item_data in tables_rows:
-            if not instance:
-                instance = cls.from_json(vars(loc_data))
+            if not loc:
+                loc = cls.from_json(vars(loc_data))
             if item_data.item_id:
                 itemAt = ItemAt.from_json(item_data)
                 itemAt.container = cls.get_by_id(loc_data.id)
-                instance.items.append(itemAt)
-        return instance or Location()
+                loc.items.append(itemAt)
+                if not itemAt.container.items:
+                    itemAt.container = loc
+        if loc:
+            pile = loc.items[0]
+            logger.debug("item %s (%d) qty %.1f",
+                pile.item.name, pile.item.id, pile.quantity)
+        else:
+            logger.debug("Returning default loc")
+        return loc or Location()
 
     @classmethod
     def data_for_file(cls):
-        print(f"{cls.__name__}.data_for_file()")
+        logger.debug("data_for_file()")
         query = """
             SELECT *
             FROM {tables[0]}
@@ -164,9 +181,9 @@ class Location(Identifiable):
             ['locations', 'loc_destinations', 'loc_items'])
         instances = {}  # keyed by ID
         for loc_data, dest_data, loc_item_data in tables_rows:
-            print(f"loc_data {loc_data}")
-            print(f"dest_data {dest_data}")
-            print(f"loc_item_data {loc_item_data}")
+            logger.debug("loc_data %s", loc_data)
+            logger.debug("dest_data %s", dest_data)
+            logger.debug("loc_item_data %s", loc_item_data)
             instance = instances.get(loc_data.id)
             if not instance:
                 instance = cls.from_json(vars(loc_data))
@@ -183,15 +200,15 @@ class Location(Identifiable):
                 loc_objs[loc_obj] = distance
             instance.destinations = loc_objs
         # Print debugging info
-        print(f"found {len(instances)} locations")
+        logger.debug("found %d locations", len(instances))
         for instance in instances.values():
-            print(f"location {instance.id} ({instance.name})"
-                " has {len(instance.destinations)} destinations")
+            logger.debug("location %d (%s) has %d destinations",
+                instance.id, instance.name, len(instance.destinations))
         return list(instances.values())
 
     @classmethod
     def data_for_configure(cls, id_to_get):
-        print(f"{cls.__name__}.data_for_configure()")
+        logger.debug("data_for_configure(%s)", id_to_get)
         if id_to_get == 'new':
             id_to_get = 0
         else:
@@ -250,15 +267,15 @@ class Location(Identifiable):
 
     @classmethod
     def data_for_play(cls, id_to_get):
-        print(f"{cls.__name__}.data_for_play()")
+        logger.debug("data_for_play()")
         current_obj = cls.data_for_configure(id_to_get)
         cls.load_characters_at_loc(id_to_get)
         return current_obj
 
     def configure_by_form(self):
         if 'save_changes' in request.form:  # button was clicked
-            print("Saving changes.")
-            print(request.form)
+            logger.debug("Saving changes.")
+            logger.debug(request.form)
             entity_list = self.get_list()
             if self not in entity_list:
                 entity_list.append(self)
@@ -287,9 +304,9 @@ class Location(Identifiable):
             except DbError as e:
                 raise DeletionError(e)
         elif 'cancel_changes' in request.form:
-            print("Cancelling changes.")
+            logger.debug("Cancelling changes.")
         else:
-            print("Neither button was clicked.")
+            logger.debug("Neither button was clicked.")
 
     def distance(self, other_location):
         return self.destinations.get(other_location, -1)

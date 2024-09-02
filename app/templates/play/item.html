@@ -23,7 +23,7 @@
                 } else if (key === 'p') {
                     document.getElementById('pickup-btn').click();
                 } else if (key === 'e') {
-                    {% if pile.slot %}
+                    {% if container.pile.slot %}
                         document.getElementById('unequip-btn').click();
                     {% elif game_data.overall.slots %}
                         document.getElementById('equip-btn').click();
@@ -37,25 +37,25 @@
     <table style="width: 100%; max-width: 80%; margin: 0 auto;">
         <tr>
             <td>
-                {% if pile.PILE_TYPE == 'universal' %}
+                {% if container.pile.PILE_TYPE == 'universal' %}
                     General Storage<br>
-                {% elif pile.PILE_TYPE == 'carried' and char_id %}
+                {% elif container.pile.PILE_TYPE == 'carried' and char_id %}
                     {% set link = url_for('play_char', char_id=char_id) %}
                     {% set letter = link_letters.next(link) %}
                     <script>
                         linkForKey['{{ letter }}'] = "{{ link }}";
                     </script>
                     Carried by
-                    <a href="{{ link }}">{{ container_name }}</a>
+                    <a href="{{ link }}">{{ container.name }}</a>
                     <span>[{{ letter }}]</span><br>
-                {% elif pile.PILE_TYPE == 'local' and loc_id %}
+                {% elif container.pile.PILE_TYPE == 'local' and loc_id %}
                     {% set link = url_for('play_location', loc_id=loc_id) %}
                     {% set letter = link_letters.next(link) %}
                     <script>
                         linkForKey['{{ letter }}'] = "{{ link }}";
                     </script>
                     At
-                    <a href="{{ link }}">{{ container_name }}</a>
+                    <a href="{{ link }}">{{ container.name }}</a>
                     <span>[{{ letter }}]</span><br>
                 {% else %}
                     General Storage (by default)<br>
@@ -100,8 +100,8 @@
             </style>
             <td>
                 <div class="button-container">
-                {% if pile.PILE_TYPE == 'carried' and char_id %}
-                    {% if pile.slot %}
+                {% if container.pile.PILE_TYPE == 'carried' and char_id %}
+                    {% if container.pile.slot %}
                         <div class="button-column, show-if-carried">
                             <button id="unequip-btn" class="go-button">Un[e]quip</button>
                         </div>
@@ -121,7 +121,7 @@
                         <button id="drop-btn" class="go-button">[D]rop</button>
                     </div>
                 {% endif %}
-                {% if pile.PILE_TYPE == 'local' and loc_id %}
+                {% if container.pile.PILE_TYPE == 'local' and loc_id %}
                     <div class="button-column, show-if-carried">
                         <button id="pickup-btn" class="go-button">[P]ick Up</button><br>
                         <select id="char-picking-up">
@@ -131,7 +131,7 @@
                         </select>
                     </div>
                 {% endif %}
-                {% if pile.PILE_TYPE == 'universal' %}
+                {% if container.pile.PILE_TYPE == 'universal' %}
                     <div class="button-column, show-if-carried">
                         <button id="move_to_char-btn" class="go-button">Move to [C]haracter</button><br>
                         <select id="char-moving-to">
@@ -228,7 +228,7 @@
                             {% if source.pile and (source.pile.container or source.pile.quantity > 0) %}
                                 {% set link = url_for('play_item', item_id=item.id, char_id=char_id, loc_id=loc_id) %}
                             {% else %}
-                                {% set link = url_for('play_item', item_id=item.id, char_id=char_id, loc_id=loc_id, produced=true) %}
+                                {% set link = url_for('play_item', item_id=item.id, char_id=char_id, loc_id=loc_id, default_pile=true) %}
                             {% endif %}
                             {% set letter = link_letters.next(link) %}
                             <script>
@@ -311,7 +311,7 @@
                         <th>Required</th>
                     </tr>
                     {% for used_for in outerscope.used_as_source %}
-                        {% set link = url_for('play_item', item_id=used_for.item.id, char_id=char_id, loc_id=loc_id, produced='true') %}
+                        {% set link = url_for('play_item', item_id=used_for.item.id, char_id=char_id, loc_id=loc_id, default_pile=true) %}
                         {% set letter = link_letters.next(link) %}
                         <script>
                             linkForKey['{{ letter }}'] = "{{ link|safe }}";
@@ -339,7 +339,7 @@
                 const quantity = data.quantity || 0;
                 const maxQuantity = data.max_quantity || 0;
                 if (maxQuantity === 0) {
-                    console.error("maxQuantity cannot be zero.");
+                    // Don't show bar
                     return;
                 }
                 const progressPercent = (quantity / maxQuantity) * 100;
@@ -358,13 +358,34 @@
                     max_quantity: {{ current.q_limit or 0 }}
                 });
                 // Source item quantities required
-                //{% for recipe in current.recipes %}
-                //    {% for source in recipe.sources %}
-                //        $.get('/item/progress_data/{{ source.item.id }}', function(data) {
-                //            $('#recipe-{{ recipe.id }}-source-{{ source.item.id }}-qtyreq').text(data.q_required);
-                //        });
-                //    {% endfor %}
-                //{% endfor %}
+                let url;
+                {% for recipe in current.recipes %}
+                    {% for source in recipe.sources %}
+                        url = getItemProgressUrl({{ source.item.id }})
+                        $.get(url, function(data) {
+                            $('#recipe-{{ recipe.id }}-source-{{ source.item.id }}-quantity').text(data.quantity);
+                        });
+                    {% endfor %}
+                {% endfor %}
+            }
+            function getItemProgressUrl(itemId, sourceOnly=false) {
+                const queryParams = [];
+                const charId = "{{ char_id }}";
+                if (charId) {
+                    queryParams.push('char_id=' + encodeURIComponent(charId));
+                }
+                const locId = "{{ loc_id }}";
+                if (locId) {
+                    queryParams.push('loc_id=' + encodeURIComponent(locId));
+                }
+                if (sourceOnly) {
+                    queryParams.push('sourceOnly=True');
+                }
+                let url = '/item/progress_data/' + itemId;
+                if (queryParams.length > 0) {
+                    url += '?' + queryParams.join('&');
+                }
+                return url;
             }
 
             // Global variable to store the elapsed time.
@@ -448,20 +469,7 @@
 
             // Fetch progress data and update all relevant information
             function fetchProgressData() {
-                const itemId = "{{ current.id }}";
-                const charId = "{{ char_id }}";
-                const locId = "{{ loc_id }}";
-                let url = '/item/progress_data/' + itemId;
-                const queryParams = [];
-                if (charId) {
-                    queryParams.push('char_id=' + encodeURIComponent(charId));
-                }
-                if (locId) {
-                    queryParams.push('loc_id=' + encodeURIComponent(locId));
-                }
-                if (queryParams.length > 0) {
-                    url += '?' + queryParams.join('&');
-                }
+                const url = getItemProgressUrl({{ current.id }})
                 $.get(url, function(data) {
                     updateQuantity(data);
                     updateActionProgress();
@@ -486,9 +494,7 @@
                 if (fetchProgressInterval) {
                     stopFetchingProgress();
                 }
-                const duration = 2000;
-                //const duration = 15000;  // for development only
-                fetchProgressInterval = setInterval(fetchProgressData, duration);
+                fetchProgressInterval = setInterval(fetchProgressData, 2000);
             }
             function stopFetchingProgress() {
                 clearInterval(fetchProgressInterval);
@@ -688,7 +694,7 @@
                     }
                 });
                 $('.hide-if-slot').each(function() {
-                    {% if pile.slot %}
+                    {% if container.pile.slot %}
                         if (showAll) {
                             if (!showThese.includes(this)) {
                                 showThese.push(this);
