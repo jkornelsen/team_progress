@@ -9,6 +9,11 @@
             "description": "Can do chores.",
             "id": 2,
             "name": "Willing to do Odd Jobs"
+        },
+        {
+            "description": "Has money to pay for chores.",
+            "id": 3,
+            "name": "Pays for Odd Jobs"
         }
     ],
     "characters": [
@@ -42,6 +47,7 @@
                 "start_time": null,
                 "stop_time": null
             },
+            "quantity": 0.0,
             "toplevel": true
         },
         {
@@ -62,10 +68,13 @@
                 "start_time": null,
                 "stop_time": null
             },
+            "quantity": 0.0,
             "toplevel": true
         },
         {
-            "attribs": {},
+            "attribs": {
+                "3": 1.0
+            },
             "description": "Will pay a modest salary for chores.",
             "dest_id": null,
             "id": 3,
@@ -80,6 +89,7 @@
                 "start_time": null,
                 "stop_time": null
             },
+            "quantity": 0.0,
             "toplevel": false
         }
     ],
@@ -124,6 +134,7 @@
             "outcome_type": "fourway",
             "selection_strings": "",
             "toplevel": true,
+            "trigger_by_duration": true,
             "trigger_chance": [],
             "triggers": []
         }
@@ -165,7 +176,9 @@
             "quantity": 0.0,
             "recipes": [
                 {
-                    "attribs": [],
+                    "attribs": {
+                        "3": 1.0
+                    },
                     "instant": true,
                     "item_id": 12,
                     "rate_amount": 3.0,
@@ -200,7 +213,9 @@
             "quantity": 0.0,
             "recipes": [
                 {
-                    "attribs": [],
+                    "attribs": {
+                        "2": 1.0
+                    },
                     "instant": false,
                     "item_id": 11,
                     "rate_amount": 1.0,
@@ -235,7 +250,7 @@
             "quantity": 0.0,
             "recipes": [
                 {
-                    "attribs": [],
+                    "attribs": {},
                     "instant": false,
                     "item_id": 6,
                     "rate_amount": 1.0,
@@ -308,7 +323,7 @@
             "quantity": 0.0,
             "recipes": [
                 {
-                    "attribs": [],
+                    "attribs": {},
                     "instant": false,
                     "item_id": 8,
                     "rate_amount": 1.0,
@@ -323,7 +338,7 @@
                     ]
                 },
                 {
-                    "attribs": [],
+                    "attribs": {},
                     "instant": true,
                     "item_id": 8,
                     "rate_amount": 1.0,
@@ -358,7 +373,7 @@
             "quantity": 0.0,
             "recipes": [
                 {
-                    "attribs": [],
+                    "attribs": {},
                     "instant": false,
                     "item_id": 7,
                     "rate_amount": 10.0,
@@ -431,6 +446,9 @@
     ],
     "overall": {
         "description": "Suzy must get bacon from the farm and then return home to cook it.\r\n\r\nThis is a complete, fully playable scenario. It could also be extended.",
+        "slots": [
+            "Main Hand"
+        ],
         "title": "Bacon for Dinner",
         "win_reqs": [
             {

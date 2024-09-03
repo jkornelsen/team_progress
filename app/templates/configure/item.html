@@ -285,8 +285,15 @@
                         recipeCounter,
                         {{ source.item.id }},
                         "{{ source.item.name }}",
-                        {{ source.q_required | dec2str}},
+                        {{ source.q_required | dec2str }},
                         {{ source.preserve | lower }});
+                {% endfor %}
+                {% for attrib_id, req in recipe.attribs.items() %}
+                    addRecipeAttrib(
+                        recipeCounter,
+                        {{ attrib_id }},
+                        "{{ req.attrib.name }}",
+                        {{ req.val | dec2str }});
                 {% endfor %}
             {% endfor %}
 

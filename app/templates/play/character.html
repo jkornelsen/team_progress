@@ -109,7 +109,7 @@
 
     <h2>Inventory Items</h2>
     <ul>
-        {% for owned in current.items if not owned.slot %}
+        {% for owned in current.items.values() if not owned.slot %}
             {% set item = owned.item %}
             {% set link = url_for('play_item', item_id=item.id, char_id=current.id) %}
             {% set letter = link_letters.next(link) %}
@@ -132,10 +132,10 @@
 
     <h2>Attributes</h2>
     <ul>
-        {% for attrib, attrib_val in current.attribs.items() %}
-            <li>{{ attrib.name }}
-                {% if attrib_val != 1 %}
-                    {{ attrib_val | dec2str }}
+        {% for attrib_of in current.attribs.values() %}
+            <li>{{ attrib_of.attrib.name }}
+                {% if attrib_of.val != 1 %}
+                    {{ attrib_of.val | dec2str }}
                 {% endif %}
             </li>
         {% else %}

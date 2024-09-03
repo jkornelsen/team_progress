@@ -14,6 +14,23 @@ tables_to_create = {
 }
 logger = logging.getLogger(__name__)
 
+class AttribOf:
+    """Attribute of Item or Character class object."""
+    def __init__(self, attrib=None, attrib_id=None, val=0):
+        if attrib is not None:
+            self.attrib = attrib
+        elif attrib_id is not None:
+            self.attrib = Attrib(attrib_id)
+        else:
+            self.attrib = Attrib()
+        self.val = val
+
+    @classmethod
+    def from_json(cls, data):
+        return cls(
+            attrib_id=data.get(attrib_id, 0),
+            val=data.get(value, 0.0))
+
 class Attrib(Identifiable):
     """Stat or state or other type of attribute for a character or item.
     Examples: Perception, XP, Max HP, Current HP, Poisoned
@@ -52,12 +69,12 @@ class Attrib(Identifiable):
     @classmethod
     def data_for_file(cls):
         logger.debug("data_for_file()")
-        data = cls.execute_select("""
+        rows = cls.execute_select("""
             SELECT *
             FROM {table}
             WHERE game_token = %s
         """, (g.game_token,))
-        instances = [cls.from_json(vars(dat)) for dat in data]
+        instances = [cls.from_json(vars(row)) for row in rows]
         return instances
 
     @classmethod
@@ -67,13 +84,13 @@ class Attrib(Identifiable):
             id_to_get = 0
         else:
             id_to_get = int(id_to_get)
-        data = cls.execute_select("""
+        row = cls.execute_select("""
             SELECT *
             FROM {table}
             WHERE game_token = %s
                 AND id = %s
         """, (g.game_token, id_to_get), fetch_all=False)
-        instance = cls.from_json(vars(data))
+        instance = cls.from_json(vars(row))
         return instance
 
     def configure_by_form(self):

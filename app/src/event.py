@@ -181,20 +181,20 @@ class Event(Identifiable):
                     attriblist = instance.changed_attrs
                 attriblist.append(Attrib(attrib_data.attrib_id))
         # Get event data with trigger relation data
-        triggers_data = cls.execute_select("""
+        triggers_rows = cls.execute_select("""
             SELECT *
             FROM event_triggers
             WHERE game_token = %s
         """, values)
-        for trigger_data in triggers_data:
-            logger.debug("trigger_data %s", trigger_data)
-            instance = instances.get(trigger_data.event_id)
+        for trigger_row in triggers_rows:
+            logger.debug("trigger_row %s", trigger_row)
+            instance = instances.get(trigger_row.event_id)
             if not instance:
                 raise Exception(
                     f"Could not get instance for event id {event_data.id}")
             instance.triggers.append(
-                Item(trigger_data.item_id) if trigger_data.item_id
-                else Location(trigger_data.loc_id) if trigger_data.loc_id
+                Item(trigger_row.item_id) if trigger_row.item_id
+                else Location(trigger_row.loc_id) if trigger_row.loc_id
                 else None)
         # Print debugging info
         logger.debug(f"found %d events", len(instances))
@@ -212,7 +212,7 @@ class Event(Identifiable):
         else:
             id_to_get = int(id_to_get)
         # Get all event data
-        events_data = cls.execute_select("""
+        events_rows = cls.execute_select("""
             SELECT *
             FROM {table}
             WHERE game_token = %s
@@ -220,10 +220,10 @@ class Event(Identifiable):
         """, (g.game_token,))
         g.game_data.events = []
         current_data = MutableNamespace()
-        for evt_data in events_data:
-            if evt_data.id == id_to_get:
-                current_data = evt_data
-            g.game_data.events.append(Event.from_json(evt_data))
+        for event_row in events_rows:
+            if event_row.id == id_to_get:
+                current_data = event_row
+            g.game_data.events.append(Event.from_json(event_row))
         # Get all attrib data and the current event's attrib relation data
         tables_rows = cls.select_tables("""
             SELECT *
@@ -298,7 +298,7 @@ class Event(Identifiable):
     @classmethod
     def load_triggers_for_loc(cls, loc_id):
         logger.debug("load_triggers_for_loc()")
-        events_data = cls.execute_select("""
+        events_rows = cls.execute_select("""
             SELECT {table}.*
             FROM event_triggers
             INNER JOIN {table}
@@ -308,8 +308,8 @@ class Event(Identifiable):
                 AND event_triggers.loc_id = %s
         """, (g.game_token, loc_id))
         g.game_data.events = []
-        for evt_data in events_data:
-            g.game_data.events.append(Event.from_json(evt_data))
+        for event_row in events_rows:
+            g.game_data.events.append(Event.from_json(event_row))
         return g.game_data.events
 
     def configure_by_form(self):

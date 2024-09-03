@@ -52,15 +52,6 @@ class AttribReq:
         self.val = new_val
         self.entity = None  # entity that fulfills the requirement
 
-    def to_json(self):
-        return [self.attrib.id, self.val]
-
-    @classmethod
-    def from_json(cls, data):
-        # Expects a JSON array which is deserialized into a Python list
-        instance = cls(data[0], data[1])
-        return instance
-
 class Recipe(DbSerializable):
     def __init__(self, new_id=0, item=None):
         self.id = int(new_id)  # only unique for a particular item
@@ -69,7 +60,7 @@ class Recipe(DbSerializable):
         self.rate_duration = 3.0  # seconds for a batch
         self.instant = False
         self.sources = []  # Source objects
-        self.attribs = []  # AttribReq objects
+        self.attribs = {}  # AttribReq objects keyed by attr id
 
     def to_json(self):
         return {
@@ -79,7 +70,9 @@ class Recipe(DbSerializable):
             'rate_duration': self.rate_duration,
             'instant': self.instant,
             'sources': [source.to_json() for source in self.sources],
-            'attribs': [req.to_json() for req in self.attribs]}
+            'attribs': {attrib_id: req.val
+                for attrib_id, req in self.attribs}
+            }
 
     @classmethod
     def from_json(cls, data, item_produced=None):
@@ -94,9 +87,9 @@ class Recipe(DbSerializable):
         instance.sources = [
             Source.from_json(src_data)
             for src_data in data.get('sources', [])]
-        instance.attribs = [
-            AttribReq.from_json(src_data)
-            for src_data in data.get('attribs', [])]
+        instance.attribs = {
+            attrib_id: AttribReq(attrib_id, val)
+            for attrib_id, val in data.get('attribs', {}).items()}
         return instance
 
     def json_to_db(self, doc):
@@ -128,11 +121,10 @@ class Recipe(DbSerializable):
         if doc['attribs']:
             logger.debug("attribs: %s", doc['attribs'])
             values = []
-            for req in doc['attribs']:
+            for attrib_id, attrib_val in doc['attribs'].items():
                 values.append((
                     g.game_token, doc['item_id'], self.id,
-                    req.attrib_id,
-                    req.attrib_val
+                    attrib_id, attrib_val
                     ))
             self.insert_multiple(
                 "recipe_attribs",
@@ -152,10 +144,10 @@ class Item(Identifiable, Pile):
         # but general storage can still be used for other types if needed.
         self.storage_type = Storage.UNIVERSAL
         self.toplevel = False if len(self.get_list()) > 1 else True
-        self.attribs = {}  # Attrib objects and their stat val
+        self.attribs = {}  # AttribOf objects keyed by attrib id
         self.recipes = []  # list of Recipe objects
         self.q_limit = 0.0  # limit the quantity if not 0
-        self.pile = self  # for Progress
+        self.pile = self
         self.progress = Progress(container=self)  # for general storage
 
     def to_json(self):
@@ -169,8 +161,8 @@ class Item(Identifiable, Pile):
                 recipe.to_json()
                 for recipe in self.recipes],
             'attribs': {
-                attrib.id: val
-                for attrib, val in self.attribs.items()},
+                attrib_id: attrib_of.val
+                for attrib_id, attrib_of in self.attribs.items()},
             'q_limit': self.q_limit,
             'quantity': self.quantity,
             'progress': self.progress.to_json(),
@@ -186,7 +178,7 @@ class Item(Identifiable, Pile):
         instance.storage_type = data.get('storage_type', Storage.UNIVERSAL)
         instance.toplevel = data.get('toplevel', False)
         instance.attribs = {
-            Attrib(int(attrib_id)): val
+            attrib_id: AttribOf(attrib_id=attrib_id, val=val)
             for attrib_id, val in data.get('attribs', {}).items()}
         instance.q_limit = data.get('q_limit', 0.0)
         instance.quantity = data.get('quantity', 0.0)
@@ -349,76 +341,9 @@ class Item(Identifiable, Pile):
             recipe_data = recipes_data.setdefault(
                 row_recipe.recipe_id, row_recipe)
             if row_recipe_attrib.attrib_id:
-                recipe_data.setdefault('attribs', []).append(row_recipe_attrib)
+                recipe_data.setdefault('attribs', {}
+                    )[row_recipe_attrib.attrib_id] = row_recipe_attrib.value
         return item_recipes_data
-
-    @classmethod
-    def assign_pile(cls, item, chars, loc):
-        logger.debug("item id %d type %s", item.id, item.storage_type)
-        pile = item
-        pile.container = item
-        if item.storage_type == Storage.CARRIED:
-            # Select a char at this loc who owns one
-            for char in chars:
-                for owned_item in char.items:
-                    if (owned_item.item.id == item.id
-                            and owned_item.quantity != 0):
-                        pile = owned_item
-                        pile.container = char
-                        logger.debug("assigned ownedItem from %s qty %.1f", 
-                            owned_item.container.name, pile.quantity)
-        elif item.storage_type == Storage.LOCAL:
-            # Select an itemAt for this loc
-            for item_at in loc.items:
-                if (item_at.item.id == item.id
-                        and item_at.quantity != 0):
-                    pile = item_at
-                    pile.container = loc
-                    logger.debug("assigned itemAt from %s qty %.1f", 
-                        item_at.container.name, pile.quantity)
-        elif item.storage_type == Storage.UNIVERSAL:
-            if pile.quantity == 0:
-                # Use the item in general storage
-                pile = item
-                pile.container = item
-                logger.debug(f"assigned general storage qty %.1f",
-                    pile.quantity)
-        return pile
-
-    @classmethod
-    def load_piles_for_sources(cls, current_obj, owner_char_id, at_loc_id):
-        """Assign a pile from this location or char inventory
-        that can be used for each recipe source.
-        Also find chars or items that meet recipe attrib requirements.
-        """
-        logger.debug(f"{cls.__name__}.load_piles_for_sources()")
-        from .character import Character
-        from .location import Location
-        chars = []
-        loc = Location()
-        if owner_char_id and not at_loc_id:
-            # Get current loc of char
-            chars = Character.load_piles(owner_char_id)
-            char = next(iter(chars), Character(owner_char_id))
-            at_loc_id = char.location.id if char.location else 0
-        if at_loc_id:
-            # Get items for all chars at this loc
-            chars = Character.load_piles(loc_id=at_loc_id)
-            # Get all items at this loc
-            loc = Location.load_piles(at_loc_id)
-        # Assign the most appropriate pile
-        for recipe in current_obj.recipes:
-            for source in recipe.sources:
-                source.pile = cls.assign_pile(source.item, chars, loc)
-            # Look for entities to meet attrib requirements
-            for req in recipe.attribs:
-                for char in chars:
-                    if char.attribs[req.attrib_id] >= req.attrib_val:
-                        req.entity = char
-                for item in g.game_data.items:
-                    if item.attribs[req.attrib_id] >= req.attrib_val:
-                        req.entity = item
-        current_obj.pile = cls.assign_pile(current_obj, chars, loc)
 
     @classmethod
     def data_for_file(cls):
@@ -435,8 +360,8 @@ class Item(Identifiable, Pile):
         tables_rows = cls.db_attrib_data()
         for attrib_data, item_attrib_data in tables_rows:
             instance = instances[item_attrib_data.item_id]
-            attrib_obj = Attrib(attrib_data.id)
-            instance.attribs[attrib_obj] = item_attrib_data.value
+            attrib_of = AttribOf.from_json(item_attrib_data)
+            instance.attribs[attrib_data.id] = attrib_of
         # Get source data for items
         item_recipes_data = cls.db_recipe_data()
         for item_id, recipes_data in item_recipes_data.items():
@@ -449,7 +374,7 @@ class Item(Identifiable, Pile):
             if recipe_id:
                 instance.progress.recipe = next(
                     (recipe for recipe in instance.recipes
-                     if recipe.id == recipe_id), Recipe(item=instance))
+                    if recipe.id == recipe_id), Recipe(item=instance))
         # Print debugging info
         logger.debug("found %d items", len(instances))
         for instance in instances.values():
@@ -500,13 +425,13 @@ class Item(Identifiable, Pile):
         populated_objs = {}
         for partial_attrib, val in current_obj.attribs.items():
             attrib = Attrib.get_by_id(partial_attrib.id)
-            populated_objs[attrib] = val
+            populated_objs[attrib.id] = AttribOf(attrib, val=val)
         current_obj.attribs = populated_objs
         for recipe in current_obj.recipes:
             for source in recipe.sources:
                 source.item = Item.get_by_id(source.item.id)
-            for req in recipe.attribs:
-                req.attrib = Attrib.get_by_id(req.attrib.id)
+            for attrib_id, req in recipe.attribs.items():
+                req.attrib = Attrib.get_by_id(attrib_id)
         # Print debugging info
         logger.debug(f"found %d recipes", len(current_obj.recipes))
         #if len(current_obj.recipes):
@@ -531,50 +456,14 @@ class Item(Identifiable, Pile):
         logger.debug("data_for_play(%s, %s, %s)",
             id_to_get, owner_char_id, at_loc_id)
         current_obj = cls.data_for_configure(id_to_get)
-        # Get all character and location names
+        # Get all needed character and location names
         from .game_data import GameData
-        from .character import Character
         from .location import Location
         GameData.entity_names_from_db([Location])
         Location.load_characters_at_loc(at_loc_id)
-        # Get piles at this loc or char that can be used for sources
-        cls.load_piles_for_sources(current_obj, owner_char_id, at_loc_id)
-        # Get item data for the specific container
-        if default_pile:
-            pile_type = current_obj.storage_type
-        elif current_obj.storage_type == Storage.CARRIED and owner_char_id:
-            pile_type = Storage.CARRIED
-        elif current_obj.storage_type == Storage.LOCAL and at_loc_id:
-            pile_type = Storage.LOCAL
-        elif owner_char_id:
-            pile_type = Storage.CARRIED
-        elif at_loc_id:
-            pile_type = Storage.LOCAL
-        else:
-            pile_type = Storage.UNIVERSAL
-        logger.debug("pile_type=%s", pile_type)
-        container = current_obj
-        pile = current_obj
-        if default_pile:
-            pile = current_obj.pile
-            container = pile.container
-        elif pile_type == Storage.CARRIED and owner_char_id:
-            from .character import OwnedItem
-            container = Character.data_for_configure(owner_char_id)
-            pile = next(
-                (ownedItem for ownedItem in container.items
-                if ownedItem.item.id == current_obj.id),
-                OwnedItem(current_obj))
-        elif pile_type == Storage.LOCAL and at_loc_id:
-            from .location import ItemAt
-            container = Location.data_for_configure(at_loc_id)
-            pile = next(
-                (itemAt for itemAt in container.items
-                if itemAt.item.id == current_obj.id),
-                ItemAt(current_obj))
-        container.pile = pile
-        pile.item = current_obj
-        pile.container = container
+        # Get item data for the specific container,
+        # and get piles at this loc or char that can be used for sources
+        _load_piles(current_obj, owner_char_id, at_loc_id, default_pile)
         # Get relation data for items that use this item as a source
         item_recipes_data = cls.db_recipe_data(id_to_get, get_by_source=True)
         for item_id, recipes_data in item_recipes_data.items():
@@ -583,7 +472,7 @@ class Item(Identifiable, Pile):
             item.recipes = [
                 Recipe.from_json(recipe_data, item)
                 for recipe_id, recipe_data in recipes_data.items()]
-        return current_obj, container
+        return current_obj
 
     def configure_by_form(self):
         if 'save_changes' in request.form:  # button was clicked
@@ -629,17 +518,18 @@ class Item(Identifiable, Pile):
                 for attrib_id in recipe_attrib_ids:
                     attrib_value = request_float(request,
                         f'recipe{recipe_id}_attrib{attrib_id}_value', 1.0)
-                    recipe.attribs.append((attrib_id, attrib_value))
+                    recipe.attribs[attrib_id] = AttribReq(
+                        attrib_id=attrib_id, val=attrib_value)
             attrib_ids = request.form.getlist('attrib_id')
             logger.debug("Attrib IDs: %s", attrib_ids)
             self.attribs = {}
             for attrib_id in attrib_ids:
                 attrib_val = request_float(request,
                     f'attrib{attrib_id}_val', 0.0)
-                attrib_obj = Attrib(attrib_id)
-                self.attribs[attrib_obj] = attrib_val
-            logger.debug("attribs: %s", {attrib.id: val
-                for attrib, val in self.attribs.items()})
+                self.attribs[attrib_id] = AttribOf(
+                    attrib_id=attrib_id, val=attrib_val)
+            logger.debug("attribs: %s", {attrib_id: attrib_of.val
+                for attrib_id, attrib_of in self.attribs.items()})
             self.to_db()
         elif 'delete_item' in request.form:
             try:
@@ -651,3 +541,102 @@ class Item(Identifiable, Pile):
             logger.debug("Cancelling changes.")
         else:
             logger.debug("Neither button was clicked.")
+
+def _load_piles(current_item, char_id, loc_id, default_pile):
+    """Assign a pile from this location or char inventory
+    for the current item and that can be used for each recipe source.
+    Also find chars or items that meet recipe attrib requirements.
+    """
+    logger.debug("load_piles()")
+    from .character import Character
+    from .location import Location
+    chars = []
+    loc = Location()
+    if char_id and not loc_id:
+        # Get current loc of char
+        chars = Character.load_piles(char_id)
+        char = next(iter(chars), Character(char_id))
+        loc_id = char.location.id if char.location else 0
+    if loc_id:
+        # Get items for all chars at this loc
+        chars = Character.load_piles(loc_id=loc_id)
+        # Get all items at this loc
+        loc = Location.load_piles(loc_id)
+    # Assign the most appropriate pile
+    current_item.pile = _assign_pile(
+        current_item, chars, loc, char_id, loc_id, default_pile)
+    for recipe in current_item.recipes:
+        for source in recipe.sources:
+            source.pile = _assign_pile(source.item, chars, loc)
+        # Look for entities to meet attrib requirements
+        for attrib_id, req in recipe.attribs.items():
+            for item in g.game_data.items:
+                attrib_of = item.attribs.get(attrib_id)
+                if attrib_of is not None and attrib_of.val >= req.val:
+                    req.entity = item
+            for char in chars:
+                attrib_of = char.attribs.get(attrib_id)
+                if attrib_of is not None and attrib_of.val >= req.val:
+                    req.entity = char
+
+def _assign_pile(current_item, chars, loc, char_id=0, loc_id=0,
+        default_pile=True):
+    logger.debug("item id %d type %s",
+        current_item.id, current_item.storage_type)
+    pile = None
+    if default_pile:
+        pile_type = current_item.storage_type
+    elif current_item.storage_type == Storage.CARRIED and char_id:
+        pile_type = Storage.CARRIED
+    elif current_item.storage_type == Storage.LOCAL and loc_id:
+        pile_type = Storage.LOCAL
+    elif char_id:
+        pile_type = Storage.CARRIED
+    elif loc_id:
+        pile_type = Storage.LOCAL
+    else:
+        pile_type = Storage.UNIVERSAL
+    logger.debug("pile_type %s", pile_type)
+    if pile_type == Storage.CARRIED:
+        # Select a char at this loc who owns one
+        for char in chars:
+            for owned_item_id, owned_item in char.items.items():
+                if (owned_item_id == current_item.id and
+                        (owned_item.quantity != 0 or not pile)):
+                    pile = owned_item
+                    pile.container = char
+                    logger.debug("assigned ownedItem from %s qty %.1f", 
+                        owned_item.container.name, pile.quantity)
+        if char_id and not pile:
+            from .character import Character, OwnedItem
+            char = next(
+                (ch for ch in chars if ch.id == char_id),
+                Character.data_for_configure(char_id))
+            pile = OwnedItem(current_item)
+            pile.container = char
+            logger.debug("assigned empty ownedItem from %s", 
+                pile.container.name)
+    elif pile_type == Storage.LOCAL:
+        # Select an itemAt for this loc
+        for item_at in loc.items:
+            if (item_at.item.id == current_item.id and
+                    (item_at.quantity != 0 or not pile)):
+                pile = item_at
+                pile.container = loc
+                logger.debug("assigned itemAt from %s qty %.1f", 
+                    item_at.container.name, pile.quantity)
+        if loc_id and not pile:
+            if loc.id != loc_id:
+                loc = Location.data_for_configure(loc_id)
+            from .location import ItemAt
+            pile = ItemAt(current_item)
+            pile.container = loc
+            logger.debug("assigned empty itemAt from %s", 
+                pile.container.name)
+    if not pile:
+        pile = current_item
+        pile.container = current_item
+        logger.debug(f"assigned general storage qty %.1f",
+            pile.quantity)
+    pile.container.pile = pile
+    return pile

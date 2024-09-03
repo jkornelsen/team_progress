@@ -122,9 +122,9 @@ class Location(Identifiable):
             values.append(id_to_get)
         query += "\nORDER BY name"
         chars = []
-        characters_data = cls.execute_select(query, values)
-        for char_data in characters_data:
-            chars.append(Character.from_json(char_data))
+        characters_rows = cls.execute_select(query, values)
+        for char_row in characters_rows:
+            chars.append(Character.from_json(char_row))
         if load:
             g.game_data.set_list(Character, chars)
         return chars
@@ -214,7 +214,7 @@ class Location(Identifiable):
         else:
             id_to_get = int(id_to_get)
         # Get all location data
-        locations_data = cls.execute_select("""
+        locations_rows = cls.execute_select("""
             SELECT *
             FROM {table}
             WHERE game_token = %s
@@ -222,19 +222,19 @@ class Location(Identifiable):
         """, (g.game_token,))
         g.game_data.locations = []
         current_data = MutableNamespace()
-        for loc_data in locations_data:
-            if loc_data.id == id_to_get:
-                current_data = loc_data
-            g.game_data.locations.append(Location.from_json(loc_data))
+        for loc_row in locations_rows:
+            if loc_row.id == id_to_get:
+                current_data = loc_row
+            g.game_data.locations.append(Location.from_json(loc_row))
         # Get the current location's destination data
-        loc_dest_data = cls.execute_select("""
+        loc_dest_rows = cls.execute_select("""
             SELECT *
             FROM loc_destinations
             WHERE game_token = %s
                 AND loc_id = %s
         """, (g.game_token, id_to_get))
         dests_data = {}
-        for row in loc_dest_data:
+        for row in loc_dest_rows:
             dests_data[row.dest_id] = row.distance
         current_data.destinations = dests_data
         # Get all item data and the current location's item relation data

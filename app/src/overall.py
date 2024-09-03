@@ -238,20 +238,20 @@ class Overall(DbSerializable):
                 loc_name=loc_data.name)
             character_list.append(row)
         logger.debug("character_list=%s", character_list)
-        item_data = cls.execute_select("""
+        item_rows = cls.execute_select("""
             SELECT id, name
             FROM items
             WHERE toplevel = TRUE
                 AND game_token = %s
         """, (g.game_token,))
-        event_data = cls.execute_select("""
+        event_rows = cls.execute_select("""
             SELECT id, name
             FROM events
             WHERE toplevel = TRUE
                 AND game_token = %s
         """, (g.game_token,))
         other_toplevel_entities = SimpleNamespace(
-            items=item_data, events=event_data)
+            items=item_rows, events=event_rows)
         from .user_interaction import UserInteraction  # avoid circular import
         interactions_list = UserInteraction.recent_interactions()
         instance = cls.from_db()

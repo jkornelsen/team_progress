@@ -14,6 +14,7 @@ import os
 import random
 import re
 import string
+import sys
 import uuid
 
 from database import get_db, close_db
@@ -31,9 +32,18 @@ from src.game_data import GameData
 from src.game_routes import set_routes as _set_game_routes
 from src.file import set_routes as _set_file_routes
 
-logging.basicConfig(
-    level=logging.DEBUG, 
-    format=('%(filename)s:%(lineno)d  %(message)s'))
+def set_up_logging():
+    file_handler = logging.FileHandler('app.log')
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(
+        logging.Formatter('%(filename)s:%(lineno)d  %(message)s'))
+    stdout_handler = logging.StreamHandler(sys.stdout)
+    stdout_handler.setLevel(logging.ERROR)
+    logging.basicConfig(
+        level=logging.DEBUG,
+        handlers=[file_handler, stdout_handler])
+
+set_up_logging()
 logger = logging.getLogger(__name__)
 
 with app.app_context():
