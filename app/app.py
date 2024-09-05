@@ -18,6 +18,10 @@ import sys
 import uuid
 
 from database import get_db, close_db
+from src.game_data import GameData
+from src.user_interaction import UserInteraction
+from src.file import set_routes as _set_file_routes
+from src.game_routes import set_routes as _set_game_routes
 
 app = Flask(__name__)
 app.config['TITLE'] = 'Team Progress'
@@ -25,12 +29,6 @@ app.config['SECRET_KEY'] = 'team-progress'
 app.config['DATA_DIR'] = 'data'
 app.config['UPLOAD_DIR'] = os.path.join(app.config['DATA_DIR'], 'uploads')
 app.config['TEMPLATES_AUTO_RELOAD'] = True  # set to False for production
-
-from src.user_interaction import UserInteraction
-from src.game_data import GameData
-
-from src.game_routes import set_routes as _set_game_routes
-from src.file import set_routes as _set_file_routes
 
 def set_up_logging():
     file_handler = logging.FileHandler('app.log')

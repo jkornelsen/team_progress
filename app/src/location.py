@@ -5,13 +5,14 @@ from .db_serializable import (
     Identifiable, MutableNamespace, coldef, tuple_to_pg_array)
 from .item import Item
 from .progress import Progress
-from .utils import Pile, Storage
+from .utils import Pile, Storage, request_bool
 
 tables_to_create = {
     'locations': f"""
         {coldef('id')},
         {coldef('name')},
         {coldef('description')},
+        masked boolean NOT NULL,
         dimensions integer[2]
     """
 }
@@ -40,12 +41,18 @@ class ItemAt(Pile):
         instance.position = tuple(data.get('position', (0, 0)))
         return instance
 
+class Destination:
+    def __init__(self, loc, distance):
+        self.loc = loc
+        self.distance = distance
+
 class Location(Identifiable):
     def __init__(self, new_id=""):
         super().__init__(new_id)
         self.name = ""
         self.description = ""
-        self.destinations = {}  # Location objects and their distance
+        self.masked = False
+        self.destinations = {}  # Destination objects keyed by loc id
         self.items = []  # ItemAt objects
         self.pile = ItemAt()  # for Progress
         self.progress = Progress(container=self)
@@ -55,9 +62,10 @@ class Location(Identifiable):
             'id': self.id,
             'name': self.name,
             'description': self.description,
+            'masked': self.masked,
             'destinations': {
-                str(dest.id): distance
-                for dest, distance in self.destinations.items()},
+                str(dest.loc.id): dest.distance
+                for dest in self.destinations.values()},
             'items': [
                 item_at.to_json()
                 for item_at in self.items],
@@ -70,8 +78,9 @@ class Location(Identifiable):
         instance = cls(int(data.get('id', 0)))
         instance.name = data.get('name', "")
         instance.description = data.get('description', "")
+        instance.masked = data.get('masked', False)
         instance.destinations = {
-            Location(int(dest_id)): distance
+            dest_id: Destination(Location(dest_id), distance)
             for dest_id, distance in data.get('destinations', {}).items()}
         instance.items = [
             ItemAt.from_json(item_data)
@@ -146,7 +155,7 @@ class Location(Identifiable):
         loc = None
         for loc_data, item_data in tables_rows:
             if not loc:
-                loc = cls.from_json(vars(loc_data))
+                loc = cls.from_json(loc_data)
             if item_data.item_id:
                 itemAt = ItemAt.from_json(item_data)
                 itemAt.container = cls.get_by_id(loc_data.id)
@@ -164,41 +173,37 @@ class Location(Identifiable):
     @classmethod
     def data_for_file(cls):
         logger.debug("data_for_file()")
-        query = """
+        # Get loc and destinations data
+        tables_rows = cls.select_tables("""
             SELECT *
             FROM {tables[0]}
             LEFT JOIN {tables[1]}
                 ON {tables[1]}.loc_id = {tables[0]}.id
                 AND {tables[1]}.game_token = {tables[0]}.game_token
-            LEFT JOIN {tables[2]}
-                ON {tables[2]}.loc_id = {tables[0]}.id
-                AND {tables[2]}.game_token = {tables[0]}.game_token
             WHERE {tables[0]}.game_token = %s
-        """
-        values = [g.game_token]
-        tables_rows = cls.select_tables(
-            query, values,
-            ['locations', 'loc_destinations', 'loc_items'])
+        """, [g.game_token], ['locations', 'loc_destinations'])
         instances = {}  # keyed by ID
-        for loc_data, dest_data, loc_item_data in tables_rows:
-            logger.debug("loc_data %s", loc_data)
-            logger.debug("dest_data %s", dest_data)
-            logger.debug("loc_item_data %s", loc_item_data)
-            instance = instances.get(loc_data.id)
-            if not instance:
-                instance = cls.from_json(vars(loc_data))
-                instances[loc_data.id] = instance
+        for loc_data, dest_data in tables_rows:
+            instance = instances.setdefault(
+                loc_data.id, cls.from_json(loc_data))
             if dest_data.dest_id:
                 instance.destinations[dest_data.dest_id] = dest_data.distance
-            if loc_item_data.item_id:
-                instance.items.append(ItemAt.from_json(loc_item_data))
+        # Get loc item data
+        item_rows = cls.execute_select("""
+            SELECT *
+            FROM loc_items
+            WHERE game_token = %s
+        """, [g.game_token])
+        for row in item_rows:
+            instance = instances[row.loc_id]
+            instance.items.append(ItemAt.from_json(row))
         # Replace IDs with partial objects
         for instance in instances.values():
-            loc_objs = {}
+            dest_objs = {}
             for dest_id, distance in instance.destinations.items():
-                loc_obj = Location(dest_id)
-                loc_objs[loc_obj] = distance
-            instance.destinations = loc_objs
+                dest_obj = Destination(Location(dest_id), distance)
+                dest_objs[dest_id] = dest_obj
+            instance.destinations = dest_objs
         # Print debugging info
         logger.debug("found %d locations", len(instances))
         for instance in instances.values():
@@ -256,11 +261,8 @@ class Location(Identifiable):
         # Create item from data
         current_obj = Location.from_json(current_data)
         # Replace partial objects with fully populated objects
-        populated_objs = {}
-        for partial_item, distance in current_obj.destinations.items():
-            loc = Location.get_by_id(partial_item.id)
-            populated_objs[loc] = distance
-        current_obj.destinations = populated_objs
+        for dest_id, dest in current_obj.destinations.items():
+            dest.loc = Location.get_by_id(dest_id)
         for item_at in current_obj.items:
             item_at.item = Item.get_by_id(item_at.item.id)
         return current_obj
@@ -281,13 +283,14 @@ class Location(Identifiable):
                 entity_list.append(self)
             self.name = request.form.get('location_name')
             self.description = request.form.get('location_description')
+            self.masked = request_bool(request, 'masked')
             destination_ids = request.form.getlist('destination_id[]')
             destination_distances = request.form.getlist('destination_distance[]')
             self.destinations = {}
             for dest_id, dest_dist in zip(
                     destination_ids, destination_distances):
-                dest_location = Location(int(dest_id))
-                self.destinations[dest_location] = int(dest_dist)
+                self.destinations[dest_id] = Destination(
+                    Location(dest_id), int(dest_dist))
             item_ids = request.form.getlist('item_id[]')
             item_qtys = request.form.getlist('item_qty[]')
             self.items = []
@@ -307,6 +310,3 @@ class Location(Identifiable):
             logger.debug("Cancelling changes.")
         else:
             logger.debug("Neither button was clicked.")
-
-    def distance(self, other_location):
-        return self.destinations.get(other_location, -1)

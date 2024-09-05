@@ -1,7 +1,4 @@
-networked web game
-
-various scenarios to start the board
-partially procedurally generated,
+partially procedurally generated scenarios
 use lists like those found in tabletop rpg books,
 only with different kinds of items, such as paperclips
 choose goal
@@ -12,19 +9,10 @@ gamemaster could research beforehand as well as possibly some setup
 source more scenarios from community
 perhaps submit to github via enhancement requests
 optionally sort scenarios based on popularity
-keep track of scenarios played by a game token with at least 10 interactions
 
-no matter what the scenario, there will be a list of the following entities:
-    overall -- scenario description and win requirements
-    items -- can be used; variety of types such as upgrades, sources
-    locations -- e.g. first room to the north
-    characters -- player or npc, with select box to specify "user 1" etc
-    events -- e.g. axe breaks; random chance that can occur once per second during action
-    attributes -- e.g. 100 max hp; also states such as poisoned or 20 hp left
+characters -- select box to specify "user 1" etc
 
 entity classes might have superclasses for partially shared behavior
-    items and characters have progress
-    items and locations can both have a position, such as inside another one
 
 action could be an event, or whatever was the most recent item interacted
 with for a particular character, even if the action is finished
@@ -61,29 +49,7 @@ maybe to get something working, it would be better to change to Solo Progress
 socket.io (e.g. Flask-SocketIO) is another tech often mentioned for
 synching between multiple players, like Scribbl.io
 
-db.collection.create_index("expiry_time", expireAfterSeconds=<time_in_seconds>)
-maybe for firebase, keep track of how long it's been since a clean has been done
-once per day, clean up data for game tokens that haven't been played recently
-keep data for 1 week?
-maybe when on the game setup screen, check if cleaning needs to be done,
-and if so, post a message when it's done, like saving to file
-prompt each player to save to their PC once per day
-
-perhaps the database is only needed for persistence
-or maybe store the game with JSON rather than in a database
-store client-side in browser with downloadable JSON?
-would that work for multiplayer?
-
-source of resources: obtained from activities in forest which can be
-unlimited, regenerates periodically, or fixed limit.
-if unlimited, it's equivalent to saying magically produced by an activity,
-so we don't actually have a source?
-a particular location or crafing station can be required
-the action stops if requirement is no longer met
-resources could be purchased
-realistic would be to start with a debt and eventually break even and better
-but can choose to make it easy and simply be given lots of money or resources to start
-fixed limit could be used to give an endpoint to the game
+prompt each player to save to their PC occasionally
 
 global stop button on overview screen
 
@@ -93,137 +59,39 @@ could do this in configure
 gain all instant could be more convenient than entering e.g. 9999 batches
 maybe a button or 0 for number of batches, or "(A)ll"
 
-materials versus contained items
-for example, a wooden box requires planks and nails to build, but could contain clothes.
-only locations need to contain things, and a wooden box could be a location
-    it may still be possible to build a location, perhaps by brute force with an event
-    we could manufacture a wooden box item, then destroy it and create the unique location
-characters (players and npcs) could also contain (i.e. wear or hold) items
-
 can move items from owned/carried to general storage
-the difference is whether the game tracks location
-so general storage boils down to less automation
-buttons Drop (to Location), Put in General Storage, Transfer to Char
 input quantity to transfer
 overview shows general storage
-
-location required is wherever the source item is found
-that is, if pigs are located in a sty,
-and bacon requires pigs,
-then everything needed for making bacon must be in the same location,
-including a character
-a station is a required item on the floor at a location
-if nothing required is at a specific location, then use general storage
-"floor" means not carried -- could be thought of as e.g. on a shelf
 
 first check if source item is carried,
 then if on floor,
 and finally, if in general storage
 deduct whichever is found first
-might be tricky if say 5 are required,
-and two are held and three are on floor,
-to draw from both,
-but it might be fine to just fail in that case,
-and require the character to either pick up three or drop two.
-also output to that same place.
-if different source items are in different places,
-then again follow that order -- if any are carried,
-then that's the output, otherwise floor, otherwise general.
+if say 5 are required, two are held and three are on floor,
+then require the character to either pick up three or drop two
 
-items could be categorized by source type
-carried -- can be moved to general storage but not used as material from there
-local -- can only be on floor
-universal -- cannot be held in character inventory -- picking up goes to general storage
-radio buttons: <p>Storage:</p>
-() Use when carried
-() Resides at location
-() Accessible anywhere
-
-instead of requiring specific characters to be present to produce item,
-or requiring identifying attributes such as "Is Hank" > 0,
-use descriptive attributes such as "Is Adult Traveler" > 0.
 display all entities that meet the attr requirement
-what does it mean to be present on the item play screen, especially in
-general storage?
-characters need to be in the same location
-general storage is a wildcard, matching any location
-so we don't need to specify location on item screen
 
-clicking on an item in a location screen brings up
-the item play screen for the stack at that particular location
-if it's a source then a produced item can then be clicked
-produced item play screen shows two locations to select from,
-either general storage or the location most recently viewed
-record the most recently viewed for each client browser
-viewing a character would set this value to that character's inventory
-
-this would mean that clicking top level items only displays general storage
-
-an item in a character's inventory when the character is not at a location
-can be used with general storage?
-the only difference would be that it is considered carried,
-in case the item is marked as having that requirement
-maybe if there are multiple characters with the needed item,
-pop up an error, saying to move the character to a location
-if we're viewing a location, then the character should be at that location
-of course there could be multiple such matches
-
-inventory of a specific character could be a third option on the play screen
-only the last viewed character would be selectable
-items at the same location as the character would also qualify,
-as of course would general storage
-whereas items of the same type held by other characters would be ignored
-
-so in summary, an item recipe requirement is either another item or an attr
-attrs match either characters or more items
-items and characters must be in the same location in order to be used
-everything must either be in one location (including characters there),
-or one character inventory (plus items on floor at that character's location)
-items in general storage can be used with the other options or independently,
-unless specified as must be carried or must be on floor
-
-steers must be on floor
-pigs producing more pigs should end up on floor
-stove located in the kitchen so must also be on floor
-
-Suzy's knife must be carried
-[but at location seems good enough;
-we can still imagine she would pick it up from the floor to use it]
-bacon, raw or otherwise, can be stored anywhere,
-but will end up in Suzy's inventory
-[when the raw bacon is picked up?
-sounds awkward; expected play would be directly to inventory],
-and the cooked bacon will be in that same place since
-we will view it starting from Suzy's inventory
-
-cooked bacon should end up in character inventory
-a printed page could stay at that location because requirements are the printer
-whereas if Suzy must use a knife, the output would go to her inventory
-
-items all share the same limit?
-might want to fill large water tank with buckets
-but that could make it too complicated
-
-locations can be top level or not,
-and location play screen lists clickable destinations
-
-in many scenarios, no items are top-level, but rather locations,
+in some scenarios, no items are top-level, but rather locations,
 perhaps a backpack or chest,
 and clicking on it would show its contents.
 a room could serve this purpose as well, containing npcs for example.
 but general storage top-level items should show on overview screen
 such as for the Pen Factory scenario
 
-dialog via item sources
-show sources in overview instead of the produced items
-checkbox to mask if 0 -- replace all non-spaces with "*"
+checkbox to mask items until gained or while none
+replace all non-spaces with "*" or "?"
+description "(hidden -- produce or find to reveal)"
+dialog via masked item sources
+yes or no choice would consume a source
 
-sales can increase in complexity, adding stores and store management
-NPCs can work at stores
-items of a single name are unique
-so if we want multiple stores, make "store 1", "store 2"
-could also divide money into "store 1 money" and "general money"
-    and they could require each other to allow transfers
+mask characters we haven't met yet
+those not marked as maskable are the starting set
+go to location to unmask all characters there
+
+checkbox to hide events on config screen would be useful for gamemaster
+
+remember last used setting when adding new items
 
 stamina points
 train stamina by swimming in pool
@@ -482,13 +350,6 @@ but speed could make it so can move two at a time
 compared to another character's one at a time
 arrow buttons to change position
 
-a single player could open two tabs
-one to move character and another to see location change
-
-a particular item with quantity in a place,
-where there could be several stacks in different places
-a many-to-many relationship with item and either location or character
-
 randomly populate room with items to pick up
 by selecting items from a list of all items on location config screen
 for example 0 to 10 items
@@ -499,11 +360,6 @@ maybe also randomly populate with monsters
 
 location config screen would list all items and their positions and quantities
 could remove one at a position, or all at location
-
-not as interesting to see total time spent on this action across starts/stops
-for now, let's eliminate it
-race scenarios would need more than that anyway,
-as each character would need their own time
 
 prompt before overwriting another action in progress
 such as if a character is already doing something else
@@ -534,18 +390,28 @@ is exciting but can also feel like being tied up
 
 ---- scenarios ----
 
-explore scenarios page
-dropdown list selectable by their title
-selecting one shows its description,
-and the count of each type of entry -- "Starting Setup: "
-if zero entities, display "This scenario comes with no entities,
-so you would need to set up everything."
-when "Load Scenario" is pressed, load from JSON into database
-warn that this will erase any scenario currently being played, so save first,
-which would download a JSON file
+show count of each type of entry -- "Starting Setup: "
+warn that this will erase any scenario currently being played, so save first
 
-scenario: Blank
-The first item in the list is the default empty scenario.
+scenario: Growing Up
+classes cost money but gain knowledge and grades
+start with savings or go into debt for college
+work odd jobs and eventually get a decent paying job
+buy a house
+
+scenario: Traditional RPG Campaign
+For example, start in a town and later visit a woods or dungeon,
+fighting enemies based on character stats.
+While this is perhaps the most obvious way to play the game
+for people who are familiar with D&D,
+the game is intended to allow for a wide variety of scenarios.
+melee attacks require melee range
+
+scenario: Dating with a Matchmaker
+Romance is highly dependent on your personal morals,
+so customize it based on that.
+The default setup will aim for morals that most people should
+find acceptable, at the risk of feeling too tame.
 
 scenario: Pen Factory
 This is a complete, fully playable scenario,
@@ -566,29 +432,6 @@ For example, automobiles of perhaps a new or sci-fi kind, such as walkers like o
 Or run a restaurant with sandwiches, pies or pizzas.
 currency name: credits
 While this is one of the more obvious ways to play the game,
-the game is intended to allow for a wide variety of scenarios,
-not just this type.
-
-scenario: Bacon for Dinner
-This is a complete, fully playable scenario,
-although it could easily be extended.
-pigs require pigs as source, 2 => 3.
-if less than 2, then will have to earn money doing farm chores in
-order to get enough to buy another pig.
-requires minimum 2 pigs to win
-so multiple sources will be required.
-phone is an item, or at least an event
-Mom is also included from the start
-
-scenario: Breed Livestock
-Offspring have event-based chances to inherit or get new traits.
-Could also grow crops on the same farm.
-
-scenario: Traditional RPG Campaign
-For example, start in a town and later visit a woods or dungeon,
-fighting enemies based on character stats.
-While this is perhaps the most obvious way to play the game
-for people who are acquainted with the D&D genre,
 the game is intended to allow for a wide variety of scenarios,
 not just this type.
 
@@ -614,6 +457,18 @@ The problem is clear, but you'll need to decide how to solve it.
 Chop down trees to build a raft, or swim across (might want to practice first),
 or build a bridge, or look for vines.
 
+scenario: Breed Livestock
+Offspring have event-based chances to inherit or get new traits.
+Could also grow crops on the same farm.
+
+scenario: Franchise
+sales can increase in complexity, adding stores and store management
+NPCs can work at stores
+items of a single name are unique
+so if we want multiple stores, make "store 1", "store 2"
+could also divide money into "store 1 money" and "general money"
+    and they could require each other to allow transfers
+
 scenario: Empire
 Attempt to take over the world, or at least a significant part of it.
 Develop technology and build resources along the way, or simply start attacking.
@@ -628,12 +483,6 @@ Try an inspiring slogan to gain popularity, such as: Change for a brighter futur
 Set up by default for lighthearted play,
 but this could be configured for serious, real-world political parties,
 social and economic issues.
-
-scenario: Dating with a Matchmaker
-Romance is highly dependent on your personal morals,
-so customize it based on that.
-The default setup will aim for morals that most people should
-find acceptable, at the risk of feeling too tame.
 
 scenario: Hospital
 For those who have watched medical drama tv shows, this should be straightforward.
@@ -659,8 +508,7 @@ Have a certain goal to fix, something that went wrong.
 
 scenario: Race
 Perhaps horse racing or a triathalon.
-Track the distance of each competitor during the race to see who's ahead,
-and make use of the elapsed time displayed by the game.
+Track the distance of each competitor during the race to see who's ahead.
 
 scenario: Furniture
 Play a sofa whose goal is to get people to relax on its cushions.

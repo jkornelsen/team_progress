@@ -1,5 +1,6 @@
 from flask import g
 import logging
+import psycopg2
 from psycopg2.extras import RealDictCursor, execute_values
 from types import SimpleNamespace
 
@@ -21,8 +22,6 @@ def coldef(which):
         return "name varchar(255) NOT NULL"
     elif which == 'description':
         return "description text"
-    elif which == 'toplevel':
-        return "toplevel boolean NOT NULL"
     else:
         raise Exception(f"Unexpected coldef type '{which}'")
 

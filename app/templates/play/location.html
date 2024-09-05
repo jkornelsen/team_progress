@@ -73,15 +73,19 @@
 
     <h2>Neighboring Locations</h2>
     <ul>
-        {% for destination, distance in current.destinations.items() %}
-            {% set link = url_for('play_location', loc_id=destination.id) %}
-            {% set letter = link_letters.next(link) %}
-            <script>
-                linkForKey['{{ letter }}'] = "{{ link }}";
-            </script>
-            <span>[{{ letter }}]</span>
-            <a href="{{ link }}">{{ destination.name }}</a> —
-            Distance {{ distance | dec2str }}<br>
+        {% for dest in current.destinations.values() %}
+            {% if dest.loc.masked %}
+                (Unvisited)
+            {% else %}
+                {% set link = url_for('play_location', loc_id=dest.loc.id) %}
+                {% set letter = link_letters.next(link) %}
+                <script>
+                    linkForKey['{{ letter }}'] = "{{ link }}";
+                </script>
+                <span>[{{ letter }}]</span>
+                <a href="{{ link }}">{{ dest.loc.name }}</a>
+            {% endif %}
+            — Distance {{ dest.distance | dec2str }}<br>
         {% else %}
             <p>(None)</p>
         {% endfor %}

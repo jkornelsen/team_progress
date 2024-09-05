@@ -48,7 +48,8 @@
                 "stop_time": null
             },
             "quantity": 0.0,
-            "toplevel": true
+            "toplevel": true,
+            "masked": false
         },
         {
             "attribs": {
@@ -69,7 +70,8 @@
                 "stop_time": null
             },
             "quantity": 0.0,
-            "toplevel": true
+            "toplevel": true,
+            "masked": false
         },
         {
             "attribs": {
@@ -90,7 +92,8 @@
                 "stop_time": null
             },
             "quantity": 0.0,
-            "toplevel": false
+            "toplevel": false,
+            "masked": true
         }
     ],
     "events": [
@@ -157,7 +160,8 @@
             "quantity": 0.0,
             "recipes": [],
             "storage_type": "local",
-            "toplevel": false
+            "toplevel": false,
+            "masked": true
         },
         {
             "attribs": {},
@@ -194,7 +198,8 @@
                 }
             ],
             "storage_type": "universal",
-            "toplevel": false
+            "toplevel": false,
+            "masked": false
         },
         {
             "attribs": {},
@@ -231,7 +236,8 @@
                 }
             ],
             "storage_type": "universal",
-            "toplevel": false
+            "toplevel": false,
+            "masked": false
         },
         {
             "attribs": {},
@@ -266,7 +272,8 @@
                 }
             ],
             "storage_type": "carried",
-            "toplevel": false
+            "toplevel": false,
+            "masked": false
         },
         {
             "attribs": {},
@@ -285,7 +292,8 @@
             "quantity": 0.0,
             "recipes": [],
             "storage_type": "carried",
-            "toplevel": false
+            "toplevel": false,
+            "masked": false
         },
         {
             "attribs": {},
@@ -304,7 +312,8 @@
             "quantity": 0.0,
             "recipes": [],
             "storage_type": "carried",
-            "toplevel": false
+            "toplevel": false,
+            "masked": false
         },
         {
             "attribs": {},
@@ -354,7 +363,8 @@
                 }
             ],
             "storage_type": "local",
-            "toplevel": false
+            "toplevel": false,
+            "masked": false
         },
         {
             "attribs": {},
@@ -394,16 +404,19 @@
                 }
             ],
             "storage_type": "carried",
-            "toplevel": false
+            "toplevel": false,
+            "masked": false
         }
     ],
     "locations": [
         {
+            "id": 3,
+            "name": "Uncle's Farm",
             "description": "Suzy's uncle is okay with her butchering pigs from time to time.",
+            "masked": true,
             "destinations": {
                 "2": 2.0
             },
-            "id": 3,
             "items": [
                 {
                     "item_id": 8,
@@ -421,27 +434,28 @@
                     ],
                     "quantity": 1.0
                 }
-            ],
-            "name": "Uncle's Farm"
+            ]
         },
         {
+            "id": 1,
+            "name": "Home",
             "description": "Starting point, and we'll return here at the end.",
+            "masked": false,
             "destinations": {
                 "2": 1.0
             },
-            "id": 1,
-            "items": [],
-            "name": "Home"
+            "items": []
         },
         {
+            "id": 2,
+            "name": "Sketchy-Path Forest",
             "description": "Easy to get lost in.",
+            "masked": true,
             "destinations": {
                 "1": 10.0,
                 "3": 10.0
             },
-            "id": 2,
-            "items": [],
-            "name": "Sketchy-Path Forest"
+            "items": []
         }
     ],
     "overall": {

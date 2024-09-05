@@ -8,9 +8,9 @@
 
 {% block content %}
     <h1>Item Setup</h1>
-    <p class="info">In addition to typical items such as resources, money, or equipment,
+    <p class="info">Basic building blocks. In addition to typical items such as resources, money, or equipment,
     they can also represent an upgrade in production speed,
-    or concepts such as reputation, or conversation dialog.
+    or conversation dialog.
     They could even be people if they don't do much.
     For more ideas on how items can be used, browse the pre-built scenarios.
     </p>
@@ -23,8 +23,6 @@
         <input type="text" id="item-name" name="item_name" value="{{ current.name }}" required><br>
         <label for="item-description" >Description:</label>
         <textarea id="item-description" name="item_description" rows="4" cols="50">{{ current.description }}</textarea><br>
-            <label for="item-limit">Limit Per Pile:</label>
-        <input type="number" step="any" id="item-limit" name="item_limit" value="{{ current.q_limit | dec2str }}"> <span class="label-like">0 for unlimited</span><br>
 
         <style>
             .storage-container {
@@ -46,6 +44,10 @@
         </div>
         <label for="item-quantity">Quantity in General Storage:</label>
         <input type="number" step="any" id="item-quantity" name="item_quantity" value="{{ current.quantity | dec2str }}"><span id="running-label"></span><br>
+        <label for="item-limit">Limit per Pile:</label>
+        <input type="number" step="any" id="item-limit" name="item_limit" value="{{ current.q_limit | dec2str }}"> <span class="label-like">0 for unlimited</span><br>
+        <input type="checkbox" id="masked" name="masked" {% if current.masked %}checked{% endif %}>
+        <label for="mask">Don't reveal until gained</label><br>
 
         <div id="sources-container" class="outer-border">
             <!-- Placeholder for appending new recipes -->

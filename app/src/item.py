@@ -14,7 +14,8 @@ tables_to_create = {
         {coldef('id')},
         {coldef('name')},
         {coldef('description')},
-        {coldef('toplevel')},
+        toplevel boolean NOT NULL,
+        masked boolean NOT NULL,
         storage_type varchar(20) not null,
         q_limit float(4) NOT NULL,
         quantity float(4) NOT NULL,
@@ -71,7 +72,7 @@ class Recipe(DbSerializable):
             'instant': self.instant,
             'sources': [source.to_json() for source in self.sources],
             'attribs': {attrib_id: req.val
-                for attrib_id, req in self.attribs}
+                for attrib_id, req in self.attribs.items()}
             }
 
     @classmethod
@@ -140,10 +141,11 @@ class Item(Identifiable, Pile):
         self.name = ""
         self.description = ""
         # Varies for different items. Typically,
-        # Item.pile.quantity will be 0 unless storage_type is universal,
+        # Item.quantity will be 0 unless storage_type is universal,
         # but general storage can still be used for other types if needed.
         self.storage_type = Storage.UNIVERSAL
-        self.toplevel = False if len(self.get_list()) > 1 else True
+        self.toplevel = True
+        self.masked = False
         self.attribs = {}  # AttribOf objects keyed by attrib id
         self.recipes = []  # list of Recipe objects
         self.q_limit = 0.0  # limit the quantity if not 0
@@ -157,6 +159,7 @@ class Item(Identifiable, Pile):
             'description': self.description,
             'storage_type': self.storage_type,
             'toplevel': self.toplevel,
+            'masked': self.masked,
             'recipes': [
                 recipe.to_json()
                 for recipe in self.recipes],
@@ -177,6 +180,7 @@ class Item(Identifiable, Pile):
         instance.description = data.get('description', "")
         instance.storage_type = data.get('storage_type', Storage.UNIVERSAL)
         instance.toplevel = data.get('toplevel', False)
+        instance.masked = data.get('masked', False)
         instance.attribs = {
             attrib_id: AttribOf(attrib_id=attrib_id, val=val)
             for attrib_id, val in data.get('attribs', {}).items()}
@@ -482,6 +486,7 @@ class Item(Identifiable, Pile):
             self.description = request.form.get('item_description')
             self.storage_type = request.form.get('storage_type')
             self.toplevel = request_bool(request, 'top_level')
+            self.masked = request_bool(request, 'masked')
             self.q_limit = request_float(request, 'item_limit')
             self.quantity = request_float(request, 'item_quantity')
             #if self.progress.is_ongoing:

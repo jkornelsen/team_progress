@@ -1,7 +1,11 @@
 {% extends 'base.html' %}
 
 {% block upper_left %}
-    <div class="nav-container"></div>
+    <div class="nav-container">
+        <a class="upper-left" href="{{ url_for('overview') }}">Continue Game</a>
+        <span class="separator">|</span>
+        <a href="{{ url_for('configure') }}">Setup</a>
+    </div>
 {% endblock %}
 
 {% block content %}

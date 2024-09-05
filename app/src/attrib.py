@@ -28,8 +28,8 @@ class AttribOf:
     @classmethod
     def from_json(cls, data):
         return cls(
-            attrib_id=data.get(attrib_id, 0),
-            val=data.get(value, 0.0))
+            attrib_id=data.get('attrib_id', 0),
+            val=data.get('value', 0.0))
 
 class Attrib(Identifiable):
     """Stat or state or other type of attribute for a character or item.

@@ -78,7 +78,13 @@ def set_routes(app):
         filename = secure_filename(uploaded_file.filename)
         filepath = os.path.join(UPLOAD_DIR, filename)
         uploaded_file.save(filepath)
-        load_data_from_file(filepath)
+        try:
+            load_data_from_file(filepath)
+        except Exception as ex:
+            logger.exception("")
+            return render_template(
+                'error.html',
+                message="An error occurred while processing the file.")
         # Get rid of old files
         MAX_FILE_AGE = datetime.timedelta(minutes=5)
         current_time = datetime.datetime.now()
@@ -109,7 +115,13 @@ def set_routes(app):
         scenario_title = request.form.get('scenario_title')
         if scenario_file:
             filepath = os.path.join(DATA_DIR, scenario_file)
-            load_data_from_file(filepath)
+            try:
+                load_data_from_file(filepath)
+            except Exception as ex:
+                logger.exception("")
+                return render_template(
+                    'error.html',
+                    message=f"Could not load \"{scenario_title}\".")
             session['file_message'] = 'Loaded scenario "{}"'.format(scenario_title)
             return redirect(url_for('configure'))
 

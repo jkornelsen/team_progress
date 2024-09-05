@@ -14,6 +14,8 @@
         <input type="text" id="location-name" name="location_name" value="{{ current.name }}" required><br>
         <label for="location-description">Description:</label>
         <textarea id="location-description" name="location_description" rows="4" cols="50">{{ current.description }}</textarea><br>
+        <input type="checkbox" id="masked" name="masked" {% if current.masked %}checked{% endif %}>
+        <label for="mask">Don't reveal until visited</label><br>
 
         <div id="destinations-container" class="outer-border">
             <div>
@@ -130,11 +132,11 @@
                 }
                 addDestination(destinationId, destinationName);
             });
-            {% for destination, distance in current.destinations.items() %}
+            {% for dest in current.destinations.values() %}
                 addDestination(
-                    {{ destination.id }},
-                    "{{ destination.name }}",
-                    "{{ distance | dec2str }}");
+                    {{ dest.loc.id }},
+                    "{{ dest.loc.name }}",
+                    "{{ dest.distance | dec2str }}");
             {% endfor %}
 
             $('#destinations-container').on('click', '.remove-destination-btn', function() {

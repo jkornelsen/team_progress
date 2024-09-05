@@ -4,7 +4,7 @@ import logging
 from .attrib import Attrib, AttribOf
 from .db_serializable import Identifiable, MutableNamespace, coldef
 from .item import Item
-from .location import Location
+from .location import Destination, Location
 from .progress import Progress
 from .utils import Pile, Storage, request_bool, request_float
 
@@ -13,7 +13,8 @@ tables_to_create = {
         {coldef('id')},
         {coldef('name')},
         {coldef('description')},
-        {coldef('toplevel')},
+        toplevel boolean NOT NULL,
+        masked boolean NOT NULL,
         progress_id integer,
         quantity float(4) NOT NULL,
         location_id integer,
@@ -55,7 +56,8 @@ class Character(Identifiable):
         super().__init__(new_id)
         self.name = ""
         self.description = ""
-        self.toplevel = False if len(self.get_list()) > 1 else True
+        self.toplevel = True
+        self.masked = False
         self.attribs = {}  # AttribOf objects keyed by attrib id
         self.items = {}  # OwnedItem objects keyed by item id
         self.pile = OwnedItem()  # for Progress
@@ -69,6 +71,7 @@ class Character(Identifiable):
             'name': self.name,
             'description': self.description,
             'toplevel': self.toplevel,
+            'masked': self.masked,
             'attribs': {
                 str(attrib_id): attrib_of.val
                 for attrib_id, attrib_of in self.attribs.items()},
@@ -88,9 +91,12 @@ class Character(Identifiable):
         instance.name = data.get('name', "")
         instance.description = data.get('description', '')
         instance.toplevel = data.get('toplevel', False)
-        instance.items = {
-            owned_data.item_id: OwnedItem.from_json(owned_data)
-            for owned_data in data.get('items', [])}
+        instance.masked = data.get('masked', False)
+        for owned_data in data.get('items', []):
+            if not isinstance(owned_data, dict):
+                owned_data = vars(owned_data)
+            instance.items[
+                owned_data.get('item_id', 0)] = OwnedItem.from_json(owned_data)
         instance.attribs = {
             attrib_id: AttribOf(Attrib.get_by_id(int(attrib_id)), val=val)
             for attrib_id, val in data.get('attribs', {}).items()}
@@ -162,7 +168,7 @@ class Character(Identifiable):
         chars = {}  # keyed by ID
         for char_data, item_data, attrib_data in tables_rows:
             char = chars.setdefault(
-                char_data.id, cls.from_json(vars(char_data)))
+                char_data.id, cls.from_json(char_data))
             if attrib_data.attrib_id:
                 attrib_of = AttribOf(
                     Attrib.get_by_id(int(attrib_data.attrib_id)),
@@ -194,7 +200,7 @@ class Character(Identifiable):
         instances = {}  # keyed by ID
         for char_data, progress_data in tables_rows:
             instance = instances.setdefault(
-                char_data.id, cls.from_json(vars(char_data)))
+                char_data.id, cls.from_json(char_data))
             if progress_data.id:
                 instance.progress = Progress.from_json(progress_data, instance)
         # Get char attrib data
@@ -278,6 +284,13 @@ class Character(Identifiable):
                 current_data.setdefault('items', []).append(
                     char_item_data)
             g.game_data.items.append(Item.from_json(item_data))
+        # Mark this location as visited if it hasn't been yet
+        if current_data.location_id:
+            cls.execute_change(f"""
+                UPDATE locations
+                SET masked = false
+                WHERE id = %s AND masked = true
+            """, (current_data.location_id,))
         # Get all location names
         from .game_data import GameData
         GameData.entity_names_from_db([Location])
@@ -303,26 +316,26 @@ class Character(Identifiable):
         current_obj = cls.data_for_configure(id_to_get)
         if current_obj.location:
             # Get the current location's destination data
-            loc_dest_rows = cls.execute_select("""
+            tables_rows = cls.select_tables("""
                 SELECT *
-                FROM loc_destinations
-                WHERE game_token = %s
-                    AND loc_id = %s
-            """, (g.game_token, current_obj.location.id))
-            dests_data = {}
-            for row in loc_dest_rows:
-                dests_data[row.dest_id] = row.distance
-            destinations = dests_data
-            # Replace IDs with objects
-            loc_objs = {}
-            for dest_id, distance in destinations.items():
-                loc = Location.get_by_id(dest_id)
-                loc_objs[loc] = distance
-            current_obj.location.destinations = loc_objs
+                FROM {tables[0]}
+                INNER JOIN {tables[1]}
+                    ON {tables[1]}.id = {tables[0]}.dest_id
+                    AND {tables[1]}.game_token = {tables[0]}.game_token
+                WHERE {tables[0]}.game_token = %s
+                    AND {tables[0]}.loc_id = %s
+            """, [g.game_token, current_obj.location.id],
+                ['loc_destinations', 'locations'])
+            for dest_data, loc_data in tables_rows:
+                current_obj.location.destinations[loc_data.id] = Destination(
+                    Location.from_json(loc_data),
+                    dest_data.distance)
             # Travel distance
-            distance = current_obj.location.destinations.get(
-                current_obj.destination, 0)
-            current_obj.pile.item.q_limit = distance
+            if current_obj.destination:
+                dest = current_obj.location.destinations.get(
+                    current_obj.destination.id, None)
+                if dest:
+                    current_obj.pile.item.q_limit = dest.distance
         return current_obj
 
     def configure_by_form(self):
@@ -332,8 +345,7 @@ class Character(Identifiable):
             self.name = request.form.get('char_name')
             self.description = request.form.get('char_description')
             self.toplevel = request_bool(request, 'top_level')
-            #if self.progress.is_ongoing:
-            #    self.progress.stop()
+            self.masked = request_bool(request, 'masked')
             item_ids = request.form.getlist('item_id[]')
             item_qtys = request.form.getlist('item_qty[]')
             item_slots = request.form.getlist('item_slot[]')

@@ -61,13 +61,17 @@
                 <label for="destination-select">[T]ravel To</label>
                 <select id="destination-select" class="select-box">
                     <option value="" data-distance="-1">(Select destination)</option>
-                    {% for destination, distance in current.location.destinations.items() %}
-                        <option value="{{ destination.id }}" data-distance="{{ distance | dec2str }}"
-                            {% if current.destination and destination.id == current.destination.id %}
+                    {% for dest_id, dest in current.location.destinations.items() %}
+                        <option value="{{ dest_id }}" data-distance="{{ dest.distance | dec2str }}"
+                            {% if current.destination and current.destination.id == dest_id %}
                                 selected
                             {% endif %}
                         >
-                            {{ destination.name }}
+                            {% if dest.loc.masked %}
+                                unvisited location
+                            {% else %}
+                                {{ dest.loc.name }}
+                            {% endif %}
                         </option>
                     {% endfor %}
                 </select>

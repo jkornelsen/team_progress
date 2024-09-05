@@ -45,7 +45,7 @@ tables_to_create = {
         {coldef('id')},
         {coldef('name')},
         {coldef('description')},
-        {coldef('toplevel')},
+        toplevel boolean NOT NULL,
         outcome_type varchar(20) not null,
         trigger_chance integer[],
         trigger_by_duration boolean,
