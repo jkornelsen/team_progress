@@ -12,7 +12,6 @@ from inspect import signature
 import logging
 import os
 import random
-import re
 import string
 import sys
 import uuid
@@ -22,6 +21,7 @@ from src.game_data import GameData
 from src.user_interaction import UserInteraction
 from src.file import set_routes as _set_file_routes
 from src.game_routes import set_routes as _set_game_routes
+from src.utils import dec2str
 
 app = Flask(__name__)
 app.config['TITLE'] = 'Team Progress'
@@ -135,12 +135,9 @@ def get_parameter_name(endpoint):
 def inject_username():
     return {'current_username': session.get('username')}
 
-# Define a custom filter function
+# Define a custom filter function.
 def dec2str_filter(value):
-    """Convert the value to a string and remove trailing ".0" if present."""
-    if value is None or value == '':
-        return ''
-    return re.sub(r'\.0+$', '', str(value))
+    return dec2str(value)
 
 app.jinja_env.filters['dec2str'] = dec2str_filter
 

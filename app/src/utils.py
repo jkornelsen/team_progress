@@ -1,3 +1,5 @@
+import re
+
 class Storage:
     CARRIED = 'carried'
     LOCAL = 'local'
@@ -42,3 +44,10 @@ def request_bool(request, key, default=False, source='form'):
         return bool(value_str) if value_str else default
     except ValueError:
         return default
+
+def dec2str(value):
+    """Convert the value to a string and remove trailing ".0" if present."""
+    if value is None or value == '':
+        return ''
+    return re.sub(r'\.0+$', '', str(value))
+

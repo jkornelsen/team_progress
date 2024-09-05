@@ -13,6 +13,8 @@ tables_to_create = {
         {coldef('name')},
         {coldef('description')},
         masked boolean NOT NULL,
+        progress_id integer,
+        quantity float(4) NOT NULL,
         dimensions integer[2]
     """
 }
@@ -69,6 +71,8 @@ class Location(Identifiable):
             'items': [
                 item_at.to_json()
                 for item_at in self.items],
+            'progress': self.progress.to_json(),
+            'quantity': self.pile.quantity
         }
 
     @classmethod
@@ -85,10 +89,15 @@ class Location(Identifiable):
         instance.items = [
             ItemAt.from_json(item_data)
             for item_data in data.get('items', [])]
+        instance.progress = Progress.from_json(
+            data.get('progress', {}), instance)
+        instance.pile.quantity = data.get('quantity', 0.0)
         return instance
 
     def json_to_db(self, doc):
         logger.debug("json_to_db()")
+        self.progress.json_to_db(doc['progress'])
+        doc['progress_id'] = self.progress.id
         super().json_to_db(doc)
         for rel_table in ('loc_destinations', 'loc_items'):
             self.execute_change(f"""
@@ -144,7 +153,7 @@ class Location(Identifiable):
         query = """
             SELECT *
             FROM {tables[0]}
-            LEFT JOIN {tables[1]}
+            INNER JOIN {tables[1]}
                 ON {tables[1]}.loc_id = {tables[0]}.id
                 AND {tables[1]}.game_token = {tables[0]}.game_token
             WHERE {tables[0]}.game_token = %s
@@ -173,21 +182,30 @@ class Location(Identifiable):
     @classmethod
     def data_for_file(cls):
         logger.debug("data_for_file()")
-        # Get loc and destinations data
+        # Get loc and progress data
         tables_rows = cls.select_tables("""
             SELECT *
             FROM {tables[0]}
             LEFT JOIN {tables[1]}
-                ON {tables[1]}.loc_id = {tables[0]}.id
+                ON {tables[1]}.id = {tables[0]}.progress_id
                 AND {tables[1]}.game_token = {tables[0]}.game_token
             WHERE {tables[0]}.game_token = %s
-        """, [g.game_token], ['locations', 'loc_destinations'])
+        """, [g.game_token], ['locations', 'progress'])
         instances = {}  # keyed by ID
-        for loc_data, dest_data in tables_rows:
+        for loc_data, progress_data in tables_rows:
             instance = instances.setdefault(
                 loc_data.id, cls.from_json(loc_data))
-            if dest_data.dest_id:
-                instance.destinations[dest_data.dest_id] = dest_data.distance
+            if progress_data.id:
+                instance.progress = Progress.from_json(progress_data, instance)
+        # Get destinations data
+        dest_rows = cls.execute_select("""
+            SELECT *
+            FROM loc_destinations
+            WHERE game_token = %s
+        """, [g.game_token])
+        for row in dest_rows:
+            instance = instances[row.loc_id]
+            instance.destinations[dest_data.dest_id] = dest_data.distance
         # Get loc item data
         item_rows = cls.execute_select("""
             SELECT *
@@ -218,19 +236,24 @@ class Location(Identifiable):
             id_to_get = 0
         else:
             id_to_get = int(id_to_get)
-        # Get all location data
-        locations_rows = cls.execute_select("""
+        # Get all location data and the current loc's progress data
+        tables_rows = cls.select_tables("""
             SELECT *
-            FROM {table}
-            WHERE game_token = %s
-            ORDER BY {table}.name
-        """, (g.game_token,))
+            FROM {tables[0]}
+            LEFT JOIN {tables[1]}
+                ON {tables[1]}.id = {tables[0]}.progress_id
+                AND {tables[1]}.game_token = {tables[0]}.game_token
+                AND {tables[0]}.id = %s
+            WHERE {tables[0]}.game_token = %s
+            ORDER BY {tables[0]}.name
+        """, (id_to_get, g.game_token), ['locations', 'progress'])
         g.game_data.locations = []
         current_data = MutableNamespace()
-        for loc_row in locations_rows:
-            if loc_row.id == id_to_get:
-                current_data = loc_row
-            g.game_data.locations.append(Location.from_json(loc_row))
+        for loc_data, progress_data in tables_rows:
+            if loc_data.id == id_to_get:
+                current_data = loc_data
+                loc_data.progress = progress_data
+            g.game_data.locations.append(Location.from_json(loc_data))
         # Get the current location's destination data
         loc_dest_rows = cls.execute_select("""
             SELECT *

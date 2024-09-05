@@ -68,7 +68,7 @@
                             {% endif %}
                         >
                             {% if dest.loc.masked %}
-                                unvisited location
+                                an unvisited location
                             {% else %}
                                 {{ dest.loc.name }}
                             {% endif %}
@@ -270,7 +270,7 @@
             // Fetch progress data and update all relevant information
             function fetchProgressData() {
                 const ignoreEventId = localStorage.getItem('ignore_event_id') || '';
-                const url = `/char/progress_data/{{ current.id }}${ignoreEventId ? `?ignore_event=${ignoreEventId}` : ''}`;
+                const url = `/char/progress/{{ current.id }}${ignoreEventId ? `?ignore_event=${ignoreEventId}` : ''}`;
                 $.get(url, function(data) {
                     console.log('Received data:', data);
                     updateTravelProgress(data);

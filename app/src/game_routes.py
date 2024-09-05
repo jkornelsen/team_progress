@@ -186,10 +186,10 @@ def set_routes(app):
         else:
             return jsonify({'message': 'Progress is already paused.'})
 
-    @app.route('/char/progress_data/<int:char_id>')
-    def char_progress_data(char_id):
+    @app.route('/char/progress/<int:char_id>')
+    def char_progress(char_id):
         logger.debug("-" * 80)
-        logger.debug("char_progress_data(%d)", char_id)
+        logger.debug("char_progress(%d)", char_id)
         char = Character.data_for_play(char_id)
         if char:
             current_loc_id = char.location.id if char.location else 0
@@ -292,29 +292,31 @@ def set_routes(app):
             game_data=g.game_data,
             link_letters=LinkLetters(set('cdelop')))
 
-    @app.route('/item/progress_data/<int:item_id>/')
-    def item_progress_data(item_id):
+    @app.route('/item/progress/<int:item_id>/')
+    def item_progress(item_id):
         char_id = request_int(request, 'char_id', '', 'args')
         loc_id = request_int(request, 'loc_id', '', 'args')
         if not char_id and not loc_id:
             char_id = session.get('last_char_id', '')
             loc_id = session.get('last_loc_id', '')
         logger.debug("-" * 80)
-        logger.debug("item_progress_data(item_id=%d, char_id=%s, loc_id=%s)",
+        logger.debug("item_progress(item_id=%d, char_id=%s, loc_id=%s)",
             item_id, char_id, loc_id)
         item = Item.data_for_play(
             item_id, char_id, loc_id, default_pile=True)
         if not item:
             return jsonify({'error': 'Item not found'})
-        logger.debug("Retrieved item %d from DB: %d recipes",
-            item.id, len(item.recipes))
-        progress = item.pile.container.progress
+        pile = item.pile
+        logger.debug("Retrieved item %d from DB: %d recipes\n"
+            "Pile type %s from %s",
+            item.id, len(item.recipes), pile.PILE_TYPE, pile.container.name)
+        progress = pile.container.progress
         if progress.is_ongoing:
             progress.determine_current_quantity()
         return jsonify({
             'is_ongoing': progress.is_ongoing,
             'recipe_id': progress.recipe.id,
-            'quantity': item.pile.quantity,
+            'quantity': pile.quantity,
             'elapsed_time': progress.calculate_elapsed_time()})
 
     @app.route('/item/start/<int:item_id>/<int:recipe_id>')
@@ -325,8 +327,8 @@ def set_routes(app):
             char_id = session.get('last_char_id', '')
             loc_id = session.get('last_loc_id', '')
         logger.debug("-" * 80)
-        logger.debug("start_item(item_id=%d, recipe_id=%d, char_id=%d, "
-                     "loc_id=%d)", item_id, recipe_id, char_id, loc_id)
+        logger.debug("start_item(item_id=%d, recipe_id=%d, char_id=%s, "
+                     "loc_id=%s)", item_id, recipe_id, char_id, loc_id)
         item = Item.data_for_play(
             item_id, char_id, loc_id, default_pile=True)
         container = item.pile.container
@@ -338,9 +340,13 @@ def set_routes(app):
                 'message': 'Progress started.',
                 'is_ongoing': progress.is_ongoing})
         else:
+            message = "Could not start."
+            reason = progress.failure_reason
+            if reason:
+                message = f"{message} {reason}"
             return jsonify({
                 'status': 'error',
-                'message': 'Could not start.',
+                'message': message,
                 'is_ongoing': progress.is_ongoing})
 
     @app.route('/item/stop/<int:item_id>')
@@ -392,12 +398,16 @@ def set_routes(app):
         changed = progress.change_quantity(num_batches)
         if changed:
             return jsonify({
-                'status': 'success', 'message':
-                f'Quantity of {item.name} changed.'})
+                'status': 'success',
+                'message': f'Quantity of {item.name} changed.'})
         else:
+            message = "Nothing gained."
+            reason = progress.failure_reason
+            if reason:
+                message = f"{message} {reason}"
             return jsonify({
                 'status': 'error',
-                'message': 'Could not change quantity.'})
+                'message': message})
 
     @app.route('/item/drop/<int:item_id>/char/<int:char_id>', methods=['POST'])
     def drop_item(item_id, char_id):

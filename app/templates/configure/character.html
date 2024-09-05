@@ -139,7 +139,7 @@
                 addItem(itemId, itemName);
             });
             console.log("number of items={{ current.items | length }}");
-            {% for owned_item in current.items %}
+            {% for owned_item in current.items.values() %}
                 console.log("name={{owned_item.item.name}}");
                 console.log("slot={{owned_item.slot}}");
                 addItem(
@@ -183,11 +183,11 @@
                 addAttrib(attribId, attribName);
             });
             console.log("number of attribs={{ current.attribs.keys() | length }}");
-            {% for attrib, attrib_val in current.attribs.items() %}
+            {% for attrib_id, attrib_of in current.attribs.items() %}
                 addAttrib(
-                    {{ attrib.id }},
-                    "{{ attrib.name }}",
-                    {{ attrib_val | dec2str }});
+                    {{ attrib_id }},
+                    "{{ attrib_of.attrib.name }}",
+                    {{ attrib_of.val | dec2str }});
             {% endfor %}
             $('#attrib-container').on('click', '.remove-attrib-btn', function() {
                 const attribRow = $(this).closest('tr');

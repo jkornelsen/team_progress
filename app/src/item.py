@@ -2,7 +2,7 @@ from flask import g, request, session
 import logging
 import math
 
-from .attrib import Attrib
+from .attrib import Attrib, AttribOf
 from .db_serializable import (
     DbSerializable, Identifiable, MutableNamespace, coldef,
     DbError, DeletionError)
@@ -471,7 +471,6 @@ class Item(Identifiable, Pile):
         # Get relation data for items that use this item as a source
         item_recipes_data = cls.db_recipe_data(id_to_get, get_by_source=True)
         for item_id, recipes_data in item_recipes_data.items():
-            logger.debug("item_id %d, recipes_data %s", item_id, recipes_data)
             item = Item.get_by_id(item_id)
             item.recipes = [
                 Recipe.from_json(recipe_data, item)
@@ -515,7 +514,7 @@ class Item(Identifiable, Pile):
                             f'recipe{recipe_id}_source{source_id}_preserve'),
                     })
                     recipe.sources.append(source)
-                    logger.debug("Sources for %d: %s",
+                    logger.debug("Sources for %s: %s",
                         recipe_id, {source.item.id: source.q_required
                         for source in recipe.sources})
                 recipe_attrib_ids = request.form.getlist(
@@ -631,9 +630,9 @@ def _assign_pile(current_item, chars, loc, char_id=0, loc_id=0,
                 logger.debug("assigned itemAt from %s qty %.1f", 
                     item_at.container.name, pile.quantity)
         if loc_id and not pile:
+            from .location import ItemAt, Location
             if loc.id != loc_id:
                 loc = Location.data_for_configure(loc_id)
-            from .location import ItemAt
             pile = ItemAt(current_item)
             pile.container = loc
             logger.debug("assigned empty itemAt from %s", 

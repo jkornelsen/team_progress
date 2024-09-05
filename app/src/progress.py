@@ -5,6 +5,7 @@ import math
 import threading
 
 from .db_serializable import Identifiable, coldef
+from .utils import dec2str
 
 tables_to_create = {
     'progress': f"""
@@ -38,6 +39,7 @@ class Progress(Identifiable):
         self.batches_processed = 0
         self.is_ongoing = False
         self.lock = threading.Lock()
+        self.failure_reason = ""  # error message for caller to read
 
     def to_json(self):
         return {
@@ -71,7 +73,7 @@ class Progress(Identifiable):
         with self.lock:
             logger.debug("change_quantity() for progress %d: batches_requested=%d",
                 self.id, batches_requested)
-            stop_here = False
+            stop_when_done = False
             if batches_requested == 0:
                 raise Exception("Expected non-zero number of batches.")
             num_batches = batches_requested
@@ -81,9 +83,11 @@ class Progress(Identifiable):
                     or (self.q_limit < 0.0 and new_quantity < self.q_limit)):
                 num_batches = ((self.q_limit - self.pile.quantity)
                     // self.recipe.rate_amount)
-                stop_here = True  # can't process the full amount
+                stop_when_done = True  # can't process the full amount
                 logger.debug("change_quantity(): num_batches=%d due to limit %d",
                     num_batches, self.q_limit)
+                if num_batches == 0:
+                    self.report_failure("Limit {self.q_limit} reached.")
             for source in self.recipe.sources:
                 eff_source_qty = num_batches * source.q_required
                 if eff_source_qty > 0:
@@ -93,13 +97,20 @@ class Progress(Identifiable):
                         source.pile.quantity)
                     if (source.pile.quantity < eff_source_qty
                             and not source.preserve):
-                        stop_here = True  # can't process the full amount
+                        stop_when_done = True  # can't process the full amount
                         num_batches = min(
                             num_batches,
                             math.floor(source.pile.quantity / source.q_required))
+                        if num_batches == 0:
+                            self.report_failure(
+                                f"Requires {dec2str(f'{source.q_required}')} "
+                                f"{source.item.name}.")
                     elif source.pile.quantity < source.q_required:
-                        stop_here = True
+                        stop_when_done = True
                         num_batches = 0
+                        self.report_failure(
+                            f"Requires {dec2str(f'{source.q_required}')} "
+                            f"{source.item.name}.")
             logger.debug("change_quantity(): num_batches=%d", num_batches)
             if num_batches > 0:
                 for source in self.recipe.sources:
@@ -113,7 +124,7 @@ class Progress(Identifiable):
                 self.pile.quantity += eff_result_qty
                 self.batches_processed += num_batches
                 self.container.to_db()
-            if stop_here:
+            if stop_when_done:
                 self.stop()
             return num_batches > 0
 
@@ -147,21 +158,25 @@ class Progress(Identifiable):
     def can_produce(self):
         """True if at least one batch can be produced."""
         if self.recipe is None:
-            logger.debug("no recipe")
+            self.report_failure("No recipe.")
             return False
         if not self.recipe.rate_amount:
-            logger.debug("no rate amount")
+            self.report_failure("Recipe production rate is 0.")
             return False
         if ((self.q_limit > 0.0 and self.pile.quantity >= self.q_limit)
                 or (self.q_limit < 0.0 and self.pile.quantity <= self.q_limit)):
-            logger.debug("would pass limit")
+            self.report_failure("Limit {self.q_limit} reached.")
             return False
         for source in self.recipe.sources:
-            eff_source_qty = source.q_required
-            if (eff_source_qty > 0
-                    and source.pile.quantity < eff_source_qty):
-                logger.debug("requires %.1f of item id %d but only have %.1f",
-                    source.q_required, source.item.id, source.pile.quantity)
+            req_qty = source.q_required
+            if (req_qty > 0 and source.pile.quantity < req_qty):
+                self.report_failure(
+                    f"Requires {dec2str(f'{req_qty}')} {source.item.name}.")
+                return False
+        for req in self.recipe.attribs.values():
+            if (req.val > 0 and req.entity is None):
+                self.report_failure(
+                    f"Requires attribute {req.attrib.name} {req.val:.1f}")
                 return False
         logger.debug("can produce")
         return True
@@ -172,6 +187,7 @@ class Progress(Identifiable):
             logger.debug("Already ongoing.")
             return True
         if self.recipe.rate_amount == 0:
+            self.report_failure("Recipe production rate is 0.")
             return False
         if not self.can_produce():
             self.stop()
@@ -200,3 +216,8 @@ class Progress(Identifiable):
         else:
             elapsed_time = timedelta(seconds=0)
         return elapsed_time.total_seconds()
+
+    def report_failure(self, message):
+        """Store error message for caller to read."""
+        self.failure_reason = message
+        logger.info(message)

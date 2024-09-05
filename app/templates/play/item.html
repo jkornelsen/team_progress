@@ -81,6 +81,7 @@
                     <span class="progress-label" id="action-progress-label-{{ current.id }}">0%</span>
                 </div>
                 <span id="elapsed-time" class="hidden">...</span>
+                <br>Dest Time<span id="dest-time">...</span><!-- for debugging only -->
             </td>
         </tr>
         <tr>
@@ -208,7 +209,7 @@
                         <input type="number" step="any" id="quantity_to_gain" size="10" value="1">
                         <button id="gain-btn" data-recipe-id="{{ recipe.id }}" data-rate-amount="{{ recipe.rate_amount }}" class="go-button">Gain</button>
                         {% else %}
-                        <button class="toggle-btn go-button" data-recipe-id="{{ recipe.id }}">Start</button>
+                        <button class="start-stop-btn go-button" data-recipe-id="{{ recipe.id }}">Start</button>
                         {% endif %}
                     </td>
                     <td rowspan="{{ rowspan }}">
@@ -411,7 +412,7 @@
                 if (sourceOnly) {
                     queryParams.push('sourceOnly=True');
                 }
-                let url = '/item/progress_data/' + itemId;
+                let url = '/item/progress/' + itemId;
                 if (queryParams.length > 0) {
                     url += '?' + queryParams.join('&');
                 }
@@ -424,7 +425,7 @@
             let in_progress = false;
 
             function updateActionProgress() {
-                console.log('Updating progress:', { elapsedTime, rateDuration });
+                console.log('Updating progress bar:', { elapsedTime, rateDuration });
                 const progressBar = $('#action-progress-bar-{{ current.id }}');
                 const progressLabel = $('#action-progress-label-{{ current.id }}');
                 const effectiveElapsedTime = elapsedTime % rateDuration;
@@ -461,19 +462,19 @@
             }
 
             // the Start button can change to "Stop"
-            function updateToggleButtonLabel(data, recipe_id) {
-                const toggleBtns = document.querySelectorAll(".toggle-btn");
-                for (const toggleBtn of toggleBtns) {
-                    const btnRecipeId = toggleBtn.getAttribute("data-recipe-id");
+            function updateStartButtonLabel(data, recipe_id) {
+                const startBtns = document.querySelectorAll(".start-stop-btn");
+                for (const startBtn of startBtns) {
+                    const btnRecipeId = startBtn.getAttribute("data-recipe-id");
                     if (btnRecipeId && parseInt(btnRecipeId) === recipe_id) {
                         if (data && data.is_ongoing) {
-                            toggleBtn.innerHTML = "Stop";
-                            toggleBtn.classList.add("dangerous-button");
-                            toggleBtn.classList.remove("go-button");
+                            startBtn.innerHTML = "Stop";
+                            startBtn.classList.add("dangerous-button");
+                            startBtn.classList.remove("go-button");
                         } else {
-                            toggleBtn.innerHTML = "Start";
-                            toggleBtn.classList.add("go-button");
-                            toggleBtn.classList.remove("dangerous-button");
+                            startBtn.innerHTML = "Start";
+                            startBtn.classList.add("go-button");
+                            startBtn.classList.remove("dangerous-button");
                         }
                     }
                 }
@@ -505,7 +506,7 @@
                     updateActionProgress();
                     in_progress = data.is_ongoing;
                     reconcileElapsedTime(data);
-                    updateToggleButtonLabel(data, data.recipe_id);
+                    updateStartButtonLabel(data, data.recipe_id);
                     updateProgressVisibility();
                 });
             }
@@ -565,16 +566,15 @@
                     }
                 });
             });
-            $('.toggle-btn').click(function() {
+            $('.start-stop-btn').click(function() {
                 const current_id = {{ current.id }};
-                const toggleBtn = this;
+                const startBtn = this;
                 const recipe_id = $(this).data('recipe-id');
                 const row = $(this).closest('tr');
                 rateDuration = parseFloat(row.find('#rate-duration').text()) || 1;
-                console.log('toggleItem(): ' + current_id);
-                //toggleBtn.disabled = true;
+                console.log(`start/stop button clicked for recipe ${recipe_id}`);
                 const urlParts = ['/item/stop', current_id];
-                if (toggleBtn.innerHTML === "Start") {
+                if (startBtn.innerHTML === "Start") {
                     urlParts[0] = '/item/start';
                     urlParts.push(recipe_id);
                 }
@@ -586,10 +586,10 @@
                     .then(data => {
                         console.log(data.message);
                         if (data.status === 'error') {
-                            console.error('Could not toggle:', data.message);
+                            console.error('Could not start or stop:', data.message);
                             alert(data.message);
                         }
-                        updateToggleButtonLabel(data, recipe_id);
+                        updateStartButtonLabel(data, recipe_id);
                         fetchProgressData();
                         startFetchingProgress();
                     })

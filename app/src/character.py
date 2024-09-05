@@ -349,7 +349,7 @@ class Character(Identifiable):
             item_ids = request.form.getlist('item_id[]')
             item_qtys = request.form.getlist('item_qty[]')
             item_slots = request.form.getlist('item_slot[]')
-            self.items = []
+            self.items = {}
             for item_id, item_qty, item_slot in zip(
                     item_ids, item_qtys, item_slots):
                 ownedItem = OwnedItem(Item(int(item_id)))
@@ -366,9 +366,11 @@ class Character(Identifiable):
                 attrib_val = request_float(
                     request, f'attrib_{attrib_id}_val', 0.0)
                 attrib_item = Attrib.get_by_id(attrib_id)
-                self.attribs[attrib_item] = attrib_val
-            logger.debug("attribs: %s", {attrib.name: val
-                for attrib, val in self.attribs.items()})
+                self.attribs[attrib_id] = AttribOf(
+                    attrib_item, attrib_id, attrib_val)
+            logger.debug("attribs: %s", {
+                attrib_of.attrib.name: attrib_of.val
+                for attrib_of in self.attribs.values()})
             self.to_db()
         elif 'delete_character' in request.form:
             try:
