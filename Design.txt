@@ -319,6 +319,36 @@ advantage: single roll, best of two, worst of two -- radio buttons
 during encounters, time is turn-based and rotational,
 at other times, it is much freer
 
+position of characters and loc_item piles
+display the coords of each entity at that location
+loc_destinations could specify a starting position
+
+allow multiple characters and items at one position
+if a grid is defined then char must either be at same or adjacent pos
+to pick up pile and use local item sources
+
+no travel time progress between subdivisions,
+but speed could make it so can move two at a time
+compared to another character's one at a time
+number pad or arrow keys to change position
+also arrow buttons
+radio button or select box to specify which character to move
+
+randomly populate room with items to pick up
+by running events
+chance based on item rarity
+or other attrs, for example, some items more likely in fire caves
+and others more likely in ice
+also randomly populate with monsters
+allow only one of each type of item pile at a loc
+location config screen lists all items and their positions and quantities
+
+for locations, have speed as well as distance
+characters would have travel speed for a particular location?
+for example, a swimming speed and a walking speed
+speed for a particular type of terrain, and a location would have a type of terrain
+or we could manually change the character's speed when entering a new location
+
 to travel from one location to another, selecting from a dropdown may
 be a bit tedious
 could have buttons instead to start travelling to a location
@@ -328,38 +358,6 @@ only a single distance display as well
 maybe display would include destination name: "Distance to Home: 3 of 10"
 since button would simply show "Travelling."
 other buttons would be greyed out if travelling.
-
-for locations, have speed as well as distance
-characters would have travel speed for a particular location?
-for example, a swimming speed and a walking speed
-speed for a particular type of terrain, and a location would have a type of terrain
-or we could manually change the character's speed when entering a new location
-
-a location could optionally have subdivisions
-specify as having a grid of x by y
-position of the character or item
-would be an attribute of a many-to-many is_at_location relationship
-show visually on play screen with ascii graphics
-first letter of characters and items in their position
-also display the coords of each entity at that location
-the area would be a <pre> with a different background to
-show empty space
-
-no travel time progress between subdivisions,
-but speed could make it so can move two at a time
-compared to another character's one at a time
-arrow buttons to change position
-
-randomly populate room with items to pick up
-by selecting items from a list of all items on location config screen
-for example 0 to 10 items
-chance based on item rarity
-or possibly any attrs, for example, some items more likely in fire caves
-and others more likely in ice
-maybe also randomly populate with monsters
-
-location config screen would list all items and their positions and quantities
-could remove one at a position, or all at location
 
 prompt before overwriting another action in progress
 such as if a character is already doing something else

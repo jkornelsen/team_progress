@@ -29,6 +29,12 @@
         <p>{{ current.description }}</p>
     {% endif %}
 
+    {% set width, height = current.grid.dimensions %}
+    {% set has_grid = False %}
+    {% if width > 0 and height > 0 %}
+        {% set has_grid = True %}
+    {% endif %}
+    <table style="background: transparent"><tr><td valign="top">
     <h2>Characters Here</h2>
     <ul>
         {% for char in game_data.characters if char.location.id == current.id %}
@@ -38,7 +44,11 @@
                 linkForKey['{{ letter }}'] = "{{ link }}";
             </script>
             <span>[{{ letter }}]</span>
-            <a href="{{ link }}">{{ char.name }}</a><br>
+            <a href="{{ link }}">{{ char.name }}</a>
+            {% if has_grid %}
+                <span class="label-like">pos [{{char.position[0]}},{{char.position[1]}}]</span>
+            {% endif %}
+            <br>
         {% else %}
             <p>(None)</p>
         {% endfor %}
@@ -65,7 +75,11 @@
                 {% if not (item_at.item.q_limit == 1 and item_at.quantity == 1) %}
                     {{ item_at.quantity | dec2str }}
                 {% endif %}
-            </span><br>
+            </span>
+            {% if has_grid %}
+                <span class="label-like">pos [{{item_at.position[0]}},{{item_at.position[1]}}]</span>
+            {% endif %}
+            <br>
         {% else %}
             <p>(None)</p>
         {% endfor %}
@@ -90,6 +104,60 @@
             <p>(None)</p>
         {% endfor %}
     </ul>
+    </td>
+    {% set left, top, right, bottom = current.grid.excluded %}
+    {% if has_grid %}
+    <td valign="top">
+        <style>
+            td.grid {
+                width: 2em;
+                height: 2em;
+                text-align: center;
+                vertical-align: middle;
+                padding: 0;
+            }
+            td.excluded {
+                border: none;
+            }
+            td.included {
+                border: 1px solid gray;
+                background-color: #2a2a2a;
+            }
+        </style>
+        <table style="background: transparent; border-collapse: collapse; font-family: monospace;">
+        {% for y in range(height) %}
+            <tr>
+                {% for x in range(width) %}
+                    {% if left <= x <= right and top <= y <= bottom %}
+                        <td class="grid excluded">
+                        </td>
+                    {% else %}
+                        <td class="grid included">
+                        {% set cell_info = namespace(filled=False) %}
+                        {% for char in game_data.characters if char.location.id == current.id %}
+                            {% if char.position[0] == x and char.position[1] == y %}
+                                {% if not cell_info.filled %}
+                                    {{ char.name[0] }}
+                                    {% set cell_info.filled = True %}
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                        {% for item_at in current.items %}
+                            {% if item_at.position[0] == x and item_at.position[1] == y %}
+                                {% if not cell_info.filled %}
+                                    {{ item_at.item.name[0] }}
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                        </td>
+                    {% endif %}
+                {% endfor %}
+            </tr>
+        {% endfor %}
+        </table>
+    </td>
+    {% endif %}
+    </tr></table>
 
     <script>
         $(document).ready(function() {

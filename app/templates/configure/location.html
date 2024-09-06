@@ -16,7 +16,15 @@
         <textarea id="location-description" name="location_description" rows="4" cols="50">{{ current.description }}</textarea><br>
         <input type="checkbox" id="masked" name="masked" {% if current.masked %}checked{% endif %}>
         <label for="mask">Don't reveal until visited</label><br>
-
+        <label for="dimensions">Grid Dimensions:</label>
+        <input type="text" id="dimensions" name="dimensions" value="{{ current.grid.dimensions[0] }}x{{ current.grid.dimensions[1] }}" size="5"> <span class="label-like">width x height</span><br>
+        <label for="excluded-left-top">Exclude from Grid:</label>
+        <input type="text" id="excluded-left-top" name="excluded_left_top" 
+               value="{{ current.grid.excluded[0] }},{{ current.grid.excluded[1] }}" size="5">
+        <label for="excluded-right-bottom"> to </label>
+        <input type="text" id="excluded-right-bottom" name="excluded_right_bottom" 
+               value="{{ current.grid.excluded[2] }},{{ current.grid.excluded[3] }}" size="5">
+        <span class="label-like">left,top to right,bottom</span><br>
         <div id="destinations-container" class="outer-border">
             <div>
                 {% set outerscope = namespace(has_other_location = false) %}
@@ -60,6 +68,7 @@
                     <tr>
                         <th>Item</th>
                         <th>Quantity</th>
+                        <th>Grid Position</th>
                         <th class="transparent-col"></th>
                     </tr>
                 </thead>
@@ -144,13 +153,15 @@
                 destinationContainer.remove();
             });
 
-            function addItem(itemId, itemName, itemQty = 1) {
+            function addItem(itemId, itemName, itemQty = 1, itemPos = "0,0") {
                 const itemHtml = `
                     <tr>
                         <td>${itemName}
                             <input type="hidden" name="item_id[]" value="${itemId}">
                         </td><td>
                             <input type="number" name="item_qty[]" value="${itemQty}" size="8">
+                        </td><td>
+                            <input type="text" name="item_pos[]" value="${itemPos}" size="8">
                         </td><td>
                             <button class="remove-item-btn lesser-button">Remove</button>
                         </td>
@@ -175,12 +186,13 @@
                 addItem(itemId, itemName);
             });
             console.log("number of items={{ current.items | length }}");
-            {% for owned_item in current.items %}
-                console.log("name={{owned_item.item.name}}");
+            {% for item_at in current.items %}
+                console.log("name={{item_at.item.name}}");
                 addItem(
-                    {{ owned_item.item.id }},
-                    "{{ owned_item.item.name }}",
-                    {{ owned_item.quantity | dec2str }});
+                    {{ item_at.item.id }},
+                    "{{ item_at.item.name }}",
+                    {{ item_at.quantity | dec2str }},
+                    "{{ item_at.position[0] }},{{ item_at.position[1] }}");
             {% endfor %}
             $('#items-rows').on('click', '.remove-item-btn', function() {
                 const itemContainer = $(this).closest('tr');

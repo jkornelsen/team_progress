@@ -15,7 +15,8 @@ tables_to_create = {
         masked boolean NOT NULL,
         progress_id integer,
         quantity float(4) NOT NULL,
-        dimensions integer[2]
+        dimensions integer[2],
+        excluded integer[4]
     """
 }
 logger = logging.getLogger(__name__)
@@ -48,6 +49,11 @@ class Destination:
         self.loc = loc
         self.distance = distance
 
+class Grid:
+    def __init__(self):
+        self.dimensions = (0, 0)  # width, height
+        self.excluded = (0, 0, 0, 0)  # left, top, right, bottom
+
 class Location(Identifiable):
     def __init__(self, new_id=""):
         super().__init__(new_id)
@@ -58,6 +64,7 @@ class Location(Identifiable):
         self.items = []  # ItemAt objects
         self.pile = ItemAt()  # for Progress
         self.progress = Progress(container=self)
+        self.grid = Grid()
 
     def to_json(self):
         return {
@@ -72,7 +79,9 @@ class Location(Identifiable):
                 item_at.to_json()
                 for item_at in self.items],
             'progress': self.progress.to_json(),
-            'quantity': self.pile.quantity
+            'quantity': self.pile.quantity,
+            'dimensions': self.grid.dimensions,
+            'excluded': self.grid.excluded
         }
 
     @classmethod
@@ -92,6 +101,8 @@ class Location(Identifiable):
         instance.progress = Progress.from_json(
             data.get('progress', {}), instance)
         instance.pile.quantity = data.get('quantity', 0.0)
+        instance.grid.dimensions = data.get('dimensions', (0, 0))
+        instance.grid.excluded = data.get('excluded', (0, 0, 0, 0))
         return instance
 
     def json_to_db(self, doc):
@@ -307,6 +318,14 @@ class Location(Identifiable):
             self.name = request.form.get('location_name')
             self.description = request.form.get('location_description')
             self.masked = request_bool(request, 'masked')
+            self.grid.dimensions = tuple(
+                map(int, request.form.get(
+                    'dimensions').split('x')))
+            self.grid.excluded = tuple(
+                list(map(int, request.form.get(
+                    'excluded_left_top').split(','))) +
+                list(map(int, request.form.get(
+                    'excluded_right_bottom').split(','))))
             destination_ids = request.form.getlist('destination_id[]')
             destination_distances = request.form.getlist('destination_distance[]')
             self.destinations = {}
@@ -316,11 +335,15 @@ class Location(Identifiable):
                     Location(dest_id), int(dest_dist))
             item_ids = request.form.getlist('item_id[]')
             item_qtys = request.form.getlist('item_qty[]')
+            item_posits = request.form.getlist('item_pos[]')
             self.items = []
-            for item_id, item_qty in zip(item_ids, item_qtys):
+            for item_id, item_qty, item_pos in zip(
+                    item_ids, item_qtys, item_posits):
                 item = Item(int(item_id))
                 item_at = ItemAt(item)
                 item_at.quantity = int(item_qty)
+                item_at.position = tuple(
+                    map(int, item_pos.split(',')))
                 self.items.append(item_at)
             self.to_db()
         elif 'delete_location' in request.form:

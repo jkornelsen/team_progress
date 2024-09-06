@@ -63,6 +63,7 @@ class Character(Identifiable):
         self.pile = OwnedItem()  # for Progress
         self.progress = Progress(container=self)  # for travel or item recipes
         self.location = None  # Location object
+        self.position = (0, 0)  # grid coordinates: top, left
         self.destination = None  # Location object to travel to
 
     def to_json(self):
@@ -78,6 +79,7 @@ class Character(Identifiable):
             'items': [
                 owned.to_json() for owned in self.items.values()],
             'location_id': self.location.id if self.location else None,
+            'position': self.position,
             'progress': self.progress.to_json(),
             'quantity': self.pile.quantity,
             'dest_id': self.destination.id if self.destination else None
@@ -102,6 +104,7 @@ class Character(Identifiable):
             for attrib_id, val in data.get('attribs', {}).items()}
         instance.location = Location.get_by_id(
             int(data['location_id'])) if data.get('location_id', 0) else None
+        instance.position = data.get('position', (0, 0))
         instance.progress = Progress.from_json(
             data.get('progress', {}), instance)
         instance.pile.quantity = data.get('quantity', 0.0)
@@ -285,7 +288,7 @@ class Character(Identifiable):
                     char_item_data)
             g.game_data.items.append(Item.from_json(item_data))
         # Mark this location as visited if it hasn't been yet
-        if current_data.location_id:
+        if hasattr(current_data, 'location_id') and current_data.location_id:
             cls.execute_change(f"""
                 UPDATE locations
                 SET masked = false
@@ -359,6 +362,8 @@ class Character(Identifiable):
             location_id = request.form.get('char_location')
             self.location = Location.get_by_id(
                 int(location_id)) if location_id else None
+            self.position = tuple(
+                map(int, request.form.get('position').split(',')))
             attrib_ids = request.form.getlist('attrib_id[]')
             logger.debug(f"Attrib IDs: %s", attrib_ids)
             self.attribs = {}
