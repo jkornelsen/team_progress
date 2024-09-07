@@ -154,9 +154,6 @@ class Character(Identifiable):
             LEFT JOIN {tables[1]}
                 ON {tables[1]}.char_id = {tables[0]}.id
                 AND {tables[1]}.game_token = {tables[0]}.game_token
-            LEFT JOIN {tables[2]}
-                ON {tables[2]}.char_id = {tables[0]}.id
-                AND {tables[2]}.game_token = {tables[0]}.game_token
             WHERE {tables[0]}.game_token = %s
         """
         values = [g.game_token]
@@ -167,8 +164,32 @@ class Character(Identifiable):
             query += "AND {tables[0]}.location_id = %s\n"
             values.append(loc_id);
         tables_rows = cls.select_tables(
-            query, values, ['characters', 'char_items', 'char_attribs'])
+            query, values, ['characters', 'char_items'])
         chars = {}  # keyed by ID
+        for char_data, item_data in tables_rows:
+            char = chars.setdefault(
+                char_data.id, cls.from_json(char_data))
+            if item_data.item_id:
+                owned = OwnedItem.from_json(item_data)
+                owned.container = cls.get_by_id(char_data.id)
+                char.items[item_data.item_id] = owned
+        query = """
+            SELECT *
+            FROM {tables[0]}
+            INNER JOIN {tables[1]}
+                ON {tables[1]}.char_id = {tables[0]}.id
+                AND {tables[1]}.game_token = {tables[0]}.game_token
+            WHERE {tables[0]}.game_token = %s
+        """
+        values = [g.game_token]
+        if char_id:
+            query += "AND {tables[0]}.id = %s\n"
+            values.append(char_id);
+        elif loc_id:
+            query += "AND {tables[0]}.location_id = %s\n"
+            values.append(loc_id);
+        tables_rows = cls.select_tables(
+            query, values, ['characters', 'char_attribs'])
         for char_data, item_data, attrib_data in tables_rows:
             char = chars.setdefault(
                 char_data.id, cls.from_json(char_data))
@@ -177,10 +198,6 @@ class Character(Identifiable):
                     Attrib.get_by_id(int(attrib_data.attrib_id)),
                     val=attrib_data.value)
                 char.attribs[attrib_data.attrib_id] = attrib_of
-            if item_data.item_id:
-                owned = OwnedItem.from_json(item_data)
-                owned.container = cls.get_by_id(char_data.id)
-                char.items[item_data.item_id] = owned
         for char in chars.values():
             if char.items:
                 pile = next(iter(char.items.values()))

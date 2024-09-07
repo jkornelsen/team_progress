@@ -24,11 +24,6 @@ class Progress(Identifiable):
     def __init__(self, new_id="", container=None, recipe=None):
         super().__init__(new_id)
         self.container = container  # e.g. Character that uses this object
-        self.pile = None  # e.g. char OwnedItem
-        self.q_limit = 0.0
-        if container:
-            self.pile = container.pile
-            self.q_limit = self.pile.item.q_limit
         if recipe:
             self.recipe = recipe
         else:
@@ -40,6 +35,18 @@ class Progress(Identifiable):
         self.is_ongoing = False
         self.lock = threading.Lock()
         self.failure_reason = ""  # error message for caller to read
+
+    @property
+    def pile(self):
+        if self.container:
+            return self.container.pile
+        return None
+
+    @property
+    def q_limit(self):
+        if self.pile:
+            return self.pile.item.q_limit
+        return 0.0
 
     def to_json(self):
         return {
@@ -117,12 +124,20 @@ class Progress(Identifiable):
                     if not source.preserve:
                         # Deduct source quantity used
                         eff_source_qty = num_batches * source.q_required
+                        logger.debug("change_quantity(): %s -= %s for id %s",
+                            source.pile.quantity, eff_source_qty, source.pile.item.id)
                         source.pile.quantity -= eff_source_qty
+                        logger.debug("change_quantity(): source.pile.container[%s].to_db()",
+                            source.pile.container.name)
                         source.pile.container.to_db()
                 # Add quantity produced
                 eff_result_qty = num_batches * self.recipe.rate_amount
+                logger.debug("change_quantity(): %s += %s for id %s",
+                    self.pile.quantity, eff_result_qty, self.pile.item.id)
                 self.pile.quantity += eff_result_qty
                 self.batches_processed += num_batches
+                logger.debug("change_quantity(): self.container[%s].to_db()",
+                    self.container.name)
                 self.container.to_db()
             if stop_when_done:
                 self.stop()
@@ -150,6 +165,10 @@ class Progress(Identifiable):
             recipe_id = self.recipe.id
             if not recipe_id:
                 return
+        #XXX: This doesn't seem right.
+        # At least in the current trace,
+        # it's an empty list,
+        # while item.recipes is a good list.
         for recipe in self.pile.item.recipes:
             if recipe.id == recipe_id:
                 self.recipe = recipe

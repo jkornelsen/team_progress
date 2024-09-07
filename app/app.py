@@ -141,6 +141,14 @@ def dec2str_filter(value):
 
 app.jinja_env.filters['dec2str'] = dec2str_filter
 
+@app.errorhandler(TypeError)
+def handle_type_error(ex):
+    logger.exception(ex)
+    return render_template(
+        'error.html',
+        message="An error occurred.",
+        details=str(ex))
+
 @app.teardown_appcontext
 def teardown(ctx):
     close_db()

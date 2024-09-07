@@ -53,6 +53,34 @@ class Grid:
     def __init__(self):
         self.dimensions = (0, 0)  # width, height
         self.excluded = (0, 0, 0, 0)  # left, top, right, bottom
+        self.default_pos = None  # legal position in grid if any
+
+    def set_default_pos(self):
+        """Returns None if there are no legal positions.
+        Call this method whenever changing dimensions or excluded.
+        """
+        width, height = self.dimensions
+        left, top, right, bottom = self.excluded
+        for y in range(height):
+            for x in range(width):
+                if not (left <= x <= right and top <= y <= bottom):
+                    self.default_pos = x, y
+                    return
+        self.default_pos = None
+
+    def in_grid(self, pos):
+        """Returns True if position is legally in the grid."""
+        x, y = pos
+        width, height = self.dimensions
+        left, top, right, bottom = self.excluded
+        if x < 0 or x > width - 1:
+            return False
+        if y < 0 or y > height - 1:
+            return False
+        if x >= left and x <= right and y >= top and y <= bottom:
+            return False
+        return True
+        
 
 class Location(Identifiable):
     def __init__(self, new_id=""):
@@ -101,8 +129,9 @@ class Location(Identifiable):
         instance.progress = Progress.from_json(
             data.get('progress', {}), instance)
         instance.pile.quantity = data.get('quantity', 0.0)
-        instance.grid.dimensions = data.get('dimensions', (0, 0))
-        instance.grid.excluded = data.get('excluded', (0, 0, 0, 0))
+        instance.grid.dimensions = data.get('dimensions') or (0, 0)
+        instance.grid.excluded = data.get('excluded') or (0, 0, 0, 0)
+        instance.grid.set_default_pos()
         return instance
 
     def json_to_db(self, doc):
@@ -299,13 +328,19 @@ class Location(Identifiable):
             dest.loc = Location.get_by_id(dest_id)
         for item_at in current_obj.items:
             item_at.item = Item.get_by_id(item_at.item.id)
+            if not current_obj.grid.in_grid(item_at.position):
+                item_at.position = current_obj.grid.default_pos
         return current_obj
 
     @classmethod
     def data_for_play(cls, id_to_get):
-        logger.debug("data_for_play()")
+        logger.debug("data_for_play(%s)", id_to_get)
         current_obj = cls.data_for_configure(id_to_get)
-        cls.load_characters_at_loc(id_to_get)
+        chars = cls.load_characters_at_loc(id_to_get)
+        for char in chars:
+            if char.location.id == current_obj.id:
+                if not current_obj.grid.in_grid(char.position):
+                    char.position = current_obj.grid.default_pos
         return current_obj
 
     def configure_by_form(self):
@@ -326,6 +361,7 @@ class Location(Identifiable):
                     'excluded_left_top').split(','))) +
                 list(map(int, request.form.get(
                     'excluded_right_bottom').split(','))))
+            self.grid.set_default_pos()
             destination_ids = request.form.getlist('destination_id[]')
             destination_distances = request.form.getlist('destination_distance[]')
             self.destinations = {}

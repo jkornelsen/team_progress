@@ -12,6 +12,26 @@
 
 {% block content %}
     <script>
+        const keyToMovement = {
+            'ArrowUp': { xChange: 0, yChange: -1 },
+            'ArrowDown': { xChange: 0, yChange: 1 },
+            'ArrowLeft': { xChange: -1, yChange: 0 },
+            'ArrowRight': { xChange: 1, yChange: 0 },
+            'Numpad8': { xChange: 0, yChange: -1 },
+            'Numpad2': { xChange: 0, yChange: 1 },
+            'Numpad4': { xChange: -1, yChange: 0 },
+            'Numpad6': { xChange: 1, yChange: 0 },
+            'Numpad7': { xChange: -1, yChange: -1 },
+            'Numpad9': { xChange: 1, yChange: -1 },
+            'Numpad1': { xChange: -1, yChange: 1 },
+            'Numpad3': { xChange: 1, yChange: 1 }
+        };
+        document.addEventListener('keydown', function (event) {
+            const movement = keyToMovement[event.code];
+            if (movement) {
+                moveCharacter(movement.xChange, movement.yChange);
+            }
+        });
         const linkForKey = {
             'o': '{{ url_for('overview') }}',
         };
@@ -37,7 +57,9 @@
     <table style="background: transparent"><tr><td valign="top">
     <h2>Characters Here</h2>
     <ul>
+        {% set has = namespace(chars=False) %}
         {% for char in game_data.characters if char.location.id == current.id %}
+            {% set has.chars = True %}
             {% set link = url_for('play_char', char_id=char.id) %}
             {% set letter = link_letters.next(link) %}
             <script>
@@ -46,7 +68,7 @@
             <span>[{{ letter }}]</span>
             <a href="{{ link }}">{{ char.name }}</a>
             {% if has_grid %}
-                <span class="label-like">pos [{{char.position[0]}},{{char.position[1]}}]</span>
+                <span class="label-like char-position" data-char-id="{{ char.id }}">&nbsp;[{{char.position[0]}},{{char.position[1]}}]</span>
             {% endif %}
             <br>
         {% else %}
@@ -77,7 +99,7 @@
                 {% endif %}
             </span>
             {% if has_grid %}
-                <span class="label-like">pos [{{item_at.position[0]}},{{item_at.position[1]}}]</span>
+                <span class="label-like">&nbsp;[{{item_at.position[0]}},{{item_at.position[1]}}]</span>
             {% endif %}
             <br>
         {% else %}
@@ -129,37 +151,138 @@
             <tr>
                 {% for x in range(width) %}
                     {% if left <= x <= right and top <= y <= bottom %}
-                        <td class="grid excluded">
-                        </td>
+                        <td class="grid excluded" id="cell-{{ x }}-{{ y }}"></td>
                     {% else %}
-                        <td class="grid included">
-                        {% set cell_info = namespace(filled=False) %}
-                        {% for char in game_data.characters if char.location.id == current.id %}
-                            {% if char.position[0] == x and char.position[1] == y %}
-                                {% if not cell_info.filled %}
-                                    {{ char.name[0] }}
-                                    {% set cell_info.filled = True %}
-                                {% endif %}
-                            {% endif %}
-                        {% endfor %}
-                        {% for item_at in current.items %}
-                            {% if item_at.position[0] == x and item_at.position[1] == y %}
-                                {% if not cell_info.filled %}
-                                    {{ item_at.item.name[0] }}
-                                {% endif %}
-                            {% endif %}
-                        {% endfor %}
-                        </td>
+                        <td class="grid included" id="cell-{{ x }}-{{ y }}"></td>
                     {% endif %}
                 {% endfor %}
             </tr>
         {% endfor %}
         </table>
+        {% if has.chars %}
+            <style>
+                .navigation-container {
+                    display: grid;
+                    grid-template-columns: auto auto auto;
+                    grid-template-rows: auto auto auto;
+                    gap: 10px;
+                    justify-content: center;
+                    align-items: center;
+                }
+                .navigation-container button {
+                    width: 50px;
+                    height: 50px;
+                    font-size: 16px;
+                    cursor: pointer;
+                }
+                .empty {
+                    visibility: hidden; /* Hide the empty grid spaces */
+                }
+            </style>
+            <div class="navigation-container">
+                <button data-x="-1" data-y="-1">&#8598;</button> <!-- Top Left -->
+                <button data-x="0" data-y="-1">&#8593;</button> <!-- Up -->
+                <button data-x="1" data-y="-1">&#8599;</button> <!-- Top Right -->
+                <button data-x="-1" data-y="0">&#8592;</button> <!-- Left -->
+                <div></div>
+                <button data-x="1" data-y="0">&#8594;</button> <!-- Right -->
+                <select id="char-to-move" style="grid-column: span 3;">
+                    {% for char in game_data.characters if char.location.id == current.id %}
+                        <option value="{{ char.id }}" {% if char.id == defaults.move_char %}selected{% endif %}>{{ char.name }}</option>
+                    {% endfor %}
+                </select>
+                <button data-x="-1" data-y="1">&#8601;</button> <!-- Bottom Left -->
+                <button data-x="0" data-y="1">&#8595;</button> <!-- Down -->
+                <button data-x="1" data-y="1">&#8600;</button> <!-- Bottom Right -->
+            </div>
+        {% endif %}
     </td>
     {% endif %}
     </tr></table>
 
     <script>
+        const characters = {
+            {% for char in game_data.characters if char.location.id == current.id %}
+                "{{ char.id }}": {
+                    letter: '{{ char.name[0] }}',
+                    x: {{ char.position[0] }},
+                    y: {{ char.position[1] }} },
+            {% endfor %}
+        };
+        const items = {
+            {% for item_at in current.items %}
+                "{{ item_at.item.id }}": {
+                    letter: '{{ item_at.item.name[0] }}',
+                    x: {{ item_at.position[0] }},
+                    y: {{ item_at.position[1] }} },
+            {% endfor %}
+        };
+        function moveCharacter(xChange, yChange) {
+            const selectBox = document.getElementById('char-to-move');
+            const charId = (selectBox ? selectBox.value : null);
+            if (!charId) {
+                alert("Select a character to move.");
+                return;
+            }
+            fetch(`/char/move/${charId}/x_change/${xChange}/y_change/${yChange}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'}
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.position) {
+                    console.log(`Character moved to ${data.position}`);
+                    characters[charId].x = data.position[0];
+                    characters[charId].y = data.position[1];
+                    fillGrid();
+                    updateCharacterDisplay(charId, data.position);
+                } else {
+                    console.error('Failed to move character');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+        function fillGrid(redraw=true) {
+            if (redraw) {
+                const cells = document.querySelectorAll('.grid');
+                cells.forEach(cell => {
+                    cell.innerHTML = '';
+                });
+            }
+            for (const [id, char] of Object.entries(characters)) {
+                setCellContents(char.x, char.y, char.letter);
+            }
+
+            for (const [id, item_at] of Object.entries(items)) {
+                setCellContents(item_at.x, item_at.y, item_at.letter);
+            }
+        }
+        function setCellContents(x, y, content, replace = false) {
+            const cell = document.getElementById(`cell-${x}-${y}`);
+            if (cell) {
+                if (replace || cell.innerHTML.trim() === '') {
+                    cell.innerHTML = content;
+                } else {
+                    console.log(`Cell (${x}, ${y}) is already occupied.`);
+                }
+            } else {
+                console.error(`Cell (${x}, ${y}) not found.`);
+            }
+        }
+
+
+        // Initial setup of cell contents
+        fillGrid(false);
+
+        function updateCharacterDisplay(charId, position) {
+            const coordElement = document.querySelector(`span.char-position[data-char-id='${charId}']`);
+            if (coordElement) {
+                coordElement.innerHTML = `&nbsp;[${position[0]}, ${position[1]}]`;
+            } else {
+                console.error(`No coordinates element found for character ID ${charId}`);
+            }
+        }
+
         $(document).ready(function() {
             function updateQuantities() {
                 {% for item_at in current.items %}
@@ -175,6 +298,14 @@
 
             // Update quantities periodically
             //setInterval(updateQuantities, 10000);
+
+            document.querySelectorAll('.navigation-container button').forEach(button => {
+                button.addEventListener('click', () => {
+                    const xChange = parseInt(button.getAttribute('data-x'));
+                    const yChange = parseInt(button.getAttribute('data-y'));
+                    moveCharacter(xChange, yChange);
+                });
+            });
         });
     </script>
 {% endblock %}
