@@ -82,7 +82,7 @@
                         <select class="item-select" name="item_select">
                             <option value="" selected>(Select item)</option>
                             {% for item in game_data.items %}
-                                {% if item not in current.items %}
+                                {% if item.id not in current.items %}
                                     <option value="{{ item.id }}">{{ item.name }}</option>
                                 {% endif %}
                             {% endfor %}

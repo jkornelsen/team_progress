@@ -50,4 +50,3 @@ def dec2str(value):
     if value is None or value == '':
         return ''
     return re.sub(r'\.0+$', '', str(value))
-

@@ -108,7 +108,7 @@
                         </div>
                     {% else %}
                         {% if game_data.overall.slots %}
-                            <div class="button-column, show-if-carried">
+                            <div class="button-column, show-if-carried, hide-if-empty">
                                 <button id="equip-btn" class="go-button">[E]quip</button><br>
                                 <select id="char-equip-slot">
                                     {% for slot in game_data.overall.slots %}
@@ -118,12 +118,12 @@
                             </div>
                         {% endif %}
                     {% endif %}
-                    <div class="button-column, show-if-carried, hide-if-slot">
+                    <div class="button-column, show-if-carried, hide-if-slot, hide-if-empty">
                         <button id="drop-btn" class="go-button">[D]rop</button>
                     </div>
                 {% endif %}
                 {% if container.pile.PILE_TYPE == 'local' and loc_id %}
-                    <div class="button-column, show-if-carried">
+                    <div class="button-column, show-if-carried, hide-if-empty">
                         <button id="pickup-btn" class="go-button">[P]ick Up</button><br>
                         <select id="char-picking-up">
                             {% for char in game_data.characters if char.location.id == loc_id %}
@@ -133,7 +133,7 @@
                     </div>
                 {% endif %}
                 {% if container.pile.PILE_TYPE == 'universal' %}
-                    <div class="button-column, show-if-carried">
+                    <div class="button-column, show-if-carried, hide-if-empty">
                         <button id="move_to_char-btn" class="go-button">Move to [C]haracter</button><br>
                         <select id="char-moving-to">
                             {% for char in game_data.characters %}
@@ -141,7 +141,7 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="button-column, show-if-local">
+                    <div class="button-column, show-if-local, hide-if-empty">
                         <button id="move_to_char-btn" class="go-button">Move to [L]ocation</button><br>
                         <select id="loc-moving-to">
                             {% for loc in game_data.locations %}
@@ -150,11 +150,11 @@
                         </select>
                     </div>
                 {% else %}
-                    <div class="button-column, show-if-universal">
+                    <div class="button-column, show-if-universal, hide-if-empty">
                         <button id="move_to_general-btn" class="go-button">Move to [G]eneral Storage</button>
                     </div>
                 {% endif %}
-                <div>
+                <div class="hide-if-empty">
                     <input type="checkbox" id="show-all-buttons" /><label for="show-all-buttons">Show all choices</label>
                 </div>
                 </div>
@@ -255,14 +255,10 @@
                         {% endif %}
                         </td>
                         <td id="recipe-{{ recipe.id }}-source-{{ item.id }}-at">
-                        {% if source.pile %}
+                        {% if source.pile and source.pile.quantity > 0 %}
                             {% set container = source.pile.container %}
                             {% if source.pile.PILE_TYPE == 'universal' %}
-                                {% if source.pile.quantity > 0 %}
-                                    (General)
-                                {% else %}
-                                    <center>&mdash;</center>
-                                {% endif %}
+                                (General)
                             {% else %}
                                 {% if source.pile.PILE_TYPE == 'carried' %}
                                     {% set link = url_for('play_char', char_id=container.id) %}
@@ -363,6 +359,30 @@
 
     <script>
         $(document).ready(function() {
+            let mainQuantity = 0;
+
+            function updateQuantity(data) {
+                // Main item quantity
+                $('#quantity-{{ current.id }}').text(
+                    data.quantity
+                    {% if current.q_limit != 0 %} + " / " + {{ current.q_limit }}{% endif %}
+                );
+                updateStorageProgress({
+                    quantity: data.quantity,
+                    max_quantity: {{ current.q_limit or 0 }}
+                });
+                mainQuantity = data.quantity;
+                // Source item quantities required
+                let url;
+                {% for recipe in current.recipes %}
+                    {% for source in recipe.sources %}
+                        url = getItemProgressUrl({{ source.item.id }})
+                        $.get(url, function(data) {
+                            $('#recipe-{{ recipe.id }}-source-{{ source.item.id }}-quantity').text(data.quantity);
+                        });
+                    {% endfor %}
+                {% endfor %}
+            }
             function updateStorageProgress(data) {
                 const progressBar = $('#storage-progress-bar-{{ current.id }}');
                 const progressLabel = $('#storage-progress-label-{{ current.id }}');
@@ -377,27 +397,6 @@
                 progressBar.attr('value', progressPercent);
                 progressBar.attr('max', 100);
                 progressLabel.text(`${quantity} / ${maxQuantity}`);
-            }
-            function updateQuantity(data) {
-                // Main item quantity
-                $('#quantity-{{ current.id }}').text(
-                    data.quantity
-                    {% if current.q_limit != 0 %} + " / " + {{ current.q_limit }}{% endif %}
-                );
-                updateStorageProgress({
-                    quantity: data.quantity,
-                    max_quantity: {{ current.q_limit or 0 }}
-                });
-                // Source item quantities required
-                let url;
-                {% for recipe in current.recipes %}
-                    {% for source in recipe.sources %}
-                        url = getItemProgressUrl({{ source.item.id }})
-                        $.get(url, function(data) {
-                            $('#recipe-{{ recipe.id }}-source-{{ source.item.id }}-quantity').text(data.quantity);
-                        });
-                    {% endfor %}
-                {% endfor %}
             }
             function getItemProgressUrl(itemId, sourceOnly=false) {
                 const queryParams = [];
@@ -508,6 +507,7 @@
                     reconcileElapsedTime(data);
                     updateStartButtonLabel(data, data.recipe_id);
                     updateProgressVisibility();
+                    updateVisibility();
                 });
             }
 
@@ -721,6 +721,25 @@
                         showThese.push(this);
                     } else {
                         hideThese.push(this);
+                    }
+                });
+                $('.hide-if-empty').each(function() {
+                    if (mainQuantity != 0) {
+                        if (!showThese.includes(this)) {
+                            showThese.push(this);
+                        }
+                        const index = showThese.indexOf(this);
+                        if (index > -1) {
+                            hideThese.splice(index, 1);
+                        }
+                    } else {
+                        const index = showThese.indexOf(this);
+                        if (index > -1) {
+                            showThese.splice(index, 1);
+                        }
+                        if (!hideThese.includes(this)) {
+                            hideThese.push(this);
+                        }
                     }
                 });
                 $('.hide-if-slot').each(function() {

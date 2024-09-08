@@ -95,7 +95,7 @@ class Event(Identifiable):
         }
 
     @classmethod
-    def from_json(cls, data, _=None):
+    def from_json(cls, data):
         if not isinstance(data, dict):
             data = vars(data)
         instance = cls(int(data.get('id', 0)))

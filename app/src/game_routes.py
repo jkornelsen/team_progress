@@ -133,13 +133,13 @@ def set_routes(app):
 
     @app.route('/configure/overall', methods=['GET', 'POST'])
     def configure_overall():
-        game_data = Overall.data_for_configure()
+        Overall.data_for_configure()
         if request.method == 'GET':
             session['referrer'] = request.referrer
             return render_template(
                 'configure/overall.html',
-                current=game_data.overall,
-                game_data=game_data)
+                current=g.game_data.overall,
+                game_data=g.game_data)
         game_data.overall.configure_by_form()
         return redirect(url_for('configure'))
 
@@ -294,7 +294,7 @@ def set_routes(app):
         logger.debug("-" * 80 + "\nitem_progress(item_id=%d, char_id=%s, loc_id=%s)",
             item_id, char_id, loc_id)
         item = Item.data_for_play(
-            item_id, char_id, loc_id, default_pile=True)
+            item_id, char_id, loc_id, default_pile=False)
         if not item:
             return jsonify({'error': 'Item not found'})
         pile = item.pile
@@ -403,24 +403,31 @@ def set_routes(app):
             item_id, char_id)
         item = Item.data_for_play(
             item_id, char_id, default_pile=False)
-        char = item.pile.container
-        owned_item = next((oi for oi in char.items
-            if oi.item.id == item_id), None)
+        char = Character.load_complete_object(char_id)
+        owned_item = char.items.get(item_id)
         if not owned_item:
             return jsonify({
                 'status': 'error',
                 'message': f'No item {item.name} in {char.name} inventory.'})
-            return
-        item_at = ItemAt(item=owned_item.item)
-        item_at.quantity = owned_item.quantity
-        loc = Location.data_for_configure(char.location.id)
-        loc.items.append(item_at)  # TODO: check if it already exists
-        char.items.remove(owned_item)
+        new_qty = owned_item.quantity
+        loc = Location.load_complete_object(char.location.id)
+        if item_id in loc.items:
+            item_at = loc.items[item_id]
+            new_qty += item_at.quantity
+        else:
+            item_at = ItemAt(item=owned_item.item)
+        if new_qty > item.q_limit:
+            return jsonify({
+                'status': 'error',
+                'message': f'Limit of {item.name} is {item.q_limit}.'})
+        item_at.quantity = new_qty
+        loc.items[item_id] = item_at
+        del char.items[item_id]
         loc.to_db()
         char.to_db()
         return jsonify({
-            'status': 'success', 'message':
-            f'Dropped {item.name}.'})
+            'status': 'success',
+            'message': f'Dropped {item.name}.'})
 
     @app.route('/item/pickup/<int:item_id>/loc/<int:loc_id>/char/<int:char_id>', methods=['POST'])
     def pickup_item(item_id, loc_id, char_id):
@@ -429,19 +436,27 @@ def set_routes(app):
         session['default_pickup_char'] = char_id
         item = Item.data_for_play(
             item_id, at_loc_id=loc_id, default_pile=False)
-        loc = item.pile.container
-        item_at = next((ia for ia in loc.items
-            if ia.item.id == item_id), None)
+        loc = Location.load_complete_object(loc_id)
+        item_at = loc.items.get(item_id)
         if not item_at:
             return jsonify({
                 'status': 'error',
                 'message': f'No item {item.name} at {item.pile.container.name}.'})
             return
-        owned_item = OwnedItem(item=item_at.item)
-        owned_item.quantity = item_at.quantity
-        char = Character.data_for_configure(char_id)
-        char.items.append(owned_item)  # TODO: check if it already exists
-        loc.items.remove(item_at)
+        new_qty = item_at.quantity
+        char = Character.load_complete_object(char_id)
+        if item_id in char.items:
+            owned_item = char.items[item_id]
+            new_qty += owned_item.quantity
+        else:
+            owned_item = OwnedItem(item=item_at.item)
+        if new_qty > item.q_limit:
+            return jsonify({
+                'status': 'error',
+                'message': f'Limit of {item.name} is {item.q_limit}.'})
+        owned_item.quantity = new_qty
+        char.items[item_id] = owned_item
+        del loc.items[item_id]
         char.to_db()
         loc.to_db()
         return jsonify({
@@ -456,8 +471,7 @@ def set_routes(app):
         item = Item.data_for_play(
             item_id, char_id, default_pile=False)
         char = item.pile.container
-        owned_item = next((oi for oi in char.items
-            if oi.item.id == item_id), None)
+        owned_item = char.items.get(item_id)
         if not owned_item:
             return jsonify({
                 'status': 'error',
@@ -476,8 +490,7 @@ def set_routes(app):
         item = Item.data_for_play(
             item_id, char_id, default_pile=False)
         char = item.pile.container
-        owned_item = next((oi for oi in char.items
-            if oi.item.id == item_id), None)
+        owned_item = char.items.get(item_id)
         if not owned_item:
             return jsonify({
                 'status': 'error',
@@ -516,11 +529,11 @@ def set_routes(app):
     def move_char(char_id, x_change, y_change):
         logger.debug("-" * 80 + "\nmove_char(%d,%d,%d)",
             char_id, x_change, y_change)
-        char = Character.data_for_configure(char_id)
+        char = Character.load_complete_object(char_id)
         if not char:
             return 'Character not found'
         session['default_move_char'] = char_id
-        loc = Location.data_for_configure(char.location.id)
+        loc = Location.load_complete_object(char.location.id)
         cur_x, cur_y = char.position
         newpos = (
             cur_x + x_change,

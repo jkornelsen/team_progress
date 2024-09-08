@@ -89,9 +89,9 @@ class Location(Identifiable):
         self.description = ""
         self.masked = False
         self.destinations = {}  # Destination objects keyed by loc id
-        self.items = []  # ItemAt objects
-        self.pile = ItemAt()  # for Progress
-        self.progress = Progress(container=self)
+        self.items = {}  # ItemAt objects keyed by item id
+        self.progress = None  # producing local items? Maybe char would do that.
+        self.pile = None  # for Progress
         self.grid = Grid()
 
     def to_json(self):
@@ -105,7 +105,7 @@ class Location(Identifiable):
                 for dest in self.destinations.values()},
             'items': [
                 item_at.to_json()
-                for item_at in self.items],
+                for item_at in self.items.values()],
             'progress': self.progress.to_json(),
             'quantity': self.pile.quantity,
             'dimensions': self.grid.dimensions,
@@ -123,11 +123,14 @@ class Location(Identifiable):
         instance.destinations = {
             dest_id: Destination(Location(dest_id), distance)
             for dest_id, distance in data.get('destinations', {}).items()}
-        instance.items = [
-            ItemAt.from_json(item_data)
-            for item_data in data.get('items', [])]
+        for item_data in data.get('items', []):
+            if not isinstance(item_data, dict):
+                item_data = vars(item_data)
+            instance.items[
+                item_data.get('item_id', 0)] = ItemAt.from_json(item_data)
         instance.progress = Progress.from_json(
             data.get('progress', {}), instance)
+        instance.pile = Pile()  #XXX: progress of different items shouldn't transfer
         instance.pile.quantity = data.get('quantity', 0.0)
         instance.grid.dimensions = data.get('dimensions') or (0, 0)
         instance.grid.excluded = data.get('excluded') or (0, 0, 0, 0)
@@ -208,11 +211,11 @@ class Location(Identifiable):
             if item_data.item_id:
                 itemAt = ItemAt.from_json(item_data)
                 itemAt.container = cls.get_by_id(loc_data.id)
-                loc.items.append(itemAt)
+                loc.items[item_data.item_id] = itemAt
                 if not itemAt.container.items:
                     itemAt.container = loc
         if loc:
-            pile = loc.items[0]
+            pile = next(iter(loc.items.values()))
             logger.debug("item %s (%d) qty %.1f",
                 pile.item.name, pile.item.id, pile.quantity)
         else:
@@ -220,7 +223,58 @@ class Location(Identifiable):
         return loc or Location()
 
     @classmethod
+    def load_complete_object(cls, id_to_get):
+        """Load an object with everything needed for storing to db.
+        Like data_for_file() but only one object.
+        """
+        logger.debug("load_complete_object(%s)", id_to_get)
+        if id_to_get == 'new':
+            id_to_get = 0
+        else:
+            id_to_get = int(id_to_get)
+        # Get current location and progress data
+        tables_row = cls.select_tables("""
+            SELECT *
+            FROM {tables[0]}
+            LEFT JOIN {tables[1]}
+                ON {tables[1]}.id = {tables[0]}.progress_id
+                AND {tables[1]}.game_token = {tables[0]}.game_token
+            WHERE {tables[0]}.game_token = %s
+                AND {tables[0]}.id = %s
+            ORDER BY {tables[0]}.name
+        """, (g.game_token, id_to_get), ['locations', 'progress'],
+            fetch_all=False)
+        current_data = MutableNamespace()
+        if tables_row:
+            loc_data, progress_data = tables_row
+            current_data = loc_data
+            loc_data.progress = progress_data
+        # Get the current location's destination data
+        loc_dest_rows = cls.execute_select("""
+            SELECT *
+            FROM loc_destinations
+            WHERE game_token = %s
+                AND loc_id = %s
+        """, (g.game_token, id_to_get))
+        dests_data = {}
+        for row in loc_dest_rows:
+            dests_data[row.dest_id] = row.distance
+        current_data.destinations = dests_data
+        # Get the current location's item relation data
+        loc_items_rows = cls.execute_select("""
+            SELECT *
+            FROM loc_items
+            WHERE game_token = %s
+                AND loc_id = %s
+        """, (g.game_token, id_to_get))
+        for item_data in loc_items_rows:
+            current_data.setdefault('items', []).append(vars(item_data))
+        # Create object from data
+        return Location.from_json(current_data)
+
+    @classmethod
     def data_for_file(cls):
+        """Load objects with everything needed for storing to JSON file."""
         logger.debug("data_for_file()")
         # Get loc and progress data
         tables_rows = cls.select_tables("""
@@ -254,7 +308,7 @@ class Location(Identifiable):
         """, [g.game_token])
         for row in item_rows:
             instance = instances[row.loc_id]
-            instance.items.append(ItemAt.from_json(row))
+            instance.items[row.item_id] = ItemAt.from_json(row)
         # Replace IDs with partial objects
         for instance in instances.values():
             dest_objs = {}
@@ -272,61 +326,13 @@ class Location(Identifiable):
     @classmethod
     def data_for_configure(cls, id_to_get):
         logger.debug("data_for_configure(%s)", id_to_get)
-        if id_to_get == 'new':
-            id_to_get = 0
-        else:
-            id_to_get = int(id_to_get)
-        # Get all location data and the current loc's progress data
-        tables_rows = cls.select_tables("""
-            SELECT *
-            FROM {tables[0]}
-            LEFT JOIN {tables[1]}
-                ON {tables[1]}.id = {tables[0]}.progress_id
-                AND {tables[1]}.game_token = {tables[0]}.game_token
-                AND {tables[0]}.id = %s
-            WHERE {tables[0]}.game_token = %s
-            ORDER BY {tables[0]}.name
-        """, (id_to_get, g.game_token), ['locations', 'progress'])
-        g.game_data.locations = []
-        current_data = MutableNamespace()
-        for loc_data, progress_data in tables_rows:
-            if loc_data.id == id_to_get:
-                current_data = loc_data
-                loc_data.progress = progress_data
-            g.game_data.locations.append(Location.from_json(loc_data))
-        # Get the current location's destination data
-        loc_dest_rows = cls.execute_select("""
-            SELECT *
-            FROM loc_destinations
-            WHERE game_token = %s
-                AND loc_id = %s
-        """, (g.game_token, id_to_get))
-        dests_data = {}
-        for row in loc_dest_rows:
-            dests_data[row.dest_id] = row.distance
-        current_data.destinations = dests_data
-        # Get all item data and the current location's item relation data
-        tables_rows = cls.select_tables("""
-            SELECT *
-            FROM {tables[0]}
-            LEFT JOIN {tables[1]}
-                ON {tables[0]}.id = {tables[1]}.item_id
-                AND {tables[0]}.game_token = {tables[1]}.game_token
-                AND {tables[1]}.loc_id = %s
-            WHERE {tables[0]}.game_token = %s
-            ORDER BY {tables[0]}.name
-        """, (id_to_get, g.game_token), ['items', 'loc_items'])
-        for item_data, loc_item_data in tables_rows:
-            if loc_item_data.loc_id:
-                current_data.setdefault('items', []).append(
-                    vars(loc_item_data))
-            g.game_data.items.append(Item.from_json(item_data))
-        # Create item from data
-        current_obj = Location.from_json(current_data)
+        current_obj = cls.load_complete_object(id_to_get)
+        # Get all basic location and item data
+        g.game_data.from_db_flat([Location, Item])
         # Replace partial objects with fully populated objects
         for dest_id, dest in current_obj.destinations.items():
             dest.loc = Location.get_by_id(dest_id)
-        for item_at in current_obj.items:
+        for item_at in current_obj.items.values():
             item_at.item = Item.get_by_id(item_at.item.id)
             if not current_obj.grid.in_grid(item_at.position):
                 item_at.position = current_obj.grid.default_pos
@@ -372,7 +378,7 @@ class Location(Identifiable):
             item_ids = request.form.getlist('item_id[]')
             item_qtys = request.form.getlist('item_qty[]')
             item_posits = request.form.getlist('item_pos[]')
-            self.items = []
+            self.items = {}
             for item_id, item_qty, item_pos in zip(
                     item_ids, item_qtys, item_posits):
                 item = Item(int(item_id))
@@ -380,7 +386,7 @@ class Location(Identifiable):
                 item_at.quantity = int(item_qty)
                 item_at.position = tuple(
                     map(int, item_pos.split(',')))
-                self.items.append(item_at)
+                self.items[item_id] = item_at
             self.to_db()
         elif 'delete_location' in request.form:
             try:

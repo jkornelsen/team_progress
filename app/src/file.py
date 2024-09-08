@@ -51,7 +51,7 @@ def set_routes(app):
     @app.route('/configure')
     def configure():
         file_message = session.pop('file_message', False)
-        GameData.entity_names_from_db()
+        g.game_data.entity_names_from_db()
         return render_template(
             'configure/index.html',
             game_data=g.game_data,

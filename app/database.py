@@ -80,7 +80,7 @@ def column_counts(table_name):
         'loc_items': 5,
         'locations': 9,
         'overall': 4,
-        'progress': 7,
+        'progress': 8,
         'recipe_attribs': 5,
         'recipe_sources': 6,
         'recipes': 6,

@@ -10,6 +10,7 @@ from .utils import dec2str
 tables_to_create = {
     'progress': f"""
         {coldef('id')},
+        item_id integer,
         recipe_id integer,
         start_time timestamp,
         stop_time timestamp,
@@ -51,6 +52,7 @@ class Progress(Identifiable):
     def to_json(self):
         return {
             'id': self.id,
+            'item_id': self.pile.item.id if self.pile else 0,
             'recipe_id': self.recipe.id,
             'start_time': self.start_time,
             'stop_time': self.stop_time,

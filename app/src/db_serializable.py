@@ -7,7 +7,7 @@ from types import SimpleNamespace
 from database import column_counts, pretty
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.CRITICAL)  # turn off for this module
+#logger.setLevel(logging.CRITICAL)  # turn off for this module
 
 def coldef(which):
     """Definitions for commonly used columns for creating a table."""
@@ -223,14 +223,21 @@ class Identifiable(DbSerializable):
         if not id_to_get:
             return None
         id_to_get = int(id_to_get)
+        entity_dict = getattr(g.active, cls.listname)
+        entity = entity_dict.get(id_to_get)
+        if entity:
+            return entity
         entity_list = g.game_data.get_list(cls)
         return next(
             (instance for instance in entity_list
             if instance.id == id_to_get), None)
 
     @classmethod
+    @property
     def listname(cls):
-        """Attributes of GameData for each entity. Same as table name."""
+        """Attributes of GameData and ActiveData for each entity.
+        Same as table name.
+        """
         return cls.tablename()
 
     @classmethod

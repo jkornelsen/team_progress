@@ -463,7 +463,7 @@ class Item(Identifiable, Pile):
         # Get all needed character and location names
         from .game_data import GameData
         from .location import Location
-        GameData.entity_names_from_db([Location])
+        g.game_data.entity_names_from_db([Location])
         Location.load_characters_at_loc(at_loc_id)
         # Get item data for the specific container,
         # and get piles at this loc or char that can be used for sources
@@ -650,7 +650,7 @@ def _assign_pile(current_item, chars, loc, char_id=0, loc_id=0,
                 pile.container.name)
     elif pile_type == Storage.LOCAL:
         # Select an itemAt for this loc
-        for item_at in loc.items:
+        for item_at in loc.items.values():
             if (item_at.item.id == current_item.id and
                     (item_at.quantity != 0 or not pile)):
                 pile = item_at

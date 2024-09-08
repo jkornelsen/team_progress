@@ -50,7 +50,7 @@ class Attrib(Identifiable):
         }
 
     @classmethod
-    def from_json(cls, data, _=None):
+    def from_json(cls, data):
         if not isinstance(data, dict):
             data = vars(data)
         instance = cls(int(data.get('id', 0)))
@@ -63,7 +63,7 @@ class Attrib(Identifiable):
         logger.debug("list_from_json()")
         instances = []
         for attrib_data in json_data:
-            instances.append(cls.from_json(attrib_data, None))
+            instances.append(cls.from_json(attrib_data))
         return instances
 
     @classmethod

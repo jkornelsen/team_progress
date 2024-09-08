@@ -60,11 +60,11 @@ class Character(Identifiable):
         self.masked = False
         self.attribs = {}  # AttribOf objects keyed by attrib id
         self.items = {}  # OwnedItem objects keyed by item id
-        self.pile = OwnedItem()  # for Progress
-        self.progress = Progress(container=self)  # for travel or item recipes
-        self.location = None  # Location object
+        self.location = None  # Location object where char is
         self.position = (0, 0)  # grid coordinates: top, left
         self.destination = None  # Location object to travel to
+        self.progress = None  # travel or producing items
+        self.pile = None  # for Progress
 
     def to_json(self):
         return {
@@ -86,7 +86,7 @@ class Character(Identifiable):
         }
 
     @classmethod
-    def from_json(cls, data, _=None):
+    def from_json(cls, data):
         if not isinstance(data, dict):
             data = vars(data)
         instance = cls(int(data.get('id', 0)))
@@ -100,13 +100,15 @@ class Character(Identifiable):
             instance.items[
                 owned_data.get('item_id', 0)] = OwnedItem.from_json(owned_data)
         instance.attribs = {
-            attrib_id: AttribOf(Attrib.get_by_id(int(attrib_id)), val=val)
+            attrib_id: AttribOf(
+                Attrib.get_by_id(int(attrib_id)), val=val)
             for attrib_id, val in data.get('attribs', {}).items()}
         instance.location = Location.get_by_id(
             int(data['location_id'])) if data.get('location_id', 0) else None
         instance.position = data.get('position', (0, 0))
         instance.progress = Progress.from_json(
             data.get('progress', {}), instance)
+        instance.pile = Pile()  #XXX: progress of different things shouldn't transfer
         instance.pile.quantity = data.get('quantity', 0.0)
         instance.destination = Location.get_by_id(
             int(data['dest_id'])) if data.get('dest_id', 0) else None
@@ -190,7 +192,7 @@ class Character(Identifiable):
             values.append(loc_id);
         tables_rows = cls.select_tables(
             query, values, ['characters', 'char_attribs'])
-        for char_data, item_data, attrib_data in tables_rows:
+        for char_data, attrib_data in tables_rows:
             char = chars.setdefault(
                 char_data.id, cls.from_json(char_data))
             if attrib_data.attrib_id:
@@ -206,7 +208,66 @@ class Character(Identifiable):
         return chars.values()
 
     @classmethod
+    def load_complete_object(cls, id_to_get):
+        """Load an object with everything needed for storing to db.
+        Like data_for_file() but only one object.
+        """
+        logger.debug("load_complete_object(%s)", id_to_get)
+        if id_to_get == 'new':
+            id_to_get = 0
+        else:
+            id_to_get = int(id_to_get)
+        # Get current character's character and progress data
+        tables_row = cls.select_tables("""
+            SELECT *
+            FROM {tables[0]}
+            LEFT JOIN {tables[1]}
+                ON {tables[1]}.id = {tables[0]}.progress_id
+                AND {tables[1]}.game_token = {tables[0]}.game_token
+            WHERE {tables[0]}.game_token = %s
+                AND {tables[0]}.id = %s
+            ORDER BY {tables[0]}.name
+        """, (g.game_token, id_to_get), ['characters', 'progress'],
+            fetch_all=False)
+        current_data = MutableNamespace()
+        if tables_row:
+            char_data, progress_data = tables_row
+            current_data = char_data
+            char_data.progress = progress_data
+        # Get current character's attrib relation data
+        char_attribs_rows = cls.execute_select("""
+            SELECT *
+            FROM char_attribs
+            WHERE game_token = %s
+                AND char_id = %s
+        """, (g.game_token, id_to_get))
+        for attrib_data in char_attribs_rows:
+            current_data.setdefault(
+                'attribs', {})[attrib_data.attrib_id] = attrib_data.value
+        # Get the current character's item relation data
+        char_items_rows = cls.execute_select("""
+            SELECT *
+            FROM char_items
+            WHERE game_token = %s
+                AND char_id = %s
+        """, (g.game_token, id_to_get))
+        for item_data in char_items_rows:
+            current_data.setdefault('items', []).append(vars(item_data))
+        # Mark this location as visited if it hasn't been yet
+        if hasattr(current_data, 'location_id') and current_data.location_id:
+            cls.execute_change(f"""
+                UPDATE locations
+                SET masked = false
+                WHERE id = %s AND masked = true
+            """, (current_data.location_id,))
+        # Get all location names
+        g.game_data.entity_names_from_db([Location])
+        # Create character from data
+        return Character.from_json(current_data)
+
+    @classmethod
     def data_for_file(cls):
+        """Load objects with everything needed for storing to JSON file."""
         logger.debug("data_for_file()")
         # Get char and progress data
         tables_rows = cls.select_tables("""
@@ -252,70 +313,10 @@ class Character(Identifiable):
     @classmethod
     def data_for_configure(cls, id_to_get):
         logger.debug("data_for_configure(%s)", id_to_get)
-        if id_to_get == 'new':
-            id_to_get = 0
-        else:
-            id_to_get = int(id_to_get)
-        # Get current character's character and progress data
-        tables_rows = cls.select_tables("""
-            SELECT *
-            FROM {tables[0]}
-            LEFT JOIN {tables[1]}
-                ON {tables[1]}.id = {tables[0]}.progress_id
-                AND {tables[1]}.game_token = {tables[0]}.game_token
-            WHERE {tables[0]}.game_token = %s
-                AND {tables[0]}.id = %s
-            ORDER BY {tables[0]}.name
-        """, (g.game_token, id_to_get), ['characters', 'progress'])
+        current_obj = cls.load_complete_object(id_to_get)
         g.game_data.characters = []
-        current_data = MutableNamespace()
-        for char_data, progress_data in tables_rows:
-            current_data = char_data
-            char_data.progress = progress_data
-        # Get all attrib data and the current character's attrib relation data
-        tables_rows = cls.select_tables("""
-            SELECT *
-            FROM {tables[0]}
-            LEFT JOIN {tables[1]}
-                ON {tables[1]}.attrib_id = {tables[0]}.id
-                AND {tables[1]}.game_token = {tables[0]}.game_token
-                AND {tables[1]}.char_id = %s
-            WHERE {tables[0]}.game_token = %s
-            ORDER BY {tables[0]}.name
-        """, (id_to_get, g.game_token), ['attribs', 'char_attribs'])
-        for attrib_data, char_attrib_data in tables_rows:
-            if char_attrib_data.attrib_id:
-                current_data.setdefault(
-                    'attribs', {})[attrib_data.id] = char_attrib_data.value
-            g.game_data.attribs.append(Attrib.from_json(attrib_data))
-        # Get all item data and the current character's item relation data
-        tables_rows = cls.select_tables("""
-            SELECT *
-            FROM {tables[0]}
-            LEFT JOIN {tables[1]}
-                ON {tables[0]}.id = {tables[1]}.item_id
-                AND {tables[0]}.game_token = {tables[1]}.game_token
-                AND {tables[1]}.char_id = %s
-            WHERE {tables[0]}.game_token = %s
-            ORDER BY {tables[0]}.name
-        """, (id_to_get, g.game_token), ['items', 'char_items'])
-        for item_data, char_item_data in tables_rows:
-            if char_item_data.char_id:
-                current_data.setdefault('items', []).append(
-                    char_item_data)
-            g.game_data.items.append(Item.from_json(item_data))
-        # Mark this location as visited if it hasn't been yet
-        if hasattr(current_data, 'location_id') and current_data.location_id:
-            cls.execute_change(f"""
-                UPDATE locations
-                SET masked = false
-                WHERE id = %s AND masked = true
-            """, (current_data.location_id,))
-        # Get all location names
-        from .game_data import GameData
-        GameData.entity_names_from_db([Location])
-        # Create character from data
-        current_obj = Character.from_json(current_data)
+        # Get all basic attrib and item data
+        g.game_data.from_db_flat([Attrib, Item])
         # Replace partial objects with fully populated objects
         for attrib_id, attrib_of in current_obj.attribs.items():
             attrib_of.attrib = Attrib.get_by_id(attrib_id)

@@ -142,7 +142,7 @@ class UserInteraction(DbSerializable):
 
     @classmethod
     def recent_interactions(cls, threshold_minutes=2):
-        GameData.entity_names_from_db()
+        g.game_data.entity_names_from_db()
         threshold_time = datetime.now() - timedelta(minutes=threshold_minutes)
         query = f"""
             SELECT DISTINCT ON (game_token, username)

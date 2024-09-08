@@ -171,12 +171,10 @@ class Overall(DbSerializable):
     @classmethod
     def data_for_configure(cls):
         logger.debug("data_for_configure()")
-        from .game_data import GameData
-        game_data = GameData.entity_names_from_db()
-        game_data.overall = cls.from_db()
-        for win_req in game_data.overall.win_reqs:
+        g.game_data.entity_names_from_db()
+        g.game_data.overall = cls.from_db()
+        for win_req in g.game_data.overall.win_reqs:
             win_req.id_to_refs_from_game_data()
-        return game_data
 
     def configure_by_form(self):
         if 'save_changes' in request.form:

@@ -90,7 +90,7 @@
 
     <h2>Equipped Items</h2>
     <ul>
-        {% for owned in current.items if owned.slot %}
+        {% for owned in current.items.values() if owned.slot %}
             {% set item = owned.item %}
             {% set link = url_for('play_item', item_id=item.id, char_id=current.id) %}
             {% set letter = link_letters.next(link) %}
@@ -249,7 +249,7 @@
             }
 
             // the Start button may change to "Running..."
-            function updateStartbuttonLabel(data) {
+            function updateStartButtonLabel(data) {
                 const startBtn = document.getElementById("start-travel-btn");
                 const stopBtn = document.getElementById("stop-travel-btn");
                 const destSel = document.getElementById("destination-select");
@@ -274,7 +274,7 @@
                 $.get(url, function(data) {
                     console.log('Received data:', data);
                     updateTravelProgress(data);
-                    updateStartbuttonLabel(data);
+                    updateStartButtonLabel(data);
                 });
             }
             let intervalId;
@@ -306,7 +306,7 @@
                             console.error(response.message);
                             alert(response.message);
                         }
-                        updateStartbuttonLabel();
+                        updateStartButtonLabel();
                     },
                     error: function(error) {
                         console.error('Error:', error);
@@ -323,7 +323,7 @@
                     .then(response => response.json())
                     .then(data => {
                         console.log(data.message);
-                        updateStartbuttonLabel();
+                        updateStartButtonLabel();
                     })
                     .catch(error => {
                         console.error('Error:', error);

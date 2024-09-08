@@ -78,7 +78,7 @@
 
     <h2>Items Here</h2>
     <ul class="item-list">
-        {% for item_at in current.items %}
+        {% for item_at in current.items.values() %}
             {% set item = item_at.item %}
             {% if item.storage_type == 'local' %}
                 {% set link = url_for('play_item', item_id=item.id, loc_id=current.id, char_id=char_id) %}
@@ -210,7 +210,7 @@
             {% endfor %}
         };
         const items = {
-            {% for item_at in current.items %}
+            {% for item_at in current.items.values() %}
                 "{{ item_at.item.id }}": {
                     letter: '{{ item_at.item.name[0] }}',
                     x: {{ item_at.position[0] }},
@@ -285,7 +285,7 @@
 
         $(document).ready(function() {
             function updateQuantities() {
-                {% for item_at in current.items %}
+                {% for item_at in current.items.values() %}
                     // Make AJAX request for item quantity
                     $.get('/item/progress_data/{{ item_at.item.id }}', function(data) {
                         $('#item-{{ item_at.item.id }}-quantity').text(data.quantity);
