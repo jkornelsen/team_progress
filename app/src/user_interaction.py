@@ -3,7 +3,6 @@ from flask import g, request, url_for
 import logging
 
 from .db_serializable import DbSerializable, coldef
-from src.game_data import GameData
 
 from .attrib import Attrib
 from .character import Character

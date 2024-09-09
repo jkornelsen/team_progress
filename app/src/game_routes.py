@@ -56,7 +56,7 @@ def error_page(exc):
 def set_routes(app):
     @app.route('/configure/attrib/<attrib_id>', methods=['GET', 'POST'])
     def configure_attrib(attrib_id):
-        attrib = Attrib.data_for_configure(attrib_id)
+        attrib = Attrib.load_complete_object(attrib_id)
         if request.method == 'GET':
             session['referrer'] = request.referrer
             return render_template(
@@ -72,14 +72,15 @@ def set_routes(app):
     @app.route('/configure/character/<char_id>', methods=['GET', 'POST'])
     def configure_char(char_id):
         logger.debug("-" * 80 + "\nconfigure_char(%s)", char_id)
-        char = Character.data_for_configure(char_id)
         if request.method == 'GET':
             session['referrer'] = request.referrer
+            char = Character.data_for_configure(char_id)
             return render_template(
                 'configure/character.html',
                 current=char,
                 game_data=g.game_data)
         try:
+            char = Character.load_complete_object(char_id)
             char.configure_by_form()
         except DeletionError as e:
             return error_page(e)
@@ -87,14 +88,15 @@ def set_routes(app):
 
     @app.route('/configure/event/<event_id>', methods=['GET', 'POST'])
     def configure_event(event_id):
-        event = Event.data_for_configure(event_id)
         if request.method == 'GET':
             session['referrer'] = request.referrer
+            event = Event.data_for_configure(event_id)
             return render_template(
                 'configure/event.html',
                 current=event,
                 game_data=g.game_data)
         try:
+            event = Event.load_complete_object(event_id)
             event.configure_by_form()
         except DeletionError as e:
             return error_page(e)
@@ -103,14 +105,15 @@ def set_routes(app):
     @app.route('/configure/item/<item_id>', methods=['GET', 'POST'])
     def configure_item(item_id):
         logger.debug("-" * 80 + "\nconfigure_item(%s)", item_id)
-        item = Item.data_for_configure(item_id)
         if request.method == 'GET':
             session['referrer'] = request.referrer
+            item = Item.data_for_configure(item_id)
             return render_template(
                 'configure/item.html',
                 current=item,
                 game_data=g.game_data)
         try:
+            item = Item.load_complete_object(item_id)
             item.configure_by_form()
         except DeletionError as e:
             return error_page(e)
@@ -118,14 +121,15 @@ def set_routes(app):
 
     @app.route('/configure/location/<loc_id>',methods=['GET', 'POST'])
     def configure_location(loc_id):
-        loc = Location.data_for_configure(loc_id)
         if request.method == 'GET':
             session['referrer'] = request.referrer
+            loc = Location.data_for_configure(loc_id)
             return render_template(
                 'configure/location.html',
                 current=loc,
                 game_data=g.game_data)
         try:
+            loc = Location.load_complete_object(loc_id)
             loc.configure_by_form()
         except DeletionError as e:
             return error_page(e)
@@ -273,7 +277,7 @@ def set_routes(app):
             'movingto_char': session.get('default_movingto_char', ''),
             'slot': session.get('default_slot', '')
         }
-        g.game_data.overall = Overall.from_db()
+        g.game_data.overall = Overall.load_complete_object()
         return render_template(
             'play/item.html',
             current=item,

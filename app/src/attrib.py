@@ -67,19 +67,8 @@ class Attrib(Identifiable):
         return instances
 
     @classmethod
-    def data_for_file(cls):
-        logger.debug("data_for_file()")
-        rows = cls.execute_select("""
-            SELECT *
-            FROM {table}
-            WHERE game_token = %s
-        """, (g.game_token,))
-        instances = [cls.from_json(vars(row)) for row in rows]
-        return instances
-
-    @classmethod
-    def data_for_configure(cls, id_to_get):
-        logger.debug("data_for_configure(%s)", id_to_get)
+    def load_complete_object(cls, id_to_get):
+        logger.debug("load_complete_object(%s)", id_to_get)
         if id_to_get == 'new':
             id_to_get = 0
         else:
@@ -92,6 +81,17 @@ class Attrib(Identifiable):
         """, (g.game_token, id_to_get), fetch_all=False)
         instance = cls.from_json(vars(row))
         return instance
+
+    @classmethod
+    def data_for_file(cls):
+        logger.debug("data_for_file()")
+        rows = cls.execute_select("""
+            SELECT *
+            FROM {table}
+            WHERE game_token = %s
+        """, (g.game_token,))
+        instances = [cls.from_json(vars(row)) for row in rows]
+        return instances
 
     def configure_by_form(self):
         if 'save_changes' in request.form:  # button was clicked

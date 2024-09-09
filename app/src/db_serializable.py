@@ -296,25 +296,6 @@ class Identifiable(DbSerializable):
         return instances
 
     @classmethod
-    def list_to_db(cls):
-        logger.debug("list_to_db()")
-        table = cls.tablename()
-        existing_ids = set(
-            str(doc['id'])
-            for doc in table.find({'game_token': g.game_token}))
-        entity_list = g.game_data.get_list(cls)
-        for instance in entity_list:
-            instance.to_db()
-        for doc_id in existing_ids:
-            if doc_id not in (str(instance.id) for instance in entity_list):
-                logger.debug("Removing document with id %d", doc_id)
-                cls(doc_id).remove_from_db()
-
-    @classmethod
-    def list_from_db(cls):
-        return cls.data_for_file()
-
-    @classmethod
     def data_for_file(cls):
         raise NotImplementedError()
 

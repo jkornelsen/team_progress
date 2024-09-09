@@ -170,27 +170,6 @@ class Location(Identifiable):
                 values)
 
     @classmethod
-    def load_characters_at_loc(cls, id_to_get, load=True):
-        from .character import Character
-        query = """
-            SELECT *
-            FROM characters
-            WHERE game_token = %s
-        """
-        values = [g.game_token]
-        if id_to_get:
-            query += " AND location_id = %s"
-            values.append(id_to_get)
-        query += "\nORDER BY name"
-        chars = []
-        characters_rows = cls.execute_select(query, values)
-        for char_row in characters_rows:
-            chars.append(Character.from_json(char_row))
-        if load:
-            g.game_data.set_list(Character, chars)
-        return chars
-
-    @classmethod
     def load_piles(cls, loc_id):
         logger.debug("load_piles(%d)", loc_id)
         query = """
@@ -232,7 +211,7 @@ class Location(Identifiable):
             id_to_get = 0
         else:
             id_to_get = int(id_to_get)
-        # Get current location and progress data
+        # Get this location's base data and progress data
         tables_row = cls.select_tables("""
             SELECT *
             FROM {tables[0]}
@@ -241,7 +220,6 @@ class Location(Identifiable):
                 AND {tables[1]}.game_token = {tables[0]}.game_token
             WHERE {tables[0]}.game_token = %s
                 AND {tables[0]}.id = %s
-            ORDER BY {tables[0]}.name
         """, (g.game_token, id_to_get), ['locations', 'progress'],
             fetch_all=False)
         current_data = MutableNamespace()
@@ -249,7 +227,7 @@ class Location(Identifiable):
             loc_data, progress_data = tables_row
             current_data = loc_data
             loc_data.progress = progress_data
-        # Get the current location's destination data
+        # Get this location's destination data
         loc_dest_rows = cls.execute_select("""
             SELECT *
             FROM loc_destinations
@@ -260,7 +238,7 @@ class Location(Identifiable):
         for row in loc_dest_rows:
             dests_data[row.dest_id] = row.distance
         current_data.destinations = dests_data
-        # Get the current location's item relation data
+        # Get this location's item relation data
         loc_items_rows = cls.execute_select("""
             SELECT *
             FROM loc_items
@@ -299,7 +277,7 @@ class Location(Identifiable):
         """, [g.game_token])
         for row in dest_rows:
             instance = instances[row.loc_id]
-            instance.destinations[dest_data.dest_id] = dest_data.distance
+            instance.destinations[row.dest_id] = row.distance
         # Get loc item data
         item_rows = cls.execute_select("""
             SELECT *
@@ -342,7 +320,8 @@ class Location(Identifiable):
     def data_for_play(cls, id_to_get):
         logger.debug("data_for_play(%s)", id_to_get)
         current_obj = cls.data_for_configure(id_to_get)
-        chars = cls.load_characters_at_loc(id_to_get)
+        from .character import Character
+        chars = Character.load_characters_at_loc(id_to_get)
         for char in chars:
             if char.location.id == current_obj.id:
                 if not current_obj.grid.in_grid(char.position):

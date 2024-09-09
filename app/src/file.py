@@ -43,7 +43,7 @@ def load_data_from_file(filepath):
     with open(filepath, 'r') as infile:
         data = json.load(infile)
         GameData.clear_db_for_token()
-        g.game_data = GameData.from_json(data)
+        g.game_data.from_json(data)
     g.game_data.to_db()
     session['file_message'] = 'Loaded from file.'
 
@@ -59,9 +59,9 @@ def set_routes(app):
 
     @app.route('/save_to_file')
     def save_to_file():
-        game_data = GameData.from_db()
-        data_to_save = game_data.to_json()
-        filename = generate_filename(game_data.overall.title)
+        g.game_data.load_for_file()
+        data_to_save = g.game_data.to_json()
+        filename = generate_filename(g.game_data.overall.title)
         with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
             filepath = temp_file.name
             json.dump(data_to_save, temp_file, indent=4)
@@ -128,7 +128,7 @@ def set_routes(app):
     @app.route('/blank_scenario')
     def blank_scenario():
         GameData.clear_db_for_token()
-        g.game_data = GameData()
+        GameData()
         g.game_data.to_db()
         session['file_message'] = 'Starting game with default setup.'
         return redirect(url_for('configure'))

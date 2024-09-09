@@ -148,6 +148,26 @@ class Character(Identifiable):
                 values)
 
     @classmethod
+    def load_characters_at_loc(cls, loc_id, load=True):
+        query = """
+            SELECT *
+            FROM characters
+            WHERE game_token = %s
+        """
+        values = [g.game_token]
+        if loc_id:
+            query += " AND location_id = %s"
+            values.append(loc_id)
+        query += "\nORDER BY name"
+        chars = []
+        characters_rows = cls.execute_select(query, values)
+        for char_row in characters_rows:
+            chars.append(Character.from_json(char_row))
+        if load:
+            g.game_data.set_list(Character, chars)
+        return chars
+
+    @classmethod
     def load_piles(cls, char_id=0, loc_id=0):
         logger.debug("load_piles(%d, %d)", char_id, loc_id)
         query = """
@@ -217,7 +237,7 @@ class Character(Identifiable):
             id_to_get = 0
         else:
             id_to_get = int(id_to_get)
-        # Get current character's character and progress data
+        # Get this character's base data and progress data
         tables_row = cls.select_tables("""
             SELECT *
             FROM {tables[0]}
@@ -226,7 +246,6 @@ class Character(Identifiable):
                 AND {tables[1]}.game_token = {tables[0]}.game_token
             WHERE {tables[0]}.game_token = %s
                 AND {tables[0]}.id = %s
-            ORDER BY {tables[0]}.name
         """, (g.game_token, id_to_get), ['characters', 'progress'],
             fetch_all=False)
         current_data = MutableNamespace()
@@ -234,7 +253,7 @@ class Character(Identifiable):
             char_data, progress_data = tables_row
             current_data = char_data
             char_data.progress = progress_data
-        # Get current character's attrib relation data
+        # Get this character's attrib relation data
         char_attribs_rows = cls.execute_select("""
             SELECT *
             FROM char_attribs
@@ -244,7 +263,7 @@ class Character(Identifiable):
         for attrib_data in char_attribs_rows:
             current_data.setdefault(
                 'attribs', {})[attrib_data.attrib_id] = attrib_data.value
-        # Get the current character's item relation data
+        # Get the this character's item relation data
         char_items_rows = cls.execute_select("""
             SELECT *
             FROM char_items

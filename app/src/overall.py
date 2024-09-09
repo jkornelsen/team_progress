@@ -135,10 +135,8 @@ class Overall(DbSerializable):
         return instance
 
     @classmethod
-    def from_db(cls):
-        logger.debug(f"{cls.__name__}.from_db()")
-        #if 'overall' in g:
-        #    return g.overall
+    def load_complete_object(cls):
+        logger.debug("load_complete_object()")
         values = [g.game_token]
         tables_rows = DbSerializable.select_tables("""
             SELECT *
@@ -172,7 +170,7 @@ class Overall(DbSerializable):
     def data_for_configure(cls):
         logger.debug("data_for_configure()")
         g.game_data.entity_names_from_db()
-        g.game_data.overall = cls.from_db()
+        g.game_data.overall = cls.load_complete_object()
         for win_req in g.game_data.overall.win_reqs:
             win_req.id_to_refs_from_game_data()
 
@@ -252,7 +250,7 @@ class Overall(DbSerializable):
             items=item_rows, events=event_rows)
         from .user_interaction import UserInteraction  # avoid circular import
         interactions_list = UserInteraction.recent_interactions()
-        instance = cls.from_db()
+        instance = cls.load_complete_object()
         g.game_data.overall = instance
         # Win requirement results
         req_by_id = {}

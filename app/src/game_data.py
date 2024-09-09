@@ -14,7 +14,7 @@ from .progress import Progress
 
 logger = logging.getLogger(__name__)
 
-# In this order for from_json().
+# In this order for from_json() to correctly get references to other entities. 
 ENTITIES = (
         Attrib,
         Item,
@@ -74,25 +74,24 @@ class GameData:
 
     def from_json(self, data):
         logger.debug("from_json()")
-        # Load in this order to correctly get references to other entities. 
         for entity_cls in ENTITIES:
             entity_data = data[entity_cls.listname]
             self.set_list(
                 entity_cls, entity_cls.list_from_json(entity_data))
         self.overall = Overall.from_json(data['overall'])
 
-    def from_db(self, entities=None):
-        logger.debug("from_db()")
+    def load_for_file(self, entities=None):
+        logger.debug("load_complete()")
         if entities is None:
             entities = ENTITIES
         for entity_cls in entities:
             self.set_list(
-                entity_cls, entity_cls.list_from_db())
-        self.overall = Overall.from_db()
+                entity_cls, entity_cls.data_for_file())
+        self.overall = Overall.load_complete_object()
 
     def from_db_flat(self, entities=None):
         """Don't include entity relation data, just the base tables."""
-        logger.debug("from_db_base_tables()")
+        logger.debug("from_db_flat()")
         if entities is None:
             entities = ENTITIES
         for entity_cls in entities:
@@ -107,14 +106,13 @@ class GameData:
                 entity = entity_cls.from_json(row)
                 self.get_list(entity_cls).append(entity)
 
-    @classmethod
-    def entity_names_from_db(cls, entities=None):
+    def entity_names_from_db(self, entities=None):
         logger.debug("entity_names_from_db()")
         if entities is None:
-            entities = cls.ENTITIES
+            entities = ENTITIES
         query_parts = []
         for entity_cls in entities:
-            g.game_data.set_list(entity_cls, [])
+            self.set_list(entity_cls, [])
             query_parts.append(f"""
                 SELECT id, name, '{entity_cls.tablename()}' AS tablename
                 FROM {entity_cls.tablename()}
@@ -123,9 +121,9 @@ class GameData:
         rows = DbSerializable.execute_select(
             " UNION ".join(query_parts) + " ORDER BY name")
         for row in rows:
-            entity_cls = g.game_data.entity_for(row.tablename)
+            entity_cls = self.entity_for(row.tablename)
             entity = entity_cls.from_json(row)
-            g.game_data.get_list(entity_cls).append(entity)
+            self.get_list(entity_cls).append(entity)
 
     def to_db(self):
         logger.debug("to_db()")
@@ -151,4 +149,3 @@ class GameData:
                 DELETE FROM {tablename}
                 WHERE game_token = %s
             """, (g.game_token,))
-

@@ -152,6 +152,56 @@ class Event(Identifiable):
                 values)
 
     @classmethod
+    def load_complete_object(cls, id_to_get):
+        """Load an object with everything needed for storing to db.
+        Like data_for_file() but only one object.
+        """
+        logger.debug("load_complete_object(%s)", id_to_get)
+        if id_to_get == 'new':
+            id_to_get = 0
+        else:
+            id_to_get = int(id_to_get)
+        # Get this event's base data
+        events_row = cls.execute_select("""
+            SELECT *
+            FROM {table}
+            WHERE game_token = %s
+                AND id = %s
+        """, (g.game_token, id_to_get), fetch_all=False)
+        current_data = MutableNamespace()
+        if events_row:
+            current_data = event_row
+        # Get this event's attrib relation data
+        event_attribs_rows = cls.execute_select("""
+            SELECT *
+            FROM event_attribs
+            WHERE game_token = %s
+                AND event_id = %s
+        """, (g.game_token, id_to_get))
+        for attrib_data in event_attribs_rows:
+            if attrib_data.determining:
+                listname = 'determining_attrs'
+            else:
+                listname = 'changed_attrs'
+            current_data.setdefault(listname, []).append(
+                attrib_data.attrib_id)
+        # Get this events's trigger relation data
+        triggers_rows = cls.execute_select("""
+            SELECT *
+            FROM event_triggers
+            WHERE game_token = %s
+                AND event_id = %s
+        """, (g.game_token, id_to_get))
+        for trigger_data in triggers_rows:
+            if trigger_data.item_id:
+                trigger_tup = (Item, trigger_data.item_id)
+            else:
+                trigger_tup = (Location, trigger_data.loc_id)
+            current_data.setdefault('triggers', []).append(trigger_tup)
+        # Create event from data
+        return Event.from_json(current_data)
+
+    @classmethod
     def data_for_file(cls):
         logger.debug("data_for_file()")
         # Get event data with attrib relation data
@@ -207,68 +257,9 @@ class Event(Identifiable):
     @classmethod
     def data_for_configure(cls, id_to_get):
         logger.debug("data_for_configure(%s)", id_to_get)
-        if id_to_get == 'new':
-            id_to_get = 0
-        else:
-            id_to_get = int(id_to_get)
-        # Get all event data
-        events_rows = cls.execute_select("""
-            SELECT *
-            FROM {table}
-            WHERE game_token = %s
-            ORDER BY {table}.name
-        """, (g.game_token,))
-        g.game_data.events = []
-        current_data = MutableNamespace()
-        for event_row in events_rows:
-            if event_row.id == id_to_get:
-                current_data = event_row
-            g.game_data.events.append(Event.from_json(event_row))
-        # Get all attrib data and the current event's attrib relation data
-        tables_rows = cls.select_tables("""
-            SELECT *
-            FROM {tables[0]}
-            LEFT JOIN {tables[1]}
-                ON {tables[1]}.attrib_id = {tables[0]}.id
-                AND {tables[1]}.game_token = {tables[0]}.game_token
-                AND {tables[1]}.event_id = %s
-            WHERE {tables[0]}.game_token = %s
-            ORDER BY {tables[0]}.name
-        """, (id_to_get, g.game_token), ['attribs', 'event_attribs'])
-        for attrib_data, evt_attrib_data in tables_rows:
-            if evt_attrib_data.attrib_id:
-                if evt_attrib_data.determining:
-                    listname = 'determining_attrs'
-                else:
-                    listname = 'changed_attrs'
-                current_data.setdefault(listname, []).append(attrib_data.id)
-                logger.debug("current_data.%s = %s",
-                    listname, current_data.get(listname))
-            g.game_data.attribs.append(Attrib.from_json(attrib_data))
-        # Get all item and location data and
-        # the current events's trigger relation data
-        for entity_cls in (Item, Location):
-            join_key = "loc_id" if entity_cls == Location else "item_id"
-            tables_rows = cls.select_tables("""
-                SELECT *
-                FROM {tables[0]}
-                LEFT JOIN {tables[1]}
-                    ON {tables[0]}.id = {tables[1]}.""" + join_key + """
-                    AND {tables[0]}.game_token = {tables[1]}.game_token
-                    AND {tables[1]}.event_id = %s
-                WHERE {tables[0]}.game_token = %s
-                ORDER BY {tables[0]}.name
-            """, (id_to_get, g.game_token),
-                [entity_cls.tablename(), 'event_triggers'])
-            for entity_data, trigger_data in tables_rows:
-                if trigger_data.event_id:
-                    trigger_tup = (
-                        entity_cls.basename(), trigger_data.get(join_key))
-                    current_data.setdefault('triggers', []).append(trigger_tup)
-                entity_cls.get_list().append(
-                    entity_cls.from_json(entity_data))
-        # Create event from data
-        current_obj = Event.from_json(current_data)
+        current_obj = cls.load_complete_object(id_to_get)
+        # Get all basic data
+        g.game_data.from_db_flat([Attrib, Event, Item, Location])
         # Replace partial objects with fully populated objects
         for attrlist in (
                 current_obj.determining_attrs,

@@ -352,6 +352,49 @@ class Item(Identifiable, Pile):
         return item_recipes_data
 
     @classmethod
+    def load_complete_object(cls, id_to_get):
+        """Load an object with everything needed for storing to db.
+        Like data_for_file() but only one object.
+        """
+        if id_to_get == 'new':
+            id_to_get = 0
+        else:
+            id_to_get = int(id_to_get)
+        # Get this item's base data and progress data
+        tables_row = cls.select_tables("""
+            SELECT *
+            FROM {tables[0]}
+            LEFT JOIN {tables[1]}
+                ON {tables[1]}.id = {tables[0]}.progress_id
+                AND {tables[1]}.game_token = {tables[0]}.game_token
+            WHERE {tables[0]}.game_token = %s
+                AND {tables[0]}.id = %s
+        """, (g.game_token, id_to_get), ['items', 'progress'],
+            fetch_all=False)
+        current_data = MutableNamespace()
+        if tables_row:
+            item_data, progress_data = tables_row
+            current_data = item_data
+            item_data.progress = progress_data
+        # Get this item's attrib relation data
+        item_attribs_rows = cls.execute_select("""
+            SELECT *
+            FROM item_attribs
+            WHERE game_token = %s
+                AND item_id = %s
+        """, (g.game_token, id_to_get))
+        for attrib_data in item_attribs_rows:
+            current_data.setdefault(
+                'attribs', {})[attrib_data.attrib_id] = attrib_data.value
+        # Get this item's source relation data
+        item_recipes_data = cls.db_recipe_data(id_to_get)
+        if item_recipes_data:
+            recipes_data = list(item_recipes_data.values())[0]
+            current_data.recipes = list(recipes_data.values())
+        # Create item from data
+        return Item.from_json(current_data)
+
+    @classmethod
     def data_for_file(cls):
         logger.debug("data_for_file()")
         # Get item and progress data
@@ -399,40 +442,12 @@ class Item(Identifiable, Pile):
     @classmethod
     def data_for_configure(cls, id_to_get):
         logger.debug("data_for_configure(%s)", id_to_get)
-        if id_to_get == 'new':
-            id_to_get = 0
-        else:
-            id_to_get = int(id_to_get)
-        # Get all item data and the current item's progress data
-        tables_rows = cls.db_item_and_progress_data(id_to_get)
-        g.game_data.items = []
-        current_data = MutableNamespace()
-        for item_data, progress_data in tables_rows:
-            if item_data.id == id_to_get:
-                current_data = item_data
-            if progress_data.id:
-                item_data.progress = progress_data
-            g.game_data.items.append(Item.from_json(item_data))
-        # Get all attrib data and the current item's attrib relation data
-        tables_rows = cls.db_attrib_data(id_to_get, include_all=True)
-        for attrib_data, item_attrib_data in tables_rows:
-            if item_attrib_data.attrib_id:
-                current_data.setdefault(
-                    'attribs', {})[attrib_data.id] = item_attrib_data.value
-            g.game_data.attribs.append(Attrib.from_json(attrib_data))
-        # Get the current item's source relation data
-        item_recipes_data = cls.db_recipe_data(id_to_get)
-        if item_recipes_data:
-            recipes_data = list(item_recipes_data.values())[0]
-            current_data.recipes = list(recipes_data.values())
-        # Create item from data
-        current_obj = Item.from_json(current_data)
+        current_obj = cls.load_complete_object(id_to_get)
+        # Get all basic attrib and item data
+        g.game_data.from_db_flat([Attrib, Item])
         # Replace partial objects with fully populated objects
-        populated_objs = {}
-        for partial_attrib, val in current_obj.attribs.items():
-            attrib = Attrib.get_by_id(partial_attrib.id)
-            populated_objs[attrib.id] = AttribOf(attrib, val=val)
-        current_obj.attribs = populated_objs
+        for attrib_id, attrib_of in current_obj.attribs.items():
+            attrib_of.attrib = Attrib.get_by_id(attrib_id)
         for recipe in current_obj.recipes:
             for source in recipe.sources:
                 source.item = Item.get_by_id(source.item.id)
@@ -460,11 +475,11 @@ class Item(Identifiable, Pile):
         logger.debug("data_for_play(%s, %s, %s)",
             id_to_get, owner_char_id, at_loc_id)
         current_obj = cls.data_for_configure(id_to_get)
-        # Get all needed character and location names
-        from .game_data import GameData
+        # Get all needed location and character names
         from .location import Location
+        from .character import Character
         g.game_data.entity_names_from_db([Location])
-        Location.load_characters_at_loc(at_loc_id)
+        Character.load_characters_at_loc(at_loc_id)
         # Get item data for the specific container,
         # and get piles at this loc or char that can be used for sources
         _load_piles(current_obj, owner_char_id, at_loc_id, default_pile)
@@ -477,7 +492,6 @@ class Item(Identifiable, Pile):
                 for recipe_id, recipe_data in recipes_data.items()]
         # Print debugging info
         container = current_obj.pile.container
-        from .character import Character
         if isinstance(container, Character):
             char = container
             logger.debug("container %s", char.name)
