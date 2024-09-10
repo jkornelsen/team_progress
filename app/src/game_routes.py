@@ -153,6 +153,7 @@ def set_routes(app):
         instance = Character.data_for_play(char_id)
         if not instance:
             return 'Character not found'
+        session['last_char_id'] = char_id
         session['default_pickup_char'] = char_id
         return render_template(
             'play/character.html',
@@ -263,13 +264,14 @@ def set_routes(app):
             session['last_char_id'] = char_id
         if loc_id:
             session['last_loc_id'] = loc_id
-        if not char_id and not loc_id:
+        if not char_id:
             char_id = session.get('last_char_id', '')
+        if not loc_id:
             loc_id = session.get('last_loc_id', '')
         logger.debug("-" * 80 + "\nplay_item(item_id=%d, char_id=%s, loc_id=%s)",
             item_id, char_id, loc_id)
         item = Item.data_for_play(
-            item_id, char_id, loc_id, default_pile=default_pile)
+            item_id, char_id, loc_id, complete_sources=False)
         if not item:
             return 'Item not found'
         defaults = {
@@ -298,7 +300,7 @@ def set_routes(app):
         logger.debug("-" * 80 + "\nitem_progress(item_id=%d, char_id=%s, loc_id=%s)",
             item_id, char_id, loc_id)
         item = Item.data_for_play(
-            item_id, char_id, loc_id, default_pile=False)
+            item_id, char_id, loc_id, complete_sources=True)
         if not item:
             return jsonify({'error': 'Item not found'})
         pile = item.pile
@@ -324,7 +326,7 @@ def set_routes(app):
         logger.debug("-" * 80 + "\nstart_item(item_id=%d, recipe_id=%d, "
             "char_id=%s, loc_id=%s)", item_id, recipe_id, char_id, loc_id)
         item = Item.data_for_play(
-            item_id, char_id, loc_id, default_pile=True)
+            item_id, char_id, loc_id, complete_sources=True)
         container = item.pile.container
         progress = container.progress
         if progress.start(recipe_id):
@@ -352,7 +354,7 @@ def set_routes(app):
             loc_id = session.get('last_loc_id', '')
         logger.debug("-" * 80 + "\nstop_item(%d)", item_id)
         item = Item.data_for_play(
-            item_id, char_id, loc_id, default_pile=True)
+            item_id, char_id, loc_id, complete_sources=True)
         logger.debug("Retrieved item %d from DB: %d recipes",
             item.id, len(item.recipes))
         container = item.pile.container
@@ -384,7 +386,7 @@ def set_routes(app):
             "char_id=%s, loc_id=%s)",
             item_id, recipe_id, num_batches, char_id, loc_id)
         item = Item.data_for_play(
-            item_id, char_id, loc_id, default_pile=True)
+            item_id, char_id, loc_id, complete_sources=True)
         progress = item.pile.container.progress
         progress.set_recipe_by_id(recipe_id)
         changed = progress.change_quantity(num_batches)
@@ -406,7 +408,7 @@ def set_routes(app):
         logger.debug("-" * 80 + "\ndrop_item(item_id=%d, char_id=%d)",
             item_id, char_id)
         item = Item.data_for_play(
-            item_id, char_id, default_pile=False)
+            item_id, char_id, complete_sources=False)
         char = Character.load_complete_object(char_id)
         owned_item = char.items.get(item_id)
         if not owned_item:
@@ -439,7 +441,7 @@ def set_routes(app):
             item_id, loc_id, char_id)
         session['default_pickup_char'] = char_id
         item = Item.data_for_play(
-            item_id, at_loc_id=loc_id, default_pile=False)
+            item_id, at_loc_id=loc_id, complete_sources=False)
         loc = Location.load_complete_object(loc_id)
         item_at = loc.items.get(item_id)
         if not item_at:
@@ -473,7 +475,7 @@ def set_routes(app):
             item_id, char_id, slot)
         session['default_slot'] = slot
         item = Item.data_for_play(
-            item_id, char_id, default_pile=False)
+            item_id, char_id, complete_sources=False)
         char = item.pile.container
         owned_item = char.items.get(item_id)
         if not owned_item:
@@ -492,7 +494,7 @@ def set_routes(app):
         logger.debug("-" * 80 + "\nequip_item(item_id=%d, char_id=%d)",
             item_id, char_id)
         item = Item.data_for_play(
-            item_id, char_id, default_pile=False)
+            item_id, char_id, complete_sources=False)
         char = item.pile.container
         owned_item = char.items.get(item_id)
         if not owned_item:
@@ -508,15 +510,16 @@ def set_routes(app):
 
     @app.route('/play/location/<int:loc_id>')
     def play_location(loc_id):
+        logger.debug("-" * 80 + "\nplay_location(%d)", loc_id)
+        instance = Location.data_for_play(loc_id)
+        if not instance:
+            return 'Location not found'
+        session['last_loc_id'] = loc_id
         char_id = request_int(request, 'char_id', '', 'args')
         if char_id:
             session['last_char_id'] = char_id
         else:
             char_id = session.get('last_char_id', '')
-        logger.debug("-" * 80 + "\nplay_location(%d)", loc_id)
-        instance = Location.data_for_play(loc_id)
-        if not instance:
-            return 'Location not found'
         defaults = {
             'move_char': session.get('default_move_char', '')}
         return render_template(

@@ -39,8 +39,8 @@
             <td>
                 {% if container.pile.PILE_TYPE == 'universal' %}
                     General Storage<br>
-                {% elif container.pile.PILE_TYPE == 'carried' and char_id %}
-                    {% set link = url_for('play_char', char_id=char_id) %}
+                {% elif container.pile.PILE_TYPE == 'carried' %}
+                    {% set link = url_for('play_char', char_id=container.id) %}
                     {% set letter = link_letters.next(link) %}
                     <script>
                         linkForKey['{{ letter }}'] = "{{ link }}";
@@ -48,8 +48,8 @@
                     Carried by
                     <a href="{{ link }}">{{ container.name }}</a>
                     <span>[{{ letter }}]</span><br>
-                {% elif container.pile.PILE_TYPE == 'local' and loc_id %}
-                    {% set link = url_for('play_location', loc_id=loc_id) %}
+                {% elif container.pile.PILE_TYPE == 'local' %}
+                    {% set link = url_for('play_location', loc_id=container.id) %}
                     {% set letter = link_letters.next(link) %}
                     <script>
                         linkForKey['{{ letter }}'] = "{{ link }}";
@@ -81,7 +81,6 @@
                     <span class="progress-label" id="action-progress-label-{{ current.id }}">0%</span>
                 </div>
                 <span id="elapsed-time" class="hidden">...</span>
-                <br>Dest Time<span id="dest-time">...</span><!-- for debugging only -->
             </td>
         </tr>
         <tr>
@@ -101,7 +100,7 @@
             </style>
             <td>
                 <div class="button-container">
-                {% if container.pile.PILE_TYPE == 'carried' and char_id %}
+                {% if container.pile.PILE_TYPE == 'carried' %}
                     {% if container.pile.slot %}
                         <div class="button-column, show-if-carried">
                             <button id="unequip-btn" class="go-button">Un[e]quip</button>
@@ -119,7 +118,8 @@
                         {% endif %}
                     {% endif %}
                     <div class="button-column, show-if-carried, hide-if-slot, hide-if-empty">
-                        <button id="drop-btn" class="go-button">[D]rop</button>
+                        <button id="drop-btn" class="go-button">[D]rop</button><br>
+                        <input type="number" step="any" id="quantity_to_drop" size="5" value="">
                     </div>
                 {% endif %}
                 {% if container.pile.PILE_TYPE == 'local' and loc_id %}
@@ -142,7 +142,7 @@
                         </select>
                     </div>
                     <div class="button-column, show-if-local, hide-if-empty">
-                        <button id="move_to_char-btn" class="go-button">Move to [L]ocation</button><br>
+                        <button id="move_to_loc-btn" class="go-button">Move to [L]ocation</button><br>
                         <select id="loc-moving-to">
                             {% for loc in game_data.locations %}
                                 <option value="{{ loc.id }}" {% if loc.id == defaults.movingto_loc %}selected{% endif %}>{{ loc.name }}</option>
@@ -151,7 +151,8 @@
                     </div>
                 {% else %}
                     <div class="button-column, show-if-universal, hide-if-empty">
-                        <button id="move_to_general-btn" class="go-button">Move to [G]eneral Storage</button>
+                        <button id="move_to_general-btn" class="go-button">Move to [G]eneral Storage</button><br>
+                        <input type="number" step="any" id="quantity_to_move" size="5" value="">
                     </div>
                 {% endif %}
                 <div class="hide-if-empty">
@@ -457,7 +458,7 @@
                 } else {
                     elapsedTime = 0;
                 }
-                $('#dest-time').text(formatTime(elapsedTime));
+                //$('#dest-time').text(formatTime(elapsedTime));
             }
 
             // the Start button can change to "Stop"
@@ -600,15 +601,14 @@
             });
             $('#drop-btn').click(function() {
                 const itemId = "{{ current.id }}";
-                const charId = "{{ char_id }}";
+                const charId = "{{ container.id }}";
                 $.ajax({
                     url: `/item/drop/${itemId}/char/${charId}`,
                     method: 'POST',
                     success: function(response) {
                         if (response.status === 'success') {
-                            {% if char_id %} // Ensure that url_for() does not cause an error, even if the JavaScript code isn't executed.
-                                window.location.href = "{{ url_for('play_char', char_id=char_id) }}";
-                            {% endif %}
+                            const url = "{{ url_for('play_char', char_id=container.id) }}";
+                            window.location.href = url;
                         } else {
                             console.error(response.message);
                             alert('Error: ' + response.message);
@@ -622,7 +622,7 @@
             });
             $('#pickup-btn').click(function() {
                 const itemId = "{{ current.id }}";
-                const locId = "{{ loc_id }}";
+                const locId = "{{ container.id }}";
                 const charId = $('#char-picking-up').val();
                 if (!charId) {
                     alert('Please select a character to pick up the item.');
@@ -633,9 +633,8 @@
                     method: 'POST',
                     success: function(response) {
                         if (response.status === 'success') {
-                            {% if loc_id %} // Ensure that url_for() does not cause an error, even if the JavaScript code isn't executed.
-                                window.location.href = "{{ url_for('play_location', loc_id=loc_id) }}";
-                            {% endif %}
+                            const url = "{{ url_for('play_location', loc_id=container.id) }}";
+                            window.location.href = url;
                         } else {
                             console.error(response.message);
                             alert('Error: ' + response.message);
@@ -649,7 +648,7 @@
             });
             $('#equip-btn').click(function() {
                 const itemId = "{{ current.id }}";
-                const charId = "{{ char_id }}";
+                const charId = "{{ container.id }}";
                 const slot = $('#char-equip-slot').val();
                 if (!slot) {
                     alert('Please select a slot to equip the item.');
@@ -660,9 +659,8 @@
                     method: 'POST',
                     success: function(response) {
                         if (response.status === 'success') {
-                            {% if char_id %} // Ensure that url_for() does not cause an error, even if the JavaScript code isn't executed.
-                                window.location.href = "{{ url_for('play_char', char_id=char_id) }}";
-                            {% endif %}
+                            const url = "{{ url_for('play_char', char_id=container.id) }}";
+                            window.location.href = url;
                         } else {
                             console.error(response.message);
                             alert('Error: ' + response.message);
@@ -676,15 +674,13 @@
             });
             $('#unequip-btn').click(function() {
                 const itemId = "{{ current.id }}";
-                const charId = "{{ char_id }}";
+                const charId = "{{ container.id }}";
                 $.ajax({
                     url: `/item/unequip/${itemId}/char/${charId}`,
                     method: 'POST',
                     success: function(response) {
                         if (response.status === 'success') {
-                            {% if char_id %} // Ensure that url_for() does not cause an error, even if the JavaScript code isn't executed.
-                                window.location.href = "{{ url_for('play_char', char_id=char_id) }}";
-                            {% endif %}
+                            window.location.href = "{{ url_for('play_char', char_id=container.id) }}";
                         } else {
                             console.error(response.message);
                             alert('Error: ' + response.message);

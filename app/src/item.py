@@ -3,7 +3,7 @@ import logging
 import math
 import re
 
-from .attrib import Attrib, AttribOf
+from .attrib import Attrib, AttribOf, AttribReq
 from .db_serializable import (
     DbSerializable, Identifiable, MutableNamespace, coldef,
     DbError, DeletionError)
@@ -47,12 +47,6 @@ class Source:
         instance.preserve = data.get('preserve', False)
         instance.q_required = data.get('q_required', 1.0)
         return instance
-
-class AttribReq:
-    def __init__(self, new_id=0, new_val=0):
-        self.attrib = Attrib(new_id)
-        self.val = new_val
-        self.entity = None  # entity that fulfills the requirement
 
 class Recipe(DbSerializable):
     def __init__(self, new_id=0, item=None):
@@ -466,23 +460,26 @@ class Item(Identifiable, Pile):
 
     @classmethod
     def data_for_play(cls, id_to_get, owner_char_id=0, at_loc_id=0,
-            default_pile=False):
+            complete_sources=True):
         """
-        :param default_pile: False to use the type based on passed params
-            such as current char inventory.
-            True to use pile type that gets produced or used as a source.
+        :param complete_sources: needed to safely call source.to_db() after
+            potentially modifying source quantities
         """
         logger.debug("data_for_play(%s, %s, %s)",
             id_to_get, owner_char_id, at_loc_id)
         current_obj = cls.data_for_configure(id_to_get)
+        if complete_sources:
+            for recipe in current_obj.recipes:
+                for source in recipe.sources:
+                    source.item = cls.load_complete_object(source.item.id)
         # Get all needed location and character names
         from .location import Location
         from .character import Character
         g.game_data.entity_names_from_db([Location])
-        Character.load_characters_at_loc(at_loc_id)
+        g.game_data.from_db_flat([Character])
         # Get item data for the specific container,
         # and get piles at this loc or char that can be used for sources
-        _load_piles(current_obj, owner_char_id, at_loc_id, default_pile)
+        _load_piles(current_obj, owner_char_id, at_loc_id)
         # Get relation data for items that use this item as a source
         item_recipes_data = cls.db_recipe_data(id_to_get, get_by_source=True)
         for item_id, recipes_data in item_recipes_data.items():
@@ -496,9 +493,11 @@ class Item(Identifiable, Pile):
             char = container
             logger.debug("container %s", char.name)
             for owned_item in char.items.values():
-                logger.debug("owned %s, container %s, quantity %s",
+                logger.debug("owned %s (%d), container %s (%d), quantity %s",
                     owned_item.item.name,
+                    owned_item.item.id,
                     owned_item.container.name,
+                    owned_item.container.id,
                     owned_item.quantity)
         return current_obj
 
@@ -571,23 +570,30 @@ class Item(Identifiable, Pile):
         else:
             logger.debug("Neither button was clicked.")
 
-def _load_piles(current_item, char_id, loc_id, default_pile):
+def _load_piles(current_item, char_id, loc_id):
     """Assign a pile from this location or char inventory
     for the current item and that can be used for each recipe source.
     Also find chars or items that meet recipe attrib requirements.
     """
-    logger.debug("_load_piles()")
+    logger.debug("_load_piles(%d, %s, %s)",
+        current_item.id, char_id, loc_id)
     from .character import Character
     from .location import Location
     chars = []
     loc = Location()
     position = None
     if char_id:
-        # Get current loc and position of char
         chars = Character.load_piles(char_id)
         char = next(iter(chars), Character(char_id))
-        loc_id = char.location.id if char.location else 0
-        position = char.position
+        char_loc_id = char.location.id if char.location else 0
+        if (char_loc_id != loc_id and
+                current_item.storage_type == Storage.CARRIED):
+            # Use character's location instead of passed loc_id
+            if char_loc_id:
+                loc_id = char_loc_id
+            else:
+                loc_id = 0
+        #position = char.position
     if loc_id:
         # Get all items at this loc
         #loc = Location.load_piles(loc_id, position)
@@ -595,7 +601,7 @@ def _load_piles(current_item, char_id, loc_id, default_pile):
         if not position:
             # TODO: assign position to first useful local pile found
             #_assign_pile(
-            #    current_item, chars=[], loc, loc_id=loc_id, default_pile)
+            #    current_item, chars=[], loc, loc_id=loc_id)
             pass
     if loc_id:
         # Get items for all chars at this loc
@@ -606,7 +612,7 @@ def _load_piles(current_item, char_id, loc_id, default_pile):
     # Assign the most appropriate pile
     logger.debug("main pile")
     current_item.pile = _assign_pile(
-        current_item, chars, loc, char_id, loc_id, default_pile)
+        current_item, chars, loc, char_id, loc_id)
     current_item.pile.container.pile = current_item.pile
     current_item.pile.item = current_item
     for recipe in current_item.recipes:
@@ -624,17 +630,16 @@ def _load_piles(current_item, char_id, loc_id, default_pile):
                 if attrib_of is not None and attrib_of.val >= req.val:
                     req.entity = char
 
-def _assign_pile(current_item, chars, loc, char_id=0, loc_id=0,
-        default_pile=True):
+def _assign_pile(pile_item, chars, loc, char_id=0, loc_id=0):
     logger.debug("_assign_pile(): item id %d type %s",
-        current_item.id, current_item.storage_type)
+        pile_item.id, pile_item.storage_type)
     pile = None
-    if default_pile:
-        pile_type = current_item.storage_type
-    elif current_item.storage_type == Storage.CARRIED and char_id:
+    if pile_item.storage_type == Storage.CARRIED and char_id:
         pile_type = Storage.CARRIED
-    elif current_item.storage_type == Storage.LOCAL and loc_id:
+    elif pile_item.storage_type == Storage.LOCAL and loc_id:
         pile_type = Storage.LOCAL
+    elif pile_item.storage_type == Storage.UNIVERSAL:
+        pile_type = Storage.UNIVERSAL
     elif char_id:
         pile_type = Storage.CARRIED
     elif loc_id:
@@ -646,7 +651,7 @@ def _assign_pile(current_item, chars, loc, char_id=0, loc_id=0,
         # Select a char at this loc who owns one
         for char in chars:
             for owned_item_id, owned_item in char.items.items():
-                if (owned_item_id == current_item.id and
+                if (owned_item_id == pile_item.id and
                         (owned_item.quantity != 0 or not pile)):
                     pile = owned_item
                     pile.container = char
@@ -657,15 +662,15 @@ def _assign_pile(current_item, chars, loc, char_id=0, loc_id=0,
             char = next(
                 (ch for ch in chars if ch.id == char_id),
                 Character.data_for_configure(char_id))
-            pile = OwnedItem(current_item)
+            pile = OwnedItem(pile_item)
             pile.container = char
-            char.items[current_item.id] = pile
+            char.items[pile_item.id] = pile
             logger.debug("assigned empty ownedItem from %s", 
                 pile.container.name)
     elif pile_type == Storage.LOCAL:
         # Select an itemAt for this loc
         for item_at in loc.items.values():
-            if (item_at.item.id == current_item.id and
+            if (item_at.item.id == pile_item.id and
                     (item_at.quantity != 0 or not pile)):
                 pile = item_at
                 pile.container = loc
@@ -675,14 +680,14 @@ def _assign_pile(current_item, chars, loc, char_id=0, loc_id=0,
             from .location import ItemAt, Location
             if loc.id != loc_id:
                 loc = Location.data_for_configure(loc_id)
-            pile = ItemAt(current_item)
+            pile = ItemAt(pile_item)
             pile.container = loc
-            loc.items[current_item.id] = pile
+            loc.items[pile_item.id] = pile
             logger.debug("assigned empty itemAt from %s", 
                 pile.container.name)
     if not pile:
-        pile = current_item
-        pile.container = current_item
+        pile = pile_item
+        pile.container = pile_item
         logger.debug(f"assigned general storage qty %.1f",
             pile.quantity)
     return pile

@@ -31,6 +31,13 @@ class AttribOf:
             attrib_id=data.get('attrib_id', 0),
             val=data.get('value', 0.0))
 
+class AttribReq:
+    """For example the attribute value required to produce an item."""
+    def __init__(self, attrib_id=0, val=0):
+        self.attrib = Attrib(attrib_id)
+        self.val = val
+        self.entity = None  # entity that fulfills the requirement
+
 class Attrib(Identifiable):
     """Stat or state or other type of attribute for a character or item.
     Examples: Perception, XP, Max HP, Current HP, Poisoned

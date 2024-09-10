@@ -140,6 +140,7 @@ def dec2str_filter(value):
     return dec2str(value)
 
 app.jinja_env.filters['dec2str'] = dec2str_filter
+app.jinja_env.globals['MAX_INT_32'] = 2**31 - 1
 
 @app.errorhandler(TypeError)
 def handle_type_error(ex):
