@@ -28,8 +28,8 @@ logger = logging.getLogger(__name__)
 
 class OwnedItem(Pile):
     PILE_TYPE = Storage.CARRIED
-    def __init__(self, item=None):
-        super().__init__(item)
+    def __init__(self, item=None, char=None):
+        super().__init__(item, char)
         self.slot = ''  # for example, "main hand"
 
     def to_json(self):
@@ -40,8 +40,8 @@ class OwnedItem(Pile):
         }
 
     @classmethod
-    def from_json(cls, data):
-        instance = cls(Item(int(data.get('item_id', 0))))
+    def from_json(cls, data, char=None):
+        instance = cls(Item(int(data.get('item_id', 0))), char)
         instance.quantity = data.get('quantity', 0)
         instance.slot = data.get('slot', "")
         return instance
@@ -97,8 +97,8 @@ class Character(Identifiable):
         for owned_data in data.get('items', []):
             if not isinstance(owned_data, dict):
                 owned_data = vars(owned_data)
-            instance.items[
-                owned_data.get('item_id', 0)] = OwnedItem.from_json(owned_data)
+            instance.items[owned_data.get('item_id', 0)] = OwnedItem.from_json(
+                owned_data, instance)
         instance.attribs = {
             attrib_id: AttribOf(
                 Attrib.get_by_id(int(attrib_id)), val=val)
@@ -168,70 +168,8 @@ class Character(Identifiable):
         return chars
 
     @classmethod
-    def load_piles(cls, char_id=0, loc_id=0):
-        logger.debug("load_piles(%d, %d)", char_id, loc_id)
-        query = """
-            SELECT *
-            FROM {tables[0]}
-            LEFT JOIN {tables[1]}
-                ON {tables[1]}.char_id = {tables[0]}.id
-                AND {tables[1]}.game_token = {tables[0]}.game_token
-            WHERE {tables[0]}.game_token = %s
-        """
-        values = [g.game_token]
-        if char_id:
-            query += "AND {tables[0]}.id = %s\n"
-            values.append(char_id);
-        elif loc_id:
-            query += "AND {tables[0]}.location_id = %s\n"
-            values.append(loc_id);
-        tables_rows = cls.select_tables(
-            query, values, ['characters', 'char_items'])
-        chars = {}  # keyed by ID
-        for char_data, item_data in tables_rows:
-            char = chars.setdefault(
-                char_data.id, cls.from_json(char_data))
-            if item_data.item_id:
-                owned = OwnedItem.from_json(item_data)
-                owned.container = cls.get_by_id(char_data.id)
-                char.items[item_data.item_id] = owned
-        query = """
-            SELECT *
-            FROM {tables[0]}
-            INNER JOIN {tables[1]}
-                ON {tables[1]}.char_id = {tables[0]}.id
-                AND {tables[1]}.game_token = {tables[0]}.game_token
-            WHERE {tables[0]}.game_token = %s
-        """
-        values = [g.game_token]
-        if char_id:
-            query += "AND {tables[0]}.id = %s\n"
-            values.append(char_id);
-        elif loc_id:
-            query += "AND {tables[0]}.location_id = %s\n"
-            values.append(loc_id);
-        tables_rows = cls.select_tables(
-            query, values, ['characters', 'char_attribs'])
-        for char_data, attrib_data in tables_rows:
-            char = chars.setdefault(
-                char_data.id, cls.from_json(char_data))
-            if attrib_data.attrib_id:
-                attrib_of = AttribOf(
-                    Attrib.get_by_id(int(attrib_data.attrib_id)),
-                    val=attrib_data.value)
-                char.attribs[attrib_data.attrib_id] = attrib_of
-        for char in chars.values():
-            if char.items:
-                pile = next(iter(char.items.values()))
-                logger.debug("char %s (%d) owns item %d qty %.1f",
-                    char.name, char.id, pile.item.id, pile.quantity)
-        return chars.values()
-
-    @classmethod
     def load_complete_object(cls, id_to_get):
-        """Load an object with everything needed for storing to db.
-        Like data_for_file() but only one object.
-        """
+        """Load an object with everything needed for storing to db."""
         logger.debug("load_complete_object(%s)", id_to_get)
         if id_to_get == 'new':
             id_to_get = 0
@@ -281,13 +219,13 @@ class Character(Identifiable):
             """, (current_data.location_id,))
         # Get all location names
         g.game_data.entity_names_from_db([Location])
-        # Create character from data
+        # Create object from data
         return Character.from_json(current_data)
 
     @classmethod
-    def data_for_file(cls):
+    def load_complete_objects(cls):
         """Load objects with everything needed for storing to JSON file."""
-        logger.debug("data_for_file()")
+        logger.debug("load_complete_objects()")
         # Get char and progress data
         tables_rows = cls.select_tables("""
             SELECT *
@@ -320,14 +258,16 @@ class Character(Identifiable):
         """, [g.game_token])
         for row in item_rows:
             instance = instances[row.char_id]
-            instance.items[row.item_id] = OwnedItem.from_json(row)
+            instance.items[row.item_id] = OwnedItem.from_json(row, instance)
         # Print debugging info
         logger.debug("found %d characters", len(instances))
         logger.debug('\n'.join(
             f"character {instance.id} ({instance.name}) has"
             f" {len(instance.attribs)} attribs"
             for instance in instances.values()))
-        return list(instances.values())
+        # Set list of objects
+        g.game_data.set_list(cls, list(instances.values()))
+        return g.game_data.get_list(cls)
 
     @classmethod
     def data_for_configure(cls, id_to_get):
@@ -392,7 +332,7 @@ class Character(Identifiable):
             self.items = {}
             for item_id, item_qty, item_slot in zip(
                     item_ids, item_qtys, item_slots):
-                ownedItem = OwnedItem(Item(int(item_id)))
+                ownedItem = OwnedItem(Item(int(item_id)), self)
                 self.items[item_id] = ownedItem
                 ownedItem.quantity = float(item_qty)
                 ownedItem.slot = item_slot

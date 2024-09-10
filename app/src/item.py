@@ -347,13 +347,15 @@ class Item(Identifiable, Pile):
 
     @classmethod
     def load_complete_object(cls, id_to_get):
-        """Load an object with everything needed for storing to db.
-        Like data_for_file() but only one object.
-        """
+        """Load an object with everything needed for storing to db."""
+        logger.debug("load_complete_object(%s)", id_to_get)
         if id_to_get == 'new':
             id_to_get = 0
         else:
             id_to_get = int(id_to_get)
+        if id_to_get in g.active.items:
+            logger.debug("already loaded")
+            return g.active.items[id_to_get]
         # Get this item's base data and progress data
         tables_row = cls.select_tables("""
             SELECT *
@@ -386,11 +388,13 @@ class Item(Identifiable, Pile):
             recipes_data = list(item_recipes_data.values())[0]
             current_data.recipes = list(recipes_data.values())
         # Create item from data
-        return Item.from_json(current_data)
+        item = Item.from_json(current_data)
+        g.active.items[id_to_get] = item
+        return item
 
     @classmethod
-    def data_for_file(cls):
-        logger.debug("data_for_file()")
+    def load_complete_objects(cls):
+        logger.debug("load_complete_objects()")
         # Get item and progress data
         tables_rows = cls.db_item_and_progress_data()
         instances = {}  # keyed by ID
@@ -431,7 +435,9 @@ class Item(Identifiable, Pile):
                 for source in recipe.sources:
                     logger.debug("    source item id %d, qty %d",
                         source.item.id, source.q_required)
-        return list(instances.values())
+        # Set list of objects
+        g.game_data.set_list(cls, list(instances.values()))
+        return g.game_data.get_list(cls)
 
     @classmethod
     def data_for_configure(cls, id_to_get):
@@ -472,11 +478,11 @@ class Item(Identifiable, Pile):
             for recipe in current_obj.recipes:
                 for source in recipe.sources:
                     source.item = cls.load_complete_object(source.item.id)
-        # Get all needed location and character names
+        # Get all needed location and character data
         from .location import Location
         from .character import Character
         g.game_data.entity_names_from_db([Location])
-        g.game_data.from_db_flat([Character])
+        Character.load_complete_objects()
         # Get item data for the specific container,
         # and get piles at this loc or char that can be used for sources
         _load_piles(current_obj, owner_char_id, at_loc_id)
@@ -583,21 +589,22 @@ def _load_piles(current_item, char_id, loc_id):
     loc = Location()
     position = None
     if char_id:
-        chars = Character.load_piles(char_id)
-        char = next(iter(chars), Character(char_id))
-        char_loc_id = char.location.id if char.location else 0
-        if (char_loc_id != loc_id and
-                current_item.storage_type == Storage.CARRIED):
-            # Use character's location instead of passed loc_id
-            if char_loc_id:
-                loc_id = char_loc_id
-            else:
-                loc_id = 0
+        char = Character.get_by_id(char_id)
+        if char:
+            chars = [char]
+            char_loc_id = char.location.id if char.location else 0
+            if (char_loc_id != loc_id and
+                    current_item.storage_type == Storage.CARRIED):
+                # Use character's location instead of passed loc_id
+                if char_loc_id:
+                    loc_id = char_loc_id
+                else:
+                    loc_id = 0
         #position = char.position
     if loc_id:
         # Get all items at this loc
-        #loc = Location.load_piles(loc_id, position)
-        loc = Location.load_piles(loc_id)
+        #loc = Location.load_complete_object(loc_id, position)
+        loc = Location.load_complete_object(loc_id)
         if not position:
             # TODO: assign position to first useful local pile found
             #_assign_pile(
@@ -606,29 +613,39 @@ def _load_piles(current_item, char_id, loc_id):
     if loc_id:
         # Get items for all chars at this loc
         # TODO: if position or grid then only consider chars by that pos
-        #chars = Character.load_piles(
+        #chars = Character.load_complete_objects(
         #    loc_id=loc_id, pos=position)
-        chars = Character.load_piles(loc_id=loc_id)
+        chars = [
+            char for char in g.game_data.characters
+            if char.location and char.location.id == loc_id]
     # Assign the most appropriate pile
     logger.debug("main pile")
     current_item.pile = _assign_pile(
         current_item, chars, loc, char_id, loc_id)
-    current_item.pile.container.pile = current_item.pile
     current_item.pile.item = current_item
+    current_item.pile.container.pile = current_item.pile
+    #current_item.pile.container.progress.recipe = current_item.progress.recipes[0]
     for recipe in current_item.recipes:
         for source in recipe.sources:
             logger.debug("source pile")
-            source.pile = _assign_pile(source.item, chars, loc)
+            source.pile = _assign_pile(
+                source.item, chars, loc, char_id, loc_id)
         # Look for entities to meet attrib requirements
         for attrib_id, req in recipe.attribs.items():
             for item in g.game_data.items:
                 attrib_of = item.attribs.get(attrib_id)
                 if attrib_of is not None and attrib_of.val >= req.val:
                     req.entity = item
+                    logger.debug("attrib %s req %.1f met by item %s %.1f", 
+                        attrib_of.attrib.name, req.val,
+                        item.name, attrib_of.val)
             for char in chars:
                 attrib_of = char.attribs.get(attrib_id)
                 if attrib_of is not None and attrib_of.val >= req.val:
                     req.entity = char
+                    logger.debug("attrib %s req %.1f met by char %s %.1f", 
+                        attrib_of.attrib.name, req.val,
+                        char.name, attrib_of.val)
 
 def _assign_pile(pile_item, chars, loc, char_id=0, loc_id=0):
     logger.debug("_assign_pile(): item id %d type %s",
@@ -659,11 +676,8 @@ def _assign_pile(pile_item, chars, loc, char_id=0, loc_id=0):
                         owned_item.container.name, pile.quantity)
         if char_id and not pile:
             from .character import Character, OwnedItem
-            char = next(
-                (ch for ch in chars if ch.id == char_id),
-                Character.data_for_configure(char_id))
-            pile = OwnedItem(pile_item)
-            pile.container = char
+            char = Character.get_by_id(char_id)
+            pile = OwnedItem(pile_item, char)
             char.items[pile_item.id] = pile
             logger.debug("assigned empty ownedItem from %s", 
                 pile.container.name)

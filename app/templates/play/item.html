@@ -63,9 +63,9 @@
                 <h2 style="margin: 10px 10px; display: flex; align-items: center; flex-wrap: nowrap;">
                 {{ current.name }}:
                 {% if current.q_limit %}
-                    <div id="storage-progress-container-{{ current.id }}" class="progress-container" style="display: inline-flex; align-items: center; margin-left: 10px;">
-                        <progress id="storage-progress-bar-{{ current.id }}" class="progress-bar" value="0" max="100"></progress>
-                        <span class="progress-label" id="storage-progress-label-{{ current.id }}" style="margin-left: 5px; color: white; font-weight: bold;">...</span>
+                    <div id="storage-progress-container" class="progress-container" style="display: inline-flex; align-items: center; margin-left: 10px;">
+                        <progress id="storage-progress-bar" class="progress-bar" value="0" max="100"></progress>
+                        <span class="progress-label" id="storage-progress-label" style="margin-left: 5px; color: white; font-weight: bold;">...</span>
                     </div>
                 {% else %}
                     <span id="quantity-{{ current.id }}">...</span>
@@ -75,10 +75,10 @@
         </tr>
         <tr>
             <td>
-                <span id="recipe-progress-label-{{ current.id }}" style="">Recipe Progress:</span>
-                <div id="action-progress-container-{{ current.id }}" class="progress-container hidden" style="display: inline-flex">
-                    <progress id="action-progress-bar-{{ current.id }}" class="progress-bar" value="0" max="100"></progress>
-                    <span class="progress-label" id="action-progress-label-{{ current.id }}">0%</span>
+                <span id="recipe-progress-label" style="">Recipe Progress:</span>
+                <div id="action-progress-container" class="progress-container hidden" style="display: inline-flex">
+                    <progress id="action-progress-bar" class="progress-bar" value="0" max="100"></progress>
+                    <span class="progress-label" id="action-progress-label">0%</span>
                 </div>
                 <span id="elapsed-time" class="hidden">...</span>
             </td>
@@ -158,6 +158,7 @@
                 <div class="hide-if-empty">
                     <input type="checkbox" id="show-all-buttons" /><label for="show-all-buttons">Show all choices</label>
                 </div>
+                <div><br><br><br></div><!-- so that buttons appearing doesn't cause movement -->
                 </div>
             </td>
         </tr>
@@ -385,8 +386,8 @@
                 {% endfor %}
             }
             function updateStorageProgress(data) {
-                const progressBar = $('#storage-progress-bar-{{ current.id }}');
-                const progressLabel = $('#storage-progress-label-{{ current.id }}');
+                const progressBar = $('#storage-progress-bar');
+                const progressLabel = $('#storage-progress-label');
 
                 const quantity = data.quantity || 0;
                 const maxQuantity = data.max_quantity || 0;
@@ -426,8 +427,8 @@
 
             function updateActionProgress() {
                 console.log('Updating progress bar:', { elapsedTime, rateDuration });
-                const progressBar = $('#action-progress-bar-{{ current.id }}');
-                const progressLabel = $('#action-progress-label-{{ current.id }}');
+                const progressBar = $('#action-progress-bar');
+                const progressLabel = $('#action-progress-label');
                 const effectiveElapsedTime = elapsedTime % rateDuration;
                 const progressPercent = (effectiveElapsedTime / rateDuration) * 100;
                 progressBar.val(progressPercent);
@@ -482,19 +483,16 @@
 
             function updateProgressVisibility() {
                 if (!in_progress) {
-                    $('#action-progress-container-{{ current.id }}').addClass('hidden');
-                    $('#elapsed-time').addClass('hidden');
-                    $('#recipe-progress-label-{{ current.id }}').addClass('hidden');
+                    $('#action-progress-container').addClass('hidden');
+                    $('#recipe-progress-label').addClass('hidden');
                     return;
                 }
                 if (rateDuration < 5) {
-                    $('#action-progress-container-{{ current.id }}').addClass('hidden');
-                    $('#elapsed-time').removeClass('hidden');
-                    $('#recipe-progress-label-{{ current.id }}').addClass('hidden');
+                    $('#action-progress-container').addClass('hidden');
+                    $('#recipe-progress-label').addClass('hidden');
                 } else {
-                    $('#action-progress-container-{{ current.id }}').removeClass('hidden');
-                    $('#elapsed-time').addClass('hidden');
-                    $('#recipe-progress-label-{{ current.id }}').removeClass('hidden');
+                    $('#action-progress-container').removeClass('hidden');
+                    $('#recipe-progress-label').removeClass('hidden');
                 }
             }
 

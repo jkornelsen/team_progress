@@ -7,7 +7,7 @@ from types import SimpleNamespace
 from database import column_counts, pretty
 
 logger = logging.getLogger(__name__)
-#logger.setLevel(logging.CRITICAL)  # turn off for this module
+logger.setLevel(logging.CRITICAL)  # turn off for this module
 
 def coldef(which):
     """Definitions for commonly used columns for creating a table."""
@@ -131,10 +131,9 @@ class DbSerializable():
                         row[start_idx:end_idx])))
                     result.append(table_data)
                 results.append(result)
-        if fetch_all:
+        if fetch_all or not results:
             return results
-        else:
-            return results[0]
+        return results[0]
 
     @classmethod
     def execute_change(cls, query_without_table, values, fetch=False):
@@ -225,8 +224,8 @@ class Identifiable(DbSerializable):
         id_to_get = int(id_to_get)
         entity_dict = getattr(g.active, cls.listname)
         entity = entity_dict.get(id_to_get)
-        if entity:
-            return entity
+        #if entity:
+        #    return entity
         entity_list = g.game_data.get_list(cls)
         return next(
             (instance for instance in entity_list
@@ -296,7 +295,10 @@ class Identifiable(DbSerializable):
         return instances
 
     @classmethod
-    def data_for_file(cls):
+    def load_complete_objects(cls):
+        """Load from db all objects of this class.
+        Suitable for saving objects to file.
+        """
         raise NotImplementedError()
 
 class DbError(Exception):

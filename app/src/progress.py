@@ -86,6 +86,9 @@ class Progress(Identifiable):
             if batches_requested == 0:
                 raise Exception("Expected non-zero number of batches.")
             num_batches = batches_requested
+            if not self.can_produce():
+                num_batches = 0
+                stop_when_done = True
             eff_result_qty = num_batches * self.recipe.rate_amount
             new_quantity = self.pile.quantity + eff_result_qty
             if ((self.q_limit > 0.0 and new_quantity > self.q_limit)
@@ -145,14 +148,14 @@ class Progress(Identifiable):
                 self.stop()
             return num_batches > 0
 
-    def determine_current_quantity(self):
+    def batches_for_elapsed_time(self):
         """Returns number of seconds spent if any work gets done."""
         self.set_recipe_by_id()
         elapsed_time = self.calculate_elapsed_time()
         total_batches_needed = math.floor(elapsed_time / self.recipe.rate_duration)
         batches_to_do = total_batches_needed - self.batches_processed
         logger.debug(
-            "determine_current_quantity: batches_to_do=%d (%.1f / %.1f - %d)",
+            "batches_for_elapsed_time(): batches_to_do=%d (%.1f / %.1f - %d)",
             batches_to_do, elapsed_time, self.recipe.rate_duration,
             self.batches_processed)
         if batches_to_do > 0:
@@ -167,10 +170,6 @@ class Progress(Identifiable):
             recipe_id = self.recipe.id
             if not recipe_id:
                 return
-        #XXX: This doesn't seem right.
-        # At least in the current trace,
-        # it's an empty list,
-        # while item.recipes is a good list.
         for recipe in self.pile.item.recipes:
             if recipe.id == recipe_id:
                 self.recipe = recipe

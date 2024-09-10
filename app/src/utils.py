@@ -8,10 +8,10 @@ class Storage:
 
 class Pile:
     PILE_TYPE = None  # specify in child classes
-    def __init__(self, item=None):
+    def __init__(self, item=None, container=None):
         from .item import Item
         self.item = item if item else Item()
-        self.container = None  # character or location where item is
+        self.container = container  # character or location where item is
         self.quantity = 0
 
 def _get_from_request(request, key, source):

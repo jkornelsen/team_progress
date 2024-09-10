@@ -35,7 +35,6 @@ class GameData:
     """Store complete sets of data such as for file export,
     the configure index, or select boxes on forms.
     """
-
     def __init__(self):
         g.game_data = self
         ActiveData()
@@ -86,7 +85,7 @@ class GameData:
             entities = ENTITIES
         for entity_cls in entities:
             self.set_list(
-                entity_cls, entity_cls.data_for_file())
+                entity_cls, entity_cls.load_complete_objects())
         self.overall = Overall.load_complete_object()
 
     def from_db_flat(self, entities=None):

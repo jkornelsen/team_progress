@@ -199,7 +199,7 @@ def set_routes(app):
                     'current_loc_id': current_loc_id,
                     'quantity': 0})
             if char.progress.is_ongoing:
-                time_spent = char.progress.determine_current_quantity()
+                time_spent = char.progress.batches_for_elapsed_time()
                 events = Event.load_triggers_for_loc(char.location.id)
                 ignore_event_id = request_int(
                     request, 'ignore_event', '', 'args')
@@ -309,7 +309,7 @@ def set_routes(app):
             item.id, len(item.recipes), pile.PILE_TYPE, pile.container.name)
         progress = pile.container.progress
         if progress.is_ongoing:
-            progress.determine_current_quantity()
+            progress.batches_for_elapsed_time()
         return jsonify({
             'is_ongoing': progress.is_ongoing,
             'recipe_id': progress.recipe.id,
@@ -360,7 +360,7 @@ def set_routes(app):
         container = item.pile.container
         progress = container.progress
         if progress.is_ongoing:
-            progress.determine_current_quantity()
+            progress.batches_for_elapsed_time()
             progress.stop()
             container.to_db()
             return jsonify({
@@ -455,7 +455,7 @@ def set_routes(app):
             owned_item = char.items[item_id]
             new_qty += owned_item.quantity
         else:
-            owned_item = OwnedItem(item=item_at.item)
+            owned_item = OwnedItem(item_at.item, char)
         if new_qty > item.q_limit:
             return jsonify({
                 'status': 'error',

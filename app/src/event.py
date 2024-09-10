@@ -153,9 +153,7 @@ class Event(Identifiable):
 
     @classmethod
     def load_complete_object(cls, id_to_get):
-        """Load an object with everything needed for storing to db.
-        Like data_for_file() but only one object.
-        """
+        """Load an object with everything needed for storing to db."""
         logger.debug("load_complete_object(%s)", id_to_get)
         if id_to_get == 'new':
             id_to_get = 0
@@ -202,8 +200,8 @@ class Event(Identifiable):
         return Event.from_json(current_data)
 
     @classmethod
-    def data_for_file(cls):
-        logger.debug("data_for_file()")
+    def load_complete_objects(cls):
+        logger.debug("load_complete_objects()")
         # Get event data with attrib relation data
         query = """
             SELECT *
@@ -252,7 +250,9 @@ class Event(Identifiable):
             logger.debug("event %d (%s) has %d triggers and %d det attrs",
             instance.id, instance.name, len(instance.triggers),
             len(instance.determining_attrs))
-        return list(instances.values())
+        # Set list of objects
+        g.game_data.set_list(cls, list(instances.values()))
+        return g.game_data.get_list(cls)
 
     @classmethod
     def data_for_configure(cls, id_to_get):

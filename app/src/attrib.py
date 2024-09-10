@@ -90,15 +90,17 @@ class Attrib(Identifiable):
         return instance
 
     @classmethod
-    def data_for_file(cls):
-        logger.debug("data_for_file()")
+    def load_complete_objects(cls):
+        logger.debug("load_complete_objects()")
         rows = cls.execute_select("""
             SELECT *
             FROM {table}
             WHERE game_token = %s
         """, (g.game_token,))
-        instances = [cls.from_json(vars(row)) for row in rows]
-        return instances
+        # Create objects from data
+        g.game_data.set_list(cls, 
+            [cls.from_json(vars(row)) for row in rows])
+        return g.game_data.get_list(cls)
 
     def configure_by_form(self):
         if 'save_changes' in request.form:  # button was clicked

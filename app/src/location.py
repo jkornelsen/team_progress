@@ -170,42 +170,8 @@ class Location(Identifiable):
                 values)
 
     @classmethod
-    def load_piles(cls, loc_id):
-        logger.debug("load_piles(%d)", loc_id)
-        query = """
-            SELECT *
-            FROM {tables[0]}
-            INNER JOIN {tables[1]}
-                ON {tables[1]}.loc_id = {tables[0]}.id
-                AND {tables[1]}.game_token = {tables[0]}.game_token
-            WHERE {tables[0]}.game_token = %s
-                AND {tables[0]}.id = %s
-        """
-        tables_rows = cls.select_tables(
-            query, [g.game_token, loc_id], ['locations', 'loc_items'])
-        loc = None
-        for loc_data, item_data in tables_rows:
-            if not loc:
-                loc = cls.from_json(loc_data)
-            if item_data.item_id:
-                itemAt = ItemAt.from_json(item_data)
-                itemAt.container = cls.get_by_id(loc_data.id)
-                loc.items[item_data.item_id] = itemAt
-                if not itemAt.container.items:
-                    itemAt.container = loc
-        if loc:
-            pile = next(iter(loc.items.values()))
-            logger.debug("item %s (%d) qty %.1f",
-                pile.item.name, pile.item.id, pile.quantity)
-        else:
-            logger.debug("Returning default loc")
-        return loc or Location()
-
-    @classmethod
     def load_complete_object(cls, id_to_get):
-        """Load an object with everything needed for storing to db.
-        Like data_for_file() but only one object.
-        """
+        """Load an object with everything needed for storing to db."""
         logger.debug("load_complete_object(%s)", id_to_get)
         if id_to_get == 'new':
             id_to_get = 0
@@ -251,9 +217,9 @@ class Location(Identifiable):
         return Location.from_json(current_data)
 
     @classmethod
-    def data_for_file(cls):
+    def load_complete_objects(cls):
         """Load objects with everything needed for storing to JSON file."""
-        logger.debug("data_for_file()")
+        logger.debug("load_complete_objects()")
         # Get loc and progress data
         tables_rows = cls.select_tables("""
             SELECT *
@@ -299,7 +265,9 @@ class Location(Identifiable):
         for instance in instances.values():
             logger.debug("location %d (%s) has %d destinations",
                 instance.id, instance.name, len(instance.destinations))
-        return list(instances.values())
+        # Set list of objects
+        g.game_data.set_list(cls, list(instances.values()))
+        return g.game_data.get_list(cls)
 
     @classmethod
     def data_for_configure(cls, id_to_get):
