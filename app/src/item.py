@@ -465,14 +465,16 @@ class Item(Identifiable, Pile):
         return current_obj
 
     @classmethod
-    def data_for_play(cls, id_to_get, owner_char_id=0, at_loc_id=0,
-            complete_sources=True):
+    def data_for_play(
+            cls, id_to_get, owner_char_id=0, at_loc_id=0,
+            complete_sources=True, main_pile_type=''):
         """
         :param complete_sources: needed to safely call source.to_db() after
             potentially modifying source quantities
         """
-        logger.debug("data_for_play(%s, %s, %s)",
-            id_to_get, owner_char_id, at_loc_id)
+        logger.debug(
+            "data_for_play(%s, %s, %s, %s)",
+            id_to_get, owner_char_id, at_loc_id, main_pile_type)
         current_obj = cls.data_for_configure(id_to_get)
         if complete_sources:
             for recipe in current_obj.recipes:
@@ -485,7 +487,7 @@ class Item(Identifiable, Pile):
         Character.load_complete_objects()
         # Get item data for the specific container,
         # and get piles at this loc or char that can be used for sources
-        _load_piles(current_obj, owner_char_id, at_loc_id)
+        _load_piles(current_obj, owner_char_id, at_loc_id, main_pile_type)
         # Get relation data for items that use this item as a source
         item_recipes_data = cls.db_recipe_data(id_to_get, get_by_source=True)
         for item_id, recipes_data in item_recipes_data.items():
@@ -499,12 +501,14 @@ class Item(Identifiable, Pile):
             char = container
             logger.debug("container %s", char.name)
             for owned_item in char.items.values():
-                logger.debug("owned %s (%d), container %s (%d), quantity %s",
+                logger.debug(
+                    "owned %s (%d), container %s (%d), quantity %s",
                     owned_item.item.name,
                     owned_item.item.id,
                     owned_item.container.name,
                     owned_item.container.id,
-                    owned_item.quantity)
+                    owned_item.quantity
+                    )
         return current_obj
 
     def configure_by_form(self):
@@ -553,8 +557,8 @@ class Item(Identifiable, Pile):
                         f'recipe{recipe_id}_attrib{attrib_id}_value', 1.0)
                     recipe.attribs[attrib_id] = AttribReq(
                         attrib_id=attrib_id, val=attrib_value)
-            attrib_ids = req.get_list('attrib_id')
-            logger.debug("Attrib IDs: %s", attrib_ids)
+            attrib_ids = req.get_list('attrib_id[]')
+            logger.debug(f"Attrib IDs: %s", attrib_ids)
             self.attribs = {}
             for attrib_id in attrib_ids:
                 attrib_val = req.get_float(f'attrib{attrib_id}_val', 0.0)
@@ -574,12 +578,19 @@ class Item(Identifiable, Pile):
         else:
             logger.debug("Neither button was clicked.")
 
-def _load_piles(current_item, char_id, loc_id):
+    def exceeds_limit(self, quantity):
+        return (
+            (self.q_limit > 0.0 and quantity > self.q_limit) or
+            (self.q_limit < 0.0 and quantity < self.q_limit)
+            )
+
+def _load_piles(current_item, char_id, loc_id, main_pile_type):
     """Assign a pile from this location or char inventory
     for the current item and that can be used for each recipe source.
     Also find chars or items that meet recipe attrib requirements.
     """
-    logger.debug("_load_piles(%d, %s, %s)",
+    logger.debug(
+        "_load_piles(%d, %s, %s)",
         current_item.id, char_id, loc_id)
     from .character import Character
     from .location import Location
@@ -608,6 +619,12 @@ def _load_piles(current_item, char_id, loc_id):
             #_assign_pile(
             #    current_item, chars=[], loc, loc_id=loc_id)
             pass
+    # Assign the most appropriate pile
+    logger.debug("main pile")
+    current_item.pile = _assign_pile(
+        current_item, chars, loc, char_id, loc_id, main_pile_type)
+    current_item.pile.item = current_item
+    container = current_item.pile.container 
     if loc_id:
         # Get items for all chars at this loc
         # TODO: if position or grid then only consider chars by that pos
@@ -616,12 +633,6 @@ def _load_piles(current_item, char_id, loc_id):
         chars = [
             char for char in g.game_data.characters
             if char.location and char.location.id == loc_id]
-    # Assign the most appropriate pile
-    logger.debug("main pile")
-    current_item.pile = _assign_pile(
-        current_item, chars, loc, char_id, loc_id)
-    current_item.pile.item = current_item
-    container = current_item.pile.container 
     # This container item id was set by container.progress.from_json(),
     # loaded from the progress table.
     if container.pile.item.id != current_item.pile.item.id:
@@ -651,13 +662,16 @@ def _load_piles(current_item, char_id, loc_id):
                         attrib_of.attrib.name, req.val,
                         char.name, attrib_of.val)
 
-def _assign_pile(pile_item, chars, loc, char_id=0, loc_id=0):
+def _assign_pile(
+        pile_item, chars, loc, char_id=0, loc_id=0, forced_pile_type=''):
     logger.debug("_assign_pile(item.id=%d, item.type=%s, "
-        "chars=[%d], loc.id=%d, char_id=%d, loc_id=%d)",
+        "chars=[%d], loc.id=%d, char_id=%s, loc_id=%s, type=%s)",
         pile_item.id, pile_item.storage_type, len(chars),
-        loc.id if loc else "_", char_id, loc_id)
+        loc.id if loc else "_", char_id, loc_id, forced_pile_type)
     pile = None
-    if pile_item.storage_type == Storage.CARRIED and char_id:
+    if forced_pile_type:
+        pile_type = forced_pile_type
+    elif pile_item.storage_type == Storage.CARRIED and char_id:
         pile_type = Storage.CARRIED
     elif pile_item.storage_type == Storage.LOCAL and loc_id:
         pile_type = Storage.LOCAL

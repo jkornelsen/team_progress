@@ -96,7 +96,7 @@ class Overall(DbSerializable):
             "\r\n\r\n"
             "More setup can be done as the game goes along.")
         self.win_reqs = []
-        self.slots = []
+        self.slots = ["Main Hand", "Off Hand", "Body Armor"]
 
     @classmethod
     def tablename(cls):
@@ -130,8 +130,7 @@ class Overall(DbSerializable):
         instance.win_reqs = [
             WinRequirement.from_json(winreq_data)
             for winreq_data in data.get('win_reqs', [])]
-        DEFAULT_SLOTS = ["Main Hand", "Off Hand", "Body Armor"]
-        instance.slots = list(data.get('slots') or DEFAULT_SLOTS)
+        instance.slots = list(data.get('slots') or [])
         return instance
 
     @classmethod
@@ -180,27 +179,28 @@ class Overall(DbSerializable):
             req.debug()
             self.title = req.get_str('scenario_title')
             self.description = req.get_str('scenario_description')
-            winreq_ids = req.get_strlist('winreq_id')
+            winreq_ids = req.get_list('winreq_id')
             self.win_reqs = []
             for winreq_id in winreq_ids:
                 prefix = f"winreq{winreq_id}_"
-                req = WinRequirement()
-                self.win_reqs.append(req)
-                req.quantity = req.get_float(f"{prefix}quantity")
+                winreq = WinRequirement()
+                self.win_reqs.append(winreq)
+                winreq.quantity = req.get_float(f"{prefix}quantity")
                 item_id = req.get_int(f"{prefix}item_id")
                 if item_id:
-                    req.item = Item(item_id)
+                    winreq.item = Item(item_id)
                 char_id = req.get_int(f"{prefix}char_id")
                 if char_id:
-                    req.character = Character(char_id)
+                    winreq.character = Character(char_id)
                 loc_id = req.get_int(f"{prefix}loc_id")
                 if loc_id:
-                    req.location = Location(loc_id)
+                    winreq.location = Location(loc_id)
                 attrib_id = req.get_int(f"{prefix}attrib_id")
                 if attrib_id:
-                    req.attrib = Attrib(attrib_id)
-                req.attrib_value = req.get_float(f"{prefix}attribValue")
-            self.slots = [slot.strip()
+                    winreq.attrib = Attrib(attrib_id)
+                winreq.attrib_value = req.get_float(f"{prefix}attribValue")
+            self.slots = [
+                slot.strip()
                 for slot in req.get_str('slots').splitlines()
                 if slot.strip()]
             self.to_db()
@@ -307,8 +307,6 @@ class Overall(DbSerializable):
                 AND B.value >= A.attrib_value
         """, (g.game_token,) * NUM_QUERIES)
         for row in rows:
-            import sys
-            print(f"row=[{row}]", file=sys.stderr, flush=True)
             win_req = req_by_id.get(row.id)
             win_req.fulfilled = True
         return (

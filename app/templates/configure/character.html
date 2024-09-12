@@ -2,7 +2,7 @@
 
 {% block upper_left %}
     <div class="nav-container">
-        <a href="{{ url_for('configure') }}">General Setup</a>
+        <a href="{{ url_for('configure_index') }}">General Setup</a>
     </div>
 {% endblock %}
 
@@ -118,7 +118,7 @@
                         </td><td>
                             <input type="text" name="item_slot[]" value="${itemSlot}" size="8">
                         </td><td>
-                            <button class="remove-item-btn lesser-button">Remove</button>
+                            <button type="button" class="remove-item-btn lesser-button">Remove</button>
                         </td>
                     </tr>
                 `;
@@ -161,9 +161,9 @@
                         <td>${attribName}
                             <input type="hidden" name="attrib_id[]" value="${attribId}">
                         </td><td>
-                            <input type="number" name="attrib_${attribId}_val" value="${attribVal}" size="8">
+                            <input type="number" name="attrib${attribId}_val" value="${attribVal}" size="8">
                         </td><td>
-                            <button class="remove-attrib-btn lesser-button">Remove</button>
+                            <button type="button" class="remove-attrib-btn lesser-button">Remove</button>
                         </td>
                     </tr>
                 `;

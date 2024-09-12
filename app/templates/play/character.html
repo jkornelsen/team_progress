@@ -4,13 +4,14 @@
     <div class="nav-container">
         <a class="upper-left" href="{{ url_for('overview') }}">[O]verview</a>
         <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for('configure') }}">General Setup</a>
+        <a class="upper-left" href="{{ url_for('configure_index') }}">General Setup</a>
         <span class="separator">|</span>
         <a class="upper-left" href="{{ url_for('configure_char', char_id=current.id) }}">Character Setup</a>
     </div>
 {% endblock %}
 
 {% block content %}
+    <div id="content" style="display:none;">
     <script>
         let isModalOpen = false;
         const linkForKey = {
@@ -81,8 +82,8 @@
                     <progress class="progress-bar" max="100" value="0"></progress>
                     <span class="progress-label">0 / 0</span>
                 </div>
-                <button id="start-travel-btn">[S]tart</button>
-                <button id="stop-travel-btn">Stop</button>
+                <button type="button" id="start-travel-btn">[S]tart</button>
+                <button type="button" id="stop-travel-btn">Stop</button>
             </div>
         {% endif %}
         </ul>
@@ -90,12 +91,12 @@
 
     <h2>Equipped Items</h2>
     <ul>
-        {% for owned in current.items.values() if owned.slot %}
+        {% for owned in current.items.values() if owned.quantity > 0 and owned.slot %}
             {% set item = owned.item %}
-            {% set link = url_for('play_item', item_id=item.id, char_id=current.id) %}
+            {% set link = url_for('play_item', item_id=item.id, char_id=current.id, main='carried') %}
             {% set letter = link_letters.next(link) %}
             <script>
-                linkForKey['{{ letter }}'] = "{{ link }}";
+                linkForKey['{{ letter }}'] = "{{ link|safe }}";
             </script>
             <span class="item-name">
                 <span>[{{ letter }}]</span>
@@ -113,12 +114,12 @@
 
     <h2>Inventory Items</h2>
     <ul>
-        {% for owned in current.items.values() if not owned.slot %}
+        {% for owned in current.items.values() if owned.quantity > 0 and not owned.slot %}
             {% set item = owned.item %}
-            {% set link = url_for('play_item', item_id=item.id, char_id=current.id) %}
+            {% set link = url_for('play_item', item_id=item.id, char_id=current.id, main='carried') %}
             {% set letter = link_letters.next(link) %}
             <script>
-                linkForKey['{{ letter }}'] = "{{ link }}";
+                linkForKey['{{ letter }}'] = "{{ link|safe }}";
             </script>
             <span class="item-name">
                 <span>[{{ letter }}]</span>
@@ -151,8 +152,8 @@
         <div class="modal-content">
             <p id="custom-confirm-message"></p>
             <div class="modal-buttons">
-                <button id="custom-confirm-yes">[Y]es</button>
-                <button id="custom-confirm-no">[N]o</button>
+                <button type="button" id="custom-confirm-yes">[Y]es</button>
+                <button type="button" id="custom-confirm-no">[N]o</button>
             </div>
         </div>
     </div>
@@ -268,14 +269,19 @@
             }
 
             // Fetch progress data and update all relevant information
-            function fetchProgressData() {
+            async function fetchProgressData() {
                 const ignoreEventId = localStorage.getItem('ignore_event_id') || '';
                 const url = `/char/progress/{{ current.id }}${ignoreEventId ? `?ignore_event=${ignoreEventId}` : ''}`;
-                $.get(url, function(data) {
-                    console.log('Received data:', data);
-                    updateTravelProgress(data);
-                    updateStartButtonLabel(data);
+                const data = await new Promise((resolve, reject) => {
+                    $.get(url, function(response) {
+                        resolve(response);
+                    }).fail(function(xhr, status, error) {
+                        reject(error);
+                    });
                 });
+                console.log('Received data:', data);
+                updateTravelProgress(data);
+                updateStartButtonLabel(data);
             }
             let intervalId;
             function startFetchingProgress() {
@@ -285,10 +291,16 @@
                 clearInterval(intervalId);
             }
 
-            // Initial setup when page loads
-            localStorage.removeItem('ignore_event_id');
-            fetchProgressData();
-            startFetchingProgress();
+            function showContent() {
+                document.getElementById("content").style.display = "block";
+            }
+            async function initializePage() {
+                localStorage.removeItem('ignore_event_id');
+                await fetchProgressData();
+                startFetchingProgress();
+                showContent();
+            }
+            initializePage();
 
             $('#destination-select').change(function() {
                 fetchProgressData();
@@ -334,4 +346,5 @@
             });
         });
     </script>
+    </div><!-- content -->
 {% endblock %}

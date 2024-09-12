@@ -2,7 +2,7 @@
 
 {% block upper_left %}
     <div class="nav-container">
-        <a href="{{ url_for('configure') }}">Change Setup</a>
+        <a href="{{ url_for('configure_index') }}">Change Setup</a>
     </div>
 {% endblock %}
 
@@ -106,7 +106,7 @@
                 <th>Quantity</th>
             </tr>
             {% for item in other_entities.items %}
-                {% set link = url_for('play_item', item_id=item.id) %}
+                {% set link = url_for('play_item', item_id=item.id, main='universal') %}
                 {% set letter = link_letters.next(link) %}
                 <script>
                     linkForKey['{{ letter }}'] = "{{ link }}";
@@ -127,7 +127,7 @@
             function updateQuantities() {
                 {% for item in other_entities.items %}
                     // Make AJAX request for item quantity
-                    $.get('/item/progress_data/{{ item.id }}', function(data) {
+                    $.get('/item/progress/{{ item.id }}', function(data) {
                         $('#item-{{ item.id }}-quantity').text(data.quantity);
                     });
                 {% endfor %}

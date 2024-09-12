@@ -70,6 +70,8 @@ class Grid:
 
     def in_grid(self, pos):
         """Returns True if position is legally in the grid."""
+        if not pos:
+            return False
         x, y = pos
         width, height = self.dimensions
         left, top, right, bottom = self.excluded

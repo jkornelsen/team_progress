@@ -93,8 +93,7 @@ class Progress(Identifiable):
                 stop_when_done = True
             eff_result_qty = num_batches * self.recipe.rate_amount
             new_quantity = self.pile.quantity + eff_result_qty
-            if ((self.q_limit > 0.0 and new_quantity > self.q_limit)
-                    or (self.q_limit < 0.0 and new_quantity < self.q_limit)):
+            if self.pile.item.exceeds_limit(new_quantity):
                 num_batches = ((self.q_limit - self.pile.quantity)
                     // self.recipe.rate_amount)
                 stop_when_done = True  # can't process the full amount

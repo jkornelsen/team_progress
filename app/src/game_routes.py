@@ -46,7 +46,7 @@ def back_to_referrer():
     if referrer:
         return redirect(referrer)
     else:
-        return redirect(url_for('configure'))
+        return redirect(url_for('configure_index'))
 
 def error_page(exc):
     return render_template('error.html',
@@ -144,8 +144,8 @@ def set_routes(app):
                 'configure/overall.html',
                 current=g.game_data.overall,
                 game_data=g.game_data)
-        game_data.overall.configure_by_form()
-        return redirect(url_for('configure'))
+        g.game_data.overall.configure_by_form()
+        return redirect(url_for('configure_index'))
 
     @app.route('/play/char/<int:char_id>')
     def play_char(char_id):
@@ -198,7 +198,8 @@ def set_routes(app):
                     'status': 'error',
                     'message': 'No travel destination.',
                     'current_loc_id': current_loc_id,
-                    'quantity': 0})
+                    'quantity': 0
+                    })
             if char.progress.is_ongoing:
                 time_spent = char.progress.batches_for_elapsed_time()
                 events = Event.load_triggers_for_loc(char.location.id)
@@ -212,7 +213,8 @@ def set_routes(app):
                                 'status': 'interrupt',
                                 'message': f"<h2>{char.name} triggered {event.name}!</h2>"
                                 " Allow event?",
-                                'event_id': event.id})
+                                'event_id': event.id
+                                })
                 char.to_db()
             if char.pile.quantity >= char.pile.item.q_limit:
                 # arrived at the destination
@@ -223,7 +225,8 @@ def set_routes(app):
                 char.to_db()
                 return jsonify({
                     'status': 'arrived',
-                    'current_loc_id': char.location.id})
+                    'current_loc_id': char.location.id
+                    })
             else:
                 logger.debug("dest_id: %d", char.destination.id)
                 return jsonify({
@@ -232,11 +235,13 @@ def set_routes(app):
                     'current_loc_id': current_loc_id,
                     'dest_id': char.destination.id,
                     'quantity': int(char.pile.quantity),
-                    'elapsed_time': char.progress.calculate_elapsed_time()})
+                    'elapsed_time': char.progress.calculate_elapsed_time()
+                    })
         else:
             return jsonify({
                 'status': 'error',
-                'message': 'Character not found.'})
+                'message': 'Character not found.'
+                })
 
     @app.route('/play/event/<int:event_id>', methods=['GET', 'POST'])
     def play_event(event_id):
@@ -248,20 +253,22 @@ def set_routes(app):
             return render_template(
                 'play/event.html',
                 current=instance,
-                link_letters=LinkLetters(set('or')))
+                link_letters=LinkLetters(set('or'))
+                )
         instance.play_by_form()
         return render_template(
             'play/event.html',
             current=instance,
             outcome=instance.get_outcome(),
-            link_letters=LinkLetters(set('or')))
+            link_letters=LinkLetters(set('or'))
+            )
 
     @app.route('/play/item/<int:item_id>/')
     def play_item(item_id):
         req = RequestHelper('args')
         char_id = req.get_int('char_id', '')
         loc_id = req.get_int('loc_id', '')
-        default_pile = req.get_bool('default_pile', False)
+        main_pile_type = req.get_str('main', '')
         if char_id:
             session['last_char_id'] = char_id
         if loc_id:
@@ -270,17 +277,19 @@ def set_routes(app):
             char_id = session.get('last_char_id', '')
         if not loc_id:
             loc_id = session.get('last_loc_id', '')
-        logger.debug("-" * 80 + "\nplay_item(item_id=%d, char_id=%s, loc_id=%s)",
+        logger.debug(
+            "-" * 80 + "\nplay_item(item_id=%d, char_id=%s, loc_id=%s)",
             item_id, char_id, loc_id)
         item = Item.data_for_play(
-            item_id, char_id, loc_id, complete_sources=False)
+            item_id, char_id, loc_id, complete_sources=False,
+            main_pile_type=main_pile_type)
         if not item:
             return 'Item not found'
         defaults = {
             'pickup_char': session.get('default_pickup_char', ''),
             'movingto_char': session.get('default_movingto_char', ''),
             'slot': session.get('default_slot', '')
-        }
+            }
         g.game_data.overall = Overall.load_complete_object()
         return render_template(
             'play/item.html',
@@ -288,27 +297,33 @@ def set_routes(app):
             container=item.pile.container,
             char_id=char_id,
             loc_id=loc_id,
+            main_pile_type=main_pile_type,
             defaults=defaults,
             game_data=g.game_data,
-            link_letters=LinkLetters(set('cdelop')))
+            link_letters=LinkLetters(set('cdelop'))
+            )
 
     @app.route('/item/progress/<int:item_id>/')
     def item_progress(item_id):
         req = RequestHelper('args')
         char_id = req.get_int('char_id', '')
         loc_id = req.get_int('loc_id', '')
+        main_pile_type = req.get_str('main', '')
         if not char_id and not loc_id:
             char_id = session.get('last_char_id', '')
             loc_id = session.get('last_loc_id', '')
-        logger.debug("-" * 80 + "\nitem_progress(item_id=%d, char_id=%s, loc_id=%s)",
+        logger.debug(
+            "-" * 80 + "\nitem_progress(item_id=%d, char_id=%s, loc_id=%s)",
             item_id, char_id, loc_id)
         item = Item.data_for_play(
-            item_id, char_id, loc_id, complete_sources=True)
+            item_id, char_id, loc_id, complete_sources=True,
+            main_pile_type=main_pile_type)
         if not item:
             return jsonify({'error': 'Item not found'})
         pile = item.pile
         progress = pile.container.progress
-        logger.debug("Retrieved item %d from DB: %d recipes\n"
+        logger.debug(
+            "Retrieved item %d from DB: %d recipes\n"
             "Pile type %s from %s",
             item.id, len(item.recipes), pile.PILE_TYPE, pile.container.name)
         if progress.is_ongoing:
@@ -317,7 +332,8 @@ def set_routes(app):
             'is_ongoing': progress.is_ongoing,
             'recipe_id': progress.recipe.id,
             'quantity': pile.quantity,
-            'elapsed_time': progress.calculate_elapsed_time()})
+            'elapsed_time': progress.calculate_elapsed_time()
+            })
 
     @app.route('/item/start/<int:item_id>/<int:recipe_id>')
     def start_item(item_id, recipe_id):
@@ -327,7 +343,8 @@ def set_routes(app):
         if not char_id and not loc_id:
             char_id = session.get('last_char_id', '')
             loc_id = session.get('last_loc_id', '')
-        logger.debug("-" * 80 + "\nstart_item(item_id=%d, recipe_id=%d, "
+        logger.debug(
+            "-" * 80 + "\nstart_item(item_id=%d, recipe_id=%d, "
             "char_id=%s, loc_id=%s)", item_id, recipe_id, char_id, loc_id)
         item = Item.data_for_play(
             item_id, char_id, loc_id, complete_sources=True)
@@ -337,7 +354,8 @@ def set_routes(app):
             return jsonify({
                 'status': 'success',
                 'message': 'Progress started.',
-                'is_ongoing': progress.is_ongoing})
+                'is_ongoing': progress.is_ongoing
+                })
         else:
             message = "Could not start."
             reason = progress.failure_reason
@@ -346,7 +364,8 @@ def set_routes(app):
             return jsonify({
                 'status': 'error',
                 'message': message,
-                'is_ongoing': progress.is_ongoing})
+                'is_ongoing': progress.is_ongoing
+                })
 
     @app.route('/item/stop/<int:item_id>')
     def stop_item(item_id):
@@ -411,7 +430,8 @@ def set_routes(app):
 
     @app.route('/item/drop/<int:item_id>/char/<int:char_id>', methods=['POST'])
     def drop_item(item_id, char_id):
-        logger.debug("-" * 80 + "\ndrop_item(item_id=%d, char_id=%d)",
+        logger.debug(
+            "-" * 80 + "\ndrop_item(item_id=%d, char_id=%d)",
             item_id, char_id)
         item = Item.data_for_play(
             item_id, char_id, complete_sources=False)
@@ -420,7 +440,8 @@ def set_routes(app):
         if not owned_item:
             return jsonify({
                 'status': 'error',
-                'message': f'No item {item.name} in {char.name} inventory.'})
+                'message': f'No item {item.name} in {char.name} inventory.'
+                })
         new_qty = owned_item.quantity
         loc = Location.load_complete_object(char.location.id)
         if item_id in loc.items:
@@ -428,10 +449,11 @@ def set_routes(app):
             new_qty += item_at.quantity
         else:
             item_at = ItemAt(item=owned_item.item)
-        if new_qty > item.q_limit:
+        if item.exceeds_limit(new_qty):
             return jsonify({
                 'status': 'error',
-                'message': f'Limit of {item.name} is {item.q_limit}.'})
+                'message': f'Limit of {item.name} is {item.q_limit}.'
+                })
         item_at.quantity = new_qty
         loc.items[item_id] = item_at
         del char.items[item_id]
@@ -439,7 +461,8 @@ def set_routes(app):
         char.to_db()
         return jsonify({
             'status': 'success',
-            'message': f'Dropped {item.name}.'})
+            'message': f'Dropped {item.name}.'
+            })
 
     @app.route('/item/pickup/<int:item_id>/loc/<int:loc_id>/char/<int:char_id>', methods=['POST'])
     def pickup_item(item_id, loc_id, char_id):
@@ -462,7 +485,7 @@ def set_routes(app):
             new_qty += owned_item.quantity
         else:
             owned_item = OwnedItem(item_at.item, char)
-        if new_qty > item.q_limit:
+        if item.exceeds_limit(new_qty):
             return jsonify({
                 'status': 'error',
                 'message': f'Limit of {item.name} is {item.q_limit}.'})

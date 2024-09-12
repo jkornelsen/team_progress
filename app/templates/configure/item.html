@@ -2,7 +2,7 @@
 
 {% block upper_left %}
     <div class="nav-container">
-        <a href="{{ url_for('configure') }}">General Setup</a>
+        <a href="{{ url_for('configure_index') }}">General Setup</a>
     </div>
 {% endblock %}
 
@@ -82,22 +82,32 @@
         </div>
 
         <div id="attrib-container" class="outer-border">
-            <!-- Placeholder for appending new attribs -->
-            <div id="attriblist_end" style="unobtrusive"></div>
-            {% if game_data.attribs %}
-                <!-- Select box for adding another attrib -->
-                <div class="select-box">
-                    <select id="add-attrib-select">
-                        <option value="" selected>(Select item)</option>
-                        {% for attrib in game_data.attribs %}
-                            <option value="{{ attrib.id }}">{{ attrib.name }}</option>
-                        {% endfor %}
-                    </select>
-                    <button type="button" id="add-attrib-btn" class="lesser-button">Add Attribute</button>
-                </div>
-            {% else %}
-                <p class="no-entities">(No attributes)</p>
-            {% endif %}
+            <table id="attrib-table" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Attribute</th>
+                        <th>Value</th>
+                        <th class="transparent-col"></th>
+                    </tr>
+                </thead>
+                <tbody id="attrib-rows">
+                </tbody>
+            </table>
+            <div>
+                {% if game_data.attribs %}
+                    <!-- Select box for adding another attribute -->
+                    <div class="select-box">
+                        <select id="add-attrib-select">
+                            <option value="" selected>(Select attribute)</option>
+                            {% for attrib in game_data.attribs %}
+                                <option value="{{ attrib.id }}">{{ attrib.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="button" id="add-attrib-btn" class="lesser-button">Add Attribute</button>
+                    </div>
+                {% else %}
+                    <p class="no-entities">(No attributes)</p>
+                {% endif %}
             </div>
         </div>
 
@@ -337,14 +347,18 @@
 
             function addAttrib(attribId, attribName, attribVal = 1) {
                 const attribHtml = `
-                    <div class="attrib flexdiv" data-attrib-id="${attribId}">
-                        <input type="hidden" name="attrib_id" value="${attribId}">
-                        ${attribName}
-                        <input type="number" step="any" id="attrib${attribId}-val" name="attrib${attribId}_val" value="${attribVal}">
-                        <button type="button" class="remove-attrib-btn lesser-button" id="remove-attrib${attribId}">Remove</button>
-                    </div>
+                    <tr>
+                        <td>${attribName}
+                            <input type="hidden" name="attrib_id[]" value="${attribId}">
+                        </td><td>
+                            <input type="number" name="attrib${attribId}_val" value="${attribVal}" size="8">
+                        </td><td>
+                            <button type="button" class="remove-attrib-btn lesser-button">Remove</button>
+                        </td>
+                    </tr>
                 `;
-                $('#attriblist_end').before(attribHtml);
+                $('#attrib-rows').prepend(attribHtml);
+                $('#attrib-table').show();
             }
             $('#add-attrib-btn').click(function() {
                 const selectedOption = $('#add-attrib-select option:selected');
@@ -353,7 +367,7 @@
                 if (attribId == "") {
                     return; // don't add if the selected option is the placeholder
                 }
-                const existingAttrib = $(`.attrib[data-attrib-id="${attribId}"]`);
+                const existingAttrib = $('#attrib-rows input[name="attrib_id[]"][value="' + attribId + '"]').closest('tr');
                 if (existingAttrib.length > 0) {
                     alert('Attribute already exists.');
                     return;
@@ -361,16 +375,19 @@
                 addAttrib(attribId, attribName);
             });
             console.log("number of attribs={{ current.attribs.keys() | length }}");
-            {% for attrib, attrib_val in current.attribs.items() %}
+            {% for attrib_id, attrib_of in current.attribs.items() %}
                 addAttrib(
-                    {{ attrib.id }},
-                    "{{ attrib.name }}",
-                    "{{ attrib_val }}");
+                    {{ attrib_id }},
+                    "{{ attrib_of.attrib.name }}",
+                    {{ attrib_of.val | dec2str }});
             {% endfor %}
 
             $('#attrib-container').on('click', '.remove-attrib-btn', function() {
-                const attribContainer = $(this).closest('.attrib');
-                attribContainer.remove();
+                const attribRow = $(this).closest('tr');
+                attribRow.remove();
+                if ($('#attrib-rows').children().length === 0) {
+                    $('#attrib-table').hide();
+                }
             });
 
             function updateTopLevelCheckbox() {

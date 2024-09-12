@@ -2,7 +2,7 @@
 
 {% block upper_left %}
     <div class="nav-container">
-        <a href="{{ url_for('configure') }}">General Setup</a>
+        <a href="{{ url_for('configure_index') }}">General Setup</a>
     </div>
 {% endblock %}
 
@@ -114,7 +114,7 @@
                         <p>${destinationName}
                         <label for="destination-distance">Distance:</label>
                         <input type="number" id="destination-distance" name="destination_distance[]" value="${distance}" class="distance-field">
-                        <button class="remove-destination-btn lesser-button">Remove Destination</button>
+                        <button type="button" class="remove-destination-btn lesser-button">Remove Destination</button>
                         </p>
                     </div>
                 `;
@@ -163,7 +163,7 @@
                         </td><td>
                             <input type="text" name="item_pos[]" value="${itemPos}" size="8">
                         </td><td>
-                            <button class="remove-item-btn lesser-button">Remove</button>
+                            <button type="button" class="remove-item-btn lesser-button">Remove</button>
                         </td>
                     </tr>
                 `;

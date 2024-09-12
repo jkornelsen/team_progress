@@ -4,13 +4,14 @@
     <div class="nav-container">
         <a class="upper-left" href="{{ url_for('overview') }}">[O]verview</a>
         <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for('configure') }}">General Setup</a>
+        <a class="upper-left" href="{{ url_for('configure_index') }}">General Setup</a>
         <span class="separator">|</span>
         <a class="upper-left" href="{{ url_for('configure_location', loc_id=current.id) }}">Location Setup</a>
     </div>
 {% endblock %}
 
 {% block content %}
+    <div id="content" style="display:none;">
     <script>
         const keyToMovement = {
             'ArrowUp': { xChange: 0, yChange: -1 },
@@ -80,7 +81,7 @@
     <ul class="item-list">
         {% for item_at in current.items.values() %}
             {% set item = item_at.item %}
-            {% set link = url_for('play_item', item_id=item.id, loc_id=current.id) %}
+            {% set link = url_for('play_item', item_id=item.id, loc_id=current.id, main='local') %}
             {% set letter = link_letters.next(link) %}
             <script>
                 linkForKey['{{ letter }}'] = "{{ link|safe }}";
@@ -176,20 +177,20 @@
                 }
             </style>
             <div class="navigation-container">
-                <button data-x="-1" data-y="-1">&#8598;</button> <!-- Top Left -->
-                <button data-x="0" data-y="-1">&#8593;</button> <!-- Up -->
-                <button data-x="1" data-y="-1">&#8599;</button> <!-- Top Right -->
-                <button data-x="-1" data-y="0">&#8592;</button> <!-- Left -->
+                <button type="button" data-x="-1" data-y="-1">&#8598;</button> <!-- Top Left -->
+                <button type="button" data-x="0" data-y="-1">&#8593;</button> <!-- Up -->
+                <button type="button" data-x="1" data-y="-1">&#8599;</button> <!-- Top Right -->
+                <button type="button" data-x="-1" data-y="0">&#8592;</button> <!-- Left -->
                 <div></div>
-                <button data-x="1" data-y="0">&#8594;</button> <!-- Right -->
+                <button type="button" data-x="1" data-y="0">&#8594;</button> <!-- Right -->
                 <select id="char-to-move" style="grid-column: span 3;">
                     {% for char in game_data.characters if char.location.id == current.id %}
                         <option value="{{ char.id }}" {% if char.id == defaults.move_char %}selected{% endif %}>{{ char.name }}</option>
                     {% endfor %}
                 </select>
-                <button data-x="-1" data-y="1">&#8601;</button> <!-- Bottom Left -->
-                <button data-x="0" data-y="1">&#8595;</button> <!-- Down -->
-                <button data-x="1" data-y="1">&#8600;</button> <!-- Bottom Right -->
+                <button type="button" data-x="-1" data-y="1">&#8601;</button> <!-- Bottom Left -->
+                <button type="button" data-x="0" data-y="1">&#8595;</button> <!-- Down -->
+                <button type="button" data-x="1" data-y="1">&#8600;</button> <!-- Bottom Right -->
             </div>
         {% endif %}
     </td>
@@ -201,16 +202,16 @@
             {% for char in game_data.characters if char.location.id == current.id %}
                 "{{ char.id }}": {
                     letter: '{{ char.name[0] }}',
-                    x: {{ char.position[0] }},
-                    y: {{ char.position[1] }} },
+                    x: "{{ char.position[0] }}",
+                    y: "{{ char.position[1] }}" },
             {% endfor %}
         };
         const items = {
             {% for item_at in current.items.values() %}
                 "{{ item_at.item.id }}": {
                     letter: '{{ item_at.item.name[0] }}',
-                    x: {{ item_at.position[0] }},
-                    y: {{ item_at.position[1] }} },
+                    x: "{{ item_at.position[0] }}",
+                    y: "{{ item_at.position[1] }}" },
             {% endfor %}
         };
         function moveCharacter(xChange, yChange) {
@@ -254,6 +255,9 @@
             }
         }
         function setCellContents(x, y, content, replace = false) {
+            if (!x && !y) {
+                return;
+            }
             const cell = document.getElementById(`cell-${x}-${y}`);
             if (cell) {
                 if (replace || cell.innerHTML.trim() === '') {
@@ -288,12 +292,18 @@
                     });
                 {% endfor %}
             }
+            function showContent() {
+                document.getElementById("content").style.display = "block";
+            }
+            async function initializePage() {
+                // Update quantities initially
+                //updateQuantities();
 
-            // Update quantities initially
-            //updateQuantities();
-
-            // Update quantities periodically
-            //setInterval(updateQuantities, 10000);
+                // Update quantities periodically
+                //setInterval(updateQuantities, 10000);
+                showContent();
+            }
+            initializePage();
 
             document.querySelectorAll('.navigation-container button').forEach(button => {
                 button.addEventListener('click', () => {
@@ -304,4 +314,5 @@
             });
         });
     </script>
+    </div><!-- content -->
 {% endblock %}

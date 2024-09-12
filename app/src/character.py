@@ -98,10 +98,14 @@ class Character(Identifiable):
         instance.toplevel = data.get('toplevel', False)
         instance.masked = data.get('masked', False)
         for owned_data in data.get('items', []):
-            if not isinstance(owned_data, dict):
-                owned_data = vars(owned_data)
-            instance.items[owned_data.get('item_id', 0)] = OwnedItem.from_json(
-                owned_data, instance)
+            try:
+                if not isinstance(owned_data, dict):
+                    owned_data = vars(owned_data)
+                instance.items[owned_data.get('item_id', 0)] = OwnedItem.from_json(
+                    owned_data, instance)
+            except TypeError:
+                logger.exception('')
+                continue
         instance.attribs = {
             attrib_id: AttribOf(
                 Attrib.get_by_id(int(attrib_id)), val=val)
@@ -344,7 +348,7 @@ class Character(Identifiable):
             logger.debug(f"Attrib IDs: %s", attrib_ids)
             self.attribs = {}
             for attrib_id in attrib_ids:
-                attrib_val = req.get_float(f'attrib_{attrib_id}_val', 0.0)
+                attrib_val = req.get_float(f'attrib{attrib_id}_val', 0.0)
                 self.attribs[attrib_id] = AttribOf(
                     attrib_id=attrib_id, val=attrib_val)
             logger.debug("attribs: %s", {

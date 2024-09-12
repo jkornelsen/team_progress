@@ -49,9 +49,18 @@ def load_data_from_file(filepath):
 
 def set_routes(app):
     @app.route('/configure')
-    def configure():
+    def configure_index():
         file_message = session.pop('file_message', False)
         g.game_data.entity_names_from_db()
+        for session_key in (
+                'last_char_id',
+                'last_loc_id',
+                'default_move_char',
+                'default_pickup_char',
+                'default_movingto_char',
+                'default_slot',
+            ):
+            session.pop(session_key, None)
         return render_template(
             'configure/index.html',
             game_data=g.game_data,
@@ -95,7 +104,7 @@ def set_routes(app):
             if file_age > MAX_FILE_AGE:
                 os.remove(file_path)
                 logger.info(f"Deleted %s (age: %s)", filename, file_age)
-        return redirect(url_for('configure'))
+        return redirect(url_for('configure_index'))
 
     @app.route('/browse_scenarios', methods=['GET', 'POST'])
     def browse_scenarios():
@@ -123,7 +132,7 @@ def set_routes(app):
                     'error.html',
                     message=f"Could not load \"{scenario_title}\".")
             session['file_message'] = 'Loaded scenario "{}"'.format(scenario_title)
-            return redirect(url_for('configure'))
+            return redirect(url_for('configure_index'))
 
     @app.route('/blank_scenario')
     def blank_scenario():
@@ -131,5 +140,5 @@ def set_routes(app):
         GameData()
         g.game_data.to_db()
         session['file_message'] = 'Starting game with default setup.'
-        return redirect(url_for('configure'))
+        return redirect(url_for('configure_index'))
 

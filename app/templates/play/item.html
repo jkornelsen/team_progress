@@ -4,13 +4,14 @@
     <div class="nav-container">
         <a class="upper-left" href="{{ url_for('overview') }}">[O]verview</a>
         <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for('configure') }}">General Setup</a>
+        <a class="upper-left" href="{{ url_for('configure_index') }}">General Setup</a>
         <span class="separator">|</span>
         <a class="upper-left" href="{{ url_for('configure_item', item_id=current.id) }}">Item Setup</a>
     </div>
 {% endblock %}
 
 {% block content %}
+    <div id="content" style="display:none;">
     <script>
         const linkForKey = {
             'o': '{{ url_for('overview') }}',
@@ -104,11 +105,12 @@
                     {% if container.pile.slot %}
                         <div class="button-column" id="unequip-container">
                             <button id="unequip-btn" class="go-button">Un[e]quip</button>
+                            {{ container.pile.slot }}
                         </div>
                     {% else %}
                         {% if game_data.overall.slots %}
                             <div class="button-column" id="equip-container">
-                                <button id="equip-btn" class="go-button">[E]quip</button><br>
+                                <button id="equip-btn" class="go-button">[E]quip</button>
                                 <select id="char-equip-slot">
                                     {% for slot in game_data.overall.slots %}
                                         <option value="{{ slot }}" {% if slot == defaults.slot %}selected{% endif %}>{{ slot }}</option>
@@ -118,13 +120,13 @@
                         {% endif %}
                     {% endif %}
                     <div class="button-column" id="drop-container">
-                        <button id="drop-btn" class="go-button">[D]rop</button><br>
-                        <input type="number" step="any" id="quantity_to_drop" size="5" value="">
+                        <button id="drop-btn" class="go-button">[D]rop</button>
+                        <input type="number" step="any" id="quantity_to_drop" size="5" value="1">
                     </div>
                 {% endif %}
                 {% if container.pile.PILE_TYPE == 'local' and loc_id %}
                     <div class="button-column" id="pickup-container">
-                        <button id="pickup-btn" class="go-button">[P]ick Up</button><br>
+                        <button id="pickup-btn" class="go-button">[P]ick Up</button>
                         <select id="char-picking-up">
                             {% for char in game_data.characters if char.location.id == loc_id %}
                                 <option value="{{ char.id }}" {% if char.id == defaults.pickup_char %}selected{% endif %}>{{ char.name }}</option>
@@ -134,7 +136,7 @@
                 {% endif %}
                 {% if container.pile.PILE_TYPE == 'universal' %}
                     <div class="button-column" id="move_to_char-container">
-                        <button id="move_to_char-btn" class="go-button">Move to [C]haracter</button><br>
+                        <button id="move_to_char-btn" class="go-button">Move to [C]haracter</button>
                         <select id="char-moving-to">
                             {% for char in game_data.characters %}
                                 <option value="{{ char.id }}" {% if char.id == defaults.movingto_char %}selected{% endif %}>{{ char.name }}</option>
@@ -142,7 +144,7 @@
                         </select>
                     </div>
                     <div class="button-column" id="move_to_loc-container">
-                        <button id="move_to_loc-btn" class="go-button">Move to [L]ocation</button><br>
+                        <button id="move_to_loc-btn" class="go-button">Move to [L]ocation</button>
                         <select id="loc-moving-to">
                             {% for loc in game_data.locations %}
                                 <option value="{{ loc.id }}" {% if loc.id == defaults.movingto_loc %}selected{% endif %}>{{ loc.name }}</option>
@@ -151,8 +153,8 @@
                     </div>
                 {% else %}
                     <div class="button-column" id="move_to_general-container">
-                        <button id="move_to_general-btn" class="go-button">Move to [G]eneral Storage</button><br>
-                        <input type="number" step="any" id="quantity_to_move" size="5" value="">
+                        <button id="move_to_general-btn" class="go-button">Move to [G]eneral Storage</button>
+                        <input type="number" step="any" id="quantity_to_move" size="5" value="1">
                     </div>
                 {% endif %}
                 <div id="show_all_buttons-container">
@@ -176,18 +178,18 @@
         {% if current.attribs %}
         <tr>
             <td>
-                <table class="inner-table" cellspacing="0" cellpadding="5">
-                    <tr>
-                        <th>Attribute</th>
-                        <th>Value</th>
-                    </tr>
-                    {% for attrib, attrib_val in current.attribs.items() %}
-                    <tr>
-                        <td>{{ attrib.name }}</td>
-                        <td>{{ attrib_val }}</td>
-                    </tr>
+                <h2>Attributes</h2>
+                <ul>
+                    {% for attrib_of in current.attribs.values() %}
+                        <li>{{ attrib_of.attrib.name }}
+                            {% if attrib_of.val != 1 %}
+                                {{ attrib_of.val | dec2str }}
+                            {% endif %}
+                        </li>
+                    {% else %}
+                        (None)<br>
                     {% endfor %}
-                </table>
+                </ul>
             </td>
         </tr>
         {% endif %}
@@ -209,9 +211,9 @@
                     <td rowspan="{{ rowspan }}">
                         {% if recipe.instant %}
                         <input type="number" step="any" id="quantity_to_gain" size="10" value="1">
-                        <button id="gain-btn" data-recipe-id="{{ recipe.id }}" data-rate-amount="{{ recipe.rate_amount }}" class="go-button">Gain</button>
+                        <button type="button" id="gain-btn" data-recipe-id="{{ recipe.id }}" data-rate-amount="{{ recipe.rate_amount }}" class="go-button">Gain</button>
                         {% else %}
-                        <button class="start-stop-btn go-button" data-recipe-id="{{ recipe.id }}">Start</button>
+                        <button type="button" class="start-stop-btn go-button" data-recipe-id="{{ recipe.id }}">Start</button>
                         {% endif %}
                     </td>
                     <td rowspan="{{ rowspan }}">
@@ -400,7 +402,7 @@
                 progressBar.attr('max', 100);
                 progressLabel.text(`${quantity} / ${maxQuantity}`);
             }
-            function getItemProgressUrl(itemId, sourceOnly=false) {
+            function getItemProgressUrl(itemId, mainPileType='') {
                 const queryParams = [];
                 const charId = "{{ char_id }}";
                 if (charId) {
@@ -410,8 +412,8 @@
                 if (locId) {
                     queryParams.push('loc_id=' + encodeURIComponent(locId));
                 }
-                if (sourceOnly) {
-                    queryParams.push('sourceOnly=True');
+                if (mainPileType) {
+                    queryParams.push('main=' + encodeURIComponent(mainPileType));
                 }
                 let url = '/item/progress/' + itemId;
                 if (queryParams.length > 0) {
@@ -497,27 +499,35 @@
             }
 
             // Fetch progress data and update all relevant information
-            function fetchProgressData() {
-                const url = getItemProgressUrl({{ current.id }})
-                $.get(url, function(data) {
-                    updateQuantity(data);
-                    updateActionProgress();
-                    in_progress = data.is_ongoing;
-                    reconcileElapsedTime(data);
-                    updateStartButtonLabel(data, data.recipe_id);
-                    updateProgressVisibility();
-                    updateVisibility();
+            async function fetchProgressData() {
+                const url = getItemProgressUrl({{ current.id }}, "{{ main_pile_type }}")
+                const data = await new Promise((resolve, reject) => {
+                    $.get(url, function(response) {
+                        resolve(response);
+                    }).fail(function(xhr, status, error) {
+                        reject(error);
+                    });
                 });
+                updateQuantity(data);
+                updateActionProgress();
+                in_progress = data.is_ongoing;
+                reconcileElapsedTime(data);
+                updateStartButtonLabel(data, data.recipe_id);
+                updateProgressVisibility();
+                updateVisibility();
             }
-
-            // Update initially
-            fetchProgressData();
-            updateElapsedTime();
-
-            // Client-side update loops 
-            setInterval(updateElapsedTime, 1000);
-            startFetchingProgress();
-            updateVisibility();
+            function showContent() {
+                document.getElementById("content").style.display = "block";
+            }
+            async function initializePage() {
+                await fetchProgressData();
+                startFetchingProgress();
+                updateElapsedTime();
+                setInterval(updateElapsedTime, 1000);
+                await updateVisibility();
+                showContent();
+            }
+            initializePage();
 
             var fetchProgressInterval;
             function startFetchingProgress() {
@@ -530,8 +540,6 @@
                 clearInterval(fetchProgressInterval);
                 fetchProgressInterval = null;
             }
-
-            // Button click event handlers
 
             $('#gain-btn').click(function() {
                 const quantityInput = $(this).prev('#quantity_to_gain');
@@ -691,16 +699,16 @@
                 });
             });
 
-            function updateVisibility() {
+            async function updateVisibility() {
                 const storageType = '{{ current.storage_type }}';
                 const showAll = $('#show-all-buttons').is(':checked');
                 const storage_carried = storageType === 'carried';
                 const notEmpty = mainQuantity !== 0;
                 const slot = {% if container.pile.slot %}true{% else %}false{% endif %};
                 const visibilityMap = {
-                    'unequip-container': (showAll || storage_carried),
+                    'unequip-container': (notEmpty && slot && (showAll || storage_carried)),
                     'equip-container': (notEmpty && (showAll || storage_carried)),
-                    'drop-container': (notEmpty && slot && (showAll || storage_carried)),
+                    'drop-container': (notEmpty && !slot && (showAll || storage_carried)),
                     'pickup-container': (notEmpty && (showAll || storage_carried)),
                     'move_to_char-container': (notEmpty && (showAll || storage_carried)),
                     'move_to_loc-container': (notEmpty && (showAll || storageType === 'local')),
@@ -787,4 +795,5 @@
             });
         });
     </script>
+    </div><!-- content -->
 {% endblock %}
