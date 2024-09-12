@@ -203,7 +203,7 @@
         },
         {
             "attribs": {},
-            "description": "Pitchforking hay to feed animals. Mucking manure. Milking cows. When enough chores are done, find the Uncle to get paid for them.",
+            "description": "Pitchforking hay to feed animals. Mucking manure. Milking cows. When enough chores are done, find Uncle to get paid for them.",
             "id": 11,
             "name": "Chores",
             "progress": {
@@ -267,6 +267,11 @@
                             "preserve": false,
                             "q_required": 1.0,
                             "source_id": 7
+                        },
+                        {
+                            "preserve": true,
+                            "q_required": 1.0,
+                            "source_id": 14
                         }
                     ]
                 }
@@ -406,6 +411,27 @@
             "storage_type": "carried",
             "toplevel": false,
             "masked": false
+        },
+        {
+            "attribs": {},
+            "description": "For cooking in the kitchen.",
+            "id": 14,
+            "masked": false,
+            "name": "Wood Stove",
+            "progress": {
+                "batches_processed": 0,
+                "id": 40,
+                "is_ongoing": false,
+                "item_id": 0,
+                "recipe_id": 0,
+                "start_time": null,
+                "stop_time": null
+            },
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "local",
+            "toplevel": false
         }
     ],
     "locations": [
@@ -444,7 +470,16 @@
             "destinations": {
                 "2": 1.0
             },
-            "items": []
+            "items": [
+                {
+                    "item_id": 14,
+                    "position": [
+                        0,
+                        0
+                    ],
+                    "quantity": 1.0
+                }
+            ]
         },
         {
             "id": 2,

@@ -102,12 +102,12 @@
                 <div class="button-container">
                 {% if container.pile.PILE_TYPE == 'carried' %}
                     {% if container.pile.slot %}
-                        <div class="button-column, show-if-carried">
+                        <div class="button-column" id="unequip-container">
                             <button id="unequip-btn" class="go-button">Un[e]quip</button>
                         </div>
                     {% else %}
                         {% if game_data.overall.slots %}
-                            <div class="button-column, show-if-carried, hide-if-empty">
+                            <div class="button-column" id="equip-container">
                                 <button id="equip-btn" class="go-button">[E]quip</button><br>
                                 <select id="char-equip-slot">
                                     {% for slot in game_data.overall.slots %}
@@ -117,13 +117,13 @@
                             </div>
                         {% endif %}
                     {% endif %}
-                    <div class="button-column, show-if-carried, hide-if-slot, hide-if-empty">
+                    <div class="button-column" id="drop-container">
                         <button id="drop-btn" class="go-button">[D]rop</button><br>
                         <input type="number" step="any" id="quantity_to_drop" size="5" value="">
                     </div>
                 {% endif %}
                 {% if container.pile.PILE_TYPE == 'local' and loc_id %}
-                    <div class="button-column, show-if-carried, hide-if-empty">
+                    <div class="button-column" id="pickup-container">
                         <button id="pickup-btn" class="go-button">[P]ick Up</button><br>
                         <select id="char-picking-up">
                             {% for char in game_data.characters if char.location.id == loc_id %}
@@ -133,7 +133,7 @@
                     </div>
                 {% endif %}
                 {% if container.pile.PILE_TYPE == 'universal' %}
-                    <div class="button-column, show-if-carried, hide-if-empty">
+                    <div class="button-column" id="move_to_char-container">
                         <button id="move_to_char-btn" class="go-button">Move to [C]haracter</button><br>
                         <select id="char-moving-to">
                             {% for char in game_data.characters %}
@@ -141,7 +141,7 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="button-column, show-if-local, hide-if-empty">
+                    <div class="button-column" id="move_to_loc-container">
                         <button id="move_to_loc-btn" class="go-button">Move to [L]ocation</button><br>
                         <select id="loc-moving-to">
                             {% for loc in game_data.locations %}
@@ -150,12 +150,12 @@
                         </select>
                     </div>
                 {% else %}
-                    <div class="button-column, show-if-universal, hide-if-empty">
+                    <div class="button-column" id="move_to_general-container">
                         <button id="move_to_general-btn" class="go-button">Move to [G]eneral Storage</button><br>
                         <input type="number" step="any" id="quantity_to_move" size="5" value="">
                     </div>
                 {% endif %}
-                <div class="hide-if-empty">
+                <div id="show_all_buttons-container">
                     <input type="checkbox" id="show-all-buttons" /><label for="show-all-buttons">Show all choices</label>
                 </div>
                 <div><br><br><br></div><!-- so that buttons appearing doesn't cause movement -->
@@ -231,7 +231,7 @@
                             {% if source.pile and (source.pile.container or source.pile.quantity > 0) %}
                                 {% set link = url_for('play_item', item_id=item.id, char_id=char_id, loc_id=loc_id) %}
                             {% else %}
-                                {% set link = url_for('play_item', item_id=item.id, char_id=char_id, loc_id=loc_id, default_pile=true) %}
+                                {% set link = url_for('play_item', item_id=item.id, char_id=char_id, loc_id=loc_id) %}
                             {% endif %}
                             {% set letter = link_letters.next(link) %}
                             <script>
@@ -340,7 +340,7 @@
                         <th>Required</th>
                     </tr>
                     {% for used_for in outerscope.used_as_source %}
-                        {% set link = url_for('play_item', item_id=used_for.item.id, char_id=char_id, loc_id=loc_id, default_pile=true) %}
+                        {% set link = url_for('play_item', item_id=used_for.item.id, char_id=char_id, loc_id=loc_id) %}
                         {% set letter = link_letters.next(link) %}
                         <script>
                             linkForKey['{{ letter }}'] = "{{ link|safe }}";
@@ -432,7 +432,7 @@
                 const effectiveElapsedTime = elapsedTime % rateDuration;
                 const progressPercent = (effectiveElapsedTime / rateDuration) * 100;
                 progressBar.val(progressPercent);
-                progressLabel.text(`${Math.floor(effectiveElapsedTime)}s / ${rateDuration}s`);
+                progressLabel.text(`${Math.floor(effectiveElapsedTime)} / ${rateDuration} sec`);
             }
 
             // Update the elapsed time on the client.
@@ -694,6 +694,26 @@
             function updateVisibility() {
                 const storageType = '{{ current.storage_type }}';
                 const showAll = $('#show-all-buttons').is(':checked');
+                const storage_carried = storageType === 'carried';
+                const notEmpty = mainQuantity !== 0;
+                const slot = {% if container.pile.slot %}true{% else %}false{% endif %};
+                const visibilityMap = {
+                    'unequip-container': (showAll || storage_carried),
+                    'equip-container': (notEmpty && (showAll || storage_carried)),
+                    'drop-container': (notEmpty && slot && (showAll || storage_carried)),
+                    'pickup-container': (notEmpty && (showAll || storage_carried)),
+                    'move_to_char-container': (notEmpty && (showAll || storage_carried)),
+                    'move_to_loc-container': (notEmpty && (showAll || storageType === 'local')),
+                    'move_to_general-container': (notEmpty && (showAll || storageType === 'general')),
+                    'show_all_buttons-container': (mainQuantity != 0),
+                };
+                Object.keys(visibilityMap).forEach(function(id) {
+                    if (visibilityMap[id]) {
+                        $('#' + id).show();
+                    } else {
+                        $('#' + id).hide();
+                    }
+                });
                 const showThese = [];
                 const hideThese = [];
                 $('.show-if-carried').each(function() {
@@ -719,6 +739,7 @@
                 });
                 $('.hide-if-empty').each(function() {
                     if (mainQuantity != 0) {
+                        /*
                         if (!showThese.includes(this)) {
                             showThese.push(this);
                         }
@@ -726,6 +747,7 @@
                         if (index > -1) {
                             hideThese.splice(index, 1);
                         }
+                        */
                     } else {
                         const index = showThese.indexOf(this);
                         if (index > -1) {

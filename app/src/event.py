@@ -1,4 +1,4 @@
-from flask import g, request, session
+from flask import g, session
 import logging
 import random
 from types import SimpleNamespace
@@ -7,7 +7,7 @@ from .attrib import Attrib
 from .db_serializable import Identifiable, MutableNamespace, coldef
 from .item import Item
 from .location import Location
-from .utils import request_bool, request_int
+from .utils import RequestHelper
 
 OUTCOME_TYPES = [
     'fourway',  # critical/minor failure or success
@@ -34,9 +34,9 @@ def roll_dice(sides):
 
 def create_trigger_entity(entity_name, entity_id):
     if entity_name == 'item':
-        return Item(int(entity_id))
+        return Item(entity_id)
     elif entity_name == 'location':
-        return Location(int(entity_id))
+        return Location(entity_id)
     else:
         raise ValueError(f"Unknown entity_name: {entity_name}")
 
@@ -168,7 +168,7 @@ class Event(Identifiable):
         """, (g.game_token, id_to_get), fetch_all=False)
         current_data = MutableNamespace()
         if events_row:
-            current_data = event_row
+            current_data = events_row
         # Get this event's attrib relation data
         event_attribs_rows = cls.execute_select("""
             SELECT *
@@ -192,9 +192,9 @@ class Event(Identifiable):
         """, (g.game_token, id_to_get))
         for trigger_data in triggers_rows:
             if trigger_data.item_id:
-                trigger_tup = (Item, trigger_data.item_id)
+                trigger_tup = (Item.basename(), trigger_data.item_id)
             else:
-                trigger_tup = (Location, trigger_data.loc_id)
+                trigger_tup = (Location.basename(), trigger_data.loc_id)
             current_data.setdefault('triggers', []).append(trigger_tup)
         # Create event from data
         return Event.from_json(current_data)
@@ -304,50 +304,52 @@ class Event(Identifiable):
         return g.game_data.events
 
     def configure_by_form(self):
-        if 'save_changes' in request.form:  # button was clicked
-            logger.debug("Saving changes.")
-            logger.debug(request.form)
-            self.name = request.form.get('event_name')
-            self.description = request.form.get('event_description')
-            self.toplevel = request_bool(request, 'top_level')
-            self.outcome_type = request.form.get('outcome_type')
+        req = RequestHelper('form')
+        if req.has_key('save_changes'):  # button was clicked
+            req.debug()
+            self.name = req.get_str('event_name')
+            self.description = req.get_str('event_description')
+            req = RequestHelper('form')
+            self.toplevel = req.get_bool('top_level')
+            self.outcome_type = req.get_str('outcome_type')
             self.numeric_range = (
-                request_int(request, 'numeric_min', 0),
-                request_int(request, 'numeric_max', 1))
-            self.selection_strings = request.form.get('selection_strings', "")
-            determining_attr_ids = request.form.getlist('determining_attr_id[]')
-            changed_attr_ids = request.form.getlist('changed_attr_id[]')
+                req.get_int('numeric_min', 0),
+                req.get_int('numeric_max', 1))
+            self.selection_strings = req.get_str('selection_strings', "")
+            determining_attr_ids = req.get_list('determining_attr_id[]')
+            changed_attr_ids = req.get_list('changed_attr_id[]')
             self.determining_attrs = [
                 Attrib(int(attrib_id)) for attrib_id in determining_attr_ids]
             self.changed_attrs = [
                 Attrib(int(attrib_id)) for attrib_id in changed_attr_ids]
             self.trigger_chance = (
-                request_int(request, 'trigger_numerator', 1),
-                request_int(request, 'trigger_denominator', 10))
+                req.get_int('trigger_numerator', 1),
+                req.get_int('trigger_denominator', 10))
             self.trigger_by_duration = (
-                request.form.get('trigger_timing') == 'during_progress')
-            trigger_types = request.form.getlist('entity_type[]')
-            trigger_ids = request.form.getlist('entity_id[]')
+                req.get_str('trigger_timing') == 'during_progress')
+            trigger_types = req.get_list('entity_type[]')
+            trigger_ids = req.get_list('entity_id[]')
             self.triggers = [
                 create_trigger_entity(entity_name, entity_id)
                 for entity_name, entity_id in zip(trigger_types, trigger_ids)]
             self.to_db()
-        elif 'delete_event' in request.form:
+        elif req.has_key('delete_event'):
             try:
                 self.remove_from_db()
                 session['file_message'] = 'Removed event.'
             except DbError as e:
                 raise DeletionError(e)
-        elif 'cancel_changes' in request.form:
+        elif req.has_key('cancel_changes'):
             logger.debug("Cancelling changes.")
         else:
             logger.debug("Neither button was clicked.")
 
     def play_by_form(self):
         logger.debug("Saving changes.")
-        logger.debug(request.form)
-        self.difficulty = request_int(request, 'difficulty')
-        self.stat_adjustment = request_int(request, 'stat_adjustment')
+        req = RequestHelper('form')
+        req.debug()
+        self.difficulty = req.get_int('difficulty')
+        self.stat_adjustment = req.get_int('stat_adjustment')
         self.to_db()
 
     def get_outcome(self):

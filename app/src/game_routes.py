@@ -16,7 +16,7 @@ from .item import Item
 from .event import Event
 from .location import Location, ItemAt
 from .overall import Overall
-from .utils import request_bool, request_int
+from .utils import RequestHelper
 
 logger = logging.getLogger(__name__)
 
@@ -164,7 +164,8 @@ def set_routes(app):
     @app.route('/char/start/<int:char_id>', methods=['POST'])
     def start_char(char_id):
         logger.debug("-" * 80 + "\nstart_char(%d)", char_id)
-        dest_id = request_int(request, 'dest_id')
+        req = RequestHelper('form')
+        dest_id = req.get_int('dest_id')
         char = Character.data_for_play(char_id)
         if not char.destination or char.destination.id != dest_id:
             char.destination = Location.get_by_id(dest_id)
@@ -201,8 +202,8 @@ def set_routes(app):
             if char.progress.is_ongoing:
                 time_spent = char.progress.batches_for_elapsed_time()
                 events = Event.load_triggers_for_loc(char.location.id)
-                ignore_event_id = request_int(
-                    request, 'ignore_event', '', 'args')
+                req = RequestHelper('args')
+                ignore_event_id = req.get_int('ignore_event', '')
                 for event in events:
                     if event.id != ignore_event_id:
                         if (event.trigger_by_duration
@@ -257,9 +258,10 @@ def set_routes(app):
 
     @app.route('/play/item/<int:item_id>/')
     def play_item(item_id):
-        char_id = request_int(request, 'char_id', '', 'args')
-        loc_id = request_int(request, 'loc_id', '', 'args')
-        default_pile = request_bool(request, 'default_pile', False, 'args')
+        req = RequestHelper('args')
+        char_id = req.get_int('char_id', '')
+        loc_id = req.get_int('loc_id', '')
+        default_pile = req.get_bool('default_pile', False)
         if char_id:
             session['last_char_id'] = char_id
         if loc_id:
@@ -292,8 +294,9 @@ def set_routes(app):
 
     @app.route('/item/progress/<int:item_id>/')
     def item_progress(item_id):
-        char_id = request_int(request, 'char_id', '', 'args')
-        loc_id = request_int(request, 'loc_id', '', 'args')
+        req = RequestHelper('args')
+        char_id = req.get_int('char_id', '')
+        loc_id = req.get_int('loc_id', '')
         if not char_id and not loc_id:
             char_id = session.get('last_char_id', '')
             loc_id = session.get('last_loc_id', '')
@@ -304,10 +307,10 @@ def set_routes(app):
         if not item:
             return jsonify({'error': 'Item not found'})
         pile = item.pile
+        progress = pile.container.progress
         logger.debug("Retrieved item %d from DB: %d recipes\n"
             "Pile type %s from %s",
             item.id, len(item.recipes), pile.PILE_TYPE, pile.container.name)
-        progress = pile.container.progress
         if progress.is_ongoing:
             progress.batches_for_elapsed_time()
         return jsonify({
@@ -318,8 +321,9 @@ def set_routes(app):
 
     @app.route('/item/start/<int:item_id>/<int:recipe_id>')
     def start_item(item_id, recipe_id):
-        char_id = request_int(request, 'char_id', '', 'args')
-        loc_id = request_int(request, 'loc_id', '', 'args')
+        req = RequestHelper('args')
+        char_id = req.get_int('char_id', '')
+        loc_id = req.get_int('loc_id', '')
         if not char_id and not loc_id:
             char_id = session.get('last_char_id', '')
             loc_id = session.get('last_loc_id', '')
@@ -327,10 +331,9 @@ def set_routes(app):
             "char_id=%s, loc_id=%s)", item_id, recipe_id, char_id, loc_id)
         item = Item.data_for_play(
             item_id, char_id, loc_id, complete_sources=True)
-        container = item.pile.container
-        progress = container.progress
+        pile = item.pile
+        progress = pile.container.progress
         if progress.start(recipe_id):
-            container.to_db()
             return jsonify({
                 'status': 'success',
                 'message': 'Progress started.',
@@ -347,8 +350,9 @@ def set_routes(app):
 
     @app.route('/item/stop/<int:item_id>')
     def stop_item(item_id):
-        char_id = request_int(request, 'char_id', '', 'args')
-        loc_id = request_int(request, 'loc_id', '', 'args')
+        req = RequestHelper('args')
+        char_id = req.get_int('char_id', '')
+        loc_id = req.get_int('loc_id', '')
         if not char_id and not loc_id:
             char_id = session.get('last_char_id', '')
             loc_id = session.get('last_loc_id', '')
@@ -375,9 +379,11 @@ def set_routes(app):
 
     @app.route('/item/gain/<int:item_id>/<int:recipe_id>', methods=['POST'])
     def gain_item(item_id, recipe_id):
-        char_id = request_int(request, 'char_id', '', 'args')
-        loc_id = request_int(request, 'loc_id', '', 'args')
-        num_batches = request_int(request, 'quantity')
+        req = RequestHelper('args')
+        char_id = req.get_int('char_id', '')
+        loc_id = req.get_int('loc_id', '')
+        req = RequestHelper('form')
+        num_batches = req.get_int('quantity', 0)
         if not char_id and not loc_id:
             char_id = session.get('last_char_id', '')
             loc_id = session.get('last_loc_id', '')
@@ -515,7 +521,8 @@ def set_routes(app):
         if not instance:
             return 'Location not found'
         session['last_loc_id'] = loc_id
-        char_id = request_int(request, 'char_id', '', 'args')
+        req = RequestHelper('args')
+        char_id = req.get_int('char_id', '')
         if char_id:
             session['last_char_id'] = char_id
         else:
@@ -569,3 +576,29 @@ def set_routes(app):
             interactions=interactions,
             link_letters=LinkLetters())
 
+    @app.route('/test/<int:item_id>/')
+    def test_route(item_id):
+        req = RequestHelper('args')
+        char_id = req.get_int('char_id', '')
+        loc_id = req.get_int('loc_id', '')
+        if not char_id and not loc_id:
+            char_id = session.get('last_char_id', '')
+            loc_id = session.get('last_loc_id', '')
+        logger.debug("-" * 80 + "\ntest_route(item_id=%d, char_id=%s, loc_id=%s)",
+            item_id, char_id, loc_id)
+        item = Item.data_for_play(
+            item_id, char_id, loc_id, complete_sources=True)
+        if not item:
+            return jsonify({'error': 'Item not found'})
+        pile = item.pile
+        logger.debug("Retrieved item %d from DB: %d recipes\n"
+            "Pile type %s from %s",
+            item.id, len(item.recipes), pile.PILE_TYPE, pile.container.name)
+        progress = pile.container.progress
+        if progress.is_ongoing:
+            progress.batches_for_elapsed_time()
+        return jsonify({
+            'is_ongoing': progress.is_ongoing,
+            'recipe_id': progress.recipe.id,
+            'quantity': pile.quantity,
+            'elapsed_time': progress.calculate_elapsed_time()})

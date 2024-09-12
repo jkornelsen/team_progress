@@ -1,4 +1,4 @@
-from flask import g, request, session
+from flask import g, session
 import logging
 
 from .attrib import Attrib, AttribOf
@@ -6,7 +6,7 @@ from .db_serializable import Identifiable, MutableNamespace, coldef
 from .item import Item
 from .location import Destination, Location
 from .progress import Progress
-from .utils import Pile, Storage, request_bool, request_float
+from .utils import Pile, RequestHelper, Storage
 
 tables_to_create = {
     'characters': f"""
@@ -87,6 +87,9 @@ class Character(Identifiable):
 
     @classmethod
     def from_json(cls, data):
+        """Looks for attribs and locations in g.game_data with get_by_id(),
+        so consider loading those before calling this method.
+        """
         if not isinstance(data, dict):
             data = vars(data)
         instance = cls(int(data.get('id', 0)))
@@ -106,10 +109,10 @@ class Character(Identifiable):
         instance.location = Location.get_by_id(
             int(data['location_id'])) if data.get('location_id', 0) else None
         instance.position = data.get('position', (0, 0))
+        instance.pile = Pile()
+        instance.pile.quantity = data.get('quantity', 0.0)
         instance.progress = Progress.from_json(
             data.get('progress', {}), instance)
-        instance.pile = Pile()  #XXX: progress of different things shouldn't transfer
-        instance.pile.quantity = data.get('quantity', 0.0)
         instance.destination = Location.get_by_id(
             int(data['dest_id'])) if data.get('dest_id', 0) else None
         return instance
@@ -217,8 +220,6 @@ class Character(Identifiable):
                 SET masked = false
                 WHERE id = %s AND masked = true
             """, (current_data.location_id,))
-        # Get all location names
-        g.game_data.entity_names_from_db([Location])
         # Create object from data
         return Character.from_json(current_data)
 
@@ -272,10 +273,8 @@ class Character(Identifiable):
     @classmethod
     def data_for_configure(cls, id_to_get):
         logger.debug("data_for_configure(%s)", id_to_get)
+        g.game_data.from_db_flat([Attrib, Location, Item])
         current_obj = cls.load_complete_object(id_to_get)
-        g.game_data.characters = []
-        # Get all basic attrib and item data
-        g.game_data.from_db_flat([Attrib, Item])
         # Replace partial objects with fully populated objects
         for attrib_id, attrib_of in current_obj.attribs.items():
             attrib_of.attrib = Attrib.get_by_id(attrib_id)
@@ -319,16 +318,17 @@ class Character(Identifiable):
         return current_obj
 
     def configure_by_form(self):
-        if 'save_changes' in request.form:  # button was clicked
-            logger.debug("Saving changes.")
-            logger.debug(request.form)
-            self.name = request.form.get('char_name')
-            self.description = request.form.get('char_description')
-            self.toplevel = request_bool(request, 'top_level')
-            self.masked = request_bool(request, 'masked')
-            item_ids = request.form.getlist('item_id[]')
-            item_qtys = request.form.getlist('item_qty[]')
-            item_slots = request.form.getlist('item_slot[]')
+        req = RequestHelper('form')
+        if req.has_key('save_changes'):  # button was clicked
+            req.debug()
+            self.name = req.get_str('char_name')
+            self.description = req.get_str('char_description')
+            req = RequestHelper('form')
+            self.toplevel = req.get_bool('top_level')
+            self.masked = req.get_bool('masked')
+            item_ids = req.get_list('item_id[]')
+            item_qtys = req.get_list('item_qty[]')
+            item_slots = req.get_list('item_slot[]')
             self.items = {}
             for item_id, item_qty, item_slot in zip(
                     item_ids, item_qtys, item_slots):
@@ -336,31 +336,28 @@ class Character(Identifiable):
                 self.items[item_id] = ownedItem
                 ownedItem.quantity = float(item_qty)
                 ownedItem.slot = item_slot
-            location_id = request.form.get('char_location')
-            self.location = Location.get_by_id(
-                int(location_id)) if location_id else None
+            location_id = req.get_int('char_location')
+            self.location = Location(location_id) if location_id else None
             self.position = tuple(
-                map(int, request.form.get('position').split(',')))
-            attrib_ids = request.form.getlist('attrib_id[]')
+                map(int, req.get_str('position').split(',')))
+            attrib_ids = req.get_list('attrib_id[]')
             logger.debug(f"Attrib IDs: %s", attrib_ids)
             self.attribs = {}
             for attrib_id in attrib_ids:
-                attrib_val = request_float(
-                    request, f'attrib_{attrib_id}_val', 0.0)
-                attrib_item = Attrib.get_by_id(attrib_id)
+                attrib_val = req.get_float(f'attrib_{attrib_id}_val', 0.0)
                 self.attribs[attrib_id] = AttribOf(
-                    attrib_item, attrib_id, attrib_val)
+                    attrib_id=attrib_id, val=attrib_val)
             logger.debug("attribs: %s", {
                 attrib_of.attrib.name: attrib_of.val
                 for attrib_of in self.attribs.values()})
             self.to_db()
-        elif 'delete_character' in request.form:
+        elif req.has_key('delete_character'):
             try:
                 self.remove_from_db()
                 session['file_message'] = 'Removed character.'
             except DbError as e:
                 raise DeletionError(e)
-        elif 'cancel_changes' in request.form:
+        elif req.has_key('cancel_changes'):
             logger.debug("Cancelling changes.")
         else:
             logger.debug("Neither button was clicked.")

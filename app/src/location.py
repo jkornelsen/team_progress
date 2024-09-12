@@ -1,11 +1,11 @@
-from flask import g, request, session
+from flask import g, session
 import logging
 
 from .db_serializable import (
     Identifiable, MutableNamespace, coldef, tuple_to_pg_array)
 from .item import Item
 from .progress import Progress
-from .utils import Pile, Storage, request_bool
+from .utils import Pile, RequestHelper, Storage
 
 tables_to_create = {
     'locations': f"""
@@ -128,10 +128,10 @@ class Location(Identifiable):
                 item_data = vars(item_data)
             instance.items[
                 item_data.get('item_id', 0)] = ItemAt.from_json(item_data)
+        instance.pile = Pile()
+        instance.pile.quantity = data.get('quantity', 0.0)
         instance.progress = Progress.from_json(
             data.get('progress', {}), instance)
-        instance.pile = Pile()  #XXX: progress of different items shouldn't transfer
-        instance.pile.quantity = data.get('quantity', 0.0)
         instance.grid.dimensions = data.get('dimensions') or (0, 0)
         instance.grid.excluded = data.get('excluded') or (0, 0, 0, 0)
         instance.grid.set_default_pos()
@@ -297,51 +297,55 @@ class Location(Identifiable):
         return current_obj
 
     def configure_by_form(self):
-        if 'save_changes' in request.form:  # button was clicked
-            logger.debug("Saving changes.")
-            logger.debug(request.form)
+        req = RequestHelper('form')
+        if req.has_key('save_changes'):  # button was clicked
+            req.debug()
             entity_list = self.get_list()
             if self not in entity_list:
                 entity_list.append(self)
-            self.name = request.form.get('location_name')
-            self.description = request.form.get('location_description')
-            self.masked = request_bool(request, 'masked')
+            self.name = req.get_str('location_name')
+            self.description = req.get_str('location_description')
+            req = RequestHelper('form')
+            self.masked = req.get_bool('masked')
             self.grid.dimensions = tuple(
-                map(int, request.form.get(
+                map(int, req.get_str(
                     'dimensions').split('x')))
             self.grid.excluded = tuple(
-                list(map(int, request.form.get(
+                list(map(int, req.get_str(
                     'excluded_left_top').split(','))) +
-                list(map(int, request.form.get(
+                list(map(int, req.get_str(
                     'excluded_right_bottom').split(','))))
             self.grid.set_default_pos()
-            destination_ids = request.form.getlist('destination_id[]')
-            destination_distances = request.form.getlist('destination_distance[]')
+            destination_ids = req.get_list('destination_id[]')
+            destination_distances = req.get_list('destination_distance[]')
             self.destinations = {}
             for dest_id, dest_dist in zip(
                     destination_ids, destination_distances):
                 self.destinations[dest_id] = Destination(
                     Location(dest_id), int(dest_dist))
-            item_ids = request.form.getlist('item_id[]')
-            item_qtys = request.form.getlist('item_qty[]')
-            item_posits = request.form.getlist('item_pos[]')
+            item_ids = req.get_list('item_id[]')
+            item_qtys = req.get_list('item_qty[]')
+            item_posits = req.get_list('item_pos[]')
             self.items = {}
             for item_id, item_qty, item_pos in zip(
                     item_ids, item_qtys, item_posits):
                 item = Item(int(item_id))
                 item_at = ItemAt(item)
                 item_at.quantity = int(item_qty)
-                item_at.position = tuple(
-                    map(int, item_pos.split(',')))
+                try:
+                    item_at.position = tuple(
+                        map(int, item_pos.split(',')))
+                except ValueError:
+                    pass  # use default value
                 self.items[item_id] = item_at
             self.to_db()
-        elif 'delete_location' in request.form:
+        elif req.has_key('delete_location'):
             try:
                 self.remove_from_db()
                 session['file_message'] = 'Removed location.'
             except DbError as e:
                 raise DeletionError(e)
-        elif 'cancel_changes' in request.form:
+        elif req.has_key('cancel_changes'):
             logger.debug("Cancelling changes.")
         else:
             logger.debug("Neither button was clicked.")

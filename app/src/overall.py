@@ -1,5 +1,5 @@
 from collections import namedtuple
-from flask import g, request
+from flask import g
 import logging
 from types import SimpleNamespace
 
@@ -9,7 +9,7 @@ from .db_serializable import DbSerializable, Identifiable, coldef
 from .event import Event
 from .item import Item
 from .location import Location
-from .utils import request_int, request_float
+from .utils import RequestHelper
 
 tables_to_create = {
     'overall': f"""
@@ -175,37 +175,36 @@ class Overall(DbSerializable):
             win_req.id_to_refs_from_game_data()
 
     def configure_by_form(self):
-        if 'save_changes' in request.form:
-            logger.debug("Saving changes.")
-            logger.debug(request.form)
-            self.title = request.form.get('scenario_title')
-            self.description = request.form.get('scenario_description')
-            winreq_ids = request.form.getlist('winreq_id')
+        req = RequestHelper('form')
+        if req.has_key('save_changes'):
+            req.debug()
+            self.title = req.get_str('scenario_title')
+            self.description = req.get_str('scenario_description')
+            winreq_ids = req.get_strlist('winreq_id')
             self.win_reqs = []
             for winreq_id in winreq_ids:
                 prefix = f"winreq{winreq_id}_"
                 req = WinRequirement()
                 self.win_reqs.append(req)
-                req.quantity = request_float(request, f"{prefix}quantity")
-                item_id = request_int(request, f"{prefix}item_id")
+                req.quantity = req.get_float(f"{prefix}quantity")
+                item_id = req.get_int(f"{prefix}item_id")
                 if item_id:
                     req.item = Item(item_id)
-                char_id = request_int(request, f"{prefix}char_id")
+                char_id = req.get_int(f"{prefix}char_id")
                 if char_id:
                     req.character = Character(char_id)
-                loc_id = request_int(request, f"{prefix}loc_id")
+                loc_id = req.get_int(f"{prefix}loc_id")
                 if loc_id:
                     req.location = Location(loc_id)
-                attrib_id = request_int(request, f"{prefix}attrib_id")
+                attrib_id = req.get_int(f"{prefix}attrib_id")
                 if attrib_id:
                     req.attrib = Attrib(attrib_id)
-                req.attrib_value = request_float(
-                    request, f"{prefix}attribValue")
+                req.attrib_value = req.get_float(f"{prefix}attribValue")
             self.slots = [slot.strip()
-                for slot in request.form.get('slots').splitlines()
+                for slot in req.get_str('slots').splitlines()
                 if slot.strip()]
             self.to_db()
-        elif 'cancel_changes' in request.form:
+        elif req.has_key('cancel_changes'):
             logger.debug("Cancelling changes.")
         else:
             logger.debug("Neither button was clicked.")
@@ -308,7 +307,9 @@ class Overall(DbSerializable):
                 AND B.value >= A.attrib_value
         """, (g.game_token,) * NUM_QUERIES)
         for row in rows:
-            win_req = req_by_id[row.get("A.id")]
+            import sys
+            print(f"row=[{row}]", file=sys.stderr, flush=True)
+            win_req = req_by_id.get(row.id)
             win_req.fulfilled = True
         return (
             instance,

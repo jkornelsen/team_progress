@@ -1,7 +1,8 @@
-from flask import g, request, session
+from flask import g, session
 import logging
 
 from .db_serializable import Identifiable, coldef
+from .utils import RequestHelper
 
 tables_to_create = {
     'attribs': f"""
@@ -103,19 +104,20 @@ class Attrib(Identifiable):
         return g.game_data.get_list(cls)
 
     def configure_by_form(self):
-        if 'save_changes' in request.form:  # button was clicked
+        req = RequestHelper('form')
+        if req.has_key('save_changes'):  # button was clicked
             logger.debug("Saving changes.")
-            logger.debug(request.form)
-            self.name = request.form.get('attrib_name')
-            self.description = request.form.get('attrib_description')
+            req.debug()
+            self.name = req.get_str('attrib_name')
+            self.description = req.get_str('attrib_description')
             self.to_db()
-        elif 'delete_attrib' in request.form:
+        elif req.has_key('delete_attrib'):
             try:
                 self.remove_from_db()
                 session['file_message'] = 'Removed attribute.'
             except DbError as e:
                 raise DeletionError(e)
-        elif 'cancel_changes' in request.form:
+        elif req.has_key('cancel_changes'):
             logger.debug("Cancelling changes.")
         else:
             logger.debug("Neither button was clicked.")

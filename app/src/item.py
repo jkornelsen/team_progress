@@ -1,4 +1,4 @@
-from flask import g, request, session
+from flask import g, session
 import logging
 import math
 import re
@@ -8,7 +8,7 @@ from .db_serializable import (
     DbSerializable, Identifiable, MutableNamespace, coldef,
     DbError, DeletionError)
 from .progress import Progress
-from .utils import Pile, Storage, request_bool, request_float
+from .utils import Pile, RequestHelper, Storage
 
 tables_to_create = {
     'items': f"""
@@ -508,70 +508,68 @@ class Item(Identifiable, Pile):
         return current_obj
 
     def configure_by_form(self):
-        if 'save_changes' in request.form:  # button was clicked
-            logger.debug("Saving changes.")
-            logger.debug(request.form)
-            self.name = request.form.get('item_name')
-            self.description = request.form.get('item_description')
-            self.storage_type = request.form.get('storage_type')
-            self.toplevel = request_bool(request, 'top_level')
-            self.masked = request_bool(request, 'masked')
-            self.q_limit = request_float(request, 'item_limit')
-            self.quantity = request_float(request, 'item_quantity')
-            #if self.progress.is_ongoing:
-            #    self.progress.stop()
-            recipe_ids = request.form.getlist('recipe_id')
+        req = RequestHelper('form')
+        if req.has_key('save_changes'):  # button was clicked
+            req.debug()
+            self.name = req.get_str('item_name')
+            self.description = req.get_str('item_description')
+            self.storage_type = req.get_str('storage_type')
+            req = RequestHelper('form')
+            self.toplevel = req.get_bool('top_level')
+            self.masked = req.get_bool('masked')
+            self.q_limit = req.get_float('item_limit')
+            self.quantity = req.get_float('item_quantity')
+            recipe_ids = req.get_list('recipe_id')
             self.recipes = []
             for recipe_id in recipe_ids:
                 recipe = Recipe(int(recipe_id), self)
                 self.recipes.append(recipe)
-                recipe.rate_amount = request_float(request,
+                recipe.rate_amount = req.get_float(
                     f'recipe{recipe_id}_rate_amount')
-                recipe.rate_duration = request_float(request,
+                recipe.rate_duration = req.get_float(
                     f'recipe{recipe_id}_rate_duration')
-                recipe.instant = request_bool(request,
+                recipe.instant = req.get_bool(
                     f'recipe{recipe_id}_instant')
-                source_ids = request.form.getlist(
+                source_ids = req.get_list(
                     f'recipe{recipe_id}_source_id')
                 logger.debug(f"Source IDs: %s", source_ids)
                 for source_id in source_ids:
                     source = Source.from_json({
                         'source_id': int(source_id),
-                        'q_required': request_float(request,
+                        'q_required': req.get_float(
                             f'recipe{recipe_id}_source{source_id}_qtyreq',
                             0.0),
-                        'preserve': request_bool(request,
+                        'preserve': req.get_bool(
                             f'recipe{recipe_id}_source{source_id}_preserve'),
                     })
                     recipe.sources.append(source)
                     logger.debug("Sources for %s: %s",
                         recipe_id, {source.item.id: source.q_required
                         for source in recipe.sources})
-                recipe_attrib_ids = request.form.getlist(
+                recipe_attrib_ids = req.get_list(
                     f'recipe{recipe_id}_attrib_id')
                 for attrib_id in recipe_attrib_ids:
-                    attrib_value = request_float(request,
+                    attrib_value = req.get_float(
                         f'recipe{recipe_id}_attrib{attrib_id}_value', 1.0)
                     recipe.attribs[attrib_id] = AttribReq(
                         attrib_id=attrib_id, val=attrib_value)
-            attrib_ids = request.form.getlist('attrib_id')
+            attrib_ids = req.get_list('attrib_id')
             logger.debug("Attrib IDs: %s", attrib_ids)
             self.attribs = {}
             for attrib_id in attrib_ids:
-                attrib_val = request_float(request,
-                    f'attrib{attrib_id}_val', 0.0)
+                attrib_val = req.get_float(f'attrib{attrib_id}_val', 0.0)
                 self.attribs[attrib_id] = AttribOf(
                     attrib_id=attrib_id, val=attrib_val)
             logger.debug("attribs: %s", {attrib_id: attrib_of.val
                 for attrib_id, attrib_of in self.attribs.items()})
             self.to_db()
-        elif 'delete_item' in request.form:
+        elif req.has_key('delete_item'):
             try:
                 self.remove_from_db()
                 session['file_message'] = 'Removed item.'
             except DbError as e:
                 raise DeletionError(e)
-        elif 'cancel_changes' in request.form:
+        elif req.has_key('cancel_changes'):
             logger.debug("Cancelling changes.")
         else:
             logger.debug("Neither button was clicked.")
@@ -623,8 +621,14 @@ def _load_piles(current_item, char_id, loc_id):
     current_item.pile = _assign_pile(
         current_item, chars, loc, char_id, loc_id)
     current_item.pile.item = current_item
-    current_item.pile.container.pile = current_item.pile
-    #current_item.pile.container.progress.recipe = current_item.progress.recipes[0]
+    container = current_item.pile.container 
+    # This container item id was set by container.progress.from_json(),
+    # loaded from the progress table.
+    if container.pile.item.id != current_item.pile.item.id:
+        # Don't carry over progress for a different item.
+        # Replace the reference with an empty Progress object instead.
+        container.progress = Progress(container=container)
+    container.pile = current_item.pile
     for recipe in current_item.recipes:
         for source in recipe.sources:
             logger.debug("source pile")
@@ -648,8 +652,10 @@ def _load_piles(current_item, char_id, loc_id):
                         char.name, attrib_of.val)
 
 def _assign_pile(pile_item, chars, loc, char_id=0, loc_id=0):
-    logger.debug("_assign_pile(): item id %d type %s",
-        pile_item.id, pile_item.storage_type)
+    logger.debug("_assign_pile(item.id=%d, item.type=%s, "
+        "chars=[%d], loc.id=%d, char_id=%d, loc_id=%d)",
+        pile_item.id, pile_item.storage_type, len(chars),
+        loc.id if loc else "_", char_id, loc_id)
     pile = None
     if pile_item.storage_type == Storage.CARRIED and char_id:
         pile_type = Storage.CARRIED

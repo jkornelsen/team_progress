@@ -65,8 +65,10 @@ class Progress(Identifiable):
         if not isinstance(data, dict):
             data = vars(data)
         instance = cls(int(data.get('id', 0)), container=container)
-        from .item import Recipe
-        instance.recipe = Recipe(int(data.get('recipe_id', 0)))
+        from .item import Item, Recipe
+        if container:
+            instance.pile.item = Item(data.get('item_id', 0))
+        instance.recipe = Recipe(data.get('recipe_id', 0))
         instance.start_time = data.get('start_time')
         instance.stop_time = data.get('stop_time')
         instance.batches_processed = data.get('batches_processed', 0)
