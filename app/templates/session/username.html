@@ -1,21 +1,22 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{ config['TITLE'] }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-</head>
-<body>
-    <h1>Enter Username</h1>
-    <p>Can either be a new one or the name you've been using for this game.
-    <p>This is your ID to access the game,
-    not the name of your player's character.
-    For example, your username could be tom123
-    while the main character you play might be named "Thunderfist Joe".</p>
-    <p>Leave blank to generate random letters.</p>
+{% extends 'base.html' %}
+
+{% block upper_left %}
+    <div class="nav-container">
+        <a class="upper-left" href="{{ url_for('overview') }}">Continue Game</a>
+        <span class="separator">|</span>
+        <a href="{{ url_for('configure_index') }}">Setup</a>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <h1>Change User ID</h1>
+    <p class="info">For example, the initials of your first and last name,
+    so your friends can see who is connected.
+    Resets when the session times out.</p>
+    <p class="info">Leave blank to generate random letters.</p>
     <form method="POST" action="{{ url_for('change_user') }}">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" autofocus>
+        <label for="username">User ID:</label>
+        <input type="text" id="username" name="username" value="{{ current_username }}" autofocus>
         <button type="submit">Submit</button>
     </form>
-</body>
-</html>
+{% endblock %}

@@ -7,7 +7,7 @@ from types import SimpleNamespace
 from database import column_counts, pretty
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.CRITICAL)  # turn off for this module
+#logger.setLevel(logging.CRITICAL)  # turn off for this module
 
 def coldef(which):
     """Definitions for commonly used columns for creating a table."""
@@ -136,7 +136,7 @@ class DbSerializable():
         return results[0]
 
     @classmethod
-    def execute_change(cls, query_without_table, values, fetch=False):
+    def execute_change(cls, query_without_table, values=[], fetch=False):
         """Returning a value is useful when inserting
         auto-generated IDs.
         """
@@ -148,8 +148,6 @@ class DbSerializable():
                 cursor.execute(query, tuple(values))
                 if fetch:
                     result = MutableNamespace(**cursor.fetchone())
-            if g.commit_db:
-                g.db.commit()
         except (psycopg2.OperationalError, psycopg2.ProgrammingError,
                 psycopg2.IntegrityError, psycopg2.InterfaceError,
                 psycopg2.InternalError) as e:
@@ -163,12 +161,10 @@ class DbSerializable():
         sql = f"""
             INSERT INTO {table} ({column_names})
             VALUES %s
-        """
+            """
         logger.debug(pretty(sql, values))
         with g.db.cursor() as cursor:
             execute_values(cursor, sql, values, template=None, page_size=100)
-        if g.commit_db:
-            g.db.commit()
 
     @classmethod
     def insert_single(cls, table, column_names, values):
@@ -204,7 +200,7 @@ class DbSerializable():
             VALUES ({placeholders})
             ON CONFLICT (game_token) DO UPDATE
             SET {update_placeholders}
-        """
+            """
         self.execute_change(query, values)
 
 class Identifiable(DbSerializable):
@@ -268,7 +264,7 @@ class Identifiable(DbSerializable):
             ON CONFLICT (game_token, id) DO UPDATE
             SET {update_placeholders}
             RETURNING id
-        """
+            """
         row = self.execute_change(query, values, fetch=True)
         self.id = row.id
 
@@ -276,7 +272,7 @@ class Identifiable(DbSerializable):
         self.execute_change("""
             DELETE FROM {table}
             WHERE game_token = %s AND id = %s
-        """, (self.game_token, self.id))
+            """, (self.game_token, self.id))
         entity_list = self.get_list()
         if self in entity_list:
             entity_list.remove(self)

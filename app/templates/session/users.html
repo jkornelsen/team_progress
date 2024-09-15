@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block upper_left %}
+    <div class="nav-container">
+        <a class="upper-left" href="{{ url_for('overview') }}">Continue Game</a>
+        <span class="separator">|</span>
+        <a href="{{ url_for('configure_index') }}">Setup</a>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <h1>Session Users</h1>
+    {% set count = interactions | length %}
+    {% if count > 1 %}
+        <p class="info">{{ count }} players have joined your current game.</p>
+    {% else %}
+        <p class="info">There are no other players in your current game. To invite others, send them the <a href="{{ url_for('get_session_link') }}">session link</a>.</p>
+    {% endif %}
+    {% if interactions %}
+    <table>
+        <tr>
+            <th>User ID</th>
+            <th>Last Interaction</th>
+            <th>Page<th>
+        </tr>
+        {% for interaction in interactions %}
+            <tr>
+                <td{% if interaction.username == current_username %} class="username"{% endif %}>{{ interaction.username }}</td>
+                <td>{{ interaction.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                <td>
+                    {{ interaction.action_display() }}
+                    <!--link: {{ interaction.action_link }}-->
+                </td>
+            </td></tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    {% endif %}
+{% endblock %}

@@ -13,6 +13,17 @@ from .overall import Overall
 
 logger = logging.getLogger(__name__)
 
+tables_to_create = {
+    'user_interactions': f"""
+        {coldef('game_token')} NOT NULL,
+        username varchar(50) NOT NULL,
+        timestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        route varchar(50) NOT NULL,
+        entity_id varchar(20),
+        UNIQUE (game_token, username, route, entity_id)
+        """
+    }
+
 def determine_entity_type(endpoint):
     """Determine the entity type based on the endpoint.
     For example, if endpoint is '/configure/item/<item_id>', return 'items'
@@ -27,17 +38,6 @@ def determine_entity_type(endpoint):
         except KeyError:
             pass
     return None
-
-tables_to_create = {
-    'user_interactions': f"""
-        {coldef('game_token')} NOT NULL,
-        username varchar(50) NOT NULL,
-        timestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        route varchar(50) NOT NULL,
-        entity_id varchar(20),
-        UNIQUE (game_token, username, route, entity_id)
-    """
-}
 
 class UserInteraction(DbSerializable):
     """Keep a record of recent user interactions with the game
@@ -61,7 +61,7 @@ class UserInteraction(DbSerializable):
             'timestamp': datetime.now(),
             'route': self.route_endpoint,
             'entity_id': self.entity_id,
-        }
+            }
 
     @classmethod
     def from_json(cls, data):
@@ -92,7 +92,7 @@ class UserInteraction(DbSerializable):
             VALUES ({placeholders})
             ON CONFLICT (game_token, username, route, entity_id) DO UPDATE
             SET {update_placeholders}
-        """
+            """
         values = [doc[field] for field in fields]
         update_values = [doc[field] for field in update_fields]
         self.execute_change(query, values + update_values)
@@ -150,7 +150,7 @@ class UserInteraction(DbSerializable):
             WHERE game_token = %s
                 AND timestamp > %s
             ORDER BY game_token, username, timestamp DESC
-        """
+            """
         values = (g.game_token, threshold_time,)
         rows = cls.execute_select(query, values)
         # Don't include usernames which have later been changed
@@ -158,7 +158,4 @@ class UserInteraction(DbSerializable):
             UserInteraction.from_json(vars(row))
             for row in rows
             if row.route != 'change_user']
-        if len(interactions) < 2:
-            # No need to display info for a single user
-            return []
         return interactions

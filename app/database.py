@@ -13,13 +13,17 @@ def get_db():
             host='localhost',
             port='5432'
         )
-    g.commit_db = True
+    set_autocommit(True)
     return g.db
 
 def close_db(ctx=None):
     db = g.pop('db', None)
     if db is not None:
         db.close()
+
+def set_autocommit(commit):
+    logger.debug("autocommit: %s to %s", g.db.autocommit, commit)
+    g.db.autocommit = commit
 
 def pretty(text, values=None):
     """Pretty-print SQL by indenting consistently and removing extra
@@ -40,6 +44,7 @@ def create_all():
         'attrib',
         'character',
         'event',
+        'file',
         'item',
         'location',
         'overall',
@@ -84,6 +89,7 @@ def column_counts(table_name):
         'recipe_attribs': 5,
         'recipe_sources': 6,
         'recipes': 6,
+        'scenario_log': 2,
         'user_interactions': 5,
         'win_requirements': 8,
     }

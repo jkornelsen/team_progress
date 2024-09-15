@@ -16,11 +16,12 @@ logger = logging.getLogger(__name__)
 
 # In this order for from_json() to correctly get references to other entities. 
 ENTITIES = (
-        Attrib,
-        Item,
-        Location,
-        Character,
-        Event)
+    Attrib,
+    Item,
+    Location,
+    Character,
+    Event
+    )
 
 class ActiveData:
     """Use instead of GameData when the need is to store a set of
@@ -100,7 +101,7 @@ class GameData:
                 FROM {table}
                 WHERE game_token = %s
                 ORDER BY name
-            """, (g.game_token,))
+                """, (g.game_token,))
             for row in rows:
                 entity = entity_cls.from_json(row)
                 self.get_list(entity_cls).append(entity)
@@ -116,7 +117,7 @@ class GameData:
                 SELECT id, name, '{entity_cls.tablename()}' AS tablename
                 FROM {entity_cls.tablename()}
                 WHERE game_token = '{g.game_token}'
-            """)
+                """)
         rows = DbSerializable.execute_select(
             " UNION ".join(query_parts) + " ORDER BY name")
         for row in rows:
@@ -136,15 +137,11 @@ class GameData:
     def clear_db_for_token():
         logger.debug("clear_db_for_token()")
         tablenames = [
-                tablename
-                for tablename in relation_tables
-            ] + [
-                entity_cls.tablename()
-                for entity_cls in [Recipe
-                    ] + list(ENTITIES) + [Overall, Progress]
+            entity_cls.tablename()
+            for entity_cls in list(ENTITIES) + [Overall, Progress]
             ]
         for tablename in tablenames:
             DbSerializable.execute_change(f"""
                 DELETE FROM {tablename}
                 WHERE game_token = %s
-            """, (g.game_token,))
+                """, (g.game_token,))

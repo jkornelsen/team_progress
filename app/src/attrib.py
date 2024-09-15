@@ -9,9 +9,7 @@ tables_to_create = {
         {coldef('id')},
         {coldef('name')},
         {coldef('description')}
-""",
-    # example "{10: 'Very Hungry', 50: 'Full'}
-    # threshold_names JSON NOT NULL
+        """,
 }
 logger = logging.getLogger(__name__)
 
@@ -55,7 +53,7 @@ class Attrib(Identifiable):
             'id': self.id,
             'name': self.name,
             'description': self.description,
-        }
+            }
 
     @classmethod
     def from_json(cls, data):
@@ -86,7 +84,7 @@ class Attrib(Identifiable):
             FROM {table}
             WHERE game_token = %s
                 AND id = %s
-        """, (g.game_token, id_to_get), fetch_all=False)
+            """, (g.game_token, id_to_get), fetch_all=False)
         instance = cls.from_json(vars(row))
         return instance
 
@@ -97,7 +95,7 @@ class Attrib(Identifiable):
             SELECT *
             FROM {table}
             WHERE game_token = %s
-        """, (g.game_token,))
+            """, (g.game_token,))
         # Create objects from data
         g.game_data.set_list(cls, 
             [cls.from_json(vars(row)) for row in rows])
@@ -105,7 +103,7 @@ class Attrib(Identifiable):
 
     def configure_by_form(self):
         req = RequestHelper('form')
-        if req.has_key('save_changes'):  # button was clicked
+        if req.has_key('save_changes') or req.has_key('make_duplicate'):
             logger.debug("Saving changes.")
             req.debug()
             self.name = req.get_str('attrib_name')

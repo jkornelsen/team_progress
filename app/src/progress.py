@@ -16,7 +16,7 @@ tables_to_create = {
         stop_time timestamp,
         batches_processed integer NOT NULL,
         is_ongoing boolean NOT NULL
-    """
+        """
 }
 logger = logging.getLogger(__name__)
 
@@ -58,7 +58,7 @@ class Progress(Identifiable):
             'stop_time': self.stop_time,
             'batches_processed': self.batches_processed,
             'is_ongoing': self.is_ongoing,
-        }
+            }
 
     @classmethod
     def from_json(cls, data, container=None):

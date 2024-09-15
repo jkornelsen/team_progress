@@ -1,41 +1,3 @@
-partially procedurally generated scenarios
-use lists like those found in tabletop rpg books,
-only with different kinds of items, such as paperclips
-choose goal
-research scenario-related details online during the game
-for example, how are pens made
-gamemaster could research beforehand as well as possibly some setup
-
-source more scenarios from community
-perhaps submit to github via enhancement requests
-optionally sort scenarios based on popularity
-
-characters -- select box to specify "user 1" etc
-
-entity classes might have superclasses for partially shared behavior
-
-action could be an event, or whatever was the most recent item interacted
-with for a particular character, even if the action is finished
-username and character in the same row doesn't necessarily mean that character
-is a player character
-all ongoing progress actions have a swirling icon next to the action name
-
-    character   location    action  player
-    ~~~~~~~~    ~~~~~~~~    ~~~~~~  ~~~~~~~~
-    Suzy        Home        Ink     mycoolusername
-    George      Woods       travel  2kul4wrds
-                            Pens    userwithoutchar
-    Peter       Woods       wolf
-
-icons or other images would add quite a bit of color to the game
-characters and items could have icons
-locations may even have bigger images, perhaps drawn
-what about adding a simple art screen,
-with a pencil (adjustable width) and color selection
-image sizes for each entity would be fixed, either icon size or image size
-of course, that would require more memory, not as scalable
-ascii art perhaps 
-
 hosting possibilities:
 Pythonanywhere should be able to host postgres and flask web app.
 https://www.reddit.com/r/flask/comments/12beskr/free_hosting_sites_compatible_with_flask/
@@ -51,7 +13,14 @@ synching between multiple players, like Scribbl.io
 
 prompt each player to save to their PC occasionally
 
-global stop button on overview screen
+icons or other images would add quite a bit of color to the game
+characters and items could have icons
+locations may even have bigger images, perhaps drawn
+what about adding a simple art screen,
+with a pencil (adjustable width) and color selection
+image sizes for each entity would be fixed, either icon size or image size
+of course, that would require more memory, not as scalable
+ascii art perhaps 
 
 need a way to lose or destroy items as well as gain them?
 could do this in configure
@@ -69,8 +38,6 @@ and finally, if in general storage
 deduct whichever is found first
 if say 5 are required, two are held and three are on floor,
 then require the character to either pick up three or drop two
-
-display all entities that meet the attr requirement
 
 in some scenarios, no items are top-level, but rather locations,
 perhaps a backpack or chest,
@@ -90,8 +57,6 @@ those not marked as maskable are the starting set
 go to location to unmask all characters there
 
 checkbox to hide events on config screen would be useful for gamemaster
-
-remember last used setting when adding new items
 
 stamina points
 train stamina by swimming in pool
@@ -116,23 +81,7 @@ or how about a downloadable key file
 maybe give each player the choice of auth method
 a player could choose no auth if desired
 
-events can pop up randomly while an action is in progress
-sudden bad or good events may also happen
-for example, outcome is critical failure, and if scenario is trees, lose lots of logs
-trigger chance is in settings, can be 0 to turn off
-for example, 1 out of 100 chance
-before the event is shown, event params are shown which can either be
-accepted or changed, and then roll for the event
-no random event can occur when progress is paused
-
 chance of Event to occur during Item progress
-on Event config screen, add all items and locations where the event can trigger
-chance of 1 out of x seconds to trigger while progress is running
-e.g. chance of beast showing up during suzy's trip through the forest
-
-maybe only one event can trigger while not viewing the item or location,
-which will be shown when viewed
-because elapsed time isn't calculated until viewed
 
 randomized progress
 for example if str is 10 then hit on tree is from 8 to 10
@@ -140,30 +89,6 @@ chance of success for incrementing
 optionally manual rather than auto increment, like manually attempting to chop a tree
 can select a failure event from a dropdown list
 event chance may depend on stats (attributes) of characters or items involved
-
-radio in config specifies that the type is four-way outcome, on by default
-radio2: outcome is a number -- specify min and max
-    useful in combat such as for a d6 damage roll
-    hopefully add more automation later such as calculating based on attributes
-radio3: selected list -- can select a list of other entities to randomly choose from
-    on the configure screen
-radio4: entered list -- enter a list of strings of outcomes to randomly choose from
-    on the configure screen
-    for example, we might want to ask which of 5 doors to enter,
-    or which of 5 names to choose
-
-scenarios can be randomly generated except number of players must be specified
-setting up the configuration one question at a time could be tedious
-perhaps the questions could be all in a list
-for quality of life, could have the ability to copy info from one entity to another
-so an entity could be used like a template
-maybe specify a list of which attrs to copy
-call it templating or copying
-each entity perhaps would have a template e.g. all characters in this scenario have int
-or simply allow duplicating
-
-keep track of how many produced (for xp) as well as how many in inventory
-age could be similar to xp, increasing over time
 
 win requirements
 Item quantity optionally at a Location or held by Character
@@ -182,14 +107,18 @@ win requirement: character has a certain item
 win requirement: character is in a certain location
 all conditions must be met to win
 
-ability to replay a game
+action could be an event, or whatever was the most recent item interacted
+with for a particular character, even if the action is finished
+username and character in the same row doesn't necessarily mean that character
+is a player character
+all ongoing progress actions have a swirling icon next to the action name
 
-require character in location with attribute for item progress
-the operation can be continued as long as the requirement is met
-doesn't matter if there are multiple matches
-as long as at least one character meets the requirements
-also require owned item
-checkbox that the item won't get consumed during the exchange
+    character   location    action  player
+    ~~~~~~~~    ~~~~~~~~    ~~~~~~  ~~~~~~~~
+    Suzy        Home        Ink     mycoolusername
+    George      Woods       travel  2kul4wrds
+                            Pens    userwithoutchar
+    Peter       Woods       wolf
 
 separate lists on overview screen
 - players and their most recent route
@@ -249,6 +178,12 @@ only works if all in the list are at starting loc
 otherwise display missing member in alert
 checkbox "Group1 Together" to travel,
 if group_name isn't empty and there are at least 2 members
+
+hopefully add more automation later such as calculating events based on attributes
+keep track of how many produced (for xp) as well as how many in inventory
+age could be similar to xp, increasing over time
+
+event selection list of entities to randomly choose from
 
 attributes would be the main thing determining event chances,
 and attributes could be members of characters, items, or top-level
@@ -359,6 +294,8 @@ other buttons would be greyed out if travelling.
 prompt before overwriting another action in progress
 such as if a character is already doing something else
 
+global stop button on overview screen
+
 limit actions in progress to 10 concurrent per session?
 or two per user?
 but there might be several long-term actions in progress,
@@ -382,11 +319,18 @@ or maybe no offline progress
 the idea of farming for something for hours, hoping for a certain chance,
 is exciting but can also feel like being tied up
 
-
 ---- scenarios ----
 
-show count of each type of entry -- "Starting Setup: "
-warn that this will erase any scenario currently being played, so save first
+warn that loading will erase any scenario currently being played, so save first
+
+source more scenarios from community
+perhaps submit to github via enhancement requests
+or reddit
+
+research scenario-related details online during the game
+for example, how are pens made
+gamemaster could research beforehand as well as possibly some setup
+could use AI to generate entities, perhaps by creating JSON for loading
 
 scenario: Growing Up
 classes cost money but gain knowledge and grades

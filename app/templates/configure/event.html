@@ -2,20 +2,21 @@
 
 {% block upper_left %}
     <div class="nav-container">
-        <a href="{{ url_for('configure_index') }}">General Setup</a>
+        <a href="{{ url_for('configure_index') }}">Main Setup Page</a>
     </div>
 {% endblock %}
 
 {% block content %}
     <h1>Event Setup</h1>
-    <p class="info">Chance of something happening. Four-outcome rolls use
-    a 20-sided die.
-    For example, if the die roll comes up as 15
+    <p class="info">Chance of something happening, such as getting lost or
+    landing a certain type of attack.</p>
+    <p class="info">Show in Overview so the event can be started manually.
+    Or, set a chance to trigger during ongoing actions.</p>
+    <p class="info">Four-outcome rolls use a 20-sided die.
+    For example, if the die comes up as 15
     and the difficulty selected is easy (5),
     then 15 - 5 is greater than the major/minor threshold of 9,
     so the outcome is a major success.</p>
-    <p class="info">Show in Overview so the event can be started manually.
-    Or, set a chance to trigger during ongoing actions.</p>
     <form method="post">
         <label for="event-name">Name:</label>
         <input type="text" id="event-name" name="event_name" value="{{ current.name }}" required><br>
@@ -144,9 +145,12 @@
             </div>
         </div>
 
-        <button type="submit" id="btn-save" name="save_changes">Save and Continue</button>
-        <button type="submit" id="btn-cancel" name="cancel_changes" formnovalidate>Cancel Changes</button>
-        <button type="submit" id="btn-delete" name="delete_event" class="dangerous-button">Delete Event</button>
+        <div class="footer-buttons">
+            <button type="submit" id="btn-save" name="save_changes">Save and Close</button>
+            <button type="submit" id="btn-duplicate" name="make_duplicate">Save and Duplicate</button>
+            <button type="submit" id="btn-cancel" name="cancel_changes" formnovalidate>Close without Saving</button>
+            <button type="submit" id="btn-delete" name="delete_event" class="dangerous-button">Delete Event</button>
+        </div>
     </form>
     <script>
         $(document).ready(function() {

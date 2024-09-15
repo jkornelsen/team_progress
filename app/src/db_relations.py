@@ -13,10 +13,14 @@ tables_to_create = {
         value float(4) NOT NULL,
         PRIMARY KEY (game_token, item_id, attrib_id),
         FOREIGN KEY (game_token, item_id)
-            REFERENCES items (game_token, id),
+            REFERENCES items (game_token, id)
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED,
         FOREIGN KEY (game_token, attrib_id)
             REFERENCES attribs (game_token, id)
-    """,
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED
+        """,
     'recipes': f"""
         {coldef('game_token')},
         item_id integer NOT NULL,
@@ -27,7 +31,9 @@ tables_to_create = {
         PRIMARY KEY (game_token, item_id, recipe_id),
         FOREIGN KEY (game_token, item_id)
             REFERENCES items (game_token, id)
-    """,
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED
+        """,
     'recipe_sources': f"""
         {coldef('game_token')},
         item_id integer NOT NULL,
@@ -35,16 +41,40 @@ tables_to_create = {
         source_id integer NOT NULL,
         q_required float(4) NOT NULL,
         preserve boolean NOT NULL,
-        PRIMARY KEY (game_token, item_id, recipe_id, source_id)
-    """,
+        PRIMARY KEY (game_token, item_id, recipe_id, source_id),
+        FOREIGN KEY (game_token, item_id)
+            REFERENCES items (game_token, id)
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED,
+        FOREIGN KEY (game_token, item_id, recipe_id)
+            REFERENCES recipes (game_token, item_id, recipe_id)
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED,
+        FOREIGN KEY (game_token, source_id)
+            REFERENCES items (game_token, id)
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED
+        """,
     'recipe_attribs': f"""
         {coldef('game_token')},
         item_id integer NOT NULL,
         recipe_id integer NOT NULL,
         attrib_id integer NOT NULL,
         value float(4) NOT NULL,
-        PRIMARY KEY (game_token, item_id, recipe_id, attrib_id)
-    """,
+        PRIMARY KEY (game_token, item_id, recipe_id, attrib_id),
+        FOREIGN KEY (game_token, item_id)
+            REFERENCES items (game_token, id)
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED,
+        FOREIGN KEY (game_token, item_id, recipe_id)
+            REFERENCES recipes (game_token, item_id, recipe_id)
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED,
+        FOREIGN KEY (game_token, attrib_id)
+            REFERENCES attribs (game_token, id)
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED
+        """,
     # Character
     'char_attribs': f"""
         {coldef('game_token')},
@@ -53,10 +83,14 @@ tables_to_create = {
         value float(4) NOT NULL,
         PRIMARY KEY (game_token, char_id, attrib_id),
         FOREIGN KEY (game_token, char_id)
-            REFERENCES characters (game_token, id),
+            REFERENCES characters (game_token, id)
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED,
         FOREIGN KEY (game_token, attrib_id)
             REFERENCES attribs (game_token, id)
-    """,
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED
+        """,
     'char_items': f"""
         {coldef('game_token')},
         char_id integer NOT NULL,
@@ -65,10 +99,14 @@ tables_to_create = {
         slot varchar(50),
         PRIMARY KEY (game_token, char_id, item_id),
         FOREIGN KEY (game_token, char_id)
-            REFERENCES characters (game_token, id),
+            REFERENCES characters (game_token, id)
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED,
         FOREIGN KEY (game_token, item_id)
             REFERENCES items (game_token, id)
-    """,
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED
+        """,
     # Location
     'loc_destinations': f"""
         {coldef('game_token')},
@@ -78,7 +116,13 @@ tables_to_create = {
         PRIMARY KEY (game_token, loc_id, dest_id),
         FOREIGN KEY (game_token, loc_id)
             REFERENCES locations (game_token, id)
-    """,
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED,
+        FOREIGN KEY (game_token, dest_id)
+            REFERENCES locations (game_token, id)
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED
+        """,
     'loc_items': f"""
         {coldef('game_token')},
         loc_id integer NOT NULL,
@@ -87,10 +131,14 @@ tables_to_create = {
         position integer[2],
         PRIMARY KEY (game_token, loc_id, item_id),
         FOREIGN KEY (game_token, loc_id)
-            REFERENCES locations (game_token, id),
+            REFERENCES locations (game_token, id)
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED,
         FOREIGN KEY (game_token, item_id)
             REFERENCES items (game_token, id)
-    """,
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED
+        """,
     # Event
     'event_attribs': f"""
         {coldef('game_token')},
@@ -99,10 +147,14 @@ tables_to_create = {
         determining boolean NOT NULL,
         PRIMARY KEY (game_token, event_id, attrib_id),
         FOREIGN KEY (game_token, event_id)
-            REFERENCES events (game_token, id),
+            REFERENCES events (game_token, id)
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED,
         FOREIGN KEY (game_token, attrib_id)
             REFERENCES attribs (game_token, id)
-    """,
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED
+        """,
     'event_triggers': f"""
         {coldef('game_token')},
         event_id integer NOT NULL,
@@ -110,12 +162,18 @@ tables_to_create = {
         loc_id integer,
         UNIQUE (game_token, event_id, item_id, loc_id),
         FOREIGN KEY (game_token, event_id)
-            REFERENCES events (game_token, id),
+            REFERENCES events (game_token, id)
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED,
         FOREIGN KEY (game_token, item_id)
-            REFERENCES items (game_token, id),
+            REFERENCES items (game_token, id)
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED,
         FOREIGN KEY (game_token, loc_id)
             REFERENCES locations (game_token, id)
-    """,
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED
+        """,
     # Overall
     'win_requirements': f"""
         {coldef('id')},
@@ -128,6 +186,20 @@ tables_to_create = {
         UNIQUE (game_token, item_id, char_id, loc_id, attrib_id),
         FOREIGN KEY (game_token, item_id)
             REFERENCES items (game_token, id)
-    """,
-}
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED,
+        FOREIGN KEY (game_token, char_id)
+            REFERENCES characters (game_token, id)
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED,
+        FOREIGN KEY (game_token, loc_id)
+            REFERENCES locations (game_token, id)
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED,
+        FOREIGN KEY (game_token, attrib_id)
+            REFERENCES attribs (game_token, id)
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED
+        """,
+    }
 

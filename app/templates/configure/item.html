@@ -2,7 +2,7 @@
 
 {% block upper_left %}
     <div class="nav-container">
-        <a href="{{ url_for('configure_index') }}">General Setup</a>
+        <a href="{{ url_for('configure_index') }}">Main Setup Page</a>
     </div>
 {% endblock %}
 
@@ -18,7 +18,7 @@
     <p class="info">Incidentally, in a pen-and-paper game, item progress could be determined from a clock,
     by writing the start and stop time of an action and computing elapsed progress.</p>
     -->
-    <form method="post">
+    <form method="post" style="padding-bottom: 60px">
         <label for="item-name">Name:</label>
         <input type="text" id="item-name" name="item_name" value="{{ current.name }}" required><br>
         <label for="item-description" >Description:</label>
@@ -110,10 +110,12 @@
                 {% endif %}
             </div>
         </div>
-
-        <button type="submit" id="btn-save" name="save_changes">Save and Continue</button>
-        <button type="submit" id="btn-cancel" name="cancel_changes" formnovalidate>Cancel Changes</button>
-        <button type="submit" id="btn-delete" name="delete_item" class="dangerous-button">Delete Item</button>
+        <div class="footer-buttons">
+            <button type="submit" id="btn-save" name="save_changes">Save and Close</button>
+            <button type="submit" id="btn-duplicate" name="make_duplicate">Save and Duplicate</button>
+            <button type="submit" id="btn-cancel" name="cancel_changes" formnovalidate>Close without Saving</button>
+            <button type="submit" id="btn-delete" name="delete_item" class="dangerous-button">Delete Item</button>
+        </div>
     </form>
     <script>
         function updateInstantVisibility(checkbox) {

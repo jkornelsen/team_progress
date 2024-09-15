@@ -8,18 +8,33 @@
 
 {% block content %}
     <h1>Pre-built Scenarios</h1>
-    <div class="scenario-list">
-        {% for scenario in scenarios %}
-            <div class="scenario-item">
-                <h2>{{ scenario.title }}</h2>
-                <p>{{ scenario.description }}</p>
-                <form method="POST" action="{{ url_for('browse_scenarios') }}">
-                    <input type="hidden" name="scenario_file" value="{{ scenario.filename }}">
-                    <input type="hidden" name="scenario_title" value="{{ scenario.title }}">
-                    <button type="submit">Load Scenario</button>
-                </form>
-            </div>
-        {% endfor %}
-    </div>
+    <form method="GET" action="{{ url_for('browse_scenarios') }}">
+        <center>
+        <label for="sort_by">Sort by:</label>
+        <select name="sort_by" id="sort_by">
+            <option value="filename" {% if sort_by == 'filename' %}selected{% endif %}>Suggested Order</option>
+            <option value="filesize" {% if sort_by == 'filesize' %}selected{% endif %}>Size</option>
+            <option value="popularity" {% if sort_by == 'popularity' %}selected{% endif %}>Popularity</option>
+            <option value="title" {% if sort_by == 'title' %}selected{% endif %}>Title</option>
+        </select>
+        <button type="submit">Sort</button>
+        </center>
+    </form>
+    <table>
+    {% for scenario in scenarios %}
+        <tr><td>
+            <form method="POST" action="{{ url_for('browse_scenarios') }}">
+                <button type="submit">Load Scenario</button>
+                <input type="hidden" name="scenario_file" value="{{ scenario.filename }}">
+                <input type="hidden" name="scenario_title" value="{{ scenario.title }}">
+            </form>
+        </td><td>
+            <span style="font-size: 1.3em; font-weight: bold">{{ scenario.title }}</h2>
+        </td>
+        <td>
+            <p>{{ scenario.description }}</p>
+        </td></tr>
+    {% endfor %}
+    </table>
 {% endblock %}
 

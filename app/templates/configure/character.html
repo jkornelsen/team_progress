@@ -2,7 +2,7 @@
 
 {% block upper_left %}
     <div class="nav-container">
-        <a href="{{ url_for('configure_index') }}">General Setup</a>
+        <a href="{{ url_for('configure_index') }}">Main Setup Page</a>
     </div>
 {% endblock %}
 
@@ -95,9 +95,12 @@
             </div>
         </div>
 
-        <button type="submit" id="btn-save" name="save_changes">Save and Continue</button>
-        <button type="submit" id="btn-cancel" name="cancel_changes" formnovalidate>Cancel Changes</button>
-        <button type="submit" id="btn-delete" name="delete_character" class="dangerous-button">Delete Character</button>
+        <div class="footer-buttons">
+            <button type="submit" id="btn-save" name="save_changes">Save and Close</button>
+            <button type="submit" id="btn-duplicate" name="make_duplicate">Save and Duplicate</button>
+            <button type="submit" id="btn-cancel" name="cancel_changes" formnovalidate>Close without Saving</button>
+            <button type="submit" id="btn-delete" name="delete_character" class="dangerous-button">Delete Character</button>
+        </div>
     </form>
 
     <script>

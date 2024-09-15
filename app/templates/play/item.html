@@ -4,9 +4,7 @@
     <div class="nav-container">
         <a class="upper-left" href="{{ url_for('overview') }}">[O]verview</a>
         <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for('configure_index') }}">General Setup</a>
-        <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for('configure_item', item_id=current.id) }}">Item Setup</a>
+        <a class="upper-left" href="{{ url_for('configure_item', item_id=current.id) }}">Item S[e]tup</a>
     </div>
 {% endblock %}
 
@@ -15,6 +13,7 @@
     <script>
         const linkForKey = {
             'o': '{{ url_for('overview') }}',
+            'e': '{{ url_for('configure_item', item_id=current.id) }}',
         };
         document.addEventListener('DOMContentLoaded', function () {
             document.addEventListener('keypress', function (event) {
@@ -23,7 +22,7 @@
                     document.getElementById('drop-btn').click();
                 } else if (key === 'p') {
                     document.getElementById('pickup-btn').click();
-                } else if (key === 'e') {
+                } else if (key === 'q') {
                     {% if container.pile.slot %}
                         document.getElementById('unequip-btn').click();
                     {% elif game_data.overall.slots %}
@@ -104,13 +103,13 @@
                 {% if container.pile.PILE_TYPE == 'carried' %}
                     {% if container.pile.slot %}
                         <div class="button-column" id="unequip-container">
-                            <button id="unequip-btn" class="go-button">Un[e]quip</button>
+                            <button id="unequip-btn" class="go-button">Une[q]uip</button>
                             {{ container.pile.slot }}
                         </div>
                     {% else %}
                         {% if game_data.overall.slots %}
                             <div class="button-column" id="equip-container">
-                                <button id="equip-btn" class="go-button">[E]quip</button>
+                                <button id="equip-btn" class="go-button">E[q]uip</button>
                                 <select id="char-equip-slot">
                                     {% for slot in game_data.overall.slots %}
                                         <option value="{{ slot }}" {% if slot == defaults.slot %}selected{% endif %}>{{ slot }}</option>

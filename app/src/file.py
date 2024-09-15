@@ -15,37 +15,21 @@ import tempfile
 from types import SimpleNamespace
 from werkzeug.utils import secure_filename
 
-from src.game_data import GameData
-from src.db_serializable import DbSerializable
-from src.overall import Overall
+from database import set_autocommit
+from .game_data import GameData
+from .db_serializable import DbSerializable
+from .overall import Overall
+from .utils import RequestHelper
 
 logger = logging.getLogger(__name__)
 
-def generate_filename(title):
-    # Remove special characters and replace with '_'
-    filename = ''.join(c if c.isalnum() else '_' for c in title)
-    MAX_FILENAME_LENGTH = 30
-    filename = filename[:MAX_FILENAME_LENGTH]  # Limit filename length
-    filename = "{}.json".format(filename)
-    return filename
-
-def load_scenario_metadata(filepath):
-    with open(filepath, 'r') as infile:
-        data = json.load(infile)
-    overall = Overall.from_json(data['overall'])
-    return {
-        'title': overall.title,
-        'description': overall.description,
-        'filename': os.path.basename(filepath)
+tables_to_create = {
+    'scenario_log': f"""
+        filename varchar(50) NOT NULL,
+        times_loaded integer NOT NULL,
+        UNIQUE (filename)
+        """
     }
-
-def load_data_from_file(filepath):
-    with open(filepath, 'r') as infile:
-        data = json.load(infile)
-        GameData.clear_db_for_token()
-        g.game_data.from_json(data)
-    g.game_data.to_db()
-    session['file_message'] = 'Loaded from file.'
 
 def set_routes(app):
     @app.route('/configure')
@@ -111,15 +95,33 @@ def set_routes(app):
         DATA_DIR = app.config['DATA_DIR']
         if request.method == 'GET':
             scenarios = []
+            popularity = {}
+            rows = DbSerializable.execute_select("""
+                SELECT * FROM scenario_log
+                """)
+            for row in rows:
+                popularity[row.filename] = row.times_loaded
             for filename in os.listdir(DATA_DIR):
                 if filename.endswith('.json'):
                     filepath = os.path.join(DATA_DIR, filename)
                     scenario = load_scenario_metadata(filepath)
+                    scenario['filename'] = filename
+                    scenario['popularity'] = popularity.get(filename, 0)
                     scenarios.append(scenario)
-            scenarios = sorted(scenarios, key=lambda sc: sc['filename'])
+            req = RequestHelper('args')
+            sort_by = req.get_str('sort_by', 'filename')
+            if sort_by == 'filename':
+                scenarios = sorted(scenarios, key=lambda x: x['filename'])
+            elif sort_by == 'title':
+                scenarios = sorted(scenarios, key=lambda x: x['title'])
+            elif sort_by == 'filesize':
+                scenarios = sorted(scenarios, key=lambda x: x['filesize'], reverse=True)
+            elif sort_by == 'popularity':
+                scenarios = sorted(scenarios, key=lambda x: x['popularity'], reverse=True)
             return render_template(
                 'configure/scenarios.html',
-                scenarios=scenarios)
+                scenarios=scenarios,
+                sort_by=sort_by)
         scenario_file = request.form.get('scenario_file')
         scenario_title = request.form.get('scenario_title')
         if scenario_file:
@@ -131,6 +133,12 @@ def set_routes(app):
                 return render_template(
                     'error.html',
                     message=f"Could not load \"{scenario_title}\".")
+            DbSerializable.execute_change("""
+                INSERT INTO scenario_log (filename, times_loaded)
+                VALUES (%s, 1)  -- Start with 1 on the first load
+                ON CONFLICT (filename) DO UPDATE
+                SET times_loaded = scenario_log.times_loaded + 1
+                """, [scenario_file])
             session['file_message'] = 'Loaded scenario "{}"'.format(scenario_title)
             return redirect(url_for('configure_index'))
 
@@ -142,3 +150,38 @@ def set_routes(app):
         session['file_message'] = 'Starting game with default setup.'
         return redirect(url_for('configure_index'))
 
+def load_data_from_file(filepath):
+    with open(filepath, 'r') as infile:
+        data = json.load(infile)
+    g.game_data.from_json(data)
+    GameData.clear_db_for_token()
+    set_autocommit(False)
+    try:
+        DbSerializable.execute_change("BEGIN")
+        DbSerializable.execute_change("SET CONSTRAINTS ALL DEFERRED")
+        g.game_data.to_db()
+        g.db.commit()
+        session['file_message'] = 'Loaded from file.'
+    except Exception as ex:
+        g.db.rollback()
+        raise ex
+    finally:
+        set_autocommit(True)
+
+def load_scenario_metadata(filepath):
+    with open(filepath, 'r') as infile:
+        data = json.load(infile)
+    overall = Overall.from_json(data['overall'])
+    return {
+        'title': overall.title,
+        'description': overall.description,
+        'filesize': os.path.getsize(filepath)
+        }
+
+def generate_filename(title):
+    # Remove special characters and replace with '_'
+    filename = ''.join(c if c.isalnum() else '_' for c in title)
+    MAX_FILENAME_LENGTH = 30
+    filename = filename[:MAX_FILENAME_LENGTH]  # Limit filename length
+    filename = "{}.json".format(filename)
+    return filename

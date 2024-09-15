@@ -17,7 +17,7 @@ tables_to_create = {
         quantity float(4) NOT NULL,
         dimensions integer[2],
         excluded integer[4]
-    """
+        """
 }
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class ItemAt(Pile):
             'item_id': self.item.id,
             'quantity': self.quantity,
             'position': self.position,
-        }
+            }
 
     @classmethod
     def from_json(cls, data):
@@ -112,7 +112,7 @@ class Location(Identifiable):
             'quantity': self.pile.quantity,
             'dimensions': self.grid.dimensions,
             'excluded': self.grid.excluded
-        }
+            }
 
     @classmethod
     def from_json(cls, data):
@@ -148,7 +148,7 @@ class Location(Identifiable):
             self.execute_change(f"""
                 DELETE FROM {rel_table}
                 WHERE loc_id = %s AND game_token = %s
-            """, (self.id, self.game_token))
+                """, (self.id, self.game_token))
         if doc['destinations']:
             values = [
                 (g.game_token, self.id, dest_id, distance)
@@ -188,7 +188,7 @@ class Location(Identifiable):
                 AND {tables[1]}.game_token = {tables[0]}.game_token
             WHERE {tables[0]}.game_token = %s
                 AND {tables[0]}.id = %s
-        """, (g.game_token, id_to_get), ['locations', 'progress'],
+            """, (g.game_token, id_to_get), ['locations', 'progress'],
             fetch_all=False)
         current_data = MutableNamespace()
         if tables_row:
@@ -201,7 +201,7 @@ class Location(Identifiable):
             FROM loc_destinations
             WHERE game_token = %s
                 AND loc_id = %s
-        """, (g.game_token, id_to_get))
+            """, (g.game_token, id_to_get))
         dests_data = {}
         for row in loc_dest_rows:
             dests_data[row.dest_id] = row.distance
@@ -212,7 +212,7 @@ class Location(Identifiable):
             FROM loc_items
             WHERE game_token = %s
                 AND loc_id = %s
-        """, (g.game_token, id_to_get))
+            """, (g.game_token, id_to_get))
         for item_data in loc_items_rows:
             current_data.setdefault('items', []).append(vars(item_data))
         # Create object from data
@@ -230,7 +230,7 @@ class Location(Identifiable):
                 ON {tables[1]}.id = {tables[0]}.progress_id
                 AND {tables[1]}.game_token = {tables[0]}.game_token
             WHERE {tables[0]}.game_token = %s
-        """, [g.game_token], ['locations', 'progress'])
+            """, [g.game_token], ['locations', 'progress'])
         instances = {}  # keyed by ID
         for loc_data, progress_data in tables_rows:
             instance = instances.setdefault(
@@ -242,7 +242,7 @@ class Location(Identifiable):
             SELECT *
             FROM loc_destinations
             WHERE game_token = %s
-        """, [g.game_token])
+            """, [g.game_token])
         for row in dest_rows:
             instance = instances[row.loc_id]
             instance.destinations[row.dest_id] = row.distance
@@ -251,7 +251,7 @@ class Location(Identifiable):
             SELECT *
             FROM loc_items
             WHERE game_token = %s
-        """, [g.game_token])
+            """, [g.game_token])
         for row in item_rows:
             instance = instances[row.loc_id]
             instance.items[row.item_id] = ItemAt.from_json(row)
@@ -300,7 +300,7 @@ class Location(Identifiable):
 
     def configure_by_form(self):
         req = RequestHelper('form')
-        if req.has_key('save_changes'):  # button was clicked
+        if req.has_key('save_changes') or req.has_key('make_duplicate'):
             req.debug()
             entity_list = self.get_list()
             if self not in entity_list:

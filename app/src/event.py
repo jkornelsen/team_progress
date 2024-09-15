@@ -12,19 +12,21 @@ from .utils import RequestHelper
 OUTCOME_TYPES = [
     'fourway',  # critical/minor failure or success
     'numeric',  # such as a damage number
-    'selection']  # random selection from a list
+    'selection'  # random selection from a list
+    ]
 (OUTCOME_FOURWAY,
- OUTCOME_NUMERIC,
- OUTCOME_SELECTION) = OUTCOME_TYPES
+    OUTCOME_NUMERIC,
+    OUTCOME_SELECTION) = OUTCOME_TYPES
 OUTCOMES = [
     "Critical Failure",
     "Minor Failure",
     "Minor Success",
-    "Major Success"]
+    "Major Success"
+    ]
 (OUTCOME_CRITICAL_FAILURE,
- OUTCOME_MINOR_FAILURE,
- OUTCOME_MINOR_SUCCESS,
- OUTCOME_MAJOR_SUCCESS) = range(len(OUTCOMES))
+    OUTCOME_MINOR_FAILURE,
+    OUTCOME_MINOR_SUCCESS,
+    OUTCOME_MAJOR_SUCCESS) = range(len(OUTCOMES))
 OUTCOME_MARGIN = 9  # difference required to get major or critical
 
 logger = logging.getLogger(__name__)
@@ -51,7 +53,7 @@ tables_to_create = {
         trigger_by_duration boolean,
         numeric_range integer[],
         selection_strings text
-    """
+        """
 }
 
 class Event(Identifiable):
@@ -92,7 +94,7 @@ class Event(Identifiable):
             'triggers': [
                 (entity.basename(), entity.id)
                 for entity in self.triggers]
-        }
+            }
 
     @classmethod
     def from_json(cls, data):
@@ -126,7 +128,7 @@ class Event(Identifiable):
             self.execute_change(f"""
                 DELETE FROM {rel_table}
                 WHERE event_id = %s AND game_token = %s
-            """, (self.id, self.game_token))
+                """, (self.id, self.game_token))
         for determining in ('determining', 'changed'):
             attr_data = doc[f'{determining}_attrs']
             logger.debug("%s_attrs=%s", determining, attr_data)
@@ -165,7 +167,7 @@ class Event(Identifiable):
             FROM {table}
             WHERE game_token = %s
                 AND id = %s
-        """, (g.game_token, id_to_get), fetch_all=False)
+            """, (g.game_token, id_to_get), fetch_all=False)
         current_data = MutableNamespace()
         if events_row:
             current_data = events_row
@@ -175,7 +177,7 @@ class Event(Identifiable):
             FROM event_attribs
             WHERE game_token = %s
                 AND event_id = %s
-        """, (g.game_token, id_to_get))
+            """, (g.game_token, id_to_get))
         for attrib_data in event_attribs_rows:
             if attrib_data.determining:
                 listname = 'determining_attrs'
@@ -189,7 +191,7 @@ class Event(Identifiable):
             FROM event_triggers
             WHERE game_token = %s
                 AND event_id = %s
-        """, (g.game_token, id_to_get))
+            """, (g.game_token, id_to_get))
         for trigger_data in triggers_rows:
             if trigger_data.item_id:
                 trigger_tup = (Item.basename(), trigger_data.item_id)
@@ -210,7 +212,7 @@ class Event(Identifiable):
                 ON {tables[1]}.event_id = {tables[0]}.id
                 AND {tables[1]}.game_token = {tables[0]}.game_token
             WHERE {tables[0]}.game_token = %s
-        """
+            """
         values = [g.game_token]
         tables_rows = cls.select_tables(
             query, values, ['events', 'event_attribs'])
@@ -233,7 +235,7 @@ class Event(Identifiable):
             SELECT *
             FROM event_triggers
             WHERE game_token = %s
-        """, values)
+            """, values)
         for trigger_row in triggers_rows:
             logger.debug("trigger_row %s", trigger_row)
             instance = instances.get(trigger_row.event_id)
@@ -297,7 +299,7 @@ class Event(Identifiable):
                 AND {table}.game_token = event_triggers.game_token
             WHERE event_triggers.game_token = %s
                 AND event_triggers.loc_id = %s
-        """, (g.game_token, loc_id))
+            """, (g.game_token, loc_id))
         g.game_data.events = []
         for event_row in events_rows:
             g.game_data.events.append(Event.from_json(event_row))
@@ -305,7 +307,7 @@ class Event(Identifiable):
 
     def configure_by_form(self):
         req = RequestHelper('form')
-        if req.has_key('save_changes'):  # button was clicked
+        if req.has_key('save_changes') or req.has_key('make_duplicate'):
             req.debug()
             self.name = req.get_str('event_name')
             self.description = req.get_str('event_description')

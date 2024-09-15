@@ -22,7 +22,7 @@ tables_to_create = {
         position integer[2],
         FOREIGN KEY (game_token, progress_id)
             REFERENCES progress (game_token, id)
-    """,
+        """,
 }
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ class OwnedItem(Pile):
             'item_id': self.item.id,
             'quantity': self.quantity,
             'slot': self.slot,
-        }
+            }
 
     @classmethod
     def from_json(cls, data, char=None):
@@ -83,7 +83,7 @@ class Character(Identifiable):
             'progress': self.progress.to_json(),
             'quantity': self.pile.quantity,
             'dest_id': self.destination.id if self.destination else None
-        }
+            }
 
     @classmethod
     def from_json(cls, data):
@@ -130,7 +130,7 @@ class Character(Identifiable):
             self.execute_change(f"""
                 DELETE FROM {rel_table}
                 WHERE char_id = %s AND game_token = %s
-            """, (self.id, self.game_token))
+                """, (self.id, self.game_token))
         if doc['attribs']:
             values = [
                 (g.game_token, self.id, attrib_id, val)
@@ -160,7 +160,7 @@ class Character(Identifiable):
             SELECT *
             FROM characters
             WHERE game_token = %s
-        """
+            """
         values = [g.game_token]
         if loc_id:
             query += " AND location_id = %s"
@@ -191,7 +191,7 @@ class Character(Identifiable):
                 AND {tables[1]}.game_token = {tables[0]}.game_token
             WHERE {tables[0]}.game_token = %s
                 AND {tables[0]}.id = %s
-        """, (g.game_token, id_to_get), ['characters', 'progress'],
+            """, (g.game_token, id_to_get), ['characters', 'progress'],
             fetch_all=False)
         current_data = MutableNamespace()
         if tables_row:
@@ -204,7 +204,7 @@ class Character(Identifiable):
             FROM char_attribs
             WHERE game_token = %s
                 AND char_id = %s
-        """, (g.game_token, id_to_get))
+            """, (g.game_token, id_to_get))
         for attrib_data in char_attribs_rows:
             current_data.setdefault(
                 'attribs', {})[attrib_data.attrib_id] = attrib_data.value
@@ -214,7 +214,7 @@ class Character(Identifiable):
             FROM char_items
             WHERE game_token = %s
                 AND char_id = %s
-        """, (g.game_token, id_to_get))
+            """, (g.game_token, id_to_get))
         for item_data in char_items_rows:
             current_data.setdefault('items', []).append(vars(item_data))
         # Mark this location as visited if it hasn't been yet
@@ -223,7 +223,7 @@ class Character(Identifiable):
                 UPDATE locations
                 SET masked = false
                 WHERE id = %s AND masked = true
-            """, (current_data.location_id,))
+                """, (current_data.location_id,))
         # Create object from data
         return Character.from_json(current_data)
 
@@ -239,7 +239,7 @@ class Character(Identifiable):
                 ON {tables[1]}.id = {tables[0]}.progress_id
                 AND {tables[1]}.game_token = {tables[0]}.game_token
             WHERE {tables[0]}.game_token = %s
-        """, [g.game_token], ['characters', 'progress'])
+            """, [g.game_token], ['characters', 'progress'])
         instances = {}  # keyed by ID
         for char_data, progress_data in tables_rows:
             instance = instances.setdefault(
@@ -251,7 +251,7 @@ class Character(Identifiable):
             SELECT *
             FROM char_attribs
             WHERE game_token = %s
-        """, [g.game_token])
+            """, [g.game_token])
         for row in attrib_rows:
             instance = instances[row.char_id]
             instance.attribs[row.attrib_id] = AttribOf.from_json(row)
@@ -260,7 +260,7 @@ class Character(Identifiable):
             SELECT *
             FROM char_items
             WHERE game_token = %s
-        """, [g.game_token])
+            """, [g.game_token])
         for row in item_rows:
             instance = instances[row.char_id]
             instance.items[row.item_id] = OwnedItem.from_json(row, instance)
@@ -307,7 +307,7 @@ class Character(Identifiable):
                     AND {tables[1]}.game_token = {tables[0]}.game_token
                 WHERE {tables[0]}.game_token = %s
                     AND {tables[0]}.loc_id = %s
-            """, [g.game_token, current_obj.location.id],
+                """, [g.game_token, current_obj.location.id],
                 ['loc_destinations', 'locations'])
             for dest_data, loc_data in tables_rows:
                 current_obj.location.destinations[loc_data.id] = Destination(
@@ -323,7 +323,7 @@ class Character(Identifiable):
 
     def configure_by_form(self):
         req = RequestHelper('form')
-        if req.has_key('save_changes'):  # button was clicked
+        if req.has_key('save_changes') or req.has_key('make_duplicate'):
             req.debug()
             self.name = req.get_str('char_name')
             self.description = req.get_str('char_description')

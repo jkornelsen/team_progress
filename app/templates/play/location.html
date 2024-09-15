@@ -4,9 +4,7 @@
     <div class="nav-container">
         <a class="upper-left" href="{{ url_for('overview') }}">[O]verview</a>
         <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for('configure_index') }}">General Setup</a>
-        <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for('configure_location', loc_id=current.id) }}">Location Setup</a>
+        <a class="upper-left" href="{{ url_for('configure_location', loc_id=current.id) }}">Location S[e]tup</a>
     </div>
 {% endblock %}
 
@@ -35,6 +33,7 @@
         });
         const linkForKey = {
             'o': '{{ url_for('overview') }}',
+            'e': '{{ url_for('configure_location', loc_id=current.id) }}',
         };
         document.addEventListener('DOMContentLoaded', function () {
             document.addEventListener('keypress', function (event) {

@@ -65,10 +65,50 @@ def before_request():
     GameData()
     g.loaded = ''
 
-@app.route('/')  # route name
-def index():  # endpoint name
-    logger.debug("index()")
-    return redirect(url_for('overview'))  # endpoint name
+def _set_app_routes():
+    @app.route('/')  # route name
+    def index():  # endpoint name
+        logger.debug("index()")
+        return redirect(url_for('overview'))  # endpoint name
+
+    @app.route('/join-game', methods=['GET', 'POST'])
+    def join_game():
+        logger.debug("join_game()")
+        # Retrieve game token from URL parameter
+        game_token = request.args.get('game_token')
+        if game_token:
+            session['game_token'] = game_token
+            return redirect(url_for('overview'))
+        else:
+            return "Please include the game token in the URL."
+
+    @app.route('/session-link')
+    def get_session_link():
+        if 'game_token' not in session:
+            return "Session not found"
+        game_token = session.get('game_token')
+        url = url_for('join_game', game_token=game_token, _external=True)
+        return render_template(
+            'session/session_link.html',
+            url=url)
+
+    @app.route('/change-user', methods=['GET', 'POST'])
+    def change_user():
+        game_token = session.get('game_token')
+        if request.method == 'POST':
+            username = request.form.get('username')
+            if not username:
+                username = generate_username()
+            session['username'] = username
+            return redirect(url_for('index'))
+        return render_template('session/username.html')
+
+    @app.route('/session-users')
+    def session_users():
+        interactions = UserInteraction.recent_interactions()
+        return render_template(
+            'session/users.html',
+            interactions=interactions)
 
 def generate_game_token():
     """Generate a new unique token to keep games separate."""
@@ -81,41 +121,7 @@ def generate_username():
     consonants = ''.join(c for c in string.ascii_lowercase if c not in 'aeiouyl')
     return ''.join(random.choice(consonants) for _ in range(10))
 
-@app.route('/join-game', methods=['GET', 'POST'])
-def join_game():
-    logger.debug("join_game()")
-    # Retrieve game token from URL parameter
-    game_token = request.args.get('game_token')
-    if game_token:
-        session['game_token'] = game_token
-        return redirect(url_for('overview'))
-    else:
-        return "Please include the game token in the URL."
-
-@app.route('/session-link')
-def get_session_link():
-    if 'game_token' not in session:
-        return "Session not found"
-    game_token = session.get('game_token')
-    url = url_for('join_game', game_token=game_token, _external=True)
-    return render_template(
-        'session/session_link.html',
-        url=url)
-
-@app.route('/change-user', methods=['GET', 'POST'])
-def change_user():
-    game_token = session.get('game_token')
-    if 'username' in session:
-        session.pop('username', None)
-    if request.method == 'POST':
-        username = request.form.get('username')
-        if not username:
-            username = generate_username()
-        # Store the user ID specific to the game token
-        session['username'] = username
-        return redirect(url_for('index'))
-    return render_template('session/username.html')
-
+_set_app_routes()
 _set_game_routes(app)
 _set_file_routes(app)
 

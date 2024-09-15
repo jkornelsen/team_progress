@@ -4,9 +4,7 @@
     <div class="nav-container">
         <a class="upper-left" href="{{ url_for('overview') }}">[O]verview</a>
         <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for('configure_index') }}">General Setup</a>
-        <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for('configure_char', char_id=current.id) }}">Character Setup</a>
+        <a class="upper-left" href="{{ url_for('configure_char', char_id=current.id) }}">Character S[e]tup</a>
     </div>
 {% endblock %}
 
@@ -16,6 +14,7 @@
         let isModalOpen = false;
         const linkForKey = {
             'o': '{{ url_for('overview') }}',
+            'e': '{{ url_for('configure_char', char_id=current.id) }}',
         };
         document.addEventListener('DOMContentLoaded', function () {
             document.addEventListener('keypress', function (event) {
@@ -42,11 +41,6 @@
     {% if current.description %}
         <p>{{ current.description }}</p>
     {% endif %}
-    <!--
-    if current.for_player
-    <p>Character for current.for_player|capitalize </p>
-    -->
-
     {% if current.location %}
         <h2>Location</h2>
         <ul>
@@ -69,7 +63,7 @@
                             {% endif %}
                         >
                             {% if dest.loc.masked %}
-                                an unvisited location
+                                a location not yet visited
                             {% else %}
                                 {{ dest.loc.name }}
                             {% endif %}
@@ -249,7 +243,6 @@
                 }
             }
 
-            // the Start button may change to "Running..."
             function updateStartButtonLabel(data) {
                 const startBtn = document.getElementById("start-travel-btn");
                 const stopBtn = document.getElementById("stop-travel-btn");
@@ -268,7 +261,6 @@
                 }
             }
 
-            // Fetch progress data and update all relevant information
             async function fetchProgressData() {
                 const ignoreEventId = localStorage.getItem('ignore_event_id') || '';
                 const url = `/char/progress/{{ current.id }}${ignoreEventId ? `?ignore_event=${ignoreEventId}` : ''}`;

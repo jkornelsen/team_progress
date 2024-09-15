@@ -8,6 +8,7 @@ from flask import (
     url_for
 )
 import logging
+import re
 
 from .attrib import Attrib
 from .db_serializable import DeletionError
@@ -16,123 +17,154 @@ from .item import Item
 from .event import Event
 from .location import Location, ItemAt
 from .overall import Overall
+from .progress import Progress
 from .utils import RequestHelper
 
 logger = logging.getLogger(__name__)
-
-class LinkLetters:
-    """Letters to add before a link for hotkeys."""
-    def __init__(self, excluded={'o'}):
-        self.letter_index = 0
-        self.letters = [
-            chr(c) for c in range(ord('a'), ord('z') + 1)
-            if chr(c) not in excluded]
-        self.links = {}
-
-    def next(self, link):
-        if link in self.links:
-            return self.links[link]
-        if self.letter_index < len(self.letters):
-            letter = self.letters[self.letter_index]
-            self.letter_index += 1
-            self.links[link] = letter
-            return letter
-        else:
-            return ''
-
-def back_to_referrer():
-    referrer = session.pop('referrer', None)
-    logger.debug(f"Referrer: %s", referrer)
-    if referrer:
-        return redirect(referrer)
-    else:
-        return redirect(url_for('configure_index'))
-
-def error_page(exc):
-    return render_template('error.html',
-        message=str(exc),
-        details=str(exc.original_exception))
 
 def set_routes(app):
     @app.route('/configure/attrib/<attrib_id>', methods=['GET', 'POST'])
     def configure_attrib(attrib_id):
         attrib = Attrib.load_complete_object(attrib_id)
         if request.method == 'GET':
-            session['referrer'] = request.referrer
+            req = RequestHelper('args')
+            if not req.has_key('duplicated'):
+                session['referrer'] = request.referrer
             return render_template(
                 'configure/attrib.html',
                 current=attrib,
-                game_data=g.game_data)
+                game_data=g.game_data
+                )
         try:
             attrib.configure_by_form()
         except DeletionError as e:
             return error_page(e)
+        req = RequestHelper('form')
+        if req.has_key('make_duplicate'):
+            new_attrib = attrib
+            new_attrib.id = 0
+            new_attrib.name = increment_name(attrib.name)
+            new_attrib.to_db()  # Changes the ID
+            return redirect(
+                url_for('configure_attrib', attrib_id=new_attrib.id,
+                duplicated=True))
         return back_to_referrer()
 
     @app.route('/configure/character/<char_id>', methods=['GET', 'POST'])
     def configure_char(char_id):
         logger.debug("-" * 80 + "\nconfigure_char(%s)", char_id)
         if request.method == 'GET':
-            session['referrer'] = request.referrer
+            req = RequestHelper('args')
+            if not req.has_key('duplicated'):
+                session['referrer'] = request.referrer
             char = Character.data_for_configure(char_id)
             return render_template(
                 'configure/character.html',
                 current=char,
-                game_data=g.game_data)
+                game_data=g.game_data
+                )
         try:
             char = Character.load_complete_object(char_id)
             char.configure_by_form()
         except DeletionError as e:
             return error_page(e)
+        req = RequestHelper('form')
+        if req.has_key('make_duplicate'):
+            new_char = char
+            new_char.id = 0
+            new_char.name = increment_name(char.name)
+            new_char.progress = Progress(container=new_char)
+            new_char.to_db()  # Changes the ID
+            return redirect(
+                url_for('configure_char', char_id=new_char.id,
+                duplicated=True))
         return back_to_referrer()
 
     @app.route('/configure/event/<event_id>', methods=['GET', 'POST'])
     def configure_event(event_id):
         if request.method == 'GET':
-            session['referrer'] = request.referrer
+            req = RequestHelper('args')
+            if not req.has_key('duplicated'):
+                session['referrer'] = request.referrer
             event = Event.data_for_configure(event_id)
             return render_template(
                 'configure/event.html',
                 current=event,
-                game_data=g.game_data)
+                game_data=g.game_data
+                )
         try:
             event = Event.load_complete_object(event_id)
             event.configure_by_form()
         except DeletionError as e:
             return error_page(e)
+        req = RequestHelper('form')
+        if req.has_key('make_duplicate'):
+            new_event = event
+            new_event.id = 0
+            new_event.name = increment_name(event.name)
+            new_event.to_db()  # Changes the ID
+            return redirect(
+                url_for('configure_event', event_id=new_event.id,
+                duplicated=True))
         return back_to_referrer()
 
     @app.route('/configure/item/<item_id>', methods=['GET', 'POST'])
     def configure_item(item_id):
         logger.debug("-" * 80 + "\nconfigure_item(%s)", item_id)
         if request.method == 'GET':
-            session['referrer'] = request.referrer
+            req = RequestHelper('args')
+            if not req.has_key('duplicated'):
+                session['referrer'] = request.referrer
             item = Item.data_for_configure(item_id)
             return render_template(
                 'configure/item.html',
                 current=item,
-                game_data=g.game_data)
+                game_data=g.game_data
+                )
         try:
             item = Item.load_complete_object(item_id)
             item.configure_by_form()
         except DeletionError as e:
             return error_page(e)
+        req = RequestHelper('form')
+        if req.has_key('make_duplicate'):
+            new_item = item
+            new_item.id = 0
+            new_item.name = increment_name(item.name)
+            new_item.progress = Progress(container=new_item)
+            new_item.to_db()  # Changes the ID
+            return redirect(
+                url_for('configure_item', item_id=new_item.id,
+                duplicated=True))
         return back_to_referrer()
 
     @app.route('/configure/location/<loc_id>',methods=['GET', 'POST'])
     def configure_location(loc_id):
         if request.method == 'GET':
-            session['referrer'] = request.referrer
+            req = RequestHelper('args')
+            if not req.has_key('duplicated'):
+                session['referrer'] = request.referrer
             loc = Location.data_for_configure(loc_id)
             return render_template(
                 'configure/location.html',
                 current=loc,
-                game_data=g.game_data)
+                game_data=g.game_data
+                )
         try:
             loc = Location.load_complete_object(loc_id)
             loc.configure_by_form()
         except DeletionError as e:
             return error_page(e)
+        req = RequestHelper('form')
+        if req.has_key('make_duplicate'):
+            new_loc = loc
+            new_loc.id = 0
+            new_loc.name = increment_name(loc.name)
+            new_loc.progress = Progress(container=new_loc)
+            new_loc.to_db()  # Changes the ID
+            return redirect(
+                url_for('configure_location', loc_id=new_loc.id,
+                duplicated=True))
         return back_to_referrer()
 
     @app.route('/configure/overall', methods=['GET', 'POST'])
@@ -143,7 +175,8 @@ def set_routes(app):
             return render_template(
                 'configure/overall.html',
                 current=g.game_data.overall,
-                game_data=g.game_data)
+                game_data=g.game_data
+                )
         g.game_data.overall.configure_by_form()
         return redirect(url_for('configure_index'))
 
@@ -159,33 +192,104 @@ def set_routes(app):
             'play/character.html',
             current=instance,
             game_data=g.game_data,
-            link_letters=LinkLetters(set('ost')))
+            link_letters=LinkLetters('eost')
+            )
 
-    @app.route('/char/start/<int:char_id>', methods=['POST'])
-    def start_char(char_id):
-        logger.debug("-" * 80 + "\nstart_char(%d)", char_id)
-        req = RequestHelper('form')
-        dest_id = req.get_int('dest_id')
-        char = Character.data_for_play(char_id)
-        if not char.destination or char.destination.id != dest_id:
-            char.destination = Location.get_by_id(dest_id)
-            char.pile.quantity = 0
-            char.to_db()
-        if char.progress.start():
-            char.to_db()
-            return jsonify({'status': 'success', 'message': 'Progress started.'})
-        else:
-            return jsonify({'status': 'error', 'message': 'Could not start.'})
+    @app.route('/play/event/<int:event_id>', methods=['GET', 'POST'])
+    def play_event(event_id):
+        logger.debug("-" * 80 + "\nplay_event(%d)", event_id)
+        instance = Event.data_for_configure(event_id)
+        if not instance:
+            return 'Event not found'
+        if request.method == 'GET':
+            return render_template(
+                'play/event.html',
+                current=instance,
+                link_letters=LinkLetters('eor')
+                )
+        instance.play_by_form()
+        return render_template(
+            'play/event.html',
+            current=instance,
+            outcome=instance.get_outcome(),
+            link_letters=LinkLetters('eor')
+            )
 
-    @app.route('/char/stop/<int:char_id>')
-    def stop_char(char_id):
-        logger.debug("-" * 80 + "\nstop_char(%d)", char_id)
-        char = Character.data_for_play(char_id)
-        if char.progress.stop():
-            char.to_db()
-            return jsonify({'message': 'Progress paused.'})
+    @app.route('/play/item/<int:item_id>/')
+    def play_item(item_id):
+        req = RequestHelper('args')
+        char_id = req.get_int('char_id', '')
+        loc_id = req.get_int('loc_id', '')
+        main_pile_type = req.get_str('main', '')
+        if char_id:
+            session['last_char_id'] = char_id
+        if loc_id:
+            session['last_loc_id'] = loc_id
+        if not char_id:
+            char_id = session.get('last_char_id', '')
+        if not loc_id:
+            loc_id = session.get('last_loc_id', '')
+        logger.debug(
+            "-" * 80 + "\nplay_item(item_id=%d, char_id=%s, loc_id=%s)",
+            item_id, char_id, loc_id)
+        item = Item.data_for_play(
+            item_id, char_id, loc_id, complete_sources=False,
+            main_pile_type=main_pile_type)
+        if not item:
+            return 'Item not found'
+        defaults = {
+            'pickup_char': session.get('default_pickup_char', ''),
+            'movingto_char': session.get('default_movingto_char', ''),
+            'slot': session.get('default_slot', '')
+            }
+        g.game_data.overall = Overall.load_complete_object()
+        return render_template(
+            'play/item.html',
+            current=item,
+            container=item.pile.container,
+            char_id=char_id,
+            loc_id=loc_id,
+            main_pile_type=main_pile_type,
+            defaults=defaults,
+            game_data=g.game_data,
+            link_letters=LinkLetters('cdelopq')
+            )
+
+    @app.route('/play/location/<int:loc_id>')
+    def play_location(loc_id):
+        logger.debug("-" * 80 + "\nplay_location(%d)", loc_id)
+        instance = Location.data_for_play(loc_id)
+        if not instance:
+            return 'Location not found'
+        session['last_loc_id'] = loc_id
+        req = RequestHelper('args')
+        char_id = req.get_int('char_id', '')
+        if char_id:
+            session['last_char_id'] = char_id
         else:
-            return jsonify({'message': 'Progress is already paused.'})
+            char_id = session.get('last_char_id', '')
+        defaults = {
+            'move_char': session.get('default_move_char', '')}
+        return render_template(
+            'play/location.html',
+            current=instance,
+            char_id=char_id,
+            defaults=defaults,
+            game_data=g.game_data,
+            link_letters=LinkLetters('eo')
+            )
+
+    @app.route('/overview')
+    def overview():
+        overall, charlist, other_entities = (
+            Overall.data_for_overview())
+        return render_template(
+            'play/overview.html',
+            current=overall,
+            charlist=charlist,
+            other_entities=other_entities,
+            link_letters=LinkLetters('e')
+            )
 
     @app.route('/char/progress/<int:char_id>')
     def char_progress(char_id):
@@ -243,65 +347,37 @@ def set_routes(app):
                 'message': 'Character not found.'
                 })
 
-    @app.route('/play/event/<int:event_id>', methods=['GET', 'POST'])
-    def play_event(event_id):
-        logger.debug("-" * 80 + "\nplay_event(%d)", event_id)
-        instance = Event.data_for_configure(event_id)
-        if not instance:
-            return 'Event not found'
-        if request.method == 'GET':
-            return render_template(
-                'play/event.html',
-                current=instance,
-                link_letters=LinkLetters(set('or'))
-                )
-        instance.play_by_form()
-        return render_template(
-            'play/event.html',
-            current=instance,
-            outcome=instance.get_outcome(),
-            link_letters=LinkLetters(set('or'))
-            )
+    @app.route('/char/start/<int:char_id>', methods=['POST'])
+    def start_char(char_id):
+        logger.debug("-" * 80 + "\nstart_char(%d)", char_id)
+        req = RequestHelper('form')
+        dest_id = req.get_int('dest_id')
+        char = Character.data_for_play(char_id)
+        if not char.destination or char.destination.id != dest_id:
+            char.destination = Location.get_by_id(dest_id)
+            char.pile.quantity = 0
+            char.to_db()
+        if char.progress.start():
+            char.to_db()
+            return jsonify({
+                'status': 'success',
+                'message': 'Progress started.'
+                })
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': 'Could not start.'
+                })
 
-    @app.route('/play/item/<int:item_id>/')
-    def play_item(item_id):
-        req = RequestHelper('args')
-        char_id = req.get_int('char_id', '')
-        loc_id = req.get_int('loc_id', '')
-        main_pile_type = req.get_str('main', '')
-        if char_id:
-            session['last_char_id'] = char_id
-        if loc_id:
-            session['last_loc_id'] = loc_id
-        if not char_id:
-            char_id = session.get('last_char_id', '')
-        if not loc_id:
-            loc_id = session.get('last_loc_id', '')
-        logger.debug(
-            "-" * 80 + "\nplay_item(item_id=%d, char_id=%s, loc_id=%s)",
-            item_id, char_id, loc_id)
-        item = Item.data_for_play(
-            item_id, char_id, loc_id, complete_sources=False,
-            main_pile_type=main_pile_type)
-        if not item:
-            return 'Item not found'
-        defaults = {
-            'pickup_char': session.get('default_pickup_char', ''),
-            'movingto_char': session.get('default_movingto_char', ''),
-            'slot': session.get('default_slot', '')
-            }
-        g.game_data.overall = Overall.load_complete_object()
-        return render_template(
-            'play/item.html',
-            current=item,
-            container=item.pile.container,
-            char_id=char_id,
-            loc_id=loc_id,
-            main_pile_type=main_pile_type,
-            defaults=defaults,
-            game_data=g.game_data,
-            link_letters=LinkLetters(set('cdelop'))
-            )
+    @app.route('/char/stop/<int:char_id>')
+    def stop_char(char_id):
+        logger.debug("-" * 80 + "\nstop_char(%d)", char_id)
+        char = Character.data_for_play(char_id)
+        if char.progress.stop():
+            char.to_db()
+            return jsonify({'message': 'Progress paused.'})
+        else:
+            return jsonify({'message': 'Progress is already paused.'})
 
     @app.route('/item/progress/<int:item_id>/')
     def item_progress(item_id):
@@ -389,12 +465,14 @@ def set_routes(app):
             return jsonify({
                 'status': 'success',
                 'message': 'Progress paused.',
-                'is_ongoing': progress.is_ongoing})
+                'is_ongoing': progress.is_ongoing
+                })
         else:
             return jsonify({
                 'status': 'success',
                 'message': 'Progress is already paused.',
-                'is_ongoing': progress.is_ongoing})
+                'is_ongoing': progress.is_ongoing
+                })
 
     @app.route('/item/gain/<int:item_id>/<int:recipe_id>', methods=['POST'])
     def gain_item(item_id, recipe_id):
@@ -418,7 +496,8 @@ def set_routes(app):
         if changed:
             return jsonify({
                 'status': 'success',
-                'message': f'Quantity of {item.name} changed.'})
+                'message': f'Quantity of {item.name} changed.'
+                })
         else:
             message = "Nothing gained."
             reason = progress.failure_reason
@@ -426,7 +505,8 @@ def set_routes(app):
                 message = f"{message} {reason}"
             return jsonify({
                 'status': 'error',
-                'message': message})
+                'message': message
+                })
 
     @app.route('/item/drop/<int:item_id>/char/<int:char_id>', methods=['POST'])
     def drop_item(item_id, char_id):
@@ -476,8 +556,8 @@ def set_routes(app):
         if not item_at:
             return jsonify({
                 'status': 'error',
-                'message': f'No item {item.name} at {item.pile.container.name}.'})
-            return
+                'message': f'No item {item.name} at {item.pile.container.name}.'
+                })
         new_qty = item_at.quantity
         char = Character.load_complete_object(char_id)
         if item_id in char.items:
@@ -488,7 +568,8 @@ def set_routes(app):
         if item.exceeds_limit(new_qty):
             return jsonify({
                 'status': 'error',
-                'message': f'Limit of {item.name} is {item.q_limit}.'})
+                'message': f'Limit of {item.name} is {item.q_limit}.'
+                })
         owned_item.quantity = new_qty
         char.items[item_id] = owned_item
         del loc.items[item_id]
@@ -496,7 +577,8 @@ def set_routes(app):
         loc.to_db()
         return jsonify({
             'status': 'success', 'message':
-            f'Picked up {item.name}.'})
+            f'Picked up {item.name}.'
+            })
 
     @app.route('/item/equip/<int:item_id>/char/<int:char_id>/slot/<string:slot>', methods=['POST'])
     def equip_item(item_id, char_id, slot):
@@ -510,13 +592,14 @@ def set_routes(app):
         if not owned_item:
             return jsonify({
                 'status': 'error',
-                'message': f'No item {item.name} in {item.pile.container.name}\'s inventory.'})
-            return
+                'message': f'No item {item.name} in {item.pile.container.name}\'s inventory.'
+                })
         owned_item.slot = slot
         char.to_db()
         return jsonify({
             'status': 'success', 'message':
-            f'Equipped {item.name}.'})
+            f'Equipped {item.name}.'
+            })
 
     @app.route('/item/unequip/<int:item_id>/char/<int:char_id>', methods=['POST'])
     def unequip_item(item_id, char_id):
@@ -529,36 +612,14 @@ def set_routes(app):
         if not owned_item:
             return jsonify({
                 'status': 'error',
-                'message': f'No item {item.name} in {item.pile.container.name}\'s inventory.'})
-            return
+                'message': f'No item {item.name} in {item.pile.container.name}\'s inventory.'
+                })
         owned_item.slot = ''
         char.to_db()
         return jsonify({
             'status': 'success', 'message':
-            f'Equipped {item.name}.'})
-
-    @app.route('/play/location/<int:loc_id>')
-    def play_location(loc_id):
-        logger.debug("-" * 80 + "\nplay_location(%d)", loc_id)
-        instance = Location.data_for_play(loc_id)
-        if not instance:
-            return 'Location not found'
-        session['last_loc_id'] = loc_id
-        req = RequestHelper('args')
-        char_id = req.get_int('char_id', '')
-        if char_id:
-            session['last_char_id'] = char_id
-        else:
-            char_id = session.get('last_char_id', '')
-        defaults = {
-            'move_char': session.get('default_move_char', '')}
-        return render_template(
-            'play/location.html',
-            current=instance,
-            char_id=char_id,
-            defaults=defaults,
-            game_data=g.game_data,
-            link_letters=LinkLetters())
+            f'Equipped {item.name}.'
+            })
 
     @app.route('/char/move/<int:char_id>'
                 '/x_change/<int(signed=True):x_change>'
@@ -587,41 +648,46 @@ def set_routes(app):
             char.to_db()
         return jsonify({'position': char.position})
 
-    @app.route('/overview')
-    def overview():
-        overall, charlist, other_entities, interactions = (
-            Overall.data_for_overview())
-        return render_template(
-            'play/overview.html',
-            current=overall,
-            charlist=charlist,
-            other_entities=other_entities,
-            interactions=interactions,
-            link_letters=LinkLetters())
+class LinkLetters:
+    """Letters to add before a link for hotkeys."""
+    def __init__(self, excluded='o'):
+        self.letter_index = 0
+        self.letters = [
+            chr(c) for c in range(ord('a'), ord('z') + 1)
+            if chr(c) not in excluded]
+        self.links = {}
 
-    @app.route('/test/<int:item_id>/')
-    def test_route(item_id):
-        req = RequestHelper('args')
-        char_id = req.get_int('char_id', '')
-        loc_id = req.get_int('loc_id', '')
-        if not char_id and not loc_id:
-            char_id = session.get('last_char_id', '')
-            loc_id = session.get('last_loc_id', '')
-        logger.debug("-" * 80 + "\ntest_route(item_id=%d, char_id=%s, loc_id=%s)",
-            item_id, char_id, loc_id)
-        item = Item.data_for_play(
-            item_id, char_id, loc_id, complete_sources=True)
-        if not item:
-            return jsonify({'error': 'Item not found'})
-        pile = item.pile
-        logger.debug("Retrieved item %d from DB: %d recipes\n"
-            "Pile type %s from %s",
-            item.id, len(item.recipes), pile.PILE_TYPE, pile.container.name)
-        progress = pile.container.progress
-        if progress.is_ongoing:
-            progress.batches_for_elapsed_time()
-        return jsonify({
-            'is_ongoing': progress.is_ongoing,
-            'recipe_id': progress.recipe.id,
-            'quantity': pile.quantity,
-            'elapsed_time': progress.calculate_elapsed_time()})
+    def next(self, link):
+        if link in self.links:
+            return self.links[link]
+        if self.letter_index < len(self.letters):
+            letter = self.letters[self.letter_index]
+            self.letter_index += 1
+            self.links[link] = letter
+            return letter
+        else:
+            return ''
+
+def back_to_referrer():
+    referrer = session.pop('referrer', None)
+    logger.debug(f"Referrer: %s", referrer)
+    if referrer:
+        return redirect(referrer)
+    else:
+        return redirect(url_for('configure_index'))
+
+def error_page(exc):
+    return render_template('error.html',
+        message=str(exc),
+        details=str(exc.original_exception))
+
+def increment_name(name):
+    """Add or increment a number at the end, for duplicating."""
+    match = re.search(r'(.*?)(\d*)$', name)
+    base_name = match.group(1)
+    number = match.group(2)
+    if number:
+        new_number = str(int(number) + 1)
+    else:
+        new_number = "2"
+    return f"{base_name}{new_number}"

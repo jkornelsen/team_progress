@@ -18,7 +18,7 @@ tables_to_create = {
         {coldef('description')},
         slots TEXT[],
         PRIMARY KEY (game_token)
-    """
+        """
 }
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,8 @@ class WinRequirement(Identifiable):
             'char_id': self.character.id if self.character else None,
             'loc_id': self.location.id if self.location else None,
             'attrib_id': self.attrib.id if self.attrib else None,
-            'attrib_value': self.attrib_value}
+            'attrib_value': self.attrib_value
+            }
 
     @classmethod
     def from_json(cls, data):
@@ -94,7 +95,8 @@ class Overall(DbSerializable):
             " in the Overall settings, and do initial"
             " setup such as adding a few items."
             "\r\n\r\n"
-            "More setup can be done as the game goes along.")
+            "More setup can be done as the game goes along."
+            )
         self.win_reqs = []
         self.slots = ["Main Hand", "Off Hand", "Body Armor"]
 
@@ -118,7 +120,7 @@ class Overall(DbSerializable):
                 win_req.to_json()
                 for win_req in self.win_reqs],
             'slots': tuple(self.slots)
-        }
+            }
 
     @classmethod
     def from_json(cls, data):
@@ -143,7 +145,7 @@ class Overall(DbSerializable):
             LEFT JOIN {tables[1]}
                 ON {tables[1]}.game_token = {tables[0]}.game_token
             WHERE {tables[0]}.game_token = %s
-        """, (g.game_token,), ('overall', 'win_requirements'))
+            """, (g.game_token,), ('overall', 'win_requirements'))
         instance = None
         for overall_data, winreq_data in tables_rows:
             if not instance:
@@ -161,7 +163,7 @@ class Overall(DbSerializable):
         self.execute_change(f"""
             DELETE FROM win_requirements
             WHERE game_token = %s
-        """, (g.game_token,))
+            """, (g.game_token,))
         for win_req in doc.get('win_reqs', []):
             WinRequirement.from_json(win_req).to_db()
 
@@ -221,7 +223,7 @@ class Overall(DbSerializable):
             WHERE {tables[0]}.game_token = %s
                 AND {tables[0]}.toplevel = TRUE
             ORDER BY {tables[0]}.name
-        """, (g.game_token,), ['characters', 'locations'])
+            """, (g.game_token,), ['characters', 'locations'])
         CharacterRow = namedtuple('CharacterRow',
             ['char_id', 'char_name', 'loc_id', 'loc_name'])
         character_list = []
@@ -238,17 +240,15 @@ class Overall(DbSerializable):
             FROM items
             WHERE toplevel = TRUE
                 AND game_token = %s
-        """, (g.game_token,))
+            """, (g.game_token,))
         event_rows = cls.execute_select("""
             SELECT id, name
             FROM events
             WHERE toplevel = TRUE
                 AND game_token = %s
-        """, (g.game_token,))
+            """, (g.game_token,))
         other_toplevel_entities = SimpleNamespace(
             items=item_rows, events=event_rows)
-        from .user_interaction import UserInteraction  # avoid circular import
-        interactions_list = UserInteraction.recent_interactions()
         instance = cls.load_complete_object()
         g.game_data.overall = instance
         # Win requirement results
@@ -305,12 +305,11 @@ class Overall(DbSerializable):
                 AND B.char_id = A.char_id
                 AND B.attrib_id = A.attrib_id
                 AND B.value >= A.attrib_value
-        """, (g.game_token,) * NUM_QUERIES)
+            """, (g.game_token,) * NUM_QUERIES)
         for row in rows:
             win_req = req_by_id.get(row.id)
             win_req.fulfilled = True
         return (
             instance,
             character_list,
-            other_toplevel_entities,
-            interactions_list)
+            other_toplevel_entities)

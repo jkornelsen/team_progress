@@ -23,7 +23,7 @@ tables_to_create = {
         progress_id integer,
         FOREIGN KEY (game_token, progress_id)
             REFERENCES progress (game_token, id)
-    """,
+        """,
 }
 logger = logging.getLogger(__name__)
 
@@ -193,41 +193,11 @@ class Item(Identifiable, Pile):
         self.progress.json_to_db(doc['progress'])
         doc['progress_id'] = self.progress.id
         super().json_to_db(doc)
-        # Delete from recipe_sources for recipes of this item_id
-        self.execute_change(f"""
-            DELETE FROM recipe_sources
-            USING recipe_sources AS rs
-            LEFT OUTER JOIN recipes ON
-                recipes.game_token = rs.game_token
-                AND recipes.item_id = rs.item_id
-                AND recipes.recipe_id = rs.recipe_id
-            WHERE recipe_sources.game_token = rs.game_token
-                AND recipe_sources.item_id = rs.item_id
-                AND recipe_sources.recipe_id = rs.recipe_id
-                AND recipe_sources.source_id = rs.source_id
-                AND recipes.item_id = %s
-                AND recipes.game_token = %s
-        """, [self.id, self.game_token])
-        # Delete from recipe_attribs for recipes of this item_id
-        self.execute_change(f"""
-            DELETE FROM recipe_attribs
-            USING recipe_attribs AS ra
-            LEFT OUTER JOIN recipes ON
-                recipes.game_token = ra.game_token
-                AND recipes.item_id = ra.item_id
-                AND recipes.recipe_id = ra.recipe_id
-            WHERE recipe_attribs.game_token = ra.game_token
-                AND recipe_attribs.item_id = ra.item_id
-                AND recipe_attribs.recipe_id = ra.recipe_id
-                AND recipe_attribs.attrib_id = ra.attrib_id
-                AND recipes.item_id = %s
-                AND recipes.game_token = %s
-        """, [self.id, self.game_token])
         for rel_table in ('item_attribs', 'recipes'):
             self.execute_change(f"""
                 DELETE FROM {rel_table}
                 WHERE item_id = %s AND game_token = %s
-            """, (self.id, self.game_token))
+                """, (self.id, self.game_token))
         if doc['attribs']:
             values = [
                 (g.game_token, self.id, attrib_id, val)
@@ -247,7 +217,7 @@ class Item(Identifiable, Pile):
             LEFT JOIN {tables[1]}
                 ON {tables[1]}.id = {tables[0]}.progress_id
                 AND {tables[1]}.game_token = {tables[0]}.game_token
-        """
+            """
         values = []
         if item_id_for_progress:
             query += "AND {tables[0]}.id = %s\n"
@@ -269,7 +239,7 @@ class Item(Identifiable, Pile):
             LEFT JOIN {tables[1]}
                 ON {tables[1]}.game_token = {tables[0]}.game_token
                 AND {tables[1]}.attrib_id = {tables[0]}.id
-        """
+            """
         values = [g.game_token]
         if id_to_get:
             query += "AND {tables[1]}.item_id = %s\n"
@@ -293,7 +263,7 @@ class Item(Identifiable, Pile):
                 ON {tables[1]}.game_token = {tables[0]}.game_token
                 AND {tables[1]}.item_id = {tables[0]}.item_id
                 AND {tables[1]}.recipe_id = {tables[0]}.recipe_id
-        """
+            """
         item_conditions = [
             "WHERE {tables[0]}.game_token = %s"]
         values = [g.game_token]
@@ -325,7 +295,7 @@ class Item(Identifiable, Pile):
                 ON {tables[1]}.game_token = {tables[0]}.game_token
                 AND {tables[1]}.item_id = {tables[0]}.item_id
                 AND {tables[1]}.recipe_id = {tables[0]}.recipe_id
-        """
+            """
         item_conditions = [
             "WHERE {tables[0]}.game_token = %s"]
         values = [g.game_token]
@@ -365,7 +335,7 @@ class Item(Identifiable, Pile):
                 AND {tables[1]}.game_token = {tables[0]}.game_token
             WHERE {tables[0]}.game_token = %s
                 AND {tables[0]}.id = %s
-        """, (g.game_token, id_to_get), ['items', 'progress'],
+            """, (g.game_token, id_to_get), ['items', 'progress'],
             fetch_all=False)
         current_data = MutableNamespace()
         if tables_row:
@@ -378,7 +348,7 @@ class Item(Identifiable, Pile):
             FROM item_attribs
             WHERE game_token = %s
                 AND item_id = %s
-        """, (g.game_token, id_to_get))
+            """, (g.game_token, id_to_get))
         for attrib_data in item_attribs_rows:
             current_data.setdefault(
                 'attribs', {})[attrib_data.attrib_id] = attrib_data.value
@@ -513,7 +483,7 @@ class Item(Identifiable, Pile):
 
     def configure_by_form(self):
         req = RequestHelper('form')
-        if req.has_key('save_changes'):  # button was clicked
+        if req.has_key('save_changes') or req.has_key('make_duplicate'):
             req.debug()
             self.name = req.get_str('item_name')
             self.description = req.get_str('item_description')
