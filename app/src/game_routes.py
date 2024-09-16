@@ -296,13 +296,11 @@ def set_routes(app):
 
     @app.route('/overview')
     def overview():
-        overall, charlist, other_entities = (
-            Overall.data_for_overview())
+        active = Overall.data_for_overview()
         return render_template(
             'play/overview.html',
-            current=overall,
-            charlist=charlist,
-            other_entities=other_entities,
+            current=active.overall,
+            active=active,
             link_letters=LinkLetters('e')
             )
 

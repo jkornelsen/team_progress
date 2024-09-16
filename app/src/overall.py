@@ -235,22 +235,33 @@ class Overall(DbSerializable):
                 loc_name=loc_data.name)
             character_list.append(row)
         logger.debug("character_list=%s", character_list)
+        g.active.characters = character_list
+        loc_rows = cls.execute_select("""
+            SELECT id, name
+            FROM locations
+            WHERE toplevel = TRUE
+                AND game_token = %s
+            ORDER BY name
+            """, (g.game_token,))
+        g.active.locations = loc_rows
         item_rows = cls.execute_select("""
             SELECT id, name
             FROM items
             WHERE toplevel = TRUE
                 AND game_token = %s
+            ORDER BY name
             """, (g.game_token,))
+        g.active.items = item_rows
         event_rows = cls.execute_select("""
             SELECT id, name
             FROM events
             WHERE toplevel = TRUE
                 AND game_token = %s
+            ORDER BY name
             """, (g.game_token,))
-        other_toplevel_entities = SimpleNamespace(
-            items=item_rows, events=event_rows)
+        g.active.events = event_rows
         instance = cls.load_complete_object()
-        g.game_data.overall = instance
+        g.active.overall = instance
         # Win requirement results
         req_by_id = {}
         for win_req in instance.win_reqs:
@@ -309,7 +320,4 @@ class Overall(DbSerializable):
         for row in rows:
             win_req = req_by_id.get(row.id)
             win_req.fulfilled = True
-        return (
-            instance,
-            character_list,
-            other_toplevel_entities)
+        return g.active

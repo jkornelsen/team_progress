@@ -9,13 +9,15 @@
 {% block content %}
     <h1>Location Setup</h1>
     <form method="post">
-    <p class="info">Room, area, or container where items and characters can be. It takes 3 seconds to travel 1 unit of distance.</p><!-- TODO (maybe): May be subdivided into a grid of positions.-->
+    <p class="info">Room, area, or container where items and characters can be. It takes 3 seconds to travel 1 unit of distance between locations. May be subdivided into a grid.</p>
         <label for="location-name">Name:</label>
         <input type="text" id="location-name" name="location_name" value="{{ current.name }}" required><br>
         <label for="location-description">Description:</label>
         <textarea id="location-description" name="location_description" rows="4" cols="50">{{ current.description }}</textarea><br>
         <input type="checkbox" id="masked" name="masked" {% if current.masked %}checked{% endif %}>
         <label for="mask">Don't reveal until visited</label><br>
+        <input type="checkbox" id="top_level" name="top_level" {% if current.toplevel %}checked{% endif %}>
+        <label for="top_level">Show in Overview</label> <span class="label-like">&ndash; useful if characters do not go here</span><br>
         <label for="dimensions">Grid Dimensions:</label>
         <input type="text" id="dimensions" name="dimensions" value="{{ current.grid.dimensions[0] }}x{{ current.grid.dimensions[1] }}" size="5"> <span class="label-like">width x height</span><br>
         <label for="excluded-left-top">Exclude from Grid:</label>

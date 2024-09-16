@@ -83,8 +83,13 @@
         </ul>
     {% endif %}
 
-    <h2>Equipped Items</h2>
-    <ul>
+    {% set has = namespace(chars=False) %}
+    {% for owned in current.items.values() if owned.quantity > 0 and owned.slot %}
+        {% set has.equipped_items = True %}
+    {% endfor %}
+    {% if has.equipped_items %}
+        <h2>Equipped Items</h2>
+        <ul>
         {% for owned in current.items.values() if owned.quantity > 0 and owned.slot %}
             {% set item = owned.item %}
             {% set link = url_for('play_item', item_id=item.id, char_id=current.id, main='carried') %}
@@ -101,13 +106,16 @@
             <span class="item-slot" id="item-{{ item.id }}-slot">
                 &mdash; {{ owned.slot }}
             </span><br>
-        {% else %}
-            (None)<br>
         {% endfor %}
-    </ul>
+        </ul>
+    {% endif %}
 
-    <h2>Inventory Items</h2>
-    <ul>
+    {% for owned in current.items.values() if owned.quantity > 0 and not owned.slot %}
+        {% set has.owned_items = True %}
+    {% endfor %}
+    {% if has.owned_items %}
+        <h2>Inventory Items</h2>
+        <ul>
         {% for owned in current.items.values() if owned.quantity > 0 and not owned.slot %}
             {% set item = owned.item %}
             {% set link = url_for('play_item', item_id=item.id, char_id=current.id, main='carried') %}
@@ -124,23 +132,22 @@
                     {{ owned.quantity | dec2str }}
                 {% endif %}
             </span><br>
-        {% else %}
-            (None)<br>
         {% endfor %}
-    </ul>
+        </ul>
+    {% endif %}
 
-    <h2>Attributes</h2>
-    <ul>
+    {% if current.attribs %}
+        <h2>Attributes</h2>
+        <ul>
         {% for attrib_of in current.attribs.values() %}
             <li>{{ attrib_of.attrib.name }}
                 {% if attrib_of.val != 1 %}
                     {{ attrib_of.val | dec2str }}
                 {% endif %}
             </li>
-        {% else %}
-            (None)<br>
         {% endfor %}
-    </ul>
+        </ul>
+    {% endif %}
 
     <div id="custom-confirm-modal" class="modal">
         <div class="modal-content">
@@ -191,7 +198,7 @@
                 stopFetchingProgress();
                 const confirmed = await showCustomConfirm(data.message);
                 if (confirmed) {
-                    const baseEventUrl = "{{ url_for('play_event', event_id=MAX_INT_32, char_id=current.id') }}"
+                    const baseEventUrl = "{{ url_for('play_event', event_id=MAX_INT_32, char_id=current.id) }}"
                     const url = baseEventUrl.replace('{{ MAX_INT_32 }}', data.event_id);
                     console.log("Confirmed to go to ", url);
                     stopTravel();

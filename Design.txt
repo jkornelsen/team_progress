@@ -2,9 +2,9 @@ hosting possibilities:
 Pythonanywhere should be able to host postgres and flask web app.
 https://www.reddit.com/r/flask/comments/12beskr/free_hosting_sites_compatible_with_flask/
 render.com is an alternative.
-
 perhaps could offer some users on Pythonanywhere and also option to download
 code for playing on a LAN
+
 another option would be, in addition to LAN multiplayer from GitHub,
 offer an online single-player version that doesn't require a database
 maybe to get something working, it would be better to change to Solo Progress
@@ -21,9 +21,6 @@ with a pencil (adjustable width) and color selection
 image sizes for each entity would be fixed, either icon size or image size
 of course, that would require more memory, not as scalable
 ascii art perhaps 
-
-need a way to lose or destroy items as well as gain them?
-could do this in configure
 
 gain all instant could be more convenient than entering e.g. 9999 batches
 maybe a button or 0 for number of batches, or "(A)ll"
@@ -251,6 +248,9 @@ or advantage (highest of two roles) based on story context
 on event play screen
 advantage: single roll, best of two, worst of two -- radio buttons
 
+event trigger chance based on produced item quantity
+or character attribute
+
 during encounters, time is turn-based and rotational,
 at other times, it is much freer
 
@@ -331,6 +331,13 @@ research scenario-related details online during the game
 for example, how are pens made
 gamemaster could research beforehand as well as possibly some setup
 could use AI to generate entities, perhaps by creating JSON for loading
+
+scenario: Fission Plant
+win condition is at least a certain amount of power
+and no more than a certain amount of pollution
+need a way to destroy items as well as gain them
+set up an elapsed time decreasing production cycle: 2 waste -> 1 waste
+events trigger during production of some recipes
 
 scenario: Growing Up
 classes cost money but gain knowledge and grades

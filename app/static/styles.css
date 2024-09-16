@@ -7,11 +7,38 @@ body {
 h1 {
     text-align: center;
 }
+h2 {
+    margin: 10px 10px;
+}
 
 .info {
     /* font-family: initial; */
     /* font-size: 90%; */
     font-family: Times, "Times New Roman", serif;
+}
+
+label {
+    color: #999999;
+}
+
+.label-like {
+    color: #999999;
+}
+
+.username {
+    color: yellow;
+    font-weight: bold;
+}
+
+a {
+    color: #428bca; /* Lighter blue color */
+    text-decoration: none;
+    font-family: sans-serif, Arial, Helvetica, sans-serif;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); /* Add a subtle text shadow */
+}
+
+a:hover {
+    color: #2a6496; /* Slightly darker blue on hover */
 }
 
 .flexdiv {
@@ -96,32 +123,9 @@ h1 {
     margin: 0 0 0 10px;
 }
 
-.username {
-    color: yellow;
-    font-weight: bold;
-}
-
-a {
-    color: #428bca; /* Lighter blue color */
-    text-decoration: none;
-    font-family: sans-serif, Arial, Helvetica, sans-serif;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); /* Add a subtle text shadow */
-}
-
-a:hover {
-    color: #2a6496; /* Slightly darker blue on hover */
-}
-
 .select-box {
     margin-left: 10px;
     margin-right: 10px;
-}
-
-label {
-    color: #999999;
-}
-.label-like {
-    color: #999999;
 }
 
 input[type="text"],
@@ -235,10 +239,6 @@ table th {
 .transparent-col {
     background-color: transparent;
     border: none;
-}
-
-h2 {
-    margin: 10px 10px;
 }
 
 .outer-border {

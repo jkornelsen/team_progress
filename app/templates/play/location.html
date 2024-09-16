@@ -55,11 +55,15 @@
         {% set has_grid = True %}
     {% endif %}
     <table style="background: transparent"><tr><td valign="top">
-    <h2>Characters Here</h2>
-    <ul>
-        {% set has = namespace(chars=False) %}
+
+    {% set has = namespace(chars=False) %}
+    {% for char in game_data.characters if char.location.id == current.id %}
+        {% set has.chars = True %}
+    {% endfor %}
+    {% if has.chars %}
+        <h2>Characters Here</h2>
+        <ul>
         {% for char in game_data.characters if char.location.id == current.id %}
-            {% set has.chars = True %}
             {% set link = url_for('play_char', char_id=char.id) %}
             {% set letter = link_letters.next(link) %}
             <script>
@@ -74,10 +78,12 @@
         {% else %}
             <p>(None)</p>
         {% endfor %}
-    </ul>
+        </ul>
+    {% endif %}
 
-    <h2>Items Here</h2>
-    <ul class="item-list">
+    {% if current.items %}
+        <h2>Items Here</h2>
+        <ul class="item-list">
         {% for item_at in current.items.values() %}
             {% set item = item_at.item %}
             {% set link = url_for('play_item', item_id=item.id, loc_id=current.id, main='local') %}
@@ -101,10 +107,12 @@
         {% else %}
             <p>(None)</p>
         {% endfor %}
-    </ul>
+        </ul>
+    {% endif %}
 
-    <h2>Neighboring Locations</h2>
-    <ul>
+    {% if current.destinations %}
+        <h2>Neighboring Locations</h2>
+        <ul>
         {% for dest in current.destinations.values() %}
             {% if dest.loc.masked %}
                 (Unvisited)
@@ -121,7 +129,9 @@
         {% else %}
             <p>(None)</p>
         {% endfor %}
-    </ul>
+        </ul>
+    {% endif %}
+
     </td>
     {% set left, top, right, bottom = current.grid.excluded %}
     {% if has_grid %}

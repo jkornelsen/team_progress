@@ -123,7 +123,11 @@
                         <input type="number" step="any" id="quantity_to_drop" size="5" value="1">
                     </div>
                 {% endif %}
-                {% if container.pile.PILE_TYPE == 'local' and loc_id %}
+                {% set has = namespace(chars=False) %}
+                {% for char in game_data.characters if char.location.id == loc_id %}
+                    {% set has.chars = True %}
+                {% endfor %}
+                {% if container.pile.PILE_TYPE == 'local' and loc_id and has.chars %}
                     <div class="button-column" id="pickup-container">
                         <button id="pickup-btn" class="go-button">[P]ick Up</button>
                         <select id="char-picking-up">
@@ -157,7 +161,7 @@
                     </div>
                 {% endif %}
                 <div id="show_all_buttons-container">
-                    <input type="checkbox" id="show-all-buttons" /><label for="show-all-buttons">Show all choices</label>
+                    <input type="checkbox" id="show-all-buttons" /><label for="show-all-buttons">Show all actions</label>
                 </div>
                 <div><br><br><br></div><!-- so that buttons appearing doesn't cause movement -->
                 </div>
@@ -219,9 +223,12 @@
                         {% endif %}
                     </td>
                     <td rowspan="{{ rowspan }}">
-                        <span class="rate-amount" id="rate-amount_{{ recipe.id }}">{{ recipe.rate_amount | dec2str }}</span>
+                        <span class="rate-amount" id="rate-amount_{{ recipe.id }}">
+                            {% if recipe.rate_amount %}{{ recipe.rate_amount | dec2str }}
+                            {% else %}<span style="font-size: 2em" title="(trash can icon) does not produce the current item">&#x1F5D1;</span>{% endif %}
+                        </span>
                         {% if not recipe.instant %}
-                        per <span class="rate-duration" id="rate-duration_{{ recipe.id }}">{{ recipe.rate_duration | dec2str }}</span>s
+                        {% if recipe.rate_amount %}per {% endif %}<span class="rate-duration" id="rate-duration_{{ recipe.id }}">{{ recipe.rate_duration | dec2str }}</span>s
                         {% endif %}
                     </td>
                     <td style="padding: 0; margin: 0;"></td><!-- so we don't need to repeat recipe.sources code for this row only. This is also why rowspan is length + 1. -->

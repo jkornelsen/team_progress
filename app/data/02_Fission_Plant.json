@@ -1,0 +1,363 @@
+{
+    "attribs": [],
+    "characters": [],
+    "events": [
+        {
+            "changed_attrs": [],
+            "description": "Get more information about a problem that occurred.",
+            "determining_attrs": [],
+            "id": 2,
+            "name": "Fission Problem Type",
+            "numeric_range": [
+                0,
+                10
+            ],
+            "outcome_type": "selection",
+            "selection_strings": "Waste Leak\r\nNo Energy Gain\r\nExcess Energy\r\nCore Meltdown",
+            "toplevel": true,
+            "trigger_by_duration": true,
+            "trigger_chance": [
+                0,
+                1
+            ],
+            "triggers": []
+        },
+        {
+            "changed_attrs": [],
+            "description": "Minor problems, such as waste leaks, up to the worst case, core meltdown. Optionally, run the Fission Problem Type event afterwards to help determine which problem occurred.",
+            "determining_attrs": [],
+            "id": 1,
+            "name": "Fission Problem",
+            "numeric_range": [
+                0,
+                10
+            ],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": true,
+            "trigger_by_duration": false,
+            "trigger_chance": [
+                1,
+                20
+            ],
+            "triggers": [
+                [
+                    "item",
+                    20
+                ]
+            ]
+        }
+    ],
+    "items": [
+        {
+            "attribs": {},
+            "description": "Cycles water to cool through contact with air.\r\n\r\n",
+            "id": 19,
+            "masked": false,
+            "name": "Cooling Tower",
+            "progress": {
+                "batches_processed": 0,
+                "id": 58,
+                "is_ongoing": false,
+                "item_id": 0,
+                "recipe_id": 0,
+                "start_time": null,
+                "stop_time": null
+            },
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "local",
+            "toplevel": false
+        },
+        {
+            "attribs": {},
+            "description": "Stored in high-capacity battery.",
+            "id": 20,
+            "masked": false,
+            "name": "Energy",
+            "progress": {
+                "batches_processed": 0,
+                "id": 59,
+                "is_ongoing": false,
+                "item_id": 0,
+                "recipe_id": 0,
+                "start_time": null,
+                "stop_time": null
+            },
+            "q_limit": 0.0,
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "attribs": {},
+                    "instant": false,
+                    "item_id": 20,
+                    "rate_amount": 1.0,
+                    "rate_duration": 8.0,
+                    "recipe_id": 1,
+                    "sources": [
+                        {
+                            "preserve": false,
+                            "q_required": 1.0,
+                            "source_id": 15
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "universal",
+            "toplevel": true
+        },
+        {
+            "attribs": {},
+            "description": "Valuable nuclear material used in a reactor to generate high energy levels.",
+            "id": 15,
+            "masked": false,
+            "name": "Plutonium",
+            "progress": {
+                "batches_processed": 0,
+                "id": 54,
+                "is_ongoing": false,
+                "item_id": 0,
+                "recipe_id": 0,
+                "start_time": null,
+                "stop_time": null
+            },
+            "q_limit": 0.0,
+            "quantity": 10.0,
+            "recipes": [
+                {
+                    "attribs": {},
+                    "instant": false,
+                    "item_id": 15,
+                    "rate_amount": 1.0,
+                    "rate_duration": 8.0,
+                    "recipe_id": 1,
+                    "sources": [
+                        {
+                            "preserve": false,
+                            "q_required": 1.0,
+                            "source_id": 16
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "universal",
+            "toplevel": true
+        },
+        {
+            "attribs": {},
+            "description": "Glowing, greenish sludge. Stored in thick metal barrels\u2014just hope they don't spring a leak.\r\n\r\nCan be consumed and neutralized by bio-engineered bacteria.",
+            "id": 17,
+            "masked": true,
+            "name": "Radioactive Waste",
+            "progress": {
+                "batches_processed": 0,
+                "id": 56,
+                "is_ongoing": false,
+                "item_id": 0,
+                "recipe_id": 0,
+                "start_time": null,
+                "stop_time": null
+            },
+            "q_limit": 0.0,
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "attribs": {},
+                    "instant": false,
+                    "item_id": 17,
+                    "rate_amount": 1.0,
+                    "rate_duration": 8.0,
+                    "recipe_id": 1,
+                    "sources": [
+                        {
+                            "preserve": false,
+                            "q_required": 2.0,
+                            "source_id": 17
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "universal",
+            "toplevel": true
+        },
+        {
+            "attribs": {},
+            "description": "Accelerates atomic particles to collide with nuclei, splitting them into smaller parts and releasing energy.",
+            "id": 21,
+            "masked": false,
+            "name": "Reactor",
+            "progress": {
+                "batches_processed": 0,
+                "id": 60,
+                "is_ongoing": false,
+                "item_id": 0,
+                "recipe_id": 0,
+                "start_time": null,
+                "stop_time": null
+            },
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "local",
+            "toplevel": false
+        },
+        {
+            "attribs": {},
+            "description": "Nuclear fuel becomes inefficient and radioactive after use. Refine into fresh plutonium by atomic reclamation.\r\n",
+            "id": 16,
+            "masked": true,
+            "name": "Spent Fuel",
+            "progress": {
+                "batches_processed": 0,
+                "id": 55,
+                "is_ongoing": false,
+                "item_id": 0,
+                "recipe_id": 0,
+                "start_time": null,
+                "stop_time": null
+            },
+            "q_limit": 0.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "universal",
+            "toplevel": false
+        },
+        {
+            "attribs": {},
+            "description": "Generated heat could turn nearby rivers into hot springs, an unwelcome turn of events for fish.\r\n",
+            "id": 18,
+            "masked": true,
+            "name": "Thermal Waste",
+            "progress": {
+                "batches_processed": 0,
+                "id": 57,
+                "is_ongoing": false,
+                "item_id": 0,
+                "recipe_id": 0,
+                "start_time": null,
+                "stop_time": null
+            },
+            "q_limit": 0.0,
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "attribs": {},
+                    "instant": false,
+                    "item_id": 18,
+                    "rate_amount": 0.0,
+                    "rate_duration": 3.0,
+                    "recipe_id": 1,
+                    "sources": [
+                        {
+                            "preserve": true,
+                            "q_required": 1.0,
+                            "source_id": 19
+                        },
+                        {
+                            "preserve": false,
+                            "q_required": 1.0,
+                            "source_id": 18
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "universal",
+            "toplevel": true
+        }
+    ],
+    "locations": [
+        {
+            "description": "Large chamber with a controlled environment where fission takes place.",
+            "destinations": {},
+            "dimensions": [
+                0,
+                0
+            ],
+            "excluded": [
+                0,
+                0,
+                0,
+                0
+            ],
+            "id": 5,
+            "items": [
+                {
+                    "item_id": 21,
+                    "position": [
+                        0,
+                        0
+                    ],
+                    "quantity": 1.0
+                }
+            ],
+            "masked": false,
+            "name": "Energy Core Room",
+            "progress": {
+                "batches_processed": 0,
+                "id": 61,
+                "is_ongoing": false,
+                "item_id": 0,
+                "recipe_id": 0,
+                "start_time": null,
+                "stop_time": null
+            },
+            "quantity": 0.0,
+            "toplevel": true
+        },
+        {
+            "description": "Handle excess heat away from the main room.",
+            "destinations": {},
+            "dimensions": [
+                0,
+                0
+            ],
+            "excluded": [
+                0,
+                0,
+                0,
+                0
+            ],
+            "id": 6,
+            "items": [
+                {
+                    "item_id": 19,
+                    "position": [
+                        0,
+                        0
+                    ],
+                    "quantity": 1.0
+                }
+            ],
+            "masked": false,
+            "name": "Outdoor Facility",
+            "progress": {
+                "batches_processed": 0,
+                "id": 62,
+                "is_ongoing": false,
+                "item_id": 0,
+                "recipe_id": 0,
+                "start_time": null,
+                "stop_time": null
+            },
+            "quantity": 0.0,
+            "toplevel": true
+        }
+    ],
+    "overall": {
+        "description": "Produce enough energy to fill a high-capacity battery while managing waste. Handle any critical failures and then restore operations.",
+        "slots": [],
+        "title": "Fission Plant",
+        "win_reqs": [
+            {
+                "attrib_id": null,
+                "attrib_value": 0.0,
+                "char_id": null,
+                "id": 1,
+                "item_id": 20,
+                "loc_id": null,
+                "quantity": 1000.0
+            }
+        ]
+    }
+}

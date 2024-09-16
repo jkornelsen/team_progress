@@ -12,6 +12,7 @@ tables_to_create = {
         {coldef('id')},
         {coldef('name')},
         {coldef('description')},
+        toplevel boolean NOT NULL,
         masked boolean NOT NULL,
         progress_id integer,
         quantity float(4) NOT NULL,
@@ -89,6 +90,7 @@ class Location(Identifiable):
         super().__init__(new_id)
         self.name = ""
         self.description = ""
+        self.toplevel = True
         self.masked = False
         self.destinations = {}  # Destination objects keyed by loc id
         self.items = {}  # ItemAt objects keyed by item id
@@ -101,6 +103,7 @@ class Location(Identifiable):
             'id': self.id,
             'name': self.name,
             'description': self.description,
+            'toplevel': self.toplevel,
             'masked': self.masked,
             'destinations': {
                 str(dest.loc.id): dest.distance
@@ -121,6 +124,7 @@ class Location(Identifiable):
         instance = cls(int(data.get('id', 0)))
         instance.name = data.get('name', "")
         instance.description = data.get('description', "")
+        instance.toplevel = data.get('toplevel', False)
         instance.masked = data.get('masked', False)
         instance.destinations = {
             dest_id: Destination(Location(dest_id), distance)
@@ -307,6 +311,7 @@ class Location(Identifiable):
                 entity_list.append(self)
             self.name = req.get_str('location_name')
             self.description = req.get_str('location_description')
+            self.toplevel = req.get_bool('top_level')
             req = RequestHelper('form')
             self.masked = req.get_bool('masked')
             self.grid.dimensions = tuple(

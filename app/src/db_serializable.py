@@ -215,13 +215,12 @@ class Identifiable(DbSerializable):
 
     @classmethod
     def get_by_id(cls, id_to_get):
+        """Get from g.game_data list.
+        To use g.active instead, do a basic dict lookup.
+        """
         if not id_to_get:
             return None
         id_to_get = int(id_to_get)
-        entity_dict = getattr(g.active, cls.listname)
-        entity = entity_dict.get(id_to_get)
-        #if entity:
-        #    return entity
         entity_list = g.game_data.get_list(cls)
         return next(
             (instance for instance in entity_list
