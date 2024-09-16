@@ -4,6 +4,7 @@ import random
 from types import SimpleNamespace
 
 from .attrib import Attrib
+from .character import Character
 from .db_serializable import Identifiable, MutableNamespace, coldef
 from .item import Item
 from .location import Location
@@ -286,6 +287,13 @@ class Event(Identifiable):
             logger.debug("type=%s", trigger.__class__.__name__)
             logger.debug("id=%d", trigger.id)
             logger.debug("name=%s", trigger.name)
+        return current_obj
+
+    @classmethod
+    def data_for_play(cls, id_to_get):
+        logger.debug("data_for_play()")
+        current_obj = cls.data_for_configure(id_to_get)
+        Character.load_characters_for_event(id_to_get)
         return current_obj
 
     @classmethod

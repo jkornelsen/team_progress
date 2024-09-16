@@ -175,6 +175,41 @@ class Character(Identifiable):
         return chars
 
     @classmethod
+    def load_characters_for_event(cls, event_id, load=True):
+        """Get characters that have attributes used for the event."""
+        query = """
+            SELECT *
+            FROM {tables[0]}
+            INNER JOIN {tables[1]}
+                ON {tables[1]}.game_token = {tables[0]}.game_token
+                AND {tables[1]}.char_id = {tables[0]}.id
+            INNER JOIN {tables[2]}
+                ON {tables[2]}.game_token = {tables[0]}.game_token
+                AND {tables[2]}.event_id = %s
+                AND {tables[2]}.attrib_id = {tables[1]}.attrib_id
+            WHERE {tables[0]}.game_token = %s
+            """.format(tables=['characters', 'char_attribs', 'event_attribs'])
+        characters_rows = cls.execute_select(
+            query, (event_id, g.game_token))
+        chars = {}
+        for char_row in characters_rows:
+            if char_row.id not in chars:
+                chars[char_row.id] = Character.from_json(char_row)
+        # Get char attrib data
+        attrib_rows = cls.execute_select("""
+            SELECT *
+            FROM char_attribs
+            WHERE game_token = %s
+            """, [g.game_token])
+        for row in attrib_rows:
+            char = chars.get(row.char_id, None)
+            if char:
+                char.attribs[row.attrib_id] = AttribOf.from_json(row)
+        if load:
+            g.game_data.set_list(Character, chars.values())
+        return chars
+
+    @classmethod
     def load_complete_object(cls, id_to_get):
         """Load an object with everything needed for storing to db."""
         logger.debug("load_complete_object(%s)", id_to_get)

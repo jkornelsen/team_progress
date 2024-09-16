@@ -191,8 +191,8 @@
                 stopFetchingProgress();
                 const confirmed = await showCustomConfirm(data.message);
                 if (confirmed) {
-                    const baseEventUrl = "{{ url_for('play_event', event_id='-1') }}";
-                    const url = baseEventUrl.replace('-1', data.event_id);
+                    const baseEventUrl = "{{ url_for('play_event', event_id=MAX_INT_32, char_id=current.id') }}"
+                    const url = baseEventUrl.replace('{{ MAX_INT_32 }}', data.event_id);
                     console.log("Confirmed to go to ", url);
                     stopTravel();
                     window.location.href = url;

@@ -205,20 +205,23 @@
                         <th>Where</th>
                     </tr>
             {% for recipe in current.recipes %}
-                {% set rowspan = recipe.sources|length + recipe.attribs|length + 1 %}
+                {% if recipe.id != current.recipes[0].id %}
+                <tr style="border-top: 1px solid #888;"></tr>
+                {% endif %}
                 <tr>
+                    {% set rowspan = recipe.sources|length + recipe.attribs|length + 1 %}
                     <td rowspan="{{ rowspan }}">
                         {% if recipe.instant %}
-                        <input type="number" step="any" id="quantity_to_gain" size="10" value="1">
-                        <button type="button" id="gain-btn" data-recipe-id="{{ recipe.id }}" data-rate-amount="{{ recipe.rate_amount }}" class="go-button">Gain</button>
+                        <input type="number" step="any" class="quantity_to_gain" id="quantity_to_gain_{{ recipe.id }}" size="10" value="{{ session['quantity_to_gain'] if session['quantity_to_gain'] else 1 }}">
+                        <button type="button" data-recipe-id="{{ recipe.id }}" data-rate-amount="{{ recipe.rate_amount }}" class="gain-btn go-button" id="gain-btn_{{ recipe.id }}">Gain</button>
                         {% else %}
-                        <button type="button" class="start-stop-btn go-button" data-recipe-id="{{ recipe.id }}">Start</button>
+                        <button type="button" class="start-stop-btn go-button" id="start-stop-btn_{{ recipe.id }}" data-recipe-id="{{ recipe.id }}">Start</button>
                         {% endif %}
                     </td>
                     <td rowspan="{{ rowspan }}">
-                        <span id="rate-amount">{{ recipe.rate_amount | dec2str }}</span>
+                        <span class="rate-amount" id="rate-amount_{{ recipe.id }}">{{ recipe.rate_amount | dec2str }}</span>
                         {% if not recipe.instant %}
-                        per <span id="rate-duration">{{ recipe.rate_duration | dec2str }}</span>s
+                        per <span class="rate-duration" id="rate-duration_{{ recipe.id }}">{{ recipe.rate_duration | dec2str }}</span>s
                         {% endif %}
                     </td>
                     <td style="padding: 0; margin: 0;"></td><!-- so we don't need to repeat recipe.sources code for this row only. This is also why rowspan is length + 1. -->
@@ -540,8 +543,8 @@
                 fetchProgressInterval = null;
             }
 
-            $('#gain-btn').click(function() {
-                const quantityInput = $(this).prev('#quantity_to_gain');
+            $('.gain-btn').click(function() {
+                const quantityInput = $(this).prev('.quantity_to_gain');
                 const quantity = parseInt(quantityInput.val(), 10);
                 const recipe_id = $(this).data('recipe-id');
                 const rate_amount = $(this).data('rate-amount');
@@ -577,7 +580,7 @@
                 const startBtn = this;
                 const recipe_id = $(this).data('recipe-id');
                 const row = $(this).closest('tr');
-                rateDuration = parseFloat(row.find('#rate-duration').text()) || 1;
+                rateDuration = parseFloat(row.find('.rate-duration').text()) || 1;
                 console.log(`start/stop button clicked for recipe ${recipe_id}`);
                 const urlParts = ['/item/stop', current_id];
                 if (startBtn.innerHTML === "Start") {

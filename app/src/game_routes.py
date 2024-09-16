@@ -197,20 +197,35 @@ def set_routes(app):
 
     @app.route('/play/event/<int:event_id>', methods=['GET', 'POST'])
     def play_event(event_id):
-        logger.debug("-" * 80 + "\nplay_event(%d)", event_id)
-        instance = Event.data_for_configure(event_id)
+        req = RequestHelper('args')
+        char_id = req.get_int('char_id', '')
+        loc_id = req.get_int('loc_id', '')
+        if char_id:
+            session['last_char_id'] = char_id
+        if loc_id:
+            session['last_loc_id'] = loc_id
+        if not char_id:
+            char_id = session.get('last_char_id', '')
+        if not loc_id:
+            loc_id = session.get('last_loc_id', '')
+        logger.debug(
+            "-" * 80 + "\nplay_event(event_id=%d, char_id=%s, loc_id=%s)",
+            event_id, char_id, loc_id)
+        instance = Event.data_for_play(event_id)
         if not instance:
             return 'Event not found'
         if request.method == 'GET':
             return render_template(
                 'play/event.html',
                 current=instance,
+                game_data=g.game_data,
                 link_letters=LinkLetters('eor')
                 )
         instance.play_by_form()
         return render_template(
             'play/event.html',
             current=instance,
+            game_data=g.game_data,
             outcome=instance.get_outcome(),
             link_letters=LinkLetters('eor')
             )
@@ -481,6 +496,8 @@ def set_routes(app):
         loc_id = req.get_int('loc_id', '')
         req = RequestHelper('form')
         num_batches = req.get_int('quantity', 0)
+        session['quantity_to_gain'] = num_batches or 1
+        print(f"Updated quantity_to_gain: {session['quantity_to_gain']}") 
         if not char_id and not loc_id:
             char_id = session.get('last_char_id', '')
             loc_id = session.get('last_loc_id', '')

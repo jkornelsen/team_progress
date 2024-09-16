@@ -42,7 +42,7 @@
             <td>
                 <form method="POST" action="{{ url_for('play_event', event_id=current.id) }}">
                     {% if current.outcome_type == 'fourway' %}
-                        <label for="difficulty">Difficulty:</label>
+                        <label for="difficulty" style="padding-left: 10px;">Difficulty:</label>
                         <select id="difficulty" name="difficulty">
                             <option value="5">Easy (5)</option>
                             <option value="10">Moderate (10)</option>
@@ -51,11 +51,26 @@
                         </select><br>
                     {% endif %}
                     {% if current.outcome_type == 'fourway' or current.outcome_type == 'numeric' %}
-                    <label for="stat_adjustment">Stat Adjustment:</label>
-                    <input type="number" id="stat_adjustment" name="stat_adjustment" value="{{ current.stat_adjustment }}">
-                    <br>
+                        <div style="background-color: black; margin: 0px; padding: 10px">
+                        <label for="stat_adjustment">Stat Adjustment:</label>
+                        <input type="number" id="stat_adjustment" name="stat_adjustment" value="{{ current.stat_adjustment }}">
+                        <br>
+                        {% for attr in current.determining_attrs %}
+                            <li>{{ attr.name }}
+                            <select class="char-for-attr" id="char-for-attr_{{ attr.id }}">
+                                <option value="" selected>(Select character)</option>
+                                {% for char in game_data.characters if attr.id in char.attribs %}
+                                    {% set attrib_val = char.attribs[attr.id].val | dec2str %}
+                                    <option value="{{ attrib_val }}" {% if char.id == session['last_char_id'] %}selected{% endif %}>{{ char.name }} {{ attrib_val }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="button" class="fill-btn" data-attr-id="{{ attr.id }}">Fill</button><br>
+                        {% endfor %}
+                        </div>
                     {% endif %}
+                    <div style="margin-top: 20px">
                     <button type="submit" id="roll-btn">[R]oll</button>
+                    </div>
                 </form>
             </td>
         </tr>
@@ -77,6 +92,19 @@
             document.getElementById('difficulty').value = selectedDifficulty;
             document.getElementById('difficulty').addEventListener('change', function() {
                 localStorage.setItem('selectedDifficulty', this.value);
+            });
+            
+            function updateStatAdjustment(event) {
+                const selectedValue = event.target.value;
+                const statAdjustmentInput = document.getElementById('stat_adjustment');
+                statAdjustmentInput.value = selectedValue;
+            }
+            $('.char-for-attr').on('change', updateStatAdjustment);
+
+            $('.fill-btn').on('click', function() {
+                var attrId = $(this).data('attr-id');
+                var selectedValue = $('#char-for-attr_' + attrId).val();
+                $('#stat_adjustment').val(selectedValue);
             });
         });
     </script>
