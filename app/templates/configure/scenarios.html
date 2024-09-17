@@ -12,9 +12,9 @@
         <center>
         <label for="sort_by">Sort by:</label>
         <select name="sort_by" id="sort_by">
-            <option value="filename" {% if sort_by == 'filename' %}selected{% endif %}>Suggested Order</option>
+            <option value="filename" {% if sort_by == 'filename' %}selected{% endif %}>Gameplay Concepts</option>
             <option value="filesize" {% if sort_by == 'filesize' %}selected{% endif %}>Size</option>
-            <option value="popularity" {% if sort_by == 'popularity' %}selected{% endif %}>Popularity</option>
+            <option value="popularity" {% if sort_by == 'popularity' %}selected{% endif %}>Most Played</option>
             <option value="title" {% if sort_by == 'title' %}selected{% endif %}>Title</option>
         </select>
         <button type="submit">Sort</button>

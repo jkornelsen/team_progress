@@ -117,7 +117,7 @@
                         <td>${itemName}
                             <input type="hidden" name="item_id[]" value="${itemId}">
                         </td><td>
-                            <input type="number" name="item_qty[]" value="${itemQty}" size="8">
+                            <input type="text" name="item_qty[]" value="${itemQty}" size="8">
                         </td><td>
                             <input type="text" name="item_slot[]" value="${itemSlot}" size="8">
                         </td><td>
@@ -150,7 +150,7 @@
                 addItem(
                     {{ owned_item.item.id }},
                     "{{ owned_item.item.name }}",
-                    {{ owned_item.quantity | dec2str }},
+                    {{ owned_item.quantity | formatNum }},
                     "{{ owned_item.slot }}");
             {% endfor %}
             $('#items-rows').on('click', '.remove-item-btn', function() {
@@ -164,7 +164,7 @@
                         <td>${attribName}
                             <input type="hidden" name="attrib_id[]" value="${attribId}">
                         </td><td>
-                            <input type="number" name="attrib${attribId}_val" value="${attribVal}" size="8">
+                            <input type="text" name="attrib${attribId}_val" value="${attribVal}" size="10">
                         </td><td>
                             <button type="button" class="remove-attrib-btn lesser-button">Remove</button>
                         </td>
@@ -192,7 +192,7 @@
                 addAttrib(
                     {{ attrib_id }},
                     "{{ attrib_of.attrib.name }}",
-                    {{ attrib_of.val | dec2str }});
+                    {{ attrib_of.val | formatNum }});
             {% endfor %}
             $('#attrib-container').on('click', '.remove-attrib-btn', function() {
                 const attribRow = $(this).closest('tr');

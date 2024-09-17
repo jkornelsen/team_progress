@@ -6,7 +6,7 @@ from .db_serializable import Identifiable, MutableNamespace, coldef
 from .item import Item
 from .location import Destination, Location
 from .progress import Progress
-from .utils import Pile, RequestHelper, Storage
+from .utils import Pile, RequestHelper, Storage, unformat_num
 
 tables_to_create = {
     'characters': f"""
@@ -369,12 +369,15 @@ class Character(Identifiable):
             item_qtys = req.get_list('item_qty[]')
             item_slots = req.get_list('item_slot[]')
             self.items = {}
+            old = Character.load_complete_object(self.id)
             for item_id, item_qty, item_slot in zip(
                     item_ids, item_qtys, item_slots):
                 ownedItem = OwnedItem(Item(int(item_id)), self)
                 self.items[item_id] = ownedItem
-                ownedItem.quantity = float(item_qty)
                 ownedItem.slot = item_slot
+                old_item = old.items.get(item_id, None)
+                old_qty = old_item.quantity if old_item else 0
+                ownedItem.quantity = req.set_num_if_changed(item_qty, old_qty)
             location_id = req.get_int('char_location')
             self.location = Location(location_id) if location_id else None
             self.position = tuple(

@@ -118,7 +118,7 @@
                         <input type="hidden" name="destination_id[]" value="${destinationId}">
                         <p>${destinationName}
                         <label for="destination-distance">Distance:</label>
-                        <input type="number" id="destination-distance" name="destination_distance[]" value="${distance}" class="distance-field">
+                        <input type="text" id="destination-distance" name="destination_distance[]" value="${distance}" class="distance-field" size="5">
                         <button type="button" class="remove-destination-btn lesser-button">Remove Destination</button>
                         </p>
                     </div>
@@ -150,7 +150,7 @@
                 addDestination(
                     {{ dest.loc.id }},
                     "{{ dest.loc.name }}",
-                    "{{ dest.distance | dec2str }}");
+                    "{{ dest.distance | formatNum }}");
             {% endfor %}
 
             $('#destinations-container').on('click', '.remove-destination-btn', function() {
@@ -164,7 +164,7 @@
                         <td>${itemName}
                             <input type="hidden" name="item_id[]" value="${itemId}">
                         </td><td>
-                            <input type="number" name="item_qty[]" value="${itemQty}" size="8">
+                            <input type="text" name="item_qty[]" value="${itemQty}" size="8">
                         </td><td>
                             <input type="text" name="item_pos[]" value="${itemPos}" size="8">
                         </td><td>
@@ -196,7 +196,7 @@
                 addItem(
                     {{ item_at.item.id }},
                     "{{ item_at.item.name }}",
-                    {{ item_at.quantity | dec2str }},
+                    {{ item_at.quantity | formatNum }},
                     "{{ item_at.position[0] }},{{ item_at.position[1] }}");
             {% endfor %}
             $('#items-rows').on('click', '.remove-item-btn', function() {

@@ -5,6 +5,7 @@ from types import SimpleNamespace
 
 from .attrib import Attrib
 from .character import Character
+from .cache import cache
 from .db_serializable import DbSerializable, Identifiable, coldef
 from .event import Event
 from .item import Item
@@ -16,6 +17,7 @@ tables_to_create = {
         {coldef('game_token')},
         title varchar(255) NOT NULL,
         {coldef('description')},
+        number_format VARCHAR(5) NOT NULL,
         slots TEXT[],
         PRIMARY KEY (game_token)
         """
@@ -93,11 +95,12 @@ class Overall(DbSerializable):
             "An empty scenario."
             " To start from scratch, change the title and this description"
             " in the Overall settings, and do initial"
-            " setup such as adding a few items."
+            " setup such as adding a few items or characters."
             "\r\n\r\n"
             "More setup can be done as the game goes along."
             )
         self.win_reqs = []
+        self.number_format = 'en_US'
         self.slots = ["Main Hand", "Off Hand", "Body Armor"]
 
     @classmethod
@@ -112,6 +115,25 @@ class Overall(DbSerializable):
                 return False
         return True
 
+    def load_cached(self):
+        self.number_format = self._cached_number_format()
+    
+    @classmethod
+    def invalidate_cached(cls):
+        cache.delete_memoized(cls._cached_number_format)
+
+    @classmethod
+    @cache.memoize(timeout=600)
+    def _cached_number_format(cls):
+        row = cls.execute_select("""
+            SELECT number_format
+            FROM overall
+            WHERE game_token = %s
+            """, (g.game_token,), fetch_all=False)
+        if row:
+            return row.number_format
+        return ''
+
     def to_json(self):
         return {
             'title': self.title,
@@ -119,6 +141,7 @@ class Overall(DbSerializable):
             'win_reqs': [
                 win_req.to_json()
                 for win_req in self.win_reqs],
+            'number_format': self.number_format,
             'slots': tuple(self.slots)
             }
 
@@ -127,11 +150,15 @@ class Overall(DbSerializable):
         if not isinstance(data, dict):
             data = vars(data)
         instance = cls()
-        instance.title = data['title']
-        instance.description = data['description']
+        instance.title = data.get(
+            'title', instance.title)
+        instance.description = data.get(
+            'description', instance.description)
         instance.win_reqs = [
             WinRequirement.from_json(winreq_data)
             for winreq_data in data.get('win_reqs', [])]
+        instance.number_format = data.get(
+            'number_format', instance.number_format)
         instance.slots = list(data.get('slots') or [])
         return instance
 
@@ -201,11 +228,13 @@ class Overall(DbSerializable):
                 if attrib_id:
                     winreq.attrib = Attrib(attrib_id)
                 winreq.attrib_value = req.get_float(f"{prefix}attribValue")
+            self.number_format = req.get_str('number_format')
             self.slots = [
                 slot.strip()
                 for slot in req.get_str('slots').splitlines()
                 if slot.strip()]
             self.to_db()
+            self.invalidate_cached()
         elif req.has_key('cancel_changes'):
             logger.debug("Cancelling changes.")
         else:

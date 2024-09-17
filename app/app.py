@@ -8,6 +8,7 @@ from flask import (
     session,
     url_for
 )
+from flask_caching import Cache
 from inspect import signature
 import logging
 import os
@@ -17,11 +18,12 @@ import sys
 import uuid
 
 from database import get_db, close_db
+from src.cache import init_cache
 from src.game_data import GameData
 from src.user_interaction import UserInteraction
 from src.file import set_routes as _set_file_routes
 from src.game_routes import set_routes as _set_game_routes
-from src.utils import dec2str
+from src.utils import format_num
 
 app = Flask(__name__)
 app.config['TITLE'] = 'Team Progress'
@@ -63,7 +65,7 @@ def before_request():
     g.db = get_db()
     UserInteraction.log_visit(session.get('username'))
     GameData()
-    g.loaded = ''
+    g.game_data.overall.load_cached()
 
 def _set_app_routes():
     @app.route('/')  # route name
@@ -124,6 +126,7 @@ def generate_username():
 _set_app_routes()
 _set_game_routes(app)
 _set_file_routes(app)
+init_cache(app)
 
 def get_parameter_name(endpoint):
     """Get first parameter name from the route rule for
@@ -141,11 +144,10 @@ def get_parameter_name(endpoint):
 def inject_username():
     return {'current_username': session.get('username')}
 
-# Define a custom filter function.
-def dec2str_filter(value):
-    return dec2str(value)
+def formatNum_filter(value):
+    return format_num(value)
 
-app.jinja_env.filters['dec2str'] = dec2str_filter
+app.jinja_env.filters['formatNum'] = formatNum_filter
 app.jinja_env.globals['MAX_INT_32'] = 2**31 - 1
 
 @app.errorhandler(TypeError)

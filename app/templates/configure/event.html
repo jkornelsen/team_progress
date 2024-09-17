@@ -45,9 +45,9 @@
 
         <div id="numeric-factors">
             <label for="numeric-min">Min:</label>
-            <input type="number" id="numeric-min" name="numeric_min" value="{{ current.numeric_range[0] }}">
+            <input type="text" id="numeric-min" name="numeric_min" value="{{ current.numeric_range[0] }}">
             <label for="numeric-max">Max:</label>
-            <input type="number" id="numeric-max" name="numeric_max" value="{{ current.numeric_range[1] }}">
+            <input type="text" id="numeric-max" name="numeric_max" value="{{ current.numeric_range[1] }}">
         </div>
         <div id="selection-container">
             <label for="selection-strings">Enter a list to choose from (one per line):</label>
@@ -98,9 +98,9 @@
         <div class="entity-trigger-container outer-border" id="entity-trigger-container">
         <div id="trigger-chance-container">
             <label>Trigger Chance:</label>
-            <input type="number" id="trigger-numerator" name="trigger_numerator" value="{{ current.trigger_chance[0] }}">
+            <input type="text" id="trigger-numerator" name="trigger_numerator" value="{{ current.trigger_chance[0] }}">
             <label for="trigger-denominator">out of</label>
-            <input type="number" id="trigger-denominator" name="trigger_denominator" value="{{ current.trigger_chance[1] }}"><span class="info">Set a value only if triggering automatically.</span>
+            <input type="text" id="trigger-denominator" name="trigger_denominator" value="{{ current.trigger_chance[1] }}"><span class="info">Set a value only if triggering automatically.</span>
         </div>
 
             <label>

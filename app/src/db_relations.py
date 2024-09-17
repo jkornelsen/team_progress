@@ -21,53 +21,45 @@ tables_to_create = {
             ON DELETE CASCADE
             DEFERRABLE INITIALLY DEFERRED
         """,
-    'recipes': f"""
+    'recipe_sources': f"""
         {coldef('game_token')},
-        item_id integer NOT NULL,
         recipe_id integer NOT NULL,
-        rate_amount float(4) NOT NULL,
-        rate_duration float(4) NOT NULL,
-        instant boolean NOT NULL,
-        PRIMARY KEY (game_token, item_id, recipe_id),
+        item_id integer NOT NULL,
+        q_required float(4) NOT NULL,
+        preserve boolean NOT NULL,
+        PRIMARY KEY (game_token, recipe_id, item_id),
+        FOREIGN KEY (game_token, recipe_id)
+            REFERENCES recipes (game_token, id)
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED,
         FOREIGN KEY (game_token, item_id)
             REFERENCES items (game_token, id)
             ON DELETE CASCADE
             DEFERRABLE INITIALLY DEFERRED
         """,
-    'recipe_sources': f"""
+    'recipe_byproducts': f"""
         {coldef('game_token')},
-        item_id integer NOT NULL,
         recipe_id integer NOT NULL,
-        source_id integer NOT NULL,
-        q_required float(4) NOT NULL,
-        preserve boolean NOT NULL,
-        PRIMARY KEY (game_token, item_id, recipe_id, source_id),
+        item_id integer NOT NULL,
+        rate_amount float(4) NOT NULL,
+        PRIMARY KEY (game_token, recipe_id, item_id),
+        FOREIGN KEY (game_token, recipe_id)
+            REFERENCES recipes (game_token, id)
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED,
         FOREIGN KEY (game_token, item_id)
-            REFERENCES items (game_token, id)
-            ON DELETE CASCADE
-            DEFERRABLE INITIALLY DEFERRED,
-        FOREIGN KEY (game_token, item_id, recipe_id)
-            REFERENCES recipes (game_token, item_id, recipe_id)
-            ON DELETE CASCADE
-            DEFERRABLE INITIALLY DEFERRED,
-        FOREIGN KEY (game_token, source_id)
             REFERENCES items (game_token, id)
             ON DELETE CASCADE
             DEFERRABLE INITIALLY DEFERRED
         """,
     'recipe_attribs': f"""
         {coldef('game_token')},
-        item_id integer NOT NULL,
         recipe_id integer NOT NULL,
         attrib_id integer NOT NULL,
         value float(4) NOT NULL,
-        PRIMARY KEY (game_token, item_id, recipe_id, attrib_id),
-        FOREIGN KEY (game_token, item_id)
-            REFERENCES items (game_token, id)
-            ON DELETE CASCADE
-            DEFERRABLE INITIALLY DEFERRED,
-        FOREIGN KEY (game_token, item_id, recipe_id)
-            REFERENCES recipes (game_token, item_id, recipe_id)
+        PRIMARY KEY (game_token, recipe_id, attrib_id),
+        FOREIGN KEY (game_token, recipe_id)
+            REFERENCES recipes (game_token, id)
             ON DELETE CASCADE
             DEFERRABLE INITIALLY DEFERRED,
         FOREIGN KEY (game_token, attrib_id)

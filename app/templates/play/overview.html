@@ -128,7 +128,7 @@
                 {% for item in active.items %}
                     // Make AJAX request for item quantity
                     $.get('/item/progress/{{ item.id }}', function(data) {
-                        $('#item-{{ item.id }}-quantity').text(data.quantity);
+                        $('#item-{{ item.id }}-quantity').text(data.quantity_str);
                     });
                 {% endfor %}
             }

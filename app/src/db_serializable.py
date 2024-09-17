@@ -54,6 +54,9 @@ class MutableNamespace(SimpleNamespace):
         """Allow setting attributes dynamically"""
         object.__setattr__(self, key, value)
 
+    def __bool__(self):
+        return len(self.__dict__) > 0
+
     def setdefault(self, key, default):
         """Get the value of an attribute after setting default if needed."""
         if not hasattr(self, key):

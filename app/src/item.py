@@ -24,6 +24,17 @@ tables_to_create = {
         FOREIGN KEY (game_token, progress_id)
             REFERENCES progress (game_token, id)
         """,
+    'recipes': f"""
+        {coldef('id')},
+        item_id integer NOT NULL,
+        rate_amount float(4) NOT NULL,
+        rate_duration float(4) NOT NULL,
+        instant boolean NOT NULL,
+        FOREIGN KEY (game_token, item_id)
+            REFERENCES items (game_token, id)
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED
+        """,
 }
 logger = logging.getLogger(__name__)
 
@@ -36,21 +47,21 @@ class Source:
 
     def to_json(self):
         return {
-            'source_id': self.item.id,
+            'item_id': self.item.id,
             'preserve': self.preserve,
             'q_required': self.q_required}
 
     @classmethod
     def from_json(cls, data):
         instance = cls()
-        instance.item = Item(int(data.get('source_id', 0)))
+        instance.item = Item(int(data.get('item_id', 0)))
         instance.preserve = data.get('preserve', False)
         instance.q_required = data.get('q_required', 1.0)
         return instance
 
-class Recipe(DbSerializable):
+class Recipe(Identifiable):
     def __init__(self, new_id=0, item=None):
-        self.id = int(new_id)  # only unique for a particular item
+        super().__init__(new_id)
         self.item_produced = item
         self.rate_amount = 1.0  # quantity produced per batch
         self.rate_duration = 3.0  # seconds for a batch
@@ -60,7 +71,7 @@ class Recipe(DbSerializable):
 
     def to_json(self):
         return {
-            'recipe_id': self.id,
+            'id': self.id,
             'item_id': self.item_produced.id if self.item_produced else 0,
             'rate_amount': self.rate_amount,
             'rate_duration': self.rate_duration,
@@ -73,7 +84,7 @@ class Recipe(DbSerializable):
     @classmethod
     def from_json(cls, data, item_produced=None):
         instance = cls()
-        instance.id = data.get('recipe_id', 0)
+        instance.id = data.get('id', 0)
         instance.item_produced = (
             item_produced if item_produced
             else Item(int(data.get('item_id', 0))))
@@ -90,42 +101,32 @@ class Recipe(DbSerializable):
 
     def json_to_db(self, doc):
         logger.debug("json_to_db() for id=%d", self.id)
-        self.insert_single(
-            "recipes",
-            "game_token, item_id, recipe_id,"
-            " rate_amount, rate_duration, instant", (
-                g.game_token, doc['item_id'], self.id,
-                doc['rate_amount'],
-                doc['rate_duration'],
-                doc['instant']
-                ))
+        super().json_to_db(doc)
         if doc['sources']:
             logger.debug("sources: %s", doc['sources'])
             values = []
             for source in doc['sources']:
                 values.append((
-                    g.game_token, doc['item_id'], self.id,
-                    source['source_id'],
+                    g.game_token, self.id,
+                    source['item_id'],
                     source['q_required'],
                     source['preserve']
                     ))
             self.insert_multiple(
                 "recipe_sources",
-                "game_token, item_id, recipe_id,"
-                " source_id, q_required, preserve",
+                "game_token, recipe_id, item_id, q_required, preserve",
                 values)
         if doc['attribs']:
             logger.debug("attribs: %s", doc['attribs'])
             values = []
             for attrib_id, attrib_val in doc['attribs'].items():
                 values.append((
-                    g.game_token, doc['item_id'], self.id,
+                    g.game_token, self.id,
                     attrib_id, attrib_val
                     ))
             self.insert_multiple(
                 "recipe_attribs",
-                "game_token, item_id, recipe_id,"
-                " attrib_id, value",
+                "game_token, recipe_id, attrib_id, value",
                 values)
 
 class Item(Identifiable, Pile):
@@ -261,29 +262,28 @@ class Item(Identifiable, Pile):
             FROM {tables[0]}
             LEFT JOIN {tables[1]}
                 ON {tables[1]}.game_token = {tables[0]}.game_token
-                AND {tables[1]}.item_id = {tables[0]}.item_id
-                AND {tables[1]}.recipe_id = {tables[0]}.recipe_id
+                AND {tables[1]}.recipe_id = {tables[0]}.id
             """
+        tables = ['recipes', 'recipe_sources']
         item_conditions = [
             "WHERE {tables[0]}.game_token = %s"]
         values = [g.game_token]
         if id_to_get:
             if get_by_source:
                 query = re.sub(r'LEFT JOIN', 'INNER JOIN', query)
-                item_conditions.insert(0, "AND {tables[1]}.source_id = %s")
+                item_conditions.insert(0, "AND {tables[1]}.item_id = %s")
                 values.insert(0, id_to_get);
             else:
                 item_conditions.append("AND {tables[0]}.item_id = %s")
                 values.append(id_to_get);
         query += "\n".join(item_conditions)
-        sources_data = cls.select_tables(
-            query, values, ['recipes', 'recipe_sources'])
+        sources_data = cls.select_tables(query, values, tables)
         item_recipes_data = {}
         for row_recipe, row_recipe_source in sources_data:
             recipes_data = item_recipes_data.setdefault(row_recipe.item_id, {})
             recipe_data = recipes_data.setdefault(
-                row_recipe.recipe_id, row_recipe)
-            if row_recipe_source.source_id:
+                row_recipe.id, row_recipe)
+            if row_recipe_source.item_id:
                 recipe_data.setdefault('sources', []).append(row_recipe_source)
         attribs_data = []
         if get_by_source:
@@ -293,9 +293,9 @@ class Item(Identifiable, Pile):
             FROM {tables[0]}
             INNER JOIN {tables[1]}
                 ON {tables[1]}.game_token = {tables[0]}.game_token
-                AND {tables[1]}.item_id = {tables[0]}.item_id
-                AND {tables[1]}.recipe_id = {tables[0]}.recipe_id
+                AND {tables[1]}.recipe_id = {tables[0]}.id
             """
+        tables = ['recipes', 'recipe_attribs']
         item_conditions = [
             "WHERE {tables[0]}.game_token = %s"]
         values = [g.game_token]
@@ -303,13 +303,12 @@ class Item(Identifiable, Pile):
             item_conditions.append("AND {tables[0]}.item_id = %s")
             values.append(id_to_get);
         query += "\n".join(item_conditions)
-        attribs_data = cls.select_tables(
-            query, values, ['recipes', 'recipe_attribs'])
+        attribs_data = cls.select_tables(query, values, tables)
         for row_recipe, row_recipe_attrib in attribs_data:
             recipes_data = item_recipes_data.setdefault(
                 row_recipe.item_id, {})
             recipe_data = recipes_data.setdefault(
-                row_recipe.recipe_id, row_recipe)
+                row_recipe.id, row_recipe)
             if row_recipe_attrib.attrib_id:
                 recipe_data.setdefault('attribs', {}
                     )[row_recipe_attrib.attrib_id] = row_recipe_attrib.value
@@ -491,12 +490,19 @@ class Item(Identifiable, Pile):
             req = RequestHelper('form')
             self.toplevel = req.get_bool('top_level')
             self.masked = req.get_bool('masked')
-            self.q_limit = req.get_float('item_limit')
-            self.quantity = req.get_float('item_quantity')
+            old = Item.load_complete_object(self.id)
+            self.q_limit = req.set_num_if_changed(
+                req.get_str('item_limit'), old.q_limit)
+            self.quantity = req.set_num_if_changed(
+                req.get_str('item_quantity'), old.quantity)
             recipe_ids = req.get_list('recipe_id')
+            recipe_ids_from = req.get_list('recipe_id_from')
             self.recipes = []
-            for recipe_id in recipe_ids:
-                recipe = Recipe(int(recipe_id), self)
+            for recipe_id, recipe_id_from in zip(recipe_ids, recipe_ids_from):
+                if recipe_id_from == 'from_db':
+                    recipe = Recipe(int(recipe_id), self)
+                else:
+                    recipe = Recipe(0, self)  # generate from db
                 self.recipes.append(recipe)
                 recipe.rate_amount = req.get_float(
                     f'recipe{recipe_id}_rate_amount')
@@ -509,7 +515,7 @@ class Item(Identifiable, Pile):
                 logger.debug(f"Source IDs: %s", source_ids)
                 for source_id in source_ids:
                     source = Source.from_json({
-                        'source_id': int(source_id),
+                        'item_id': int(source_id),
                         'q_required': req.get_float(
                             f'recipe{recipe_id}_source{source_id}_qtyreq',
                             0.0),

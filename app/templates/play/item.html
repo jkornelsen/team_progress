@@ -120,7 +120,7 @@
                     {% endif %}
                     <div class="button-column" id="drop-container">
                         <button id="drop-btn" class="go-button">[D]rop</button>
-                        <input type="number" step="any" id="quantity_to_drop" size="5" value="1">
+                        <input type="text" id="quantity_to_drop" size="10" value="1">
                     </div>
                 {% endif %}
                 {% set has = namespace(chars=False) %}
@@ -157,7 +157,7 @@
                 {% else %}
                     <div class="button-column" id="move_to_general-container">
                         <button id="move_to_general-btn" class="go-button">Move to [G]eneral Storage</button>
-                        <input type="number" step="any" id="quantity_to_move" size="5" value="1">
+                        <input type="text" id="quantity_to_move" size="10" value="1">
                     </div>
                 {% endif %}
                 <div id="show_all_buttons-container">
@@ -186,7 +186,7 @@
                     {% for attrib_of in current.attribs.values() %}
                         <li>{{ attrib_of.attrib.name }}
                             {% if attrib_of.val != 1 %}
-                                {{ attrib_of.val | dec2str }}
+                                {{ attrib_of.val | formatNum }}
                             {% endif %}
                         </li>
                     {% else %}
@@ -216,7 +216,7 @@
                     {% set rowspan = recipe.sources|length + recipe.attribs|length + 1 %}
                     <td rowspan="{{ rowspan }}">
                         {% if recipe.instant %}
-                        <input type="number" step="any" class="quantity_to_gain" id="quantity_to_gain_{{ recipe.id }}" size="10" value="{{ session['quantity_to_gain'] if session['quantity_to_gain'] else 1 }}">
+                        <input type="text" class="quantity_to_gain" id="quantity_to_gain_{{ recipe.id }}" size="10" value="{{ session['quantity_to_gain'] if session['quantity_to_gain'] else 1 }}">
                         <button type="button" data-recipe-id="{{ recipe.id }}" data-rate-amount="{{ recipe.rate_amount }}" class="gain-btn go-button" id="gain-btn_{{ recipe.id }}">Gain</button>
                         {% else %}
                         <button type="button" class="start-stop-btn go-button" id="start-stop-btn_{{ recipe.id }}" data-recipe-id="{{ recipe.id }}">Start</button>
@@ -224,11 +224,11 @@
                     </td>
                     <td rowspan="{{ rowspan }}">
                         <span class="rate-amount" id="rate-amount_{{ recipe.id }}">
-                            {% if recipe.rate_amount %}{{ recipe.rate_amount | dec2str }}
+                            {% if recipe.rate_amount %}{{ recipe.rate_amount | formatNum }}
                             {% else %}<span style="font-size: 2em" title="(trash can icon) does not produce the current item">&#x1F5D1;</span>{% endif %}
                         </span>
                         {% if not recipe.instant %}
-                        {% if recipe.rate_amount %}per {% endif %}<span class="rate-duration" id="rate-duration_{{ recipe.id }}">{{ recipe.rate_duration | dec2str }}</span>s
+                        {% if recipe.rate_amount %}per {% endif %}<span class="rate-duration" id="rate-duration_{{ recipe.id }}">{{ recipe.rate_duration | formatNum }}</span>s
                         {% endif %}
                     </td>
                     <td style="padding: 0; margin: 0;"></td><!-- so we don't need to repeat recipe.sources code for this row only. This is also why rowspan is length + 1. -->
@@ -255,14 +255,14 @@
                         {% endif %}
                         <td>
                             {% if source.preserve %}
-                                ({{ source.q_required | dec2str }})
+                                ({{ source.q_required | formatNum }})
                             {% else %}
-                                {{ source.q_required | dec2str }}
+                                {{ source.q_required | formatNum }}
                             {% endif %}
                         </td>
                         <td id="recipe-{{ recipe.id }}-source-{{ item.id }}-quantity">
                         {% if source.pile %}
-                            {{ source.pile.quantity | dec2str }}
+                            {{ source.pile.quantity | formatNum }}
                         {% else %}
                             <center>&mdash;</center>
                         {% endif %}
@@ -297,11 +297,11 @@
                     <tr>
                         <td>{{ req.attrib.name }}</td>
                         <td>
-                            ({{ req.val | dec2str }})
+                            ({{ req.val | formatNum }})
                         </td>
                         {% if req.entity %}
                             {% set entity = req.entity %}
-                            <td>{{ entity.attribs[req.attrib.id].val | dec2str }}</td>
+                            <td>{{ entity.attribs[req.attrib.id].val | formatNum }}</td>
                             {% if entity.__class__.__name__ == 'Character' %}
                                 {% set link = url_for('play_char', char_id=entity.id) %}
                             {% elif entity.__class__.__name__ == 'Item' %}
@@ -361,7 +361,7 @@
                             <span>[{{ letter }}]</span>
                             <a href="{{ link }}">{{ used_for.item.name }}</a>
                         </td>
-                        <td>{{ used_for.q_required | dec2str }}</td>
+                        <td>{{ used_for.q_required | formatNum }}</td>
                     </tr>
                     {% endfor %}
                 </table>
@@ -377,7 +377,7 @@
             function updateQuantity(data) {
                 // Main item quantity
                 $('#quantity-{{ current.id }}').text(
-                    data.quantity
+                    data.quantity_str
                     {% if current.q_limit != 0 %} + " / " + {{ current.q_limit }}{% endif %}
                 );
                 updateStorageProgress({
@@ -391,7 +391,7 @@
                     {% for source in recipe.sources %}
                         url = getItemProgressUrl({{ source.item.id }})
                         $.get(url, function(data) {
-                            $('#recipe-{{ recipe.id }}-source-{{ source.item.id }}-quantity').text(data.quantity);
+                            $('#recipe-{{ recipe.id }}-source-{{ source.item.id }}-quantity').text(data.quantity_str);
                         });
                     {% endfor %}
                 {% endfor %}

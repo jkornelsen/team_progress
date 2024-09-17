@@ -334,17 +334,19 @@ class Location(Identifiable):
             item_qtys = req.get_list('item_qty[]')
             item_posits = req.get_list('item_pos[]')
             self.items = {}
+            old = Location.load_complete_object(self.id)
             for item_id, item_qty, item_pos in zip(
                     item_ids, item_qtys, item_posits):
-                item = Item(int(item_id))
-                item_at = ItemAt(item)
-                item_at.quantity = int(item_qty)
+                item_at = ItemAt(Item(int(item_id)))
                 try:
                     item_at.position = tuple(
                         map(int, item_pos.split(',')))
                 except ValueError:
                     pass  # use default value
                 self.items[item_id] = item_at
+                old_item = old.items.get(item_id, None)
+                old_qty = old_item.quantity if old_item else 0
+                item_at.quantity = req.set_num_if_changed(item_qty, old_qty)
             self.to_db()
         elif req.has_key('delete_location'):
             try:

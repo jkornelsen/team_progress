@@ -5,7 +5,7 @@ import math
 import threading
 
 from .db_serializable import Identifiable, coldef
-from .utils import dec2str
+from .utils import format_num
 
 tables_to_create = {
     'progress': f"""
@@ -116,13 +116,13 @@ class Progress(Identifiable):
                             math.floor(source.pile.quantity / source.q_required))
                         if num_batches == 0:
                             self.report_failure(
-                                f"Requires {dec2str(f'{source.q_required}')} "
+                                f"Requires {format_num(f'{source.q_required}')} "
                                 f"{source.item.name}.")
                     elif source.pile.quantity < source.q_required:
                         stop_when_done = True
                         num_batches = 0
                         self.report_failure(
-                            f"Requires {dec2str(f'{source.q_required}')} "
+                            f"Requires {format_num(f'{source.q_required}')} "
                             f"{source.item.name}.")
             logger.debug("change_quantity(): num_batches=%d", num_batches)
             if num_batches > 0:
@@ -192,7 +192,7 @@ class Progress(Identifiable):
             req_qty = source.q_required
             if (req_qty > 0 and source.pile.quantity < req_qty):
                 self.report_failure(
-                    f"Requires {dec2str(f'{req_qty}')} {source.item.name}.")
+                    f"Requires {format_num(f'{req_qty}')} {source.item.name}.")
                 return False
         for req in self.recipe.attribs.values():
             if (req.val > 0 and req.entity is None):

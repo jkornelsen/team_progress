@@ -57,7 +57,7 @@
                 <select id="destination-select" class="select-box">
                     <option value="" data-distance="-1">(Select destination)</option>
                     {% for dest_id, dest in current.location.destinations.items() %}
-                        <option value="{{ dest_id }}" data-distance="{{ dest.distance | dec2str }}"
+                        <option value="{{ dest_id }}" data-distance="{{ dest.distance | formatNum }}"
                             {% if current.destination and current.destination.id == dest_id %}
                                 selected
                             {% endif %}
@@ -129,7 +129,7 @@
             </span>
             <span class="item-quantity" id="item-{{ item.id }}-quantity">
                 {% if not (owned.item.q_limit == 1 and owned.quantity == 1) %}
-                    {{ owned.quantity | dec2str }}
+                    {{ owned.quantity | formatNum }}
                 {% endif %}
             </span><br>
         {% endfor %}
@@ -142,7 +142,7 @@
         {% for attrib_of in current.attribs.values() %}
             <li>{{ attrib_of.attrib.name }}
                 {% if attrib_of.val != 1 %}
-                    {{ attrib_of.val | dec2str }}
+                    {{ attrib_of.val | formatNum }}
                 {% endif %}
             </li>
         {% endfor %}

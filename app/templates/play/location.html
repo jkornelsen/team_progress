@@ -97,7 +97,7 @@
             </span>
             <span class="item-quantity" id="item-{{ item.id }}-quantity">
                 {% if not (item_at.item.q_limit == 1 and item_at.quantity == 1) %}
-                    {{ item_at.quantity | dec2str }}
+                    {{ item_at.quantity | formatNum }}
                 {% endif %}
             </span>
             {% if has_grid %}
@@ -125,7 +125,7 @@
                 <span>[{{ letter }}]</span>
                 <a href="{{ link }}">{{ dest.loc.name }}</a>
             {% endif %}
-            — Distance {{ dest.distance | dec2str }}<br>
+            — Distance {{ dest.distance | formatNum }}<br>
         {% else %}
             <p>(None)</p>
         {% endfor %}
@@ -297,7 +297,7 @@
                 {% for item_at in current.items.values() %}
                     // Make AJAX request for item quantity
                     $.get('/item/progress_data/{{ item_at.item.id }}', function(data) {
-                        $('#item-{{ item_at.item.id }}-quantity').text(data.quantity);
+                        $('#item-{{ item_at.item.id }}-quantity').text(data.quantity_str);
                     });
                 {% endfor %}
             }

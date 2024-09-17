@@ -18,7 +18,7 @@ from .event import Event
 from .location import Location, ItemAt
 from .overall import Overall
 from .progress import Progress
-from .utils import RequestHelper
+from .utils import RequestHelper, format_num
 
 logger = logging.getLogger(__name__)
 
@@ -41,12 +41,12 @@ def set_routes(app):
             return error_page(e)
         req = RequestHelper('form')
         if req.has_key('make_duplicate'):
-            new_attrib = attrib
-            new_attrib.id = 0
-            new_attrib.name = increment_name(attrib.name)
-            new_attrib.to_db()  # Changes the ID
+            dup_attrib = attrib
+            dup_attrib.id = 0
+            dup_attrib.name = increment_name(new_attrib.name)
+            dup_attrib.to_db()  # Changes the ID
             return redirect(
-                url_for('configure_attrib', attrib_id=new_attrib.id,
+                url_for('configure_attrib', attrib_id=dup_attrib.id,
                 duplicated=True))
         return back_to_referrer()
 
@@ -64,19 +64,19 @@ def set_routes(app):
                 game_data=g.game_data
                 )
         try:
-            char = Character.load_complete_object(char_id)
-            char.configure_by_form()
+            new_char = Character(char_id)
+            new_char.configure_by_form()
         except DeletionError as e:
             return error_page(e)
         req = RequestHelper('form')
         if req.has_key('make_duplicate'):
-            new_char = char
-            new_char.id = 0
-            new_char.name = increment_name(char.name)
-            new_char.progress = Progress(container=new_char)
-            new_char.to_db()  # Changes the ID
+            dup_char = new_char
+            dup_char.id = 0
+            dup_char.name = increment_name(new_char.name)
+            dup_char.progress = Progress(container=dup_char)
+            dup_char.to_db()  # Changes the ID
             return redirect(
-                url_for('configure_char', char_id=new_char.id,
+                url_for('configure_char', char_id=dup_char.id,
                 duplicated=True))
         return back_to_referrer()
 
@@ -93,18 +93,18 @@ def set_routes(app):
                 game_data=g.game_data
                 )
         try:
-            event = Event.load_complete_object(event_id)
-            event.configure_by_form()
+            new_event = Event(event_id)
+            new_event.configure_by_form()
         except DeletionError as e:
             return error_page(e)
         req = RequestHelper('form')
         if req.has_key('make_duplicate'):
-            new_event = event
-            new_event.id = 0
-            new_event.name = increment_name(event.name)
-            new_event.to_db()  # Changes the ID
+            dup_event = new_event
+            dup_event.id = 0
+            dup_event.name = increment_name(new_event.name)
+            dup_event.to_db()  # Changes the ID
             return redirect(
-                url_for('configure_event', event_id=new_event.id,
+                url_for('configure_event', event_id=dup_event.id,
                 duplicated=True))
         return back_to_referrer()
 
@@ -122,19 +122,19 @@ def set_routes(app):
                 game_data=g.game_data
                 )
         try:
-            item = Item.load_complete_object(item_id)
-            item.configure_by_form()
+            new_item = Item(item_id)
+            new_item.configure_by_form()
         except DeletionError as e:
             return error_page(e)
         req = RequestHelper('form')
         if req.has_key('make_duplicate'):
-            new_item = item
-            new_item.id = 0
-            new_item.name = increment_name(item.name)
-            new_item.progress = Progress(container=new_item)
-            new_item.to_db()  # Changes the ID
+            dup_item = item
+            dup_item.id = 0
+            dup_item.name = increment_name(new_item.name)
+            dup_item.progress = Progress(container=dup_item)
+            dup_item.to_db()  # Changes the ID
             return redirect(
-                url_for('configure_item', item_id=new_item.id,
+                url_for('configure_item', item_id=dup_item.id,
                 duplicated=True))
         return back_to_referrer()
 
@@ -151,19 +151,19 @@ def set_routes(app):
                 game_data=g.game_data
                 )
         try:
-            loc = Location.load_complete_object(loc_id)
-            loc.configure_by_form()
+            new_loc = Location(loc_id)
+            new_loc.configure_by_form()
         except DeletionError as e:
             return error_page(e)
         req = RequestHelper('form')
         if req.has_key('make_duplicate'):
-            new_loc = loc
-            new_loc.id = 0
-            new_loc.name = increment_name(loc.name)
-            new_loc.progress = Progress(container=new_loc)
-            new_loc.to_db()  # Changes the ID
+            dup_loc = new_loc
+            dup_loc.id = 0
+            dup_loc.name = increment_name(new_loc.name)
+            dup_loc.progress = Progress(container=dup_loc)
+            dup_loc.to_db()  # Changes the ID
             return redirect(
-                url_for('configure_location', loc_id=new_loc.id,
+                url_for('configure_location', loc_id=dup_loc.id,
                 duplicated=True))
         return back_to_referrer()
 
@@ -421,6 +421,7 @@ def set_routes(app):
             'is_ongoing': progress.is_ongoing,
             'recipe_id': progress.recipe.id,
             'quantity': pile.quantity,
+            'quantity_str': format_num(pile.quantity),
             'elapsed_time': progress.calculate_elapsed_time()
             })
 
@@ -495,7 +496,6 @@ def set_routes(app):
         req = RequestHelper('form')
         num_batches = req.get_int('quantity', 0)
         session['quantity_to_gain'] = num_batches or 1
-        print(f"Updated quantity_to_gain: {session['quantity_to_gain']}") 
         if not char_id and not loc_id:
             char_id = session.get('last_char_id', '')
             loc_id = session.get('last_loc_id', '')
