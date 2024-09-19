@@ -28,8 +28,7 @@ the driving forces are narrative and imagination along with chance.
 For example, set up a factory based on idle/incremental gameplay,
 and employees from a rival company could invade and steal.
 
-If you're not sure where to start,
-try the pre-built scenario "Bacon for Dinner."
+A good place to start is the pre-built scenario "Bacon for Dinner."
 
 Setup can be complex,
 so even if you're playing as a Gamemaster,
@@ -41,10 +40,9 @@ This was conceived for groups,
 although there is a reason idle games are typically single player.
 Multiplayer requires a lot to be handled by the server.
 So, a good way to play this game is to download the project
-along with PostgreSQL and Flask,
-then run them on a home network to play with friends or family.
+and run on a home network to play with friends or family.
+To see what is required, see Instructions.txt.
 
 There are some websites such as pythonAnywhere that can host
 this type of game for free,
 so we'll see if it can handle the load.
-

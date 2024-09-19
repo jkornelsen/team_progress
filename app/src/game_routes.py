@@ -43,7 +43,7 @@ def set_routes(app):
         if req.has_key('make_duplicate'):
             dup_attrib = attrib
             dup_attrib.id = 0
-            dup_attrib.name = increment_name(new_attrib.name)
+            dup_attrib.name = increment_name(attrib.name)
             dup_attrib.to_db()  # Changes the ID
             return redirect(
                 url_for('configure_attrib', attrib_id=dup_attrib.id,

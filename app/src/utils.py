@@ -89,6 +89,15 @@ class RequestHelper:
             return old_unformatted  # preserve precision
         return unformat_num(new_formatted)
 
+def get_default(data, key, default):
+    if not data:
+        return default
+    if isinstance(data, dict):
+        value = data.get(key, default)
+    else:
+        value = getattr(data, key, default)
+    return value if value is not None else default
+
 SUFFIXES = [
     '', 'k', 'm', 'b', 't', 'q', 'Q', 's', 'S', 'o', 'n', 'd',
     'u', 'U', 'v', 'V', 'w', 'W', 'x', 'X', 'y', 'Y', 'z', 'Z']

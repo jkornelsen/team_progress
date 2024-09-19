@@ -5,7 +5,7 @@ import math
 import threading
 
 from .db_serializable import Identifiable, coldef
-from .utils import format_num
+from .utils import get_default, format_num
 
 tables_to_create = {
     'progress': f"""
@@ -50,6 +50,10 @@ class Progress(Identifiable):
         return 0.0
 
     def to_json(self):
+        if ((not self.start_time) or 
+                (not self.is_ongoing and self.batches_processed == 0)):
+            # No meaningful progress that needs to be stored
+            return {}
         return {
             'id': self.id,
             'item_id': self.pile.item.id if self.pile else 0,
@@ -64,15 +68,15 @@ class Progress(Identifiable):
     def from_json(cls, data, container=None):
         if not isinstance(data, dict):
             data = vars(data)
-        instance = cls(int(data.get('id', 0)), container=container)
+        instance = cls(get_default(data, 'id', 0), container=container)
         from .item import Item, Recipe
         if container:
-            instance.pile.item = Item(data.get('item_id', 0))
-        instance.recipe = Recipe(data.get('recipe_id', 0))
+            instance.pile.item = Item(get_default(data, 'item_id', 0))
+        instance.recipe = Recipe(get_default(data, 'recipe_id', 0))
         instance.start_time = data.get('start_time')
         instance.stop_time = data.get('stop_time')
-        instance.batches_processed = data.get('batches_processed', 0)
-        instance.is_ongoing = data.get('is_ongoing', False)
+        instance.batches_processed = get_default(data, 'batches_processed', 0)
+        instance.is_ongoing = get_default(data, 'is_ongoing', False)
         return instance
 
     @classmethod

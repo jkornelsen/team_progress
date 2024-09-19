@@ -14,25 +14,26 @@
         <select name="sort_by" id="sort_by">
             <option value="filename" {% if sort_by == 'filename' %}selected{% endif %}>Gameplay Concepts</option>
             <option value="filesize" {% if sort_by == 'filesize' %}selected{% endif %}>Size</option>
-            <option value="popularity" {% if sort_by == 'popularity' %}selected{% endif %}>Most Played</option>
             <option value="title" {% if sort_by == 'title' %}selected{% endif %}>Title</option>
+            <option value="popularity" {% if sort_by == 'popularity' %}selected{% endif %}>Most Played</option>
         </select>
         <button type="submit">Sort</button>
         </center>
     </form>
     <table>
     {% for scenario in scenarios %}
-        <tr><td>
+        <tr style="border-top: 1px solid #888;"></tr>
+        <tr><td valign="top">
             <form method="POST" action="{{ url_for('browse_scenarios') }}">
                 <button type="submit">Load Scenario</button>
                 <input type="hidden" name="scenario_file" value="{{ scenario.filename }}">
                 <input type="hidden" name="scenario_title" value="{{ scenario.title }}">
             </form>
-        </td><td>
+        </td><td valign="top">
             <span style="font-size: 1.3em; font-weight: bold">{{ scenario.title }}</h2>
         </td>
-        <td>
-            <p>{{ scenario.description }}</p>
+        <td valign="top">
+            {{ scenario.description|htmlify }}
         </td></tr>
     {% endfor %}
     </table>

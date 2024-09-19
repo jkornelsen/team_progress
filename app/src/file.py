@@ -118,6 +118,7 @@ def set_routes(app):
                 scenarios = sorted(scenarios, key=lambda x: x['filesize'], reverse=True)
             elif sort_by == 'popularity':
                 scenarios = sorted(scenarios, key=lambda x: x['popularity'], reverse=True)
+            from flask import Response
             return render_template(
                 'configure/scenarios.html',
                 scenarios=scenarios,
@@ -132,7 +133,8 @@ def set_routes(app):
                 logger.exception("")
                 return render_template(
                     'error.html',
-                    message=f"Could not load \"{scenario_title}\".")
+                    message=f"Could not load \"{scenario_title}\".",
+                    details=str(ex))
             DbSerializable.execute_change("""
                 INSERT INTO scenario_log (filename, times_loaded)
                 VALUES (%s, 1)  -- Start with 1 on the first load
@@ -150,8 +152,12 @@ def set_routes(app):
         session['file_message'] = 'Starting game with default setup.'
         return redirect(url_for('configure_index'))
 
+    @app.route('/test')
+    def hello_world():
+        return 'Here, with Response it works well: höne'
+
 def load_data_from_file(filepath):
-    with open(filepath, 'r') as infile:
+    with open(filepath, 'r', encoding='utf-8') as infile:
         data = json.load(infile)
     g.game_data.from_json(data)
     GameData.clear_db_for_token()
@@ -169,7 +175,7 @@ def load_data_from_file(filepath):
         set_autocommit(True)
 
 def load_scenario_metadata(filepath):
-    with open(filepath, 'r') as infile:
+    with open(filepath, 'r', encoding='utf-8') as infile:
         data = json.load(infile)
     overall = Overall.from_json(data['overall'])
     return {

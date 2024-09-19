@@ -27,7 +27,7 @@
     {% endif %}
         {{ current.title }}
         </h1>
-    <p class="info">{{ current.description }}</p>
+    <p class="info">{{ current.description|htmlify }}</p>
 
     <!-- Top-level Events -->
     {% if active.events %}

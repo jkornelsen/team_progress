@@ -174,7 +174,7 @@
         {% if current.description %}
         <tr>
             <td>
-                <p>{{ current.description }}</p>
+                <p>{{ current.description|htmlify }}</p>
             </td>
         </tr>
         {% endif %}

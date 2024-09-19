@@ -192,7 +192,7 @@ class Item(Identifiable, Pile):
     def json_to_db(self, doc):
         logger.debug("json_to_db() for id=%d", self.id)
         self.progress.json_to_db(doc['progress'])
-        doc['progress_id'] = self.progress.id
+        doc['progress_id'] = None if self.progress.id == 0 else self.progress.id
         super().json_to_db(doc)
         for rel_table in ('item_attribs', 'recipes'):
             self.execute_change(f"""

@@ -14,9 +14,11 @@
         <label for="character-name">Name:</label>
         <input type="text" id="character-name" name="char_name" value="{{ current.name }}" required><br>
         <label for="character-description">Description:</label>
-        <textarea id="character-description" name="char_description" rows="4" cols="50">{{ current.description }}</textarea><br>
+        <textarea id="character-description" name="char_description" rows="6" cols="50">{{ current.description }}</textarea><br>
+        <!--
         <input type="checkbox" id="masked" name="masked" {% if current.masked %}checked{% endif %}>
         <label for="mask">Don't reveal until met</label><br>
+        -->
         <input type="checkbox" id="top_level" name="top_level" {% if current.toplevel %}checked{% endif %}>
         <label for="top_level">Show in Overview</label><br>
 

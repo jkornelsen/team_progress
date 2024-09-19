@@ -94,8 +94,9 @@ class Location(Identifiable):
         self.masked = False
         self.destinations = {}  # Destination objects keyed by loc id
         self.items = {}  # ItemAt objects keyed by item id
-        self.progress = None  # producing local items? Maybe char would do that.
-        self.pile = None  # for Progress
+        # producing local items? Maybe char would do that.
+        self.progress = Progress(container=self)
+        self.pile = Pile()  # for Progress
         self.grid = Grid()
 
     def to_json(self):
@@ -146,7 +147,7 @@ class Location(Identifiable):
     def json_to_db(self, doc):
         logger.debug("json_to_db()")
         self.progress.json_to_db(doc['progress'])
-        doc['progress_id'] = self.progress.id
+        doc['progress_id'] = None if self.progress.id == 0 else self.progress.id
         super().json_to_db(doc)
         for rel_table in ('loc_destinations', 'loc_items'):
             self.execute_change(f"""

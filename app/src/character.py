@@ -63,8 +63,8 @@ class Character(Identifiable):
         self.location = None  # Location object where char is
         self.position = (0, 0)  # grid coordinates: top, left
         self.destination = None  # Location object to travel to
-        self.progress = None  # travel or producing items
-        self.pile = None  # for Progress
+        self.progress = Progress(container=self)  # travel or producing items
+        self.pile = Pile()  # for Progress
 
     def to_json(self):
         return {
@@ -113,7 +113,6 @@ class Character(Identifiable):
         instance.location = Location.get_by_id(
             int(data['location_id'])) if data.get('location_id', 0) else None
         instance.position = data.get('position', (0, 0))
-        instance.pile = Pile()
         instance.pile.quantity = data.get('quantity', 0.0)
         instance.progress = Progress.from_json(
             data.get('progress', {}), instance)
@@ -124,7 +123,7 @@ class Character(Identifiable):
     def json_to_db(self, doc):
         logger.debug("json_to_db()")
         self.progress.json_to_db(doc['progress'])
-        doc['progress_id'] = self.progress.id
+        doc['progress_id'] = None if self.progress.id == 0 else self.progress.id
         super().json_to_db(doc)
         for rel_table in ('char_attribs', 'char_items'):
             self.execute_change(f"""

@@ -13,7 +13,7 @@
         <label for="location-name">Name:</label>
         <input type="text" id="location-name" name="location_name" value="{{ current.name }}" required><br>
         <label for="location-description">Description:</label>
-        <textarea id="location-description" name="location_description" rows="4" cols="50">{{ current.description }}</textarea><br>
+        <textarea id="location-description" name="location_description" rows="6" cols="50">{{ current.description }}</textarea><br>
         <input type="checkbox" id="masked" name="masked" {% if current.masked %}checked{% endif %}>
         <label for="mask">Don't reveal until visited</label><br>
         <input type="checkbox" id="top_level" name="top_level" {% if current.toplevel %}checked{% endif %}>

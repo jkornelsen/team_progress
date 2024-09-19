@@ -4,12 +4,23 @@ import psycopg2
 
 logger = logging.getLogger(__name__)
 
+try:
+    from sensitive import DB_PASSWORD
+except ImportError:
+    # A default PostgreSQL installation uses 'trust' authentication,
+    # which does not require a password.
+    # This setup is suitable for use on a local LAN. 
+    # For external web deployments, update postgres_data/pg_hba.conf to use
+    # password-based authentication and edit sensitive.py to set a real password.
+    logger.warning("Not using a database password.")
+    DB_PASSWORD = 'no password needed with trust'
+
 def get_db():
     if 'db' not in g:
         g.db = psycopg2.connect(
-            dbname='postgres',
+            dbname='app',
             user='postgres',
-            password='admin',
+            password=DB_PASSWORD,
             host='localhost',
             port='5432'
         )

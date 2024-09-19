@@ -21,7 +21,7 @@
         <label for="event-name">Name:</label>
         <input type="text" id="event-name" name="event_name" value="{{ current.name }}" required><br>
         <label for="event-description" >Description:</label>
-        <textarea id="event-description" name="event_description" rows="4" cols="50">{{ current.description }}</textarea><br>
+        <textarea id="event-description" name="event_description" rows="6" cols="50">{{ current.description }}</textarea><br>
         <input type="checkbox" id="top_level" name="top_level" {% if current.toplevel %}checked{% endif %}>
         <label for="top_level">Show in Overview</label><br>
         <div id="outcome-type-container">

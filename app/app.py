@@ -1,3 +1,4 @@
+import bleach
 from datetime import timedelta
 from flask import (
     Flask,
@@ -7,12 +8,14 @@ from flask import (
     request,
     session,
     url_for
-)
+    )
 from flask_caching import Cache
 from inspect import signature
+from markupsafe import Markup
 import logging
 import os
 import random
+import re
 import string
 import sys
 import uuid
@@ -147,7 +150,32 @@ def inject_username():
 def formatNum_filter(value):
     return format_num(value)
 
+def htmlify_filter(text):
+    text = re.sub(r'<c\s*=', r'<font color=', text)
+    text = re.sub(r'</c\s*>', r'</font>', text)
+    tags = set('font')
+    attrs = {'font': ['color']}
+    cleaned_description = bleach.clean(
+        text,
+        tags={'b', 'i', 'font'},
+        attributes={
+            'a': ['href', 'title'],
+            'font': ['color']
+            }
+        )
+    def sanitize_href(match):
+        href = match.group(2).strip()
+        if not re.match(r'^/[a-zA-Z0-9/=?]*["\']?$', href):
+            return f'href="#"'
+        return match.group(0)
+    
+    text = re.sub(r'href\s*=\s*(["\']?)([^>]+)', sanitize_href, text)
+    text = re.sub(r'\r?\n', '<br>', text)
+    text = Markup(text)  # instead of adding |safe
+    return text
+
 app.jinja_env.filters['formatNum'] = formatNum_filter
+app.jinja_env.filters['htmlify'] = htmlify_filter
 app.jinja_env.globals['MAX_INT_32'] = 2**31 - 1
 
 @app.errorhandler(TypeError)

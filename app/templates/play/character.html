@@ -39,7 +39,7 @@
     </script>
     <h1>{{ current.name }}</h1>
     {% if current.description %}
-        <p>{{ current.description }}</p>
+        <p>{{ current.description|htmlify }}</p>
     {% endif %}
     {% if current.location %}
         <h2>Location</h2>

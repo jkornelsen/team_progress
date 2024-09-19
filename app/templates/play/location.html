@@ -46,7 +46,7 @@
     </script>
     <h1>{{ current.name }}</h1>
     {% if current.description %}
-        <p>{{ current.description }}</p>
+        <p>{{ current.description|htmlify }}</p>
     {% endif %}
 
     {% set width, height = current.grid.dimensions %}

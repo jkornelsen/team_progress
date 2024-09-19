@@ -211,7 +211,7 @@ class Identifiable(DbSerializable):
 
     def __init__(self, new_id=0):
         super().__init__()
-        if new_id == 'new' or new_id == '':
+        if new_id == 'new' or not new_id:
             self.id = 0
         else:
             self.id = int(new_id)
@@ -244,6 +244,8 @@ class Identifiable(DbSerializable):
         return []
 
     def json_to_db(self, doc):
+        if not doc:
+            return
         doc['game_token'] = g.game_token
         fields = db_type_fields(doc)
         placeholders = ['%s'] * len(fields)
