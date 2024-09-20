@@ -105,6 +105,8 @@ tables_to_create = {
         loc_id integer NOT NULL,
         dest_id integer NOT NULL,
         distance float(4) NOT NULL,
+        exit integer[2],
+        entrance integer[2],
         PRIMARY KEY (game_token, loc_id, dest_id),
         FOREIGN KEY (game_token, loc_id)
             REFERENCES locations (game_token, id)

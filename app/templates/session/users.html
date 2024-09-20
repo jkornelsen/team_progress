@@ -2,13 +2,27 @@
 
 {% block upper_left %}
     <div class="nav-container">
-        <a class="upper-left" href="{{ url_for('overview') }}">Continue Game</a>
+        <a class="upper-left" href="{{ url_for('overview') }}">[O]verview</a>
         <span class="separator">|</span>
-        <a href="{{ url_for('configure_index') }}">Setup</a>
+        <a href="{{ url_for('configure_index') }}">[M]ain Setup</a>
     </div>
 {% endblock %}
 
 {% block content %}
+    <script>
+        const linkForKey = {
+            'o': '{{ url_for('overview') }}',
+            'm': '{{ url_for('configure_index') }}',
+        };
+        document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('keypress', function (event) {
+                const key = event.key.toLowerCase();
+                if (linkForKey[key]) {
+                    window.location.href = linkForKey[key];
+                }
+            });
+        });
+    </script>
     <h1>Session Users</h1>
     {% set count = interactions | length %}
     {% if count > 1 %}
@@ -17,7 +31,7 @@
         <p class="info">There are no other players in your current game. To invite others, send them the <a href="{{ url_for('get_session_link') }}">session link</a>.</p>
     {% endif %}
     {% if interactions %}
-    <table>
+    <table class="spacious">
         <tr>
             <th>User ID</th>
             <th>Last Interaction</th>

@@ -48,12 +48,13 @@ def set_routes(app):
         return render_template(
             'configure/index.html',
             game_data=g.game_data,
-            file_message=file_message)
+            file_message=file_message
+            )
 
     @app.route('/save_to_file')
     def save_to_file():
         g.game_data.load_for_file()
-        data_to_save = g.game_data.to_json()
+        data_to_save = g.game_data.dict_for_json()
         filename = generate_filename(g.game_data.overall.title)
         with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
             filepath = temp_file.name
@@ -177,7 +178,7 @@ def load_data_from_file(filepath):
 def load_scenario_metadata(filepath):
     with open(filepath, 'r', encoding='utf-8') as infile:
         data = json.load(infile)
-    overall = Overall.from_json(data['overall'])
+    overall = Overall.from_data(data['overall'])
     return {
         'title': overall.title,
         'description': overall.description,

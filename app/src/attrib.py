@@ -25,7 +25,7 @@ class AttribOf:
         self.val = val
 
     @classmethod
-    def from_json(cls, data):
+    def from_data(cls, data):
         return cls(
             attrib_id=data.get('attrib_id', 0),
             val=data.get('value', 0.0))
@@ -48,7 +48,7 @@ class Attrib(Identifiable):
         self.name = ""
         self.description = ""
 
-    def to_json(self):
+    def dict_for_json(self):
         return {
             'id': self.id,
             'name': self.name,
@@ -56,21 +56,13 @@ class Attrib(Identifiable):
             }
 
     @classmethod
-    def from_json(cls, data):
+    def from_data(cls, data):
         if not isinstance(data, dict):
             data = vars(data)
         instance = cls(int(data.get('id', 0)))
         instance.name = data.get('name', "")
         instance.description = data.get('description', "")
         return instance
-
-    @classmethod
-    def list_from_json(cls, json_data):
-        logger.debug("list_from_json()")
-        instances = []
-        for attrib_data in json_data:
-            instances.append(cls.from_json(attrib_data))
-        return instances
 
     @classmethod
     def load_complete_object(cls, id_to_get):
@@ -85,7 +77,7 @@ class Attrib(Identifiable):
             WHERE game_token = %s
                 AND id = %s
             """, (g.game_token, id_to_get), fetch_all=False)
-        instance = cls.from_json(vars(row))
+        instance = cls.from_data(row)
         return instance
 
     @classmethod
@@ -98,7 +90,7 @@ class Attrib(Identifiable):
             """, (g.game_token,))
         # Create objects from data
         g.game_data.set_list(cls, 
-            [cls.from_json(vars(row)) for row in rows])
+            [cls.from_data(row) for row in rows])
         return g.game_data.get_list(cls)
 
     def configure_by_form(self):

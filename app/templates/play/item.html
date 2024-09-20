@@ -4,6 +4,8 @@
     <div class="nav-container">
         <a class="upper-left" href="{{ url_for('overview') }}">[O]verview</a>
         <span class="separator">|</span>
+        <a class="upper-left" href="{{ url_for('configure_index') }}">[M]ain Setup</a>
+        <span class="separator">|</span>
         <a class="upper-left" href="{{ url_for('configure_item', item_id=current.id) }}">Item S[e]tup</a>
     </div>
 {% endblock %}
@@ -13,6 +15,7 @@
     <script>
         const linkForKey = {
             'o': '{{ url_for('overview') }}',
+            'm': '{{ url_for('configure_index') }}',
             'e': '{{ url_for('configure_item', item_id=current.id) }}',
         };
         document.addEventListener('DOMContentLoaded', function () {
@@ -199,7 +202,7 @@
         {% if current.recipes %}
         <tr>
             <td>
-                <table class="inner-table" cellspacing="0" cellpadding="5">
+                <table class="inner-table spacious" cellspacing="0" cellpadding="5">
                     <tr>
                         <th>Batches</th>
                         <th>Rate</th>
@@ -264,7 +267,7 @@
                         {% if source.pile %}
                             {{ source.pile.quantity | formatNum }}
                         {% else %}
-                            <center>&mdash;</center>
+                            <div style="text-align: center">&mdash;</div>
                         {% endif %}
                         </td>
                         <td id="recipe-{{ recipe.id }}-source-{{ item.id }}-at">
@@ -288,7 +291,7 @@
                                 <a href="{{ link }}">{{ container.name }}</a><br>
                             {% endif %}
                         {% else %}
-                            <center>&mdash;</center>
+                            <div style="text-align: center">&mdash;</div>
                         {% endif %}
                         </td>
                     </tr>
@@ -345,7 +348,7 @@
         {% if outerscope.used_as_source %}
         <tr>
             <td>
-                <table class="inner-table" cellspacing="0" cellpadding="5">
+                <table class="inner-table spacious" cellspacing="0" cellpadding="5">
                     <tr>
                         <th>Used For</th>
                         <th>Required</th>

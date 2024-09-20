@@ -18,13 +18,14 @@ from .event import Event
 from .location import Location, ItemAt
 from .overall import Overall
 from .progress import Progress
-from .utils import RequestHelper, format_num
+from .utils import NumTup, RequestHelper, format_num
 
 logger = logging.getLogger(__name__)
 
 def set_routes(app):
     @app.route('/configure/attrib/<attrib_id>', methods=['GET', 'POST'])
     def configure_attrib(attrib_id):
+        logger.debug("-" * 80 + "\nconfigure_attrib(%s)", attrib_id)
         attrib = Attrib.load_complete_object(attrib_id)
         if request.method == 'GET':
             req = RequestHelper('args')
@@ -82,6 +83,7 @@ def set_routes(app):
 
     @app.route('/configure/event/<event_id>', methods=['GET', 'POST'])
     def configure_event(event_id):
+        logger.debug("-" * 80 + "\nconfigure_event(%s)", event_id)
         if request.method == 'GET':
             req = RequestHelper('args')
             if not req.has_key('duplicated'):
@@ -140,6 +142,7 @@ def set_routes(app):
 
     @app.route('/configure/location/<loc_id>',methods=['GET', 'POST'])
     def configure_location(loc_id):
+        logger.debug("-" * 80 + "\nconfigure_location(%s)", loc_id)
         if request.method == 'GET':
             req = RequestHelper('args')
             if not req.has_key('duplicated'):
@@ -169,6 +172,7 @@ def set_routes(app):
 
     @app.route('/configure/overall', methods=['GET', 'POST'])
     def configure_overall():
+        logger.debug("-" * 80 + "\nconfigure_overall")
         Overall.data_for_configure()
         if request.method == 'GET':
             session['referrer'] = request.referrer
@@ -192,7 +196,7 @@ def set_routes(app):
             'play/character.html',
             current=instance,
             game_data=g.game_data,
-            link_letters=LinkLetters('eost')
+            link_letters=LinkLetters('emost')
             )
 
     @app.route('/play/event/<int:event_id>', methods=['GET', 'POST'])
@@ -219,7 +223,7 @@ def set_routes(app):
                 'play/event.html',
                 current=instance,
                 game_data=g.game_data,
-                link_letters=LinkLetters('eor')
+                link_letters=LinkLetters('emor')
                 )
         instance.play_by_form()
         return render_template(
@@ -227,7 +231,7 @@ def set_routes(app):
             current=instance,
             game_data=g.game_data,
             outcome=instance.get_outcome(),
-            link_letters=LinkLetters('eor')
+            link_letters=LinkLetters('emor')
             )
 
     @app.route('/play/item/<int:item_id>/')
@@ -267,7 +271,7 @@ def set_routes(app):
             main_pile_type=main_pile_type,
             defaults=defaults,
             game_data=g.game_data,
-            link_letters=LinkLetters('cdelopq')
+            link_letters=LinkLetters('cdelmopq')
             )
 
     @app.route('/play/location/<int:loc_id>')
@@ -291,7 +295,7 @@ def set_routes(app):
             char_id=char_id,
             defaults=defaults,
             game_data=g.game_data,
-            link_letters=LinkLetters('eo')
+            link_letters=LinkLetters('emo')
             )
 
     @app.route('/overview')
@@ -301,7 +305,7 @@ def set_routes(app):
             'play/overview.html',
             current=active.overall,
             active=active,
-            link_letters=LinkLetters('e')
+            link_letters=LinkLetters('m')
             )
 
     @app.route('/char/progress/<int:char_id>')
@@ -647,11 +651,11 @@ def set_routes(app):
             return 'Character not found'
         session['default_move_char'] = char_id
         loc = Location.load_complete_object(char.location.id)
-        cur_x, cur_y = char.position
-        newpos = (
+        cur_x, cur_y = char.position.as_tuple()
+        newpos = NumTup((
             cur_x + x_change,
-            cur_y + y_change)
-        logger.debug("from %s to %s", char.position, newpos)
+            cur_y + y_change))
+        logger.debug("from (%s) to (%s)", char.position, newpos)
         if loc.grid.in_grid(newpos):
             char.position = newpos
             char.to_db()
@@ -661,7 +665,7 @@ def set_routes(app):
         else:
             char.position = loc.grid.default_pos
             char.to_db()
-        return jsonify({'position': char.position})
+        return jsonify({'position': char.position.as_tuple()})
 
 class LinkLetters:
     """Letters to add before a link for hotkeys."""

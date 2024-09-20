@@ -82,6 +82,10 @@ class RequestHelper:
         except ValueError:
             return default
 
+    def get_numtup(self, key, default=None, delim=","):
+        return NumTup.from_str(
+            self._get_from_request(key), default, delim)
+
     @staticmethod
     def set_num_if_changed(new_formatted, old_unformatted):
         old_formatted = format_num(old_unformatted)
@@ -89,14 +93,55 @@ class RequestHelper:
             return old_unformatted  # preserve precision
         return unformat_num(new_formatted)
 
-def get_default(data, key, default):
-    if not data:
-        return default
-    if isinstance(data, dict):
-        value = data.get(key, default)
-    else:
-        value = getattr(data, key, default)
-    return value if value is not None else default
+class NumTup:
+    """Manages strings such as '1,2' to store as tuples of
+    integers in python, and integer arrays in db.
+    """
+    def __init__(self, tup=None):
+        self.tup = tup if tup else ()
+        
+    @classmethod
+    def from_str(cls, str_val, default=None, delim=","):
+        instance = cls()
+        if isinstance(default, tuple):
+            instance.tup = default
+        if str_val:
+            try:
+                instance.tup = tuple(
+                    map(int, str_val.split(delim)))
+            except ValueError:
+                pass
+        return instance
+
+    @classmethod
+    def from_list(cls, the_list):
+        return cls(tuple(the_list))
+
+    def __str__(self):
+        return ",".join(map(str, self.tup))
+
+    def as_tuple(self):
+        return self.tup
+
+    def as_list(self):
+        """Suitable for insertion into database or json file."""
+        return list(self.tup)
+
+    def as_pg_array(self):
+        """Convert to a PostgreSQL array string, for example '{0, 0}'."""
+        return f"{{{', '.join(map(str, self.tup))}}}"
+
+    def __add__(self, other):
+        if isinstance(other, NumTup):
+            return NumTup(self.tup + other.as_tuple())
+        return NotImplemented
+
+    def __getitem__(self, key):
+        if isinstance(key, slice):
+            return NumTup(self.tup[key])
+        elif isinstance(key, int):
+            return self.tup[key]
+        return NotImplemented
 
 SUFFIXES = [
     '', 'k', 'm', 'b', 't', 'q', 'Q', 's', 'S', 'o', 'n', 'd',

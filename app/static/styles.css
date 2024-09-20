@@ -58,7 +58,7 @@ a:hover {
     width: fit-content;
 }
 
-.nav-container > a {
+.nav-container > *:not(separator) {
     margin-left: 10px;
 }
 
@@ -236,6 +236,10 @@ table th {
     background-color: #2a2a2a;
 }
 
+.align-top {
+    vertical-align: top;
+}
+
 .transparent-col {
     background-color: transparent;
     border: none;
@@ -248,6 +252,13 @@ table th {
 
 .inner-table {
     border: 1px solid #dddddd;
+}
+
+.spacious th {
+    padding: 10px;
+}
+.spacious td {
+    padding: 10px;
 }
 
 .separated-div {

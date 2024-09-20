@@ -4,6 +4,8 @@
     <div class="nav-container">
         <a class="upper-left" href="{{ url_for('overview') }}">[O]verview</a>
         <span class="separator">|</span>
+        <a class="upper-left" href="{{ url_for('configure_index') }}">[M]ain Setup</a>
+        <span class="separator">|</span>
         <a class="upper-left" href="{{ url_for('configure_location', loc_id=current.id) }}">Location S[e]tup</a>
     </div>
 {% endblock %}
@@ -33,6 +35,7 @@
         });
         const linkForKey = {
             'o': '{{ url_for('overview') }}',
+            'm': '{{ url_for('configure_index') }}',
             'e': '{{ url_for('configure_location', loc_id=current.id) }}',
         };
         document.addEventListener('DOMContentLoaded', function () {
@@ -54,7 +57,7 @@
     {% if width > 0 and height > 0 %}
         {% set has_grid = True %}
     {% endif %}
-    <table style="background: transparent"><tr><td valign="top">
+    <table style="background: transparent"><tr><td class="align-top">
 
     {% set has = namespace(chars=False) %}
     {% for char in game_data.characters if char.location.id == current.id %}
@@ -135,7 +138,7 @@
     </td>
     {% set left, top, right, bottom = current.grid.excluded %}
     {% if has_grid %}
-    <td valign="top">
+    <td class="align-top">
         <style>
             td.grid {
                 width: 2em;
@@ -153,9 +156,9 @@
             }
         </style>
         <table style="background: transparent; border-collapse: collapse; font-family: monospace;">
-        {% for y in range(height) %}
+        {% for y in range(1, height + 1) %}
             <tr>
-                {% for x in range(width) %}
+                {% for x in range(1, width + 1) %}
                     {% if left <= x <= right and top <= y <= bottom %}
                         <td class="grid excluded" id="cell-{{ x }}-{{ y }}"></td>
                     {% else %}
@@ -207,6 +210,7 @@
     </tr></table>
 
     <script>
+        const door_letter = "🚪"
         const characters = {
             {% for char in game_data.characters if char.location.id == current.id %}
                 "{{ char.id }}": {
@@ -221,6 +225,14 @@
                     letter: '{{ item_at.item.name[0] }}',
                     x: "{{ item_at.position[0] }}",
                     y: "{{ item_at.position[1] }}" },
+            {% endfor %}
+        };
+        const doors = {
+            {% for dest in current.destinations.values() %}
+                "{{ dest.loc.id }}": {
+                    letter: door_letter,
+                    x: "{{ dest.exit[0] }}",
+                    y: "{{ dest.exit[1] }}" },
             {% endfor %}
         };
         function moveCharacter(xChange, yChange) {
@@ -258,9 +270,11 @@
             for (const [id, char] of Object.entries(characters)) {
                 setCellContents(char.x, char.y, char.letter);
             }
-
             for (const [id, item_at] of Object.entries(items)) {
                 setCellContents(item_at.x, item_at.y, item_at.letter);
+            }
+            for (const [id, door] of Object.entries(doors)) {
+                setCellContents(door.x, door.y, door.letter);
             }
         }
         function setCellContents(x, y, content, replace = false) {

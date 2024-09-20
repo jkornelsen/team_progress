@@ -4,6 +4,8 @@
     <div class="nav-container">
         <a class="upper-left" href="{{ url_for('overview') }}">[O]verview</a>
         <span class="separator">|</span>
+        <a class="upper-left" href="{{ url_for('configure_index') }}">[M]ain Setup</a>
+        <span class="separator">|</span>
         <a class="upper-left" href="{{ url_for('configure_char', char_id=current.id) }}">Character S[e]tup</a>
     </div>
 {% endblock %}
@@ -14,6 +16,7 @@
         let isModalOpen = false;
         const linkForKey = {
             'o': '{{ url_for('overview') }}',
+            'm': '{{ url_for('configure_index') }}',
             'e': '{{ url_for('configure_char', char_id=current.id) }}',
         };
         document.addEventListener('DOMContentLoaded', function () {

@@ -6,7 +6,7 @@ from .db_serializable import Identifiable, MutableNamespace, coldef
 from .item import Item
 from .location import Destination, Location
 from .progress import Progress
-from .utils import Pile, RequestHelper, Storage, unformat_num
+from .utils import Pile, NumTup, RequestHelper, Storage, unformat_num
 
 tables_to_create = {
     'characters': f"""
@@ -22,6 +22,7 @@ tables_to_create = {
         position integer[2],
         FOREIGN KEY (game_token, progress_id)
             REFERENCES progress (game_token, id)
+            DEFERRABLE INITIALLY DEFERRED
         """,
 }
 logger = logging.getLogger(__name__)
@@ -32,7 +33,7 @@ class OwnedItem(Pile):
         super().__init__(item, char)
         self.slot = ''  # for example, "main hand"
 
-    def to_json(self):
+    def dict_for_json(self):
         return {
             'item_id': self.item.id,
             'quantity': self.quantity,
@@ -40,7 +41,7 @@ class OwnedItem(Pile):
             }
 
     @classmethod
-    def from_json(cls, data, char=None):
+    def from_data(cls, data, char=None):
         instance = cls(Item(int(data.get('item_id', 0))), char)
         instance.quantity = data.get('quantity', 0)
         instance.slot = data.get('slot', "")
@@ -61,35 +62,47 @@ class Character(Identifiable):
         self.attribs = {}  # AttribOf objects keyed by attrib id
         self.items = {}  # OwnedItem objects keyed by item id
         self.location = None  # Location object where char is
-        self.position = (0, 0)  # grid coordinates: top, left
+        self.position = NumTup((0, 0))
         self.destination = None  # Location object to travel to
         self.progress = Progress(container=self)  # travel or producing items
         self.pile = Pile()  # for Progress
 
-    def to_json(self):
+    def _base_export_data(self):
+        """Prepare the base dictionary for JSON and DB."""
         return {
             'id': self.id,
             'name': self.name,
             'description': self.description,
             'toplevel': self.toplevel,
             'masked': self.masked,
-            'attribs': {
-                str(attrib_id): attrib_of.val
-                for attrib_id, attrib_of in self.attribs.items()},
-            'items': [
-                owned.to_json() for owned in self.items.values()],
             'location_id': self.location.id if self.location else None,
-            'position': self.position,
-            'progress': self.progress.to_json(),
             'quantity': self.pile.quantity,
             'dest_id': self.destination.id if self.destination else None
             }
 
+    def dict_for_json(self):
+        data = self._base_export_data()
+        data.update({
+            'attribs': {
+                str(attrib_id): attrib_of.val
+                for attrib_id, attrib_of in self.attribs.items()},
+            'items': [
+                owned.dict_for_json() for owned in self.items.values()],
+            'progress': self.progress.dict_for_json(),
+            'position': self.position.as_list(),
+            })
+        return data
+
+    def dict_for_db(self):
+        data = self._base_export_data()
+        data.update({
+            'position': self.position,
+            'progress_id': self.progress.id or None,
+            })
+        return data
+
     @classmethod
-    def from_json(cls, data):
-        """Looks for attribs and locations in g.game_data with get_by_id(),
-        so consider loading those before calling this method.
-        """
+    def from_data(cls, data):
         if not isinstance(data, dict):
             data = vars(data)
         instance = cls(int(data.get('id', 0)))
@@ -101,52 +114,54 @@ class Character(Identifiable):
             try:
                 if not isinstance(owned_data, dict):
                     owned_data = vars(owned_data)
-                instance.items[owned_data.get('item_id', 0)] = OwnedItem.from_json(
+                instance.items[owned_data.get('item_id', 0)] = OwnedItem.from_data(
                     owned_data, instance)
             except TypeError:
                 logger.exception('')
                 continue
         instance.attribs = {
             attrib_id: AttribOf(
-                Attrib.get_by_id(int(attrib_id)), val=val)
+                Attrib(int(attrib_id)), val=val)
             for attrib_id, val in data.get('attribs', {}).items()}
-        instance.location = Location.get_by_id(
+        instance.location = Location(
             int(data['location_id'])) if data.get('location_id', 0) else None
-        instance.position = data.get('position', (0, 0))
+        instance.position = NumTup.from_list(data.get('position', [0, 0]))
         instance.pile.quantity = data.get('quantity', 0.0)
-        instance.progress = Progress.from_json(
+        instance.progress = Progress.from_data(
             data.get('progress', {}), instance)
-        instance.destination = Location.get_by_id(
+        instance.destination = Location(
             int(data['dest_id'])) if data.get('dest_id', 0) else None
         return instance
 
-    def json_to_db(self, doc):
-        logger.debug("json_to_db()")
-        self.progress.json_to_db(doc['progress'])
-        doc['progress_id'] = None if self.progress.id == 0 else self.progress.id
-        super().json_to_db(doc)
+    def to_db(self):
+        logger.debug("to_db()")
+        self.progress.to_db()
+        super().to_db()
         for rel_table in ('char_attribs', 'char_items'):
             self.execute_change(f"""
                 DELETE FROM {rel_table}
                 WHERE char_id = %s AND game_token = %s
                 """, (self.id, self.game_token))
-        if doc['attribs']:
-            values = [
-                (g.game_token, self.id, attrib_id, val)
-                for attrib_id, val in doc['attribs'].items()]
+        if self.attribs:
+            values = []
+            for attrib_id, attrib_of in self.attribs.items():
+                values.append((
+                    g.game_token, self.id,
+                    attrib_id, attrib_of.val
+                    ))
             self.insert_multiple(
                 "char_attribs",
                 "game_token, char_id, attrib_id, value",
                 values)
-        if doc['items']:
-            logger.debug("items: %s", doc['items'])
+        if self.items:
+            logger.debug("items: %s", self.items)
             values = []
-            for owned_item in doc['items']:
+            for item_id, owned_item in self.items.items():
                 values.append((
                     g.game_token, self.id,
-                    owned_item['item_id'],
-                    owned_item['quantity'],
-                    owned_item['slot']
+                    item_id,
+                    owned_item.quantity,
+                    owned_item.slot
                     ))
             self.insert_multiple(
                 "char_items",
@@ -168,7 +183,7 @@ class Character(Identifiable):
         chars = []
         characters_rows = cls.execute_select(query, values)
         for char_row in characters_rows:
-            chars.append(Character.from_json(char_row))
+            chars.append(Character.from_data(char_row))
         if load:
             g.game_data.set_list(Character, chars)
         return chars
@@ -193,7 +208,7 @@ class Character(Identifiable):
         chars = {}
         for char_row in characters_rows:
             if char_row.id not in chars:
-                chars[char_row.id] = Character.from_json(char_row)
+                chars[char_row.id] = Character.from_data(char_row)
         # Get char attrib data
         attrib_rows = cls.execute_select("""
             SELECT *
@@ -203,7 +218,7 @@ class Character(Identifiable):
         for row in attrib_rows:
             char = chars.get(row.char_id, None)
             if char:
-                char.attribs[row.attrib_id] = AttribOf.from_json(row)
+                char.attribs[row.attrib_id] = AttribOf.from_data(row)
         if load:
             g.game_data.set_list(Character, chars.values())
         return chars
@@ -259,7 +274,7 @@ class Character(Identifiable):
                 WHERE id = %s AND masked = true
                 """, (current_data.location_id,))
         # Create object from data
-        return Character.from_json(current_data)
+        return Character.from_data(current_data)
 
     @classmethod
     def load_complete_objects(cls):
@@ -277,9 +292,9 @@ class Character(Identifiable):
         instances = {}  # keyed by ID
         for char_data, progress_data in tables_rows:
             instance = instances.setdefault(
-                char_data.id, cls.from_json(char_data))
+                char_data.id, cls.from_data(char_data))
             if progress_data.id:
-                instance.progress = Progress.from_json(progress_data, instance)
+                instance.progress = Progress.from_data(progress_data, instance)
         # Get char attrib data
         attrib_rows = cls.execute_select("""
             SELECT *
@@ -288,7 +303,7 @@ class Character(Identifiable):
             """, [g.game_token])
         for row in attrib_rows:
             instance = instances[row.char_id]
-            instance.attribs[row.attrib_id] = AttribOf.from_json(row)
+            instance.attribs[row.attrib_id] = AttribOf.from_data(row)
         # Get char item data
         item_rows = cls.execute_select("""
             SELECT *
@@ -297,7 +312,7 @@ class Character(Identifiable):
             """, [g.game_token])
         for row in item_rows:
             instance = instances[row.char_id]
-            instance.items[row.item_id] = OwnedItem.from_json(row, instance)
+            instance.items[row.item_id] = OwnedItem.from_data(row, instance)
         # Print debugging info
         logger.debug("found %d characters", len(instances))
         logger.debug('\n'.join(
@@ -311,13 +326,19 @@ class Character(Identifiable):
     @classmethod
     def data_for_configure(cls, id_to_get):
         logger.debug("data_for_configure(%s)", id_to_get)
-        g.game_data.from_db_flat([Attrib, Location, Item])
         current_obj = cls.load_complete_object(id_to_get)
         # Replace partial objects with fully populated objects
+        g.game_data.from_db_flat([Attrib, Location, Item])
         for attrib_id, attrib_of in current_obj.attribs.items():
             attrib_of.attrib = Attrib.get_by_id(attrib_id)
         for item_id, owned_item in current_obj.items.items():
             owned_item.item = Item.get_by_id(item_id)
+        if current_obj.location:
+            current_obj.location = Location.get_by_id(
+                current_obj.location.id)
+        if current_obj.destination:
+            current_obj.destination = Location.get_by_id(
+                current_obj.destination.id)
         # Print debugging info
         logger.debug("found %d owned items", len(current_obj.items))
         if len(current_obj.items):
@@ -344,9 +365,9 @@ class Character(Identifiable):
                 """, [g.game_token, current_obj.location.id],
                 ['loc_destinations', 'locations'])
             for dest_data, loc_data in tables_rows:
-                current_obj.location.destinations[loc_data.id] = Destination(
-                    Location.from_json(loc_data),
-                    dest_data.distance)
+                dest = Destination.from_data(dest_data)
+                dest.loc = Location.from_data(loc_data)
+                current_obj.location.destinations[loc_data.id] = dest
             # Travel distance
             if current_obj.destination:
                 dest = current_obj.location.destinations.get(
@@ -364,23 +385,22 @@ class Character(Identifiable):
             req = RequestHelper('form')
             self.toplevel = req.get_bool('top_level')
             self.masked = req.get_bool('masked')
-            item_ids = req.get_list('item_id[]')
-            item_qtys = req.get_list('item_qty[]')
-            item_slots = req.get_list('item_slot[]')
             self.items = {}
             old = Character.load_complete_object(self.id)
             for item_id, item_qty, item_slot in zip(
-                    item_ids, item_qtys, item_slots):
+                    req.get_list('item_id[]'),
+                    req.get_list('item_qty[]'),
+                    req.get_list('item_slot[]')
+                    ):
                 ownedItem = OwnedItem(Item(int(item_id)), self)
-                self.items[item_id] = ownedItem
                 ownedItem.slot = item_slot
                 old_item = old.items.get(item_id, None)
                 old_qty = old_item.quantity if old_item else 0
                 ownedItem.quantity = req.set_num_if_changed(item_qty, old_qty)
+                self.items[item_id] = ownedItem
             location_id = req.get_int('char_location')
             self.location = Location(location_id) if location_id else None
-            self.position = tuple(
-                map(int, req.get_str('position').split(',')))
+            self.position = req.get_numtup('position', (0, 0))
             attrib_ids = req.get_list('attrib_id[]')
             logger.debug(f"Attrib IDs: %s", attrib_ids)
             self.attribs = {}

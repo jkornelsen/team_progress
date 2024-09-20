@@ -14,7 +14,7 @@ from .progress import Progress
 
 logger = logging.getLogger(__name__)
 
-# In this order for from_json() to correctly get references to other entities. 
+# In this order for from_data() to correctly get references to other entities. 
 ENTITIES = (
     Attrib,
     Item,
@@ -61,24 +61,27 @@ class GameData:
     def set_list(self, entity_cls, newval):
         setattr(self, entity_cls.listname, newval)
 
-    def to_json(self):
-        logger.debug("to_json()")
+    def dict_for_json(self):
+        logger.debug("dict_for_json()")
         data = {}
         for entity_cls in ENTITIES:
             entity_data = [
-                entity_obj.to_json()
+                entity_obj.dict_for_json()
                 for entity_obj in self.get_list(entity_cls)]
             data[entity_cls.listname] = entity_data
-        data['overall'] = self.overall.to_json()
+        data['overall'] = self.overall.dict_for_json()
         return data
 
-    def from_json(self, data):
+    def from_json(self, all_data):
+        """Load all data from file."""
         logger.debug("from_json()")
         for entity_cls in ENTITIES:
-            entity_data = data[entity_cls.listname]
-            self.set_list(
-                entity_cls, entity_cls.list_from_json(entity_data))
-        self.overall = Overall.from_json(data['overall'])
+            self.set_list(entity_cls, [])
+            entities_data = all_data[entity_cls.listname]
+            for entity_data in entities_data:
+                instance = entity_cls.from_data(entity_data)
+                self.get_list(entity_cls).append(instance)
+        self.overall = Overall.from_data(all_data['overall'])
 
     def load_for_file(self, entities=None):
         logger.debug("load_complete()")
@@ -103,7 +106,7 @@ class GameData:
                 ORDER BY name
                 """, (g.game_token,))
             for row in rows:
-                entity = entity_cls.from_json(row)
+                entity = entity_cls.from_data(row)
                 self.get_list(entity_cls).append(entity)
 
     def entity_names_from_db(self, entities=None):
@@ -122,7 +125,7 @@ class GameData:
             " UNION ".join(query_parts) + " ORDER BY name")
         for row in rows:
             entity_cls = self.entity_for(row.tablename)
-            entity = entity_cls.from_json(row)
+            entity = entity_cls.from_data(row)
             self.get_list(entity_cls).append(entity)
 
     def to_db(self):

@@ -2,14 +2,30 @@
 
 {% block upper_left %}
     <div class="nav-container">
-        <a href="{{ url_for('configure_index') }}">Back to Setup</a>
+        <a class="upper-left" href="{{ url_for('overview') }}">[O]verview</a>
+        <span class="separator">|</span>
+        <a href="{{ url_for('configure_index') }}">[M]ain Setup</a>
     </div>
 {% endblock %}
 
 {% block content %}
+    <script>
+        const linkForKey = {
+            'o': '{{ url_for('overview') }}',
+            'm': '{{ url_for('configure_index') }}',
+        };
+        document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('keypress', function (event) {
+                const key = event.key.toLowerCase();
+                if (linkForKey[key]) {
+                    window.location.href = linkForKey[key];
+                }
+            });
+        });
+    </script>
     <h1>Pre-built Scenarios</h1>
     <form method="GET" action="{{ url_for('browse_scenarios') }}">
-        <center>
+        <div style="text-align: right; padding-bottom: 10px;">
         <label for="sort_by">Sort by:</label>
         <select name="sort_by" id="sort_by">
             <option value="filename" {% if sort_by == 'filename' %}selected{% endif %}>Gameplay Concepts</option>
@@ -18,21 +34,21 @@
             <option value="popularity" {% if sort_by == 'popularity' %}selected{% endif %}>Most Played</option>
         </select>
         <button type="submit">Sort</button>
-        </center>
+        </div>
     </form>
-    <table>
+    <table class="spacious">
     {% for scenario in scenarios %}
         <tr style="border-top: 1px solid #888;"></tr>
-        <tr><td valign="top">
+        <tr><td class="align-top">
             <form method="POST" action="{{ url_for('browse_scenarios') }}">
                 <button type="submit">Load Scenario</button>
                 <input type="hidden" name="scenario_file" value="{{ scenario.filename }}">
                 <input type="hidden" name="scenario_title" value="{{ scenario.title }}">
             </form>
-        </td><td valign="top">
+        </td><td class="align-top">
             <span style="font-size: 1.3em; font-weight: bold">{{ scenario.title }}</h2>
         </td>
-        <td valign="top">
+        <td class="align-top">
             {{ scenario.description|htmlify }}
         </td></tr>
     {% endfor %}

@@ -43,7 +43,7 @@ class WinRequirement(Identifiable):
     def tablename(cls):
         return 'win_requirements'
 
-    def to_json(self):
+    def dict_for_json(self):
         return {
             'id': self.id,
             'item_id': self.item.id if self.item else None,
@@ -55,7 +55,7 @@ class WinRequirement(Identifiable):
             }
 
     @classmethod
-    def from_json(cls, data):
+    def from_data(cls, data):
         if not isinstance(data, dict):
             data = vars(data)
         instance = cls(int(data.get('id', 0)))
@@ -134,19 +134,29 @@ class Overall(DbSerializable):
             return row.number_format
         return ''
 
-    def to_json(self):
+    def _base_export_data(self):
+        """Prepare the base dictionary for JSON and DB."""
         return {
             'title': self.title,
             'description': self.description,
-            'win_reqs': [
-                win_req.to_json()
-                for win_req in self.win_reqs],
             'number_format': self.number_format,
-            'slots': tuple(self.slots)
+            'slots': self.slots,
             }
 
+    def dict_for_json(self):
+        data = self._base_export_data()
+        data.update({
+            'win_reqs': [
+                win_req.dict_for_json()
+                for win_req in self.win_reqs],
+            })
+        return data
+
+    def dict_for_db(self):
+        return self._base_export_data()
+
     @classmethod
-    def from_json(cls, data):
+    def from_data(cls, data):
         if not isinstance(data, dict):
             data = vars(data)
         instance = cls()
@@ -155,7 +165,7 @@ class Overall(DbSerializable):
         instance.description = data.get(
             'description', instance.description)
         instance.win_reqs = [
-            WinRequirement.from_json(winreq_data)
+            WinRequirement.from_data(winreq_data)
             for winreq_data in data.get('win_reqs', [])]
         instance.number_format = data.get(
             'number_format', instance.number_format)
@@ -176,23 +186,23 @@ class Overall(DbSerializable):
         instance = None
         for overall_data, winreq_data in tables_rows:
             if not instance:
-                instance = cls.from_json(vars(overall_data))
+                instance = cls.from_data(vars(overall_data))
             if winreq_data.item_id or winreq_data.char_id:
                 instance.win_reqs.append(
-                    WinRequirement.from_json(winreq_data))
+                    WinRequirement.from_data(winreq_data))
         if not instance:
             logger.debug("overall data not found -- making generic object")
             instance = cls()
         return instance
 
-    def json_to_db(self, doc):
-        super().json_to_db(doc)
+    def to_db(self):
+        super().to_db()
         self.execute_change(f"""
             DELETE FROM win_requirements
             WHERE game_token = %s
             """, (g.game_token,))
-        for win_req in doc.get('win_reqs', []):
-            WinRequirement.from_json(win_req).to_db()
+        for win_req in self.win_reqs:
+            win_req.to_db()
 
     @classmethod
     def data_for_configure(cls):

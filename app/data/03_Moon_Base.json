@@ -53,16 +53,7 @@
             "items": [],
             "location_id": 3,
             "name": "Selen",
-            "progress": {
-                "batches_processed": 5,
-                "id": 30,
-                "is_ongoing": false,
-                "q_limit": 0.0,
-                "quantity": 0.0,
-                "recipe_id": 0,
-                "start_time": "Fri, 22 Mar 2024 20:01:18 GMT",
-                "stop_time": "Fri, 22 Mar 2024 20:01:34 GMT"
-            },
+            "progress": {},
             "toplevel": true
         },
         {
@@ -86,16 +77,7 @@
             ],
             "location_id": 1,
             "name": "Bill",
-            "progress": {
-                "batches_processed": 5,
-                "id": 27,
-                "is_ongoing": false,
-                "q_limit": 0.0,
-                "quantity": 0.0,
-                "recipe_id": 0,
-                "start_time": "Fri, 22 Mar 2024 22:01:55 GMT",
-                "stop_time": "Fri, 22 Mar 2024 22:02:10 GMT"
-            },
+            "progress": {},
             "toplevel": true
         }
     ],
@@ -202,16 +184,7 @@
             "description": "",
             "id": 20,
             "name": "Empty Helium-3 Container",
-            "progress": {
-                "batches_processed": 0,
-                "id": 29,
-                "is_ongoing": false,
-                "q_limit": 0.0,
-                "quantity": 0.0,
-                "recipe_id": 0,
-                "start_time": null,
-                "stop_time": null
-            },
+            "progress": {},
             "quantity": 0.0,
             "recipes": [],
             "toplevel": false
@@ -221,16 +194,7 @@
             "description": "Transfer the extracted helium-3 from the processor into storage containers. Helium-3 is used in fusion reactions, perhaps for general power or advanced weapons.",
             "id": 19,
             "name": "Filled Helium-3 Container",
-            "progress": {
-                "batches_processed": 0,
-                "id": 28,
-                "is_ongoing": false,
-                "q_limit": 0.0,
-                "quantity": 0.0,
-                "recipe_id": 0,
-                "start_time": null,
-                "stop_time": null
-            },
+            "progress": {},
             "quantity": 0.0,
             "recipes": [],
             "toplevel": true
@@ -240,16 +204,7 @@
             "description": "Can be used as a two-handed weapon like a bat.",
             "id": 21,
             "name": "Metal Pole",
-            "progress": {
-                "batches_processed": 0,
-                "id": 31,
-                "is_ongoing": false,
-                "q_limit": 0.0,
-                "quantity": 0.0,
-                "recipe_id": 0,
-                "start_time": null,
-                "stop_time": null
-            },
+            "progress": {},
             "quantity": 0.0,
             "recipes": [],
             "toplevel": false
@@ -258,55 +213,79 @@
     "locations": [
         {
             "description": "An area rich in regolith with high concentrations of helium-3. The facility covers several acres and includes the processing equipment, storage units for helium-3, and solar panels for power.",
-            "destinations": {
-                "3": 1.0
-            },
+            "destinations": [
+                {
+                    "dest_id": "3",
+                    "distance": 1.0
+                }
+            ],
             "id": 2,
             "items": [],
             "name": "Regolith Processing Plant"
         },
         {
             "description": "Food, bed, shower.  Life support systems, a greenhouse for food production, and laboratories for scientific research.",
-            "destinations": {
-                "3": 1.0
-            },
+            "destinations": [
+                {
+                    "dest_id": "3",
+                    "distance": 1.0
+                }
+            ],
             "id": 1,
             "items": [],
             "name": "Base"
         },
         {
             "description": "",
-            "destinations": {
-                "3": 5.0,
-                "4": 5.0
-            },
+            "destinations": [
+                {
+                    "dest_id": "3",
+                    "distance": 5.0
+                },
+                {
+                    "dest_id": "4",
+                    "distance": 5.0
+                }
+            ],
             "id": 5,
             "items": [],
             "name": "Surface 1"
         },
         {
             "description": "Underground.",
-            "destinations": {
-                "5": 1.0
-            },
+            "destinations": [
+                {
+                    "dest_id": "5",
+                    "distance": 1.0
+                }
+            ],
             "id": 4,
             "items": [],
             "name": "Robot Home"
         },
         {
             "description": "Electric vehicle on a simple pressurized track system to protect against lunar dust.",
-            "destinations": {
-                "1": 5.0,
-                "2": 5.0,
-                "5": 1.0
-            },
+            "destinations": [
+                {
+                    "dest_id": "1",
+                    "distance": 5.0
+                },
+                {
+                    "dest_id": "2",
+                    "distance": 5.0
+                },
+                {
+                    "dest_id": "5",
+                    "distance": 1.0
+                }
+            ],
             "id": 3,
             "items": [],
             "name": "Track"
         }
     ],
     "overall": {
-        "description": "Start with a small base that supports helium-3 mining, with plans to add more rooms for living and working. Investigate <c=gray>Selenids</c> to determine whether they are hostile or have other purposes, and where they are coming from.\r\n\r\nThe fighting imagined by the initial setup of this scenario is low-key, such as wielding a nearby iron rod and swinging at an enemy to dissuade or disable them. It's also detailed, with ways to keep track of injuries to various body parts. <i>Be mindful of your suit—survival requires oxygen!</i>",
+        "description": "Start with a small base that supports helium-3 mining, with plans to add more rooms for living and working. Investigate <c=gray>Selenids</c> to determine whether they are hostile or have other purposes, and where they are coming from.\r\n\r\nFighting imagined by the initial setup is low-key, such as wielding a nearby iron rod and swinging at an enemy to dissuade or disable them. It's also detailed, with ways to keep track of injuries to various body parts. <i>Be mindful of your suit—survival requires oxygen!</i>",
         "title": "Moon Base",
         "win_reqs": []
     }

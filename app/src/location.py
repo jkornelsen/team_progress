@@ -2,10 +2,11 @@ from flask import g, session
 import logging
 
 from .db_serializable import (
-    Identifiable, MutableNamespace, coldef, tuple_to_pg_array)
+    Identifiable, MutableNamespace, coldef,
+    DbError, DeletionError)
 from .item import Item
 from .progress import Progress
-from .utils import Pile, RequestHelper, Storage
+from .utils import Pile, NumTup, RequestHelper, Storage
 
 tables_to_create = {
     'locations': f"""
@@ -17,7 +18,10 @@ tables_to_create = {
         progress_id integer,
         quantity float(4) NOT NULL,
         dimensions integer[2],
-        excluded integer[4]
+        excluded integer[4],
+        FOREIGN KEY (game_token, progress_id)
+            REFERENCES progress (game_token, id)
+            DEFERRABLE INITIALLY DEFERRED
         """
 }
 logger = logging.getLogger(__name__)
@@ -26,46 +30,96 @@ class ItemAt(Pile):
     PILE_TYPE = Storage.LOCAL
     def __init__(self, item=None):
         super().__init__(item)
-        self.position = (0, 0)
+        self.position = NumTup((0, 0))
 
-    def to_json(self):
+    def _base_export_data(self):
+        """Prepare the base dictionary for JSON and DB."""
         return {
             'item_id': self.item.id,
             'quantity': self.quantity,
-            'position': self.position,
             }
 
+    def dict_for_json(self):
+        data = self._base_export_data()
+        data.update({
+            'position': self.position.as_list(),
+            })
+        return data
+
+    def dict_for_db(self):
+        data = self._base_export_data()
+        data.update({
+            'position': self.position,
+            })
+        return data
+
     @classmethod
-    def from_json(cls, data):
+    def from_data(cls, data):
         if not isinstance(data, dict):
             data = vars(data)
         item_id = int(data.get('item_id', 0))
         instance = cls(Item(item_id))
         instance.quantity = data.get('quantity', 0)
-        instance.position = tuple(data.get('position', (0, 0)))
+        instance.position = NumTup(data.get('position', (0, 0)))
         return instance
 
 class Destination:
-    def __init__(self, loc, distance):
+    def __init__(self, loc):
         self.loc = loc
-        self.distance = distance
+        self.distance = 1
+        self.exit = (0, 0)  # in loc coming from
+        self.entrance = (0, 0)  # in dest loc
+
+    def _base_export_data(self):
+        """Prepare the base dictionary for JSON and DB."""
+        return {
+            'dest_id': self.loc.id,
+            'distance': self.distance,
+            }
+
+    def dict_for_json(self):
+        data = self._base_export_data()
+        data.update({
+            'exit': self.exit.as_list(),
+            'entrance': self.entrance.as_list(),
+            })
+        return data
+
+    def dict_for_db(self):
+        data = self._base_export_data()
+        data.update({
+            'exit': self.exit,
+            'entrance': self.entrance,
+            })
+        return data
+
+    @classmethod
+    def from_data(cls, data):
+        if not isinstance(data, dict):
+            data = vars(data)
+        dest_id = int(data.get('dest_id', 0))
+        instance = cls(Location(dest_id))
+        instance.distance = data.get('distance', 0)
+        instance.exit = NumTup(data.get('exit', (0, 0)))
+        instance.entrance = NumTup(data.get('entrance', (0, 0)))
+        return instance
 
 class Grid:
     def __init__(self):
-        self.dimensions = (0, 0)  # width, height
-        self.excluded = (0, 0, 0, 0)  # left, top, right, bottom
+        self.dimensions = NumTup((0, 0))  # width, height
+        self.excluded = NumTup((0, 0, 0, 0))  # left, top, right, bottom
         self.default_pos = None  # legal position in grid if any
 
     def set_default_pos(self):
         """Returns None if there are no legal positions.
         Call this method whenever changing dimensions or excluded.
         """
-        width, height = self.dimensions
-        left, top, right, bottom = self.excluded
-        for y in range(height):
-            for x in range(width):
+        width, height = self.dimensions.as_tuple()
+        left, top, right, bottom = self.excluded.as_tuple()
+        for y in range(1, height + 1):
+            for x in range(1, width + 1):
                 if not (left <= x <= right and top <= y <= bottom):
-                    self.default_pos = x, y
+                    self.default_pos = NumTup((x, y))
                     return
         self.default_pos = None
 
@@ -74,16 +128,15 @@ class Grid:
         if not pos:
             return False
         x, y = pos
-        width, height = self.dimensions
-        left, top, right, bottom = self.excluded
-        if x < 0 or x > width - 1:
+        width, height = self.dimensions.as_tuple()
+        left, top, right, bottom = self.excluded.as_tuple()
+        if x < 1 or x > width:
             return False
-        if y < 0 or y > height - 1:
+        if y < 1 or y > height:
             return False
         if x >= left and x <= right and y >= top and y <= bottom:
             return False
         return True
-        
 
 class Location(Identifiable):
     def __init__(self, new_id=""):
@@ -99,27 +152,43 @@ class Location(Identifiable):
         self.pile = Pile()  # for Progress
         self.grid = Grid()
 
-    def to_json(self):
+    def _base_export_data(self):
+        """Prepare the base dictionary for JSON and DB."""
         return {
             'id': self.id,
             'name': self.name,
             'description': self.description,
             'toplevel': self.toplevel,
             'masked': self.masked,
-            'destinations': {
-                str(dest.loc.id): dest.distance
-                for dest in self.destinations.values()},
-            'items': [
-                item_at.to_json()
-                for item_at in self.items.values()],
-            'progress': self.progress.to_json(),
             'quantity': self.pile.quantity,
-            'dimensions': self.grid.dimensions,
-            'excluded': self.grid.excluded
             }
 
+    def dict_for_json(self):
+        data = self._base_export_data()
+        data.update({
+            'destinations': [
+                dest.dict_for_json()
+                for dest in self.destinations.values()],
+            'items': [
+                item_at.dict_for_json()
+                for item_at in self.items.values()],
+            'progress': self.progress.dict_for_json(),
+            'dimensions': self.grid.dimensions.as_list(),
+            'excluded': self.grid.excluded.as_list()
+            })
+        return data
+
+    def dict_for_db(self):
+        data = self._base_export_data()
+        data.update({
+            'progress_id': self.progress.id or None,
+            'dimensions': self.grid.dimensions,
+            'excluded': self.grid.excluded
+            })
+        return data
+
     @classmethod
-    def from_json(cls, data):
+    def from_data(cls, data):
         if not isinstance(data, dict):
             data = vars(data)
         instance = cls(int(data.get('id', 0)))
@@ -127,50 +196,57 @@ class Location(Identifiable):
         instance.description = data.get('description', "")
         instance.toplevel = data.get('toplevel', False)
         instance.masked = data.get('masked', False)
-        instance.destinations = {
-            dest_id: Destination(Location(dest_id), distance)
-            for dest_id, distance in data.get('destinations', {}).items()}
+        for dest_data in data.get('destinations', []):
+            if not isinstance(dest_data, dict):
+                dest_data = vars(dest_data)
+            instance.destinations[
+                dest_data.get('dest_id', 0)] = Destination.from_data(dest_data)
         for item_data in data.get('items', []):
             if not isinstance(item_data, dict):
                 item_data = vars(item_data)
             instance.items[
-                item_data.get('item_id', 0)] = ItemAt.from_json(item_data)
+                item_data.get('item_id', 0)] = ItemAt.from_data(item_data)
         instance.pile = Pile()
         instance.pile.quantity = data.get('quantity', 0.0)
-        instance.progress = Progress.from_json(
+        instance.progress = Progress.from_data(
             data.get('progress', {}), instance)
-        instance.grid.dimensions = data.get('dimensions') or (0, 0)
-        instance.grid.excluded = data.get('excluded') or (0, 0, 0, 0)
+        instance.grid.dimensions = NumTup(data.get('dimensions', (0, 0)))
+        instance.grid.excluded = NumTup(data.get('excluded', (0, 0, 0, 0)))
         instance.grid.set_default_pos()
         return instance
 
-    def json_to_db(self, doc):
-        logger.debug("json_to_db()")
-        self.progress.json_to_db(doc['progress'])
-        doc['progress_id'] = None if self.progress.id == 0 else self.progress.id
-        super().json_to_db(doc)
+    def to_db(self):
+        logger.debug("to_db()")
+        self.progress.to_db()
+        super().to_db()
         for rel_table in ('loc_destinations', 'loc_items'):
             self.execute_change(f"""
                 DELETE FROM {rel_table}
                 WHERE loc_id = %s AND game_token = %s
                 """, (self.id, self.game_token))
-        if doc['destinations']:
-            values = [
-                (g.game_token, self.id, dest_id, distance)
-                for dest_id, distance in doc['destinations'].items()]
-            self.insert_multiple(
-                "loc_destinations",
-                "game_token, loc_id, dest_id, distance",
-                values)
-        if doc['items']:
+        if self.destinations:
             values = []
-            for item_data in doc['items']:
+            for dest in self.destinations.values():
                 values.append((
                     g.game_token, self.id,
-                    item_data['item_id'],
-                    item_data['quantity'],
-                    tuple_to_pg_array(item_data['position'])
-                ))
+                    dest.loc.id,
+                    dest.distance,
+                    dest.exit.as_pg_array(),
+                    dest.entrance.as_pg_array(),
+                    ))
+            self.insert_multiple(
+                "loc_destinations",
+                "game_token, loc_id, dest_id, distance, exit, entrance",
+                values)
+        if self.items:
+            values = []
+            for item_id, item_at in self.items.items():
+                values.append((
+                    g.game_token, self.id,
+                    item_id,
+                    item_at.quantity,
+                    item_at.position.as_pg_array(),
+                    ))
             self.insert_multiple(
                 "loc_items",
                 "game_token, loc_id, item_id, quantity, position",
@@ -207,10 +283,8 @@ class Location(Identifiable):
             WHERE game_token = %s
                 AND loc_id = %s
             """, (g.game_token, id_to_get))
-        dests_data = {}
-        for row in loc_dest_rows:
-            dests_data[row.dest_id] = row.distance
-        current_data.destinations = dests_data
+        for dest_data in loc_dest_rows:
+            current_data.setdefault('destinations', []).append(vars(dest_data))
         # Get this location's item relation data
         loc_items_rows = cls.execute_select("""
             SELECT *
@@ -221,7 +295,7 @@ class Location(Identifiable):
         for item_data in loc_items_rows:
             current_data.setdefault('items', []).append(vars(item_data))
         # Create object from data
-        return Location.from_json(current_data)
+        return Location.from_data(current_data)
 
     @classmethod
     def load_complete_objects(cls):
@@ -239,9 +313,9 @@ class Location(Identifiable):
         instances = {}  # keyed by ID
         for loc_data, progress_data in tables_rows:
             instance = instances.setdefault(
-                loc_data.id, cls.from_json(loc_data))
+                loc_data.id, cls.from_data(loc_data))
             if progress_data.id:
-                instance.progress = Progress.from_json(progress_data, instance)
+                instance.progress = Progress.from_data(progress_data, instance)
         # Get destinations data
         dest_rows = cls.execute_select("""
             SELECT *
@@ -250,7 +324,7 @@ class Location(Identifiable):
             """, [g.game_token])
         for row in dest_rows:
             instance = instances[row.loc_id]
-            instance.destinations[row.dest_id] = row.distance
+            instance.destinations[row.dest_id] = Destination.from_data(row)
         # Get loc item data
         item_rows = cls.execute_select("""
             SELECT *
@@ -259,14 +333,7 @@ class Location(Identifiable):
             """, [g.game_token])
         for row in item_rows:
             instance = instances[row.loc_id]
-            instance.items[row.item_id] = ItemAt.from_json(row)
-        # Replace IDs with partial objects
-        for instance in instances.values():
-            dest_objs = {}
-            for dest_id, distance in instance.destinations.items():
-                dest_obj = Destination(Location(dest_id), distance)
-                dest_objs[dest_id] = dest_obj
-            instance.destinations = dest_objs
+            instance.items[row.item_id] = ItemAt.from_data(row)
         # Print debugging info
         logger.debug("found %d locations", len(instances))
         for instance in instances.values():
@@ -280,9 +347,8 @@ class Location(Identifiable):
     def data_for_configure(cls, id_to_get):
         logger.debug("data_for_configure(%s)", id_to_get)
         current_obj = cls.load_complete_object(id_to_get)
-        # Get all basic location and item data
-        g.game_data.from_db_flat([Location, Item])
         # Replace partial objects with fully populated objects
+        g.game_data.from_db_flat([Location, Item])
         for dest_id, dest in current_obj.destinations.items():
             dest.loc = Location.get_by_id(dest_id)
         for item_at in current_obj.items.values():
@@ -315,39 +381,38 @@ class Location(Identifiable):
             self.toplevel = req.get_bool('top_level')
             req = RequestHelper('form')
             self.masked = req.get_bool('masked')
-            self.grid.dimensions = tuple(
-                map(int, req.get_str(
-                    'dimensions').split('x')))
-            self.grid.excluded = tuple(
-                list(map(int, req.get_str(
-                    'excluded_left_top').split(','))) +
-                list(map(int, req.get_str(
-                    'excluded_right_bottom').split(','))))
+            self.grid.dimensions = req.get_numtup(
+                'dimensions', (0, 0), delim='x')
+            self.grid.excluded = (
+                req.get_numtup('excluded_left_top', (0, 0)) +
+                req.get_numtup('excluded_right_bottom', (0, 0))
+                )
             self.grid.set_default_pos()
-            destination_ids = req.get_list('destination_id[]')
-            destination_distances = req.get_list('destination_distance[]')
             self.destinations = {}
-            for dest_id, dest_dist in zip(
-                    destination_ids, destination_distances):
-                self.destinations[dest_id] = Destination(
-                    Location(dest_id), int(dest_dist))
-            item_ids = req.get_list('item_id[]')
-            item_qtys = req.get_list('item_qty[]')
-            item_posits = req.get_list('item_pos[]')
+            for dest_id, dest_dist, dest_exit, dest_entrance in zip(
+                    req.get_list('dest_id[]'),
+                    req.get_list('dest_distance[]'),
+                    req.get_list('dest_exit[]'),
+                    req.get_list('dest_entrance[]')
+                    ):
+                dest = Destination(Location(dest_id))
+                dest.distance = int(dest_dist)
+                dest.exit = NumTup.from_str(dest_exit, (0, 0))
+                dest.entrance = NumTup.from_str(dest_entrance, (0, 0))
+                self.destinations[dest_id] = dest
             self.items = {}
             old = Location.load_complete_object(self.id)
             for item_id, item_qty, item_pos in zip(
-                    item_ids, item_qtys, item_posits):
+                    req.get_list('item_id[]'),
+                    req.get_list('item_qty[]'),
+                    req.get_list('item_pos[]')
+                    ):
                 item_at = ItemAt(Item(int(item_id)))
-                try:
-                    item_at.position = tuple(
-                        map(int, item_pos.split(',')))
-                except ValueError:
-                    pass  # use default value
-                self.items[item_id] = item_at
+                item_at.position = NumTup.from_str(item_pos, (0, 0))
                 old_item = old.items.get(item_id, None)
                 old_qty = old_item.quantity if old_item else 0
                 item_at.quantity = req.set_num_if_changed(item_qty, old_qty)
+                self.items[item_id] = item_at
             self.to_db()
         elif req.has_key('delete_location'):
             try:

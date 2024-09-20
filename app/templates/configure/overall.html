@@ -2,6 +2,8 @@
 
 {% block upper_left %}
     <div class="nav-container">
+        <a class="upper-left" href="{{ url_for('overview') }}">Overview</a>
+        <span class="separator">|</span>
         <a href="{{ url_for('configure_index') }}">Main Setup Page</a>
     </div>
 {% endblock %}

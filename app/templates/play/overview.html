@@ -2,14 +2,16 @@
 
 {% block upper_left %}
     <div class="nav-container">
-        <a href="{{ url_for('configure_index') }}">Game S[e]tup</a>
+        <span class="upper-left">Overview</span>
+        <span class="separator">|</span>
+        <a class="upper-left" href="{{ url_for('configure_index') }}">[M]ain Setup</a>
     </div>
 {% endblock %}
 
 {% block content %}
     <script>
         const linkForKey = {
-            'e': '{{ url_for('configure_index') }}'
+            'm': '{{ url_for('configure_index') }}',
         };
         document.addEventListener('DOMContentLoaded', function () {
             document.addEventListener('keypress', function (event) {
@@ -45,7 +47,7 @@
 
     <!-- Top-level Characters and their Location -->
     {% if active.characters %}
-        <table>
+        <table class="spacious">
             <tr>
                 <th>Character</th>
                 <th>At</th>
@@ -78,7 +80,7 @@
 
     <!-- Top-level Locations -->
     {% if active.locations %}
-        <table cellspacing="0" cellpadding="5">
+        <table class="spacious">
             <tr>
                 <th>Locations</th>
             </tr>
@@ -100,7 +102,7 @@
 
     <!-- Items in General Storage -->
     {% if active.items %}
-        <table cellspacing="0" cellpadding="5">
+        <table class="spacious">
             <tr>
                 <th>General Storage</th>
                 <th>Quantity</th>

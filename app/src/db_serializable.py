@@ -5,6 +5,7 @@ from psycopg2.extras import RealDictCursor, execute_values
 from types import SimpleNamespace
 
 from database import column_counts, pretty
+from .utils import NumTup
 
 logger = logging.getLogger(__name__)
 #logger.setLevel(logging.CRITICAL)  # turn off for this module
@@ -25,29 +26,12 @@ def coldef(which):
     else:
         raise Exception(f"Unexpected coldef type '{which}'")
 
-def tuples_to_lists(values):
-    """Prepare for insertion into db."""
+def numtups_to_lists(values):
+    """Convert NumTup objects to lists for database insertion."""
     return [
-        list(val) if isinstance(val, tuple)
-        else val
-        for val in values]
-
-def tuple_to_pg_array(value):
-    """Convert a tuple to a PostgreSQL array string,
-    for example "{0, 0}".
-    """
-    if isinstance(value, tuple):
-        return f"{{{', '.join(map(str, value))}}}"
-    return value
-
-def db_type_fields(doc):
-    """Objects may have types such as dicts
-    that aren't for inserting into the db.
-    """
-    NON_DB_TYPES = (dict, list, set)
-    return [
-        field for field in doc.keys()
-        if not isinstance(doc[field], NON_DB_TYPES)]
+        val.as_list() if isinstance(val, NumTup) else val
+        for val in values
+        ]
 
 class MutableNamespace(SimpleNamespace):
     def __setattr__(self, key, value):
@@ -174,7 +158,7 @@ class DbSerializable():
         cls.insert_multiple(table, column_names, (values,))
 
     @classmethod
-    def insert_multiple_from_dict(cls, table, data):
+    def insert_multiple_from_data(cls, table, data):
         if len(data) == 0:
             return
         column_keys = data[0].keys()
@@ -184,15 +168,18 @@ class DbSerializable():
         column_names = ", ".join(['game_token'] + list(column_keys))
         cls.insert_multiple(table, column_names, values)
 
-    def to_db(self):
-        self.json_to_db(
-            self.to_json())
+    def dict_for_db(self):
+        """Fields needed for the main table of this class."""
+        return self.dict_for_json()
 
-    def json_to_db(self, doc):
-        doc['game_token'] = g.game_token
-        fields = db_type_fields(doc)
+    def to_db(self):
+        """Write to the main table of this class."""
+        data = self.dict_for_db()
+        data['game_token'] = g.game_token
+        fields = data.keys()
         placeholders = ','.join(['%s'] * len(fields))
-        values = tuples_to_lists([doc[field] for field in fields])
+        values = numtups_to_lists(
+            [data[field] for field in fields])
         update_fields = [
             field for field in fields
             if field not in ('game_token',)]
@@ -243,16 +230,18 @@ class Identifiable(DbSerializable):
             return g.game_data.get_list(cls)
         return []
 
-    def json_to_db(self, doc):
-        if not doc:
+    def to_db(self):
+        data = self.dict_for_db()
+        if not data:
             return
-        doc['game_token'] = g.game_token
-        fields = db_type_fields(doc)
+        data['game_token'] = g.game_token
+        fields = data.keys()
         placeholders = ['%s'] * len(fields)
-        values = tuples_to_lists([doc[field] for field in fields])
-        if not doc.get('id'):
+        values = numtups_to_lists(
+            [data[field] for field in fields])
+        if not data.get('id'):
             # Generate new id after max instead of specifying value
-            id_index = fields.index('id')
+            id_index = list(fields).index('id')
             placeholders[id_index] = (
                 "COALESCE((SELECT MAX(id) + 1 FROM {table}), 1)")
             values.pop(id_index)
@@ -282,22 +271,24 @@ class Identifiable(DbSerializable):
             entity_list.remove(self)
 
     @classmethod
-    def from_json(cls, json_data):
+    def from_data(cls, data):
+        """Create instance of this class from the given data.
+        Data is from a json file or database,
+        either a dict or a record-like object with attributes.
+        """
         raise NotImplementedError()
 
     @classmethod
-    def list_from_json(cls, json_data):
-        logger.debug("list_from_json()")
-        instances = []
-        for entity_data in json_data:
-            instances.append(
-                cls.from_json(entity_data))
-        return instances
+    def load_complete_object(cls):
+        """Load an object of this class from db.
+        Has everything needed for writing the object back to db.
+        """
+        raise NotImplementedError()
 
     @classmethod
     def load_complete_objects(cls):
-        """Load from db all objects of this class.
-        Suitable for saving objects to file.
+        """Load all objects of this class from db.
+        Has everything needed for saving the objects to file.
         """
         raise NotImplementedError()
 

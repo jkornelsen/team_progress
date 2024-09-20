@@ -4,6 +4,8 @@
     <div class="nav-container">
         <a class="upper-left" href="{{ url_for('overview') }}">[O]verview</a>
         <span class="separator">|</span>
+        <a class="upper-left" href="{{ url_for('configure_index') }}">[M]ain Setup</a>
+        <span class="separator">|</span>
         <a class="upper-left" href="{{ url_for('configure_event', event_id=current.id) }}">Event S[e]tup</a>
     </div>
 {% endblock %}
@@ -12,6 +14,7 @@
     <script>
         const linkForKey = {
             'o': '{{ url_for('overview') }}',
+            'm': '{{ url_for('configure_index') }}',
             'e': '{{ url_for('configure_event', event_id=current.id) }}',
         };
         document.addEventListener('DOMContentLoaded', function () {
@@ -21,23 +24,20 @@
                     document.getElementById('roll-btn').click();
                 } else if (linkForKey[key]) {
                     window.location.href = linkForKey[key];
+                } else if (key === 'f') {
+                    const firstFillBtn = document.querySelector('.fill-btn');
+                    if (firstFillBtn) {
+                        firstFillBtn.click();
+                    }
                 }
             });
         });
     </script>
-    <table>
-        <tr>
-            <td style="background-color: #2a2a2a; border-bottom: 2px solid #ffffff;">
-                <h2 style="margin: 10px 10px">{{ current.name }}</h2>
-            </td>
-        </tr>
-        {% if current.description %}
-        <tr>
-            <td>
-                <p>{{ current.description|htmlify }}</p>
-            </td>
-        </tr>
-        {% endif %}
+    <h1>{{ current.name }}</h1>
+    {% if current.description %}
+        <p>{{ current.description|htmlify }}</p>
+    {% endif %}
+    <table class="spacious">
         <tr>
             <td>
                 <form method="POST" action="{{ url_for('play_event', event_id=current.id) }}">
@@ -51,12 +51,12 @@
                         </select><br>
                     {% endif %}
                     {% if current.outcome_type == 'fourway' or current.outcome_type == 'numeric' %}
-                        <div style="background-color: black; margin: 0px; padding: 10px">
+                        <div style="background-color: black; margin: 3px; padding: 10px">
                         <label for="stat_adjustment">Stat Adjustment:</label>
                         <input type="text" id="stat_adjustment" name="stat_adjustment" value="{{ current.stat_adjustment }}">
                         <br>
                         {% for attr in current.determining_attrs %}
-                            <li>{{ attr.name }}
+                            <li style="margin-top: 5px">{{ attr.name }}
                             <select class="char-for-attr" id="char-for-attr_{{ attr.id }}">
                                 <option value="" selected>(Select character)</option>
                                 {% for char in game_data.characters if attr.id in char.attribs %}
@@ -64,11 +64,13 @@
                                     <option value="{{ attrib_val }}" {% if char.id == session['last_char_id'] %}selected{% endif %}>{{ char.name }} {{ attrib_val }}</option>
                                 {% endfor %}
                             </select>
-                            <button type="button" class="fill-btn" data-attr-id="{{ attr.id }}">Fill</button><br>
+                            <button type="button" class="fill-btn" data-attr-id="{{ attr.id }}">
+                                {% if loop.first %}[F]ill{% else %}Fill{% endif %}
+                            </button><br>
                         {% endfor %}
                         </div>
                     {% endif %}
-                    <div style="margin-top: 20px">
+                    <div style="margin-top: 20px; text-align: center">
                     <button type="submit" id="roll-btn">[R]oll</button>
                     </div>
                 </form>

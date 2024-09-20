@@ -8,7 +8,7 @@ from .character import Character
 from .db_serializable import Identifiable, MutableNamespace, coldef
 from .item import Item
 from .location import Location
-from .utils import RequestHelper
+from .utils import NumTup, RequestHelper
 
 OUTCOME_TYPES = [
     'fourway',  # critical/minor failure or success
@@ -50,9 +50,9 @@ tables_to_create = {
         {coldef('description')},
         toplevel boolean NOT NULL,
         outcome_type varchar(20) not null,
-        trigger_chance integer[],
+        trigger_chance integer[2],
         trigger_by_duration boolean,
-        numeric_range integer[],
+        numeric_range integer[2],
         selection_strings text
         """
 }
@@ -64,11 +64,11 @@ class Event(Identifiable):
         self.description = ""
         self.toplevel = True
         self.outcome_type = OUTCOME_FOURWAY
-        self.numeric_range = (0, 10)  # (min, max)
+        self.numeric_range = NumTup((0, 10))  # (min, max)
         self.selection_strings = ""  # newline-separated possible outcomes
         self.determining_attrs = []  # Attrib objects determining the outcome
         self.changed_attrs = []  # Attrib objects changed by the outcome
-        self.trigger_chance = (0, 1) # (numerator, denominator)
+        self.trigger_chance = NumTup((0, 1))  # (numerator, denominator)
         self.trigger_by_duration = True  # during progress or when finished
         self.triggers = []  # Item or Location objects that can trigger
         ## For a particular occurrence, not stored in Event table
@@ -77,28 +77,43 @@ class Event(Identifiable):
         self.advantage = 0  # for example +1 means best of two rolls
         self.outcome = 0
 
-    def to_json(self):
+    def _base_export_data(self):
+        """Prepare the base dictionary for JSON and DB."""
         return {
             'id': self.id,
             'name': self.name,
             'description': self.description,
             'toplevel': self.toplevel,
             'outcome_type': self.outcome_type,
-            'numeric_range': self.numeric_range,
             'selection_strings': self.selection_strings,
+            'trigger_by_duration': self.trigger_by_duration,
+            }
+
+    def dict_for_json(self):
+        data = self._base_export_data()
+        data.update({
             'determining_attrs': [
                 attrib.id for attrib in self.determining_attrs],
             'changed_attrs': [
                 attrib.id for attrib in self.changed_attrs],
-            'trigger_chance': self.trigger_chance,
-            'trigger_by_duration': self.trigger_by_duration,
             'triggers': [
                 (entity.basename(), entity.id)
-                for entity in self.triggers]
-            }
+                for entity in self.triggers],
+            'numeric_range': self.numeric_range.as_list(),
+            'trigger_chance': self.trigger_chance.as_list(),
+            })
+        return data
+
+    def dict_for_db(self):
+        data = self._base_export_data()
+        data.update({
+            'numeric_range': self.numeric_range,
+            'trigger_chance': self.trigger_chance,
+            })
+        return data
 
     @classmethod
-    def from_json(cls, data):
+    def from_data(cls, data):
         if not isinstance(data, dict):
             data = vars(data)
         instance = cls(int(data.get('id', 0)))
@@ -106,7 +121,7 @@ class Event(Identifiable):
         instance.description = data.get('description', "")
         instance.toplevel = data.get('toplevel', True)
         instance.outcome_type = data.get('outcome_type', OUTCOME_FOURWAY)
-        instance.numeric_range = tuple(data.get('numeric_range', (0, 10)))
+        instance.numeric_range = NumTup(data.get('numeric_range', (0, 10)))
         instance.selection_strings = data.get('selection_strings', "")
         instance.determining_attrs = [
             Attrib(int(attrib_id))
@@ -114,40 +129,41 @@ class Event(Identifiable):
         instance.changed_attrs = [
             Attrib(int(attrib_id))
             for attrib_id in data.get('changed_attrs', [])]
-        instance.trigger_chance = tuple(data.get('trigger_chance', (0, 1)))
+        instance.trigger_chance = NumTup(data.get('trigger_chance', (0, 1)))
         instance.trigger_by_duration = data.get('trigger_by_duration', True)
         instance.triggers = [
             create_trigger_entity(entity_name, entity_id)
             for entity_name, entity_id in data.get('triggers', [])]
         return instance
 
-    def json_to_db(self, doc):
-        logger.debug("json_to_db()")
-        logger.debug("doc=%s", doc)
-        super().json_to_db(doc)
+    def to_db(self):
+        logger.debug("to_db()")
+        super().to_db()
         for rel_table in ('event_attribs', 'event_triggers'):
             self.execute_change(f"""
                 DELETE FROM {rel_table}
                 WHERE event_id = %s AND game_token = %s
                 """, (self.id, self.game_token))
+        values = []
         for determining in ('determining', 'changed'):
-            attr_data = doc[f'{determining}_attrs']
-            logger.debug("%s_attrs=%s", determining, attr_data)
-            if attr_data:
-                values = [
-                    (g.game_token, self.id, attrib_id,
-                        determining == 'determining')
-                    for attrib_id in attr_data]
-                self.insert_multiple(
-                    "event_attribs",
-                    "game_token, event_id, attrib_id, determining",
-                    values)
-        if doc['triggers']:
-            logger.debug("triggers: %s", doc['triggers'])
+            attribs = getattr(self, f'{determining}_attrs')
+            logger.debug("%s_attrs=%s", determining, attribs)
+            for attrib in attribs:
+                values.append((
+                    g.game_token, self.id, attrib.id,
+                    determining == 'determining'
+                    ))
+        if values:
+            self.insert_multiple(
+                "event_attribs",
+                "game_token, event_id, attrib_id, determining",
+                values)
+        if self.triggers:
+            logger.debug("triggers: %s", self.triggers)
             values = []
-            for entity_name, entity_id in doc['triggers']:
-                item_id = entity_id if entity_name == 'item' else None
-                loc_id = entity_id if entity_name == 'location' else None
+            for entity in self.triggers:
+                item_id = entity.id if isinstance(entity, Item) else None
+                loc_id = entity.id if isinstance(entity, Location) else None
                 values.append((g.game_token, self.id, item_id, loc_id))
             self.insert_multiple(
                 "event_triggers",
@@ -200,7 +216,7 @@ class Event(Identifiable):
                 trigger_tup = (Location.basename(), trigger_data.loc_id)
             current_data.setdefault('triggers', []).append(trigger_tup)
         # Create event from data
-        return Event.from_json(current_data)
+        return Event.from_data(current_data)
 
     @classmethod
     def load_complete_objects(cls):
@@ -223,7 +239,7 @@ class Event(Identifiable):
             logger.debug("attrib_data %s", attrib_data)
             instance = instances.get(event_data.id)
             if not instance:
-                instance = cls.from_json(vars(event_data))
+                instance = cls.from_data(vars(event_data))
                 instances[event_data.id] = instance
             if attrib_data.attrib_id:
                 if attrib_data.determining:
@@ -310,7 +326,7 @@ class Event(Identifiable):
             """, (g.game_token, loc_id))
         g.game_data.events = []
         for event_row in events_rows:
-            g.game_data.events.append(Event.from_json(event_row))
+            g.game_data.events.append(Event.from_data(event_row))
         return g.game_data.events
 
     def configure_by_form(self):
@@ -322,7 +338,7 @@ class Event(Identifiable):
             req = RequestHelper('form')
             self.toplevel = req.get_bool('top_level')
             self.outcome_type = req.get_str('outcome_type')
-            self.numeric_range = (
+            self.numeric_range = NumTup(
                 req.get_int('numeric_min', 0),
                 req.get_int('numeric_max', 1))
             self.selection_strings = req.get_str('selection_strings', "")
@@ -332,7 +348,7 @@ class Event(Identifiable):
                 Attrib(int(attrib_id)) for attrib_id in determining_attr_ids]
             self.changed_attrs = [
                 Attrib(int(attrib_id)) for attrib_id in changed_attr_ids]
-            self.trigger_chance = (
+            self.trigger_chance = NumTup(
                 req.get_int('trigger_numerator', 1),
                 req.get_int('trigger_denominator', 10))
             self.trigger_by_duration = (

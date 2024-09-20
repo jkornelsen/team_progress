@@ -55,7 +55,7 @@ class UserInteraction(DbSerializable):
     def tablename(cls):
         return 'user_interactions'
 
-    def to_json(self):
+    def dict_for_json(self):
         return {
             'username': self.username,
             'timestamp': datetime.now(),
@@ -64,7 +64,7 @@ class UserInteraction(DbSerializable):
             }
 
     @classmethod
-    def from_json(cls, data):
+    def from_data(cls, data):
         if not isinstance(data, dict):
             data = vars(data)
         instance = cls(data['username'])
@@ -79,7 +79,7 @@ class UserInteraction(DbSerializable):
         return instance
 
     def to_db(self):
-        doc = self.to_json()
+        doc = self.dict_for_json()
         doc['game_token'] = g.game_token
         fields = list(doc.keys())
         placeholders = ','.join(['%s'] * len(fields))
@@ -155,7 +155,7 @@ class UserInteraction(DbSerializable):
         rows = cls.execute_select(query, values)
         # Don't include usernames which have later been changed
         interactions = [
-            UserInteraction.from_json(vars(row))
+            UserInteraction.from_data(vars(row))
             for row in rows
             if row.route != 'change_user']
         return interactions

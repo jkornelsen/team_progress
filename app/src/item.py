@@ -23,6 +23,7 @@ tables_to_create = {
         progress_id integer,
         FOREIGN KEY (game_token, progress_id)
             REFERENCES progress (game_token, id)
+            DEFERRABLE INITIALLY DEFERRED
         """,
     'recipes': f"""
         {coldef('id')},
@@ -45,14 +46,14 @@ class Source:
         self.preserve = False  # if true then source will not be consumed
         self.q_required = 1.0
 
-    def to_json(self):
+    def dict_for_json(self):
         return {
             'item_id': self.item.id,
             'preserve': self.preserve,
             'q_required': self.q_required}
 
     @classmethod
-    def from_json(cls, data):
+    def from_data(cls, data):
         instance = cls()
         instance.item = Item(int(data.get('item_id', 0)))
         instance.preserve = data.get('preserve', False)
@@ -69,20 +70,30 @@ class Recipe(Identifiable):
         self.sources = []  # Source objects
         self.attribs = {}  # AttribReq objects keyed by attr id
 
-    def to_json(self):
+    def _base_export_data(self):
+        """Prepare the base dictionary for JSON and DB."""
         return {
             'id': self.id,
             'item_id': self.item_produced.id if self.item_produced else 0,
             'rate_amount': self.rate_amount,
             'rate_duration': self.rate_duration,
             'instant': self.instant,
-            'sources': [source.to_json() for source in self.sources],
-            'attribs': {attrib_id: req.val
-                for attrib_id, req in self.attribs.items()}
             }
 
+    def dict_for_json(self):
+        data = self._base_export_data()
+        data.update({
+            'sources': [source.dict_for_json() for source in self.sources],
+            'attribs': {attrib_id: req.val
+                for attrib_id, req in self.attribs.items()}
+            })
+        return data
+
+    def dict_for_db(self):
+        return self._base_export_data()
+
     @classmethod
-    def from_json(cls, data, item_produced=None):
+    def from_data(cls, data, item_produced=None):
         instance = cls()
         instance.id = data.get('id', 0)
         instance.item_produced = (
@@ -92,37 +103,37 @@ class Recipe(Identifiable):
         instance.rate_duration = data.get('rate_duration', 3.0)
         instance.instant = data.get('instant', False)
         instance.sources = [
-            Source.from_json(src_data)
+            Source.from_data(src_data)
             for src_data in data.get('sources', [])]
         instance.attribs = {
             attrib_id: AttribReq(attrib_id, val)
             for attrib_id, val in data.get('attribs', {}).items()}
         return instance
 
-    def json_to_db(self, doc):
-        logger.debug("json_to_db() for id=%d", self.id)
-        super().json_to_db(doc)
-        if doc['sources']:
-            logger.debug("sources: %s", doc['sources'])
+    def to_db(self):
+        logger.debug("to_db() for id=%d", self.id)
+        super().to_db()
+        if self.sources:
+            logger.debug("sources: %s", self.sources)
             values = []
-            for source in doc['sources']:
+            for source in self.sources:
                 values.append((
                     g.game_token, self.id,
-                    source['item_id'],
-                    source['q_required'],
-                    source['preserve']
+                    source.item.id,
+                    source.q_required,
+                    source.preserve,
                     ))
             self.insert_multiple(
                 "recipe_sources",
                 "game_token, recipe_id, item_id, q_required, preserve",
                 values)
-        if doc['attribs']:
-            logger.debug("attribs: %s", doc['attribs'])
+        if self.attribs:
+            logger.debug("attribs: %s", self.attribs)
             values = []
-            for attrib_id, attrib_val in doc['attribs'].items():
+            for attrib_id, req in self.attribs.items():
                 values.append((
                     g.game_token, self.id,
-                    attrib_id, attrib_val
+                    attrib_id, req.val
                     ))
             self.insert_multiple(
                 "recipe_attribs",
@@ -130,7 +141,7 @@ class Recipe(Identifiable):
                 values)
 
 class Item(Identifiable, Pile):
-    PILE_TYPE = Storage.UNIVERSAL  # constant for this class
+    PILE_TYPE = Storage.UNIVERSAL  # Constant for this class
     def __init__(self, new_id=""):
         Identifiable.__init__(self, new_id)
         Pile.__init__(self, item=self)
@@ -148,7 +159,8 @@ class Item(Identifiable, Pile):
         self.pile = self
         self.progress = Progress(container=self)  # for general storage
 
-    def to_json(self):
+    def _base_export_data(self):
+        """Prepare the base dictionary for JSON and DB."""
         return {
             'id': self.id,
             'name': self.name,
@@ -156,19 +168,32 @@ class Item(Identifiable, Pile):
             'storage_type': self.storage_type,
             'toplevel': self.toplevel,
             'masked': self.masked,
+            'q_limit': self.q_limit,
+            'quantity': self.quantity,
+        }
+
+    def dict_for_json(self):
+        data = self._base_export_data()
+        data.update({
             'recipes': [
-                recipe.to_json()
+                recipe.dict_for_json()
                 for recipe in self.recipes],
             'attribs': {
                 attrib_id: attrib_of.val
                 for attrib_id, attrib_of in self.attribs.items()},
-            'q_limit': self.q_limit,
-            'quantity': self.quantity,
-            'progress': self.progress.to_json(),
-        }
+            'progress': self.progress.dict_for_json(),
+            })
+        return data
+
+    def dict_for_db(self):
+        data = self._base_export_data()
+        data.update({
+            'progress_id': self.progress.id or None
+            })
+        return data
 
     @classmethod
-    def from_json(cls, data):
+    def from_data(cls, data):
         if not isinstance(data, dict):
             data = vars(data)
         instance = cls(int(data.get('id', 0)))
@@ -182,33 +207,32 @@ class Item(Identifiable, Pile):
             for attrib_id, val in data.get('attribs', {}).items()}
         instance.q_limit = data.get('q_limit', 0.0)
         instance.quantity = data.get('quantity', 0.0)
-        instance.progress = Progress.from_json(
+        instance.progress = Progress.from_data(
             data.get('progress', {}), instance)
         instance.recipes = [
-            Recipe.from_json(recipe_data, instance)
+            Recipe.from_data(recipe_data, instance)
             for recipe_data in data.get('recipes', [])]
         return instance
 
-    def json_to_db(self, doc):
-        logger.debug("json_to_db() for id=%d", self.id)
-        self.progress.json_to_db(doc['progress'])
-        doc['progress_id'] = None if self.progress.id == 0 else self.progress.id
-        super().json_to_db(doc)
+    def to_db(self):
+        logger.debug("to_db() for id=%d", self.id)
+        self.progress.to_db()
+        super().to_db()
         for rel_table in ('item_attribs', 'recipes'):
             self.execute_change(f"""
                 DELETE FROM {rel_table}
                 WHERE item_id = %s AND game_token = %s
                 """, (self.id, self.game_token))
-        if doc['attribs']:
+        if self.attribs:
             values = [
-                (g.game_token, self.id, attrib_id, val)
-                for attrib_id, val in doc['attribs'].items()]
+                (g.game_token, self.id, attrib_id, attrib_of.val)
+                for attrib_id, attrib_of in self.attribs.items()]
             self.insert_multiple(
                 "item_attribs",
                 "game_token, item_id, attrib_id, value",
                 values)
-        for recipe_data in doc.get('recipes', []):
-            Recipe.from_json(recipe_data, self).to_db()
+        for recipe in self.recipes:
+            recipe.to_db()
 
     @classmethod
     def db_item_and_progress_data(cls, item_id_for_progress=None):
@@ -357,7 +381,7 @@ class Item(Identifiable, Pile):
             recipes_data = list(item_recipes_data.values())[0]
             current_data.recipes = list(recipes_data.values())
         # Create item from data
-        item = Item.from_json(current_data)
+        item = Item.from_data(current_data)
         g.active.items[id_to_get] = item
         return item
 
@@ -369,21 +393,21 @@ class Item(Identifiable, Pile):
         instances = {}  # keyed by ID
         for item_data, progress_data in tables_rows:
             instance = instances.setdefault(
-                item_data.id, cls.from_json(vars(item_data)))
+                item_data.id, cls.from_data(vars(item_data)))
             if progress_data.id:
-                instance.progress = Progress.from_json(progress_data, instance)
+                instance.progress = Progress.from_data(progress_data, instance)
         # Get attrib data for items
         tables_rows = cls.db_attrib_data()
         for attrib_data, item_attrib_data in tables_rows:
             instance = instances[item_attrib_data.item_id]
-            attrib_of = AttribOf.from_json(item_attrib_data)
+            attrib_of = AttribOf.from_data(item_attrib_data)
             instance.attribs[attrib_data.id] = attrib_of
         # Get source data for items
         item_recipes_data = cls.db_recipe_data()
         for item_id, recipes_data in item_recipes_data.items():
             instance = instances[item_id]
             instance.recipes = [
-                Recipe.from_json(recipe_data, instance)
+                Recipe.from_data(recipe_data, instance)
                 for recipe_data in recipes_data.values()]
             # Get the recipe that is currently in progress
             recipe_id = instance.progress.recipe.id
@@ -462,7 +486,7 @@ class Item(Identifiable, Pile):
         for item_id, recipes_data in item_recipes_data.items():
             item = Item.get_by_id(item_id)
             item.recipes = [
-                Recipe.from_json(recipe_data, item)
+                Recipe.from_data(recipe_data, item)
                 for recipe_id, recipe_data in recipes_data.items()]
         # Print debugging info
         container = current_obj.pile.container
@@ -495,49 +519,47 @@ class Item(Identifiable, Pile):
                 req.get_str('item_limit'), old.q_limit)
             self.quantity = req.set_num_if_changed(
                 req.get_str('item_quantity'), old.quantity)
-            recipe_ids = req.get_list('recipe_id')
-            recipe_ids_from = req.get_list('recipe_id_from')
             self.recipes = []
-            for recipe_id, recipe_id_from in zip(recipe_ids, recipe_ids_from):
+            for recipe_id, recipe_id_from in zip(
+                    req.get_list('recipe_id'),
+                    req.get_list('recipe_id_from')
+                    ):
                 if recipe_id_from == 'from_db':
                     recipe = Recipe(int(recipe_id), self)
                 else:
                     recipe = Recipe(0, self)  # generate from db
-                self.recipes.append(recipe)
-                recipe.rate_amount = req.get_float(
-                    f'recipe{recipe_id}_rate_amount')
-                recipe.rate_duration = req.get_float(
-                    f'recipe{recipe_id}_rate_duration')
-                recipe.instant = req.get_bool(
-                    f'recipe{recipe_id}_instant')
-                source_ids = req.get_list(
-                    f'recipe{recipe_id}_source_id')
+                prefix = f'recipe{recipe_id}_'
+                recipe.rate_amount = req.get_float(f'{prefix}rate_amount')
+                recipe.rate_duration = req.get_float(f'{prefix}rate_duration')
+                recipe.instant = req.get_bool(f'{prefix}instant')
+                source_ids = req.get_list(f'{prefix}source_id')
                 logger.debug(f"Source IDs: %s", source_ids)
                 for source_id in source_ids:
-                    source = Source.from_json({
+                    source_prefix = f'{prefix}source{source_id}_'
+                    source = Source.from_data({
                         'item_id': int(source_id),
                         'q_required': req.get_float(
-                            f'recipe{recipe_id}_source{source_id}_qtyreq',
-                            0.0),
+                            f'{source_prefix}qtyreq', 0.0),
                         'preserve': req.get_bool(
-                            f'recipe{recipe_id}_source{source_id}_preserve'),
-                    })
+                            f'{source_prefix}preserve'),
+                        })
                     recipe.sources.append(source)
                     logger.debug("Sources for %s: %s",
                         recipe_id, {source.item.id: source.q_required
                         for source in recipe.sources})
-                recipe_attrib_ids = req.get_list(
-                    f'recipe{recipe_id}_attrib_id')
+                recipe_attrib_ids = req.get_list(f'{prefix}attrib_id')
                 for attrib_id in recipe_attrib_ids:
-                    attrib_value = req.get_float(
-                        f'recipe{recipe_id}_attrib{attrib_id}_value', 1.0)
+                    attrib_prefix = f'{prefix}attrib{attrib_id}_'
+                    attrib_value = req.get_float(f'{attrib_prefix}value', 1.0)
                     recipe.attribs[attrib_id] = AttribReq(
                         attrib_id=attrib_id, val=attrib_value)
+                self.recipes.append(recipe)
             attrib_ids = req.get_list('attrib_id[]')
             logger.debug(f"Attrib IDs: %s", attrib_ids)
             self.attribs = {}
             for attrib_id in attrib_ids:
-                attrib_val = req.get_float(f'attrib{attrib_id}_val', 0.0)
+                attrib_prefix = f'attrib{attrib_id}_'
+                attrib_val = req.get_float(f'{attrib_prefix}val', 0.0)
                 self.attribs[attrib_id] = AttribOf(
                     attrib_id=attrib_id, val=attrib_val)
             logger.debug("attribs: %s", {attrib_id: attrib_of.val
@@ -609,7 +631,7 @@ def _load_piles(current_item, char_id, loc_id, main_pile_type):
         chars = [
             char for char in g.game_data.characters
             if char.location and char.location.id == loc_id]
-    # This container item id was set by container.progress.from_json(),
+    # This container item id was set by container.progress.from_data(),
     # loaded from the progress table.
     if container.pile.item.id != current_item.pile.item.id:
         # Don't carry over progress for a different item.

@@ -100,13 +100,18 @@ def _set_app_routes():
     @app.route('/change-user', methods=['GET', 'POST'])
     def change_user():
         game_token = session.get('game_token')
-        if request.method == 'POST':
-            username = request.form.get('username')
-            if not username:
-                username = generate_username()
-            session['username'] = username
-            return redirect(url_for('index'))
-        return render_template('session/username.html')
+        from src.character import Character
+        g.game_data.from_db_flat([Character])
+        if request.method == 'GET':
+            return render_template(
+                'session/username.html',
+                characters=g.game_data.characters
+                )
+        username = request.form.get('username')
+        if not username:
+            username = generate_username()
+        session['username'] = username
+        return redirect(url_for('index'))
 
     @app.route('/session-users')
     def session_users():

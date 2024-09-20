@@ -2,11 +2,13 @@
 
 {% block upper_left %}
     <div class="nav-container">
-        <a class="upper-left" href="{{ url_for('overview') }}">Continue Game</a>
+        <a class="upper-left" href="{{ url_for('overview') }}">[O]verview</a>
         <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for('save_to_file') }}">Save to File</a>
+        <span class="upper-left">Main Setup</span>
         <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for('load_from_file') }}">Load from File</a>
+        <a class="upper-left" href="{{ url_for('save_to_file') }}">[S]ave to File</a>
+        <span class="separator">|</span>
+        <a class="upper-left" href="{{ url_for('load_from_file') }}">[L]oad from File</a>
     </div>
     {% if file_message %}
         <p>{{ file_message }}</p>
@@ -14,11 +16,27 @@
 {% endblock %}
 
 {% block content %}
+    <script>
+        const linkForKey = {
+            'o': '{{ url_for('overview') }}',
+            'p': '{{ url_for('browse_scenarios') }}',
+            's': '{{ url_for('save_to_file') }}',
+            'l': '{{ url_for('load_from_file') }}',
+        };
+        document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('keypress', function (event) {
+                const key = event.key.toLowerCase();
+                if (linkForKey[key]) {
+                    window.location.href = linkForKey[key];
+                }
+            });
+        });
+    </script>
     <h1>Game Setup</h1>
-    <center>
-        <a href="{{ url_for('browse_scenarios') }}"><button>Browse Example Scenarios</button></a>
+    <div style="text-align: center">
+        <a href="{{ url_for('browse_scenarios') }}"><button>[P]re-Built Scenarios</button></a>
         <a href="{{ url_for('blank_scenario') }}"><button onclick="return confirm('Are you sure you want to clear the current game\'s data and start with an empty setup?')">Blank Setup</button></a>
-    </center>
+    </div>
     <div class="entitylist-container" style="margin-bottom: 20px;">
         <a href="{{ url_for('configure_overall') }}">Overall Settings</a>
     </div>

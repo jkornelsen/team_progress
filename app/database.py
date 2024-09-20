@@ -92,7 +92,7 @@ def column_counts(table_name):
         'events': 10,
         'item_attribs': 4,
         'items': 10,
-        'loc_destinations': 4,
+        'loc_destinations': 6,
         'loc_items': 5,
         'locations': 10,
         'overall': 5,

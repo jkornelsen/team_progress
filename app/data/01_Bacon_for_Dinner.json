@@ -39,14 +39,7 @@
             ],
             "location_id": 1,
             "name": "Suzy",
-            "progress": {
-                "batches_processed": 0,
-                "id": 34,
-                "is_ongoing": false,
-                "recipe_id": 0,
-                "start_time": null,
-                "stop_time": null
-            },
+            "progress": {},
             "quantity": 0.0,
             "toplevel": true,
             "masked": false
@@ -61,14 +54,7 @@
             "items": [],
             "location_id": 1,
             "name": "Mom",
-            "progress": {
-                "batches_processed": 0,
-                "id": 35,
-                "is_ongoing": false,
-                "recipe_id": 0,
-                "start_time": null,
-                "stop_time": null
-            },
+            "progress": {},
             "quantity": 0.0,
             "toplevel": true,
             "masked": false
@@ -83,14 +69,7 @@
             "items": [],
             "location_id": 3,
             "name": "Uncle",
-            "progress": {
-                "batches_processed": 0,
-                "id": 36,
-                "is_ongoing": false,
-                "recipe_id": 0,
-                "start_time": null,
-                "stop_time": null
-            },
+            "progress": {},
             "quantity": 0.0,
             "toplevel": false,
             "masked": true
@@ -148,14 +127,7 @@
             "description": "Where chores are done.",
             "id": 13,
             "name": "Barn",
-            "progress": {
-                "batches_processed": 0,
-                "id": 33,
-                "is_ongoing": false,
-                "recipe_id": 0,
-                "start_time": null,
-                "stop_time": null
-            },
+            "progress": {},
             "q_limit": 1.0,
             "quantity": 0.0,
             "recipes": [],
@@ -168,14 +140,7 @@
             "description": "Get paid for chores. Useful for purchasing pigs at the market in case breeding doesn't work out.",
             "id": 12,
             "name": "Cash",
-            "progress": {
-                "batches_processed": 0,
-                "id": 20,
-                "is_ongoing": false,
-                "recipe_id": 0,
-                "start_time": null,
-                "stop_time": null
-            },
+            "progress": {},
             "q_limit": 100.0,
             "quantity": 0.0,
             "recipes": [
@@ -206,14 +171,7 @@
             "description": "Pitchforking hay to feed animals. Mucking manure. Milking cows. When enough chores are done, find Uncle to get paid for them.",
             "id": 11,
             "name": "Chores",
-            "progress": {
-                "batches_processed": 0,
-                "id": 19,
-                "is_ongoing": false,
-                "recipe_id": 0,
-                "start_time": null,
-                "stop_time": null
-            },
+            "progress": {},
             "q_limit": 10.0,
             "quantity": 0.0,
             "recipes": [
@@ -244,14 +202,7 @@
             "description": "Cooked on the wood stove in a cast iron skillet at home.",
             "id": 6,
             "name": "Cooked Bacon",
-            "progress": {
-                "batches_processed": 0,
-                "id": 14,
-                "is_ongoing": false,
-                "recipe_id": 0,
-                "start_time": null,
-                "stop_time": null
-            },
+            "progress": {},
             "q_limit": 30.0,
             "quantity": 0.0,
             "recipes": [
@@ -285,14 +236,7 @@
             "description": "For butchering.",
             "id": 9,
             "name": "Knife",
-            "progress": {
-                "batches_processed": 0,
-                "id": 17,
-                "is_ongoing": false,
-                "recipe_id": 0,
-                "start_time": null,
-                "stop_time": null
-            },
+            "progress": {},
             "q_limit": 1.0,
             "quantity": 0.0,
             "recipes": [],
@@ -305,14 +249,7 @@
             "description": "Suzy's mother is the first number on the contacts list.",
             "id": 10,
             "name": "Phone",
-            "progress": {
-                "batches_processed": 0,
-                "id": 18,
-                "is_ongoing": false,
-                "recipe_id": 0,
-                "start_time": null,
-                "stop_time": null
-            },
+            "progress": {},
             "q_limit": 1.0,
             "quantity": 0.0,
             "recipes": [],
@@ -325,14 +262,7 @@
             "description": "Where bacon comes from. Can be raised or else bought from the market.",
             "id": 8,
             "name": "Pigs",
-            "progress": {
-                "batches_processed": 0,
-                "id": 16,
-                "is_ongoing": false,
-                "recipe_id": 0,
-                "start_time": null,
-                "stop_time": null
-            },
+            "progress": {},
             "q_limit": 5.0,
             "quantity": 0.0,
             "recipes": [
@@ -376,14 +306,7 @@
             "description": "Straight from the pig.",
             "id": 7,
             "name": "Raw Bacon",
-            "progress": {
-                "batches_processed": 0,
-                "id": 15,
-                "is_ongoing": false,
-                "recipe_id": 0,
-                "start_time": null,
-                "stop_time": null
-            },
+            "progress": {},
             "q_limit": 30.0,
             "quantity": 0.0,
             "recipes": [
@@ -418,15 +341,7 @@
             "id": 14,
             "masked": false,
             "name": "Wood Stove",
-            "progress": {
-                "batches_processed": 0,
-                "id": 40,
-                "is_ongoing": false,
-                "item_id": 0,
-                "recipe_id": 0,
-                "start_time": null,
-                "stop_time": null
-            },
+            "progress": {},
             "q_limit": 1.0,
             "quantity": 0.0,
             "recipes": [],
@@ -440,9 +355,12 @@
             "name": "Uncle's Farm",
             "description": "Suzy's uncle is okay with her butchering pigs from time to time.",
             "masked": true,
-            "destinations": {
-                "2": 2.0
-            },
+            "destinations": [
+                {
+                    "dest_id": "2",
+                    "distance": 2.0
+                }
+            ],
             "items": [
                 {
                     "item_id": 8,
@@ -467,9 +385,12 @@
             "name": "Home",
             "description": "Starting point, and we'll return here at the end.",
             "masked": false,
-            "destinations": {
-                "2": 1.0
-            },
+            "destinations": [
+                {
+                    "dest_id": "2",
+                    "distance": 1.0
+                }
+            ],
             "items": [
                 {
                     "item_id": 14,
@@ -486,10 +407,16 @@
             "name": "Sketchy-Path Forest",
             "description": "Easy to get lost in.",
             "masked": true,
-            "destinations": {
-                "1": 10.0,
-                "3": 10.0
-            },
+            "destinations": [
+                {
+                    "dest_id": "1",
+                    "distance": 10.0
+                },
+                {
+                    "dest_id": "3",
+                    "distance": 10.0
+                }
+            ],
             "items": []
         }
     ],
