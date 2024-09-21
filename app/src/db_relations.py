@@ -196,4 +196,3 @@ tables_to_create = {
             DEFERRABLE INITIALLY DEFERRED
         """,
     }
-

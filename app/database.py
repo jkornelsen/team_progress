@@ -1,6 +1,7 @@
-from flask import Flask, g
 import logging
 import psycopg2
+
+from flask import Flask, g
 
 logger = logging.getLogger(__name__)
 
@@ -9,7 +10,7 @@ try:
 except ImportError:
     # A default PostgreSQL installation uses 'trust' authentication,
     # which does not require a password.
-    # This setup is suitable for use on a local LAN. 
+    # This setup is suitable for use on a local LAN.
     # For external web deployments, update postgres_data/pg_hba.conf to use
     # password-based authentication and edit sensitive.py to set a real password.
     logger.warning("Not using a database password.")
@@ -27,7 +28,7 @@ def get_db():
     set_autocommit(True)
     return g.db
 
-def close_db(ctx=None):
+def close_db():
     db = g.pop('db', None)
     if db is not None:
         db.close()
@@ -111,4 +112,3 @@ if __name__ == '__main__':
     app = Flask(__name__)
     with app.app_context():
         create_all()
-

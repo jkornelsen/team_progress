@@ -255,10 +255,12 @@
                     alert('Byproduct already exists.');
                     return;
                 }
-                if (byproductId == current.id) {
-                    alert('This is the main item produced by this recipe, so it cannot also be configured as a byproduct.');
+                {% if current.id > 0 %}
+                if (byproductId == {{ current.id }}) {
+                    alert(`"${byproductName}" is the primary item produced by this recipe, so it cannot also be a byproduct of the recipe.`);
                     return;
                 }
+                {% endif %}
                 const idArray = [`recipe${recipeId}`, `byproduct${byproductId}`];
                 const uniqueId = idArray.join('-');
                 const uniqueName = idArray.join('_');
@@ -370,6 +372,13 @@
                         "{{ source.item.name }}",
                         {{ source.q_required | formatNum }},
                         {{ source.preserve | lower }});
+                {% endfor %}
+                {% for byproduct in recipe.byproducts %}
+                    addByproduct(
+                        {{ recipe.id }},
+                        {{ byproduct.item.id }},
+                        "{{ byproduct.item.name }}",
+                        {{ byproduct.rate_amount | formatNum }});
                 {% endfor %}
                 {% for attrib_id, req in recipe.attribs.items() %}
                     addRecipeAttrib(

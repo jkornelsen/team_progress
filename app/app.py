@@ -1,5 +1,17 @@
+"""
+The main entry point for the server app.
+Sets up routes that get called by clients.
+"""
+from inspect import signature
+import logging
+import os
+import random
+import re
+import string
+import sys
+import uuid
+
 import bleach
-from datetime import timedelta
 from flask import (
     Flask,
     g,
@@ -9,16 +21,7 @@ from flask import (
     session,
     url_for
     )
-from flask_caching import Cache
-from inspect import signature
 from markupsafe import Markup
-import logging
-import os
-import random
-import re
-import string
-import sys
-import uuid
 
 from database import get_db, close_db
 from src.cache import init_cache
@@ -31,7 +34,7 @@ from src.utils import format_num
 app = Flask(__name__)
 app.config['TITLE'] = 'Team Progress'
 app.config['SECRET_KEY'] = 'team-progress'
-app.config['DATA_DIR'] = 'data'
+app.config['DATA_DIR'] = 'data_files'
 app.config['UPLOAD_DIR'] = os.path.join(app.config['DATA_DIR'], 'uploads')
 app.config['TEMPLATES_AUTO_RELOAD'] = True  # set to False for production
 
@@ -50,7 +53,7 @@ set_up_logging()
 logger = logging.getLogger(__name__)
 
 with app.app_context():
-    logger.debug(f"starting app")
+    logger.debug("starting app")
 
 @app.before_request
 def before_request():
@@ -84,8 +87,7 @@ def _set_app_routes():
         if game_token:
             session['game_token'] = game_token
             return redirect(url_for('overview'))
-        else:
-            return "Please include the game token in the URL."
+        return "Please include the game token in the URL."
 
     @app.route('/session-link')
     def get_session_link():
@@ -99,7 +101,6 @@ def _set_app_routes():
 
     @app.route('/change-user', methods=['GET', 'POST'])
     def change_user():
-        game_token = session.get('game_token')
         from src.character import Character
         g.game_data.from_db_flat([Character])
         if request.method == 'GET':
@@ -152,15 +153,13 @@ def get_parameter_name(endpoint):
 def inject_username():
     return {'current_username': session.get('username')}
 
-def formatNum_filter(value):
+def format_num_filter(value):
     return format_num(value)
 
 def htmlify_filter(text):
     text = re.sub(r'<c\s*=', r'<font color=', text)
     text = re.sub(r'</c\s*>', r'</font>', text)
-    tags = set('font')
-    attrs = {'font': ['color']}
-    cleaned_description = bleach.clean(
+    text = bleach.clean(
         text,
         tags={'b', 'i', 'font'},
         attributes={
@@ -171,15 +170,15 @@ def htmlify_filter(text):
     def sanitize_href(match):
         href = match.group(2).strip()
         if not re.match(r'^/[a-zA-Z0-9/=?]*["\']?$', href):
-            return f'href="#"'
+            return 'href="#"'
         return match.group(0)
-    
+
     text = re.sub(r'href\s*=\s*(["\']?)([^>]+)', sanitize_href, text)
     text = re.sub(r'\r?\n', '<br>', text)
     text = Markup(text)  # instead of adding |safe
     return text
 
-app.jinja_env.filters['formatNum'] = formatNum_filter
+app.jinja_env.filters['formatNum'] = format_num_filter
 app.jinja_env.filters['htmlify'] = htmlify_filter
 app.jinja_env.globals['MAX_INT_32'] = 2**31 - 1
 
@@ -192,9 +191,8 @@ def handle_type_error(ex):
         details=str(ex))
 
 @app.teardown_appcontext
-def teardown(ctx):
+def teardown(ctx):  # pylint: disable=unused-argument
     close_db()
 
 if __name__ == '__main__':
     app.run()
-

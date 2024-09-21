@@ -1,20 +1,19 @@
-from flask import g
 import logging
 
-from .db_serializable import DbSerializable
-from .db_relations import tables_to_create as relation_tables
+from flask import g
 
 from .attrib import Attrib
 from .character import Character
+from .db_serializable import DbSerializable
 from .event import Event
-from .item import Item, Recipe
+from .item import Item
 from .location import Location
 from .overall import Overall
 from .progress import Progress
 
 logger = logging.getLogger(__name__)
 
-# In this order for from_data() to correctly get references to other entities. 
+# In this order for from_data() to correctly get references to other entities.
 ENTITIES = (
     Attrib,
     Item,

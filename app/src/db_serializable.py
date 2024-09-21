@@ -1,8 +1,9 @@
-from flask import g
 import logging
-import psycopg2
-from psycopg2.extras import RealDictCursor, execute_values
 from types import SimpleNamespace
+
+from flask import g
+from psycopg2.extras import RealDictCursor, execute_values
+import psycopg2
 
 from database import column_counts, pretty
 from .utils import NumTup
@@ -14,17 +15,16 @@ def coldef(which):
     """Definitions for commonly used columns for creating a table."""
     if which == 'game_token':
         return "game_token varchar(50)"
-    elif which == 'id':
+    if which == 'id':
         # include game token as well
         return f"""id integer,
         {coldef('game_token')},
         PRIMARY KEY (id, game_token)"""
-    elif which == 'name':
+    if which == 'name':
         return "name varchar(255) NOT NULL"
-    elif which == 'description':
+    if which == 'description':
         return "description text"
-    else:
-        raise Exception(f"Unexpected coldef type '{which}'")
+    raise ValueError(f"Unexpected coldef type '{which}'")
 
 def numtups_to_lists(values):
     """Convert NumTup objects to lists for database insertion."""
@@ -51,13 +51,36 @@ class MutableNamespace(SimpleNamespace):
         """Get the value of an attribute or return default."""
         return getattr(self, key, default)
 
-class DbSerializable():
-    """Parent class with methods for serializing to database along with some
-    other things that entities have in common.
-    """
+#TODO: Take these out of DbSerializable without causing circular dependencies.
+class Serializable():
+    """Abstract class for exporting and importing data."""
+    def _base_export_data(self):
+        """Fields that get exported to both JSON and database."""
+        raise NotImplementedError()
+
+    def dict_for_json(self):
+        """Fields for exporting to JSON file."""
+        return self._base_export_data()
+
+    def dict_for_main_table(self):
+        """Fields for writing to the main database table of this class."""
+        return self._base_export_data()
+
+    @classmethod
+    def from_data(cls, data):
+        """Create instance of this class from the given data.
+        Data is from a json file or database,
+        either a dict or a record-like object with attributes.
+        """
+        raise NotImplementedError()
+
+#class DbSerializable():
+class DbSerializable(Serializable):
+    """Abstract class for methods for serializing to database."""
     __abstract__ = True
 
     def __init__(self):
+        #super().__init__()
         self.game_token = g.game_token
         self.game_data = None
 
@@ -136,10 +159,12 @@ class DbSerializable():
         return results[0]
 
     @classmethod
-    def execute_change(cls, query_without_table, values=[], fetch=False):
+    def execute_change(cls, query_without_table, values=None, fetch=False):
         """Returning a value is useful when inserting
         auto-generated IDs.
         """
+        if values is None:
+            values = []
         query = query_without_table.format(table=cls.tablename())
         logger.debug(pretty(query, values))
         result = None
@@ -151,7 +176,7 @@ class DbSerializable():
         except (psycopg2.OperationalError, psycopg2.ProgrammingError,
                 psycopg2.IntegrityError, psycopg2.InterfaceError,
                 psycopg2.InternalError) as e:
-            raise DbError(e)
+            raise DbError(str(e))
         return result
 
     @classmethod
@@ -181,18 +206,6 @@ class DbSerializable():
         column_names = ", ".join(['game_token'] + list(column_keys))
         cls.insert_multiple(table, column_names, values)
 
-    def _base_export_data(self):
-        """Fields that get exported to both JSON and DB."""
-        return NotImplementedError()
-
-    def dict_for_json(self):
-        """Fields for exporting to JSON file."""
-        return self._base_export_data()
-
-    def dict_for_main_table(self):
-        """Fields for writing to the main database table of this class."""
-        return self._base_export_data()
-
     def to_db(self):
         """Write to the main table of this class."""
         data = self.dict_for_main_table()
@@ -214,9 +227,11 @@ class DbSerializable():
             """
         self.execute_change(query, values)
 
+#pylint: disable=abstract-method
 class Identifiable(DbSerializable):
     __abstract__ = True
 
+    """Abstract class for objects that have a unique id in the database."""
     def __init__(self, new_id=0):
         super().__init__()
         if new_id == 'new' or not new_id:
@@ -292,17 +307,10 @@ class Identifiable(DbSerializable):
             entity_list.remove(self)
 
     @classmethod
-    def from_data(cls, data):
-        """Create instance of this class from the given data.
-        Data is from a json file or database,
-        either a dict or a record-like object with attributes.
-        """
-        raise NotImplementedError()
-
-    @classmethod
-    def load_complete_objects(cls):
-        """Load all objects of this class from db.
-        Has everything needed for saving the objects to file.
+    def load_complete_objects(cls, id_to_get=None):
+        """Load objects from db with everything needed for storing
+        to db or JSON file.
+        :param id_to_get: specify to only load a single object
         """
         raise NotImplementedError()
 

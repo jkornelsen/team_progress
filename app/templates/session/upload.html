@@ -19,14 +19,99 @@
                 const key = event.key.toLowerCase();
                 if (linkForKey[key]) {
                     window.location.href = linkForKey[key];
+                } else if (key === 'u') {
+                    uploadBtn.click();
                 }
             });
         });
     </script>
-    <h1>Upload a Game File</h1>
-    <p>Restore a game by loading a file that was downloaded to your computer previously.</p>
-    <form action="{{ url_for('load_from_file') }}" method="POST" enctype="multipart/form-data">
-        <input type="file" name="file" accept=".json">
-        <button type="submit">Upload</button>
-    </form>
+    <h1>Load from File</h1>
+    <p>Restore a game by uploading a file that was downloaded to your computer previously.
+    Feel free to edit the file before uploading,
+    which may in some cases be easier than making changes through Setup.</p>
+    <style>
+        #drop-area {
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 400px;
+            padding: 50px;
+            margin: 20px auto;
+            text-align: center;
+            background-color: #f9f9f9;
+            font-family: Arial, sans-serif;
+            color: #333;
+            cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        #drop-area:hover {
+            background-color: #f1f1f1;
+            border-color: #aaa;
+        }
+
+        #drop-area.dragover {
+            background-color: #e0f7fa;
+            border-color: #00bcd4;
+        }
+
+        #fileLabel {
+            font-size: 18px;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        #uploadBtn {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #00bcd4;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #uploadBtn:hover {
+            background-color: #0097a7;
+        }
+    </style>
+    <div id="drop-area">
+        <form action="{{ url_for('load_from_file') }}" method="POST" enctype="multipart/form-data">
+            <input type="file" id="fileElem" name="file" accept=".json" hidden>
+            <label id="fileLabel">Drag & Drop your .json file here,<br>or click in this box to select.</label><br>
+            <button type="submit" id="uploadBtn">[U]pload this File</button>
+        </form>
+    </div>
+    {% if file_message %}
+        <p>{{ file_message }}</p>
+    {% endif %}
+    <script>
+        const dropArea = document.getElementById('drop-area');
+        const fileElem = document.getElementById('fileElem');
+        const fileLabel = document.getElementById('fileLabel');
+        const uploadBtn = document.getElementById('uploadBtn');
+
+        // Prevent the drop area from opening the file dialog when the "Upload" button is clicked
+        uploadBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+        });
+
+        dropArea.addEventListener('click', () => fileElem.click());
+        fileElem.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) fileLabel.textContent = file.name;
+        });
+        dropArea.addEventListener('dragover', (event) => event.preventDefault());
+        dropArea.addEventListener('drop', (event) => {
+            event.preventDefault();
+            const file = event.dataTransfer.files[0];
+            fileElem.files = event.dataTransfer.files; // Set dropped file to input
+            if (file) fileLabel.textContent = file.name;
+        });
+
+        if (typeof File === 'undefined' || typeof FileReader === 'undefined') {
+            // HTML5 file input is not supported
+            document.getElementById('fileLabel').innerHTML = "Click in this box to select a file.<br>(Your browser does not support HTML5 click & drag):";
+        }
+    </script>
 {% endblock %}

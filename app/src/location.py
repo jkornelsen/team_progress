@@ -1,12 +1,12 @@
-from flask import g, session
 import logging
 
+from flask import g, session
+
 from .db_serializable import (
-    DbError, DeletionError, Identifiable, MutableNamespace,
-    QueryHelper, coldef)
-from .item import Item
+    DbError, DeletionError, Identifiable, QueryHelper, coldef)
+from .item import Item, Pile
 from .progress import Progress
-from .utils import Pile, NumTup, RequestHelper, Storage
+from .utils import NumTup, RequestHelper, Storage
 
 tables_to_create = {
     'locations': f"""
@@ -134,7 +134,7 @@ class Grid:
             return False
         if y < 1 or y > height:
             return False
-        if x >= left and x <= right and y >= top and y <= bottom:
+        if left <= x <= right and top <= y <= bottom:
             return False
         return True
 
@@ -254,12 +254,12 @@ class Location(Identifiable):
 
     def unmask(self):
         """Mark this location as visited if it hasn't been yet."""
-        if self.location.id:
-            self.execute_change(f"""
+        if self.id:
+            self.execute_change("""
                 UPDATE locations
                 SET masked = false
                 WHERE id = %s AND masked = true
-                """, (self.location.id,))
+                """, (self.id,))
 
     @classmethod
     def load_complete_objects(cls, id_to_get=None):
@@ -393,7 +393,7 @@ class Location(Identifiable):
                 self.remove_from_db()
                 session['file_message'] = 'Removed location.'
             except DbError as e:
-                raise DeletionError(e)
+                raise DeletionError(str(e))
         elif req.has_key('cancel_changes'):
             logger.debug("Cancelling changes.")
         else:

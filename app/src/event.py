@@ -1,12 +1,12 @@
-from flask import g, session
 import logging
 import random
-from types import SimpleNamespace
+
+from flask import g, session
 
 from .attrib import Attrib
 from .character import Character
 from .db_serializable import (
-    Identifiable, MutableNamespace, QueryHelper, coldef)
+    DbError, DeletionError, Identifiable, QueryHelper, coldef)
 from .item import Item
 from .location import Location
 from .utils import NumTup, RequestHelper
@@ -39,10 +39,9 @@ def roll_dice(sides):
 def create_trigger_entity(entity_name, entity_id):
     if entity_name == 'item':
         return Item(entity_id)
-    elif entity_name == 'location':
+    if entity_name == 'location':
         return Location(entity_id)
-    else:
-        raise ValueError(f"Unknown entity_name: {entity_name}")
+    raise ValueError(f"Unknown entity_name: {entity_name}")
 
 tables_to_create = {
     'events': f"""
@@ -218,11 +217,12 @@ class Event(Identifiable):
         qhelper.add_limit("event_id", id_to_get)
         trigger_rows = cls.execute_select(qhelper=qhelper)
         for row in trigger_rows:
+            evt = events[row.event_id]
             if row.item_id:
                 trigger_tup = (Item.basename(), row.item_id)
             else:
                 trigger_tup = (Location.basename(), row.loc_id)
-            current_data.setdefault('triggers', []).append(trigger_tup)
+            evt.setdefault('triggers', []).append(trigger_tup)
         # Set list of objects
         instances = []
         for data in events.values():
@@ -250,14 +250,14 @@ class Event(Identifiable):
             attrlist.extend(populated_objs)
         populated_objs = []
         for partial_obj in current_obj.triggers:
-            cls = partial_obj.__class__
-            lookup_obj = cls.get_by_id(partial_obj.id)
-            populated_objs.append(lookup_obj)
+            trigger_entity_class = partial_obj.__class__
+            populated_objs.append(
+                trigger_entity_class.get_by_id(partial_obj.id))
         current_obj.triggers = populated_objs
         # Print debugging info
         logger.debug("found %d triggers", len(current_obj.triggers))
         logger.debug("found %d det att", len(current_obj.determining_attrs))
-        if len(current_obj.triggers):
+        if current_obj.triggers:
             trigger = current_obj.triggers[0]
             logger.debug("type=%s", trigger.__class__.__name__)
             logger.debug("id=%d", trigger.id)
@@ -297,9 +297,9 @@ class Event(Identifiable):
             req = RequestHelper('form')
             self.toplevel = req.get_bool('top_level')
             self.outcome_type = req.get_str('outcome_type')
-            self.numeric_range = NumTup(
+            self.numeric_range = NumTup((
                 req.get_int('numeric_min', 0),
-                req.get_int('numeric_max', 1))
+                req.get_int('numeric_max', 1)))
             self.selection_strings = req.get_str('selection_strings', "")
             determining_attr_ids = req.get_list('determining_attr_id[]')
             changed_attr_ids = req.get_list('changed_attr_id[]')
@@ -307,9 +307,9 @@ class Event(Identifiable):
                 Attrib(int(attrib_id)) for attrib_id in determining_attr_ids]
             self.changed_attrs = [
                 Attrib(int(attrib_id)) for attrib_id in changed_attr_ids]
-            self.trigger_chance = NumTup(
+            self.trigger_chance = NumTup((
                 req.get_int('trigger_numerator', 1),
-                req.get_int('trigger_denominator', 10))
+                req.get_int('trigger_denominator', 10)))
             self.trigger_by_duration = (
                 req.get_str('trigger_timing') == 'during_progress')
             trigger_types = req.get_list('entity_type[]')
@@ -323,7 +323,7 @@ class Event(Identifiable):
                 self.remove_from_db()
                 session['file_message'] = 'Removed event.'
             except DbError as e:
-                raise DeletionError(e)
+                raise DeletionError(str(e))
         elif req.has_key('cancel_changes'):
             logger.debug("Cancelling changes.")
         else:
@@ -379,7 +379,7 @@ class Event(Identifiable):
             random_string = random.choice(strings_list)
             display = f"Outcome: {random_string}"
         else:
-            raise(f"Unexpected outcome_type {self.outcome_type}")
+            raise ValueError(f"Unexpected outcome_type {self.outcome_type}")
         return display
 
     def check_trigger(self, elapsed_seconds):

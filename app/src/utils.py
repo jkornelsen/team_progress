@@ -1,7 +1,8 @@
-from flask import g, request
 import locale
 import logging
 import re
+
+from flask import g, request
 
 logger = logging.getLogger(__name__)
 
@@ -10,14 +11,6 @@ class Storage:
     LOCAL = 'local'
     UNIVERSAL = 'universal'
     TYPES = [CARRIED, LOCAL, UNIVERSAL]
-
-class Pile:
-    PILE_TYPE = None  # specify in child classes
-    def __init__(self, item=None, container=None):
-        from .item import Item
-        self.item = item if item else Item()
-        self.container = container  # character or location where item is
-        self.quantity = 0
 
 class RequestHelper:
     """Verify input from request such as integer field on form."""
@@ -99,7 +92,7 @@ class NumTup:
     """
     def __init__(self, tup=None):
         self.tup = tup if tup else ()
-        
+
     @classmethod
     def from_str(cls, str_val, default=None, delim=","):
         instance = cls()
@@ -139,7 +132,7 @@ class NumTup:
     def __getitem__(self, key):
         if isinstance(key, slice):
             return NumTup(self.tup[key])
-        elif isinstance(key, int):
+        if isinstance(key, int):
             return self.tup[key]
         return NotImplemented
 
@@ -169,21 +162,20 @@ def format_num(value):
         formatted = re.sub(r'e\+0?(\d)', r'e\1', formatted)
         formatted = re.sub(r'e-0?(\d)', r'e-\1', formatted)
         return formatted
-    elif nformat == "abbr":  # 1.23m
+    if nformat == "abbr":  # 1.23m
         chunk = 0  # which group of 3 digits, as in thousands, millions
         while abs(value) >= 1000 and chunk < len(SUFFIXES) - 1:
             value /= 1000.0
             chunk += 1
         return f"{value:.2f}{SUFFIXES[chunk]}"
-    else:
-        try:
-            locale.setlocale(locale.LC_ALL, nformat)
-        except locale.Error:
-            locale.setlocale(locale.LC_ALL, 'C')  # 1230000
-        try:
-            value_str = locale.format_string("%d", int(value), grouping=True)
-        except (ValueError, TypeError):
-            return ''
+    try:
+        locale.setlocale(locale.LC_ALL, nformat)
+    except locale.Error:
+        locale.setlocale(locale.LC_ALL, 'C')  # 1230000
+    try:
+        value_str = locale.format_string("%d", int(value), grouping=True)
+    except (ValueError, TypeError):
+        return ''
     return value_str
 
 def unformat_num(value_str):

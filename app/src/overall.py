@@ -1,13 +1,12 @@
 from collections import namedtuple
-from flask import g
 import logging
-from types import SimpleNamespace
+
+from flask import g
 
 from .attrib import Attrib
 from .character import Character
 from .cache import cache
 from .db_serializable import DbSerializable, Identifiable, QueryHelper, coldef
-from .event import Event
 from .item import Item
 from .location import Location
 from .utils import RequestHelper
@@ -90,10 +89,11 @@ class Overall(DbSerializable):
     and app settings."""
 
     def __init__(self):
+        super().__init__()
         self.title = "Generic Adventure"
         self.description = (
-            "Go to <i>Main Setup</i>."
-            " If you've already started a game, click <i>Load from File</i>."
+            "Go to <i>Main Setup</i> (or press M)."
+            " To continue a game you've already started, click <i>Load from File</i>."
             " Otherwise, browse the <i>Pre-Built Scenarios</i>."
             "\r\n\r\n"
             "Or, to start from scratch, go to <i>Overall Settings</i>"
@@ -119,7 +119,7 @@ class Overall(DbSerializable):
 
     def load_cached(self):
         self.number_format = self._cached_number_format()
-    
+
     @classmethod
     def invalidate_cached(cls):
         cache.delete_memoized(cls._cached_number_format)
@@ -197,7 +197,7 @@ class Overall(DbSerializable):
 
     def to_db(self):
         super().to_db()
-        self.execute_change(f"""
+        self.execute_change("""
             DELETE FROM win_requirements
             WHERE game_token = %s
             """, (g.game_token,))

@@ -1,14 +1,13 @@
-from flask import g, session
 import logging
-import math
-import re
+
+from flask import g, session
 
 from .attrib import Attrib, AttribOf, AttribReq
 from .db_serializable import (
-    DbError, DbSerializable, DeletionError, 
-    Identifiable, MutableNamespace, QueryHelper, coldef)
+    DbError, DeletionError, Identifiable, QueryHelper, coldef)
 from .progress import Progress
-from .utils import Pile, RequestHelper, Storage
+#from .recipe import Byproduct, Recipe, Source
+from .utils import RequestHelper, Storage
 
 tables_to_create = {
     'items': f"""
@@ -25,6 +24,26 @@ tables_to_create = {
             REFERENCES progress (game_token, id)
             DEFERRABLE INITIALLY DEFERRED
         """,
+    }
+logger = logging.getLogger(__name__)
+
+class Pile:
+    PILE_TYPE = None  # specify in child classes
+    def __init__(self, item=None, container=None):
+        self.item = item if item else Item()
+        self.container = container  # character or location where item is
+        self.quantity = 0
+
+#import logging
+
+#from flask import g
+
+from .attrib import AttribReq
+from .db_serializable import DbSerializable, Serializable
+#from .db_serializable import (
+#    Identifiable, QueryHelper, Serializable, coldef)
+
+tables_to_create = {
     'recipes': f"""
         {coldef('id')},
         item_id integer NOT NULL,
@@ -36,10 +55,11 @@ tables_to_create = {
             ON DELETE CASCADE
             DEFERRABLE INITIALLY DEFERRED
         """,
-}
-logger = logging.getLogger(__name__)
+    }
+#logger = logging.getLogger(__name__)
 
-class Source:
+#class Source(Serializable):
+class Source(Serializable):
     def __init__(self, new_id=0):
         self.item = Item(new_id)  # source item, not produced item
         self.pile = self.item
@@ -60,7 +80,8 @@ class Source:
         instance.q_required = data.get('q_required', 1.0)
         return instance
 
-class Byproduct:
+#class Byproduct(Serializable):
+class Byproduct(Serializable):
     def __init__(self, new_id=0):
         self.item = Item(new_id)  # item produced
         self.pile = self.item
@@ -113,6 +134,7 @@ class Recipe(Identifiable):
     def from_data(cls, data, item_produced=None):
         instance = cls()
         instance.id = data.get('id', 0)
+        from .item import Item
         instance.item_produced = (
             item_produced if item_produced
             else Item(int(data.get('item_id', 0))))
@@ -214,9 +236,9 @@ class Recipe(Identifiable):
         byproduct_rows = cls.select_tables(
             qhelper=qhelper, tables=['recipes', 'recipe_byproducts'])
         for recipe_row, byproduct_row in byproduct_rows:
-            recipes_data = item_recipes[recipe_row.item_id]
-            recipe_data = recipes_data[recipe_row.id]
-            if byproduct_row.attrib_id:
+            if byproduct_row.recipe_id:
+                recipes_data = item_recipes[recipe_row.item_id]
+                recipe_data = recipes_data[recipe_row.id]
                 recipe_data.setdefault('byproducts', []).append(byproduct_row)
         # Get attrib relation data
         qhelper = QueryHelper("""
@@ -261,7 +283,7 @@ class Recipe(Identifiable):
             recipe_data = recipes_data.setdefault(recipe_row.id, recipe_row)
             if source_row.item_id:
                 recipe_data.setdefault('sources', []).append(source_row)
-        return recipes
+        return item_recipes
 
 class Item(Identifiable, Pile):
     PILE_TYPE = Storage.UNIVERSAL  # Constant for this class
@@ -427,7 +449,7 @@ class Item(Identifiable, Pile):
         g.game_data.from_db_flat([Attrib, Item])
         # Replace partial objects with fully populated objects
         for attrib_id, attrib_of in current_obj.attribs.items():
-            item.attrib = Attrib.get_by_id(attrib_id)
+            attrib_of.attrib = Attrib.get_by_id(attrib_id)
         for recipe in current_obj.recipes:
             for source in recipe.sources:
                 source.item = Item.get_by_id(source.item.id)
@@ -436,9 +458,9 @@ class Item(Identifiable, Pile):
             for attrib_id, req in recipe.attribs.items():
                 req.attrib = Attrib.get_by_id(attrib_id)
         # Print debugging info
-        logger.debug(f"found %d recipes", len(current_obj.recipes))
+        logger.debug("found %d recipes", len(current_obj.recipes))
         for recipe in current_obj.recipes:
-            logger.debug("recipe %d rate_amount=%d instant=%s", 
+            logger.debug("recipe %d rate_amount=%d instant=%s",
                 recipe.id, recipe.rate_amount, recipe.instant)
             for source in recipe.sources:
                 logger.debug("source item.id %d, name %s, req %d, storage %s",
@@ -463,7 +485,7 @@ class Item(Identifiable, Pile):
                 for source in recipe.sources:
                     source.item = cls.load_complete_objects(
                         source.item.id)
-                for byp in recipe.byproduct:
+                for byproduct in recipe.byproducts:
                     byproduct.item = cls.load_complete_objects(
                         byproduct.item.id)
         # Get all needed location and character data
@@ -512,7 +534,7 @@ class Item(Identifiable, Pile):
                 recipe.rate_duration = req.get_float(f'{prefix}rate_duration')
                 recipe.instant = req.get_bool(f'{prefix}instant')
                 source_ids = req.get_list(f'{prefix}source_id')
-                logger.debug(f"Source IDs: %s", source_ids)
+                logger.debug("Source IDs: %s", source_ids)
                 for source_id in source_ids:
                     source_prefix = f'{prefix}source{source_id}_'
                     source = Source.from_data({
@@ -543,7 +565,7 @@ class Item(Identifiable, Pile):
                         attrib_id=attrib_id, val=attrib_value)
                 self.recipes.append(recipe)
             attrib_ids = req.get_list('attrib_id[]')
-            logger.debug(f"Attrib IDs: %s", attrib_ids)
+            logger.debug("Attrib IDs: %s", attrib_ids)
             self.attribs = {}
             for attrib_id in attrib_ids:
                 attrib_prefix = f'attrib{attrib_id}_'
@@ -558,7 +580,7 @@ class Item(Identifiable, Pile):
                 self.remove_from_db()
                 session['file_message'] = 'Removed item.'
             except DbError as e:
-                raise DeletionError(e)
+                raise DeletionError(str(e))
         elif req.has_key('cancel_changes'):
             logger.debug("Cancelling changes.")
         else:
@@ -610,7 +632,7 @@ def _load_piles(current_item, char_id, loc_id, main_pile_type):
     current_item.pile = _assign_pile(
         current_item, chars, loc, char_id, loc_id, main_pile_type)
     current_item.pile.item = current_item
-    container = current_item.pile.container 
+    container = current_item.pile.container
     if loc_id:
         # Get items for all chars at this loc
         # TODO: if position or grid then only consider chars by that pos
@@ -637,14 +659,14 @@ def _load_piles(current_item, char_id, loc_id, main_pile_type):
                 attrib_of = item.attribs.get(attrib_id)
                 if attrib_of is not None and attrib_of.val >= req.val:
                     req.entity = item
-                    logger.debug("attrib %s req %.1f met by item %s %.1f", 
+                    logger.debug("attrib %s req %.1f met by item %s %.1f",
                         attrib_of.attrib.name, req.val,
                         item.name, attrib_of.val)
             for char in chars:
                 attrib_of = char.attribs.get(attrib_id)
                 if attrib_of is not None and attrib_of.val >= req.val:
                     req.entity = char
-                    logger.debug("attrib %s req %.1f met by char %s %.1f", 
+                    logger.debug("attrib %s req %.1f met by char %s %.1f",
                         attrib_of.attrib.name, req.val,
                         char.name, attrib_of.val)
 
@@ -678,15 +700,15 @@ def _assign_pile(
                         (owned_item.quantity != 0 or not pile)):
                     pile = owned_item
                     pile.container = char
-                    logger.debug("assigned ownedItem from %s qty %.1f", 
+                    logger.debug("assigned ownedItem from %s qty %.1f",
                         owned_item.container.name, pile.quantity)
         if char_id and not pile:
             from .character import Character, OwnedItem
             char = Character.get_by_id(char_id)
             pile = OwnedItem(pile_item, char)
             char.items[pile_item.id] = pile
-            logger.debug("assigned empty ownedItem from %s", 
-                pile.container.name)
+            logger.debug(
+                "assigned empty ownedItem from %s", pile.container.name)
     elif pile_type == Storage.LOCAL:
         # Select an itemAt for this loc
         for item_at in loc.items.values():
@@ -694,7 +716,8 @@ def _assign_pile(
                     (item_at.quantity != 0 or not pile)):
                 pile = item_at
                 pile.container = loc
-                logger.debug("assigned itemAt from %s qty %.1f", 
+                logger.debug(
+                    "assigned itemAt from %s qty %.1f",
                     item_at.container.name, pile.quantity)
         if loc_id and not pile:
             from .location import ItemAt, Location
@@ -703,11 +726,11 @@ def _assign_pile(
             pile = ItemAt(pile_item)
             pile.container = loc
             loc.items[pile_item.id] = pile
-            logger.debug("assigned empty itemAt from %s", 
-                pile.container.name)
+            logger.debug(
+                "assigned empty itemAt from %s", pile.container.name)
     if not pile:
         pile = pile_item
         pile.container = pile_item
-        logger.debug(f"assigned general storage qty %.1f",
-            pile.quantity)
+        logger.debug(
+            "assigned general storage qty %.1f", pile.quantity)
     return pile

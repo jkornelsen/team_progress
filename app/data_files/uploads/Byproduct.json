@@ -1,0 +1,74 @@
+{
+    "attribs": [],
+    "characters": [],
+    "events": [],
+    "items": [
+        {
+            "attribs": {},
+            "description": "",
+            "id": 18,
+            "masked": false,
+            "name": "a source",
+            "progress": {},
+            "q_limit": 0.0,
+            "quantity": 100.0,
+            "recipes": [],
+            "storage_type": "universal",
+            "toplevel": false
+        },
+        {
+            "attribs": {},
+            "description": "",
+            "id": 15,
+            "masked": false,
+            "name": "main prod",
+            "progress": {},
+            "q_limit": 0.0,
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "attribs": {},
+                    "id": 7,
+                    "instant": true,
+                    "item_id": 15,
+                    "rate_amount": 2.0,
+                    "rate_duration": 3.0,
+                    "sources": [
+                        {
+                            "item_id": 18,
+                            "preserve": false,
+                            "q_required": 1.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "universal",
+            "toplevel": false
+        },
+        {
+            "attribs": {},
+            "description": "",
+            "id": 17,
+            "masked": false,
+            "name": "secondary prod",
+            "progress": {},
+            "q_limit": 0.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "universal",
+            "toplevel": false
+        }
+    ],
+    "locations": [],
+    "overall": {
+        "description": "Start by figuring out how to add byproduct to recipe in item config.",
+        "number_format": "en_US",
+        "slots": [
+            "Main Hand",
+            "Off Hand",
+            "Body Armor"
+        ],
+        "title": "Byproduct",
+        "win_reqs": []
+    }
+}

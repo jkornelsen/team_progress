@@ -7,12 +7,12 @@ function Get-FilteredChildItems {
     Get-ChildItem -Path $Path -Filter $Filter -Recurse | Where-Object { $_.DirectoryName -notlike '*\venv\*' }
 }
 
-$EDITOR = "${Env:ProgramFiles}\Vim\vim91\gvim.exe"
-$inpath = Join-Path $PSScriptRoot "app"
+$EDITOR = "${Env:ProgramFiles}/Vim/vim91/gvim.exe"
+$inpath = Join-Path $PSScriptRoot "../app"
 $htmlFiles = Get-FilteredChildItems -Path $inpath -Filter "*.html"
 $cssFiles = Get-FilteredChildItems -Path $inpath -Filter "*.css"
 $pyFiles = Get-FilteredChildItems -Path $inpath -Filter "*.py"
-$txtFiles = Get-ChildItem -Path "$inpath\.." -Filter "*.txt" -File
+$txtFiles = Get-ChildItem -Path $PSScriptRoot -Filter "*.txt" -File
 
 # Quote each file path individually
 $htmlFilePaths = $htmlFiles.FullName | ForEach-Object { "`"$_`"" }

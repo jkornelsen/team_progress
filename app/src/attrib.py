@@ -1,7 +1,9 @@
-from flask import g, session
 import logging
 
-from .db_serializable import Identifiable, QueryHelper, coldef
+from flask import g, session
+
+from .db_serializable import (
+    DbError, DeletionError, Identifiable, QueryHelper, coldef)
 from .utils import RequestHelper
 
 tables_to_create = {
@@ -79,7 +81,7 @@ class Attrib(Identifiable):
             WHERE game_token = %s
             """, [g.game_token])
         qhelper.add_limit("id", id_to_get)
-        row = cls.execute_select(qhelper=qhelper)
+        rows = cls.execute_select(qhelper=qhelper)
         instances = []
         for row in rows:
             instances.append(cls.from_data(row))
@@ -101,7 +103,7 @@ class Attrib(Identifiable):
                 self.remove_from_db()
                 session['file_message'] = 'Removed attribute.'
             except DbError as e:
-                raise DeletionError(e)
+                raise DeletionError(str(e))
         elif req.has_key('cancel_changes'):
             logger.debug("Cancelling changes.")
         else:

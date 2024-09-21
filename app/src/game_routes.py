@@ -1,3 +1,6 @@
+import logging
+import re
+
 from flask import (
     g,
     jsonify,
@@ -7,8 +10,6 @@ from flask import (
     session,
     url_for
 )
-import logging
-import re
 
 from .attrib import Attrib
 from .db_serializable import DeletionError
@@ -25,7 +26,7 @@ logger = logging.getLogger(__name__)
 def set_routes(app):
     @app.route('/configure/attrib/<attrib_id>', methods=['GET', 'POST'])
     def configure_attrib(attrib_id):
-        logger.debug("-" * 80 + "\nconfigure_attrib(%s)", attrib_id)
+        logger.debug("%s\nconfigure_attrib(%s)", "-" * 80, attrib_id)
         attrib = Attrib.load_complete_objects(attrib_id)
         if request.method == 'GET':
             req = RequestHelper('args')
@@ -53,7 +54,7 @@ def set_routes(app):
 
     @app.route('/configure/character/<char_id>', methods=['GET', 'POST'])
     def configure_char(char_id):
-        logger.debug("-" * 80 + "\nconfigure_char(%s)", char_id)
+        logger.debug("%s\nconfigure_char(%s)", "-" * 80, char_id)
         if request.method == 'GET':
             req = RequestHelper('args')
             if not req.has_key('duplicated'):
@@ -83,7 +84,7 @@ def set_routes(app):
 
     @app.route('/configure/event/<event_id>', methods=['GET', 'POST'])
     def configure_event(event_id):
-        logger.debug("-" * 80 + "\nconfigure_event(%s)", event_id)
+        logger.debug("%s\nconfigure_event(%s)", "-" * 80, event_id)
         if request.method == 'GET':
             req = RequestHelper('args')
             if not req.has_key('duplicated'):
@@ -112,7 +113,7 @@ def set_routes(app):
 
     @app.route('/configure/item/<item_id>', methods=['GET', 'POST'])
     def configure_item(item_id):
-        logger.debug("-" * 80 + "\nconfigure_item(%s)", item_id)
+        logger.debug("%s\nconfigure_item(%s)", "-" * 80, item_id)
         if request.method == 'GET':
             req = RequestHelper('args')
             if not req.has_key('duplicated'):
@@ -142,7 +143,7 @@ def set_routes(app):
 
     @app.route('/configure/location/<loc_id>',methods=['GET', 'POST'])
     def configure_location(loc_id):
-        logger.debug("-" * 80 + "\nconfigure_location(%s)", loc_id)
+        logger.debug("%s\nconfigure_location(%s)", "-" * 80, loc_id)
         if request.method == 'GET':
             req = RequestHelper('args')
             if not req.has_key('duplicated'):
@@ -172,7 +173,7 @@ def set_routes(app):
 
     @app.route('/configure/overall', methods=['GET', 'POST'])
     def configure_overall():
-        logger.debug("-" * 80 + "\nconfigure_overall")
+        logger.debug("%s\nconfigure_overall", "-" * 80)
         Overall.data_for_configure()
         if request.method == 'GET':
             session['referrer'] = request.referrer
@@ -186,7 +187,7 @@ def set_routes(app):
 
     @app.route('/play/char/<int:char_id>')
     def play_char(char_id):
-        logger.debug("-" * 80 + "\nplay_char(%d)", char_id)
+        logger.debug("%s\nplay_char(%d)", "-" * 80, char_id)
         instance = Character.data_for_play(char_id)
         if not instance:
             return 'Character not found'
@@ -213,8 +214,8 @@ def set_routes(app):
         if not loc_id:
             loc_id = session.get('last_loc_id', '')
         logger.debug(
-            "-" * 80 + "\nplay_event(event_id=%d, char_id=%s, loc_id=%s)",
-            event_id, char_id, loc_id)
+            "%s\nplay_event(event_id=%d, char_id=%s, loc_id=%s)",
+            "-" * 80, event_id, char_id, loc_id)
         instance = Event.data_for_play(event_id)
         if not instance:
             return 'Event not found'
@@ -249,8 +250,8 @@ def set_routes(app):
         if not loc_id:
             loc_id = session.get('last_loc_id', '')
         logger.debug(
-            "-" * 80 + "\nplay_item(item_id=%d, char_id=%s, loc_id=%s)",
-            item_id, char_id, loc_id)
+            "%s\nplay_item(item_id=%d, char_id=%s, loc_id=%s)",
+            "-" * 80, item_id, char_id, loc_id)
         item = Item.data_for_play(
             item_id, char_id, loc_id, complete_sources=False,
             main_pile_type=main_pile_type)
@@ -276,7 +277,7 @@ def set_routes(app):
 
     @app.route('/play/location/<int:loc_id>')
     def play_location(loc_id):
-        logger.debug("-" * 80 + "\nplay_location(%d)", loc_id)
+        logger.debug("%s\nplay_location(%d)", "-" * 80, loc_id)
         instance = Location.data_for_play(loc_id)
         if not instance:
             return 'Location not found'
@@ -310,7 +311,7 @@ def set_routes(app):
 
     @app.route('/char/progress/<int:char_id>')
     def char_progress(char_id):
-        logger.debug("-" * 80 + "\nchar_progress(%d)", char_id)
+        logger.debug("%s\nchar_progress(%d)", "-" * 80, char_id)
         char = Character.data_for_play(char_id)
         if char:
             current_loc_id = char.location.id if char.location else 0
@@ -348,25 +349,23 @@ def set_routes(app):
                     'status': 'arrived',
                     'current_loc_id': char.location.id
                     })
-            else:
-                logger.debug("dest_id: %d", char.destination.id)
-                return jsonify({
-                    'status': 'ongoing',
-                    'is_ongoing': char.progress.is_ongoing,
-                    'current_loc_id': current_loc_id,
-                    'dest_id': char.destination.id,
-                    'quantity': int(char.pile.quantity),
-                    'elapsed_time': char.progress.calculate_elapsed_time()
-                    })
-        else:
+            logger.debug("dest_id: %d", char.destination.id)
             return jsonify({
-                'status': 'error',
-                'message': 'Character not found.'
+                'status': 'ongoing',
+                'is_ongoing': char.progress.is_ongoing,
+                'current_loc_id': current_loc_id,
+                'dest_id': char.destination.id,
+                'quantity': int(char.pile.quantity),
+                'elapsed_time': char.progress.calculate_elapsed_time()
                 })
+        return jsonify({
+            'status': 'error',
+            'message': 'Character not found.'
+            })
 
     @app.route('/char/start/<int:char_id>', methods=['POST'])
     def start_char(char_id):
-        logger.debug("-" * 80 + "\nstart_char(%d)", char_id)
+        logger.debug("%s\nstart_char(%d)", "-" * 80, char_id)
         req = RequestHelper('form')
         dest_id = req.get_int('dest_id')
         char = Character.data_for_play(char_id)
@@ -380,21 +379,19 @@ def set_routes(app):
                 'status': 'success',
                 'message': 'Progress started.'
                 })
-        else:
-            return jsonify({
-                'status': 'error',
-                'message': 'Could not start.'
-                })
+        return jsonify({
+            'status': 'error',
+            'message': 'Could not start.'
+            })
 
     @app.route('/char/stop/<int:char_id>')
     def stop_char(char_id):
-        logger.debug("-" * 80 + "\nstop_char(%d)", char_id)
+        logger.debug("%s\nstop_char(%d)", "-" * 80, char_id)
         char = Character.data_for_play(char_id)
         if char.progress.stop():
             char.to_db()
             return jsonify({'message': 'Progress paused.'})
-        else:
-            return jsonify({'message': 'Progress is already paused.'})
+        return jsonify({'message': 'Progress is already paused.'})
 
     @app.route('/item/progress/<int:item_id>/')
     def item_progress(item_id):
@@ -406,8 +403,8 @@ def set_routes(app):
             char_id = session.get('last_char_id', '')
             loc_id = session.get('last_loc_id', '')
         logger.debug(
-            "-" * 80 + "\nitem_progress(item_id=%d, char_id=%s, loc_id=%s)",
-            item_id, char_id, loc_id)
+            "%s\nitem_progress(item_id=%d, char_id=%s, loc_id=%s)",
+            "-" * 80, item_id, char_id, loc_id)
         item = Item.data_for_play(
             item_id, char_id, loc_id, complete_sources=True,
             main_pile_type=main_pile_type)
@@ -438,8 +435,9 @@ def set_routes(app):
             char_id = session.get('last_char_id', '')
             loc_id = session.get('last_loc_id', '')
         logger.debug(
-            "-" * 80 + "\nstart_item(item_id=%d, recipe_id=%d, "
-            "char_id=%s, loc_id=%s)", item_id, recipe_id, char_id, loc_id)
+            "%s\nstart_item(item_id=%d, recipe_id=%d, char_id=%s,"
+            " loc_id=%s)",
+            "-" * 80, item_id, recipe_id, char_id, loc_id)
         item = Item.data_for_play(
             item_id, char_id, loc_id, complete_sources=True)
         pile = item.pile
@@ -450,16 +448,15 @@ def set_routes(app):
                 'message': 'Progress started.',
                 'is_ongoing': progress.is_ongoing
                 })
-        else:
-            message = "Could not start."
-            reason = progress.failure_reason
-            if reason:
-                message = f"{message} {reason}"
-            return jsonify({
-                'status': 'error',
-                'message': message,
-                'is_ongoing': progress.is_ongoing
-                })
+        message = "Could not start."
+        reason = progress.failure_reason
+        if reason:
+            message = f"{message} {reason}"
+        return jsonify({
+            'status': 'error',
+            'message': message,
+            'is_ongoing': progress.is_ongoing
+            })
 
     @app.route('/item/stop/<int:item_id>')
     def stop_item(item_id):
@@ -469,7 +466,7 @@ def set_routes(app):
         if not char_id and not loc_id:
             char_id = session.get('last_char_id', '')
             loc_id = session.get('last_loc_id', '')
-        logger.debug("-" * 80 + "\nstop_item(%d)", item_id)
+        logger.debug("%s\nstop_item(%d)", "-" * 80, item_id)
         item = Item.data_for_play(
             item_id, char_id, loc_id, complete_sources=True)
         logger.debug("Retrieved item %d from DB: %d recipes",
@@ -485,12 +482,11 @@ def set_routes(app):
                 'message': 'Progress paused.',
                 'is_ongoing': progress.is_ongoing
                 })
-        else:
-            return jsonify({
-                'status': 'success',
-                'message': 'Progress is already paused.',
-                'is_ongoing': progress.is_ongoing
-                })
+        return jsonify({
+            'status': 'success',
+            'message': 'Progress is already paused.',
+            'is_ongoing': progress.is_ongoing
+            })
 
     @app.route('/item/gain/<int:item_id>/<int:recipe_id>', methods=['POST'])
     def gain_item(item_id, recipe_id):
@@ -504,9 +500,9 @@ def set_routes(app):
             char_id = session.get('last_char_id', '')
             loc_id = session.get('last_loc_id', '')
         logger.debug(
-            "-" * 80 + "\ngain_item(item_id=%d, recipe_id=%d, num_batches=%d, "
+            "%s\ngain_item(item_id=%d, recipe_id=%d, num_batches=%d, "
             "char_id=%s, loc_id=%s)",
-            item_id, recipe_id, num_batches, char_id, loc_id)
+            "-" * 80, item_id, recipe_id, num_batches, char_id, loc_id)
         item = Item.data_for_play(
             item_id, char_id, loc_id, complete_sources=True)
         progress = item.pile.container.progress
@@ -517,21 +513,20 @@ def set_routes(app):
                 'status': 'success',
                 'message': f'Quantity of {item.name} changed.'
                 })
-        else:
-            message = "Nothing gained."
-            reason = progress.failure_reason
-            if reason:
-                message = f"{message} {reason}"
-            return jsonify({
-                'status': 'error',
-                'message': message
-                })
+        message = "Nothing gained."
+        reason = progress.failure_reason
+        if reason:
+            message = f"{message} {reason}"
+        return jsonify({
+            'status': 'error',
+            'message': message
+            })
 
     @app.route('/item/drop/<int:item_id>/char/<int:char_id>', methods=['POST'])
     def drop_item(item_id, char_id):
         logger.debug(
-            "-" * 80 + "\ndrop_item(item_id=%d, char_id=%d)",
-            item_id, char_id)
+            "%s\ndrop_item(item_id=%d, char_id=%d)",
+            "-" * 80, item_id, char_id)
         item = Item.data_for_play(
             item_id, char_id, complete_sources=False)
         char = Character.load_complete_objects(char_id)
@@ -565,8 +560,9 @@ def set_routes(app):
 
     @app.route('/item/pickup/<int:item_id>/loc/<int:loc_id>/char/<int:char_id>', methods=['POST'])
     def pickup_item(item_id, loc_id, char_id):
-        logger.debug("-" * 80 + "\npickup_item(item_id=%d, loc_id=%d, char_id=%d)", 
-            item_id, loc_id, char_id)
+        logger.debug(
+            "%s\npickup_item(item_id=%d, loc_id=%d, char_id=%d)",
+            "-" * 80, item_id, loc_id, char_id)
         session['default_pickup_char'] = char_id
         item = Item.data_for_play(
             item_id, at_loc_id=loc_id, complete_sources=False)
@@ -601,8 +597,9 @@ def set_routes(app):
 
     @app.route('/item/equip/<int:item_id>/char/<int:char_id>/slot/<string:slot>', methods=['POST'])
     def equip_item(item_id, char_id, slot):
-        logger.debug("-" * 80 + "\nequip_item(item_id=%d, char_id=%d, slot=%d)", 
-            item_id, char_id, slot)
+        logger.debug(
+            "%s\nequip_item(item_id=%d, char_id=%d, slot=%d)",
+            "-" * 80, item_id, char_id, slot)
         session['default_slot'] = slot
         item = Item.data_for_play(
             item_id, char_id, complete_sources=False)
@@ -622,8 +619,9 @@ def set_routes(app):
 
     @app.route('/item/unequip/<int:item_id>/char/<int:char_id>', methods=['POST'])
     def unequip_item(item_id, char_id):
-        logger.debug("-" * 80 + "\nequip_item(item_id=%d, char_id=%d)",
-            item_id, char_id)
+        logger.debug(
+            "%s\nequip_item(item_id=%d, char_id=%d)",
+            "-" * 80, item_id, char_id)
         item = Item.data_for_play(
             item_id, char_id, complete_sources=False)
         char = item.pile.container
@@ -644,8 +642,9 @@ def set_routes(app):
                 '/x_change/<int(signed=True):x_change>'
                 '/y_change/<int(signed=True):y_change>', methods=['POST'])
     def move_char(char_id, x_change, y_change):
-        logger.debug("-" * 80 + "\nmove_char(%d,%d,%d)",
-            char_id, x_change, y_change)
+        logger.debug(
+            "%s\nmove_char(%d,%d,%d)",
+            "-" * 80, char_id, x_change, y_change)
         char = Character.load_complete_objects(char_id)
         if not char:
             return 'Character not found'
@@ -684,16 +683,14 @@ class LinkLetters:
             self.letter_index += 1
             self.links[link] = letter
             return letter
-        else:
-            return ''
+        return ''
 
 def back_to_referrer():
     referrer = session.pop('referrer', None)
-    logger.debug(f"Referrer: %s", referrer)
+    logger.debug("Referrer: %s", referrer)
     if referrer:
         return redirect(referrer)
-    else:
-        return redirect(url_for('configure_index'))
+    return redirect(url_for('configure_index'))
 
 def error_page(exc):
     return render_template('error.html',

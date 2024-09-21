@@ -1,4 +1,9 @@
 import datetime
+import logging
+import os
+import tempfile
+from werkzeug.utils import secure_filename
+
 from flask import (
     g,
     json,
@@ -9,11 +14,6 @@ from flask import (
     session,
     url_for
 )
-import logging
-import os
-import tempfile
-from types import SimpleNamespace
-from werkzeug.utils import secure_filename
 
 from database import set_autocommit
 from .game_data import GameData
@@ -24,7 +24,7 @@ from .utils import RequestHelper
 logger = logging.getLogger(__name__)
 
 tables_to_create = {
-    'scenario_log': f"""
+    'scenario_log': """
         filename varchar(50) NOT NULL,
         times_loaded integer NOT NULL,
         UNIQUE (filename)
@@ -65,16 +65,25 @@ def set_routes(app):
     def load_from_file():
         UPLOAD_DIR = app.config['UPLOAD_DIR']
         if request.method == 'GET':
-            return render_template('session/upload.html')
+            file_message = session.pop('file_message', False)
+            return render_template(
+                'session/upload.html',
+                file_message=file_message)
         uploaded_file = request.files['file']
-        if not uploaded_file.filename.endswith('.json'):
-            return "Please upload a file with .json extension."
+        file_message = ''
+        if uploaded_file.filename == '':
+            file_message = "Please upload a file."
+        elif not uploaded_file.filename.endswith('.json'):
+            file_message = "Please upload a file with .json extension."
+        if file_message:
+            session['file_message'] = file_message
+            return redirect(url_for('load_from_file'))
         filename = secure_filename(uploaded_file.filename)
         filepath = os.path.join(UPLOAD_DIR, filename)
         uploaded_file.save(filepath)
         try:
             load_data_from_file(filepath)
-        except Exception as ex:
+        except Exception:
             logger.exception("")
             return render_template(
                 'error.html',
@@ -88,7 +97,7 @@ def set_routes(app):
             file_age = current_time - file_mtime
             if file_age > MAX_FILE_AGE:
                 os.remove(file_path)
-                logger.info(f"Deleted %s (age: %s)", filename, file_age)
+                logger.info("Deleted %s (age: %s)", filename, file_age)
         return redirect(url_for('configure_index'))
 
     @app.route('/browse_scenarios', methods=['GET', 'POST'])
@@ -119,31 +128,33 @@ def set_routes(app):
                 scenarios = sorted(scenarios, key=lambda x: x['filesize'], reverse=True)
             elif sort_by == 'popularity':
                 scenarios = sorted(scenarios, key=lambda x: x['popularity'], reverse=True)
-            from flask import Response
             return render_template(
                 'configure/scenarios.html',
                 scenarios=scenarios,
                 sort_by=sort_by)
         scenario_file = request.form.get('scenario_file')
         scenario_title = request.form.get('scenario_title')
-        if scenario_file:
-            filepath = os.path.join(DATA_DIR, scenario_file)
-            try:
-                load_data_from_file(filepath)
-            except Exception as ex:
-                logger.exception("")
-                return render_template(
-                    'error.html',
-                    message=f"Could not load \"{scenario_title}\".",
-                    details=str(ex))
-            DbSerializable.execute_change("""
-                INSERT INTO scenario_log (filename, times_loaded)
-                VALUES (%s, 1)  -- Start with 1 on the first load
-                ON CONFLICT (filename) DO UPDATE
-                SET times_loaded = scenario_log.times_loaded + 1
-                """, [scenario_file])
-            session['file_message'] = 'Loaded scenario "{}"'.format(scenario_title)
-            return redirect(url_for('configure_index'))
+        if not scenario_file:
+            return render_template(
+                'error.html',
+                message="No scenario file was specified.")
+        filepath = os.path.join(DATA_DIR, scenario_file)
+        try:
+            load_data_from_file(filepath)
+        except Exception as ex:
+            logger.exception("")
+            return render_template(
+                'error.html',
+                message=f"Could not load \"{scenario_title}\".",
+                details=str(ex))
+        DbSerializable.execute_change("""
+            INSERT INTO scenario_log (filename, times_loaded)
+            VALUES (%s, 1)  -- Start with 1 on the first load
+            ON CONFLICT (filename) DO UPDATE
+            SET times_loaded = scenario_log.times_loaded + 1
+            """, [scenario_file])
+        session['file_message'] = 'Loaded scenario "{}"'.format(scenario_title)
+        return redirect(url_for('configure_index'))
 
     @app.route('/blank_scenario')
     def blank_scenario():
@@ -152,10 +163,6 @@ def set_routes(app):
         g.game_data.to_db()
         session['file_message'] = 'Starting game with default setup.'
         return redirect(url_for('configure_index'))
-
-    @app.route('/test')
-    def hello_world():
-        return 'Here, with Response it works well: höne'
 
 def load_data_from_file(filepath):
     with open(filepath, 'r', encoding='utf-8') as infile:

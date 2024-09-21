@@ -1,13 +1,14 @@
-from flask import g, session
 import logging
+
+from flask import g, session
 
 from .attrib import Attrib, AttribOf
 from .db_serializable import (
-    Identifiable, MutableNamespace, QueryHelper, coldef)
-from .item import Item
+    DbError, DeletionError, Identifiable, QueryHelper, coldef)
+from .item import Item, Pile
 from .location import Destination, Location
 from .progress import Progress
-from .utils import Pile, NumTup, RequestHelper, Storage, unformat_num
+from .utils import NumTup, RequestHelper, Storage
 
 tables_to_create = {
     'characters': f"""
@@ -359,7 +360,7 @@ class Character(Identifiable):
             self.location = Location(location_id) if location_id else None
             self.position = req.get_numtup('position', (0, 0))
             attrib_ids = req.get_list('attrib_id[]')
-            logger.debug(f"Attrib IDs: %s", attrib_ids)
+            logger.debug("Attrib IDs: %s", attrib_ids)
             self.attribs = {}
             for attrib_id in attrib_ids:
                 attrib_val = req.get_float(f'attrib{attrib_id}_val', 0.0)
@@ -374,7 +375,7 @@ class Character(Identifiable):
                 self.remove_from_db()
                 session['file_message'] = 'Removed character.'
             except DbError as e:
-                raise DeletionError(e)
+                raise DeletionError(str(e))
         elif req.has_key('cancel_changes'):
             logger.debug("Cancelling changes.")
         else:

@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from flask import jsonify
 import logging
 import math
 import threading
@@ -62,7 +61,7 @@ class Progress(Identifiable):
             }
 
     def dict_for_json(self):
-        if ((not self.start_time) or 
+        if ((not self.start_time) or
                 (not self.is_ongoing and self.batches_processed == 0)):
             return {}
         return self._base_export_data()
@@ -93,7 +92,7 @@ class Progress(Identifiable):
                 self.id, batches_requested)
             stop_when_done = False
             if batches_requested == 0:
-                raise Exception("Expected non-zero number of batches.")
+                raise ValueError("Expected non-zero number of batches.")
             num_batches = batches_requested
             if not self.can_produce():
                 num_batches = 0
@@ -232,8 +231,7 @@ class Progress(Identifiable):
             self.stop_time = datetime.now()
             self.container.to_db()
             return True
-        else:
-            return False
+        return False
 
     def calculate_elapsed_time(self):
         """Returns number of seconds between start and stop time."""

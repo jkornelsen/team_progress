@@ -1,15 +1,9 @@
 from datetime import datetime, timedelta
-from flask import g, request, url_for
 import logging
 
-from .db_serializable import DbSerializable, coldef
+from flask import g, request, url_for
 
-from .attrib import Attrib
-from .character import Character
-from .event import Event
-from .item import Item
-from .location import Location
-from .overall import Overall
+from .db_serializable import DbSerializable, coldef
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +26,7 @@ def determine_entity_type(endpoint):
         entity_name = endpoint.split('/')[2]  # Get the part after the match
         entity_name = entity_name.capitalize()
         try:
-            return globals()[entity_name]
+            entity_class = globals()[entity_name]
             if issubclass(entity_class, DbSerializable):
                 return entity_class
         except KeyError:
@@ -44,6 +38,7 @@ class UserInteraction(DbSerializable):
     so they can be displayed on the overview screen.
     """
     def __init__(self, username):
+        super().__init__()
         self.game_token = g.game_token
         self.username = username
         self.timestamp = datetime.min
