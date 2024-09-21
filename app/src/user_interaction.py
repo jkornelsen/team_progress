@@ -55,7 +55,7 @@ class UserInteraction(DbSerializable):
     def tablename(cls):
         return 'user_interactions'
 
-    def dict_for_json(self):
+    def _base_export_data(self):
         return {
             'username': self.username,
             'timestamp': datetime.now(),
@@ -79,7 +79,7 @@ class UserInteraction(DbSerializable):
         return instance
 
     def to_db(self):
-        doc = self.dict_for_json()
+        doc = self.dict_for_main_table()
         doc['game_token'] = g.game_token
         fields = list(doc.keys())
         placeholders = ','.join(['%s'] * len(fields))

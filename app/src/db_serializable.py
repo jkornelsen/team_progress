@@ -70,12 +70,20 @@ class DbSerializable():
         return "{}s".format(cls.basename())
 
     @classmethod
-    def execute_select(cls, query_without_table, values=None, fetch_all=True):
+    def execute_select(
+            cls, query_without_tables="", values=None, tables=None,
+            qhelper=None, fetch_all=True):
         """Returns data as a list of objects with attributes that are
         column names.
         For example, to get the name column of the first row: result[0].name
         """
-        query = query_without_table.format(table=cls.tablename())
+        if qhelper:
+            query_without_tables = qhelper.query
+            values = qhelper.values
+        if tables:
+            query = query_without_tables.format(tables=tables)
+        else:
+            query = query_without_tables.format(table=cls.tablename())
         logger.debug(pretty(query, values))
         with g.db.cursor(cursor_factory=RealDictCursor) as cursor:
             cursor.execute(query, values)
@@ -86,12 +94,17 @@ class DbSerializable():
             return result
 
     @classmethod
-    def select_tables(cls, query_without_tables, values, tables, fetch_all=True):
+    def select_tables(
+            cls, query_without_tables="", values=None, tables=None,
+            qhelper=None, fetch_all=True):
         """Query to grab all values for more than one table and separate
         results by table.
         Returns a list of rows arranged by table, for example:
             [item_data, progress_data]
         """
+        if qhelper:
+            query_without_tables = qhelper.query
+            values = qhelper.values
         query = query_without_tables.format(tables=tables)
         logger.debug(pretty(query, values))
         results = []
@@ -168,13 +181,21 @@ class DbSerializable():
         column_names = ", ".join(['game_token'] + list(column_keys))
         cls.insert_multiple(table, column_names, values)
 
-    def dict_for_db(self):
-        """Fields needed for the main table of this class."""
-        return self.dict_for_json()
+    def _base_export_data(self):
+        """Fields that get exported to both JSON and DB."""
+        return NotImplementedError()
+
+    def dict_for_json(self):
+        """Fields for exporting to JSON file."""
+        return self._base_export_data()
+
+    def dict_for_main_table(self):
+        """Fields for writing to the main database table of this class."""
+        return self._base_export_data()
 
     def to_db(self):
         """Write to the main table of this class."""
-        data = self.dict_for_db()
+        data = self.dict_for_main_table()
         data['game_token'] = g.game_token
         fields = data.keys()
         placeholders = ','.join(['%s'] * len(fields))
@@ -231,7 +252,7 @@ class Identifiable(DbSerializable):
         return []
 
     def to_db(self):
-        data = self.dict_for_db()
+        data = self.dict_for_main_table()
         if not data:
             return
         data['game_token'] = g.game_token
@@ -279,13 +300,6 @@ class Identifiable(DbSerializable):
         raise NotImplementedError()
 
     @classmethod
-    def load_complete_object(cls):
-        """Load an object of this class from db.
-        Has everything needed for writing the object back to db.
-        """
-        raise NotImplementedError()
-
-    @classmethod
     def load_complete_objects(cls):
         """Load all objects of this class from db.
         Has everything needed for saving the objects to file.
@@ -306,6 +320,21 @@ class DeletionError(DbError):
             else "Could not delete item.")
         super().__init__(message)
         self.original_exception = original_exception
+
+class QueryHelper:
+    """Build a query string and associated values."""
+    def __init__(self, base_query, initial_values):
+        self.query = base_query
+        self.values = initial_values
+
+    def add_limit(self, field, value):
+        """Add a limiting condition, such as an ID."""
+        if value:
+            self.query += f" AND {field} = %s"
+            self.values.append(value)
+
+    def sort_by(self, field):
+        self.query += f"\nORDER BY {field}"
 
 def precision(numstr, places):
     """Convert string to float with specified number of decimal places."""

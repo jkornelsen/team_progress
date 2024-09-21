@@ -5,8 +5,8 @@ import re
 
 from .attrib import Attrib, AttribOf, AttribReq
 from .db_serializable import (
-    DbSerializable, Identifiable, MutableNamespace, coldef,
-    DbError, DeletionError)
+    DbError, DbSerializable, DeletionError, 
+    Identifiable, MutableNamespace, QueryHelper, coldef)
 from .progress import Progress
 from .utils import Pile, RequestHelper, Storage
 
@@ -41,23 +41,41 @@ logger = logging.getLogger(__name__)
 
 class Source:
     def __init__(self, new_id=0):
-        self.item = Item(new_id)  # source item, not result item
+        self.item = Item(new_id)  # source item, not produced item
         self.pile = self.item
         self.preserve = False  # if true then source will not be consumed
         self.q_required = 1.0
 
-    def dict_for_json(self):
+    def _base_export_data(self):
         return {
             'item_id': self.item.id,
             'preserve': self.preserve,
-            'q_required': self.q_required}
+            'q_required': self.q_required,
+            }
 
     @classmethod
     def from_data(cls, data):
-        instance = cls()
-        instance.item = Item(int(data.get('item_id', 0)))
+        instance = cls(data.get('item_id', 0))
         instance.preserve = data.get('preserve', False)
         instance.q_required = data.get('q_required', 1.0)
+        return instance
+
+class Byproduct:
+    def __init__(self, new_id=0):
+        self.item = Item(new_id)  # item produced
+        self.pile = self.item
+        self.rate_amount = 1.0
+
+    def _base_export_data(self):
+        return {
+            'item_id': self.item.id,
+            'rate_amount': self.rate_amount,
+            }
+
+    @classmethod
+    def from_data(cls, data):
+        instance = cls(data.get('item_id', 0))
+        instance.rate_amount = data.get('rate_amount', 1.0)
         return instance
 
 class Recipe(Identifiable):
@@ -68,6 +86,7 @@ class Recipe(Identifiable):
         self.rate_duration = 3.0  # seconds for a batch
         self.instant = False
         self.sources = []  # Source objects
+        self.byproducts = []  # Byproduct objects
         self.attribs = {}  # AttribReq objects keyed by attr id
 
     def _base_export_data(self):
@@ -84,13 +103,11 @@ class Recipe(Identifiable):
         data = self._base_export_data()
         data.update({
             'sources': [source.dict_for_json() for source in self.sources],
+            'byproducts': [byp.dict_for_json() for byp in self.byproducts],
             'attribs': {attrib_id: req.val
                 for attrib_id, req in self.attribs.items()}
             })
         return data
-
-    def dict_for_db(self):
-        return self._base_export_data()
 
     @classmethod
     def from_data(cls, data, item_produced=None):
@@ -105,6 +122,9 @@ class Recipe(Identifiable):
         instance.sources = [
             Source.from_data(src_data)
             for src_data in data.get('sources', [])]
+        instance.byproducts = [
+            Byproduct.from_data(byp_data)
+            for byp_data in data.get('byproducts', [])]
         instance.attribs = {
             attrib_id: AttribReq(attrib_id, val)
             for attrib_id, val in data.get('attribs', {}).items()}
@@ -127,6 +147,19 @@ class Recipe(Identifiable):
                 "recipe_sources",
                 "game_token, recipe_id, item_id, q_required, preserve",
                 values)
+        if self.byproducts:
+            logger.debug("byproducts: %s", self.byproducts)
+            values = []
+            for byproduct in self.byproducts:
+                values.append((
+                    g.game_token, self.id,
+                    byproduct.item.id,
+                    byproduct.rate_amount,
+                    ))
+            self.insert_multiple(
+                "recipe_byproducts",
+                "game_token, recipe_id, item_id, rate_amount",
+                values)
         if self.attribs:
             logger.debug("attribs: %s", self.attribs)
             values = []
@@ -139,6 +172,96 @@ class Recipe(Identifiable):
                 "recipe_attribs",
                 "game_token, recipe_id, attrib_id, value",
                 values)
+
+    @classmethod
+    def load_complete_data(cls, id_to_get):
+        """Load all recipe data needed for creating Item objects
+        that can be stored to db or JSON file.
+        :param id_to_get: specify to only load a single recipe
+        :returns: dict of recipes for each item
+        """
+        logger.debug("load_complete_data(%s)", id_to_get)
+        if id_to_get in ['new', '0', 0]:
+            return {}
+        # Get recipe and source data
+        qhelper = QueryHelper("""
+            SELECT *
+            FROM {tables[0]}
+            LEFT JOIN {tables[1]}
+                ON {tables[1]}.game_token = {tables[0]}.game_token
+                AND {tables[1]}.recipe_id = {tables[0]}.id
+            WHERE {tables[0]}.game_token = %s
+            """, [g.game_token])
+        qhelper.add_limit("{tables[0]}.item_id", id_to_get)
+        source_rows = cls.select_tables(
+            qhelper=qhelper, tables=['recipes', 'recipe_sources'])
+        item_recipes = {}  # recipe data keyed by item ID
+        for recipe_row, source_row in source_rows:
+            recipes_data = item_recipes.setdefault(recipe_row.item_id, {})
+            recipe_data = recipes_data.setdefault(recipe_row.id, recipe_row)
+            if source_row.item_id:
+                recipe_data.setdefault('sources', []).append(source_row)
+        # Get byproduct relation data
+        qhelper = QueryHelper("""
+            SELECT *
+            FROM {tables[0]}
+            INNER JOIN {tables[1]}
+                ON {tables[1]}.game_token = {tables[0]}.game_token
+                AND {tables[1]}.recipe_id = {tables[0]}.id
+            WHERE {tables[0]}.game_token = %s
+            """, [g.game_token])
+        qhelper.add_limit("{tables[0]}.item_id", id_to_get)
+        byproduct_rows = cls.select_tables(
+            qhelper=qhelper, tables=['recipes', 'recipe_byproducts'])
+        for recipe_row, byproduct_row in byproduct_rows:
+            recipes_data = item_recipes[recipe_row.item_id]
+            recipe_data = recipes_data[recipe_row.id]
+            if byproduct_row.attrib_id:
+                recipe_data.setdefault('byproducts', []).append(byproduct_row)
+        # Get attrib relation data
+        qhelper = QueryHelper("""
+            SELECT *
+            FROM {tables[0]}
+            INNER JOIN {tables[1]}
+                ON {tables[1]}.game_token = {tables[0]}.game_token
+                AND {tables[1]}.recipe_id = {tables[0]}.id
+            WHERE {tables[0]}.game_token = %s
+            """, [g.game_token])
+        qhelper.add_limit("{tables[0]}.item_id", id_to_get)
+        attrib_rows = cls.select_tables(
+            qhelper=qhelper, tables=['recipes', 'recipe_attribs'])
+        for recipe_row, attrib_row in attrib_rows:
+            recipes_data = item_recipes[recipe_row.item_id]
+            recipe_data = recipes_data[recipe_row.id]
+            if attrib_row.attrib_id:
+                recipe_data.setdefault(
+                    'attribs', {})[attrib_row.attrib_id] = attrib_row.value
+        return item_recipes
+
+    @classmethod
+    def load_data_by_source(cls, id_to_get):
+        logger.debug("load_data_by_source(%s)", id_to_get)
+        if id_to_get in ['new', '0', 0, None]:
+            return {}
+        # Get recipe and source data
+        qhelper = QueryHelper("""
+            SELECT *
+            FROM {tables[0]}
+            INNER JOIN {tables[1]}
+                ON {tables[1]}.game_token = {tables[0]}.game_token
+                AND {tables[1]}.recipe_id = {tables[0]}.id
+            WHERE {tables[0]}.game_token = %s
+            """, [g.game_token])
+        qhelper.add_limit("{tables[1]}.item_id", id_to_get)
+        source_rows = cls.select_tables(
+            qhelper=qhelper, tables=['recipes', 'recipe_sources'])
+        item_recipes = {}  # recipe data keyed by item ID
+        for recipe_row, source_row in source_rows:
+            recipes_data = item_recipes.setdefault(recipe_row.item_id, {})
+            recipe_data = recipes_data.setdefault(recipe_row.id, recipe_row)
+            if source_row.item_id:
+                recipe_data.setdefault('sources', []).append(source_row)
+        return recipes
 
 class Item(Identifiable, Pile):
     PILE_TYPE = Storage.UNIVERSAL  # Constant for this class
@@ -185,7 +308,7 @@ class Item(Identifiable, Pile):
             })
         return data
 
-    def dict_for_db(self):
+    def dict_for_main_table(self):
         data = self._base_export_data()
         data.update({
             'progress_id': self.progress.id or None
@@ -212,6 +335,12 @@ class Item(Identifiable, Pile):
         instance.recipes = [
             Recipe.from_data(recipe_data, instance)
             for recipe_data in data.get('recipes', [])]
+        # Get the recipe that is currently in progress
+        recipe_id = instance.progress.recipe.id
+        if recipe_id:
+            instance.progress.recipe = next(
+                (recipe for recipe in instance.recipes
+                if recipe.id == recipe_id), Recipe(item=instance))
         return instance
 
     def to_db(self):
@@ -235,215 +364,75 @@ class Item(Identifiable, Pile):
             recipe.to_db()
 
     @classmethod
-    def db_item_and_progress_data(cls, item_id_for_progress=None):
-        query = """
-            SELECT *
-            FROM {tables[0]}
-            LEFT JOIN {tables[1]}
-                ON {tables[1]}.id = {tables[0]}.progress_id
-                AND {tables[1]}.game_token = {tables[0]}.game_token
-            """
-        values = []
-        if item_id_for_progress:
-            query += "AND {tables[0]}.id = %s\n"
-            values.append(item_id_for_progress);
-        values.append(g.game_token);
-        query += """WHERE {tables[0]}.game_token = %s
-            ORDER BY {tables[0]}.name
-            """
-        return cls.select_tables(
-            query, values, ['items', 'progress'])
-
-    @classmethod
-    def db_attrib_data(cls, id_to_get=None, include_all=False):
-        if id_to_get == 0:
-            return []
-        query = """
-            SELECT *
-            FROM {tables[0]}
-            LEFT JOIN {tables[1]}
-                ON {tables[1]}.game_token = {tables[0]}.game_token
-                AND {tables[1]}.attrib_id = {tables[0]}.id
-            """
-        values = [g.game_token]
-        if id_to_get:
-            query += "AND {tables[1]}.item_id = %s\n"
-            values = [id_to_get] + values
-        query += "WHERE {tables[0]}.game_token = %s\n"
-        if include_all:
-            query += "ORDER BY {tables[0]}.name\n"
-        else:
-            query += "AND {tables[1]}.item_id IS NOT NULL\n"
-        return cls.select_tables(
-            query, values, ['attribs', 'item_attribs'])
-
-    @classmethod
-    def db_recipe_data(cls, id_to_get=None, get_by_source=False):
-        if id_to_get == 0:
-            return {}
-        query = """
-            SELECT *
-            FROM {tables[0]}
-            LEFT JOIN {tables[1]}
-                ON {tables[1]}.game_token = {tables[0]}.game_token
-                AND {tables[1]}.recipe_id = {tables[0]}.id
-            """
-        tables = ['recipes', 'recipe_sources']
-        item_conditions = [
-            "WHERE {tables[0]}.game_token = %s"]
-        values = [g.game_token]
-        if id_to_get:
-            if get_by_source:
-                query = re.sub(r'LEFT JOIN', 'INNER JOIN', query)
-                item_conditions.insert(0, "AND {tables[1]}.item_id = %s")
-                values.insert(0, id_to_get);
-            else:
-                item_conditions.append("AND {tables[0]}.item_id = %s")
-                values.append(id_to_get);
-        query += "\n".join(item_conditions)
-        sources_data = cls.select_tables(query, values, tables)
-        item_recipes_data = {}
-        for row_recipe, row_recipe_source in sources_data:
-            recipes_data = item_recipes_data.setdefault(row_recipe.item_id, {})
-            recipe_data = recipes_data.setdefault(
-                row_recipe.id, row_recipe)
-            if row_recipe_source.item_id:
-                recipe_data.setdefault('sources', []).append(row_recipe_source)
-        attribs_data = []
-        if get_by_source:
-            return item_recipes_data
-        query = """
-            SELECT *
-            FROM {tables[0]}
-            INNER JOIN {tables[1]}
-                ON {tables[1]}.game_token = {tables[0]}.game_token
-                AND {tables[1]}.recipe_id = {tables[0]}.id
-            """
-        tables = ['recipes', 'recipe_attribs']
-        item_conditions = [
-            "WHERE {tables[0]}.game_token = %s"]
-        values = [g.game_token]
-        if id_to_get is not None:
-            item_conditions.append("AND {tables[0]}.item_id = %s")
-            values.append(id_to_get);
-        query += "\n".join(item_conditions)
-        attribs_data = cls.select_tables(query, values, tables)
-        for row_recipe, row_recipe_attrib in attribs_data:
-            recipes_data = item_recipes_data.setdefault(
-                row_recipe.item_id, {})
-            recipe_data = recipes_data.setdefault(
-                row_recipe.id, row_recipe)
-            if row_recipe_attrib.attrib_id:
-                recipe_data.setdefault('attribs', {}
-                    )[row_recipe_attrib.attrib_id] = row_recipe_attrib.value
-        return item_recipes_data
-
-    @classmethod
-    def load_complete_object(cls, id_to_get):
-        """Load an object with everything needed for storing to db."""
-        logger.debug("load_complete_object(%s)", id_to_get)
-        if id_to_get == 'new':
-            id_to_get = 0
-        else:
-            id_to_get = int(id_to_get)
-        if id_to_get in g.active.items:
+    def load_complete_objects(cls, id_to_get=None):
+        """Load objects with everything needed for storing to db
+        or JSON file.
+        :param id_to_get: specify to only load a single object
+        """
+        logger.debug("load_complete_objects(%s)", id_to_get)
+        if id_to_get in ['new', '0', 0]:
+            return cls()
+        if id_to_get and id_to_get in g.active.items:
             logger.debug("already loaded")
             return g.active.items[id_to_get]
-        # Get this item's base data and progress data
-        tables_row = cls.select_tables("""
+        # Get item and progress data
+        qhelper = QueryHelper("""
             SELECT *
             FROM {tables[0]}
             LEFT JOIN {tables[1]}
                 ON {tables[1]}.id = {tables[0]}.progress_id
                 AND {tables[1]}.game_token = {tables[0]}.game_token
             WHERE {tables[0]}.game_token = %s
-                AND {tables[0]}.id = %s
-            """, (g.game_token, id_to_get), ['items', 'progress'],
-            fetch_all=False)
-        current_data = MutableNamespace()
-        if tables_row:
-            item_data, progress_data = tables_row
-            current_data = item_data
-            item_data.progress = progress_data
-        # Get this item's attrib relation data
-        item_attribs_rows = cls.execute_select("""
+            """, [g.game_token])
+        qhelper.add_limit("{tables[0]}.id", id_to_get)
+        qhelper.sort_by("{tables[0]}.name")
+        tables_rows = cls.select_tables(
+            qhelper=qhelper, tables=['items', 'progress'])
+        items = {}  # data (not objects) keyed by ID
+        for item_data, progress_data in tables_rows:
+            item = items.setdefault(item_data.id, item_data)
+            item.progress = progress_data
+        # Get attrib relation data
+        qhelper = QueryHelper("""
             SELECT *
             FROM item_attribs
             WHERE game_token = %s
-                AND item_id = %s
-            """, (g.game_token, id_to_get))
-        for attrib_data in item_attribs_rows:
-            current_data.setdefault(
-                'attribs', {})[attrib_data.attrib_id] = attrib_data.value
-        # Get this item's source relation data
-        item_recipes_data = cls.db_recipe_data(id_to_get)
-        if item_recipes_data:
-            recipes_data = list(item_recipes_data.values())[0]
-            current_data.recipes = list(recipes_data.values())
-        # Create item from data
-        item = Item.from_data(current_data)
-        g.active.items[id_to_get] = item
-        return item
-
-    @classmethod
-    def load_complete_objects(cls):
-        logger.debug("load_complete_objects()")
-        # Get item and progress data
-        tables_rows = cls.db_item_and_progress_data()
-        instances = {}  # keyed by ID
-        for item_data, progress_data in tables_rows:
-            instance = instances.setdefault(
-                item_data.id, cls.from_data(vars(item_data)))
-            if progress_data.id:
-                instance.progress = Progress.from_data(progress_data, instance)
-        # Get attrib data for items
-        tables_rows = cls.db_attrib_data()
-        for attrib_data, item_attrib_data in tables_rows:
-            instance = instances[item_attrib_data.item_id]
-            attrib_of = AttribOf.from_data(item_attrib_data)
-            instance.attribs[attrib_data.id] = attrib_of
-        # Get source data for items
-        item_recipes_data = cls.db_recipe_data()
-        for item_id, recipes_data in item_recipes_data.items():
-            instance = instances[item_id]
-            instance.recipes = [
-                Recipe.from_data(recipe_data, instance)
-                for recipe_data in recipes_data.values()]
-            # Get the recipe that is currently in progress
-            recipe_id = instance.progress.recipe.id
-            if recipe_id:
-                instance.progress.recipe = next(
-                    (recipe for recipe in instance.recipes
-                    if recipe.id == recipe_id), Recipe(item=instance))
-        # Print debugging info
-        logger.debug("found %d items", len(instances))
-        for instance in instances.values():
-            logger.debug("item %d (%s) has %d recipes", 
-                instance.id, instance.name, len(instance.recipes))
-            if len(instance.recipes):
-                recipe = instance.recipes[0]
-                logger.debug("recipe id %d", recipe.id)
-                logger.debug("    rate_amount=%d, rate_duration=%d, instant=%s",
-                    recipe.rate_amount, recipe.rate_duration, recipe.instant)
-                for source in recipe.sources:
-                    logger.debug("    source item id %d, qty %d",
-                        source.item.id, source.q_required)
+            """, [g.game_token])
+        qhelper.add_limit("item_id", id_to_get)
+        attrib_rows = cls.execute_select(qhelper=qhelper)
+        for row in attrib_rows:
+            item = items[row.item_id]
+            item.setdefault('attribs', []).append(row)
+        # Get source relation data
+        all_recipes_data = Recipe.load_complete_data(id_to_get)
+        for item_id, recipes_data in all_recipes_data.items():
+            item = items[item_id]
+            item.recipes = recipes_data.values()
         # Set list of objects
-        g.game_data.set_list(cls, list(instances.values()))
-        return g.game_data.get_list(cls)
+        instances = []
+        for data in items.values():
+            instances.append(cls.from_data(data))
+        if id_to_get:
+            instance = instances[0]
+            g.active.items[id_to_get] = instance
+            return instance
+        g.game_data.set_list(cls, instances)
+        return instances
 
     @classmethod
     def data_for_configure(cls, id_to_get):
         logger.debug("data_for_configure(%s)", id_to_get)
-        current_obj = cls.load_complete_object(id_to_get)
+        current_obj = cls.load_complete_objects(id_to_get)
         # Get all basic attrib and item data
         g.game_data.from_db_flat([Attrib, Item])
         # Replace partial objects with fully populated objects
         for attrib_id, attrib_of in current_obj.attribs.items():
-            attrib_of.attrib = Attrib.get_by_id(attrib_id)
+            item.attrib = Attrib.get_by_id(attrib_id)
         for recipe in current_obj.recipes:
             for source in recipe.sources:
                 source.item = Item.get_by_id(source.item.id)
+            for byproduct in recipe.byproducts:
+                byproduct.item = Item.get_by_id(byproduct.item.id)
             for attrib_id, req in recipe.attribs.items():
                 req.attrib = Attrib.get_by_id(attrib_id)
         # Print debugging info
@@ -472,7 +461,11 @@ class Item(Identifiable, Pile):
         if complete_sources:
             for recipe in current_obj.recipes:
                 for source in recipe.sources:
-                    source.item = cls.load_complete_object(source.item.id)
+                    source.item = cls.load_complete_objects(
+                        source.item.id)
+                for byp in recipe.byproduct:
+                    byproduct.item = cls.load_complete_objects(
+                        byproduct.item.id)
         # Get all needed location and character data
         from .location import Location
         from .character import Character
@@ -482,26 +475,12 @@ class Item(Identifiable, Pile):
         # and get piles at this loc or char that can be used for sources
         _load_piles(current_obj, owner_char_id, at_loc_id, main_pile_type)
         # Get relation data for items that use this item as a source
-        item_recipes_data = cls.db_recipe_data(id_to_get, get_by_source=True)
+        item_recipes_data = Recipe.load_data_by_source(id_to_get)
         for item_id, recipes_data in item_recipes_data.items():
             item = Item.get_by_id(item_id)
             item.recipes = [
                 Recipe.from_data(recipe_data, item)
                 for recipe_id, recipe_data in recipes_data.items()]
-        # Print debugging info
-        container = current_obj.pile.container
-        if isinstance(container, Character):
-            char = container
-            logger.debug("container %s", char.name)
-            for owned_item in char.items.values():
-                logger.debug(
-                    "owned %s (%d), container %s (%d), quantity %s",
-                    owned_item.item.name,
-                    owned_item.item.id,
-                    owned_item.container.name,
-                    owned_item.container.id,
-                    owned_item.quantity
-                    )
         return current_obj
 
     def configure_by_form(self):
@@ -514,7 +493,7 @@ class Item(Identifiable, Pile):
             req = RequestHelper('form')
             self.toplevel = req.get_bool('top_level')
             self.masked = req.get_bool('masked')
-            old = Item.load_complete_object(self.id)
+            old = Item.load_complete_objects(self.id)
             self.q_limit = req.set_num_if_changed(
                 req.get_str('item_limit'), old.q_limit)
             self.quantity = req.set_num_if_changed(
@@ -537,7 +516,7 @@ class Item(Identifiable, Pile):
                 for source_id in source_ids:
                     source_prefix = f'{prefix}source{source_id}_'
                     source = Source.from_data({
-                        'item_id': int(source_id),
+                        'item_id': source_id,
                         'q_required': req.get_float(
                             f'{source_prefix}qtyreq', 0.0),
                         'preserve': req.get_bool(
@@ -547,6 +526,15 @@ class Item(Identifiable, Pile):
                     logger.debug("Sources for %s: %s",
                         recipe_id, {source.item.id: source.q_required
                         for source in recipe.sources})
+                byproduct_ids = req.get_list(f'{prefix}byproduct_id')
+                for byproduct_id in byproduct_ids:
+                    byproduct_prefix = f'{prefix}byproduct{byproduct_id}_'
+                    byproduct = Byproduct.from_data({
+                        'item_id': byproduct_id,
+                        'rate_amount': req.get_float(
+                            f'{byproduct_prefix}rate_amount', 1.0),
+                        })
+                    recipe.byproducts.append(byproduct)
                 recipe_attrib_ids = req.get_list(f'{prefix}attrib_id')
                 for attrib_id in recipe_attrib_ids:
                     attrib_prefix = f'{prefix}attrib{attrib_id}_'
@@ -610,8 +598,8 @@ def _load_piles(current_item, char_id, loc_id, main_pile_type):
         #position = char.position
     if loc_id:
         # Get all items at this loc
-        #loc = Location.load_complete_object(loc_id, position)
-        loc = Location.load_complete_object(loc_id)
+        #loc = Location.load_complete_objects(loc_id, position)
+        loc = Location.load_complete_objects(loc_id)
         if not position:
             # TODO: assign position to first useful local pile found
             #_assign_pile(

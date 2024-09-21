@@ -5,7 +5,8 @@ from types import SimpleNamespace
 
 from .attrib import Attrib
 from .character import Character
-from .db_serializable import Identifiable, MutableNamespace, coldef
+from .db_serializable import (
+    Identifiable, MutableNamespace, QueryHelper, coldef)
 from .item import Item
 from .location import Location
 from .utils import NumTup, RequestHelper
@@ -104,7 +105,7 @@ class Event(Identifiable):
             })
         return data
 
-    def dict_for_db(self):
+    def dict_for_main_table(self):
         data = self._base_export_data()
         data.update({
             'numeric_range': self.numeric_range,
@@ -171,112 +172,70 @@ class Event(Identifiable):
                 values)
 
     @classmethod
-    def load_complete_object(cls, id_to_get):
-        """Load an object with everything needed for storing to db."""
-        logger.debug("load_complete_object(%s)", id_to_get)
-        if id_to_get == 'new':
-            id_to_get = 0
-        else:
-            id_to_get = int(id_to_get)
-        # Get this event's base data
-        events_row = cls.execute_select("""
+    def load_complete_objects(cls, id_to_get=None):
+        """Load objects with everything needed for storing to db
+        or JSON file.
+        :param id_to_get: specify to only load a single object
+        """
+        logger.debug("load_complete_objects(%s)", id_to_get)
+        if id_to_get in ['new', '0', 0]:
+            return cls()
+        # Get event base data
+        # TODO: Use select_tables to left join on event_attribs data,
+        # because it won't multiply rows.
+        # That way only 2 instead of 3 queries are needed.
+        qhelper = QueryHelper("""
             SELECT *
             FROM {table}
             WHERE game_token = %s
-                AND id = %s
-            """, (g.game_token, id_to_get), fetch_all=False)
-        current_data = MutableNamespace()
-        if events_row:
-            current_data = events_row
-        # Get this event's attrib relation data
-        event_attribs_rows = cls.execute_select("""
+            """, [g.game_token])
+        qhelper.add_limit("id", id_to_get)
+        events = {}  # data (not objects) keyed by ID
+        event_rows = cls.execute_select(qhelper=qhelper)
+        for row in event_rows:
+            events[row.id] = row
+        # Get attrib relation data
+        qhelper = QueryHelper("""
             SELECT *
             FROM event_attribs
             WHERE game_token = %s
-                AND event_id = %s
-            """, (g.game_token, id_to_get))
-        for attrib_data in event_attribs_rows:
-            if attrib_data.determining:
+            """, [g.game_token])
+        qhelper.add_limit("event_id", id_to_get)
+        attrib_rows = cls.execute_select(qhelper=qhelper)
+        for row in attrib_rows:
+            evt = events[row.event_id]
+            if row.determining:
                 listname = 'determining_attrs'
             else:
                 listname = 'changed_attrs'
-            current_data.setdefault(listname, []).append(
-                attrib_data.attrib_id)
-        # Get this events's trigger relation data
-        triggers_rows = cls.execute_select("""
+            evt.setdefault(listname, []).append(row.attrib_id)
+        # Get trigger relation data
+        qhelper = QueryHelper("""
             SELECT *
             FROM event_triggers
             WHERE game_token = %s
-                AND event_id = %s
-            """, (g.game_token, id_to_get))
-        for trigger_data in triggers_rows:
-            if trigger_data.item_id:
-                trigger_tup = (Item.basename(), trigger_data.item_id)
+            """, [g.game_token])
+        qhelper.add_limit("event_id", id_to_get)
+        trigger_rows = cls.execute_select(qhelper=qhelper)
+        for row in trigger_rows:
+            if row.item_id:
+                trigger_tup = (Item.basename(), row.item_id)
             else:
-                trigger_tup = (Location.basename(), trigger_data.loc_id)
+                trigger_tup = (Location.basename(), row.loc_id)
             current_data.setdefault('triggers', []).append(trigger_tup)
-        # Create event from data
-        return Event.from_data(current_data)
-
-    @classmethod
-    def load_complete_objects(cls):
-        logger.debug("load_complete_objects()")
-        # Get event data with attrib relation data
-        query = """
-            SELECT *
-            FROM {tables[0]}
-            LEFT JOIN {tables[1]}
-                ON {tables[1]}.event_id = {tables[0]}.id
-                AND {tables[1]}.game_token = {tables[0]}.game_token
-            WHERE {tables[0]}.game_token = %s
-            """
-        values = [g.game_token]
-        tables_rows = cls.select_tables(
-            query, values, ['events', 'event_attribs'])
-        instances = {}  # keyed by ID
-        for event_data, attrib_data in tables_rows:
-            logger.debug("event_data %s", event_data)
-            logger.debug("attrib_data %s", attrib_data)
-            instance = instances.get(event_data.id)
-            if not instance:
-                instance = cls.from_data(vars(event_data))
-                instances[event_data.id] = instance
-            if attrib_data.attrib_id:
-                if attrib_data.determining:
-                    attriblist = instance.determining_attrs
-                else:
-                    attriblist = instance.changed_attrs
-                attriblist.append(Attrib(attrib_data.attrib_id))
-        # Get event data with trigger relation data
-        triggers_rows = cls.execute_select("""
-            SELECT *
-            FROM event_triggers
-            WHERE game_token = %s
-            """, values)
-        for trigger_row in triggers_rows:
-            logger.debug("trigger_row %s", trigger_row)
-            instance = instances.get(trigger_row.event_id)
-            if not instance:
-                raise Exception(
-                    f"Could not get instance for event id {event_data.id}")
-            instance.triggers.append(
-                Item(trigger_row.item_id) if trigger_row.item_id
-                else Location(trigger_row.loc_id) if trigger_row.loc_id
-                else None)
-        # Print debugging info
-        logger.debug(f"found %d events", len(instances))
-        for instance in instances.values():
-            logger.debug("event %d (%s) has %d triggers and %d det attrs",
-            instance.id, instance.name, len(instance.triggers),
-            len(instance.determining_attrs))
         # Set list of objects
-        g.game_data.set_list(cls, list(instances.values()))
-        return g.game_data.get_list(cls)
+        instances = []
+        for data in events.values():
+            instances.append(cls.from_data(data))
+        if id_to_get:
+            return instances[0]
+        g.game_data.set_list(cls, instances)
+        return instances
 
     @classmethod
     def data_for_configure(cls, id_to_get):
         logger.debug("data_for_configure(%s)", id_to_get)
-        current_obj = cls.load_complete_object(id_to_get)
+        current_obj = cls.load_complete_objects(id_to_get)
         # Get all basic data
         g.game_data.from_db_flat([Attrib, Event, Item, Location])
         # Replace partial objects with fully populated objects

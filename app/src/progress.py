@@ -67,9 +67,6 @@ class Progress(Identifiable):
             return {}
         return self._base_export_data()
 
-    def dict_for_db(self):
-        return self._base_export_data()
-
     @classmethod
     def from_data(cls, data, container=None):
         if not isinstance(data, dict):

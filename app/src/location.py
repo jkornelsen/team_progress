@@ -2,8 +2,8 @@ from flask import g, session
 import logging
 
 from .db_serializable import (
-    Identifiable, MutableNamespace, coldef,
-    DbError, DeletionError)
+    DbError, DeletionError, Identifiable, MutableNamespace,
+    QueryHelper, coldef)
 from .item import Item
 from .progress import Progress
 from .utils import Pile, NumTup, RequestHelper, Storage
@@ -46,7 +46,7 @@ class ItemAt(Pile):
             })
         return data
 
-    def dict_for_db(self):
+    def dict_for_main_table(self):
         data = self._base_export_data()
         data.update({
             'position': self.position,
@@ -85,7 +85,7 @@ class Destination:
             })
         return data
 
-    def dict_for_db(self):
+    def dict_for_main_table(self):
         data = self._base_export_data()
         data.update({
             'exit': self.exit,
@@ -178,7 +178,7 @@ class Location(Identifiable):
             })
         return data
 
-    def dict_for_db(self):
+    def dict_for_main_table(self):
         data = self._base_export_data()
         data.update({
             'progress_id': self.progress.id or None,
@@ -252,101 +252,75 @@ class Location(Identifiable):
                 "game_token, loc_id, item_id, quantity, position",
                 values)
 
-    @classmethod
-    def load_complete_object(cls, id_to_get):
-        """Load an object with everything needed for storing to db."""
-        logger.debug("load_complete_object(%s)", id_to_get)
-        if id_to_get == 'new':
-            id_to_get = 0
-        else:
-            id_to_get = int(id_to_get)
-        # Get this location's base data and progress data
-        tables_row = cls.select_tables("""
-            SELECT *
-            FROM {tables[0]}
-            LEFT JOIN {tables[1]}
-                ON {tables[1]}.id = {tables[0]}.progress_id
-                AND {tables[1]}.game_token = {tables[0]}.game_token
-            WHERE {tables[0]}.game_token = %s
-                AND {tables[0]}.id = %s
-            """, (g.game_token, id_to_get), ['locations', 'progress'],
-            fetch_all=False)
-        current_data = MutableNamespace()
-        if tables_row:
-            loc_data, progress_data = tables_row
-            current_data = loc_data
-            loc_data.progress = progress_data
-        # Get this location's destination data
-        loc_dest_rows = cls.execute_select("""
-            SELECT *
-            FROM loc_destinations
-            WHERE game_token = %s
-                AND loc_id = %s
-            """, (g.game_token, id_to_get))
-        for dest_data in loc_dest_rows:
-            current_data.setdefault('destinations', []).append(vars(dest_data))
-        # Get this location's item relation data
-        loc_items_rows = cls.execute_select("""
-            SELECT *
-            FROM loc_items
-            WHERE game_token = %s
-                AND loc_id = %s
-            """, (g.game_token, id_to_get))
-        for item_data in loc_items_rows:
-            current_data.setdefault('items', []).append(vars(item_data))
-        # Create object from data
-        return Location.from_data(current_data)
+    def unmask(self):
+        """Mark this location as visited if it hasn't been yet."""
+        if self.location.id:
+            self.execute_change(f"""
+                UPDATE locations
+                SET masked = false
+                WHERE id = %s AND masked = true
+                """, (self.location.id,))
 
     @classmethod
-    def load_complete_objects(cls):
-        """Load objects with everything needed for storing to JSON file."""
-        logger.debug("load_complete_objects()")
+    def load_complete_objects(cls, id_to_get=None):
+        """Load objects with everything needed for storing to db
+        or JSON file.
+        :param id_to_get: specify to only load a single object
+        """
+        logger.debug("load_complete_objects(%s)", id_to_get)
+        if id_to_get in ['new', '0', 0]:
+            return cls()
         # Get loc and progress data
-        tables_rows = cls.select_tables("""
+        qhelper = QueryHelper("""
             SELECT *
             FROM {tables[0]}
             LEFT JOIN {tables[1]}
                 ON {tables[1]}.id = {tables[0]}.progress_id
                 AND {tables[1]}.game_token = {tables[0]}.game_token
             WHERE {tables[0]}.game_token = %s
-            """, [g.game_token], ['locations', 'progress'])
-        instances = {}  # keyed by ID
+            """, [g.game_token])
+        qhelper.add_limit("{tables[0]}.id", id_to_get)
+        tables_rows = cls.select_tables(
+            qhelper=qhelper, tables=['locations', 'progress'])
+        locs = {}  # data (not objects) keyed by ID
         for loc_data, progress_data in tables_rows:
-            instance = instances.setdefault(
-                loc_data.id, cls.from_data(loc_data))
-            if progress_data.id:
-                instance.progress = Progress.from_data(progress_data, instance)
-        # Get destinations data
-        dest_rows = cls.execute_select("""
+            loc = locs.setdefault(loc_data.id, loc_data)
+            loc.progress = progress_data
+        # Get destination data
+        qhelper = QueryHelper("""
             SELECT *
             FROM loc_destinations
             WHERE game_token = %s
             """, [g.game_token])
+        qhelper.add_limit("loc_id", id_to_get)
+        dest_rows = cls.execute_select(qhelper=qhelper)
         for row in dest_rows:
-            instance = instances[row.loc_id]
-            instance.destinations[row.dest_id] = Destination.from_data(row)
-        # Get loc item data
-        item_rows = cls.execute_select("""
+            loc = locs[row.loc_id]
+            loc.setdefault('destinations', []).append(row)
+        # Get this location's item relation data
+        qhelper = QueryHelper("""
             SELECT *
             FROM loc_items
             WHERE game_token = %s
             """, [g.game_token])
+        qhelper.add_limit("loc_id", id_to_get)
+        item_rows = cls.execute_select(qhelper=qhelper)
         for row in item_rows:
-            instance = instances[row.loc_id]
-            instance.items[row.item_id] = ItemAt.from_data(row)
-        # Print debugging info
-        logger.debug("found %d locations", len(instances))
-        for instance in instances.values():
-            logger.debug("location %d (%s) has %d destinations",
-                instance.id, instance.name, len(instance.destinations))
+            loc = locs[row.loc_id]
+            loc.setdefault('items', []).append(row)
         # Set list of objects
-        g.game_data.set_list(cls, list(instances.values()))
-        return g.game_data.get_list(cls)
+        instances = []
+        for data in locs.values():
+            instances.append(cls.from_data(data))
+        if id_to_get:
+            return instances[0]
+        g.game_data.set_list(cls, instances)
+        return instances
 
     @classmethod
     def data_for_configure(cls, id_to_get):
         logger.debug("data_for_configure(%s)", id_to_get)
-        current_obj = cls.load_complete_object(id_to_get)
+        current_obj = cls.load_complete_objects(id_to_get)
         # Replace partial objects with fully populated objects
         g.game_data.from_db_flat([Location, Item])
         for dest_id, dest in current_obj.destinations.items():
@@ -401,7 +375,7 @@ class Location(Identifiable):
                 dest.entrance = NumTup.from_str(dest_entrance, (0, 0))
                 self.destinations[dest_id] = dest
             self.items = {}
-            old = Location.load_complete_object(self.id)
+            old = Location.load_complete_objects(self.id)
             for item_id, item_qty, item_pos in zip(
                     req.get_list('item_id[]'),
                     req.get_list('item_qty[]'),

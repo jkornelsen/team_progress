@@ -26,7 +26,7 @@ def set_routes(app):
     @app.route('/configure/attrib/<attrib_id>', methods=['GET', 'POST'])
     def configure_attrib(attrib_id):
         logger.debug("-" * 80 + "\nconfigure_attrib(%s)", attrib_id)
-        attrib = Attrib.load_complete_object(attrib_id)
+        attrib = Attrib.load_complete_objects(attrib_id)
         if request.method == 'GET':
             req = RequestHelper('args')
             if not req.has_key('duplicated'):
@@ -130,7 +130,7 @@ def set_routes(app):
             return error_page(e)
         req = RequestHelper('form')
         if req.has_key('make_duplicate'):
-            dup_item = item
+            dup_item = new_item
             dup_item.id = 0
             dup_item.name = increment_name(new_item.name)
             dup_item.progress = Progress(container=dup_item)
@@ -534,7 +534,7 @@ def set_routes(app):
             item_id, char_id)
         item = Item.data_for_play(
             item_id, char_id, complete_sources=False)
-        char = Character.load_complete_object(char_id)
+        char = Character.load_complete_objects(char_id)
         owned_item = char.items.get(item_id)
         if not owned_item:
             return jsonify({
@@ -542,7 +542,7 @@ def set_routes(app):
                 'message': f'No item {item.name} in {char.name} inventory.'
                 })
         new_qty = owned_item.quantity
-        loc = Location.load_complete_object(char.location.id)
+        loc = Location.load_complete_objects(char.location.id)
         if item_id in loc.items:
             item_at = loc.items[item_id]
             new_qty += item_at.quantity
@@ -570,7 +570,7 @@ def set_routes(app):
         session['default_pickup_char'] = char_id
         item = Item.data_for_play(
             item_id, at_loc_id=loc_id, complete_sources=False)
-        loc = Location.load_complete_object(loc_id)
+        loc = Location.load_complete_objects(loc_id)
         item_at = loc.items.get(item_id)
         if not item_at:
             return jsonify({
@@ -578,7 +578,7 @@ def set_routes(app):
                 'message': f'No item {item.name} at {item.pile.container.name}.'
                 })
         new_qty = item_at.quantity
-        char = Character.load_complete_object(char_id)
+        char = Character.load_complete_objects(char_id)
         if item_id in char.items:
             owned_item = char.items[item_id]
             new_qty += owned_item.quantity
@@ -646,11 +646,11 @@ def set_routes(app):
     def move_char(char_id, x_change, y_change):
         logger.debug("-" * 80 + "\nmove_char(%d,%d,%d)",
             char_id, x_change, y_change)
-        char = Character.load_complete_object(char_id)
+        char = Character.load_complete_objects(char_id)
         if not char:
             return 'Character not found'
         session['default_move_char'] = char_id
-        loc = Location.load_complete_object(char.location.id)
+        loc = Location.load_complete_objects(char.location.id)
         cur_x, cur_y = char.position.as_tuple()
         newpos = NumTup((
             cur_x + x_change,

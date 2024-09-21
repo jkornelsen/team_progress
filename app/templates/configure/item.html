@@ -33,7 +33,7 @@
             }
         </style>
         <div class="storage-container">
-            <label for="storage_type">Storage:</label>
+            <label>Storage:</label>
             <div class="storage-options">
                 <input type="radio" id="carried" name="storage_type" value="carried" {% if current.storage_type == 'carried' %}checked{% endif %}>
                 <label for="carried">Used when carried</label><br>
@@ -49,7 +49,7 @@
         <label for="item-limit">Limit per Pile:</label>
         <input type="text" id="item-limit" name="item_limit" value="{{ current.q_limit | formatNum }}" size="8"> <span class="label-like">0 for unlimited</span><br>
         <input type="checkbox" id="masked" name="masked" {% if current.masked %}checked{% endif %}>
-        <label for="mask">Don't reveal until gained</label><br>
+        <label for="masked">Don't reveal until gained</label><br>
 
         <div id="sources-container" class="outer-border">
             <!-- Placeholder for appending new recipes -->
@@ -64,6 +64,7 @@
                         {% endfor %}
                     </select>
                     <button type="button" id="add-source-btn" class="lesser-button">Add Source</button>
+                    <button type="button" id="add-byproduct-btn" class="lesser-button">Add Byproduct</button>
                 </div>
             {% else %}
                 <p class="no-entities">(No items)</p>
@@ -174,9 +175,11 @@
                             ${instant ? 'checked' : ''} onChange="updateInstantVisibility(this);"
                             ><label for="instant">Instant</label>
                         </span>
-                        <button type="button" class="remove-recipe-btn lesser-button" id="remove-recipe${recipe_id}">Remove Recipe</button>
+                        <button type="button" class="remove-recipe-btn lesser-button" id="remove-recipe${recipe_id}" style="margin: 10px">Remove Recipe</button>
                         <!-- Placeholder for appending new sources -->
                         <div class="sourcelist_end" style="width: 0; height: 0; opacity: 0;"></div>
+                        <!-- Placeholder for appending new byproducts -->
+                        <div class="byproductlist_end" style="width: 0; height: 0; opacity: 0;"></div>
                         <!-- Placeholder for appending new attribs required for recipe -->
                         <div class="recipeattribs_end" style="unobtrusive"></div>
                         </div>
@@ -209,7 +212,7 @@
                         ${sourceName}
                         <span class="spaced-checkbox">
                             <input type="checkbox" id="{uniqueId}-preserve" name="${uniqueName}_preserve" ${preserve ? 'checked' : ''}
-                            ><label for="preserve">Preserve</label>
+                            ><label for="{uniqueId}-preserve">Preserve</label>
                         </span>
                         <button type="button" class="remove-source-btn lesser-button" id="remove-${uniqueId}">Remove</button>
                     </div>
@@ -244,6 +247,34 @@
                 console.log("added attribHtml before recipeattribs_end");
                 toggleAddRecipeButtonVisibility();
             }
+            function addByproduct(recipeId, byproductId, byproductName, rateAmount = 1.0) {
+                console.log(`addByproduct() ${byproductId}`);
+                const recipeContainer = $('.recipe-container').last();
+                const existingByproduct = recipeContainer.find(`.byproduct[data-byproduct-id="${byproductId}"]`);
+                if (existingByproduct.length > 0) {
+                    alert('Byproduct already exists.');
+                    return;
+                }
+                if (byproductId == current.id) {
+                    alert('This is the main item produced by this recipe, so it cannot also be configured as a byproduct.');
+                    return;
+                }
+                const idArray = [`recipe${recipeId}`, `byproduct${byproductId}`];
+                const uniqueId = idArray.join('-');
+                const uniqueName = idArray.join('_');
+                const byproductHtml = `
+                    <div class="byproduct" data-byproduct-id="${byproductId}">
+                        <input type="hidden" name="recipe${recipeId}_byproduct_id" value="${byproductId}">
+                        <label>Also Produces:</label>
+                        <input type="text" id="${uniqueId}-rate_amount" name="${uniqueName}_rate_amount" value="${rateAmount}" size="8">
+                        ${byproductName}
+                        <button type="button" class="remove-byproduct-btn lesser-button" id="remove-${uniqueId}">Remove</button>
+                    </div>
+                `;
+                recipeContainer.find('.byproductlist_end').before(byproductHtml);
+                console.log("added byproductHtml before byproductlist_end");
+                toggleAddRecipeButtonVisibility();
+            }
             $('#add-source-btn').click(function() {
                 const selectedOption = $('#add-source-select option:selected');
                 const sourceId = selectedOption.val();
@@ -268,6 +299,33 @@
                     recipeId = addRecipe();
                 }
                 addSource(recipeId, sourceId, sourceName);
+                toggleAddRecipeButtonVisibility();
+            });
+            $('#add-byproduct-btn').click(function() {
+                const selectedOption = $('#add-source-select option:selected');
+                const byproductId = selectedOption.val();
+                const byproductName = selectedOption.text();
+                if (byproductId == "") {
+                    return; // Don't add if the selected option is the placeholder
+                }
+                let recipeId;
+                const recipeContainer = $('.recipe-container').last();
+                if (recipeContainer.length) {
+                    // Check if the byproduct already exists in the container
+                    const existingByproduct = recipeContainer.find(
+                        `.byproduct[data-byproduct-id="${byproductId}"]`);
+                    if (existingByproduct.length > 0) {
+                        alert('Byproduct already exists.');
+                        return;
+                    }
+                    recipeId = recipeContainer.find('input[name="recipe_id"]').val();
+                    console.log(`recipe container for id ${recipeId}`);
+                } else {
+                    // No recipe yet, so add one
+                    console.log("no recipe containers found");
+                    recipeId = addRecipe();
+                }
+                addByproduct(recipeId, byproductId, byproductName);
                 toggleAddRecipeButtonVisibility();
             });
             $('#add-recipeattrib-btn').click(function() {
@@ -329,6 +387,12 @@
                 if (recipeContainer.find('.source').length == 0) {
                     recipeContainer.remove();
                 }
+                toggleAddRecipeButtonVisibility();
+            });
+            $('#sources-container').on('click', '.remove-byproduct-btn', function() {
+                const recipeContainer = $(this).closest('.recipe-container');
+                const byproductContainer = $(this).closest('.byproduct');
+                byproductContainer.remove();
                 toggleAddRecipeButtonVisibility();
             });
 

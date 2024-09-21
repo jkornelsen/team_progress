@@ -1,7 +1,7 @@
 from flask import g, session
 import logging
 
-from .db_serializable import Identifiable, coldef
+from .db_serializable import Identifiable, QueryHelper, coldef
 from .utils import RequestHelper
 
 tables_to_create = {
@@ -48,7 +48,7 @@ class Attrib(Identifiable):
         self.name = ""
         self.description = ""
 
-    def dict_for_json(self):
+    def _base_export_data(self):
         return {
             'id': self.id,
             'name': self.name,
@@ -65,33 +65,28 @@ class Attrib(Identifiable):
         return instance
 
     @classmethod
-    def load_complete_object(cls, id_to_get):
-        logger.debug("load_complete_object(%s)", id_to_get)
-        if id_to_get == 'new':
-            id_to_get = 0
-        else:
-            id_to_get = int(id_to_get)
-        row = cls.execute_select("""
+    def load_complete_objects(cls, id_to_get=None):
+        """Load objects with everything needed for storing to db
+        or JSON file.
+        :param id_to_get: specify to only load a single object
+        """
+        logger.debug("load_complete_objects(%s)", id_to_get)
+        if id_to_get in ['new', '0', 0]:
+            return cls()
+        qhelper = QueryHelper("""
             SELECT *
             FROM {table}
             WHERE game_token = %s
-                AND id = %s
-            """, (g.game_token, id_to_get), fetch_all=False)
-        instance = cls.from_data(row)
-        return instance
-
-    @classmethod
-    def load_complete_objects(cls):
-        logger.debug("load_complete_objects()")
-        rows = cls.execute_select("""
-            SELECT *
-            FROM {table}
-            WHERE game_token = %s
-            """, (g.game_token,))
-        # Create objects from data
-        g.game_data.set_list(cls, 
-            [cls.from_data(row) for row in rows])
-        return g.game_data.get_list(cls)
+            """, [g.game_token])
+        qhelper.add_limit("id", id_to_get)
+        row = cls.execute_select(qhelper=qhelper)
+        instances = []
+        for row in rows:
+            instances.append(cls.from_data(row))
+        if id_to_get:
+            return instances[0]
+        g.game_data.set_list(cls, instances)
+        return instances
 
     def configure_by_form(self):
         req = RequestHelper('form')

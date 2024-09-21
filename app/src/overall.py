@@ -6,7 +6,7 @@ from types import SimpleNamespace
 from .attrib import Attrib
 from .character import Character
 from .cache import cache
-from .db_serializable import DbSerializable, Identifiable, coldef
+from .db_serializable import DbSerializable, Identifiable, QueryHelper, coldef
 from .event import Event
 from .item import Item
 from .location import Location
@@ -43,7 +43,7 @@ class WinRequirement(Identifiable):
     def tablename(cls):
         return 'win_requirements'
 
-    def dict_for_json(self):
+    def _base_export_data(self):
         return {
             'id': self.id,
             'item_id': self.item.id if self.item else None,
@@ -92,12 +92,14 @@ class Overall(DbSerializable):
     def __init__(self):
         self.title = "Generic Adventure"
         self.description = (
-            "An empty scenario."
-            " To start from scratch, change the title and this description"
-            " in the Overall settings, and do initial"
-            " setup such as adding a few items or characters."
+            "Go to <i>Main Setup</i>."
+            " If you've already started a game, click <i>Load from File</i>."
+            " Otherwise, browse the <i>Pre-Built Scenarios</i>."
             "\r\n\r\n"
-            "More setup can be done as the game goes along."
+            "Or, to start from scratch, go to <i>Overall Settings</i>"
+            " and change the title and this description."
+            " Then do initial setup such as adding a few items or characters."
+            " More can be added as the game goes along."
             )
         self.win_reqs = []
         self.number_format = 'en_US'
@@ -135,7 +137,6 @@ class Overall(DbSerializable):
         return ''
 
     def _base_export_data(self):
-        """Prepare the base dictionary for JSON and DB."""
         return {
             'title': self.title,
             'description': self.description,
@@ -151,9 +152,6 @@ class Overall(DbSerializable):
                 for win_req in self.win_reqs],
             })
         return data
-
-    def dict_for_db(self):
-        return self._base_export_data()
 
     @classmethod
     def from_data(cls, data):
@@ -174,15 +172,17 @@ class Overall(DbSerializable):
 
     @classmethod
     def load_complete_object(cls):
-        logger.debug("load_complete_object()")
-        values = [g.game_token]
-        tables_rows = DbSerializable.select_tables("""
+        """Load everything needed to serialize the Overall object."""
+        logger.debug("load_complete_objects()")
+        qhelper = QueryHelper("""
             SELECT *
             FROM {tables[0]}
             LEFT JOIN {tables[1]}
                 ON {tables[1]}.game_token = {tables[0]}.game_token
             WHERE {tables[0]}.game_token = %s
-            """, (g.game_token,), ('overall', 'win_requirements'))
+            """, [g.game_token])
+        tables_rows = cls.select_tables(
+            qhelper=qhelper, tables=['overall', 'win_requirements'])
         instance = None
         for overall_data, winreq_data in tables_rows:
             if not instance:

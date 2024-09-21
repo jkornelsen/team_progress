@@ -2,7 +2,8 @@ from flask import g, session
 import logging
 
 from .attrib import Attrib, AttribOf
-from .db_serializable import Identifiable, MutableNamespace, coldef
+from .db_serializable import (
+    Identifiable, MutableNamespace, QueryHelper, coldef)
 from .item import Item
 from .location import Destination, Location
 from .progress import Progress
@@ -33,7 +34,7 @@ class OwnedItem(Pile):
         super().__init__(item, char)
         self.slot = ''  # for example, "main hand"
 
-    def dict_for_json(self):
+    def _base_export_data(self):
         return {
             'item_id': self.item.id,
             'quantity': self.quantity,
@@ -68,7 +69,6 @@ class Character(Identifiable):
         self.pile = Pile()  # for Progress
 
     def _base_export_data(self):
-        """Prepare the base dictionary for JSON and DB."""
         return {
             'id': self.id,
             'name': self.name,
@@ -93,7 +93,7 @@ class Character(Identifiable):
             })
         return data
 
-    def dict_for_db(self):
+    def dict_for_main_table(self):
         data = self._base_export_data()
         data.update({
             'position': self.position,
@@ -172,7 +172,7 @@ class Character(Identifiable):
     def load_characters_at_loc(cls, loc_id, load=True):
         query = """
             SELECT *
-            FROM characters
+            FROM {table}
             WHERE game_token = %s
             """
         values = [g.game_token]
@@ -191,7 +191,7 @@ class Character(Identifiable):
     @classmethod
     def load_characters_for_event(cls, event_id, load=True):
         """Get characters that have attributes used for the event."""
-        query = """
+        characters_rows = cls.execute_select("""
             SELECT *
             FROM {tables[0]}
             INNER JOIN {tables[1]}
@@ -202,9 +202,8 @@ class Character(Identifiable):
                 AND {tables[2]}.event_id = %s
                 AND {tables[2]}.attrib_id = {tables[1]}.attrib_id
             WHERE {tables[0]}.game_token = %s
-            """.format(tables=['characters', 'char_attribs', 'event_attribs'])
-        characters_rows = cls.execute_select(
-            query, (event_id, g.game_token))
+            """, (event_id, g.game_token),
+            ['characters', 'char_attribs', 'event_attribs'])
         chars = {}
         for char_row in characters_rows:
             if char_row.id not in chars:
@@ -224,109 +223,66 @@ class Character(Identifiable):
         return chars
 
     @classmethod
-    def load_complete_object(cls, id_to_get):
-        """Load an object with everything needed for storing to db."""
-        logger.debug("load_complete_object(%s)", id_to_get)
-        if id_to_get == 'new':
-            id_to_get = 0
-        else:
-            id_to_get = int(id_to_get)
-        # Get this character's base data and progress data
-        tables_row = cls.select_tables("""
-            SELECT *
-            FROM {tables[0]}
-            LEFT JOIN {tables[1]}
-                ON {tables[1]}.id = {tables[0]}.progress_id
-                AND {tables[1]}.game_token = {tables[0]}.game_token
-            WHERE {tables[0]}.game_token = %s
-                AND {tables[0]}.id = %s
-            """, (g.game_token, id_to_get), ['characters', 'progress'],
-            fetch_all=False)
-        current_data = MutableNamespace()
-        if tables_row:
-            char_data, progress_data = tables_row
-            current_data = char_data
-            char_data.progress = progress_data
-        # Get this character's attrib relation data
-        char_attribs_rows = cls.execute_select("""
-            SELECT *
-            FROM char_attribs
-            WHERE game_token = %s
-                AND char_id = %s
-            """, (g.game_token, id_to_get))
-        for attrib_data in char_attribs_rows:
-            current_data.setdefault(
-                'attribs', {})[attrib_data.attrib_id] = attrib_data.value
-        # Get the this character's item relation data
-        char_items_rows = cls.execute_select("""
-            SELECT *
-            FROM char_items
-            WHERE game_token = %s
-                AND char_id = %s
-            """, (g.game_token, id_to_get))
-        for item_data in char_items_rows:
-            current_data.setdefault('items', []).append(vars(item_data))
-        # Mark this location as visited if it hasn't been yet
-        if hasattr(current_data, 'location_id') and current_data.location_id:
-            cls.execute_change(f"""
-                UPDATE locations
-                SET masked = false
-                WHERE id = %s AND masked = true
-                """, (current_data.location_id,))
-        # Create object from data
-        return Character.from_data(current_data)
-
-    @classmethod
-    def load_complete_objects(cls):
-        """Load objects with everything needed for storing to JSON file."""
-        logger.debug("load_complete_objects()")
+    def load_complete_objects(cls, id_to_get=None):
+        """Load objects with everything needed for storing to db
+        or JSON file.
+        :param id_to_get: specify to only load a single object
+        """
+        logger.debug("load_complete_objects(%s)", id_to_get)
+        if id_to_get in ['new', '0', 0]:
+            return cls()
         # Get char and progress data
-        tables_rows = cls.select_tables("""
+        qhelper = QueryHelper("""
             SELECT *
             FROM {tables[0]}
             LEFT JOIN {tables[1]}
                 ON {tables[1]}.id = {tables[0]}.progress_id
                 AND {tables[1]}.game_token = {tables[0]}.game_token
             WHERE {tables[0]}.game_token = %s
-            """, [g.game_token], ['characters', 'progress'])
-        instances = {}  # keyed by ID
+            """, [g.game_token])
+        qhelper.add_limit("{tables[0]}.id", id_to_get)
+        tables_rows = cls.select_tables(
+            qhelper=qhelper, tables=['characters', 'progress'])
+        chars = {}  # data (not objects) keyed by ID
         for char_data, progress_data in tables_rows:
-            instance = instances.setdefault(
-                char_data.id, cls.from_data(char_data))
-            if progress_data.id:
-                instance.progress = Progress.from_data(progress_data, instance)
-        # Get char attrib data
-        attrib_rows = cls.execute_select("""
+            char = chars.setdefault(char_data.id, char_data)
+            char.progress = progress_data
+        # Get attrib relation data
+        qhelper = QueryHelper("""
             SELECT *
             FROM char_attribs
             WHERE game_token = %s
             """, [g.game_token])
+        qhelper.add_limit("char_id", id_to_get)
+        attrib_rows = cls.execute_select(qhelper=qhelper)
         for row in attrib_rows:
-            instance = instances[row.char_id]
-            instance.attribs[row.attrib_id] = AttribOf.from_data(row)
-        # Get char item data
-        item_rows = cls.execute_select("""
+            char = char[row.char_id]
+            char.setdefault(
+                'attribs', {})[row.attrib_id] = row.value
+        # Get item relation data
+        qhelper = QueryHelper("""
             SELECT *
             FROM char_items
             WHERE game_token = %s
             """, [g.game_token])
+        qhelper.add_limit("char_id", id_to_get)
+        item_rows = cls.execute_select(qhelper=qhelper)
         for row in item_rows:
-            instance = instances[row.char_id]
-            instance.items[row.item_id] = OwnedItem.from_data(row, instance)
-        # Print debugging info
-        logger.debug("found %d characters", len(instances))
-        logger.debug('\n'.join(
-            f"character {instance.id} ({instance.name}) has"
-            f" {len(instance.attribs)} attribs"
-            for instance in instances.values()))
+            char = char[row.char_id]
+            char.setdefault('items', []).append(row)
         # Set list of objects
-        g.game_data.set_list(cls, list(instances.values()))
-        return g.game_data.get_list(cls)
+        instances = []
+        for data in chars.values():
+            instances.append(cls.from_data(data))
+        if id_to_get:
+            return instances[0]
+        g.game_data.set_list(cls, instances)
+        return instances
 
     @classmethod
     def data_for_configure(cls, id_to_get):
         logger.debug("data_for_configure(%s)", id_to_get)
-        current_obj = cls.load_complete_object(id_to_get)
+        current_obj = cls.load_complete_objects(id_to_get)
         # Replace partial objects with fully populated objects
         g.game_data.from_db_flat([Attrib, Location, Item])
         for attrib_id, attrib_of in current_obj.attribs.items():
@@ -353,6 +309,7 @@ class Character(Identifiable):
         logger.debug("data_for_play()")
         current_obj = cls.data_for_configure(id_to_get)
         if current_obj.location:
+            current_obj.location.unmask()
             # Get the current location's destination data
             tables_rows = cls.select_tables("""
                 SELECT *
@@ -386,7 +343,7 @@ class Character(Identifiable):
             self.toplevel = req.get_bool('top_level')
             self.masked = req.get_bool('masked')
             self.items = {}
-            old = Character.load_complete_object(self.id)
+            old = Character.load_complete_objects(self.id)
             for item_id, item_qty, item_slot in zip(
                     req.get_list('item_id[]'),
                     req.get_list('item_qty[]'),
