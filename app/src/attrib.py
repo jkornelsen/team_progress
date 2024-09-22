@@ -15,29 +15,26 @@ tables_to_create = {
 }
 logger = logging.getLogger(__name__)
 
-class AttribOf:
-    """Attribute of Item or Character class object."""
-    def __init__(self, attrib=None, attrib_id=None, val=0):
-        if attrib is not None:
-            self.attrib = attrib
-        elif attrib_id is not None:
-            self.attrib = Attrib(attrib_id)
-        else:
-            self.attrib = Attrib()
+class AttribFor:
+    """Value for attribute of a particular entity,
+    or required value of an attribute."""
+    def __init__(self, attrib_id=0, val=0):
+        self.attrib_id = attrib_id
+        self.attrib = None
         self.val = val
+        self.entity = None
 
     @classmethod
     def from_data(cls, data):
+        """Can read data from item_attribs, char_attribs,
+        or recipe_attribs. (event_attribs doesn't have a value).
+        """
         return cls(
             attrib_id=data.get('attrib_id', 0),
             val=data.get('value', 0.0))
 
-class AttribReq:
-    """For example the attribute value required to produce an item."""
-    def __init__(self, attrib_id=0, val=0):
-        self.attrib = Attrib(attrib_id)
-        self.val = val
-        self.entity = None  # entity that fulfills the requirement
+    def as_tuple(self):
+        return (self.attrib_id, self.val)
 
 class Attrib(Identifiable):
     """Stat or state or other type of attribute for a character or item.

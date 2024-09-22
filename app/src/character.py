@@ -2,7 +2,7 @@ import logging
 
 from flask import g, session
 
-from .attrib import Attrib, AttribOf
+from .attrib import Attrib, AttribFor
 from .db_serializable import (
     DbError, DeletionError, Identifiable, QueryHelper, coldef)
 from .item import Item, Pile
@@ -61,7 +61,7 @@ class Character(Identifiable):
         self.description = ""
         self.toplevel = True
         self.masked = False
-        self.attribs = {}  # AttribOf objects keyed by attrib id
+        self.attribs = {}  # AttribFor objects keyed by attr id
         self.items = {}  # OwnedItem objects keyed by item id
         self.location = None  # Location object where char is
         self.position = NumTup((0, 0))
@@ -84,9 +84,9 @@ class Character(Identifiable):
     def dict_for_json(self):
         data = self._base_export_data()
         data.update({
-            'attribs': {
-                str(attrib_id): attrib_of.val
-                for attrib_id, attrib_of in self.attribs.items()},
+            'attribs': [
+                attrib_for.as_tuple()
+                for attrib_for in self.attribs.values()],
             'items': [
                 owned.dict_for_json() for owned in self.items.values()],
             'progress': self.progress.dict_for_json(),
@@ -121,9 +121,8 @@ class Character(Identifiable):
                 logger.exception('')
                 continue
         instance.attribs = {
-            attrib_id: AttribOf(
-                Attrib(int(attrib_id)), val=val)
-            for attrib_id, val in data.get('attribs', {}).items()}
+            attrib_id: AttribFor(attrib_id, val)
+            for attrib_id, val in data.get('attribs', [])}
         instance.location = Location(
             int(data['location_id'])) if data.get('location_id', 0) else None
         instance.position = NumTup.from_list(data.get('position', [0, 0]))
@@ -145,10 +144,11 @@ class Character(Identifiable):
                 """, (self.id, self.game_token))
         if self.attribs:
             values = []
-            for attrib_id, attrib_of in self.attribs.items():
+            for attrib_for in self.attribs.values():
                 values.append((
                     g.game_token, self.id,
-                    attrib_id, attrib_of.val
+                    attrib_for.attrib_id,
+                    attrib_for.val
                     ))
             self.insert_multiple(
                 "char_attribs",
@@ -218,7 +218,7 @@ class Character(Identifiable):
         for row in attrib_rows:
             char = chars.get(row.char_id, None)
             if char:
-                char.attribs[row.attrib_id] = AttribOf.from_data(row)
+                char.attribs[row.attrib_id] = AttribFor.from_data(row)
         if load:
             g.game_data.set_list(Character, chars.values())
         return chars
@@ -257,9 +257,9 @@ class Character(Identifiable):
         qhelper.add_limit("char_id", id_to_get)
         attrib_rows = cls.execute_select(qhelper=qhelper)
         for row in attrib_rows:
-            char = char[row.char_id]
+            char = chars[row.char_id]
             char.setdefault(
-                'attribs', {})[row.attrib_id] = row.value
+                'attribs', []).append((row.attrib_id, row.value))
         # Get item relation data
         qhelper = QueryHelper("""
             SELECT *
@@ -269,7 +269,7 @@ class Character(Identifiable):
         qhelper.add_limit("char_id", id_to_get)
         item_rows = cls.execute_select(qhelper=qhelper)
         for row in item_rows:
-            char = char[row.char_id]
+            char = chars[row.char_id]
             char.setdefault('items', []).append(row)
         # Set list of objects
         instances = []
@@ -286,8 +286,8 @@ class Character(Identifiable):
         current_obj = cls.load_complete_objects(id_to_get)
         # Replace partial objects with fully populated objects
         g.game_data.from_db_flat([Attrib, Location, Item])
-        for attrib_id, attrib_of in current_obj.attribs.items():
-            attrib_of.attrib = Attrib.get_by_id(attrib_id)
+        for attrib_id, attrib_for in current_obj.attribs.items():
+            attrib_for.attrib = Attrib.get_by_id(attrib_id)
         for item_id, owned_item in current_obj.items.items():
             owned_item.item = Item.get_by_id(item_id)
         if current_obj.location:
@@ -364,11 +364,7 @@ class Character(Identifiable):
             self.attribs = {}
             for attrib_id in attrib_ids:
                 attrib_val = req.get_float(f'attrib{attrib_id}_val', 0.0)
-                self.attribs[attrib_id] = AttribOf(
-                    attrib_id=attrib_id, val=attrib_val)
-            logger.debug("attribs: %s", {
-                attrib_of.attrib.name: attrib_of.val
-                for attrib_of in self.attribs.values()})
+                self.attribs[attrib_id] = AttribFor(attrib_id, attrib_val)
             self.to_db()
         elif req.has_key('delete_character'):
             try:

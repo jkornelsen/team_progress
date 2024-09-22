@@ -2,7 +2,7 @@ import logging
 
 from flask import g
 
-from .attrib import AttribReq
+from .attrib import AttribFor
 from .db_serializable import (
     Identifiable, QueryHelper, Serializable, coldef)
 
@@ -23,14 +23,15 @@ logger = logging.getLogger(__name__)
 
 class Source(Serializable):
     def __init__(self, new_id=0):
-        self.item = Item(new_id)  # source item, not produced item
-        self.pile = self.item
+        self.item_id = new_id  # source item, not produced item
+        self.item = None
+        self.pile = None
         self.preserve = False  # if true then source will not be consumed
         self.q_required = 1.0
 
     def _base_export_data(self):
         return {
-            'item_id': self.item.id,
+            'item_id': self.item_id,
             'preserve': self.preserve,
             'q_required': self.q_required,
             }
@@ -44,13 +45,14 @@ class Source(Serializable):
 
 class Byproduct(Serializable):
     def __init__(self, new_id=0):
-        self.item = Item(new_id)  # item produced
-        self.pile = self.item
+        self.item_id = new_id  # item produced
+        self.item = None
+        self.pile = None
         self.rate_amount = 1.0
 
     def _base_export_data(self):
         return {
-            'item_id': self.item.id,
+            'item_id': self.item_id,
             'rate_amount': self.rate_amount,
             }
 
@@ -69,7 +71,7 @@ class Recipe(Identifiable):
         self.instant = False
         self.sources = []  # Source objects
         self.byproducts = []  # Byproduct objects
-        self.attribs = {}  # AttribReq objects keyed by attr id
+        self.attribs = {}  # AttribFor objects keyed by attr id
 
     def _base_export_data(self):
         """Prepare the base dictionary for JSON and DB."""
@@ -109,8 +111,8 @@ class Recipe(Identifiable):
             Byproduct.from_data(byp_data)
             for byp_data in data.get('byproducts', [])]
         instance.attribs = {
-            attrib_id: AttribReq(attrib_id, val)
-            for attrib_id, val in data.get('attribs', {}).items()}
+            attrib_id: AttribFor(attrib_id, val)
+            for attrib_id, val in data.get('attribs', [])}
         return instance
 
     def to_db(self):
@@ -122,7 +124,7 @@ class Recipe(Identifiable):
             for source in self.sources:
                 values.append((
                     g.game_token, self.id,
-                    source.item.id,
+                    source.item_id,
                     source.q_required,
                     source.preserve,
                     ))
@@ -136,7 +138,7 @@ class Recipe(Identifiable):
             for byproduct in self.byproducts:
                 values.append((
                     g.game_token, self.id,
-                    byproduct.item.id,
+                    byproduct.item_id,
                     byproduct.rate_amount,
                     ))
             self.insert_multiple(

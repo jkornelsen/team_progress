@@ -51,7 +51,6 @@ class MutableNamespace(SimpleNamespace):
         """Get the value of an attribute or return default."""
         return getattr(self, key, default)
 
-#TODO: Take these out of DbSerializable without causing circular dependencies.
 class Serializable():
     """Abstract class for exporting and importing data."""
     def _base_export_data(self):
@@ -74,13 +73,13 @@ class Serializable():
         """
         raise NotImplementedError()
 
-#class DbSerializable():
+#pylint: disable=abstract-method
 class DbSerializable(Serializable):
     """Abstract class for methods for serializing to database."""
     __abstract__ = True
 
     def __init__(self):
-        #super().__init__()
+        super().__init__()
         self.game_token = g.game_token
         self.game_data = None
 

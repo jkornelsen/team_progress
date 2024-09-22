@@ -2,11 +2,11 @@ import logging
 
 from flask import g, session
 
-from .attrib import Attrib, AttribOf, AttribReq
+from .attrib import Attrib, AttribFor
 from .db_serializable import (
     DbError, DeletionError, Identifiable, QueryHelper, coldef)
 from .progress import Progress
-#from .recipe import Byproduct, Recipe, Source
+from .recipe import Byproduct, Recipe, Source
 from .utils import RequestHelper, Storage
 
 tables_to_create = {
@@ -30,260 +30,9 @@ logger = logging.getLogger(__name__)
 class Pile:
     PILE_TYPE = None  # specify in child classes
     def __init__(self, item=None, container=None):
-        self.item = item if item else Item()
+        self.item = item
         self.container = container  # character or location where item is
         self.quantity = 0
-
-#import logging
-
-#from flask import g
-
-from .attrib import AttribReq
-from .db_serializable import DbSerializable, Serializable
-#from .db_serializable import (
-#    Identifiable, QueryHelper, Serializable, coldef)
-
-tables_to_create = {
-    'recipes': f"""
-        {coldef('id')},
-        item_id integer NOT NULL,
-        rate_amount float(4) NOT NULL,
-        rate_duration float(4) NOT NULL,
-        instant boolean NOT NULL,
-        FOREIGN KEY (game_token, item_id)
-            REFERENCES items (game_token, id)
-            ON DELETE CASCADE
-            DEFERRABLE INITIALLY DEFERRED
-        """,
-    }
-#logger = logging.getLogger(__name__)
-
-#class Source(Serializable):
-class Source(Serializable):
-    def __init__(self, new_id=0):
-        self.item = Item(new_id)  # source item, not produced item
-        self.pile = self.item
-        self.preserve = False  # if true then source will not be consumed
-        self.q_required = 1.0
-
-    def _base_export_data(self):
-        return {
-            'item_id': self.item.id,
-            'preserve': self.preserve,
-            'q_required': self.q_required,
-            }
-
-    @classmethod
-    def from_data(cls, data):
-        instance = cls(data.get('item_id', 0))
-        instance.preserve = data.get('preserve', False)
-        instance.q_required = data.get('q_required', 1.0)
-        return instance
-
-#class Byproduct(Serializable):
-class Byproduct(Serializable):
-    def __init__(self, new_id=0):
-        self.item = Item(new_id)  # item produced
-        self.pile = self.item
-        self.rate_amount = 1.0
-
-    def _base_export_data(self):
-        return {
-            'item_id': self.item.id,
-            'rate_amount': self.rate_amount,
-            }
-
-    @classmethod
-    def from_data(cls, data):
-        instance = cls(data.get('item_id', 0))
-        instance.rate_amount = data.get('rate_amount', 1.0)
-        return instance
-
-class Recipe(Identifiable):
-    def __init__(self, new_id=0, item=None):
-        super().__init__(new_id)
-        self.item_produced = item
-        self.rate_amount = 1.0  # quantity produced per batch
-        self.rate_duration = 3.0  # seconds for a batch
-        self.instant = False
-        self.sources = []  # Source objects
-        self.byproducts = []  # Byproduct objects
-        self.attribs = {}  # AttribReq objects keyed by attr id
-
-    def _base_export_data(self):
-        """Prepare the base dictionary for JSON and DB."""
-        return {
-            'id': self.id,
-            'item_id': self.item_produced.id if self.item_produced else 0,
-            'rate_amount': self.rate_amount,
-            'rate_duration': self.rate_duration,
-            'instant': self.instant,
-            }
-
-    def dict_for_json(self):
-        data = self._base_export_data()
-        data.update({
-            'sources': [source.dict_for_json() for source in self.sources],
-            'byproducts': [byp.dict_for_json() for byp in self.byproducts],
-            'attribs': {attrib_id: req.val
-                for attrib_id, req in self.attribs.items()}
-            })
-        return data
-
-    @classmethod
-    def from_data(cls, data, item_produced=None):
-        instance = cls()
-        instance.id = data.get('id', 0)
-        from .item import Item
-        instance.item_produced = (
-            item_produced if item_produced
-            else Item(int(data.get('item_id', 0))))
-        instance.rate_amount = data.get('rate_amount', 1.0)
-        instance.rate_duration = data.get('rate_duration', 3.0)
-        instance.instant = data.get('instant', False)
-        instance.sources = [
-            Source.from_data(src_data)
-            for src_data in data.get('sources', [])]
-        instance.byproducts = [
-            Byproduct.from_data(byp_data)
-            for byp_data in data.get('byproducts', [])]
-        instance.attribs = {
-            attrib_id: AttribReq(attrib_id, val)
-            for attrib_id, val in data.get('attribs', {}).items()}
-        return instance
-
-    def to_db(self):
-        logger.debug("to_db() for id=%d", self.id)
-        super().to_db()
-        if self.sources:
-            logger.debug("sources: %s", self.sources)
-            values = []
-            for source in self.sources:
-                values.append((
-                    g.game_token, self.id,
-                    source.item.id,
-                    source.q_required,
-                    source.preserve,
-                    ))
-            self.insert_multiple(
-                "recipe_sources",
-                "game_token, recipe_id, item_id, q_required, preserve",
-                values)
-        if self.byproducts:
-            logger.debug("byproducts: %s", self.byproducts)
-            values = []
-            for byproduct in self.byproducts:
-                values.append((
-                    g.game_token, self.id,
-                    byproduct.item.id,
-                    byproduct.rate_amount,
-                    ))
-            self.insert_multiple(
-                "recipe_byproducts",
-                "game_token, recipe_id, item_id, rate_amount",
-                values)
-        if self.attribs:
-            logger.debug("attribs: %s", self.attribs)
-            values = []
-            for attrib_id, req in self.attribs.items():
-                values.append((
-                    g.game_token, self.id,
-                    attrib_id, req.val
-                    ))
-            self.insert_multiple(
-                "recipe_attribs",
-                "game_token, recipe_id, attrib_id, value",
-                values)
-
-    @classmethod
-    def load_complete_data(cls, id_to_get):
-        """Load all recipe data needed for creating Item objects
-        that can be stored to db or JSON file.
-        :param id_to_get: specify to only load a single recipe
-        :returns: dict of recipes for each item
-        """
-        logger.debug("load_complete_data(%s)", id_to_get)
-        if id_to_get in ['new', '0', 0]:
-            return {}
-        # Get recipe and source data
-        qhelper = QueryHelper("""
-            SELECT *
-            FROM {tables[0]}
-            LEFT JOIN {tables[1]}
-                ON {tables[1]}.game_token = {tables[0]}.game_token
-                AND {tables[1]}.recipe_id = {tables[0]}.id
-            WHERE {tables[0]}.game_token = %s
-            """, [g.game_token])
-        qhelper.add_limit("{tables[0]}.item_id", id_to_get)
-        source_rows = cls.select_tables(
-            qhelper=qhelper, tables=['recipes', 'recipe_sources'])
-        item_recipes = {}  # recipe data keyed by item ID
-        for recipe_row, source_row in source_rows:
-            recipes_data = item_recipes.setdefault(recipe_row.item_id, {})
-            recipe_data = recipes_data.setdefault(recipe_row.id, recipe_row)
-            if source_row.item_id:
-                recipe_data.setdefault('sources', []).append(source_row)
-        # Get byproduct relation data
-        qhelper = QueryHelper("""
-            SELECT *
-            FROM {tables[0]}
-            INNER JOIN {tables[1]}
-                ON {tables[1]}.game_token = {tables[0]}.game_token
-                AND {tables[1]}.recipe_id = {tables[0]}.id
-            WHERE {tables[0]}.game_token = %s
-            """, [g.game_token])
-        qhelper.add_limit("{tables[0]}.item_id", id_to_get)
-        byproduct_rows = cls.select_tables(
-            qhelper=qhelper, tables=['recipes', 'recipe_byproducts'])
-        for recipe_row, byproduct_row in byproduct_rows:
-            if byproduct_row.recipe_id:
-                recipes_data = item_recipes[recipe_row.item_id]
-                recipe_data = recipes_data[recipe_row.id]
-                recipe_data.setdefault('byproducts', []).append(byproduct_row)
-        # Get attrib relation data
-        qhelper = QueryHelper("""
-            SELECT *
-            FROM {tables[0]}
-            INNER JOIN {tables[1]}
-                ON {tables[1]}.game_token = {tables[0]}.game_token
-                AND {tables[1]}.recipe_id = {tables[0]}.id
-            WHERE {tables[0]}.game_token = %s
-            """, [g.game_token])
-        qhelper.add_limit("{tables[0]}.item_id", id_to_get)
-        attrib_rows = cls.select_tables(
-            qhelper=qhelper, tables=['recipes', 'recipe_attribs'])
-        for recipe_row, attrib_row in attrib_rows:
-            recipes_data = item_recipes[recipe_row.item_id]
-            recipe_data = recipes_data[recipe_row.id]
-            if attrib_row.attrib_id:
-                recipe_data.setdefault(
-                    'attribs', {})[attrib_row.attrib_id] = attrib_row.value
-        return item_recipes
-
-    @classmethod
-    def load_data_by_source(cls, id_to_get):
-        logger.debug("load_data_by_source(%s)", id_to_get)
-        if id_to_get in ['new', '0', 0, None]:
-            return {}
-        # Get recipe and source data
-        qhelper = QueryHelper("""
-            SELECT *
-            FROM {tables[0]}
-            INNER JOIN {tables[1]}
-                ON {tables[1]}.game_token = {tables[0]}.game_token
-                AND {tables[1]}.recipe_id = {tables[0]}.id
-            WHERE {tables[0]}.game_token = %s
-            """, [g.game_token])
-        qhelper.add_limit("{tables[1]}.item_id", id_to_get)
-        source_rows = cls.select_tables(
-            qhelper=qhelper, tables=['recipes', 'recipe_sources'])
-        item_recipes = {}  # recipe data keyed by item ID
-        for recipe_row, source_row in source_rows:
-            recipes_data = item_recipes.setdefault(recipe_row.item_id, {})
-            recipe_data = recipes_data.setdefault(recipe_row.id, recipe_row)
-            if source_row.item_id:
-                recipe_data.setdefault('sources', []).append(source_row)
-        return item_recipes
 
 class Item(Identifiable, Pile):
     PILE_TYPE = Storage.UNIVERSAL  # Constant for this class
@@ -298,7 +47,7 @@ class Item(Identifiable, Pile):
         self.storage_type = Storage.UNIVERSAL
         self.toplevel = True
         self.masked = False
-        self.attribs = {}  # AttribOf objects keyed by attrib id
+        self.attribs = {}  # AttribFor objects keyed by attrib id
         self.recipes = []  # list of Recipe objects
         self.q_limit = 0.0  # limit the quantity if not 0
         self.pile = self
@@ -323,9 +72,9 @@ class Item(Identifiable, Pile):
             'recipes': [
                 recipe.dict_for_json()
                 for recipe in self.recipes],
-            'attribs': {
-                attrib_id: attrib_of.val
-                for attrib_id, attrib_of in self.attribs.items()},
+            'attribs': [
+                attrib_for.as_tuple()
+                for attrib_for in self.attribs.values()],
             'progress': self.progress.dict_for_json(),
             })
         return data
@@ -348,8 +97,8 @@ class Item(Identifiable, Pile):
         instance.toplevel = data.get('toplevel', False)
         instance.masked = data.get('masked', False)
         instance.attribs = {
-            attrib_id: AttribOf(attrib_id=attrib_id, val=val)
-            for attrib_id, val in data.get('attribs', {}).items()}
+            attrib_id: AttribFor(attrib_id, val)
+            for attrib_id, val in data.get('attribs', [])}
         instance.q_limit = data.get('q_limit', 0.0)
         instance.quantity = data.get('quantity', 0.0)
         instance.progress = Progress.from_data(
@@ -376,8 +125,8 @@ class Item(Identifiable, Pile):
                 """, (self.id, self.game_token))
         if self.attribs:
             values = [
-                (g.game_token, self.id, attrib_id, attrib_of.val)
-                for attrib_id, attrib_of in self.attribs.items()]
+                (g.game_token, self.id, attrib_id, attrib_for.val)
+                for attrib_id, attrib_for in self.attribs.items()]
             self.insert_multiple(
                 "item_attribs",
                 "game_token, item_id, attrib_id, value",
@@ -424,7 +173,8 @@ class Item(Identifiable, Pile):
         attrib_rows = cls.execute_select(qhelper=qhelper)
         for row in attrib_rows:
             item = items[row.item_id]
-            item.setdefault('attribs', []).append(row)
+            item.setdefault(
+                'attribs', []).append((row.attrib_id, row.value))
         # Get source relation data
         all_recipes_data = Recipe.load_complete_data(id_to_get)
         for item_id, recipes_data in all_recipes_data.items():
@@ -448,24 +198,15 @@ class Item(Identifiable, Pile):
         # Get all basic attrib and item data
         g.game_data.from_db_flat([Attrib, Item])
         # Replace partial objects with fully populated objects
-        for attrib_id, attrib_of in current_obj.attribs.items():
-            attrib_of.attrib = Attrib.get_by_id(attrib_id)
+        for attrib_id, attrib_for in current_obj.attribs.items():
+            attrib_for.attrib = Attrib.get_by_id(attrib_id)
         for recipe in current_obj.recipes:
             for source in recipe.sources:
-                source.item = Item.get_by_id(source.item.id)
+                source.item = Item.get_by_id(source.item_id)
             for byproduct in recipe.byproducts:
-                byproduct.item = Item.get_by_id(byproduct.item.id)
+                byproduct.item = Item.get_by_id(byproduct.item_id)
             for attrib_id, req in recipe.attribs.items():
                 req.attrib = Attrib.get_by_id(attrib_id)
-        # Print debugging info
-        logger.debug("found %d recipes", len(current_obj.recipes))
-        for recipe in current_obj.recipes:
-            logger.debug("recipe %d rate_amount=%d instant=%s",
-                recipe.id, recipe.rate_amount, recipe.instant)
-            for source in recipe.sources:
-                logger.debug("source item.id %d, name %s, req %d, storage %s",
-                    source.item.id, source.item.name, source.q_required,
-                    source.item.storage_type)
         return current_obj
 
     @classmethod
@@ -484,10 +225,10 @@ class Item(Identifiable, Pile):
             for recipe in current_obj.recipes:
                 for source in recipe.sources:
                     source.item = cls.load_complete_objects(
-                        source.item.id)
+                        source.item_id)
                 for byproduct in recipe.byproducts:
                     byproduct.item = cls.load_complete_objects(
-                        byproduct.item.id)
+                        byproduct.item_id)
         # Get all needed location and character data
         from .location import Location
         from .character import Character
@@ -546,7 +287,7 @@ class Item(Identifiable, Pile):
                         })
                     recipe.sources.append(source)
                     logger.debug("Sources for %s: %s",
-                        recipe_id, {source.item.id: source.q_required
+                        recipe_id, {source.item_id: source.q_required
                         for source in recipe.sources})
                 byproduct_ids = req.get_list(f'{prefix}byproduct_id')
                 for byproduct_id in byproduct_ids:
@@ -561,8 +302,7 @@ class Item(Identifiable, Pile):
                 for attrib_id in recipe_attrib_ids:
                     attrib_prefix = f'{prefix}attrib{attrib_id}_'
                     attrib_value = req.get_float(f'{attrib_prefix}value', 1.0)
-                    recipe.attribs[attrib_id] = AttribReq(
-                        attrib_id=attrib_id, val=attrib_value)
+                    recipe.attribs[attrib_id] = AttribFor(attrib_id, val)
                 self.recipes.append(recipe)
             attrib_ids = req.get_list('attrib_id[]')
             logger.debug("Attrib IDs: %s", attrib_ids)
@@ -570,10 +310,9 @@ class Item(Identifiable, Pile):
             for attrib_id in attrib_ids:
                 attrib_prefix = f'attrib{attrib_id}_'
                 attrib_val = req.get_float(f'{attrib_prefix}val', 0.0)
-                self.attribs[attrib_id] = AttribOf(
-                    attrib_id=attrib_id, val=attrib_val)
-            logger.debug("attribs: %s", {attrib_id: attrib_of.val
-                for attrib_id, attrib_of in self.attribs.items()})
+                self.attribs[attrib_id] = AttribFor(attrib_id, attrib_val)
+            logger.debug("attribs: %s", {attrib_id: attrib_for.val
+                for attrib_id, attrib_for in self.attribs.items()})
             self.to_db()
         elif req.has_key('delete_item'):
             try:
@@ -656,19 +395,19 @@ def _load_piles(current_item, char_id, loc_id, main_pile_type):
         # Look for entities to meet attrib requirements
         for attrib_id, req in recipe.attribs.items():
             for item in g.game_data.items:
-                attrib_of = item.attribs.get(attrib_id)
-                if attrib_of is not None and attrib_of.val >= req.val:
+                attrib_for = item.attribs.get(attrib_id)
+                if attrib_for is not None and attrib_for.val >= req.val:
                     req.entity = item
                     logger.debug("attrib %s req %.1f met by item %s %.1f",
-                        attrib_of.attrib.name, req.val,
-                        item.name, attrib_of.val)
+                        attrib_for.attrib.name, req.val,
+                        item.name, attrib_for.val)
             for char in chars:
-                attrib_of = char.attribs.get(attrib_id)
-                if attrib_of is not None and attrib_of.val >= req.val:
+                attrib_for = char.attribs.get(attrib_id)
+                if attrib_for is not None and attrib_for.val >= req.val:
                     req.entity = char
                     logger.debug("attrib %s req %.1f met by char %s %.1f",
-                        attrib_of.attrib.name, req.val,
-                        char.name, attrib_of.val)
+                        attrib_for.attrib.name, req.val,
+                        char.name, attrib_for.val)
 
 def _assign_pile(
         pile_item, chars, loc, char_id=0, loc_id=0, forced_pile_type=''):
