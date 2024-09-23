@@ -170,10 +170,12 @@
                 </div>
             </td>
         </tr>
+<!--
         <tr>
             <td style="background-color: #2a2a2a; border-bottom: 2px solid #ffffff;">
             </td>
         </tr>
+-->
         {% if current.description %}
         <tr>
             <td>
@@ -202,6 +204,18 @@
         {% if current.recipes %}
         <tr>
             <td>
+                <style>
+                    .nested-table {
+                        width: 100%;
+                        border-collapse: collapse;
+                    }
+
+                    .nested-table td {
+                        height: 25px;
+                        vertical-align: middle;
+                        /* border: 1px solid #888; */
+                    }
+                </style>
                 <table class="inner-table spacious" cellspacing="0" cellpadding="5">
                     <tr>
                         <th>Batches</th>
@@ -215,38 +229,52 @@
                 {% if recipe.id != current.recipes[0].id %}
                 <tr style="border-top: 1px solid #888;"></tr>
                 {% endif %}
-                <tr>
-                    {% set rowspan = recipe.sources|length + recipe.attribs|length + 1 %}
-                    <td rowspan="{{ rowspan }}">
-                        {% if recipe.instant %}
-                        <input type="text" class="quantity_to_gain" id="quantity_to_gain_{{ recipe.id }}" size="10" value="{{ session['quantity_to_gain'] if session['quantity_to_gain'] else 1 }}">
-                        <button type="button" data-recipe-id="{{ recipe.id }}" data-rate-amount="{{ recipe.rate_amount }}" class="gain-btn go-button" id="gain-btn_{{ recipe.id }}">Gain</button>
-                        {% else %}
-                        <button type="button" class="start-stop-btn go-button" id="start-stop-btn_{{ recipe.id }}" data-recipe-id="{{ recipe.id }}">Start</button>
-                        {% endif %}
-                    </td>
-                    <td rowspan="{{ rowspan }}">
-                        <span class="rate-amount" id="rate-amount_{{ recipe.id }}">
-                            {% if recipe.rate_amount %}{{ recipe.rate_amount | formatNum }}
-                            {% else %}<span style="font-size: 2em" title="(trash can icon) does not produce the current item">&#x1F5D1;</span>{% endif %}
-                        </span>
-                        {% if not recipe.instant %}
-                        {% if recipe.rate_amount %}per {% endif %}<span class="rate-duration" id="rate-duration_{{ recipe.id }}">{{ recipe.rate_duration | formatNum }}</span>s
-                        {% endif %}
-                    </td>
-                    <td style="padding: 0; margin: 0;"></td><!-- so we don't need to repeat recipe.sources code for this row only. This is also why rowspan is length + 1. -->
-                </tr>
+                <tr><td colspan="2" style="vertical-align: top;"><table class="nested-table">
+                    <tr>
+                        <td>
+                            {% if recipe.instant %}
+                            <input type="text" class="quantity_to_gain" id="quantity_to_gain_{{ recipe.id }}" size="10" value="{{ session['quantity_to_gain'] if session['quantity_to_gain'] else 1 }}">
+                            <button type="button" data-recipe-id="{{ recipe.id }}" data-rate-amount="{{ recipe.rate_amount }}" class="gain-btn go-button" id="gain-btn_{{ recipe.id }}">Gain</button>
+                            {% else %}
+                            <button type="button" class="start-stop-btn go-button" id="start-stop-btn_{{ recipe.id }}" data-recipe-id="{{ recipe.id }}">Start</button>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="rate-amount" id="rate-amount_{{ recipe.id }}">
+                                {% if recipe.rate_amount %}{{ recipe.rate_amount | formatNum }}
+                                {% else %}<span style="font-size: 2em" title="(trash can icon) does not produce the current item">&#x1F5D1;</span>{% endif %}
+                            </span>
+                            {% if not recipe.instant %}
+                            {% if recipe.rate_amount %}per {% endif %}<span class="rate-duration" id="rate-duration_{{ recipe.id }}">{{ recipe.rate_duration | formatNum }}</span>s
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% for byproduct in recipe.byproducts %}
+                    {% set item = byproduct.item %}
+                    <tr>
+                        {% set link = url_for('play_item', item_id=item.id, char_id=char_id, loc_id=loc_id) %}
+                        {% set letter = link_letters.next(link) %}
+                        <script>
+                            linkForKey['{{ letter }}'] = "{{ link|safe }}";
+                        </script>
+                        <td>
+                            <strong title="byproduct">&amp;</strong>
+                            <span>[{{ letter }}]</span>
+                            <a href="{{ link }}">{{ item.name }}</a>
+                        </td>
+                        <td>
+                            {{ byproduct.rate_amount | formatNum }}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </table></td><td colspan="4" style="vertical-align: top;"><table class="nested-table">
                 {% for source in recipe.sources %}
                     {% set item = source.item %}
                     <tr>
                         {% if item.id == current.id %}
                             <td><strong>{{ item.name}}</strong></td>
                         {% else %}
-                            {% if source.pile and (source.pile.container or source.pile.quantity > 0) %}
-                                {% set link = url_for('play_item', item_id=item.id, char_id=char_id, loc_id=loc_id) %}
-                            {% else %}
-                                {% set link = url_for('play_item', item_id=item.id, char_id=char_id, loc_id=loc_id) %}
-                            {% endif %}
+                            {% set link = url_for('play_item', item_id=item.id, char_id=char_id, loc_id=loc_id) %}
                             {% set letter = link_letters.next(link) %}
                             <script>
                                 linkForKey['{{ letter }}'] = "{{ link|safe }}";
@@ -326,20 +354,27 @@
                         {% endif %}
                     </tr>
                 {% endfor %}
+                </table></td></tr></table>
             {% endfor %}
                 </table>
             </td>
         </tr>
         {% endif %}
 
-        {% set outerscope = namespace(used_as_source=[]) %}
+        {% set outerscope = namespace(used_as_source=[], produced_as_byproduct=[]) %}
         {% for other_item in game_data.items %}
-            {% if other_item.id != current.id %} <!-- e.g. pigs breeding pigs -->
+            {% if other_item.id != current.id %}  {# e.g. pigs breeding pigs #}
                 {% for recipe in other_item.recipes %}
                     {% for source in recipe.sources %}
                         {% if current.id == source.item.id %}
                             {% set _ = outerscope.used_as_source.append(
                                 {'item': other_item, 'q_required': source.q_required}) %}
+                        {% endif %}
+                    {% endfor %}
+                    {% for byproduct in recipe.byproducts %}
+                        {% if current.id == byproduct.item.id %}
+                            {% set _ = outerscope.produced_as_byproduct.append(
+                                {'item': other_item, 'rate_amount': byproduct.rate_amount}) %}
                         {% endif %}
                     {% endfor %}
                 {% endfor %}
@@ -365,6 +400,30 @@
                             <a href="{{ link }}">{{ used_for.item.name }}</a>
                         </td>
                         <td>{{ used_for.q_required | formatNum }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </td>
+        </tr>
+        {% endif %}
+        {% if outerscope.produced_as_byproduct %}
+        <tr>
+            <td>
+                <table class="inner-table spacious" cellspacing="0" cellpadding="5">
+                    <tr>
+                        <th>Byproduct of a Recipe for</th>
+                    </tr>
+                    {% for byproduct_of in outerscope.produced_as_byproduct %}
+                        {% set link = url_for('play_item', item_id=byproduct_of.item.id, char_id=char_id, loc_id=loc_id) %}
+                        {% set letter = link_letters.next(link) %}
+                        <script>
+                            linkForKey['{{ letter }}'] = "{{ link|safe }}";
+                        </script>
+                    <tr>
+                        <td>
+                            <span>[{{ letter }}]</span>
+                            <a href="{{ link }}">{{ byproduct_of.item.name }}</a>
+                        </td>
                     </tr>
                     {% endfor %}
                 </table>

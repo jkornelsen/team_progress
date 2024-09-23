@@ -1,8 +1,8 @@
 
-Show byproducts and rate amount on item play.
-
 Assign byproduct pile for the same container as the primary product.
+Don't need to show quantity -- user can open another browser window if desired.
 
-Knife item play screen isn't showing used for raw bacon,
-possibly because we're storing IDs instead of objects in
-classes such as Source.
+Refactor shared code by calling new methods, not combining them.
+For example, Recipe.load_complete_data() and Recipe.load_data_by_source()
+should both remain but call a new method.
+Use pylint to check.

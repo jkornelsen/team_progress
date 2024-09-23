@@ -185,6 +185,8 @@ class Item(Identifiable, Pile):
         for data in items.values():
             instances.append(cls.from_data(data))
         if id_to_get:
+            if not instances:
+                raise ValueError(f"Could not load item {id_to_get}.")
             instance = instances[0]
             g.active.items[id_to_get] = instance
             return instance
@@ -221,14 +223,14 @@ class Item(Identifiable, Pile):
             "data_for_play(%s, %s, %s, %s)",
             id_to_get, owner_char_id, at_loc_id, main_pile_type)
         current_obj = cls.data_for_configure(id_to_get)
-        if complete_sources:
-            for recipe in current_obj.recipes:
-                for source in recipe.sources:
-                    source.item = cls.load_complete_objects(
-                        source.item_id)
-                for byproduct in recipe.byproducts:
-                    byproduct.item = cls.load_complete_objects(
-                        byproduct.item_id)
+        for recipe in current_obj.recipes:
+            for related_list in (recipe.sources, recipe.byproducts):
+                for related in related_list:
+                    if complete_sources:
+                        related.item = cls.load_complete_objects(
+                            related.item_id)
+                    else:
+                        related.item = Item.get_by_id(related.item_id)
         # Get all needed location and character data
         from .location import Location
         from .character import Character
@@ -244,6 +246,10 @@ class Item(Identifiable, Pile):
             item.recipes = [
                 Recipe.from_data(recipe_data, item)
                 for recipe_id, recipe_data in recipes_data.items()]
+            for recipe in item.recipes:
+                for related_list in (recipe.sources, recipe.byproducts):
+                    for related in related_list:
+                        related.item = Item.get_by_id(related.item_id)
         return current_obj
 
     def configure_by_form(self):
@@ -302,7 +308,8 @@ class Item(Identifiable, Pile):
                 for attrib_id in recipe_attrib_ids:
                     attrib_prefix = f'{prefix}attrib{attrib_id}_'
                     attrib_value = req.get_float(f'{attrib_prefix}value', 1.0)
-                    recipe.attribs[attrib_id] = AttribFor(attrib_id, val)
+                    recipe.attribs[attrib_id] = AttribFor(
+                        attrib_id, attrib_value)
                 self.recipes.append(recipe)
             attrib_ids = req.get_list('attrib_id[]')
             logger.debug("Attrib IDs: %s", attrib_ids)

@@ -88,8 +88,9 @@ class Recipe(Identifiable):
         data.update({
             'sources': [source.dict_for_json() for source in self.sources],
             'byproducts': [byp.dict_for_json() for byp in self.byproducts],
-            'attribs': {attrib_id: req.val
-                for attrib_id, req in self.attribs.items()}
+            'attribs': [
+                attrib_for.as_tuple()
+                for attrib_for in self.attribs.values()],
             })
         return data
 
@@ -220,7 +221,8 @@ class Recipe(Identifiable):
             recipe_data = recipes_data[recipe_row.id]
             if attrib_row.attrib_id:
                 recipe_data.setdefault(
-                    'attribs', {})[attrib_row.attrib_id] = attrib_row.value
+                    'attribs', []).append(
+                    (attrib_row.attrib_id, attrib_row.value))
         return item_recipes
 
     @classmethod
@@ -244,6 +246,22 @@ class Recipe(Identifiable):
         for recipe_row, source_row in source_rows:
             recipes_data = item_recipes.setdefault(recipe_row.item_id, {})
             recipe_data = recipes_data.setdefault(recipe_row.id, recipe_row)
-            if source_row.item_id:
-                recipe_data.setdefault('sources', []).append(source_row)
+            recipe_data.setdefault('sources', []).append(source_row)
+        # Get byproduct relation data
+        qhelper = QueryHelper("""
+            SELECT *
+            FROM {tables[0]}
+            INNER JOIN {tables[1]}
+                ON {tables[1]}.game_token = {tables[0]}.game_token
+                AND {tables[1]}.recipe_id = {tables[0]}.id
+            WHERE {tables[0]}.game_token = %s
+            """, [g.game_token])
+        qhelper.add_limit("{tables[1]}.item_id", id_to_get)
+        byproduct_rows = cls.select_tables(
+            qhelper=qhelper, tables=['recipes', 'recipe_byproducts'])
+        for recipe_row, byproduct_row in byproduct_rows:
+            if byproduct_row.recipe_id:
+                recipes_data = item_recipes.setdefault(recipe_row.item_id, {})
+                recipe_data = recipes_data.setdefault(recipe_row.id, recipe_row)
+                recipe_data.setdefault('byproducts', []).append(byproduct_row)
         return item_recipes

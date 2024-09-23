@@ -14,6 +14,8 @@ from flask import (
     session,
     url_for
 )
+from json import JSONDecodeError
+
 
 from database import set_autocommit
 from .game_data import GameData
@@ -114,7 +116,13 @@ def set_routes(app):
             for filename in os.listdir(DATA_DIR):
                 if filename.endswith('.json'):
                     filepath = os.path.join(DATA_DIR, filename)
-                    scenario = load_scenario_metadata(filepath)
+                    try:
+                        scenario = load_scenario_metadata(filepath)
+                    except JSONDecodeError as e:
+                        return render_template(
+                            'error.html',
+                            message=f"Error reading {filename}",
+                            details=str(e))
                     scenario['filename'] = filename
                     scenario['popularity'] = popularity.get(filename, 0)
                     scenarios.append(scenario)
