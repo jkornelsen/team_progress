@@ -80,13 +80,6 @@ a player could choose no auth if desired
 
 chance of Event to occur during Item progress
 
-randomized progress
-for example if str is 10 then hit on tree is from 8 to 10
-chance of success for incrementing
-optionally manual rather than auto increment, like manually attempting to chop a tree
-can select a failure event from a dropdown list
-event chance may depend on stats (attributes) of characters or items involved
-
 win requirements
 Item quantity optionally at a Location or held by Character
 Character at required Location or with required Attribute
@@ -181,28 +174,6 @@ for example, how dark a room is,
 or deep water would require swimming or limit evasion
 perhaps it would be better to simply mention such things in location description
 
-event would calculate a random hp change based on attributes and items
-current hp would be selected as an attribute to modify
-items would have their own attrs list,
-including e.g. hp change that would indicate how much of an
-impact it would have in increasing or reducing hp change of the event
-
-automation such as calculating events based on attributes
-perhaps basic mechanics could be implemented automatically,
-and more advanced mechanics would require manual changes to stats
-armor could be dmg * 0.95, or chance to get hit * 0.95
-attributes could be attached to events both to affect and be changed by
-change and effect can both be automatic, by approval, or manual
-attaching for manual control would be for convenient display only
-
-let's go with semi automation
-on event screen, give form with new attr value based on outcome,
-but doesn't take effect unless submitted
-
-hp attr could be current value along with max, like items have
-however, attacks such as poison often do damage based on % of max hp
-maybe events can be based on the current (default) or max -- a checkbox
-
 base chances could be displayed in the form of 1 / 10000 ticks
 or 3 / 5 chance to hit
 also min and max result,
@@ -213,20 +184,6 @@ so an event based on the season would have a worse chance or lower average
 distance if season is winter
 winter would be explained in the attr description,
 and the implementation would be an input box showing * 0.9
-
-the attr obj would be damage reduction,
-perhaps somehow specifying that values are meant to be multipliers,
-(that could be explained in the description at least),
-and a piece of armor would have value 0.9 as the multiplier
-maybe multiplier would be one of several radio button options explaining what
-kind of stat it is
-an attr could possibly also reference another attr that is used to change it,
-for example, hp change could be affected by damage reduction
-
-in a fighting event,
-all factors should be displayed to show how the outcome is arrived at
-magic missile could be one event entity, and sword swing could be another
-or one event could be used for any of a group of similar abilities
 
 perhaps one event could contain references to other (sub-)events,
 for example, an attack would be a chance of changing hp
@@ -328,6 +285,9 @@ and no more than a certain amount of pollution
 need a way to destroy items as well as gain them
 set up an elapsed time decreasing production cycle: 2 waste -> 1 waste
 events trigger during production of some recipes
+use waste as a determining attr for increased
+likelihood of bigger problem
+chance could improve with upgrades
 
 scenario: Riddles
 items for conversation q&a dialog tree
@@ -367,6 +327,7 @@ While this is perhaps the most obvious way to play the game
 for people who are familiar with D&D,
 the game is intended to allow for a wide variety of scenarios.
 melee attacks require melee range
+armor could be dmg * 0.95, or chance to get hit * 0.95
 
 scenario: Dating with a Matchmaker
 Romance is highly dependent on your personal morals,
@@ -378,6 +339,15 @@ scenario: Squirrel
 gather nuts for the winter
 or ant and grasshopper
 or cheetah and rabbit
+
+scenario: Lumber Business
+events to make progress on a tree
+or if something goes wrong
+can either chop manually (faster) or in background
+    for example if str is 10 then hit on tree is from 8 to 10
+    chance of success for incrementing
+event chance may depend on stats (attributes) of characters or items involved
+sell for profit
 
 scenario: Train Trip
 Travel from Chennai to Dehradun.

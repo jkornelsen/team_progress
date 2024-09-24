@@ -143,7 +143,14 @@
         <h2>Attributes</h2>
         <ul>
         {% for attrib_of in current.attribs.values() %}
-            <li>{{ attrib_of.attrib.name }}
+            {% set link = url_for('play_attrib', attrib_id=attrib_of.attrib_id, subject_type='char', subject_id=current.id) %}
+            {% set letter = link_letters.next(link) %}
+            <script>
+                linkForKey['{{ letter }}'] = "{{ link|safe }}";
+            </script>
+            <li>
+                <span>[{{ letter }}]</span>
+                <a href="{{ link }}">{{ attrib_of.attrib.name }}</a>
                 {% if attrib_of.val != 1 %}
                     {{ attrib_of.val | formatNum }}
                 {% endif %}

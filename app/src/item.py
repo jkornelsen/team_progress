@@ -15,6 +15,7 @@ tables_to_create = {
         {coldef('name')},
         toplevel boolean NOT NULL,
         masked boolean NOT NULL,
+        mult boolean NOT NULL,
         storage_type varchar(20) not null,
         q_limit float(4) NOT NULL,
         quantity float(4) NOT NULL,
@@ -39,6 +40,7 @@ class Item(Identifiable, Pile):
         self.storage_type = Storage.UNIVERSAL
         self.toplevel = True
         self.masked = False
+        self.mult = False
         self.attribs = {}  # AttribFor objects keyed by attrib id
         self.recipes = []  # list of Recipe objects
         self.q_limit = 0.0  # limit the quantity if not 0
@@ -54,6 +56,7 @@ class Item(Identifiable, Pile):
             'storage_type': self.storage_type,
             'toplevel': self.toplevel,
             'masked': self.masked,
+            'mult': self.mult,
             'q_limit': self.q_limit,
             'quantity': self.quantity,
         }
@@ -85,6 +88,7 @@ class Item(Identifiable, Pile):
         instance.storage_type = data.get('storage_type', Storage.UNIVERSAL)
         instance.toplevel = data.get('toplevel', False)
         instance.masked = data.get('masked', False)
+        instance.mult = data.get('mult', False)
         instance.attribs = {
             attrib_id: AttribFor(attrib_id, val)
             for attrib_id, val in data.get('attribs', [])}
@@ -235,6 +239,7 @@ class Item(Identifiable, Pile):
             req = RequestHelper('form')
             self.toplevel = req.get_bool('top_level')
             self.masked = req.get_bool('masked')
+            self.mult = req.get_bool('mult')
             old = Item.load_complete_objects(self.id)
             self.q_limit = req.set_num_if_changed(
                 req.get_str('item_limit'), old.q_limit)

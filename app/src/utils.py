@@ -145,7 +145,6 @@ def format_num(value):
     value_str = str(value).strip()
     if value is None or value_str == '':
         return ''
-    value_str = re.sub(r'\.0+$', '', value_str)  # Remove trailing .0
     try:
         value = float(value)  # Ensure numeric
     except (ValueError, TypeError):
@@ -173,7 +172,9 @@ def format_num(value):
     except locale.Error:
         locale.setlocale(locale.LC_ALL, 'C')  # 1230000
     try:
-        value_str = locale.format_string("%d", int(value), grouping=True)
+        value_str = locale.format_string("%.10f", value, grouping=True)
+        value_str = re.sub(r'(\.\d*?[1-9])0+$', r'\1', value_str)
+        value_str = re.sub(r'\.0*$', '', value_str)
     except (ValueError, TypeError):
         return ''
     return value_str

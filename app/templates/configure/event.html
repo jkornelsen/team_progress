@@ -47,9 +47,10 @@
 
         <div id="numeric-factors">
             <label for="numeric-min">Min:</label>
-            <input type="text" id="numeric-min" name="numeric_min" value="{{ current.numeric_range[0] }}">
+            <input type="text" id="numeric-min" name="numeric_min" value="{{ current.numeric_range[0] }}" size="8">
             <label for="numeric-max">Max:</label>
-            <input type="text" id="numeric-max" name="numeric_max" value="{{ current.numeric_range[1] }}">
+            <input type="text" id="numeric-max" name="numeric_max" value="{{ current.numeric_range[1] }}" size="8">
+            <span class="label-like">If negative, enter for example Min -10 and Max -2</span>
         </div>
         <div id="selection-container">
             <label for="selection-strings">Enter a list to choose from (one per line):</label>
@@ -57,7 +58,7 @@
         </div>
 
         <div class="attrib-container outer-border" id="determining-attrib-container">
-            <label>Determining Attributes:</label>
+            <label>Determining Values:</label>
             <!-- Placeholder for appending new attribs -->
             <div id="determining_attriblist_end" style="unobtrusive"></div>
             {% if game_data.attribs %}
@@ -65,7 +66,7 @@
                     <select class="add-attrib-select">
                         <option value="" selected>(Select attribute)</option>
                         {% for attrib in game_data.attribs %}
-                            <option value="{{ attrib.id }}">{{ attrib.name }}</option>
+                            <option value="{{ attrib.id }}" data-mult="{{ attrib.mult | lower }}">{{ attrib.name }}</option>
                         {% endfor %}
                     </select>
                     <button type="button" class="add-attrib-btn lesser-button">Add</button>
@@ -73,11 +74,26 @@
             {% else %}
                 <p class="no-entities">(No attributes)</p>
             {% endif %}
+            <!-- Placeholder for appending new items -->
+            <div id="determining_itemlist_end" style="unobtrusive"></div>
+            {% if game_data.items %}
+                <div class="select-box">
+                    <select class="add-item-select">
+                        <option value="" selected>(Select item)</option>
+                        {% for item in game_data.items %}
+                            <option value="{{ item.id }}" data-mult="{{ item.mult | lower }}">{{ item.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="button" class="add-item-btn lesser-button">Add</button>
+                </div>
+            {% else %}
+                <p class="no-entities">(No items)</p>
+            {% endif %}
             </div>
         </div>
 
         <div class="attrib-container outer-border" id="changed-attrib-container">
-            <label>Attributes Changed:</label>
+            <label>Values Changed:</label>
             <!-- Placeholder for appending new attribs -->
             <div id="changed_attriblist_end" style="unobtrusive"></div>
             {% if game_data.attribs %}
@@ -93,28 +109,49 @@
             {% else %}
                 <p class="no-entities">(No attributes)</p>
             {% endif %}
+            <!-- Placeholder for appending new items -->
+            <div id="changed_itemlist_end" style="unobtrusive"></div>
+            {% if game_data.items %}
+                <div class="select-box">
+                    <select class="add-item-select">
+                        <option value="" selected>(Select item)</option>
+                        {% for item in game_data.items %}
+                            <option value="{{ item.id }}" data-mult="{{ item.mult | lower }}">{{ item.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="button" class="add-item-btn lesser-button">Add</button>
+                </div>
+            {% else %}
+                <p class="no-entities">(No items)</p>
+            {% endif %}
             </div>
         </div>
 
+        <style>
+            .entity-trigger-container label,
+            .entity-trigger-container div {
+                padding: 4px;
+            }
+        </style>
         <div class="entity-trigger-container outer-border" id="entity-trigger-container">
         <div id="trigger-chance-container">
             <label>Trigger Chance:</label>
-            <input type="text" id="trigger-numerator" name="trigger_numerator" value="{{ current.trigger_chance[0] }}">
+            <input type="text" id="trigger-numerator" name="trigger_numerator" value="{{ current.trigger_chance[0] }}" size="3">
             <label for="trigger-denominator">out of</label>
-            <input type="text" id="trigger-denominator" name="trigger_denominator" value="{{ current.trigger_chance[1] }}"><span class="info">Set a value only if triggering automatically.</span>
+            <input type="text" id="trigger-denominator" name="trigger_denominator" value="{{ current.trigger_chance[1] }}" size="8"> <span class="label-like">Set only if triggering automatically.</span>
         </div>
-
+        <div id="triggered-for-container">
+            <label>Triggered For:</label>
             <label>
                 <input type="radio" name="trigger_timing" value="during_progress"
                     {% if current.trigger_by_duration %}checked{% endif %}>
-                During Progress (Chance Per Second)
+                Progress (Chance Per Second)
             </label>
             <label>
                 <input type="radio" name="trigger_timing" value="when_finished"
                     {% if not current.trigger_by_duration %}checked{% endif %}>
                 When Finished
             </label><br>
-            <label>Triggered For:</label>
             <!-- Placeholder for appending new triggering entities -->
             <div id="trigger_entitylist_end" style="unobtrusive"></div>
             {% if game_data.items %}
@@ -138,14 +175,15 @@
                             <option value="{{ loc.id }}">{{ loc.name }}</option>
                         {% endfor %}
                     </select>
-                    <button type="button" class="add-loc-btn lesser-button">Add</button>
+                    <button type="button" class="add-loc-btn lesser-button">Add</button> <span class="label-like">For Travel</span>
                 </div>
             {% else %}
                 <p class="no-entities">(No locations)</p>
             {% endif %}
-            </div>
+        </div>
         </div>
 
+        <br><br><br><br>
         <div class="footer-buttons">
             <button type="submit" id="btn-save" name="save_changes">Save and Close</button>
             <button type="submit" id="btn-duplicate" name="make_duplicate">Save and Duplicate</button>
@@ -193,11 +231,13 @@
             });
             outcomeTypeVisibility();
 
-            function addAttrib(relType, attribId, attribName, attribVal = 1) {
+            function addAttrib(relType, attribId, attribName, attribMult = false, attribVal = 1) {
                 const attribHtml = `
                     <div class="attrib flexdiv" data-attrib-id="${attribId}">
                         <input type="hidden" name="${relType}_attr_id[]" value="${attribId}">
                         ${attribName}
+                        ${relType === 'determining' && attribMult ?
+                            '&nbsp;<span class="label-like">(Multiplied)</span>&nbsp;' : ''}
                         <button type="button" class="remove-attrib-btn lesser-button">Remove</button>
                     </div>
                 `;
@@ -209,6 +249,7 @@
                 const selectedOption = container.find('.add-attrib-select option:selected');
                 const attribId = selectedOption.val();
                 const attribName = selectedOption.text();
+                const attribMult = selectedOption.data('mult');
                 if (attribId == "") {
                     return; // Don't add if the selected option is the placeholder
                 }
@@ -218,14 +259,15 @@
                     return;
                 }
                 const relType = container.attr('id').split('-')[0];
-                addAttrib(relType, attribId, attribName);
+                addAttrib(relType, attribId, attribName, attribMult);
             });
             console.log("number of attribs={{ current.determining_attrs | length }}");
             {% for attrib in current.determining_attrs %}
                 addAttrib(
                     'determining',
                     {{ attrib.id }},
-                    "{{ attrib.name }}");
+                    "{{ attrib.name }}",
+                    {{ attrib.mult | lower }});
             {% endfor %}
             {% for attrib in current.changed_attrs %}
                 addAttrib(

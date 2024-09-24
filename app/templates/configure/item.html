@@ -50,6 +50,8 @@
         <input type="text" id="item-limit" name="item_limit" value="{{ current.q_limit | formatNum }}" size="8"> <span class="label-like">0 for unlimited</span><br>
         <input type="checkbox" id="masked" name="masked" {% if current.masked %}checked{% endif %}>
         <label for="masked">Don't reveal until gained</label><br>
+        <input type="checkbox" id="mult" name="multiplicative" {% if current.mult %}checked{% endif %}>
+        <label for="mult">Quantity multiplies when used for events (adds if unchecked)</label><br>
 
         <div id="sources-container" class="outer-border">
             <!-- Placeholder for appending new recipes -->

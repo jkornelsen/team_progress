@@ -11,7 +11,7 @@ from flask import (
     url_for
 )
 
-from .attrib import Attrib
+from .attrib import Attrib, AttribFor
 from .db_serializable import DeletionError
 from .character import Character, OwnedItem
 from .item import Item
@@ -185,12 +185,50 @@ def set_routes(app):
         g.game_data.overall.configure_by_form()
         return redirect(url_for('configure_index'))
 
+    @app.route(
+        '/play/attrib/<int:attrib_id>/<subject_type>/<int:subject_id>',
+        methods=['GET', 'POST'])
+    def play_attrib(attrib_id, subject_type, subject_id):
+        logger.debug(
+            "%s\nplay_attrib(attrib_id=%d, subject_type=%s, subject_id=%d)",
+            "-" * 80, attrib_id, subject_type, subject_id)
+        attrib = Attrib.load_complete_objects(attrib_id)
+        if not attrib:
+            return "Attribute not found"
+        if subject_type == 'char':
+            func_load_subject = Character.load_complete_objects
+        elif subject_type == 'item':
+            func_load_subject = Item.load_complete_objects
+        else:
+            return f"Unexpected subject type '{subject_type}'"
+        subject = func_load_subject(subject_id)
+        attrib_for = subject.attribs.get(attrib_id, 0)
+        if request.method == 'POST':
+            req = RequestHelper('form')
+            req.debug()
+            session['last_operand'] = req.get_str('operand')
+            session['last_operator'] = req.get_str('operator')
+            result = req.get_int('result', None)
+            if result is not None:
+                attrib_for.val = result
+                subject.to_db()
+                # Reload from database
+                subject = func_load_subject(subject_id)
+                attrib_for = subject.attribs.get(attrib_id, 0)
+        return render_template(
+            'play/attrib.html',
+            current=attrib,
+            subject=subject,
+            subject_attrib_val=attrib_for.val,
+            link_letters=LinkLetters('cemo')
+            )
+
     @app.route('/play/char/<int:char_id>')
     def play_char(char_id):
         logger.debug("%s\nplay_char(%d)", "-" * 80, char_id)
         instance = Character.data_for_play(char_id)
         if not instance:
-            return 'Character not found'
+            return "Character not found"
         session['last_char_id'] = char_id
         session['default_pickup_char'] = char_id
         return render_template(
@@ -218,7 +256,7 @@ def set_routes(app):
             "-" * 80, event_id, char_id, loc_id)
         instance = Event.data_for_play(event_id)
         if not instance:
-            return 'Event not found'
+            return "Event not found"
         if request.method == 'GET':
             message = session.pop('message', False)
             return render_template(
@@ -229,6 +267,7 @@ def set_routes(app):
                 link_letters=LinkLetters('emor')
                 )
         req = RequestHelper('form')
+        req.debug()
         if req.has_key('roll'):
             instance.play_by_form()
             outcome_display = instance.get_outcome()
@@ -240,19 +279,31 @@ def set_routes(app):
                 link_letters=LinkLetters('emor')
                 )
         elif req.has_key('change_attrib'):
-            req.debug()
-            attr_id = req.get_int('attr_id', 0)
+            attrib_id = req.get_int('attrib_id', 0)
             char_id = req.get_int('char_id', 0)
             newval = req.get_str('newval', "0")
             session['last_affected_char_id'] = char_id
-            #TODO: change character's attrib
+            char = Character.load_complete_objects(char_id)
+            if not char:
+                return "Character not found"
+            attrib = Attrib.load_complete_objects(attrib_id)
+            if not attrib:
+                return "Attribute not found"
+            oldval = ""
+            if attrib_id in char.attribs:
+                attrib_of = char.attribs[attrib_id]
+                oldval = f"from {attrib_of.val} "
+                attrib_of.val = newval
+            else:
+                char[attrib_id] = AttribFor(attrib_id, newval)
+            char.to_db()
             session['message'] = (
-                f"To Do: Change attrib {attr_id}"
-                f" of char {char_id} to {newval}")
+                f"Changed {attrib.name}"
+                f" of char {char.name} {oldval}to {newval}")
             return redirect(
                 url_for('play_event', event_id=event_id))
         else:
-            raise ValueError("Unrecognized form submission.")
+            return "Unrecognized form submission."
 
     @app.route('/play/item/<int:item_id>/')
     def play_item(item_id):
@@ -275,7 +326,7 @@ def set_routes(app):
             item_id, char_id, loc_id, complete_sources=False,
             main_pile_type=main_pile_type)
         if not item:
-            return 'Item not found'
+            return "Item not found"
         defaults = {
             'pickup_char': session.get('default_pickup_char', ''),
             'movingto_char': session.get('default_movingto_char', ''),
@@ -299,7 +350,7 @@ def set_routes(app):
         logger.debug("%s\nplay_location(%d)", "-" * 80, loc_id)
         instance = Location.data_for_play(loc_id)
         if not instance:
-            return 'Location not found'
+            return "Location not found"
         session['last_loc_id'] = loc_id
         req = RequestHelper('args')
         char_id = req.get_int('char_id', '')
@@ -379,7 +430,7 @@ def set_routes(app):
                 })
         return jsonify({
             'status': 'error',
-            'message': 'Character not found.'
+            'message': "Character not found."
             })
 
     @app.route('/char/start/<int:char_id>', methods=['POST'])
@@ -428,7 +479,7 @@ def set_routes(app):
             item_id, char_id, loc_id, complete_sources=True,
             main_pile_type=main_pile_type)
         if not item:
-            return jsonify({'error': 'Item not found'})
+            return jsonify({'error': "Item not found"})
         pile = item.pile
         progress = pile.container.progress
         logger.debug(
@@ -666,7 +717,7 @@ def set_routes(app):
             "-" * 80, char_id, x_change, y_change)
         char = Character.load_complete_objects(char_id)
         if not char:
-            return 'Character not found'
+            return "Character not found"
         session['default_move_char'] = char_id
         loc = Location.load_complete_objects(char.location.id)
         cur_x, cur_y = char.position.as_tuple()
@@ -694,13 +745,15 @@ class LinkLetters:
             if chr(c) not in excluded]
         self.links = {}
 
-    def next(self, link):
+    def next(self, link=None):
+        """:param link: returns same letter for identical links"""
         if link in self.links:
             return self.links[link]
         if self.letter_index < len(self.letters):
             letter = self.letters[self.letter_index]
             self.letter_index += 1
-            self.links[link] = letter
+            if link:
+                self.links[link] = letter
             return letter
         return ''
 

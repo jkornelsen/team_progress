@@ -7,7 +7,10 @@ from .db_serializable import (
 from .utils import RequestHelper
 
 tables_to_create = {
-    'attribs': coldef('name'),
+    'attribs': f"""
+        {coldef('name')},
+        mult boolean NOT NULL
+        """
     }
 logger = logging.getLogger(__name__)
 
@@ -43,13 +46,22 @@ class Attrib(Identifiable):
         super().__init__(new_id)
         self.name = ""
         self.description = ""
+        self.mult = False  # multiplicative or additive
 
     def _base_export_data(self):
         return {
             'id': self.id,
             'name': self.name,
             'description': self.description,
+            'mult': self.mult,
             }
+
+    @classmethod
+    def from_data(cls, data):
+        data = cls.prepare_dict(data)
+        instance = super().from_data(data)
+        instance.mult = data.get('mult', False)
+        return instance
 
     @classmethod
     def load_complete_objects(cls, id_to_get=None):
@@ -82,6 +94,7 @@ class Attrib(Identifiable):
             req.debug()
             self.name = req.get_str('attrib_name')
             self.description = req.get_str('attrib_description')
+            self.mult = req.get_bool('multiplicative')
             self.to_db()
         elif req.has_key('delete_attrib'):
             try:

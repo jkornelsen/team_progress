@@ -149,6 +149,21 @@ tables_to_create = {
             ON DELETE CASCADE
             DEFERRABLE INITIALLY DEFERRED
         """,
+    'event_items': f"""
+        {coldef('game_token')},
+        event_id integer NOT NULL,
+        item_id integer NOT NULL,
+        determining boolean NOT NULL,
+        PRIMARY KEY (game_token, event_id, item_id),
+        FOREIGN KEY (game_token, event_id)
+            REFERENCES events (game_token, id)
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED,
+        FOREIGN KEY (game_token, item_id)
+            REFERENCES items (game_token, id)
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED
+        """,
     'event_triggers': f"""
         {coldef('game_token')},
         event_id integer NOT NULL,

@@ -60,6 +60,7 @@ def create_all():
         'item',
         'location',
         'overall',
+        'recipe',
         'user_interaction',
         'db_relations'
     ]
@@ -84,15 +85,16 @@ def column_counts(table_name):
         ORDER BY table_name;
     """
     lookup = {
-        'attribs': 4,
+        'attribs': 5,
         'char_attribs': 4,
         'char_items': 5,
         'characters': 11,
         'event_attribs': 4,
+        'event_items': 4,
         'event_triggers': 4,
         'events': 10,
         'item_attribs': 4,
-        'items': 10,
+        'items': 11,
         'loc_destinations': 6,
         'loc_items': 5,
         'locations': 10,

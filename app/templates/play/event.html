@@ -17,6 +17,7 @@
             'm': '{{ url_for('configure_index') }}',
             'e': '{{ url_for('configure_event', event_id=current.id) }}',
         };
+        const funcForKey = {};
         document.addEventListener('DOMContentLoaded', function () {
             document.addEventListener('keypress', function (event) {
                 const key = event.key.toLowerCase();
@@ -24,21 +25,8 @@
                     document.getElementById('roll-btn').click();
                 } else if (linkForKey[key]) {
                     window.location.href = linkForKey[key];
-                } else if (key === 'f') {
-                    const firstBtn = document.querySelector('.fill-btn');
-                    if (firstBtn) {
-                        firstBtn.click();
-                    }
-                } else if (key === 'l') {
-                    const firstBtn = document.querySelector('.fill-changed-btn');
-                    if (firstBtn) {
-                        firstBtn.click();
-                    }
-                } else if (key === 'a') {
-                    const firstBtn = document.querySelector('button[name="change_attrib"]');
-                    if (firstBtn) {
-                        firstBtn.click();
-                    }
+                } else if (funcForKey[key]) {
+                    funcForKey[key]();
                 }
             });
         });
@@ -65,18 +53,24 @@
                         <label for="stat_adjustment">Stat Adjustment:</label>
                         <input type="text" id="stat_adjustment" name="stat_adjustment" value="{{ current.stat_adjustment }}">
                         <br>
-                        {% for attr in current.determining_attrs %}
-                            <li style="margin-top: 5px">{{ attr.name }}
-                            <select class="char-for-attr" id="char-for-attr_{{ attr.id }}">
+                        {% for attrib in current.determining_attrs %}
+                            <li style="margin-top: 5px">{{ attrib.name }}
+                            <select class="char-for-attrib" id="char-for-attrib_{{ attrib.id }}">
                                 <option value="" selected>(Select character)</option>
-                                {% for char in game_data.characters if attr.id in char.attribs %}
-                                    {% set attrib_val = char.attribs[attr.id].val | formatNum %}
+                                {% for char in game_data.characters if attrib.id in char.attribs %}
+                                    {% set attrib_val = char.attribs[attrib.id].val | formatNum %}
                                     <option value="{{ attrib_val }}" {% if char.id == session['last_char_id'] %}selected{% endif %}>{{ char.name }} {{ attrib_val }}</option>
                                 {% endfor %}
                             </select>
-                            <button type="button" class="fill-btn" data-attr-id="{{ attr.id }}">
-                                {% if loop.first %}[F]ill{% else %}Fill{% endif %}
-                            </button><br>
+                            {% set letter = link_letters.next() %}
+                            <button type="button" class="fill-det-btn" data-attrib-id="{{ attrib.id }}" data-mult="{{ attrib.mult | lower }}">
+                                [{{ letter }}] {% if attrib.mult %}Multiply{% else %}Add{% endif %}
+                            </button>
+                            <script>
+                                funcForKey['{{ letter }}'] = function() {
+                                    document.querySelector('.fill-det-btn[data-attrib-id="{{ attrib.id }}"]').click();
+                                };
+                            </script>
                         {% endfor %}
                         </div>
                     {% endif %}
@@ -96,26 +90,38 @@
             <td>
             <div style="background-color: black; margin: 3px; padding: 10px">
             <label for="stat_adjustment">Affected Stats:</label>
-            {% for attr in current.changed_attrs %}
+            {% for attrib in current.changed_attrs %}
                 <form method="POST" action="{{ url_for('play_event', event_id=current.id) }}">
-                <input type="hidden" name="attr_id" value="{{ attr.id }}">
-                <input type="hidden" name="char_id" value="0" id="char_id_{{ attr.id }}">
-                <li style="margin-top: 5px">{{ attr.name }}
-                <select class="char-for-changed" id="char-for-changed_{{ attr.id }}">
+                <input type="hidden" name="attrib_id" value="{{ attrib.id }}">
+                <input type="hidden" name="char_id" value="0" id="char_id_{{ attrib.id }}">
+                <li style="margin-top: 5px">{{ attrib.name }}
+                <select class="char-for-changed" id="char-for-changed_{{ attrib.id }}">
                     <option value="" selected>(Select character)</option>
-                    {% for char in game_data.characters if attr.id in char.attribs %}
-                        {% set attrib_val = char.attribs[attr.id].val | formatNum %}
+                    {% for char in game_data.characters if attrib.id in char.attribs %}
+                        {% set attrib_val = char.attribs[attrib.id].val | formatNum %}
                         <option value="{{ attrib_val }}" data-char-id="{{ char.id }}" {% if char.id == session['last_affected_char_id'] %}selected{% endif %}>{{ char.name }}</option>
                     {% endfor %}
                 </select>
-                <button type="button" class="fill-changed-btn" data-attr-id="{{ attr.id }}">
-                    {% if loop.first %}Fil[l]{% else %}Fill{% endif %}
+                {% set letter = link_letters.next() %}
+                <button type="button" class="fill-changed-btn" data-attrib-id="{{ attrib.id }}">
+                    [{{ letter }}] Fill
                 </button>
-                <span id="oldval_{{ attr.id }}" style="min-width: 5ch; display: inline-block; text-align: right;">0</span> &rarr;
-                <input type="text" name="newval" id="newval_{{ attr.id }}" size="8">
-                <button type="submit" name="change_attrib" id="apply_{{ attr.id }}" data-attr-id="{{ attr.id }}">
-                    {% if loop.first %}[A]pply{% else %}Apply{% endif %}
+                <script>
+                    funcForKey['{{ letter }}'] = function() {
+                        document.querySelector('.fill-changed-btn[data-attrib-id="{{ attrib.id }}"]').click();
+                    };
+                </script>
+                <span id="oldval_{{ attrib.id }}" style="min-width: 5ch; display: inline-block; text-align: right;">0</span> &rarr;
+                <input type="text" name="newval" id="newval_{{ attrib.id }}" size="8">
+                {% set letter = link_letters.next() %}
+                <button type="submit" name="change_attrib" class="change-attrib-btn" id="apply_{{ attrib.id }}" data-attrib-id="{{ attrib.id }}">
+                    [{{ letter }}] Apply
                 </button><br>
+                <script>
+                    funcForKey['{{ letter }}'] = function() {
+                        document.querySelector('.change-attrib-btn[data-attrib-id="{{ attrib.id }}"]').click();
+                    };
+                </script>
                 </form>
             {% endfor %}
             </div>
@@ -139,23 +145,36 @@
                 localStorage.setItem('selectedDifficulty', this.value);
             });
             
-            function updateStatAdjustment(event) {
-                const selectedValue = event.target.value;
-                const statAdjustmentInput = document.getElementById('stat_adjustment');
-                statAdjustmentInput.value = selectedValue;
+            function updateStatAdjustment(attrId) {
+                const selectedIndex = $(`#char-for-attrib_${attrId}`).prop('selectedIndex');
+                const selectedValue = parseFloat($(`#char-for-attrib_${attrId}`).val()) || 0;
+                const currentAdjustment = parseFloat($('#stat_adjustment').val()) || 0;
+                const attrMult = $(`.fill-det-btn[data-attrib-id="${attrId}"]`).data('mult') == true;
+                console.log('selectedValue:', selectedValue, 'Type:', typeof selectedValue);
+                console.log('currentAdjustment:', currentAdjustment, 'Type:', typeof currentAdjustment);
+                console.log('attrMult:', attrMult, 'Type:', typeof attrMult);
+                if (selectedIndex !== 0) {
+                    if (attrMult) {
+                        $('#stat_adjustment').val(currentAdjustment * selectedValue);
+                    } else {
+                        $('#stat_adjustment').val(currentAdjustment + selectedValue);
+                    }
+                }
             }
-            $('.char-for-attr').on('change', updateStatAdjustment);
-
-            $('.fill-btn').on('click', function() {
-                const attrId = $(this).data('attr-id');
-                const selectedValue = $('#char-for-attr_' + attrId).val();
-                $('#stat_adjustment').val(selectedValue);
+            function handleSelectChange(event) {
+                const attrId = $(event.target).attr('id').split('_')[1];
+                updateStatAdjustment(attrId);
+            }
+            $('.char-for-attrib').on('change', handleSelectChange);
+            $('.fill-det-btn').on('click', function() {
+                const attrId = $(this).data('attrib-id');
+                updateStatAdjustment(attrId); 
             });
+
             $('.fill-changed-btn').on('click', function() {
-                const attrId = $(this).data('attr-id');
+                const attrId = $(this).data('attrib-id');
                 $('#char-for-changed_' + attrId).change();
             });
-
             $('.char-for-changed').change(function() {
                 const selectedOption = $(this).find(':selected');
                 const attribVal = parseFloat(selectedOption.val()) || 0;
