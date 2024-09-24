@@ -45,9 +45,7 @@ def create_trigger_entity(entity_name, entity_id):
 
 tables_to_create = {
     'events': f"""
-        {coldef('id')},
         {coldef('name')},
-        {coldef('description')},
         toplevel boolean NOT NULL,
         outcome_type varchar(20) not null,
         trigger_chance integer[2],
@@ -114,11 +112,8 @@ class Event(Identifiable):
 
     @classmethod
     def from_data(cls, data):
-        if not isinstance(data, dict):
-            data = vars(data)
-        instance = cls(int(data.get('id', 0)))
-        instance.name = data.get('name', "")
-        instance.description = data.get('description', "")
+        data = cls.prepare_dict(data)
+        instance = super().from_data(data)
         instance.toplevel = data.get('toplevel', True)
         instance.outcome_type = data.get('outcome_type', OUTCOME_FOURWAY)
         instance.numeric_range = NumTup(data.get('numeric_range', (0, 10)))
@@ -361,18 +356,19 @@ class Event(Identifiable):
             )
         elif self.outcome_type == OUTCOME_NUMERIC:
             range_min, range_max = self.numeric_range
+            sign = 1 if range_max >= 0 else -1
             sides = range_max - range_min
             roll = roll_dice(sides)
-            total = roll + range_min + self.stat_adjustment
+            self.outcome = range_min + roll + self.stat_adjustment
             display = (
-                "1d{} ({}) + Min {} + Stat Adjustment {}<br>"
+                "Min ({}) + 1d{} ({}) + Stat Adjustment ({})<br>"
                 "Outcome = {}"
             ).format(
+                range_min,
                 sides,
                 roll,
-                range_min,
                 self.stat_adjustment,
-                total
+                self.outcome
             )
         elif self.outcome_type == OUTCOME_SELECTION:
             strings_list = self.selection_strings.split('\n')

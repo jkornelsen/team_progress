@@ -9,21 +9,20 @@ from database import column_counts, pretty
 from .utils import NumTup
 
 logger = logging.getLogger(__name__)
-#logger.setLevel(logging.CRITICAL)  # turn off for this module
+logger.setLevel(logging.CRITICAL)  # turn off for this module
 
 def coldef(which):
     """Definitions for commonly used columns for creating a table."""
     if which == 'game_token':
         return "game_token varchar(50)"
     if which == 'id':
-        # include game token as well
         return f"""id integer,
         {coldef('game_token')},
         PRIMARY KEY (id, game_token)"""
     if which == 'name':
-        return "name varchar(255) NOT NULL"
-    if which == 'description':
-        return "description text"
+        return f"""{coldef('id')},
+            name varchar(255) NOT NULL,
+            description text"""
     raise ValueError(f"Unexpected coldef type '{which}'")
 
 def numtups_to_lists(values):
@@ -64,6 +63,15 @@ class Serializable():
     def dict_for_main_table(self):
         """Fields for writing to the main database table of this class."""
         return self._base_export_data()
+
+    @classmethod
+    def prepare_dict(cls, data):
+        """Make sure data is passed as a dict before we use it
+        infrom_data(). It could be a MutableNamespace beforehand.
+        """
+        if not isinstance(data, dict):
+            data = vars(data)
+        return data
 
     @classmethod
     def from_data(cls, data):
@@ -264,6 +272,15 @@ class Identifiable(DbSerializable):
         if 'game_data' in g:
             return g.game_data.get_list(cls)
         return []
+
+    #pylint: disable=attribute-defined-outside-init
+    @classmethod
+    def from_data(cls, data):
+        data = cls.prepare_dict(data)
+        instance = cls(int(data.get('id', 0)))
+        instance.name = data.get('name', "")
+        instance.description = data.get('description', "")
+        return instance
 
     def to_db(self):
         data = self.dict_for_main_table()

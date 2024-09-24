@@ -15,7 +15,7 @@ tables_to_create = {
     'overall': f"""
         {coldef('game_token')},
         title varchar(255) NOT NULL,
-        {coldef('description')},
+        description text,
         number_format VARCHAR(5) NOT NULL,
         slots TEXT[],
         PRIMARY KEY (game_token)
@@ -55,8 +55,7 @@ class WinRequirement(Identifiable):
 
     @classmethod
     def from_data(cls, data):
-        if not isinstance(data, dict):
-            data = vars(data)
+        data = cls.prepare_dict(data)
         instance = cls(int(data.get('id', 0)))
         instance.item = Item(int(data['item_id'])
             ) if data['item_id'] else None
@@ -93,11 +92,12 @@ class Overall(DbSerializable):
         self.title = "Generic Adventure"
         self.description = (
             "Go to <i>Main Setup</i> (or press M)."
-            " To continue a game you've already started, click <i>Load from File</i>."
+            " Then, to continue a game you've already started,"
+            " click <i>Load from File</i>."
             " Otherwise, browse the <i>Pre-Built Scenarios</i>."
             "\r\n\r\n"
             "Or, to start from scratch, go to <i>Overall Settings</i>"
-            " and change the title and this description."
+            " and change this title and description."
             " Then do initial setup such as adding a few items or characters."
             " More can be added as the game goes along."
             )
@@ -155,8 +155,7 @@ class Overall(DbSerializable):
 
     @classmethod
     def from_data(cls, data):
-        if not isinstance(data, dict):
-            data = vars(data)
+        data = cls.prepare_dict(data)
         instance = cls()
         instance.title = data.get(
             'title', instance.title)

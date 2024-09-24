@@ -220,20 +220,39 @@ def set_routes(app):
         if not instance:
             return 'Event not found'
         if request.method == 'GET':
+            message = session.pop('message', False)
             return render_template(
                 'play/event.html',
                 current=instance,
                 game_data=g.game_data,
+                message=message,
                 link_letters=LinkLetters('emor')
                 )
-        instance.play_by_form()
-        return render_template(
-            'play/event.html',
-            current=instance,
-            game_data=g.game_data,
-            outcome=instance.get_outcome(),
-            link_letters=LinkLetters('emor')
-            )
+        req = RequestHelper('form')
+        if req.has_key('roll'):
+            instance.play_by_form()
+            outcome_display = instance.get_outcome()
+            return render_template(
+                'play/event.html',
+                current=instance,
+                game_data=g.game_data,
+                outcome_display=outcome_display,
+                link_letters=LinkLetters('emor')
+                )
+        elif req.has_key('change_attrib'):
+            req.debug()
+            attr_id = req.get_int('attr_id', 0)
+            char_id = req.get_int('char_id', 0)
+            newval = req.get_str('newval', "0")
+            session['last_affected_char_id'] = char_id
+            #TODO: change character's attrib
+            session['message'] = (
+                f"To Do: Change attrib {attr_id}"
+                f" of char {char_id} to {newval}")
+            return redirect(
+                url_for('play_event', event_id=event_id))
+        else:
+            raise ValueError("Unrecognized form submission.")
 
     @app.route('/play/item/<int:item_id>/')
     def play_item(item_id):

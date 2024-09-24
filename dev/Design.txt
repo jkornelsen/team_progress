@@ -176,38 +176,28 @@ otherwise display missing member in alert
 checkbox "Group1 Together" to travel,
 if group_name isn't empty and there are at least 2 members
 
-hopefully add more automation later such as calculating events based on attributes
-keep track of how many produced (for xp) as well as how many in inventory
-age could be similar to xp, increasing over time
-
-event selection list of entities to randomly choose from
-
-attributes would be the main thing determining event chances,
-and attributes could be members of characters, items, or top-level
-or maybe not top-level, but special items could be added that could
-hold such attributes, for example a calendar item with a season attribute
-would they be useful for locations?
+would attributes be useful for locations?
 for example, how dark a room is,
 or deep water would require swimming or limit evasion
 perhaps it would be better to simply mention such things in location description
 
-one attribute would be max hp
-another would be current hp
-a third would be poison duration remaining
-then there would need to be a next turn in a fight where these are possibly changed
-perhaps the turn would be an event
-the event would calculate a random hp change based on attributes and items
+event would calculate a random hp change based on attributes and items
 current hp would be selected as an attribute to modify
 items would have their own attrs list,
 including e.g. hp change that would indicate how much of an
 impact it would have in increasing or reducing hp change of the event
 
+automation such as calculating events based on attributes
 perhaps basic mechanics could be implemented automatically,
 and more advanced mechanics would require manual changes to stats
 armor could be dmg * 0.95, or chance to get hit * 0.95
 attributes could be attached to events both to affect and be changed by
 change and effect can both be automatic, by approval, or manual
 attaching for manual control would be for convenient display only
+
+let's go with semi automation
+on event screen, give form with new attr value based on outcome,
+but doesn't take effect unless submitted
 
 hp attr could be current value along with max, like items have
 however, attacks such as poison often do damage based on % of max hp

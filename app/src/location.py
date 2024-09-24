@@ -3,16 +3,15 @@ import logging
 from flask import g, session
 
 from .db_serializable import (
-    DbError, DeletionError, Identifiable, QueryHelper, coldef)
-from .item import Item, Pile
+    DbError, DeletionError, Identifiable, QueryHelper, Serializable, coldef)
+from .item import Item
+from .pile import Pile
 from .progress import Progress
 from .utils import NumTup, RequestHelper, Storage
 
 tables_to_create = {
     'locations': f"""
-        {coldef('id')},
         {coldef('name')},
-        {coldef('description')},
         toplevel boolean NOT NULL,
         masked boolean NOT NULL,
         progress_id integer,
@@ -26,10 +25,11 @@ tables_to_create = {
 }
 logger = logging.getLogger(__name__)
 
-class ItemAt(Pile):
+class ItemAt(Pile, Serializable):
     PILE_TYPE = Storage.LOCAL
     def __init__(self, item=None):
         super().__init__(item)
+        Serializable.__init__(self)
         self.position = NumTup((0, 0))
 
     def _base_export_data(self):
@@ -55,16 +55,16 @@ class ItemAt(Pile):
 
     @classmethod
     def from_data(cls, data):
-        if not isinstance(data, dict):
-            data = vars(data)
+        data = cls.prepare_dict(data)
         item_id = int(data.get('item_id', 0))
         instance = cls(Item(item_id))
         instance.quantity = data.get('quantity', 0)
         instance.position = NumTup(data.get('position', (0, 0)))
         return instance
 
-class Destination:
+class Destination(Serializable):
     def __init__(self, loc):
+        super().__init__()
         self.loc = loc
         self.distance = 1
         self.exit = (0, 0)  # in loc coming from
@@ -95,8 +95,7 @@ class Destination:
 
     @classmethod
     def from_data(cls, data):
-        if not isinstance(data, dict):
-            data = vars(data)
+        data = cls.prepare_dict(data)
         dest_id = int(data.get('dest_id', 0))
         instance = cls(Location(dest_id))
         instance.distance = data.get('distance', 0)
@@ -189,11 +188,8 @@ class Location(Identifiable):
 
     @classmethod
     def from_data(cls, data):
-        if not isinstance(data, dict):
-            data = vars(data)
-        instance = cls(int(data.get('id', 0)))
-        instance.name = data.get('name', "")
-        instance.description = data.get('description', "")
+        data = cls.prepare_dict(data)
+        instance = super().from_data(data)
         instance.toplevel = data.get('toplevel', False)
         instance.masked = data.get('masked', False)
         for dest_data in data.get('destinations', []):
@@ -270,22 +266,7 @@ class Location(Identifiable):
         logger.debug("load_complete_objects(%s)", id_to_get)
         if id_to_get in ['new', '0', 0]:
             return cls()
-        # Get loc and progress data
-        qhelper = QueryHelper("""
-            SELECT *
-            FROM {tables[0]}
-            LEFT JOIN {tables[1]}
-                ON {tables[1]}.id = {tables[0]}.progress_id
-                AND {tables[1]}.game_token = {tables[0]}.game_token
-            WHERE {tables[0]}.game_token = %s
-            """, [g.game_token])
-        qhelper.add_limit("{tables[0]}.id", id_to_get)
-        tables_rows = cls.select_tables(
-            qhelper=qhelper, tables=['locations', 'progress'])
-        locs = {}  # data (not objects) keyed by ID
-        for loc_data, progress_data in tables_rows:
-            loc = locs.setdefault(loc_data.id, loc_data)
-            loc.progress = progress_data
+        locs = Progress.load_base_data(cls, id_to_get)
         # Get destination data
         qhelper = QueryHelper("""
             SELECT *

@@ -25,9 +25,19 @@
                 } else if (linkForKey[key]) {
                     window.location.href = linkForKey[key];
                 } else if (key === 'f') {
-                    const firstFillBtn = document.querySelector('.fill-btn');
-                    if (firstFillBtn) {
-                        firstFillBtn.click();
+                    const firstBtn = document.querySelector('.fill-btn');
+                    if (firstBtn) {
+                        firstBtn.click();
+                    }
+                } else if (key === 'l') {
+                    const firstBtn = document.querySelector('.fill-changed-btn');
+                    if (firstBtn) {
+                        firstBtn.click();
+                    }
+                } else if (key === 'a') {
+                    const firstBtn = document.querySelector('button[name="change_attrib"]');
+                    if (firstBtn) {
+                        firstBtn.click();
                     }
                 }
             });
@@ -71,19 +81,51 @@
                         </div>
                     {% endif %}
                     <div style="margin-top: 20px; text-align: center">
-                    <button type="submit" id="roll-btn">[R]oll</button>
+                    <button type="submit" id="roll-btn" name="roll">[R]oll</button>
                     </div>
                 </form>
             </td>
         </tr>
-        {% if outcome %}
         <tr>
             <td>
-                <div id="outcome-display">{{ outcome|safe }}</div>
+                <div id="outcome-display" style="height: 3em;">{{ outcome_display|safe }}</div>
+            </td>
+        </tr>
+        {% if current.outcome_type == 'numeric' %}
+        <tr>
+            <td>
+            <div style="background-color: black; margin: 3px; padding: 10px">
+            <label for="stat_adjustment">Affected Stats:</label>
+            {% for attr in current.changed_attrs %}
+                <form method="POST" action="{{ url_for('play_event', event_id=current.id) }}">
+                <input type="hidden" name="attr_id" value="{{ attr.id }}">
+                <input type="hidden" name="char_id" value="0" id="char_id_{{ attr.id }}">
+                <li style="margin-top: 5px">{{ attr.name }}
+                <select class="char-for-changed" id="char-for-changed_{{ attr.id }}">
+                    <option value="" selected>(Select character)</option>
+                    {% for char in game_data.characters if attr.id in char.attribs %}
+                        {% set attrib_val = char.attribs[attr.id].val | formatNum %}
+                        <option value="{{ attrib_val }}" data-char-id="{{ char.id }}" {% if char.id == session['last_affected_char_id'] %}selected{% endif %}>{{ char.name }}</option>
+                    {% endfor %}
+                </select>
+                <button type="button" class="fill-changed-btn" data-attr-id="{{ attr.id }}">
+                    {% if loop.first %}Fil[l]{% else %}Fill{% endif %}
+                </button>
+                <span id="oldval_{{ attr.id }}" style="min-width: 5ch; display: inline-block; text-align: right;">0</span> &rarr;
+                <input type="text" name="newval" id="newval_{{ attr.id }}" size="8">
+                <button type="submit" name="change_attrib" id="apply_{{ attr.id }}" data-attr-id="{{ attr.id }}">
+                    {% if loop.first %}[A]pply{% else %}Apply{% endif %}
+                </button><br>
+                </form>
+            {% endfor %}
+            </div>
             </td>
         </tr>
         {% endif %}
     </table>
+    {% if message %}
+        <p>{{ message }}</p>
+    {% endif %}
     <script>
         $(document).ready(function() {
             // remember default for select box in client side storage
@@ -92,8 +134,8 @@
                 selectedDifficulty = '10';
                 localStorage.setItem('selectedDifficulty', selectedDifficulty);
             }
-            document.getElementById('difficulty').value = selectedDifficulty;
-            document.getElementById('difficulty').addEventListener('change', function() {
+            $('#difficulty').val(selectedDifficulty);
+            $('#difficulty').on('change', function() {
                 localStorage.setItem('selectedDifficulty', this.value);
             });
             
@@ -105,9 +147,29 @@
             $('.char-for-attr').on('change', updateStatAdjustment);
 
             $('.fill-btn').on('click', function() {
-                var attrId = $(this).data('attr-id');
-                var selectedValue = $('#char-for-attr_' + attrId).val();
+                const attrId = $(this).data('attr-id');
+                const selectedValue = $('#char-for-attr_' + attrId).val();
                 $('#stat_adjustment').val(selectedValue);
+            });
+            $('.fill-changed-btn').on('click', function() {
+                const attrId = $(this).data('attr-id');
+                $('#char-for-changed_' + attrId).change();
+            });
+
+            $('.char-for-changed').change(function() {
+                const selectedOption = $(this).find(':selected');
+                const attribVal = parseFloat(selectedOption.val()) || 0;
+                const attribId = this.id.split('_')[1];
+                const charId = selectedOption.data('char-id');
+                const currentOutcome = {{ current.outcome }};
+                const oldValText = $(`#oldval_${attribId}`);
+                const newValInput = $(`#newval_${attribId}`);
+                const newValue = attribVal + currentOutcome;
+                if (oldValText.text() !== attribVal.toString()) {
+                    oldValText.text(attribVal);
+                    newValInput.val(newValue);
+                    $(`#char_id_${attribId}`).val(charId);
+                }
             });
         });
     </script>

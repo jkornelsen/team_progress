@@ -5,16 +5,15 @@ from flask import g, session
 from .attrib import Attrib, AttribFor
 from .db_serializable import (
     DbError, DeletionError, Identifiable, QueryHelper, coldef)
-from .item import Item, Pile
+from .item import Item
 from .location import Destination, Location
+from .pile import Pile
 from .progress import Progress
 from .utils import NumTup, RequestHelper, Storage
 
 tables_to_create = {
     'characters': f"""
-        {coldef('id')},
         {coldef('name')},
-        {coldef('description')},
         toplevel boolean NOT NULL,
         masked boolean NOT NULL,
         progress_id integer,
@@ -104,11 +103,8 @@ class Character(Identifiable):
 
     @classmethod
     def from_data(cls, data):
-        if not isinstance(data, dict):
-            data = vars(data)
-        instance = cls(int(data.get('id', 0)))
-        instance.name = data.get('name', "")
-        instance.description = data.get('description', '')
+        data = cls.prepare_dict(data)
+        instance = super().from_data(data)
         instance.toplevel = data.get('toplevel', False)
         instance.masked = data.get('masked', False)
         for owned_data in data.get('items', []):
@@ -225,29 +221,10 @@ class Character(Identifiable):
 
     @classmethod
     def load_complete_objects(cls, id_to_get=None):
-        """Load objects with everything needed for storing to db
-        or JSON file.
-        :param id_to_get: specify to only load a single object
-        """
         logger.debug("load_complete_objects(%s)", id_to_get)
         if id_to_get in ['new', '0', 0]:
             return cls()
-        # Get char and progress data
-        qhelper = QueryHelper("""
-            SELECT *
-            FROM {tables[0]}
-            LEFT JOIN {tables[1]}
-                ON {tables[1]}.id = {tables[0]}.progress_id
-                AND {tables[1]}.game_token = {tables[0]}.game_token
-            WHERE {tables[0]}.game_token = %s
-            """, [g.game_token])
-        qhelper.add_limit("{tables[0]}.id", id_to_get)
-        tables_rows = cls.select_tables(
-            qhelper=qhelper, tables=['characters', 'progress'])
-        chars = {}  # data (not objects) keyed by ID
-        for char_data, progress_data in tables_rows:
-            char = chars.setdefault(char_data.id, char_data)
-            char.progress = progress_data
+        chars = Progress.load_base_data(cls, id_to_get)
         # Get attrib relation data
         qhelper = QueryHelper("""
             SELECT *

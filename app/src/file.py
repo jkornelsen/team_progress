@@ -1,21 +1,13 @@
 import datetime
+from json import JSONDecodeError
 import logging
 import os
 import tempfile
-from werkzeug.utils import secure_filename
 
 from flask import (
-    g,
-    json,
-    redirect,
-    render_template,
-    request,
-    send_file,
-    session,
-    url_for
-)
-from json import JSONDecodeError
-
+    g, json, redirect, render_template, request, send_file,
+    session, url_for)
+from werkzeug.utils import secure_filename
 
 from database import set_autocommit
 from .game_data import GameData
@@ -39,6 +31,7 @@ def set_routes(app):
         file_message = session.pop('file_message', False)
         g.game_data.entity_names_from_db()
         for session_key in (
+                'last_affected_char_id',
                 'last_char_id',
                 'last_loc_id',
                 'default_move_char',

@@ -38,6 +38,7 @@ class Source(Serializable):
 
     @classmethod
     def from_data(cls, data):
+        data = cls.prepare_dict(data)
         instance = cls(data.get('item_id', 0))
         instance.preserve = data.get('preserve', False)
         instance.q_required = data.get('q_required', 1.0)
@@ -58,6 +59,7 @@ class Byproduct(Serializable):
 
     @classmethod
     def from_data(cls, data):
+        data = cls.prepare_dict(data)
         instance = cls(data.get('item_id', 0))
         instance.rate_amount = data.get('rate_amount', 1.0)
         return instance
@@ -96,6 +98,7 @@ class Recipe(Identifiable):
 
     @classmethod
     def from_data(cls, data, item_produced=None):
+        data = cls.prepare_dict(data)
         instance = cls()
         instance.id = data.get('id', 0)
         from .item import Item
@@ -160,6 +163,39 @@ class Recipe(Identifiable):
                 values)
 
     @classmethod
+    def item_relation_data(cls, id_to_get, by_source=False):
+        if by_source:  # reverse
+            field = "{tables[1]}.item_id"
+            join_type = 'INNER'  # only the requested relation data
+        else:  # forward -- as product
+            field = "{tables[0]}.item_id"
+            join_type = 'LEFT'  # all recipe data
+        qhelper = QueryHelper("""
+            SELECT *
+            FROM {tables[0]}
+            """ + join_type + """
+            JOIN {tables[1]}
+                ON {tables[1]}.game_token = {tables[0]}.game_token
+                AND {tables[1]}.recipe_id = {tables[0]}.id
+            WHERE {tables[0]}.game_token = %s
+            """, [g.game_token])
+        qhelper.add_limit(field, id_to_get)
+        source_rows = cls.select_tables(
+            qhelper=qhelper, tables=['recipes', 'recipe_sources'])
+        qhelper = QueryHelper("""
+            SELECT *
+            FROM {tables[0]}
+            INNER JOIN {tables[1]}
+                ON {tables[1]}.game_token = {tables[0]}.game_token
+                AND {tables[1]}.recipe_id = {tables[0]}.id
+            WHERE {tables[0]}.game_token = %s
+            """, [g.game_token])
+        qhelper.add_limit(field, id_to_get)
+        byproduct_rows = cls.select_tables(
+            qhelper=qhelper, tables=['recipes', 'recipe_byproducts'])
+        return source_rows, byproduct_rows
+
+    @classmethod
     def load_complete_data(cls, id_to_get):
         """Load all recipe data needed for creating Item objects
         that can be stored to db or JSON file.
@@ -169,36 +205,14 @@ class Recipe(Identifiable):
         logger.debug("load_complete_data(%s)", id_to_get)
         if id_to_get in ['new', '0', 0]:
             return {}
-        # Get recipe and source data
-        qhelper = QueryHelper("""
-            SELECT *
-            FROM {tables[0]}
-            LEFT JOIN {tables[1]}
-                ON {tables[1]}.game_token = {tables[0]}.game_token
-                AND {tables[1]}.recipe_id = {tables[0]}.id
-            WHERE {tables[0]}.game_token = %s
-            """, [g.game_token])
-        qhelper.add_limit("{tables[0]}.item_id", id_to_get)
-        source_rows = cls.select_tables(
-            qhelper=qhelper, tables=['recipes', 'recipe_sources'])
+        # Get recipe, source, and byproduct data
+        source_rows, byproduct_rows = cls.item_relation_data(id_to_get)
         item_recipes = {}  # recipe data keyed by item ID
         for recipe_row, source_row in source_rows:
             recipes_data = item_recipes.setdefault(recipe_row.item_id, {})
             recipe_data = recipes_data.setdefault(recipe_row.id, recipe_row)
             if source_row.item_id:
                 recipe_data.setdefault('sources', []).append(source_row)
-        # Get byproduct relation data
-        qhelper = QueryHelper("""
-            SELECT *
-            FROM {tables[0]}
-            INNER JOIN {tables[1]}
-                ON {tables[1]}.game_token = {tables[0]}.game_token
-                AND {tables[1]}.recipe_id = {tables[0]}.id
-            WHERE {tables[0]}.game_token = %s
-            """, [g.game_token])
-        qhelper.add_limit("{tables[0]}.item_id", id_to_get)
-        byproduct_rows = cls.select_tables(
-            qhelper=qhelper, tables=['recipes', 'recipe_byproducts'])
         for recipe_row, byproduct_row in byproduct_rows:
             if byproduct_row.recipe_id:
                 recipes_data = item_recipes[recipe_row.item_id]
@@ -227,38 +241,16 @@ class Recipe(Identifiable):
 
     @classmethod
     def load_data_by_source(cls, id_to_get):
+        """What is the specified item used for."""
         logger.debug("load_data_by_source(%s)", id_to_get)
         if id_to_get in ['new', '0', 0, None]:
             return {}
-        # Get recipe and source data
-        qhelper = QueryHelper("""
-            SELECT *
-            FROM {tables[0]}
-            INNER JOIN {tables[1]}
-                ON {tables[1]}.game_token = {tables[0]}.game_token
-                AND {tables[1]}.recipe_id = {tables[0]}.id
-            WHERE {tables[0]}.game_token = %s
-            """, [g.game_token])
-        qhelper.add_limit("{tables[1]}.item_id", id_to_get)
-        source_rows = cls.select_tables(
-            qhelper=qhelper, tables=['recipes', 'recipe_sources'])
+        source_rows, byproduct_rows = cls.item_relation_data(id_to_get, True)
         item_recipes = {}  # recipe data keyed by item ID
         for recipe_row, source_row in source_rows:
             recipes_data = item_recipes.setdefault(recipe_row.item_id, {})
             recipe_data = recipes_data.setdefault(recipe_row.id, recipe_row)
             recipe_data.setdefault('sources', []).append(source_row)
-        # Get byproduct relation data
-        qhelper = QueryHelper("""
-            SELECT *
-            FROM {tables[0]}
-            INNER JOIN {tables[1]}
-                ON {tables[1]}.game_token = {tables[0]}.game_token
-                AND {tables[1]}.recipe_id = {tables[0]}.id
-            WHERE {tables[0]}.game_token = %s
-            """, [g.game_token])
-        qhelper.add_limit("{tables[1]}.item_id", id_to_get)
-        byproduct_rows = cls.select_tables(
-            qhelper=qhelper, tables=['recipes', 'recipe_byproducts'])
         for recipe_row, byproduct_row in byproduct_rows:
             if byproduct_row.recipe_id:
                 recipes_data = item_recipes.setdefault(recipe_row.item_id, {})

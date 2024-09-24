@@ -1,0 +1,162 @@
+import logging
+
+from flask import g
+
+from .progress import Progress
+from .utils import Storage
+
+logger = logging.getLogger(__name__)
+
+class Pile:
+    PILE_TYPE = None  # specify in child classes
+    def __init__(self, item=None, container=None):
+        self.item = item
+        self.container = container  # character or location where item is
+        self.quantity = 0
+
+def load_piles(current_item, char_id, loc_id, main_pile_type):
+    """Assign a pile from this location or char inventory
+    for the current item and that can be used for each recipe source.
+    Also find chars or items that meet recipe attrib requirements.
+    """
+    logger.debug(
+        "_load_piles(%d, %s, %s)",
+        current_item.id, char_id, loc_id)
+    from .character import Character
+    from .location import Location
+    chars = []
+    loc = Location()
+    position = None
+    if char_id:
+        char = Character.get_by_id(char_id)
+        if char:
+            chars = [char]
+            char_loc_id = char.location.id if char.location else 0
+            if (char_loc_id != loc_id and
+                    current_item.storage_type == Storage.CARRIED):
+                # Use character's location instead of passed loc_id
+                if char_loc_id:
+                    loc_id = char_loc_id
+                else:
+                    loc_id = 0
+        #position = char.position
+    if loc_id:
+        # Get all items at this loc
+        #loc = Location.load_complete_objects(loc_id, position)
+        loc = Location.load_complete_objects(loc_id)
+        if not position:
+            # TODO: assign position to first useful local pile found
+            #_assign_pile(
+            #    current_item, chars=[], loc, loc_id=loc_id)
+            pass
+    # Assign the most appropriate pile
+    logger.debug("main pile")
+    current_item.pile = _assign_pile(
+        current_item, chars, loc, char_id, loc_id, main_pile_type)
+    current_item.pile.item = current_item
+    container = current_item.pile.container
+    if loc_id:
+        # Get items for all chars at this loc
+        # TODO: if position or grid then only consider chars by that pos
+        #chars = Character.load_complete_objects(
+        #    loc_id=loc_id, pos=position)
+        chars = [
+            char for char in g.game_data.characters
+            if char.location and char.location.id == loc_id]
+    # This container item id was set by container.progress.from_data(),
+    # loaded from the progress table.
+    if container.pile.item.id != current_item.pile.item.id:
+        # Don't carry over progress for a different item.
+        # Replace the reference with an empty Progress object instead.
+        container.progress = Progress(container=container)
+    container.pile = current_item.pile
+    for recipe in current_item.recipes:
+        for source in recipe.sources:
+            logger.debug("source pile")
+            source.pile = _assign_pile(
+                source.item, chars, loc, char_id, loc_id)
+        for byproduct in recipe.byproducts:
+            logger.debug("byproduct pile")
+            byproduct.pile = _assign_pile(
+                byproduct.item, chars, loc, char_id, loc_id, main_pile_type)
+        # Look for entities to meet attrib requirements
+        for attrib_id, req in recipe.attribs.items():
+            for item in g.game_data.items:
+                attrib_for = item.attribs.get(attrib_id)
+                if attrib_for is not None and attrib_for.val >= req.val:
+                    req.entity = item
+                    logger.debug("attrib %s req %.1f met by item %s %.1f",
+                        attrib_for.attrib.name, req.val,
+                        item.name, attrib_for.val)
+            for char in chars:
+                attrib_for = char.attribs.get(attrib_id)
+                if attrib_for is not None and attrib_for.val >= req.val:
+                    req.entity = char
+                    logger.debug("attrib %s req %.1f met by char %s %.1f",
+                        attrib_for.attrib.name, req.val,
+                        char.name, attrib_for.val)
+
+def _assign_pile(
+        pile_item, chars, loc, char_id=0, loc_id=0, forced_pile_type=''):
+    logger.debug("_assign_pile(item.id=%d, item.type=%s, "
+        "chars=[%d], loc.id=%d, char_id=%s, loc_id=%s, type=%s)",
+        pile_item.id, pile_item.storage_type, len(chars),
+        loc.id if loc else "_", char_id, loc_id, forced_pile_type)
+    pile = None
+    if forced_pile_type:
+        pile_type = forced_pile_type
+    elif pile_item.storage_type == Storage.CARRIED and char_id:
+        pile_type = Storage.CARRIED
+    elif pile_item.storage_type == Storage.LOCAL and loc_id:
+        pile_type = Storage.LOCAL
+    elif pile_item.storage_type == Storage.UNIVERSAL:
+        pile_type = Storage.UNIVERSAL
+    elif char_id:
+        pile_type = Storage.CARRIED
+    elif loc_id:
+        pile_type = Storage.LOCAL
+    else:
+        pile_type = Storage.UNIVERSAL
+    logger.debug("pile_type %s", pile_type)
+    if pile_type == Storage.CARRIED:
+        # Select a char at this loc who owns one
+        for char in chars:
+            for owned_item_id, owned_item in char.items.items():
+                if (owned_item_id == pile_item.id and
+                        (owned_item.quantity != 0 or not pile)):
+                    pile = owned_item
+                    pile.container = char
+                    logger.debug("assigned ownedItem from %s qty %.1f",
+                        owned_item.container.name, pile.quantity)
+        if char_id and not pile:
+            from .character import Character, OwnedItem
+            char = Character.get_by_id(char_id)
+            pile = OwnedItem(pile_item, char)
+            char.items[pile_item.id] = pile
+            logger.debug(
+                "assigned empty ownedItem from %s", pile.container.name)
+    elif pile_type == Storage.LOCAL:
+        # Select an itemAt for this loc
+        for item_at in loc.items.values():
+            if (item_at.item.id == pile_item.id and
+                    (item_at.quantity != 0 or not pile)):
+                pile = item_at
+                pile.container = loc
+                logger.debug(
+                    "assigned itemAt from %s qty %.1f",
+                    item_at.container.name, pile.quantity)
+        if loc_id and not pile:
+            from .location import ItemAt, Location
+            if loc.id != loc_id:
+                loc = Location.data_for_configure(loc_id)
+            pile = ItemAt(pile_item)
+            pile.container = loc
+            loc.items[pile_item.id] = pile
+            logger.debug(
+                "assigned empty itemAt from %s", pile.container.name)
+    if not pile:
+        pile = pile_item
+        pile.container = pile_item
+        logger.debug(
+            "assigned general storage qty %.1f", pile.quantity)
+    return pile

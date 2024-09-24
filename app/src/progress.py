@@ -3,7 +3,9 @@ import logging
 import math
 import threading
 
-from .db_serializable import Identifiable, coldef
+from flask import g
+
+from .db_serializable import Identifiable, QueryHelper, coldef
 from .utils import format_num
 
 tables_to_create = {
@@ -52,7 +54,8 @@ class Progress(Identifiable):
         """Prepare the base dictionary for JSON and DB."""
         return {
             'id': self.id,
-            'item_id': self.pile.item.id if self.pile else 0,
+            'item_id': self.pile.item.id
+                if self.pile and self.pile.item else 0,
             'recipe_id': self.recipe.id,
             'start_time': self.start_time,
             'stop_time': self.stop_time,
@@ -68,8 +71,7 @@ class Progress(Identifiable):
 
     @classmethod
     def from_data(cls, data, container=None):
-        if not isinstance(data, dict):
-            data = vars(data)
+        data = cls.prepare_dict(data)
         instance = cls(data.get('id') or 0, container=container)
         from .item import Item, Recipe
         if container:
@@ -84,6 +86,29 @@ class Progress(Identifiable):
     @classmethod
     def tablename(cls):
         return 'progress'  # no extra 's' at the end
+
+    @classmethod
+    def load_base_data(cls, entity_cls, id_to_get=None):
+        """Load all (or the specified id) from the entity's base table
+        along with progress data.
+        """
+        logger.debug("load_complete_objects(%s)", id_to_get)
+        qhelper = QueryHelper("""
+            SELECT *
+            FROM {tables[0]}
+            LEFT JOIN {tables[1]}
+                ON {tables[1]}.id = {tables[0]}.progress_id
+                AND {tables[1]}.game_token = {tables[0]}.game_token
+            WHERE {tables[0]}.game_token = %s
+            """, [g.game_token])
+        qhelper.add_limit("{tables[0]}.id", id_to_get)
+        tables_rows = entity_cls.select_tables(
+            qhelper=qhelper, tables=[entity_cls.tablename(), 'progress'])
+        entities_data = {}  # data (not objects) keyed by ID
+        for entity_rows, progress_rows in tables_rows:
+            entity_data = entities_data.setdefault(entity_rows.id, entity_rows)
+            entity_data.progress = progress_rows
+        return entities_data
 
     # returns true if able to change quantity
     def change_quantity(self, batches_requested):
@@ -103,14 +128,16 @@ class Progress(Identifiable):
                 num_batches = ((self.q_limit - self.pile.quantity)
                     // self.recipe.rate_amount)
                 stop_when_done = True  # can't process the full amount
-                logger.debug("change_quantity(): num_batches=%d due to limit %d",
+                logger.debug(
+                    "change_quantity(): num_batches=%d due to limit %d",
                     num_batches, self.q_limit)
                 if num_batches == 0:
                     self.report_failure("Limit {self.q_limit} reached.")
             for source in self.recipe.sources:
                 eff_source_qty = num_batches * source.q_required
                 if eff_source_qty > 0:
-                    logger.debug("change_quantity(): source %d, source.q_required=%d, "
+                    logger.debug(
+                        "change_quantity(): source %d, source.q_required=%d, "
                         "eff_source_qty=%.1f, source.pile.quantity=%.1f",
                         source.item.id, source.q_required, eff_source_qty,
                         source.pile.quantity)
@@ -132,25 +159,42 @@ class Progress(Identifiable):
                             f"{source.item.name}.")
             logger.debug("change_quantity(): num_batches=%d", num_batches)
             if num_batches > 0:
+                # Deduct source quantity used
                 for source in self.recipe.sources:
                     if not source.preserve:
-                        # Deduct source quantity used
                         eff_source_qty = num_batches * source.q_required
-                        logger.debug("change_quantity(): %s -= %s for id %s",
-                            source.pile.quantity, eff_source_qty, source.pile.item.id)
+                        logger.debug(
+                            "change_quantity(): %s -= %s for id %s",
+                            source.pile.quantity, eff_source_qty,
+                            source.pile.item.id)
                         source.pile.quantity -= eff_source_qty
-                        logger.debug("change_quantity(): source.pile.container[%s].to_db()",
+                        logger.debug(
+                            "change_quantity(): source.pile.container[%s].to_db()",
                             source.pile.container.name)
                         source.pile.container.to_db()
                 # Add quantity produced
                 eff_result_qty = num_batches * self.recipe.rate_amount
-                logger.debug("change_quantity(): %s += %s for id %s",
+                logger.debug(
+                    "change_quantity(): %s += %s for id %s",
                     self.pile.quantity, eff_result_qty, self.pile.item.id)
                 self.pile.quantity += eff_result_qty
                 self.batches_processed += num_batches
-                logger.debug("change_quantity(): self.container[%s].to_db()",
+                logger.debug(
+                    "change_quantity(): self.container[%s].to_db()",
                     self.container.name)
                 self.container.to_db()
+                # Add byproducts produced
+                for byproduct in self.recipe.byproducts:
+                    eff_byproduct_qty = num_batches * byproduct.rate_amount
+                    logger.debug(
+                        "change_quantity(): %s += %s for id %s",
+                        byproduct.pile.quantity, eff_byproduct_qty,
+                        byproduct.pile.item.id)
+                    byproduct.pile.quantity += eff_byproduct_qty
+                    logger.debug(
+                        "change_quantity(): byproduct.pile.container[%s].to_db()",
+                        byproduct.pile.container.name)
+                    byproduct.pile.container.to_db()
             if stop_when_done:
                 self.stop()
             return num_batches > 0

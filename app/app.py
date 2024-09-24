@@ -161,7 +161,7 @@ def htmlify_filter(text):
     text = re.sub(r'</c\s*>', r'</font>', text)
     text = bleach.clean(
         text,
-        tags={'b', 'i', 'font'},
+        tags={'a', 'b', 'i', 'font'},
         attributes={
             'a': ['href', 'title'],
             'font': ['color']

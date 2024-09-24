@@ -60,8 +60,7 @@ class UserInteraction(DbSerializable):
 
     @classmethod
     def from_data(cls, data):
-        if not isinstance(data, dict):
-            data = vars(data)
+        data = cls.prepare_dict(data)
         instance = cls(data['username'])
         instance.timestamp = data.get('timestamp', datetime.min)
         instance.route_endpoint = data.get('route', "")

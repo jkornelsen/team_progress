@@ -3,19 +3,15 @@ import logging
 from flask import g, session
 
 from .db_serializable import (
-    DbError, DeletionError, Identifiable, QueryHelper, coldef)
+    DbError, DeletionError, Identifiable, QueryHelper, Serializable, coldef)
 from .utils import RequestHelper
 
 tables_to_create = {
-    'attribs': f"""
-        {coldef('id')},
-        {coldef('name')},
-        {coldef('description')}
-        """,
-}
+    'attribs': coldef('name'),
+    }
 logger = logging.getLogger(__name__)
 
-class AttribFor:
+class AttribFor(Serializable):
     """Value for attribute of a particular entity,
     or required value of an attribute."""
     def __init__(self, attrib_id=0, val=0):
@@ -29,6 +25,7 @@ class AttribFor:
         """Can read data from item_attribs, char_attribs,
         or recipe_attribs. (event_attribs doesn't have a value).
         """
+        data = cls.prepare_dict(data)
         return cls(
             attrib_id=data.get('attrib_id', 0),
             val=data.get('value', 0.0))
@@ -53,15 +50,6 @@ class Attrib(Identifiable):
             'name': self.name,
             'description': self.description,
             }
-
-    @classmethod
-    def from_data(cls, data):
-        if not isinstance(data, dict):
-            data = vars(data)
-        instance = cls(int(data.get('id', 0)))
-        instance.name = data.get('name', "")
-        instance.description = data.get('description', "")
-        return instance
 
     @classmethod
     def load_complete_objects(cls, id_to_get=None):

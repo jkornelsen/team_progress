@@ -258,6 +258,9 @@
                 const stopBtn = document.getElementById("stop-travel-btn");
                 const destSel = document.getElementById("destination-select");
                 const ongoing = (data && data.status === 'ongoing' && data.is_ongoing)
+                if (!startBtn || !stopBtn || !destSel) {
+                    return;
+                }
                 if (ongoing) {
                     startBtn.innerHTML = "Travelling...";
                     startBtn.disabled = true;
