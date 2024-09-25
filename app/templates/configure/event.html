@@ -57,83 +57,90 @@
             <textarea id="selection-strings" name="selection_strings" rows="10" cols="30">{{ current.selection_strings }}</textarea>
         </div>
 
-        <div class="attrib-container outer-border" id="determining-attrib-container">
-            <label>Determining Values:</label>
-            <!-- Placeholder for appending new attribs -->
-            <div id="determining_attriblist_end" style="unobtrusive"></div>
-            {% if game_data.attribs %}
-                <div class="select-box">
-                    <select class="add-attrib-select">
-                        <option value="" selected>(Select attribute)</option>
-                        {% for attrib in game_data.attribs %}
-                            <option value="{{ attrib.id }}" data-mult="{{ attrib.mult | lower }}">{{ attrib.name }}</option>
-                        {% endfor %}
-                    </select>
-                    <button type="button" class="add-attrib-btn lesser-button">Add</button>
-                </div>
-            {% else %}
-                <p class="no-entities">(No attributes)</p>
-            {% endif %}
-            <!-- Placeholder for appending new items -->
-            <div id="determining_itemlist_end" style="unobtrusive"></div>
-            {% if game_data.items %}
-                <div class="select-box">
-                    <select class="add-item-select">
-                        <option value="" selected>(Select item)</option>
-                        {% for item in game_data.items %}
-                            <option value="{{ item.id }}" data-mult="{{ item.mult | lower }}">{{ item.name }}</option>
-                        {% endfor %}
-                    </select>
-                    <button type="button" class="add-item-btn lesser-button">Add</button>
-                </div>
-            {% else %}
-                <p class="no-entities">(No items)</p>
-            {% endif %}
-            </div>
-        </div>
-
-        <div class="attrib-container outer-border" id="changed-attrib-container">
-            <label>Values Changed:</label>
-            <!-- Placeholder for appending new attribs -->
-            <div id="changed_attriblist_end" style="unobtrusive"></div>
-            {% if game_data.attribs %}
-                <div class="select-box">
-                    <select class="add-attrib-select">
-                        <option value="" selected>(Select attribute)</option>
-                        {% for attrib in game_data.attribs %}
-                            <option value="{{ attrib.id }}">{{ attrib.name }}</option>
-                        {% endfor %}
-                    </select>
-                    <button type="button" class="add-attrib-btn lesser-button">Add</button>
-                </div>
-            {% else %}
-                <p class="no-entities">(No attributes)</p>
-            {% endif %}
-            <!-- Placeholder for appending new items -->
-            <div id="changed_itemlist_end" style="unobtrusive"></div>
-            {% if game_data.items %}
-                <div class="select-box">
-                    <select class="add-item-select">
-                        <option value="" selected>(Select item)</option>
-                        {% for item in game_data.items %}
-                            <option value="{{ item.id }}" data-mult="{{ item.mult | lower }}">{{ item.name }}</option>
-                        {% endfor %}
-                    </select>
-                    <button type="button" class="add-item-btn lesser-button">Add</button>
-                </div>
-            {% else %}
-                <p class="no-entities">(No items)</p>
-            {% endif %}
-            </div>
-        </div>
-
         <style>
-            .entity-trigger-container label,
-            .entity-trigger-container div {
+            .entity-list-container label,
+            .entity-list-container div {
                 padding: 4px;
             }
+            .select-box-container {
+                display: flex;
+                flex-direction: row;
+                gap: 10px;
+            }
         </style>
-        <div class="entity-trigger-container outer-border" id="entity-trigger-container">
+        <div class="entity-list-container outer-border" id="determining-entities-container">
+            <label>Determining Values:</label>
+            <!-- Placeholder for appending new entities -->
+            <div id="determining_list_end" style="unobtrusive"></div>
+            <div class="select-box-container">
+                {% if game_data.attribs %}
+                    <div class="select-box" title="On the event play screen, you choose an entity to use that has this attribute.">
+                        <select class="add-entity-select">
+                            <option value="" selected>(Select attribute)</option>
+                            {% for attrib in game_data.attribs %}
+                                <option value="{{ attrib.id }}" data-mult="{{ attrib.mult | lower }}">{{ attrib.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="button" class="add-entity-btn lesser-button" 
+                                data-relType="determining" data-entityType="attrib">Add</button>
+                    </div>
+                {% endif %}
+                {% if game_data.items %}
+                    <div class="select-box" title="Uses the quantity of this item, such as how many held in a selected character's inventory.">
+                        <select class="add-entity-select">
+                            <option value="" selected>(Select item)</option>
+                            {% for item in game_data.items %}
+                                <option value="{{ item.id }}" data-mult="{{ item.mult | lower }}">{{ item.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="button" class="add-entity-btn lesser-button" 
+                                data-relType="determining" data-entityType="item">Add</button>
+                    </div>
+                {% endif %}
+                {% if not game_data.attribs and not game_data.items %}
+                    <p class="no-entities">(No attributes or items)</p>
+                {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="entity-list-container outer-border" id="changed-entities-container">
+            <label>Values Changed:</label>
+            <!-- Placeholder for appending new entities -->
+            <div id="changed_list_end" style="unobtrusive"></div>
+            <div class="select-box-container">
+                {% if game_data.attribs %}
+                    <div class="select-box" title="On the event play screen, you choose an entity that has this attribute to change.">
+                        <select class="add-entity-select">
+                            <option value="" selected>(Select attribute)</option>
+                            {% for attrib in game_data.attribs %}
+                                <option value="{{ attrib.id }}">{{ attrib.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="button" class="add-entity-btn lesser-button" 
+                                data-relType="changed" data-entityType="item">Add</button>
+                    </div>
+                {% endif %}
+                {% if game_data.items %}
+                    <div class="select-box" title="Changes the quantity of this item, such as how many in a selected character's inventory.">
+                        <select class="add-entity-select">
+                            <option value="" selected>(Select item)</option>
+                            {% for item in game_data.items %}
+                                <option value="{{ item.id }}" data-mult="{{ item.mult | lower }}">{{ item.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="button" class="add-entity-btn lesser-button" 
+                                data-relType="changed" data-entityType="item">Add</button>
+                    </div>
+                {% endif %}
+                {% if not game_data.attribs and not game_data.items %}
+                    <p class="no-entities">(No attributes or items)</p>
+                {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="entity-list-container outer-border" id="trigger-entities-container">
         <div id="trigger-chance-container">
             <label>Trigger Chance:</label>
             <input type="text" id="trigger-numerator" name="trigger_numerator" value="{{ current.trigger_chance[0] }}" size="3">
@@ -152,34 +159,38 @@
                     {% if not current.trigger_by_duration %}checked{% endif %}>
                 When Finished
             </label><br>
-            <!-- Placeholder for appending new triggering entities -->
-            <div id="trigger_entitylist_end" style="unobtrusive"></div>
-            {% if game_data.items %}
-                <div class="select-box">
-                    <select class="add-item-select">
-                        <option value="" selected>(Select item)</option>
-                        {% for item in game_data.items %}
-                            <option value="{{ item.id }}">{{ item.name }}</option>
-                        {% endfor %}
-                    </select>
-                    <button type="button" class="add-item-btn lesser-button">Add</button>
-                </div>
-            {% else %}
-                <p class="no-entities">(No items)</p>
-            {% endif %}
-            {% if game_data.locations %}
-                <div class="select-box">
-                    <select class="add-loc-select">
-                        <option value="" selected>(Select location)</option>
-                        {% for loc in game_data.locations %}
-                            <option value="{{ loc.id }}">{{ loc.name }}</option>
-                        {% endfor %}
-                    </select>
-                    <button type="button" class="add-loc-btn lesser-button">Add</button> <span class="label-like">For Travel</span>
-                </div>
-            {% else %}
-                <p class="no-entities">(No locations)</p>
-            {% endif %}
+            <!-- Placeholder for appending new entities -->
+            <div id="trigger_list_end" style="unobtrusive"></div>
+            <div class="select-box-container">
+                {% if game_data.items %}
+                    <div class="select-box" title="Triggered by production of this item.">
+                        <select class="add-entity-select">
+                            <option value="" selected>(Select item)</option>
+                            {% for item in game_data.items %}
+                                <option value="{{ item.id }}">{{ item.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="button" class="add-entity-btn lesser-button" 
+                                data-relType="trigger" data-entityType="item"
+                                >Add</button>
+                    </div>
+                {% endif %}
+                {% if game_data.locations %}
+                    <div class="select-box" title="Triggered by travel from this location.">
+                        <select class="add-entity-select">
+                            <option value="" selected>(Select location)</option>
+                            {% for loc in game_data.locations %}
+                                <option value="{{ loc.id }}">{{ loc.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="button" class="add-entity-btn lesser-button" 
+                                data-relType="trigger" data-entityType="loc">Add</button>
+                    </div>
+                {% endif %}
+                {% if not game_data.items and not game_data.locations %}
+                    <p class="no-entities">(No items or locations)</p>
+                {% endif %}
+            </div>
         </div>
         </div>
 
@@ -206,8 +217,8 @@
                 console.log(`outcomeType=${outcomeType}`);
                 const numericFactorsDiv = document.getElementById("numeric-factors");
                 const selectionStringsDiv = document.getElementById("selection-container");
-                const determiningAttribsDiv = document.getElementById("determining-attrib-container");
-                const changedAttribsDiv = document.getElementById("changed-attrib-container");
+                const determiningAttribsDiv = document.getElementById("determining-entities-container");
+                const changedAttribsDiv = document.getElementById("changed-entities-container");
                 if (outcomeType === "numeric") {
                     numericFactorsDiv.style.display = "block";
                     selectionStringsDiv.style.display = "none";
@@ -231,36 +242,30 @@
             });
             outcomeTypeVisibility();
 
-            function addAttrib(relType, attribId, attribName, attribMult = false, attribVal = 1) {
-                const attribHtml = `
-                    <div class="attrib flexdiv" data-attrib-id="${attribId}">
-                        <input type="hidden" name="${relType}_attr_id[]" value="${attribId}">
-                        ${attribName}
-                        ${relType === 'determining' && attribMult ?
-                            '&nbsp;<span class="label-like">(Multiplied)</span>&nbsp;' : ''}
-                        <button type="button" class="remove-attrib-btn lesser-button">Remove</button>
-                    </div>
-                `;
-                const attribListId = `${relType}_attriblist_end`;
-                $('#' + attribListId).before(attribHtml);
-            }
-            $('.add-attrib-btn').click(function() {
-                const container = $(this).closest('.attrib-container');
-                const selectedOption = container.find('.add-attrib-select option:selected');
-                const attribId = selectedOption.val();
-                const attribName = selectedOption.text();
-                const attribMult = selectedOption.data('mult');
-                if (attribId == "") {
-                    return; // Don't add if the selected option is the placeholder
-                }
-                const existingAttrib = container.find(`.attrib[data-attrib-id="${attribId}"]`);
-                if (existingAttrib.length > 0) {
-                    alert('Attribute already exists.');
+            // Add an entity next to a placeholder
+            function addEntity(relType, entityType, entityId, entityName, attribMult = false) {
+                // Check for duplicates: entityType + entityId must be unique within relType
+                const existingEntity = $(`#${relType}_list_end`).siblings(
+                    `[data-entity-type="${entityType}"][data-entity-id="${entityId}"]`);
+                if (existingEntity.length > 0) {
+                    alert(`${entityName} is already in the list.`);
                     return;
                 }
-                const relType = container.attr('id').split('-')[0];
-                addAttrib(relType, attribId, attribName, attribMult);
-            });
+                const entityHtml = `
+                    <div class="entity flexdiv" data-entity-type="${entityType}" data-entity-id="${entityId}">
+                        <input type="hidden" name="${relType}_type[]" value="${entityType}">
+                        <input type="hidden" name="${relType}_id[]" value="${entityId}">
+                        ${entityName}
+                        ${((relType === 'determining' || relType === 'changed') && attribMult) 
+                            ? '&nbsp;<span class="label-like">(Multiplied)</span>&nbsp;' 
+                            : ''}
+                        <button type="button" class="remove-entity-btn lesser-button">Remove</button>
+                    </div>
+                `;
+                const listId = `${relType}_list_end`;
+                $('#' + listId).before(entityHtml);
+            }
+
             console.log("number of attribs={{ current.determining_attrs | length }}");
             {% for attrib in current.determining_attrs %}
                 addAttrib(
@@ -275,56 +280,36 @@
                     {{ attrib.id }},
                     "{{ attrib.name }}");
             {% endfor %}
-            $('.attrib-container').on('click', '.remove-attrib-btn', function() {
+            $('.entity-list-container').on('click', '.remove-attrib-btn', function() {
                 const attribContainer = $(this).closest('.attrib');
                 attribContainer.remove();
             });
 
-            function addTrigger(entityType, entityId, entityName) {
-                const entityHtml = `
-                    <div class="entity flexdiv" data-entity-type="${entityType}" data-entity-id="${entityId}">
-                        <input type="hidden" name="entity_type[]" value="${entityType}">
-                        <input type="hidden" name="entity_id[]" value="${entityId}">
-                        ${entityName}
-                        <button type="button" class="remove-entity-btn lesser-button">Remove</button>
-                    </div>
-                `;
-                $('#trigger_entitylist_end').prepend(entityHtml);
-            }
-            $('.add-item-btn').click(function() {
-                const selectBox = $(this).prev('.add-item-select');
+            $('.add-entity-btn').click(function() {
+                const button = $(this);
+                const entityType = button.attr('data-entityType');
+                const container = button.closest('.entity-list-container');
+                const relType = container.attr('id').split('-')[0];
+                const selectBox = button.prev('.add-entity-select');
                 const selectedOption = selectBox.find(':selected');
-                const itemId = selectedOption.val();
-                const itemName = selectedOption.text();
-                const entityType = "item"
-                if (itemId === '') {
-                    return; // don't add if the selected option is the placeholder
+                const entityId = selectedOption.val();
+                const entityName = selectedOption.text();
+                const attribMult = selectedOption.data('mult') || false;
+                if (entityId === '') {
+                    return; // Don't add if the selected option is the placeholder
                 }
                 const existingItem = $(`.entity-trigger-container`)
-                    .find(`.entity[data-entity-id="${itemId}"][data-entity-type="${entityType}"]`);
+                    .find(`.entity[data-entity-id="${entityId}"][data-entity-type="${entityType}"]`);
                 if (existingItem.length > 0) {
-                    alert('Item already added.');
+                    alert(`${capitalizeFirstLetter(entityType)} already added.`);
                     return;
                 }
-                addTrigger(entityType, itemId, itemName);
+                addEntity(relType, entityType, entityId, entityName, attribMult);
             });
-            $('.add-loc-btn').click(function() {
-                const selectBox = $(this).prev('.add-loc-select');
-                const selectedOption = selectBox.find(':selected');
-                const locId = selectedOption.val();
-                const locName = selectedOption.text();
-                const entityType = "location"
-                if (locId === '') {
-                    return; // don't add if the selected option is the placeholder
-                }
-                const existingLoc = $(`.entity-trigger-container`)
-                    .find(`.entity[data-entity-id="${locId}"][data-entity-type="${entityType}"]`);
-                if (existingLoc.length > 0) {
-                    alert('Location already added.');
-                    return;
-                }
-                addTrigger(entityType, locId, locName);
-            });
+            function capitalizeFirstLetter([ first='', ...rest ], locale) {
+              return [ first.toLocaleUpperCase(locale), ...rest ].join('');
+            }
+
             console.log("number of triggers={{ current.triggers | length }}");
             {% for entity in current.triggers %}
                 console.log("name={{entity.name}}");

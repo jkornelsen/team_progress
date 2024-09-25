@@ -134,44 +134,21 @@ tables_to_create = {
             DEFERRABLE INITIALLY DEFERRED
         """,
     # Event
-    'event_attribs': f"""
+    'event_entities': f"""
         {coldef('game_token')},
         event_id integer NOT NULL,
-        attrib_id integer NOT NULL,
-        determining boolean NOT NULL,
-        PRIMARY KEY (game_token, event_id, attrib_id),
+        attrib_id integer,
+        item_id integer,
+        loc_id integer,
+        reltype varchar(20) CHECK (reltype IN ('determining', 'changed', 'trigger')),
+        determining boolean,
+        UNIQUE (game_token, event_id, attrib_id, item_id, loc_id, reltype),
         FOREIGN KEY (game_token, event_id)
             REFERENCES events (game_token, id)
             ON DELETE CASCADE
             DEFERRABLE INITIALLY DEFERRED,
         FOREIGN KEY (game_token, attrib_id)
             REFERENCES attribs (game_token, id)
-            ON DELETE CASCADE
-            DEFERRABLE INITIALLY DEFERRED
-        """,
-    'event_items': f"""
-        {coldef('game_token')},
-        event_id integer NOT NULL,
-        item_id integer NOT NULL,
-        determining boolean NOT NULL,
-        PRIMARY KEY (game_token, event_id, item_id),
-        FOREIGN KEY (game_token, event_id)
-            REFERENCES events (game_token, id)
-            ON DELETE CASCADE
-            DEFERRABLE INITIALLY DEFERRED,
-        FOREIGN KEY (game_token, item_id)
-            REFERENCES items (game_token, id)
-            ON DELETE CASCADE
-            DEFERRABLE INITIALLY DEFERRED
-        """,
-    'event_triggers': f"""
-        {coldef('game_token')},
-        event_id integer NOT NULL,
-        item_id integer,
-        loc_id integer,
-        UNIQUE (game_token, event_id, item_id, loc_id),
-        FOREIGN KEY (game_token, event_id)
-            REFERENCES events (game_token, id)
             ON DELETE CASCADE
             DEFERRABLE INITIALLY DEFERRED,
         FOREIGN KEY (game_token, item_id)

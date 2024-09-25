@@ -151,6 +151,11 @@ class Location(Identifiable):
         self.pile = Pile()  # for Progress
         self.grid = Grid()
 
+    @classmethod
+    @property
+    def typename(cls):
+        return 'loc'
+
     def _base_export_data(self):
         """Prepare the base dictionary for JSON and DB."""
         return {

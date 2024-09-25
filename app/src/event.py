@@ -9,7 +9,7 @@ from .db_serializable import (
     DbError, DeletionError, Identifiable, QueryHelper, coldef)
 from .item import Item
 from .location import Location
-from .utils import NumTup, RequestHelper
+from .utils import NumTup, RequestHelper, create_entity
 
 OUTCOME_TYPES = [
     'fourway',  # critical/minor failure or success
@@ -30,18 +30,13 @@ OUTCOMES = [
     OUTCOME_MINOR_SUCCESS,
     OUTCOME_MAJOR_SUCCESS) = range(len(OUTCOMES))
 OUTCOME_MARGIN = 9  # difference required to get major or critical
+RELATION_TYPES = ['determining', 'changed', 'trigger']
+ENTITY_TYPES = [Attrib, Item, Location]
 
 logger = logging.getLogger(__name__)
 
 def roll_dice(sides):
     return random.randint(1, sides)
-
-def create_trigger_entity(entity_name, entity_id):
-    if entity_name == 'item':
-        return Item(entity_id)
-    if entity_name == 'location':
-        return Location(entity_id)
-    raise ValueError(f"Unknown entity_name: {entity_name}")
 
 tables_to_create = {
     'events': f"""
@@ -64,11 +59,11 @@ class Event(Identifiable):
         self.outcome_type = OUTCOME_FOURWAY
         self.numeric_range = NumTup((0, 10))  # (min, max)
         self.selection_strings = ""  # newline-separated possible outcomes
-        self.determining_attrs = []  # Attrib objects determining the outcome
-        self.changed_attrs = []  # Attrib objects changed by the outcome
+        self.determining_entities = []  # these determine the outcome
+        self.changed_entities = []  # changed by the outcome
+        self.trigger_entities = []  # can trigger the event
         self.trigger_chance = NumTup((0, 1))  # (numerator, denominator)
         self.trigger_by_duration = True  # during progress or when finished
-        self.triggers = []  # Item or Location objects that can trigger
         ## For a particular occurrence, not stored in Event table
         self.difficulty = 10  # Moderate
         self.stat_adjustment = 0  # for example, 5 for perception
@@ -90,16 +85,16 @@ class Event(Identifiable):
     def dict_for_json(self):
         data = self._base_export_data()
         data.update({
-            'determining_attrs': [
-                attrib.id for attrib in self.determining_attrs],
-            'changed_attrs': [
-                attrib.id for attrib in self.changed_attrs],
-            'triggers': [
-                (entity.basename(), entity.id)
-                for entity in self.triggers],
             'numeric_range': self.numeric_range.as_list(),
             'trigger_chance': self.trigger_chance.as_list(),
             })
+        for reltype in RELATION_TYPES:
+            entities = getattr(self, f'{reltype}_entities')
+            data.update({
+                reltype: [
+                    [entity.typename(), entity.id]
+                    for entity in entities],
+                })
         return data
 
     def dict_for_main_table(self):
@@ -118,51 +113,35 @@ class Event(Identifiable):
         instance.outcome_type = data.get('outcome_type', OUTCOME_FOURWAY)
         instance.numeric_range = NumTup(data.get('numeric_range', (0, 10)))
         instance.selection_strings = data.get('selection_strings', "")
-        instance.determining_attrs = [
-            Attrib(int(attrib_id))
-            for attrib_id in data.get('determining_attrs', [])]
-        instance.changed_attrs = [
-            Attrib(int(attrib_id))
-            for attrib_id in data.get('changed_attrs', [])]
+        for reltype in RELATION_TYPES:
+            setattr(
+                instance, f'{reltype}_entities', [
+                    create_entity(typename, entity_id, ENTITY_TYPES)
+                    for typename, entity_id in data.get(reltype, [])
+                    ]
+                )
         instance.trigger_chance = NumTup(data.get('trigger_chance', (0, 1)))
         instance.trigger_by_duration = data.get('trigger_by_duration', True)
-        instance.triggers = [
-            create_trigger_entity(entity_name, entity_id)
-            for entity_name, entity_id in data.get('triggers', [])]
         return instance
 
     def to_db(self):
         logger.debug("to_db()")
         super().to_db()
-        for rel_table in ('event_attribs', 'event_triggers'):
-            self.execute_change(f"""
-                DELETE FROM {rel_table}
-                WHERE event_id = %s AND game_token = %s
-                """, (self.id, self.game_token))
-        values = []
-        for determining in ('determining', 'changed'):
-            attribs = getattr(self, f'{determining}_attrs')
-            logger.debug("%s_attrs=%s", determining, attribs)
-            for attrib in attribs:
-                values.append((
-                    g.game_token, self.id, attrib.id,
-                    determining == 'determining'
+        self.execute_change(f"""
+            DELETE FROM event_entities
+            WHERE event_id = %s AND game_token = %s
+            """, (self.id, self.game_token))
+        entity_values = {}  # keyed by entity typename
+        for reltype in RELATION_TYPES:
+            entities = getattr(self, f'{reltype}_entities')
+            for entity in entities:
+                entity_values.setdefault(entity.typename, []).append((
+                    g.game_token, self.id, entity.id, reltype
                     ))
-        if values:
+        for typename, values in entity_values.items():
             self.insert_multiple(
-                "event_attribs",
-                "game_token, event_id, attrib_id, determining",
-                values)
-        if self.triggers:
-            logger.debug("triggers: %s", self.triggers)
-            values = []
-            for entity in self.triggers:
-                item_id = entity.id if isinstance(entity, Item) else None
-                loc_id = entity.id if isinstance(entity, Location) else None
-                values.append((g.game_token, self.id, item_id, loc_id))
-            self.insert_multiple(
-                "event_triggers",
-                "game_token, event_id, item_id, loc_id",
+                "event_entities",
+                f"game_token, event_id, {typename}_id, reltype",
                 values)
 
     @classmethod
@@ -174,50 +153,30 @@ class Event(Identifiable):
         logger.debug("load_complete_objects(%s)", id_to_get)
         if id_to_get in ['new', '0', 0]:
             return cls()
-        # Get event base data
-        # TODO: Use select_tables to left join on event_attribs data,
-        # because it won't multiply rows.
-        # That way only 2 instead of 3 queries are needed.
         qhelper = QueryHelper("""
             SELECT *
-            FROM {table}
-            WHERE game_token = %s
+            FROM {tables[0]}
+            LEFT JOIN {tables[1]}
+                ON {tables[1]}.game_token = {tables[0]}.game_token
+                AND {tables[1]}.event_id = {tables[0]}.id
+            WHERE {tables[0]}.game_token = %s
             """, [g.game_token])
-        qhelper.add_limit("id", id_to_get)
+        qhelper.add_limit("{tables[0]}.id", id_to_get)
+        rows = cls.select_tables(
+            qhelper=qhelper, tables=['events', 'event_entities'])
         events = {}  # data (not objects) keyed by ID
-        event_rows = cls.execute_select(qhelper=qhelper)
-        for row in event_rows:
-            events[row.id] = row
-        # Get attrib relation data
-        qhelper = QueryHelper("""
-            SELECT *
-            FROM event_attribs
-            WHERE game_token = %s
-            """, [g.game_token])
-        qhelper.add_limit("event_id", id_to_get)
-        attrib_rows = cls.execute_select(qhelper=qhelper)
-        for row in attrib_rows:
-            evt = events[row.event_id]
-            if row.determining:
-                listname = 'determining_attrs'
-            else:
-                listname = 'changed_attrs'
-            evt.setdefault(listname, []).append(row.attrib_id)
-        # Get trigger relation data
-        qhelper = QueryHelper("""
-            SELECT *
-            FROM event_triggers
-            WHERE game_token = %s
-            """, [g.game_token])
-        qhelper.add_limit("event_id", id_to_get)
-        trigger_rows = cls.execute_select(qhelper=qhelper)
-        for row in trigger_rows:
-            evt = events[row.event_id]
-            if row.item_id:
-                trigger_tup = (Item.basename(), row.item_id)
-            else:
-                trigger_tup = (Location.basename(), row.loc_id)
-            evt.setdefault('triggers', []).append(trigger_tup)
+        for base_row, entities_row in rows:
+            evt = events.setdefault(base_row.id, base_row)
+            entity_cls = next(
+                (e_cls for e_cls in ENTITY_TYPES
+                if getattr(entities_row, e_cls.id_field)), None
+                )
+            if entity_cls:
+                entity_tup = (
+                    entity_cls.typename,
+                    getattr(entities_row, entity_cls.id_field)
+                    )
+                evt.setdefault(entities_row.reltype, []).append(entity_tup)
         # Set list of objects
         instances = []
         for data in events.values():
@@ -234,29 +193,14 @@ class Event(Identifiable):
         # Get all basic data
         g.game_data.from_db_flat([Attrib, Event, Item, Location])
         # Replace partial objects with fully populated objects
-        for attrlist in (
-                current_obj.determining_attrs,
-                current_obj.changed_attrs):
-            populated_objs = []
-            for partial_attrib in attrlist:
-                attrib = Attrib.get_by_id(partial_attrib.id)
-                populated_objs.append(attrib)
-            attrlist.clear()
-            attrlist.extend(populated_objs)
-        populated_objs = []
-        for partial_obj in current_obj.triggers:
-            trigger_entity_class = partial_obj.__class__
-            populated_objs.append(
-                trigger_entity_class.get_by_id(partial_obj.id))
-        current_obj.triggers = populated_objs
-        # Print debugging info
-        logger.debug("found %d triggers", len(current_obj.triggers))
-        logger.debug("found %d det att", len(current_obj.determining_attrs))
-        if current_obj.triggers:
-            trigger = current_obj.triggers[0]
-            logger.debug("type=%s", trigger.__class__.__name__)
-            logger.debug("id=%d", trigger.id)
-            logger.debug("name=%s", trigger.name)
+        for reltype in RELATION_TYPES:
+            listname = f'{reltype}_entities'
+            setattr(
+                current_obj, listname, [
+                    partial.__class__.get_by_id(partial.id)
+                    for partial in getattr(current_obj, listname)
+                    ]
+                )
         return current_obj
 
     @classmethod
@@ -271,12 +215,12 @@ class Event(Identifiable):
         logger.debug("load_triggers_for_loc()")
         events_rows = cls.execute_select("""
             SELECT {table}.*
-            FROM event_triggers
+            FROM event_entities
             INNER JOIN {table}
-                ON {table}.id = event_triggers.event_id
-                AND {table}.game_token = event_triggers.game_token
-            WHERE event_triggers.game_token = %s
-                AND event_triggers.loc_id = %s
+                ON {table}.id = event_entities.event_id
+                AND {table}.game_token = event_entities.game_token
+            WHERE event_entities.game_token = %s
+                AND event_entities.loc_id = %s
             """, (g.game_token, loc_id))
         g.game_data.events = []
         for event_row in events_rows:
@@ -296,22 +240,20 @@ class Event(Identifiable):
                 req.get_int('numeric_min', 0),
                 req.get_int('numeric_max', 1)))
             self.selection_strings = req.get_str('selection_strings', "")
-            determining_attr_ids = req.get_list('determining_attr_id[]')
-            changed_attr_ids = req.get_list('changed_attr_id[]')
-            self.determining_attrs = [
-                Attrib(int(attrib_id)) for attrib_id in determining_attr_ids]
-            self.changed_attrs = [
-                Attrib(int(attrib_id)) for attrib_id in changed_attr_ids]
+            for reltype in RELATION_TYPES:
+                setattr(
+                    self, f'{reltype}_entities', [
+                        create_entity(typename, entity_id, ENTITY_TYPES)
+                        for typename, entity_id in zip(
+                            req.get_list(f'{reltype}_type[]'),
+                            req.get_list(f'{reltype}_id[]'))
+                        ]
+                    )
             self.trigger_chance = NumTup((
                 req.get_int('trigger_numerator', 1),
                 req.get_int('trigger_denominator', 10)))
             self.trigger_by_duration = (
                 req.get_str('trigger_timing') == 'during_progress')
-            trigger_types = req.get_list('entity_type[]')
-            trigger_ids = req.get_list('entity_id[]')
-            self.triggers = [
-                create_trigger_entity(entity_name, entity_id)
-                for entity_name, entity_id in zip(trigger_types, trigger_ids)]
             self.to_db()
         elif req.has_key('delete_event'):
             try:

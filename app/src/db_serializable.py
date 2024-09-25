@@ -9,7 +9,7 @@ from database import column_counts, pretty
 from .utils import NumTup
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.CRITICAL)  # turn off for this module
+#logger.setLevel(logging.CRITICAL)  # turn off for this module
 
 def coldef(which):
     """Definitions for commonly used columns for creating a table."""
@@ -266,6 +266,18 @@ class Identifiable(DbSerializable):
         Same as table name.
         """
         return cls.tablename()
+
+    @classmethod
+    @property
+    def typename(cls):
+        """Short string to refer to an entity class."""
+        return cls.basename()
+
+    @classmethod
+    @property
+    def id_field(cls):
+        """String to refer to an entity id outside of its base table."""
+        return f'{cls.typename}_id'
 
     @classmethod
     def get_list(cls):

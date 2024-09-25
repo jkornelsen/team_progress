@@ -68,6 +68,11 @@ class Character(Identifiable):
         self.progress = Progress(container=self)  # travel or producing items
         self.pile = Pile()  # for Progress
 
+    @classmethod
+    @property
+    def typename(cls):
+        return 'char'
+
     def _base_export_data(self):
         return {
             'id': self.id,
