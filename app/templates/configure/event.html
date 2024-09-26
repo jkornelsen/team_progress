@@ -118,7 +118,7 @@
                             {% endfor %}
                         </select>
                         <button type="button" class="add-entity-btn lesser-button" 
-                                data-relType="changed" data-entityType="item">Add</button>
+                                data-relType="changed" data-entityType="attrib">Add</button>
                     </div>
                 {% endif %}
                 {% if game_data.items %}
@@ -243,7 +243,7 @@
             outcomeTypeVisibility();
 
             // Add an entity next to a placeholder
-            function addEntity(relType, entityType, entityId, entityName, attribMult = false) {
+            function addEntity(relType, entityType, entityId, entityName, mult = false) {
                 // Check for duplicates: entityType + entityId must be unique within relType
                 const existingEntity = $(`#${relType}_list_end`).siblings(
                     `[data-entity-type="${entityType}"][data-entity-id="${entityId}"]`);
@@ -256,7 +256,7 @@
                         <input type="hidden" name="${relType}_type[]" value="${entityType}">
                         <input type="hidden" name="${relType}_id[]" value="${entityId}">
                         ${entityName}
-                        ${((relType === 'determining' || relType === 'changed') && attribMult) 
+                        ${((relType === 'determining' || relType === 'changed') && mult) 
                             ? '&nbsp;<span class="label-like">(Multiplied)</span>&nbsp;' 
                             : ''}
                         <button type="button" class="remove-entity-btn lesser-button">Remove</button>
@@ -266,23 +266,24 @@
                 $('#' + listId).before(entityHtml);
             }
 
-            console.log("number of attribs={{ current.determining_attrs | length }}");
-            {% for attrib in current.determining_attrs %}
-                addAttrib(
-                    'determining',
-                    {{ attrib.id }},
-                    "{{ attrib.name }}",
-                    {{ attrib.mult | lower }});
+            // load data initially
+            {% for relType in ['determining', 'changed', 'trigger'] %}
+                {% set list = getattr(current, relType + '_entities', []) %}
+                console.log("{{ relType }}[{{ list | length }}]");
+                {% for entity in list %}
+                    addEntity(
+                        "{{ relType }}",
+                        "{{ entity.typename }}",
+                        "{{ entity.id }}",
+                        "{{ entity.name }}",
+                        {{ entity.mult | default(False) | lower }}
+                    );
+                {% endfor %}
             {% endfor %}
-            {% for attrib in current.changed_attrs %}
-                addAttrib(
-                    'changed',
-                    {{ attrib.id }},
-                    "{{ attrib.name }}");
-            {% endfor %}
-            $('.entity-list-container').on('click', '.remove-attrib-btn', function() {
-                const attribContainer = $(this).closest('.attrib');
-                attribContainer.remove();
+
+            $('.entity-list-container').on('click', '.remove-entity-btn', function() {
+                const entityContainer = $(this).closest('.entity');
+                entityContainer.remove();
             });
 
             $('.add-entity-btn').click(function() {
@@ -294,7 +295,7 @@
                 const selectedOption = selectBox.find(':selected');
                 const entityId = selectedOption.val();
                 const entityName = selectedOption.text();
-                const attribMult = selectedOption.data('mult') || false;
+                const mult = selectedOption.data('mult') || false;
                 if (entityId === '') {
                     return; // Don't add if the selected option is the placeholder
                 }
@@ -304,7 +305,7 @@
                     alert(`${capitalizeFirstLetter(entityType)} already added.`);
                     return;
                 }
-                addEntity(relType, entityType, entityId, entityName, attribMult);
+                addEntity(relType, entityType, entityId, entityName, mult);
             });
             function capitalizeFirstLetter([ first='', ...rest ], locale) {
               return [ first.toLocaleUpperCase(locale), ...rest ].join('');

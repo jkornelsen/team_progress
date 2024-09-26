@@ -4,12 +4,12 @@ from flask import g, session
 
 from .attrib import Attrib, AttribFor
 from .db_serializable import (
-    DbError, DeletionError, Identifiable, QueryHelper, coldef)
+    DbError, DeletionError, Identifiable, QueryHelper, Serializable, coldef)
 from .item import Item
 from .location import Destination, Location
 from .pile import Pile
 from .progress import Progress
-from .utils import NumTup, RequestHelper, Storage
+from .utils import NumTup, RequestHelper
 
 tables_to_create = {
     'characters': f"""
@@ -29,10 +29,14 @@ tables_to_create = {
 logger = logging.getLogger(__name__)
 
 class OwnedItem(Pile):
-    PILE_TYPE = Storage.CARRIED
-    def __init__(self, item=None, char=None):
-        super().__init__(item, char)
+    def __init__(self, item, char):
+        super().__init__(item=item, container=char)
         self.slot = ''  # for example, "main hand"
+
+    @classmethod
+    @property
+    def container_type(cls):
+        return Character.typename
 
     def _base_export_data(self):
         return {
@@ -43,8 +47,10 @@ class OwnedItem(Pile):
 
     @classmethod
     def from_data(cls, data, char=None):
-        instance = cls(Item(int(data.get('item_id', 0))), char)
-        instance.quantity = data.get('quantity', 0)
+        data = cls.prepare_dict(data)
+        instance = cls(None, None)
+        super().from_data(instance, data, char)
+        instance.item = Item(instance.item_id)
         instance.slot = data.get('slot', "")
         return instance
 
@@ -66,7 +72,7 @@ class Character(Identifiable):
         self.position = NumTup((0, 0))
         self.destination = None  # Location object to travel to
         self.progress = Progress(container=self)  # travel or producing items
-        self.pile = Pile()  # for Progress
+        self.pile = Pile(container=self)  # for Progress
 
     @classmethod
     @property
@@ -205,7 +211,7 @@ class Character(Identifiable):
                 AND {tables[2]}.attrib_id = {tables[1]}.attrib_id
             WHERE {tables[0]}.game_token = %s
             """, (event_id, g.game_token),
-            ['characters', 'char_attribs', 'event_attribs'])
+            ['characters', 'char_attribs', 'event_entities'])
         chars = {}
         for char_row in characters_rows:
             if char_row.id not in chars:

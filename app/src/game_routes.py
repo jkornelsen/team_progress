@@ -485,7 +485,8 @@ def set_routes(app):
         logger.debug(
             "Retrieved item %d from DB: %d recipes\n"
             "Pile type %s from %s",
-            item.id, len(item.recipes), pile.PILE_TYPE, pile.container.name)
+            item.id, len(item.recipes), pile.container_type,
+            pile.container.name)
         if progress.is_ongoing:
             progress.batches_for_elapsed_time()
         return jsonify({
@@ -612,7 +613,7 @@ def set_routes(app):
             item_at = loc.items[item_id]
             new_qty += item_at.quantity
         else:
-            item_at = ItemAt(item=owned_item.item)
+            item_at = ItemAt(owned_item.item, loc)
         if item.exceeds_limit(new_qty):
             return jsonify({
                 'status': 'error',

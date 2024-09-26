@@ -53,22 +53,22 @@
                         <label for="stat_adjustment">Stat Adjustment:</label>
                         <input type="text" id="stat_adjustment" name="stat_adjustment" value="{{ current.stat_adjustment }}">
                         <br>
-                        {% for attrib in current.determining_attrs %}
-                            <li style="margin-top: 5px">{{ attrib.name }}
-                            <select class="char-for-attrib" id="char-for-attrib_{{ attrib.id }}">
+                        {% for entity in current.determining_entities %}
+                            <li style="margin-top: 5px">{{ entity.name }}
+                            <select class="char-for-entity" id="char-for-entity_{{ entity.id }}">
                                 <option value="" selected>(Select character)</option>
-                                {% for char in game_data.characters if attrib.id in char.attribs %}
-                                    {% set attrib_val = char.attribs[attrib.id].val | formatNum %}
+                                {% for char in game_data.characters if entity.id in char.attribs %}
+                                    {% set attrib_val = char.attribs[entity.id].val | formatNum %}
                                     <option value="{{ attrib_val }}" {% if char.id == session['last_char_id'] %}selected{% endif %}>{{ char.name }} {{ attrib_val }}</option>
                                 {% endfor %}
                             </select>
                             {% set letter = link_letters.next() %}
-                            <button type="button" class="fill-det-btn" data-attrib-id="{{ attrib.id }}" data-mult="{{ attrib.mult | lower }}">
-                                [{{ letter }}] {% if attrib.mult %}Multiply{% else %}Add{% endif %}
+                            <button type="button" class="fill-det-btn" data-entity-id="{{ entity.id }}" data-mult="{{ entity.mult | lower }}">
+                                [{{ letter }}] {% if entity.mult %}Multiply{% else %}Add{% endif %}
                             </button>
                             <script>
                                 funcForKey['{{ letter }}'] = function() {
-                                    document.querySelector('.fill-det-btn[data-attrib-id="{{ attrib.id }}"]').click();
+                                    document.querySelector('.fill-det-btn[data-entity-id="{{ entity.id }}"]').click();
                                 };
                             </script>
                         {% endfor %}
@@ -85,41 +85,41 @@
                 <div id="outcome-display" style="height: 3em;">{{ outcome_display|safe }}</div>
             </td>
         </tr>
-        {% if current.outcome_type == 'numeric' %}
+        {% if current.outcome_type == 'numeric' and (current.changed_entities or current.determining_entities) %}
         <tr>
             <td>
             <div style="background-color: black; margin: 3px; padding: 10px">
             <label for="stat_adjustment">Affected Stats:</label>
-            {% for attrib in current.changed_attrs %}
+            {% for entity in current.changed_entities %}
                 <form method="POST" action="{{ url_for('play_event', event_id=current.id) }}">
-                <input type="hidden" name="attrib_id" value="{{ attrib.id }}">
-                <input type="hidden" name="char_id" value="0" id="char_id_{{ attrib.id }}">
-                <li style="margin-top: 5px">{{ attrib.name }}
-                <select class="char-for-changed" id="char-for-changed_{{ attrib.id }}">
+                <input type="hidden" name="entity_id" value="{{ entity.id }}">
+                <input type="hidden" name="char_id" value="0" id="char_id_{{ entity.id }}">
+                <li style="margin-top: 5px">{{ entity.name }}
+                <select class="char-for-changed" id="char-for-changed_{{ entity.id }}">
                     <option value="" selected>(Select character)</option>
-                    {% for char in game_data.characters if attrib.id in char.attribs %}
-                        {% set attrib_val = char.attribs[attrib.id].val | formatNum %}
+                    {% for char in game_data.characters if entity.id in char.attribs %}
+                        {% set attrib_val = char.attribs[entity.id].val | formatNum %}
                         <option value="{{ attrib_val }}" data-char-id="{{ char.id }}" {% if char.id == session['last_affected_char_id'] %}selected{% endif %}>{{ char.name }}</option>
                     {% endfor %}
                 </select>
                 {% set letter = link_letters.next() %}
-                <button type="button" class="fill-changed-btn" data-attrib-id="{{ attrib.id }}">
+                <button type="button" class="fill-changed-btn" data-entity-id="{{ entity.id }}">
                     [{{ letter }}] Fill
                 </button>
                 <script>
                     funcForKey['{{ letter }}'] = function() {
-                        document.querySelector('.fill-changed-btn[data-attrib-id="{{ attrib.id }}"]').click();
+                        document.querySelector('.fill-changed-btn[data-entity-id="{{ entity.id }}"]').click();
                     };
                 </script>
-                <span id="oldval_{{ attrib.id }}" style="min-width: 5ch; display: inline-block; text-align: right;">0</span> &rarr;
-                <input type="text" name="newval" id="newval_{{ attrib.id }}" size="8">
+                <span id="oldval_{{ entity.id }}" style="min-width: 5ch; display: inline-block; text-align: right;">0</span> &rarr;
+                <input type="text" name="newval" id="newval_{{ entity.id }}" size="8">
                 {% set letter = link_letters.next() %}
-                <button type="submit" name="change_attrib" class="change-attrib-btn" id="apply_{{ attrib.id }}" data-attrib-id="{{ attrib.id }}">
+                <button type="submit" name="change_entity" class="change-entity-btn" id="apply_{{ entity.id }}" data-entity-id="{{ entity.id }}">
                     [{{ letter }}] Apply
                 </button><br>
                 <script>
                     funcForKey['{{ letter }}'] = function() {
-                        document.querySelector('.change-attrib-btn[data-attrib-id="{{ attrib.id }}"]').click();
+                        document.querySelector('.change-entity-btn[data-entity-id="{{ entity.id }}"]').click();
                     };
                 </script>
                 </form>
@@ -145,16 +145,16 @@
                 localStorage.setItem('selectedDifficulty', this.value);
             });
             
-            function updateStatAdjustment(attrId) {
-                const selectedIndex = $(`#char-for-attrib_${attrId}`).prop('selectedIndex');
-                const selectedValue = parseFloat($(`#char-for-attrib_${attrId}`).val()) || 0;
+            function updateStatAdjustment(entityId) {
+                const selectedIndex = $(`#char-for-entity_${entityId}`).prop('selectedIndex');
+                const selectedValue = parseFloat($(`#char-for-entity_${entityId}`).val()) || 0;
                 const currentAdjustment = parseFloat($('#stat_adjustment').val()) || 0;
-                const attrMult = $(`.fill-det-btn[data-attrib-id="${attrId}"]`).data('mult') == true;
+                const entityMult = $(`.fill-det-btn[data-entity-id="${entityId}"]`).data('mult') == true;
                 console.log('selectedValue:', selectedValue, 'Type:', typeof selectedValue);
                 console.log('currentAdjustment:', currentAdjustment, 'Type:', typeof currentAdjustment);
-                console.log('attrMult:', attrMult, 'Type:', typeof attrMult);
+                console.log('entityMult:', entityMult, 'Type:', typeof entityMult);
                 if (selectedIndex !== 0) {
-                    if (attrMult) {
+                    if (entityMult) {
                         $('#stat_adjustment').val(currentAdjustment * selectedValue);
                     } else {
                         $('#stat_adjustment').val(currentAdjustment + selectedValue);
@@ -162,32 +162,32 @@
                 }
             }
             function handleSelectChange(event) {
-                const attrId = $(event.target).attr('id').split('_')[1];
-                updateStatAdjustment(attrId);
+                const entityId = $(event.target).attr('id').split('_')[1];
+                updateStatAdjustment(entityId);
             }
-            $('.char-for-attrib').on('change', handleSelectChange);
+            $('.char-for-entity').on('change', handleSelectChange);
             $('.fill-det-btn').on('click', function() {
-                const attrId = $(this).data('attrib-id');
-                updateStatAdjustment(attrId); 
+                const entityId = $(this).data('entity-id');
+                updateStatAdjustment(entityId); 
             });
 
             $('.fill-changed-btn').on('click', function() {
-                const attrId = $(this).data('attrib-id');
-                $('#char-for-changed_' + attrId).change();
+                const entityId = $(this).data('entity-id');
+                $('#char-for-changed_' + entityId).change();
             });
             $('.char-for-changed').change(function() {
                 const selectedOption = $(this).find(':selected');
-                const attribVal = parseFloat(selectedOption.val()) || 0;
-                const attribId = this.id.split('_')[1];
+                const entityVal = parseFloat(selectedOption.val()) || 0;
+                const entityId = this.id.split('_')[1];
                 const charId = selectedOption.data('char-id');
                 const currentOutcome = {{ current.outcome }};
-                const oldValText = $(`#oldval_${attribId}`);
-                const newValInput = $(`#newval_${attribId}`);
-                const newValue = attribVal + currentOutcome;
-                if (oldValText.text() !== attribVal.toString()) {
-                    oldValText.text(attribVal);
+                const oldValText = $(`#oldval_${entityId}`);
+                const newValInput = $(`#newval_${entityId}`);
+                const newValue = entityVal + currentOutcome;
+                if (oldValText.text() !== entityVal.toString()) {
+                    oldValText.text(entityVal);
                     newValInput.val(newValue);
-                    $(`#char_id_${attribId}`).val(charId);
+                    $(`#char_id_${entityId}`).val(charId);
                 }
             });
         });

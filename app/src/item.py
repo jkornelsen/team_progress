@@ -27,25 +27,43 @@ tables_to_create = {
     }
 logger = logging.getLogger(__name__)
 
-class Item(Identifiable, Pile):
-    PILE_TYPE = Storage.UNIVERSAL  # Constant for this class
+class GeneralPile(Pile):
+    def __init__(self, item=None):
+        super().__init__(item=item, container=item)
+
+    @classmethod
+    @property
+    def container_type(cls):
+        return 'general'
+
+    def dict_for_json(self):
+        return self.item.dict_for_json()
+
+    def dict_for_main_table(self):
+        return self.item.dict_for_main_table()
+
+    @classmethod
+    def from_data(cls, data, item=None):
+        instance = cls()
+        super().from_data(instance, data, None)
+        instance.item = item or Item(instance.item_id)
+        instance.container = instance.item
+        return instance
+
+class Item(Identifiable):
     def __init__(self, new_id=""):
         Identifiable.__init__(self, new_id)
-        Pile.__init__(self, item=self)
         self.name = ""
         self.description = ""
-        # Varies for different items. Typically,
-        # Item.quantity will be 0 unless storage_type is universal,
-        # but general storage can still be used for other types if needed.
-        self.storage_type = Storage.UNIVERSAL
+        self.storage_type = Storage.UNIVERSAL  # behavior, not pile type
         self.toplevel = True
         self.masked = False
         self.mult = False
         self.attribs = {}  # AttribFor objects keyed by attrib id
         self.recipes = []  # list of Recipe objects
         self.q_limit = 0.0  # limit the quantity if not 0
-        self.pile = self
         self.progress = Progress(container=self)  # for general storage
+        self.pile = GeneralPile(self)
 
     def _base_export_data(self):
         """Prepare the base dictionary for JSON and DB."""

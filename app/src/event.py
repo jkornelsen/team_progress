@@ -92,7 +92,7 @@ class Event(Identifiable):
             entities = getattr(self, f'{reltype}_entities')
             data.update({
                 reltype: [
-                    [entity.typename(), entity.id]
+                    [entity.typename, entity.id]
                     for entity in entities],
                 })
         return data

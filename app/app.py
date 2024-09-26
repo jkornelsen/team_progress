@@ -180,14 +180,16 @@ def htmlify_filter(text):
 
 app.jinja_env.filters['formatNum'] = format_num_filter
 app.jinja_env.filters['htmlify'] = htmlify_filter
+app.jinja_env.globals['getattr'] = getattr
+app.jinja_env.globals['max'] = max
 app.jinja_env.globals['MAX_INT_32'] = 2**31 - 1
 
-@app.errorhandler(TypeError)
-def handle_type_error(ex):
+@app.errorhandler(Exception)
+def handle_exception(ex):
     logger.exception(ex)
     return render_template(
         'error.html',
-        message="An error occurred.",
+        message="An unexpected error occurred.",
         details=str(ex))
 
 @app.teardown_appcontext

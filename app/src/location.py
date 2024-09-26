@@ -7,7 +7,7 @@ from .db_serializable import (
 from .item import Item
 from .pile import Pile
 from .progress import Progress
-from .utils import NumTup, RequestHelper, Storage
+from .utils import NumTup, RequestHelper
 
 tables_to_create = {
     'locations': f"""
@@ -25,12 +25,15 @@ tables_to_create = {
 }
 logger = logging.getLogger(__name__)
 
-class ItemAt(Pile, Serializable):
-    PILE_TYPE = Storage.LOCAL
-    def __init__(self, item=None):
-        super().__init__(item)
-        Serializable.__init__(self)
+class ItemAt(Pile):
+    def __init__(self, item, loc):
+        super().__init__(item=item, container=loc)
         self.position = NumTup((0, 0))
+
+    @classmethod
+    @property
+    def container_type(cls):
+        return Location.typename
 
     def _base_export_data(self):
         """Prepare the base dictionary for JSON and DB."""
@@ -54,11 +57,11 @@ class ItemAt(Pile, Serializable):
         return data
 
     @classmethod
-    def from_data(cls, data):
+    def from_data(cls, data, loc):
         data = cls.prepare_dict(data)
-        item_id = int(data.get('item_id', 0))
-        instance = cls(Item(item_id))
-        instance.quantity = data.get('quantity', 0)
+        instance = cls(None, None)
+        super().from_data(instance, data, loc)
+        instance.item = Item(instance.item_id)
         instance.position = NumTup(data.get('position', (0, 0)))
         return instance
 
@@ -205,8 +208,8 @@ class Location(Identifiable):
         for item_data in data.get('items', []):
             if not isinstance(item_data, dict):
                 item_data = vars(item_data)
-            instance.items[
-                item_data.get('item_id', 0)] = ItemAt.from_data(item_data)
+            item_at = ItemAt.from_data(item_data, instance)
+            instance.items[item_data.get('item_id', 0)] = item_at
         instance.pile = Pile()
         instance.pile.quantity = data.get('quantity', 0.0)
         instance.progress = Progress.from_data(
@@ -367,7 +370,7 @@ class Location(Identifiable):
                     req.get_list('item_qty[]'),
                     req.get_list('item_pos[]')
                     ):
-                item_at = ItemAt(Item(int(item_id)))
+                item_at = ItemAt(Item(int(item_id)), self)
                 item_at.position = NumTup.from_str(item_pos, (0, 0))
                 old_item = old.items.get(item_id, None)
                 old_qty = old_item.quantity if old_item else 0

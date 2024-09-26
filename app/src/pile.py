@@ -2,17 +2,31 @@ import logging
 
 from flask import g
 
+from .db_serializable import DbSerializable
 from .progress import Progress
 from .utils import Storage
 
 logger = logging.getLogger(__name__)
 
-class Pile:
-    PILE_TYPE = None  # specify in child classes
-    def __init__(self, item=None, container=None):
+class Pile(DbSerializable):
+    def __init__(self, item=None, container=None, item_id=0):
         self.item = item
+        self.item_id = item_id
         self.container = container  # character or location where item is
         self.quantity = 0
+
+    @classmethod
+    @property
+    def container_type(cls):
+        """Short string to refer to the container class."""
+        raise NotImplementedError()
+
+    @classmethod
+    def from_data(cls, child, data, container):
+        data = cls.prepare_dict(data)
+        child.container = container
+        child.item_id = int(data.get('item_id', 0))
+        child.quantity = data.get('quantity', 0)
 
 def load_piles(current_item, char_id, loc_id, main_pile_type):
     """Assign a pile from this location or char inventory
@@ -86,14 +100,14 @@ def load_piles(current_item, char_id, loc_id, main_pile_type):
                 if attrib_for is not None and attrib_for.val >= req.val:
                     req.entity = item
                     logger.debug("attrib %s req %.1f met by item %s %.1f",
-                        attrib_for.attrib.name, req.val,
+                        attrib_for.attrib_id, req.val,
                         item.name, attrib_for.val)
             for char in chars:
                 attrib_for = char.attribs.get(attrib_id)
                 if attrib_for is not None and attrib_for.val >= req.val:
                     req.entity = char
                     logger.debug("attrib %s req %.1f met by char %s %.1f",
-                        attrib_for.attrib.name, req.val,
+                        attrib_for.attrib_id, req.val,
                         char.name, attrib_for.val)
 
 def _assign_pile(
@@ -102,6 +116,9 @@ def _assign_pile(
         "chars=[%d], loc.id=%d, char_id=%s, loc_id=%s, type=%s)",
         pile_item.id, pile_item.storage_type, len(chars),
         loc.id if loc else "_", char_id, loc_id, forced_pile_type)
+    from .character import Character, OwnedItem
+    from .item import GeneralPile
+    from .location import ItemAt, Location
     pile = None
     if forced_pile_type:
         pile_type = forced_pile_type
@@ -129,7 +146,6 @@ def _assign_pile(
                     logger.debug("assigned ownedItem from %s qty %.1f",
                         owned_item.container.name, pile.quantity)
         if char_id and not pile:
-            from .character import Character, OwnedItem
             char = Character.get_by_id(char_id)
             pile = OwnedItem(pile_item, char)
             char.items[pile_item.id] = pile
@@ -146,17 +162,14 @@ def _assign_pile(
                     "assigned itemAt from %s qty %.1f",
                     item_at.container.name, pile.quantity)
         if loc_id and not pile:
-            from .location import ItemAt, Location
             if loc.id != loc_id:
                 loc = Location.data_for_configure(loc_id)
-            pile = ItemAt(pile_item)
-            pile.container = loc
+            pile = ItemAt(pile_item, loc)
             loc.items[pile_item.id] = pile
             logger.debug(
                 "assigned empty itemAt from %s", pile.container.name)
     if not pile:
-        pile = pile_item
-        pile.container = pile_item
+        pile = GeneralPile(pile_item)
         logger.debug(
             "assigned general storage qty %.1f", pile.quantity)
     return pile
