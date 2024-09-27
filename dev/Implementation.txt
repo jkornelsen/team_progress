@@ -1,13 +1,1 @@
 
-1. play event determined by pile quantity
-query all items (or get_by_id) and all containers with non-zero piles of each item,
-including general storage
-[item_id]: [(container_type, container_id, quantity)]
-query in pile.py
-will also need container_name
-[item_id]: [(container, quantity)]
-container can be char, loc, item
-
-2. play event changing a pile
-items could work like attrs do now -- select container
-list any possible since qty could start at 0: chars, locs, general storage

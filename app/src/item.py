@@ -28,8 +28,12 @@ tables_to_create = {
 logger = logging.getLogger(__name__)
 
 class GeneralPile(Pile):
-    def __init__(self, item=None):
+    def __init__(self, item=None, quantity=None):
         super().__init__(item=item, container=item)
+        if quantity is not None:
+            self.quantity = quantity
+        elif item and hasattr(item, 'pile') and hasattr(item.pile, 'quantity'):
+            self.quantity = item.pile.quantity
 
     @classmethod
     @property
@@ -41,14 +45,6 @@ class GeneralPile(Pile):
 
     def dict_for_main_table(self):
         return self.item.dict_for_main_table()
-
-    @classmethod
-    def from_data(cls, data, item=None):
-        instance = cls()
-        super().from_data(instance, data, None)
-        instance.item = item or Item(instance.item_id)
-        instance.container = instance.item
-        return instance
 
 class Item(Identifiable):
     def __init__(self, new_id=""):
@@ -76,7 +72,7 @@ class Item(Identifiable):
             'masked': self.masked,
             'mult': self.mult,
             'q_limit': self.q_limit,
-            'quantity': self.quantity,
+            'quantity': self.pile.quantity,
         }
 
     def dict_for_json(self):
@@ -111,7 +107,8 @@ class Item(Identifiable):
             attrib_id: AttribFor(attrib_id, val)
             for attrib_id, val in data.get('attribs', [])}
         instance.q_limit = data.get('q_limit', 0.0)
-        instance.quantity = data.get('quantity', 0.0)
+        instance.pile = GeneralPile(
+            instance, data.get('quantity', 0.0))
         instance.progress = Progress.from_data(
             data.get('progress', {}), instance)
         instance.recipes = [
@@ -261,8 +258,9 @@ class Item(Identifiable):
             old = Item.load_complete_objects(self.id)
             self.q_limit = req.set_num_if_changed(
                 req.get_str('item_limit'), old.q_limit)
-            self.quantity = req.set_num_if_changed(
-                req.get_str('item_quantity'), old.quantity)
+            self.pile = GeneralPile(
+                self, req.set_num_if_changed(
+                req.get_str('item_quantity'), old.pile.quantity))
             self.recipes = []
             for recipe_id, recipe_id_from in zip(
                     req.get_list('recipe_id'),

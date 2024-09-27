@@ -21,12 +21,25 @@ class Pile(DbSerializable):
         """Short string to refer to the container class."""
         raise NotImplementedError()
 
+    def set_basic_data(self, data):
+        """Set the item ID so that from_data() in the child class can
+        instantiate it.
+        That way we don't need to import Item here and potentially cause
+        circular references.
+        """
+        data = self.prepare_dict(data)
+        self.item_id = int(data.get('item_id', 0))
+        self.quantity = data.get('quantity', 0)
+
     @classmethod
-    def from_data(cls, child, data, container):
-        data = cls.prepare_dict(data)
-        child.container = container
-        child.item_id = int(data.get('item_id', 0))
-        child.quantity = data.get('quantity', 0)
+    def load_all_pile_data(cls):
+        """Query all items and all containers with non-zero
+        piles of each item, including general storage.
+        [item_id]: [(container_type, container_id, quantity)]
+        """
+        from .character import Character
+        from .item import Item
+        from .location import Location
 
 def load_piles(current_item, char_id, loc_id, main_pile_type):
     """Assign a pile from this location or char inventory

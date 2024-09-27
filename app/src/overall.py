@@ -97,9 +97,9 @@ class Overall(DbSerializable):
             " Otherwise, browse the <i>Pre-Built Scenarios</i>."
             "\r\n\r\n"
             "Or, to start from scratch, go to <i>Overall Settings</i>"
-            " and change this title and description."
-            " Then do initial setup such as adding a few items or characters."
-            " More can be added as the game goes along."
+            " and describe your idea, along with a title."
+            " Next, add a few initial items or characters."
+            " More can be set up as the game goes along."
             )
         self.win_reqs = []
         self.number_format = 'en_US'

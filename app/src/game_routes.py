@@ -241,23 +241,14 @@ def set_routes(app):
     @app.route('/play/event/<int:event_id>', methods=['GET', 'POST'])
     def play_event(event_id):
         req = RequestHelper('args')
-        char_id = req.get_int('char_id', '')
-        loc_id = req.get_int('loc_id', '')
-        if char_id:
-            session['last_char_id'] = char_id
-        if loc_id:
-            session['last_loc_id'] = loc_id
-        if not char_id:
-            char_id = session.get('last_char_id', '')
-        if not loc_id:
-            loc_id = session.get('last_loc_id', '')
-        logger.debug(
-            "%s\nplay_event(event_id=%d, char_id=%s, loc_id=%s)",
-            "-" * 80, event_id, char_id, loc_id)
-        instance = Event.data_for_play(event_id)
+        logger.debug("%s\nplay_event(event_id=%d)", "-" * 80, event_id)
+        instance = Event.data_for_configure(event_id)
         if not instance:
             return "Event not found"
         if request.method == 'GET':
+            Character.load_complete_objects()
+            Item.load_complete_objects()
+            Location.load_complete_objects()
             message = session.pop('message', False)
             return render_template(
                 'play/event.html',
@@ -266,44 +257,9 @@ def set_routes(app):
                 message=message,
                 link_letters=LinkLetters('emor')
                 )
-        req = RequestHelper('form')
-        req.debug()
-        if req.has_key('roll'):
-            instance.play_by_form()
-            outcome_display = instance.get_outcome()
-            return render_template(
-                'play/event.html',
-                current=instance,
-                game_data=g.game_data,
-                outcome_display=outcome_display,
-                link_letters=LinkLetters('emor')
-                )
-        elif req.has_key('change_attrib'):
-            attrib_id = req.get_int('attrib_id', 0)
-            char_id = req.get_int('char_id', 0)
-            newval = req.get_str('newval', "0")
-            session['last_affected_char_id'] = char_id
-            char = Character.load_complete_objects(char_id)
-            if not char:
-                return "Character not found"
-            attrib = Attrib.load_complete_objects(attrib_id)
-            if not attrib:
-                return "Attribute not found"
-            oldval = ""
-            if attrib_id in char.attribs:
-                attrib_of = char.attribs[attrib_id]
-                oldval = f"from {attrib_of.val} "
-                attrib_of.val = newval
-            else:
-                char[attrib_id] = AttribFor(attrib_id, newval)
-            char.to_db()
-            session['message'] = (
-                f"Changed {attrib.name}"
-                f" of char {char.name} {oldval}to {newval}")
-            return redirect(
-                url_for('play_event', event_id=event_id))
-        else:
-            return "Unrecognized form submission."
+        Event.change_by_form()
+        return redirect(
+            url_for('play_event', event_id=event_id))
 
     @app.route('/play/item/<int:item_id>/')
     def play_item(item_id):
@@ -462,6 +418,23 @@ def set_routes(app):
             char.to_db()
             return jsonify({'message': 'Progress paused.'})
         return jsonify({'message': 'Progress is already paused.'})
+
+    @app.route('/event/roll/<int:event_id>', methods=['POST'])
+    def event_roll(event_id):
+        logger.debug("%s\nevent_roll(event_id=%d)", "-" * 80, event_id)
+        instance = Event.data_for_configure(event_id)
+        if not instance:
+            return jsonify({'error': "Event not found"})
+        req = RequestHelper('form')
+        req.debug()
+        outcome, display = instance.roll_for_outcome(
+            req.get_int('difficulty'),
+            req.get_float('stat_adjustment')
+            )
+        return jsonify({
+            'outcome': outcome,
+            'outcome_display': display
+            })
 
     @app.route('/item/progress/<int:item_id>/')
     def item_progress(item_id):

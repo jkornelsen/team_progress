@@ -280,6 +280,12 @@ class Identifiable(DbSerializable):
         return f'{cls.typename}_id'
 
     @classmethod
+    @property
+    def readable_type(cls):
+        """Used to display error messages."""
+        return cls.tablename().capitalize()
+
+    @classmethod
     def get_list(cls):
         if 'game_data' in g:
             return g.game_data.get_list(cls)

@@ -9,7 +9,8 @@ from .db_serializable import (
     DbError, DeletionError, Identifiable, QueryHelper, coldef)
 from .item import Item
 from .location import Location
-from .utils import NumTup, RequestHelper, create_entity
+from .utils import (
+    NumTup, RequestHelper, create_entity, entity_class, format_num)
 
 OUTCOME_TYPES = [
     'fourway',  # critical/minor failure or success
@@ -64,11 +65,6 @@ class Event(Identifiable):
         self.trigger_entities = []  # can trigger the event
         self.trigger_chance = NumTup((0, 1))  # (numerator, denominator)
         self.trigger_by_duration = True  # during progress or when finished
-        ## For a particular occurrence, not stored in Event table
-        self.difficulty = 10  # Moderate
-        self.stat_adjustment = 0  # for example, 5 for perception
-        self.advantage = 0  # for example +1 means best of two rolls
-        self.outcome = 0
 
     def _base_export_data(self):
         """Prepare the base dictionary for JSON and DB."""
@@ -204,13 +200,6 @@ class Event(Identifiable):
         return current_obj
 
     @classmethod
-    def data_for_play(cls, id_to_get):
-        logger.debug("data_for_play()")
-        current_obj = cls.data_for_configure(id_to_get)
-        Character.load_characters_for_event(id_to_get)
-        return current_obj
-
-    @classmethod
     def load_triggers_for_loc(cls, loc_id):
         logger.debug("load_triggers_for_loc()")
         events_rows = cls.execute_select("""
@@ -266,51 +255,43 @@ class Event(Identifiable):
         else:
             logger.debug("Neither button was clicked.")
 
-    def play_by_form(self):
-        logger.debug("Saving changes.")
-        req = RequestHelper('form')
-        req.debug()
-        self.difficulty = req.get_int('difficulty')
-        self.stat_adjustment = req.get_int('stat_adjustment')
-        self.to_db()
-
-    def get_outcome(self):
+    def roll_for_outcome(self, difficulty, stat_adjustment):
         if self.outcome_type == OUTCOME_FOURWAY:
             roll = roll_dice(20)
-            total = roll + self.stat_adjustment - self.difficulty
+            total = roll + stat_adjustment - difficulty
             if total <= -OUTCOME_MARGIN:
-                self.outcome = OUTCOME_CRITICAL_FAILURE
+                outcome = OUTCOME_CRITICAL_FAILURE
             elif total <= 0:
-                self.outcome = OUTCOME_MINOR_FAILURE
+                outcome = OUTCOME_MINOR_FAILURE
             elif total < OUTCOME_MARGIN:
-                self.outcome = OUTCOME_MINOR_SUCCESS
+                outcome = OUTCOME_MINOR_SUCCESS
             else:
-                self.outcome = OUTCOME_MAJOR_SUCCESS
+                outcome = OUTCOME_MAJOR_SUCCESS
             display = (
                 "1d20 ({}) + Stat Adjustment {} - Difficulty {} = {}<br>"
                 "Outcome is a {}."
             ).format(
                 roll,
-                self.stat_adjustment,
-                self.difficulty,
-                total,
-                OUTCOMES[self.outcome],
+                format_num(stat_adjustment),
+                difficulty,
+                format_num(total),
+                OUTCOMES[outcome],
             )
         elif self.outcome_type == OUTCOME_NUMERIC:
             range_min, range_max = self.numeric_range
             sign = 1 if range_max >= 0 else -1
             sides = range_max - range_min
             roll = roll_dice(sides)
-            self.outcome = range_min + roll + self.stat_adjustment
+            outcome = range_min + roll + stat_adjustment
             display = (
                 "Min ({}) + 1d{} ({}) + Stat Adjustment ({})<br>"
                 "Outcome = {}"
             ).format(
-                range_min,
-                sides,
-                roll,
-                self.stat_adjustment,
-                self.outcome
+                format_num(range_min),
+                format_num(sides),
+                format_num(roll),
+                format_num(stat_adjustment),
+                format_num(outcome),
             )
         elif self.outcome_type == OUTCOME_SELECTION:
             strings_list = self.selection_strings.split('\n')
@@ -318,7 +299,64 @@ class Event(Identifiable):
             display = f"Outcome: {random_string}"
         else:
             raise ValueError(f"Unexpected outcome_type {self.outcome_type}")
-        return display
+        return outcome, display
+
+    @classmethod
+    def change_by_form(cls):
+        req = RequestHelper('form')
+        req.debug()
+        if not req.has_key('change_entity'):
+            raise ValueError("Unrecognized form submission.")
+        rel_id = req.get_int('key_id', 0)
+        rel_type = req.get_str('key_type', '')
+        container_id = req.get_int('container_id', 0)
+        container_type = req.get_str('container_type', '')
+        newval = req.get_str('newval', "0")
+        container_cls = entity_class(
+            container_type, [Character, Item, Location])
+        container = container_cls.load_complete_objects(container_id)
+        if not container:
+            raise ValueError(f"{container_cls.readable_type} not found")
+        oldval = ""
+        if rel_type == 'attrib':
+            rel_dict = container.attribs
+            rel_attr = 'val'
+        else:
+            rel_dict = container.items
+            rel_attr = 'quantity'
+        if rel_id in rel_dict:
+            rel_obj = rel_dict[rel_id]
+            oldval = "from " + format_num(getattr(rel_obj, rel_attr))
+            setattr(rel_obj, rel_attr, newval)
+        else:
+            if rel_type == 'attrib':
+                rel_dict[rel_id] = AttribFor(rel_id, newval)
+            elif rel_type == 'item':
+                if container_type == 'char':
+                    rel_dict[rel_id] = OwnedItem.from_data({
+                        'item_id': rel_id,
+                        'quantity': newval
+                        })
+                elif container_type == 'loc':
+                    rel_dict[rel_id] = ItemAt.from_data({
+                        'item_id': rel_id,
+                        'quantity': newval
+                        })
+                elif container_type == 'item':
+                    container.pile.quantity = newval
+                else:
+                    raise ValueError(
+                        f"Unexpected container type '{container_type}'.")
+            else:
+                raise ValueError(f"Unexpected rel type '{rel_type}'.")
+        container.to_db()
+        rel_obj_cls = entity_class(rel_type, [Attrib, Item])
+        rel_base_obj = rel_obj_cls.load_complete_objects(rel_id)
+        if not rel_base_obj:
+            raise ValueError(f"{rel_obj_cls.readable_type} not found")
+        session['message'] = (
+            f"Changed {rel_base_obj.name}"
+            f" of {container.name} from {oldval} to {newval}")
 
     def check_trigger(self, elapsed_seconds):
         if self.trigger_by_duration:

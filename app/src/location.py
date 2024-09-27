@@ -59,8 +59,8 @@ class ItemAt(Pile):
     @classmethod
     def from_data(cls, data, loc):
         data = cls.prepare_dict(data)
-        instance = cls(None, None)
-        super().from_data(instance, data, loc)
+        instance = cls(None, loc)
+        instance.set_basic_data(data)
         instance.item = Item(instance.item_id)
         instance.position = NumTup(data.get('position', (0, 0)))
         return instance

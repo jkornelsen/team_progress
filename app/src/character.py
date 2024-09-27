@@ -48,8 +48,8 @@ class OwnedItem(Pile):
     @classmethod
     def from_data(cls, data, char=None):
         data = cls.prepare_dict(data)
-        instance = cls(None, None)
-        super().from_data(instance, data, char)
+        instance = cls(None, char)
+        instance.set_basic_data(data)
         instance.item = Item(instance.item_id)
         instance.slot = data.get('slot', "")
         return instance
@@ -122,7 +122,8 @@ class Character(Identifiable):
             try:
                 if not isinstance(owned_data, dict):
                     owned_data = vars(owned_data)
-                instance.items[owned_data.get('item_id', 0)] = OwnedItem.from_data(
+                item_id = owned_data.get('item_id', 0)
+                instance.items[item_id] = OwnedItem.from_data(
                     owned_data, instance)
             except TypeError:
                 logger.exception('')
@@ -225,6 +226,7 @@ class Character(Identifiable):
         for row in attrib_rows:
             char = chars.get(row.char_id, None)
             if char:
+                # XXX: Couldn't we have done this in the first query?
                 char.attribs[row.attrib_id] = AttribFor.from_data(row)
         if load:
             g.game_data.set_list(Character, chars.values())

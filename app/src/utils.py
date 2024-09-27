@@ -136,11 +136,15 @@ class NumTup:
             return self.tup[key]
         return NotImplemented
 
-def create_entity(typename, entity_id, entity_classes):
+def entity_class(typename, entity_classes):
     for entity_cls in entity_classes:
         if typename == entity_cls.typename:
-            return entity_cls(entity_id)
+            return entity_cls
     raise ValueError(f"Unexpected type: '{typename}'")
+
+def create_entity(typename, entity_id, entity_classes):
+    entity_cls = entity_class(typename, entity_classes)
+    return entity_cls(entity_id)
 
 SUFFIXES = [
     '', 'k', 'm', 'b', 't', 'q', 'Q', 's', 'S', 'o', 'n', 'd',
