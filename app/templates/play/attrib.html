@@ -1,15 +1,14 @@
 {% extends 'base.html' %}
-
 {% block upper_left %}
     <div class="nav-container">
-        <a class="upper-left" href="{{ url_for('overview') }}">[O]verview</a>
+        <a class="upper-left" href="{{ url_for("overview") }}">[O]verview</a>
         <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for('configure_index') }}">[M]ain Setup</a>
+        <a class="upper-left" href="{{ url_for("configure_index") }}">[M]ain Setup</a>
         <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for('configure_attrib', attrib_id=current.id) }}">Attribute S[e]tup</a>
+        <a class="upper-left"
+           href="{{ url_for('configure_attrib', attrib_id=current.id) }}">Attribute S[e]tup</a>
     </div>
 {% endblock %}
-
 {% block content %}
     <script>
         const linkForKey = {
@@ -17,8 +16,8 @@
             'm': '{{ url_for('configure_index') }}',
             'e': '{{ url_for('configure_event', event_id=current.id) }}',
         };
-        document.addEventListener('DOMContentLoaded', function () {
-            document.addEventListener('keypress', function (event) {
+        document.addEventListener('DOMContentLoaded', () => {
+            document.addEventListener('keypress', (event) => {
                 const key = event.key.toLowerCase();
                 if (key === 'c') {
                     document.getElementById('change-btn').click();
@@ -36,59 +35,59 @@
         Unexpected type {{ subject.typename }}
     {% endif %}
     {% set letter = link_letters.next(link) %}
-    <script>
-        linkForKey['{{ letter }}'] = "{{ link }}";
-    </script>
+    <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
     Attribute of
     <a href="{{ link }}">{{ subject.name }}</a>
-    <span>[{{ letter }}]</span><br>
+    <span>[{{ letter }}]</span>
+    <br>
     <h2>{{ current.name }}</h2>
-    {% if current.description %}
-        <p>{{ current.description|htmlify }}</p>
-    {% endif %}
+    {% if current.description %}<p>{{ current.description|htmlify }}</p>{% endif %}
     <hr>
     <form method="post">
-    <table>
-        <tr>
-            <th>Current</th>
-            <th>Operation</th>
-            <th>New Value</th>
-        </tr>
-        <tr>
-            <td>{{ subject_attrib_val | formatNum }}</td>
-            <td>
-                {% set operators = [
-                    ['add', '+'],
-                    ['sub', '-'],
-                    ['mult', '*'],
-                    ['div', '/'],
-                    ['pow', 'Power'],
-                    ['log', 'Log']
-                ] %}
-                <select name="operator" id="operator">
-                    {% for operator in operators %}
-                        <option value="{{ operator[0] }}" {% if session.get('last_operator') == operator[0] %}selected{% endif %}>
-                            {{ operator[1] }}
-                        </option>
-                    {% endfor %}
-                <select>
-                <input type="text" name="operand" id="operand" size="8" value="{{ session.get('last_operand', 0) }}">
-            </td>
-            <td>
-                = <input type="text" name="result" id="result" size="8" value="{{ subject_attrib_val | formatNum }}">
-            </td>
-            <td>
-                <button type="submit" name="change" id="change-btn">[C]hange</button>
-            </td>
-        </tr>
-    </table>
+        <table>
+            <tr>
+                <th>Current</th>
+                <th>Operation</th>
+                <th>New Value</th>
+            </tr>
+            <tr>
+                <td>{{ subject_attrib_val | formatNum }}</td>
+                <td>
+                    {% set operators = [["add", "+"], ["sub", "-"], ["mult", "*"], ["div", "/"], ["pow", "Power"], ["log", "Log"]] %}
+                    <select name="operator" id="operator">
+                        {% for operator in operators %}
+                            <option value="{{ operator[0] }}"
+                                    {% if session.get('last_operator') == operator[0] %}selected{% endif %}>
+                                {{ operator[1] }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <input type="text"
+                           name="operand"
+                           id="operand"
+                           size="8"
+                           value="{{ session.get('last_operand', 0) }}">
+                </td>
+                <td>
+                    =
+                    <input type="text"
+                           name="result"
+                           id="result"
+                           size="8"
+                           value="{{ subject_attrib_val | formatNum }}">
+                </td>
+                <td>
+                    <button type="submit" name="change" id="change-btn">[C]hange</button>
+                </td>
+            </tr>
+        </table>
     </form>
     <script>
-        $(document).ready(function() {
+        $(document).ready(() => {
             function calculate() {
-                let subjectAttribVal = {{ subject_attrib_val }};
-                let operator = $('#operator').val();
-                let operand = parseFloat($('#operand').val());
+                const subjectAttribVal = {{ subject_attrib_val }};
+                const operator = $('#operator').val();
+                const operand = parseFloat($('#operand').val());
                 let result = subjectAttribVal;
                 switch (operator) {
                     case 'add':

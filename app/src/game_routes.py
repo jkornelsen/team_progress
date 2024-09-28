@@ -11,7 +11,7 @@ from flask import (
     url_for
 )
 
-from .attrib import Attrib, AttribFor
+from .attrib import Attrib
 from .db_serializable import DeletionError
 from .character import Character, OwnedItem
 from .item import Item
@@ -240,7 +240,6 @@ def set_routes(app):
 
     @app.route('/play/event/<int:event_id>', methods=['GET', 'POST'])
     def play_event(event_id):
-        req = RequestHelper('args')
         logger.debug("%s\nplay_event(event_id=%d)", "-" * 80, event_id)
         instance = Event.data_for_configure(event_id)
         if not instance:

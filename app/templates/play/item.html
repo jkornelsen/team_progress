@@ -1,25 +1,24 @@
 {% extends 'base.html' %}
-
 {% block upper_left %}
     <div class="nav-container">
-        <a class="upper-left" href="{{ url_for('overview') }}">[O]verview</a>
+        <a class="upper-left" href="{{ url_for("overview") }}">[O]verview</a>
         <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for('configure_index') }}">[M]ain Setup</a>
+        <a class="upper-left" href="{{ url_for("configure_index") }}">[M]ain Setup</a>
         <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for('configure_item', item_id=current.id) }}">Item S[e]tup</a>
+        <a class="upper-left"
+           href="{{ url_for('configure_item', item_id=current.id) }}">Item S[e]tup</a>
     </div>
 {% endblock %}
-
 {% block content %}
     <div id="content" style="display:none;">
-    <script>
+        <script>
         const linkForKey = {
             'o': '{{ url_for('overview') }}',
             'm': '{{ url_for('configure_index') }}',
             'e': '{{ url_for('configure_item', item_id=current.id) }}',
         };
-        document.addEventListener('DOMContentLoaded', function () {
-            document.addEventListener('keypress', function (event) {
+        document.addEventListener('DOMContentLoaded', () => {
+            document.addEventListener('keypress', (event) => {
                 const key = event.key.toLowerCase();
                 if (key === 'd') {
                     document.getElementById('drop-btn').click();
@@ -36,58 +35,71 @@
                 }
             });
         });
-    </script>
-    <table style="width: 100%; max-width: 80%; margin: 0 auto;">
-        <tr>
-            <td>
-                {% if container.pile.container_type == 'general' %}
-                    General Storage<br>
-                {% elif container.pile.container_type == 'char' %}
-                    {% set link = url_for('play_char', char_id=container.id) %}
-                    {% set letter = link_letters.next(link) %}
-                    <script>
-                        linkForKey['{{ letter }}'] = "{{ link }}";
-                    </script>
-                    Carried by
-                    <a href="{{ link }}">{{ container.name }}</a>
-                    <span>[{{ letter }}]</span><br>
-                {% elif container.pile.container_type == 'loc' %}
-                    {% set link = url_for('play_location', loc_id=container.id) %}
-                    {% set letter = link_letters.next(link) %}
-                    <script>
-                        linkForKey['{{ letter }}'] = "{{ link }}";
-                    </script>
-                    At
-                    <a href="{{ link }}">{{ container.name }}</a>
-                    <span>[{{ letter }}]</span><br>
-                {% else %}
-                    General Storage (by default)<br>
-                {% endif %}
-                <h2 style="margin: 10px 10px; display: flex; align-items: center; flex-wrap: nowrap;">
-                {{ current.name }}:&nbsp;
-                {% if current.q_limit %}
-                    <div id="storage-progress-container" class="progress-container" style="display: inline-flex; align-items: center; margin-left: 10px;">
-                        <progress id="storage-progress-bar" class="progress-bar" value="0" max="100"></progress>
-                        <span class="progress-label" id="storage-progress-label" style="margin-left: 5px; color: white; font-weight: bold;">...</span>
+        </script>
+        <table style="width: 100%; max-width: 80%; margin: 0 auto;">
+            <tr>
+                <td>
+                    {% if container.pile.container_type == 'general' %}
+                        General Storage
+                        <br>
+                    {% elif container.pile.container_type == 'char' %}
+                        {% set link = url_for('play_char', char_id=container.id) %}
+                        {% set letter = link_letters.next(link) %}
+                        <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                        Carried by
+                        <a href="{{ link }}">{{ container.name }}</a>
+                        <span>[{{ letter }}]</span>
+                        <br>
+                    {% elif container.pile.container_type == 'loc' %}
+                        {% set link = url_for('play_location', loc_id=container.id) %}
+                        {% set letter = link_letters.next(link) %}
+                        <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                        At
+                        <a href="{{ link }}">{{ container.name }}</a>
+                        <span>[{{ letter }}]</span>
+                        <br>
+                    {% else %}
+                        General Storage (by default)
+                        <br>
+                    {% endif %}
+                    <h2 style="margin: 10px 10px;
+                               display: flex;
+                               align-items: center;
+                               flex-wrap: nowrap">
+                        {{ current.name }}:&nbsp;
+                        {% if current.q_limit %}
+                            <div id="storage-progress-container"
+                                 class="progress-container"
+                                 style="display: inline-flex;
+                                        align-items: center;
+                                        margin-left: 10px">
+                                <progress id="storage-progress-bar" class="progress-bar" value="0" max="100"></progress>
+                                <span class="progress-label"
+                                      id="storage-progress-label"
+                                      style="margin-left: 5px;
+                                             color: white;
+                                             font-weight: bold">...</span>
+                            </div>
+                        {% else %}
+                            <span id="quantity-{{ current.id }}">...</span>
+                        {% endif %}
+                    </h2>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <span id="recipe-progress-label" style="">Recipe Progress:</span>
+                    <div id="action-progress-container"
+                         class="progress-container hidden"
+                         style="display: inline-flex">
+                        <progress id="action-progress-bar" class="progress-bar" value="0" max="100"></progress>
+                        <span class="progress-label" id="action-progress-label">0%</span>
                     </div>
-                {% else %}
-                    <span id="quantity-{{ current.id }}">...</span>
-                {% endif %}
-                </h2>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <span id="recipe-progress-label" style="">Recipe Progress:</span>
-                <div id="action-progress-container" class="progress-container hidden" style="display: inline-flex">
-                    <progress id="action-progress-bar" class="progress-bar" value="0" max="100"></progress>
-                    <span class="progress-label" id="action-progress-label">0%</span>
-                </div>
-                <span id="elapsed-time" class="hidden">...</span>
-            </td>
-        </tr>
-        <tr>
-            <style>
+                    <span id="elapsed-time" class="hidden">...</span>
+                </td>
+            </tr>
+            <tr>
+                <style>
                 .button-container {
                     display: flex;
                     flex-direction: row;
@@ -100,111 +112,126 @@
                     flex-direction: column;
                     align-items: flex-start;
                 }
-            </style>
-            <td>
-                <div class="button-container">
-                {% if container.pile.container_type == 'char' %}
-                    {% if container.pile.slot %}
-                        <div class="button-column" id="unequip-container">
-                            <button id="unequip-btn" class="go-button">Une[q]uip</button>
-                            {{ container.pile.slot }}
-                        </div>
-                    {% else %}
-                        {% if game_data.overall.slots %}
-                            <div class="button-column" id="equip-container">
-                                <button id="equip-btn" class="go-button">E[q]uip</button>
-                                <select id="char-equip-slot">
-                                    {% for slot in game_data.overall.slots %}
-                                        <option value="{{ slot }}" {% if slot == defaults.slot %}selected{% endif %}>{{ slot }}</option>
+                </style>
+                <td>
+                    <div class="button-container">
+                        {% if container.pile.container_type == 'char' %}
+                            {% if container.pile.slot %}
+                                <div class="button-column" id="unequip-container">
+                                    <button id="unequip-btn" class="go-button">Une[q]uip</button>
+                                    {{ container.pile.slot }}
+                                </div>
+                            {% else %}
+                                {% if game_data.overall.slots %}
+                                    <div class="button-column" id="equip-container">
+                                        <button id="equip-btn" class="go-button">E[q]uip</button>
+                                        <select id="char-equip-slot">
+                                            {% for slot in game_data.overall.slots %}
+                                                <option value="{{ slot }}" {% if slot == defaults.slot %}selected{% endif %}>{{ slot }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                            <div class="button-column" id="drop-container">
+                                <button id="drop-btn" class="go-button">[D]rop</button>
+                                <input type="text" id="quantity_to_drop" size="10" value="1">
+                            </div>
+                        {% endif %}
+                        {% set has = namespace(chars=False) %}
+                        {% for char in game_data.characters if char.location.id == loc_id %}
+                            {% set has.chars = True %}
+                        {% endfor %}
+                        {% if container.pile.container_type == 'loc' and loc_id and has.chars %}
+                            <div class="button-column" id="pickup-container">
+                                <button id="pickup-btn" class="go-button">[P]ick Up</button>
+                                <select id="char-picking-up">
+                                    {% for char in game_data.characters if char.location.id == loc_id %}
+                                        <option value="{{ char.id }}"
+                                                {% if char.id == defaults.pickup_char %}selected{% endif %}>
+                                            {{ char.name }}
+                                        </option>
                                     {% endfor %}
                                 </select>
                             </div>
                         {% endif %}
-                    {% endif %}
-                    <div class="button-column" id="drop-container">
-                        <button id="drop-btn" class="go-button">[D]rop</button>
-                        <input type="text" id="quantity_to_drop" size="10" value="1">
+                        {% if container.pile.container_type == 'general' %}
+                            <div class="button-column" id="move_to_char-container">
+                                <button id="move_to_char-btn" class="go-button">Move to [C]haracter</button>
+                                <select id="char-moving-to">
+                                    {% for char in game_data.characters %}
+                                        <option value="{{ char.id }}"
+                                                {% if char.id == defaults.movingto_char %}selected{% endif %}>
+                                            {{ char.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="button-column" id="move_to_loc-container">
+                                <button id="move_to_loc-btn" class="go-button">Move to [L]ocation</button>
+                                <select id="loc-moving-to">
+                                    {% for loc in game_data.locations %}
+                                        <option value="{{ loc.id }}"
+                                                {% if loc.id == defaults.movingto_loc %}selected{% endif %}>
+                                            {{ loc.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        {% else %}
+                            <div class="button-column" id="move_to_general-container">
+                                <button id="move_to_general-btn" class="go-button">Move to [G]eneral Storage</button>
+                                <input type="text" id="quantity_to_move" size="10" value="1">
+                            </div>
+                        {% endif %}
+                        <div id="show_all_buttons-container">
+                            <input type="checkbox" id="show-all-buttons" />
+                            <label for="show-all-buttons">Show all actions</label>
+                        </div>
+                        <div>
+                            <br>
+                            <br>
+                            <br>
+                        </div>
+                        <!-- so that buttons appearing doesn't cause movement -->
                     </div>
-                {% endif %}
-                {% set has = namespace(chars=False) %}
-                {% for char in game_data.characters if char.location.id == loc_id %}
-                    {% set has.chars = True %}
-                {% endfor %}
-                {% if container.pile.container_type == 'loc' and loc_id and has.chars %}
-                    <div class="button-column" id="pickup-container">
-                        <button id="pickup-btn" class="go-button">[P]ick Up</button>
-                        <select id="char-picking-up">
-                            {% for char in game_data.characters if char.location.id == loc_id %}
-                                <option value="{{ char.id }}" {% if char.id == defaults.pickup_char %}selected{% endif %}>{{ char.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                {% endif %}
-                {% if container.pile.container_type == 'general' %}
-                    <div class="button-column" id="move_to_char-container">
-                        <button id="move_to_char-btn" class="go-button">Move to [C]haracter</button>
-                        <select id="char-moving-to">
-                            {% for char in game_data.characters %}
-                                <option value="{{ char.id }}" {% if char.id == defaults.movingto_char %}selected{% endif %}>{{ char.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="button-column" id="move_to_loc-container">
-                        <button id="move_to_loc-btn" class="go-button">Move to [L]ocation</button>
-                        <select id="loc-moving-to">
-                            {% for loc in game_data.locations %}
-                                <option value="{{ loc.id }}" {% if loc.id == defaults.movingto_loc %}selected{% endif %}>{{ loc.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                {% else %}
-                    <div class="button-column" id="move_to_general-container">
-                        <button id="move_to_general-btn" class="go-button">Move to [G]eneral Storage</button>
-                        <input type="text" id="quantity_to_move" size="10" value="1">
-                    </div>
-                {% endif %}
-                <div id="show_all_buttons-container">
-                    <input type="checkbox" id="show-all-buttons" /><label for="show-all-buttons">Show all actions</label>
-                </div>
-                <div><br><br><br></div><!-- so that buttons appearing doesn't cause movement -->
-                </div>
-            </td>
-        </tr>
-<!--
+                </td>
+            </tr>
+            <!--
         <tr>
             <td style="background-color: #2a2a2a; border-bottom: 2px solid #ffffff;">
             </td>
         </tr>
 -->
-        {% if current.description %}
-        <tr>
-            <td>
-                <p>{{ current.description|htmlify }}</p>
-            </td>
-        </tr>
-        {% endif %}
-        {% if current.attribs %}
-        <tr>
-            <td>
-                <h2>Attributes</h2>
-                <ul>
-                    {% for attrib_of in current.attribs.values() %}
-                        <li>{{ attrib_of.attrib.name }}
-                            {% if attrib_of.val != 1 %}
-                                {{ attrib_of.val | formatNum }}
-                            {% endif %}
-                        </li>
-                    {% else %}
-                        (None)<br>
-                    {% endfor %}
-                </ul>
-            </td>
-        </tr>
-        {% endif %}
-        {% if current.recipes %}
-        <tr>
-            <td>
-                <style>
+            {% if current.description %}
+                <tr>
+                    <td>
+                        <p>{{ current.description|htmlify }}</p>
+                    </td>
+                </tr>
+            {% endif %}
+            {% if current.attribs %}
+                <tr>
+                    <td>
+                        <h2>Attributes</h2>
+                        <ul>
+                            {% for attrib_of in current.attribs.values() %}
+                                <li>
+                                    {{ attrib_of.attrib.name }}
+                                    {% if attrib_of.val != 1 %}{{ attrib_of.val | formatNum }}{% endif %}
+                                </li>
+                            {% else %}
+                                (None)
+                                <br>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+            {% endif %}
+            {% if current.recipes %}
+                <tr>
+                    <td>
+                        <style>
                     .nested-table {
                         width: 100%;
                         border-collapse: collapse;
@@ -214,246 +241,257 @@
                         vertical-align: middle;
                         /* border: 1px solid #888; */
                     }
-                </style>
-                <table class="inner-table spacious" cellspacing="0" cellpadding="5" style="width: 100%">
-                    <tr>
-                        <th>Batches</th>
-                        <th>Rate</th>
-                        <th></th>
-                        <th>Source</th>
-                        <th>Required</th>
-                        <th>In Stock</th>
-                        <th>Where</th>
-                    </tr>
-        {% for recipe in current.recipes %}
-            {% if not loop.first %}
-                <tr style="border-top: 1px solid #888;"></tr>
+                        </style>
+                        <table class="inner-table spacious"
+                               cellspacing="0"
+                               cellpadding="5"
+                               style="width: 100%">
+                            <tr>
+                                <th>Batches</th>
+                                <th>Rate</th>
+                                <th></th>
+                                <th>Source</th>
+                                <th>Required</th>
+                                <th>In Stock</th>
+                                <th>Where</th>
+                            </tr>
+                            {% for recipe in current.recipes %}
+                                {% if not loop.first %}<tr style="border-top: 1px solid #888;"></tr>{% endif %}
+                                {% set attribs_list = recipe.attribs.values() | list %}
+                                {% set max_rows = max(recipe.byproducts|length + 1, recipe.sources|length + attribs_list|length) %}
+                                {% for row in range(0, max_rows) %}
+                                    {% set byproduct_index = row - 1 %}{# subtract 1 for gain button row #}
+                                    {% set attrib_index = row - recipe.sources|length %}
+                                    {% if loop.first %}
+                                        <tr>
+                                            <td>
+                                                {% if recipe.instant %}
+                                                    <input type="text"
+                                                           class="quantity_to_gain"
+                                                           id="quantity_to_gain_{{ recipe.id }}"
+                                                           size="3"
+                                                           value="{{ session['quantity_to_gain'] if session['quantity_to_gain'] else 1 }}">
+                                                    <button type="button"
+                                                            data-recipe-id="{{ recipe.id }}"
+                                                            data-rate-amount="{{ recipe.rate_amount }}"
+                                                            class="gain-btn go-button"
+                                                            id="gain-btn_{{ recipe.id }}">Gain</button>
+                                                {% else %}
+                                                    <button type="button"
+                                                            class="start-stop-btn go-button"
+                                                            id="start-stop-btn_{{ recipe.id }}"
+                                                            data-recipe-id="{{ recipe.id }}">Start</button>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="rate-amount" id="rate-amount_{{ recipe.id }}">
+                                                    {% if recipe.rate_amount %}
+                                                        {{ recipe.rate_amount | formatNum }}
+                                                    {% else %}
+                                                        <span style="font-size: 2em"
+                                                              title="(trash can icon) does not produce the current item">🗑</span>
+                                                    {% endif %}
+                                                </span>
+                                                {% if not recipe.instant %}
+                                                    {% if recipe.rate_amount %}per{% endif %}
+                                                    <span class="rate-duration" id="rate-duration_{{ recipe.id }}">{{ recipe.rate_duration | formatNum }}</span>s
+                                                {% endif %}
+                                            </td>
+                                        {% elif byproduct_index < recipe.byproducts|length %}
+                                            {% set byproduct = recipe.byproducts[byproduct_index] %}
+                                            {% set item = byproduct.item %}
+                                            <tr>
+                                                {% set link = url_for('play_item', item_id=item.id, char_id=char_id, loc_id=loc_id) %}
+                                                {% set letter = link_letters.next(link) %}
+                                                <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
+                                                <td>
+                                                    <strong title="byproduct">&amp;</strong>
+                                                    <span>[{{ letter }}]</span>
+                                                    <a href="{{ link }}">{{ item.name }}</a>
+                                                </td>
+                                                <td>{{ byproduct.rate_amount | formatNum }}</td>
+                                            {% else %}
+                                                <!-- add empty columns to even out the sides, starting the row -->
+                                                <tr>
+                                                    <td colspan=2></td>
+                                                {% endif %}
+                                                {% if loop.first %}
+                                                    <td rowspan="{{ max_rows }}" style="position: relative">
+                                                        <div style="position: absolute;
+                                                                    top: 12.5%;
+                                                                    right: 0;
+                                                                    width: 0;
+                                                                    height: 75%;
+                                                                    border-right: 1px dotted #888"></div>
+                                                    </td>
+                                                {% endif %}
+                                                {% if row < recipe.sources|length %}
+                                                    {% set source = recipe.sources[row] %}
+                                                    {% set item = source.item %}
+                                                    {% if item.id == current.id %}
+                                                        <td>
+                                                            <strong>{{ item.name }}</strong>
+                                                        </td>
+                                                    {% else %}
+                                                        {% set link = url_for('play_item', item_id=item.id, char_id=char_id, loc_id=loc_id) %}
+                                                        {% set letter = link_letters.next(link) %}
+                                                        <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
+                                                        <td>
+                                                            <span>[{{ letter }}]</span>
+                                                            <a href="{{ link }}">{{ item.name }}</a>
+                                                        </td>
+                                                    {% endif %}
+                                                    <td>
+                                                        {% if source.preserve %}
+                                                            ({{ source.q_required | formatNum }})
+                                                        {% else %}
+                                                            {{ source.q_required | formatNum }}
+                                                        {% endif %}
+                                                    </td>
+                                                    <td id="recipe-{{ recipe.id }}-source-{{ item.id }}-quantity">
+                                                        {% if source.pile %}
+                                                            {{ source.pile.quantity | formatNum }}
+                                                        {% else %}
+                                                            <div style="text-align: center">—</div>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td id="recipe-{{ recipe.id }}-source-{{ item.id }}-at">
+                                                        {% if source.pile and source.pile.quantity > 0 %}
+                                                            {% set container = source.pile.container %}
+                                                            {% if source.pile.container_type == 'general' %}
+                                                                (General)
+                                                            {% else %}
+                                                                {% if source.pile.container_type == 'char' %}
+                                                                    {% set link = url_for('play_char', char_id=container.id) %}
+                                                                {% elif source.pile.container_type == 'loc' %}
+                                                                    {% set link = url_for('play_location', loc_id=container.id) %}
+                                                                {% else %}
+                                                                    {% set link = "/unexpected-pile-type" %}
+                                                                {% endif %}
+                                                                {% set letter = link_letters.next(link) %}
+                                                                <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                                                                <span>[{{ letter }}]</span>
+                                                                <a href="{{ link }}">{{ container.name }}</a>
+                                                                <br>
+                                                            {% endif %}
+                                                        {% else %}
+                                                            <div style="text-align: center">—</div>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                            {% elif attrib_index < attribs_list|length %}
+                                                {% set req = attribs_list[attrib_index] %}
+                                                <td>{{ req.attrib.name }}</td>
+                                                <td>({{ req.val | formatNum }})</td>
+                                                {% if req.entity %}
+                                                    {% set entity = req.entity %}
+                                                    <td>{{ entity.attribs[req.attrib.id].val | formatNum }}</td>
+                                                    {% if entity.__class__.__name__ == 'Character' %}
+                                                        {% set link = url_for('play_char', char_id=entity.id) %}
+                                                    {% elif entity.__class__.__name__ == 'Item' %}
+                                                        {% set link = url_for('play_item', item_id=entity.id) %}
+                                                    {% else %}
+                                                        {% set link = "/unexpected-entity-type" %}
+                                                    {% endif %}
+                                                    {% set letter = link_letters.next(link) %}
+                                                    <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                                                    <td>
+                                                        <span>[{{ letter }}]</span>
+                                                        <a href="{{ link }}">{{ entity.name }}</a>
+                                                    </td>
+                                                {% else %}
+                                                    <td>(0)</td>
+                                                    <td>(None)</td>
+                                                {% endif %}
+                                            </tr>
+                                        {% else %}
+                                            <!-- add empty columns to even out the sides, finishing the row -->
+                                            <td colspan=4></td>
+                                        </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endfor %}
+                        </table>
+                    </td>
+                </tr>
             {% endif %}
-            {% set attribs_list = recipe.attribs.values() | list %}
-            {% set max_rows = max(recipe.byproducts|length + 1, recipe.sources|length + attribs_list|length) %}
-            {% for row in range(0, max_rows) %}
-                {% set byproduct_index = row - 1 %}{# subtract 1 for gain button row #}
-                {% set attrib_index = row - recipe.sources|length %}
-                {% if loop.first %}
-                    <tr>
-                        <td>
-                            {% if recipe.instant %}
-                            <input type="text" class="quantity_to_gain" id="quantity_to_gain_{{ recipe.id }}" size="3" value="{{ session['quantity_to_gain'] if session['quantity_to_gain'] else 1 }}">
-                            <button type="button" data-recipe-id="{{ recipe.id }}" data-rate-amount="{{ recipe.rate_amount }}" class="gain-btn go-button" id="gain-btn_{{ recipe.id }}">Gain</button>
-                            {% else %}
-                            <button type="button" class="start-stop-btn go-button" id="start-stop-btn_{{ recipe.id }}" data-recipe-id="{{ recipe.id }}">Start</button>
+            {% set outerscope = namespace(used_as_source=[], produced_as_byproduct=[]) %}
+            {% for other_item in game_data.items %}
+                {% if other_item.id != current.id %}
+                    {# e.g. pigs breeding pigs #}
+                    {% for recipe in other_item.recipes %}
+                        {% for source in recipe.sources %}
+                            {% if current.id == source.item.id %}
+                                {% set _ = outerscope.used_as_source.append(
+                                                                {'item': other_item, 'q_required': source.q_required}) %}
                             {% endif %}
-                        </td>
-                        <td>
-                            <span class="rate-amount" id="rate-amount_{{ recipe.id }}">
-                                {% if recipe.rate_amount %}{{ recipe.rate_amount | formatNum }}
-                                {% else %}<span style="font-size: 2em" title="(trash can icon) does not produce the current item">&#x1F5D1;</span>{% endif %}
-                            </span>
-                            {% if not recipe.instant %}
-                            {% if recipe.rate_amount %}per {% endif %}<span class="rate-duration" id="rate-duration_{{ recipe.id }}">{{ recipe.rate_duration | formatNum }}</span>s
+                        {% endfor %}
+                        {% for byproduct in recipe.byproducts %}
+                            {% if current.id == byproduct.item.id %}
+                                {% set _ = outerscope.produced_as_byproduct.append(
+                                                                {'item': other_item, 'rate_amount': byproduct.rate_amount}) %}
                             {% endif %}
-                        </td>
-                {% elif byproduct_index < recipe.byproducts|length %}
-                    {% set byproduct = recipe.byproducts[byproduct_index] %}
-                    {% set item = byproduct.item %}
-                    <tr>
-                        {% set link = url_for('play_item', item_id=item.id, char_id=char_id, loc_id=loc_id) %}
-                        {% set letter = link_letters.next(link) %}
-                        <script>
-                            linkForKey['{{ letter }}'] = "{{ link|safe }}";
-                        </script>
-                        <td>
-                            <strong title="byproduct">&amp;</strong>
-                            <span>[{{ letter }}]</span>
-                            <a href="{{ link }}">{{ item.name }}</a>
-                        </td>
-                        <td>
-                            {{ byproduct.rate_amount | formatNum }}
-                        </td>
-                {% else %}
-                    <!-- add empty columns to even out the sides, starting the row -->
-                    <tr>
-                        <td colspan=2></td>
-                {% endif %}
-                {% if loop.first %}
-                <td rowspan="{{ max_rows }}" style="position: relative"><div style="position: absolute; top: 12.5%; right: 0; width: 0; height: 75%; border-right: 1px dotted #888;"></div></td>
-                {% endif %}
-                {% if row < recipe.sources|length %}
-                    {% set source = recipe.sources[row] %}
-                    {% set item = source.item %}
-                        {% if item.id == current.id %}
-                            <td><strong>{{ item.name}}</strong></td>
-                        {% else %}
-                            {% set link = url_for('play_item', item_id=item.id, char_id=char_id, loc_id=loc_id) %}
-                            {% set letter = link_letters.next(link) %}
-                            <script>
-                                linkForKey['{{ letter }}'] = "{{ link|safe }}";
-                            </script>
-                            <td>
-                                <span>[{{ letter }}]</span>
-                                <a href="{{ link }}">{{ item.name }}</a>
-                            </td>
-                        {% endif %}
-                        <td>
-                            {% if source.preserve %}
-                                ({{ source.q_required | formatNum }})
-                            {% else %}
-                                {{ source.q_required | formatNum }}
-                            {% endif %}
-                        </td>
-                        <td id="recipe-{{ recipe.id }}-source-{{ item.id }}-quantity">
-                        {% if source.pile %}
-                            {{ source.pile.quantity | formatNum }}
-                        {% else %}
-                            <div style="text-align: center">&mdash;</div>
-                        {% endif %}
-                        </td>
-                        <td id="recipe-{{ recipe.id }}-source-{{ item.id }}-at">
-                        {% if source.pile and source.pile.quantity > 0 %}
-                            {% set container = source.pile.container %}
-                            {% if source.pile.container_type == 'general' %}
-                                (General)
-                            {% else %}
-                                {% if source.pile.container_type == 'char' %}
-                                    {% set link = url_for('play_char', char_id=container.id) %}
-                                {% elif source.pile.container_type == 'loc' %}
-                                    {% set link = url_for('play_location', loc_id=container.id) %}
-                                {% else %}
-                                    {% set link = '/unexpected-pile-type' %}
-                                {% endif %}
-                                {% set letter = link_letters.next(link) %}
-                                <script>
-                                    linkForKey['{{ letter }}'] = "{{ link }}";
-                                </script>
-                                <span>[{{ letter }}]</span>
-                                <a href="{{ link }}">{{ container.name }}</a><br>
-                            {% endif %}
-                        {% else %}
-                            <div style="text-align: center">&mdash;</div>
-                        {% endif %}
-                        </td>
-                    </tr>
-                {% elif attrib_index < attribs_list|length %}
-                    {% set req = attribs_list[attrib_index] %}
-                        <td>{{ req.attrib.name }}</td>
-                        <td>
-                            ({{ req.val | formatNum }})
-                        </td>
-                        {% if req.entity %}
-                            {% set entity = req.entity %}
-                            <td>{{ entity.attribs[req.attrib.id].val | formatNum }}</td>
-                            {% if entity.__class__.__name__ == 'Character' %}
-                                {% set link = url_for('play_char', char_id=entity.id) %}
-                            {% elif entity.__class__.__name__ == 'Item' %}
-                                {% set link = url_for('play_item', item_id=entity.id) %}
-                            {% else %}
-                                {% set link = '/unexpected-entity-type' %}
-                            {% endif %}
-                            {% set letter = link_letters.next(link) %}
-                            <script>
-                                linkForKey['{{ letter }}'] = "{{ link }}";
-                            </script>
-                            <td>
-                                <span>[{{ letter }}]</span>
-                                <a href="{{ link }}">{{ entity.name }}</a>
-                            </td>
-                        {% else %}
-                            <td>(0)</td>
-                            <td>(None)</td>
-                        {% endif %}
-                    </tr>
-                {% else %}
-                    <!-- add empty columns to even out the sides, finishing the row -->
-                        <td colspan=4></td>
-                    </tr>
+                        {% endfor %}
+                    {% endfor %}
                 {% endif %}
             {% endfor %}
-        {% endfor %}
-            </table>
-            </td>
-        </tr>
-        {% endif %}
-
-        {% set outerscope = namespace(used_as_source=[], produced_as_byproduct=[]) %}
-        {% for other_item in game_data.items %}
-            {% if other_item.id != current.id %}  {# e.g. pigs breeding pigs #}
-                {% for recipe in other_item.recipes %}
-                    {% for source in recipe.sources %}
-                        {% if current.id == source.item.id %}
-                            {% set _ = outerscope.used_as_source.append(
-                                {'item': other_item, 'q_required': source.q_required}) %}
-                        {% endif %}
-                    {% endfor %}
-                    {% for byproduct in recipe.byproducts %}
-                        {% if current.id == byproduct.item.id %}
-                            {% set _ = outerscope.produced_as_byproduct.append(
-                                {'item': other_item, 'rate_amount': byproduct.rate_amount}) %}
-                        {% endif %}
-                    {% endfor %}
-                {% endfor %}
+            {% if outerscope.used_as_source %}
+                <tr>
+                    <td>
+                        <table class="inner-table spacious" cellspacing="0" cellpadding="5">
+                            <tr>
+                                <th>Used For</th>
+                                <th>Required</th>
+                            </tr>
+                            {% for used_for in outerscope.used_as_source %}
+                                {% set link = url_for('play_item', item_id=used_for.item.id, char_id=char_id, loc_id=loc_id) %}
+                                {% set letter = link_letters.next(link) %}
+                                <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
+                                <tr>
+                                    <td>
+                                        <span>[{{ letter }}]</span>
+                                        <a href="{{ link }}">{{ used_for.item.name }}</a>
+                                    </td>
+                                    <td>{{ used_for.q_required | formatNum }}</td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    </td>
+                </tr>
             {% endif %}
-        {% endfor %}
-        {% if outerscope.used_as_source %}
-        <tr>
-            <td>
-                <table class="inner-table spacious" cellspacing="0" cellpadding="5">
-                    <tr>
-                        <th>Used For</th>
-                        <th>Required</th>
-                    </tr>
-                    {% for used_for in outerscope.used_as_source %}
-                        {% set link = url_for('play_item', item_id=used_for.item.id, char_id=char_id, loc_id=loc_id) %}
-                        {% set letter = link_letters.next(link) %}
-                        <script>
-                            linkForKey['{{ letter }}'] = "{{ link|safe }}";
-                        </script>
-                    <tr>
-                        <td>
-                            <span>[{{ letter }}]</span>
-                            <a href="{{ link }}">{{ used_for.item.name }}</a>
-                        </td>
-                        <td>{{ used_for.q_required | formatNum }}</td>
-                    </tr>
-                    {% endfor %}
-                </table>
-            </td>
-        </tr>
-        {% endif %}
-        {% if outerscope.produced_as_byproduct %}
-        <tr>
-            <td>
-                <table class="inner-table spacious" cellspacing="0" cellpadding="5">
-                    <tr>
-                        <th>Byproduct of a Recipe for</th>
-                    </tr>
-                    {% for byproduct_of in outerscope.produced_as_byproduct %}
-                        {% set link = url_for('play_item', item_id=byproduct_of.item.id, char_id=char_id, loc_id=loc_id) %}
-                        {% set letter = link_letters.next(link) %}
-                        <script>
-                            linkForKey['{{ letter }}'] = "{{ link|safe }}";
-                        </script>
-                    <tr>
-                        <td>
-                            <span>[{{ letter }}]</span>
-                            <a href="{{ link }}">{{ byproduct_of.item.name }}</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </table>
-            </td>
-        </tr>
-        {% endif %}
-    </table>
-
-    <script>
-        $(document).ready(function() {
+            {% if outerscope.produced_as_byproduct %}
+                <tr>
+                    <td>
+                        <table class="inner-table spacious" cellspacing="0" cellpadding="5">
+                            <tr>
+                                <th>Byproduct of a Recipe for</th>
+                            </tr>
+                            {% for byproduct_of in outerscope.produced_as_byproduct %}
+                                {% set link = url_for('play_item', item_id=byproduct_of.item.id, char_id=char_id, loc_id=loc_id) %}
+                                {% set letter = link_letters.next(link) %}
+                                <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
+                                <tr>
+                                    <td>
+                                        <span>[{{ letter }}]</span>
+                                        <a href="{{ link }}">{{ byproduct_of.item.name }}</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    </td>
+                </tr>
+            {% endif %}
+        </table>
+        <script>
+        $(document).ready(() => {
             let mainQuantity = 0;
 
             function updateQuantity(data) {
                 // Main item quantity
+                const quantityText = data.quantity_str;
+                const qLimit = {{ current.q_limit }};
                 $('#quantity-{{ current.id }}').text(
-                    data.quantity_str
-                    {% if current.q_limit != 0 %} + " / " + {{ current.q_limit }}{% endif %}
+                    qLimit !== 0 ? `${quantityText} / ${qLimit}` : quantityText
                 );
                 updateStorageProgress({
                     quantity: data.quantity,
@@ -461,11 +499,10 @@
                 });
                 mainQuantity = data.quantity;
                 // Source item quantities required
-                let url;
                 {% for recipe in current.recipes %}
                     {% for source in recipe.sources %}
-                        url = getItemProgressUrl({{ source.item.id }})
-                        $.get(url, function(data) {
+                        const url = getItemProgressUrl({{ source.item.id }})
+                        $.get(url, (data) => {
                             $('#recipe-{{ recipe.id }}-source-{{ source.item.id }}-quantity').text(data.quantity_str);
                         });
                     {% endfor %}
@@ -490,18 +527,18 @@
                 const queryParams = [];
                 const charId = "{{ char_id }}";
                 if (charId) {
-                    queryParams.push('char_id=' + encodeURIComponent(charId));
+                    queryParams.push(`char_id=${encodeURIComponent(charId)}`);
                 }
                 const locId = "{{ loc_id }}";
                 if (locId) {
-                    queryParams.push('loc_id=' + encodeURIComponent(locId));
+                    queryParams.push(`loc_id=${encodeURIComponent(locId)}`);
                 }
                 if (mainPileType) {
-                    queryParams.push('main=' + encodeURIComponent(mainPileType));
+                    queryParams.push(`main=${encodeURIComponent(mainPileType)}`);
                 }
-                let url = '/item/progress/' + itemId;
+                let url = `/item/progress/${itemId}`;
                 if (queryParams.length > 0) {
-                    url += '?' + queryParams.join('&');
+                    url += `?${queryParams.join('&')}`;
                 }
                 return url;
             }
@@ -586,9 +623,9 @@
             async function fetchProgressData() {
                 const url = getItemProgressUrl({{ current.id }}, "{{ main_pile_type }}")
                 const data = await new Promise((resolve, reject) => {
-                    $.get(url, function(response) {
+                    $.get(url, (response) => {
                         resolve(response);
-                    }).fail(function(xhr, status, error) {
+                    }).fail((jqXHR, textStatus, error) => {
                         reject(error);
                     });
                 });
@@ -613,7 +650,7 @@
             }
             initializePage();
 
-            var fetchProgressInterval;
+            let fetchProgressInterval;
             function startFetchingProgress() {
                 if (fetchProgressInterval) {
                     stopFetchingProgress();
@@ -625,39 +662,37 @@
                 fetchProgressInterval = null;
             }
 
-            $('.gain-btn').click(function() {
+            $('.gain-btn').click(() => {
                 const quantityInput = $(this).prev('.quantity_to_gain');
                 const quantity = parseInt(quantityInput.val(), 10);
                 const recipe_id = $(this).data('recipe-id');
-                const rate_amount = $(this).data('rate-amount');
-                const minResultQty = parseInt(rate_amount, 10);
-                if (isNaN(quantity) || quantity < 1) {
+                if (isNaN(quantity) || Number(quantity) === 0) {
                     alert('Please enter a valid number for the quantity.');
                     return;
                 }
                 const item_id = {{ current.id }}
                 stopFetchingProgress();
                 $.ajax({
-                    url: '/item/gain/' + item_id + '/' + recipe_id,
-                    method: 'POST',
+                    url: `/item/gain/${item_id}/${recipe_id}`,
+                    method: 'post',
                     data: { quantity: quantity },
-                    success: function(response) {
+                    success: (response) => {
                         if (response.status === 'error') {
                             console.error(response.message);
                             alert(response.message);
                         }
                     },
-                    error: function(error) {
+                    error: (error) => {
                         console.error('Error:', error);
-                        alert('Error: ' + error);
+                        alert(`Error: ${error}`);
                     },
-                    complete: function() {
+                    complete: () => {
                         fetchProgressData();
                         startFetchingProgress();
                     }
                 });
             });
-            $('.start-stop-btn').click(function() {
+            $('.start-stop-btn').click(() => {
                 const current_id = {{ current.id }};
                 const startBtn = this;
                 const recipe_id = $(this).data('recipe-id');
@@ -689,28 +724,28 @@
                         startFetchingProgress();
                     });
             });
-            $('#drop-btn').click(function() {
+            $('#drop-btn').click(() => {
                 const itemId = "{{ current.id }}";
                 const charId = "{{ container.id }}";
                 $.ajax({
                     url: `/item/drop/${itemId}/char/${charId}`,
-                    method: 'POST',
-                    success: function(response) {
+                    method: 'post',
+                    success: (response) => {
                         if (response.status === 'success') {
                             const url = "{{ url_for('play_char', char_id=container.id) }}";
                             window.location.href = url;
                         } else {
                             console.error(response.message);
-                            alert('Error: ' + response.message);
+                            alert(`Error: ${response.message}`);
                         }
                     },
-                    error: function(error) {
+                    error: (error) => {
                         console.error('Error:', error);
-                        alert('Error: ' + error);
+                        alert(`Error: ${error}`);
                     }
                 });
             });
-            $('#pickup-btn').click(function() {
+            $('#pickup-btn').click(() => {
                 const itemId = "{{ current.id }}";
                 const locId = "{{ container.id }}";
                 const charId = $('#char-picking-up').val();
@@ -720,23 +755,23 @@
                 }
                 $.ajax({
                     url: `/item/pickup/${itemId}/loc/${locId}/char/${charId}`,
-                    method: 'POST',
-                    success: function(response) {
+                    method: 'post',
+                    success: (response) => {
                         if (response.status === 'success') {
                             const url = "{{ url_for('play_location', loc_id=container.id) }}";
                             window.location.href = url;
                         } else {
                             console.error(response.message);
-                            alert('Error: ' + response.message);
+                            alert(`Error: ${response.message}`);
                         }
                     },
-                    error: function(error) {
+                    error: (error) => {
                         console.error('Error:', error);
-                        alert('Error: ' + error);
+                        alert(`Error: ${error}`);
                     }
                 });
             });
-            $('#equip-btn').click(function() {
+            $('#equip-btn').click(() => {
                 const itemId = "{{ current.id }}";
                 const charId = "{{ container.id }}";
                 const slot = $('#char-equip-slot').val();
@@ -746,39 +781,39 @@
                 }
                 $.ajax({
                     url: `/item/equip/${itemId}/char/${charId}/slot/${slot}`,
-                    method: 'POST',
-                    success: function(response) {
+                    method: 'post',
+                    success: (response) => {
                         if (response.status === 'success') {
                             const url = "{{ url_for('play_char', char_id=container.id) }}";
                             window.location.href = url;
                         } else {
                             console.error(response.message);
-                            alert('Error: ' + response.message);
+                            alert(`Error: ${response.message}`);
                         }
                     },
-                    error: function(error) {
+                    error: (error) => {
                         console.error('Error:', error);
-                        alert('Error: ' + error);
+                        alert(`Error: ${error}`);
                     }
                 });
             });
-            $('#unequip-btn').click(function() {
+            $('#unequip-btn').click(() => {
                 const itemId = "{{ current.id }}";
                 const charId = "{{ container.id }}";
                 $.ajax({
                     url: `/item/unequip/${itemId}/char/${charId}`,
-                    method: 'POST',
-                    success: function(response) {
+                    method: 'post',
+                    success: (response) => {
                         if (response.status === 'success') {
                             window.location.href = "{{ url_for('play_char', char_id=container.id) }}";
                         } else {
                             console.error(response.message);
-                            alert('Error: ' + response.message);
+                            alert(`Error: ${response.message}`);
                         }
                     },
-                    error: function(error) {
+                    error: (error) => {
                         console.error('Error:', error);
-                        alert('Error: ' + error);
+                        alert(`Error: ${error}`);
                     }
                 });
             });
@@ -788,7 +823,7 @@
                 const showAll = $('#show-all-buttons').is(':checked');
                 const storage_carried = storageType === 'carried';
                 const notEmpty = mainQuantity !== 0;
-                const slot = {% if container.pile.slot %}true{% else %}false{% endif %};
+                const slot = {{ 'true' if container.pile.slot else 'false' }};
                 const visibilityMap = {
                     'unequip-container': (notEmpty && slot && (showAll || storage_carried)),
                     'equip-container': (notEmpty && (showAll || storage_carried)),
@@ -797,40 +832,40 @@
                     'move_to_char-container': (notEmpty && (showAll || storage_carried)),
                     'move_to_loc-container': (notEmpty && (showAll || storageType === 'local')),
                     'move_to_general-container': (notEmpty && (showAll || storageType === 'general')),
-                    'show_all_buttons-container': (mainQuantity != 0),
+                    'show_all_buttons-container': (mainQuantity !== 0),
                 };
-                Object.keys(visibilityMap).forEach(function(id) {
+                Object.keys(visibilityMap).forEach((id) => {
                     if (visibilityMap[id]) {
-                        $('#' + id).show();
+                        $(`#${id}`).show();
                     } else {
-                        $('#' + id).hide();
+                        $(`#${id}`).hide();
                     }
                 });
                 const showThese = [];
                 const hideThese = [];
-                $('.show-if-carried').each(function() {
+                $('.show-if-carried').each(() => {
                     if (showAll || storageType === 'carried') {
                         showThese.push(this);
                     } else {
                         hideThese.push(this);
                     }
                 });
-                $('.show-if-local').each(function() {
+                $('.show-if-local').each(() => {
                     if (showAll || storageType === 'local') {
                         showThese.push(this);
                     } else {
                         hideThese.push(this);
                     }
                 });
-                $('.show-if-universal').each(function() {
+                $('.show-if-universal').each(() => {
                     if (showAll || storageType === 'universal') {
                         showThese.push(this);
                     } else {
                         hideThese.push(this);
                     }
                 });
-                $('.hide-if-empty').each(function() {
-                    if (mainQuantity != 0) {
+                $('.hide-if-empty').each(() => {
+                    if (mainQuantity !== 0) {
                         /*
                         if (!showThese.includes(this)) {
                             showThese.push(this);
@@ -850,7 +885,7 @@
                         }
                     }
                 });
-                $('.hide-if-slot').each(function() {
+                $('.hide-if-slot').each(() => {
                     {% if container.pile.slot %}
                         if (showAll) {
                             if (!showThese.includes(this)) {
@@ -874,10 +909,11 @@
                 showThese.forEach(el => $(el).show());
                 hideThese.forEach(el => $(el).hide());
             }
-            $('#show-all-buttons').on('change', function() {
+            $('#show-all-buttons').on('change', () => {
                 updateVisibility();
             });
         });
-    </script>
-    </div><!-- content -->
+        </script>
+    </div>
+    <!-- content -->
 {% endblock %}

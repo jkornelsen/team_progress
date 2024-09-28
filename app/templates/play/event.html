@@ -1,15 +1,14 @@
 {% extends 'base.html' %}
-
 {% block upper_left %}
     <div class="nav-container">
-        <a class="upper-left" href="{{ url_for('overview') }}">[O]verview</a>
+        <a class="upper-left" href="{{ url_for("overview") }}">[O]verview</a>
         <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for('configure_index') }}">[M]ain Setup</a>
+        <a class="upper-left" href="{{ url_for("configure_index") }}">[M]ain Setup</a>
         <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for('configure_event', event_id=current.id) }}">Event S[e]tup</a>
+        <a class="upper-left"
+           href="{{ url_for('configure_event', event_id=current.id) }}">Event S[e]tup</a>
     </div>
 {% endblock %}
-
 {% block content %}
     <script>
         const linkForKey = {
@@ -18,8 +17,8 @@
             'e': '{{ url_for('configure_event', event_id=current.id) }}',
         };
         const funcForKey = {};
-        document.addEventListener('DOMContentLoaded', function () {
-            document.addEventListener('keypress', function (event) {
+        document.addEventListener('DOMContentLoaded', () => {
+            document.addEventListener('keypress', (event) => {
                 const key = event.key.toLowerCase();
                 if (key === 'r') {
                     document.getElementById('roll-btn').click();
@@ -32,13 +31,12 @@
         });
     </script>
     <h1>{{ current.name }}</h1>
-    {% if current.description %}
-        <p>{{ current.description|htmlify }}</p>
-    {% endif %}
+    {% if current.description %}<p>{{ current.description|htmlify }}</p>{% endif %}
     <table class="spacious">
         <tr>
             <td>
-                <form method="POST" action="{{ url_for('play_event', event_id=current.id) }}">
+                <form method="post"
+                      action="{{ url_for('play_event', event_id=current.id) }}">
                     {% if current.outcome_type == 'fourway' %}
                         <label for="difficulty" style="padding-left: 10px;">Difficulty:</label>
                         <select id="difficulty" name="difficulty">
@@ -46,80 +44,107 @@
                             <option value="10">Moderate (10)</option>
                             <option value="15">Hard (15)</option>
                             <option value="20">Very Hard (20)</option>
-                        </select><br>
+                        </select>
+                        <br>
                     {% endif %}
-        {% if current.outcome_type == 'fourway' or current.outcome_type == 'numeric' %}
-            <div style="background-color: black; margin: 3px; padding: 10px">
-            <label for="stat_adjustment">Stat Adjustment:</label>
-            <input type="text" id="stat_adjustment" name="stat_adjustment" value="{{ current.stat_adjustment }}">
-            <br>
-            {% for det in current.determining_entities %}
-                {% set det_ref = "_" ~ det.typename ~ "_" ~ det.id %}
-                <li style="margin-top: 5px">{{ det.name }}
-                <select class="container-for-det" 
-                        id="container-for-det{{ det_ref }}" 
-                        data-id="{{ det.id }}" 
-                        data-type="{{ det.typename }}"
-                        data-mult="{{ det.mult | lower }}">
-                    <option value="" selected>(Select to adjust roll)</option>
-                    {% for char in game_data.characters %}
-                        {% set adjust_factor = None %}
-                        {% if det.typename == 'attrib' and det.id in char.attribs %}
-                            {% set adjust_factor = char.attribs[det.id].val %}
-                        {% elif det.typename == 'item' and det.id in char.items %}
-                            {% set adjust_factor = char.items[det.id].quantity %}
-                        {% endif %}
-                        {% if adjust_factor is not none %}
-                            <option value="{{ adjust_factor }}"
-                                data-container-id="{{ char.id }}"
-                                data-container-type="{{ char.typename }}">
-                                {{ char.name }} {% if det.typename == 'attrib' %}stat{% else %}has{% endif %}: {{ adjust_factor | formatNum }}</option>
-                        {% endif %}
-                    {% endfor %}
-                    {% for item in game_data.items %}
-                        {% set adjust_factor = None %}
-                        {% if det.typename == 'attrib' and det.id in item.attribs %}
-                            {% set adjust_factor = item.attribs[det.id].val %}
-                        {% elif det.typename == 'item' and det.id == item.id %}
-                            {% set adjust_factor = item.pile.quantity %}
-                        {% endif %}
-                        {% if adjust_factor is not none %}
-                            <option value="{{ adjust_factor }}"
-                                data-container-id="{{ item.id }}"
-                                data-container-type="{{ item.typename }}">
-                                {{ item.name }} {% if det.typename == 'attrib' %}stat{% else %}general{% endif %}: {{ adjust_factor | formatNum }}</option>
-                        {% endif %}
-                    {% endfor %}
-                    {% for loc in game_data.locations %}
-                        {% set adjust_factor = None %}
-                        {% if det.typename == 'item' and det.id in loc.items %}
-                            {% set adjust_factor = loc.items[det.id].quantity %}
-                        {% endif %}
-                        {% if adjust_factor is not none %}
-                            <option value="{{ adjust_factor }}"
-                                data-container-id="{{ loc.id }}"
-                                data-container-type="{{ loc.typename }}">
-                                at {{ loc.name }}: {{ adjust_factor | formatNum }}</option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
-                {% set letter = link_letters.next() %}
-                <button type="button" class="fill-det-btn"
-                        id="fill-det-btn_{{ det_ref }}"
-                        data-id="{{ det.id }}"
-                        data-type="{{ det.typename }}">
-                    [{{ letter }}] {% if det.mult %}Multiply{% else %}Add{% endif %}
-                </button>
-                <script>
-                    funcForKey['{{ letter }}'] = function() {
+                    {% if current.outcome_type == 'fourway' or current.outcome_type == 'numeric' %}
+                        <div style="background-color: black; margin: 3px; padding: 10px">
+                            <label for="stat_adjustment">Stat Adjustment:</label>
+                            <input type="text"
+                                   id="stat_adjustment"
+                                   name="stat_adjustment"
+                                   value="{{ current.stat_adjustment }}">
+                            <br>
+                            {% for det in current.determining_entities %}
+                                {% set det_ref = "_" ~ det.typename ~ "_" ~ det.id %}
+                                <li style="margin-top: 5px">
+                                    {{ det.name }}
+                                    <select class="container-for-det"
+                                            id="container-for-det{{ det_ref }}"
+                                            data-id="{{ det.id }}"
+                                            data-type="{{ det.typename }}"
+                                            data-mult="{{ det.mult | lower }}">
+                                        <option value="" selected>(Select to adjust roll)</option>
+                                        {% for char in game_data.characters %}
+                                            {% set adjust_factor = None %}
+                                            {% if det.typename == 'attrib' and det.id in char.attribs %}
+                                                {% set adjust_factor = char.attribs[det.id].val %}
+                                            {% elif det.typename == 'item' and det.id in char.items %}
+                                                {% set adjust_factor = char.items[det.id].quantity %}
+                                            {% endif %}
+                                            {% if adjust_factor is not none %}
+                                                <option value="{{ adjust_factor }}"
+                                                        data-container-id="{{ char.id }}"
+                                                        data-container-type="{{ char.typename }}">
+                                                    {{ char.name }}
+                                                    {% if det.typename == 'attrib' %}
+                                                        stat
+                                                    {% else %}
+                                                        has
+                                                    {% endif %}
+                                                    : {{ adjust_factor | formatNum }}
+                                                </option>
+                                            {% endif %}
+                                        {% endfor %}
+                                        {% for item in game_data.items %}
+                                            {% set adjust_factor = None %}
+                                            {% if det.typename == 'attrib' and det.id in item.attribs %}
+                                                {% set adjust_factor = item.attribs[det.id].val %}
+                                            {% elif det.typename == 'item' and det.id == item.id %}
+                                                {% set adjust_factor = item.pile.quantity %}
+                                            {% endif %}
+                                            {% if adjust_factor is not none %}
+                                                <option value="{{ adjust_factor }}"
+                                                        data-container-id="{{ item.id }}"
+                                                        data-container-type="{{ item.typename }}">
+                                                    {{ item.name }}
+                                                    {% if det.typename == 'attrib' %}
+                                                        stat
+                                                    {% else %}
+                                                        general
+                                                    {% endif %}
+                                                    : {{ adjust_factor | formatNum }}
+                                                </option>
+                                            {% endif %}
+                                        {% endfor %}
+                                        {% for loc in game_data.locations %}
+                                            {% set adjust_factor = None %}
+                                            {% if det.typename == 'item' and det.id in loc.items %}
+                                                {% set adjust_factor = loc.items[det.id].quantity %}
+                                            {% endif %}
+                                            {% if adjust_factor is not none %}
+                                                <option value="{{ adjust_factor }}"
+                                                        data-container-id="{{ loc.id }}"
+                                                        data-container-type="{{ loc.typename }}">
+                                                    at {{ loc.name }}: {{ adjust_factor | formatNum }}
+                                                </option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                    {% set letter = link_letters.next() %}
+                                    <button type="button"
+                                            class="fill-det-btn"
+                                            id="fill-det-btn_{{ det_ref }}"
+                                            data-id="{{ det.id }}"
+                                            data-type="{{ det.typename }}">
+                                        [{{ letter }}]
+                                        {% if det.mult %}
+                                            Multiply
+                                        {% else %}
+                                            Add
+                                        {% endif %}
+                                    </button>
+                                    <script>
+                    funcForKey['{{ letter }}'] = () => {
                         document.querySelector('#fill-det-btn_{{ det_ref }}').click();
                     };
-                </script>
-            {% endfor %}
-            </div>
-        {% endif %}
+                                    </script>
+                                {% endfor %}
+                            </li>
+                        </div>
+                    {% endif %}
                     <div style="margin-top: 20px; text-align: center">
-                    <button type="button" id="roll-btn">[R]oll</button>
+                        <button type="button" id="roll-btn">[R]oll</button>
                     </div>
                 </form>
             </td>
@@ -130,106 +155,128 @@
             </td>
         </tr>
         {% if current.outcome_type == 'numeric' and (current.changed_entities or current.determining_entities) %}
-        <tr id="changed-row" style="opacity: 0.1;">
-            <td>
-            <div style="background-color: black; margin: 3px; padding: 10px">
-            <label for="stat_adjustment">Affected Stats:</label>
-            {% for chg in current.changed_entities %}
-                <form method="POST" action="{{ url_for('play_event', event_id=current.id) }}">
-                <!-- For example, a character is the container and an attribute
-                is the key, so on the server we would modify that attribue of
-                that character. -->
-                <input type="hidden" name="key_id" value="{{ chg.id }}">
-                <input type="hidden" name="key_type" value="{{ chg.typename }}">
-                {% set chg_ref = "_" ~ chg.typename ~ "_" ~ chg.id %}
-                <input type="hidden" name="container_id" value="0" id="container_id{{ chg_ref }}">
-                <input type="hidden" name="container_type" value="" id="container_type{{ chg_ref }}">
-                <li style="margin-top: 5px">{{ chg.name }}
-                <select class="container-for-changed" 
-                        id="container-for-changed{{ chg_ref }}" 
-                        data-id="{{ chg.id }}" 
-                        data-type="{{ chg.typename }}">
-                    <option value="">(Select for changing value)</option>
-                    {% for char in game_data.characters %}
-                        {% set oldval = None %}
-                        {% if chg.typename == 'attrib' and chg.id in char.attribs %}
-                            {% set oldval = char.attribs[chg.id].val %}
-                        {% elif chg.typename == 'item' and chg.id in char.items %}
-                            {% set oldval = char.items[chg.id].quantity %}
-                        {% endif %}
-                        {% if oldval is not none %}
-                            <option value="{{ oldval }}"
-                                data-container-id="{{ char.id }}"
-                                data-container-type="{{ char.typename }}">
-                                {{ char.name }} {% if chg.typename == 'attrib' %}stat{% else %}has{% endif %}: {{ oldval | formatNum }}
-                            </option>
-                        {% endif %}
-                    {% endfor %}
-                    {% for item in game_data.items %}
-                        {% set oldval = None %}
-                        {% if chg.typename == 'attrib' and chg.id in item.attribs %}
-                            {% set oldval = item.attribs[chg.id].val %}
-                        {% elif chg.typename == 'item' and chg.id == item.id %}
-                            {% set oldval = item.pile.quantity %}
-                        {% endif %}
-                        {% if oldval is not none %}
-                            <option value="{{ oldval }}"
-                                data-container-id="{{ item.id }}"
-                                data-container-type="{{ item.typename }}">
-                                {{ item.name }} {% if chg.typename == 'attrib' %}stat{% else %}general{% endif %}: {{ oldval | formatNum }}
-                            </option>
-                        {% endif %}
-                    {% endfor %}
-                    {% for loc in game_data.locations %}
-                        {% set oldval = None %}
-                        {% if chg.typename == 'item' and chg.id in loc.items %}
-                            {% set oldval = loc.items[chg.id].quantity %}
-                        {% endif %}
-                        {% if oldval is not none %}
-                            <option value="{{ oldval }}"
-                                data-container-id="{{ loc.id }}"
-                                data-container-type="{{ loc.typename }}">
-                                at {{ loc.name }}: {{ oldval | formatNum }}
-                            </option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
-                {% set letter = link_letters.next() %}
-                <button type="button" class="fill-changed-btn"
-                        id="fill-changed-btn_{{ chg_ref }}"
-                        data-id="{{ chg.id }}" 
-                        data-type="{{ chg.typename }}">
-                    [{{ letter }}] Fill
-                </button>
-                <script>
-                    funcForKey['{{ letter }}'] = function() {
+            <tr id="changed-row" style="opacity: 0.1;">
+                <td>
+                    <div style="background-color: black; margin: 3px; padding: 10px">
+                        <label for="stat_adjustment">Affected Stats:</label>
+                        {% for chg in current.changed_entities %}
+                            <form method="post"
+                                  action="{{ url_for('play_event', event_id=current.id) }}">
+                                <!-- For example, a character is the container and an
+                                     attribute is the key, so on the server we would modify
+                                     that attribue of that character. -->
+                                <input type="hidden" name="key_id" value="{{ chg.id }}">
+                                <input type="hidden" name="key_type" value="{{ chg.typename }}">
+                                {% set chg_ref = "_" ~ chg.typename ~ "_" ~ chg.id %}
+                                <input type="hidden"
+                                       name="container_id"
+                                       value="0"
+                                       id="container_id{{ chg_ref }}">
+                                <input type="hidden"
+                                       name="container_type"
+                                       value=""
+                                       id="container_type{{ chg_ref }}">
+                                <li style="margin-top: 5px">
+                                    {{ chg.name }}
+                                    <select class="container-for-changed"
+                                            id="container-for-changed{{ chg_ref }}"
+                                            data-id="{{ chg.id }}"
+                                            data-type="{{ chg.typename }}">
+                                        <option value="">(Select for changing value)</option>
+                                        {% for char in game_data.characters %}
+                                            {% set oldval = None %}
+                                            {% if chg.typename == 'attrib' and chg.id in char.attribs %}
+                                                {% set oldval = char.attribs[chg.id].val %}
+                                            {% elif chg.typename == 'item' and chg.id in char.items %}
+                                                {% set oldval = char.items[chg.id].quantity %}
+                                            {% endif %}
+                                            {% if oldval is not none %}
+                                                <option value="{{ oldval }}"
+                                                        data-container-id="{{ char.id }}"
+                                                        data-container-type="{{ char.typename }}">
+                                                    {{ char.name }}
+                                                    {% if chg.typename == 'attrib' %}
+                                                        stat
+                                                    {% else %}
+                                                        has
+                                                    {% endif %}
+                                                    : {{ oldval | formatNum }}
+                                                </option>
+                                            {% endif %}
+                                        {% endfor %}
+                                        {% for item in game_data.items %}
+                                            {% set oldval = None %}
+                                            {% if chg.typename == 'attrib' and chg.id in item.attribs %}
+                                                {% set oldval = item.attribs[chg.id].val %}
+                                            {% elif chg.typename == 'item' and chg.id == item.id %}
+                                                {% set oldval = item.pile.quantity %}
+                                            {% endif %}
+                                            {% if oldval is not none %}
+                                                <option value="{{ oldval }}"
+                                                        data-container-id="{{ item.id }}"
+                                                        data-container-type="{{ item.typename }}">
+                                                    {{ item.name }}
+                                                    {% if chg.typename == 'attrib' %}
+                                                        stat
+                                                    {% else %}
+                                                        general
+                                                    {% endif %}
+                                                    : {{ oldval | formatNum }}
+                                                </option>
+                                            {% endif %}
+                                        {% endfor %}
+                                        {% for loc in game_data.locations %}
+                                            {% set oldval = None %}
+                                            {% if chg.typename == 'item' and chg.id in loc.items %}
+                                                {% set oldval = loc.items[chg.id].quantity %}
+                                            {% endif %}
+                                            {% if oldval is not none %}
+                                                <option value="{{ oldval }}"
+                                                        data-container-id="{{ loc.id }}"
+                                                        data-container-type="{{ loc.typename }}">
+                                                    at {{ loc.name }}: {{ oldval | formatNum }}
+                                                </option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                    {% set letter = link_letters.next() %}
+                                    <button type="button"
+                                            class="fill-changed-btn"
+                                            id="fill-changed-btn_{{ chg_ref }}"
+                                            data-id="{{ chg.id }}"
+                                            data-type="{{ chg.typename }}">[{{ letter }}] Fill</button>
+                                    <script>
+                    funcForKey['{{ letter }}'] = () => {
                         document.querySelector('#fill-changed-btn_{{ chg_ref }}').click();
                     };
-                </script>
-                <span id="oldval_{{ chg_ref }}" style="min-width: 5ch; display: inline-block; text-align: right;">0</span> &rarr;
-                <input type="text" name="newval" id="newval_{{ chg_ref }}" size="8">
-                {% set letter = link_letters.next() %}
-                <button type="submit" name="change_entity" class="change-entity-btn" id="apply_{{ chg.id }}">
-                    [{{ letter }}] Apply
-                </button><br>
-                <script>
-                    funcForKey['{{ letter }}'] = function() {
+                                    </script>
+                                    <span id="oldval_{{ chg_ref }}"
+                                          style="min-width: 5ch;
+                                                 display: inline-block;
+                                                 text-align: right">0</span> →
+                                    <input type="text" name="newval" id="newval_{{ chg_ref }}" size="8">
+                                    {% set letter = link_letters.next() %}
+                                    <button type="submit"
+                                            name="change_entity"
+                                            class="change-entity-btn"
+                                            id="apply_{{ chg.id }}">[{{ letter }}] Apply</button>
+                                    <script>
+                    funcForKey['{{ letter }}'] = () => {
                         document.querySelector('#apply_{{ chg.id }}').click();
                     };
-                </script>
-                </form>
-            {% endfor %}
-            </div>
-            </td>
-        </tr>
-        </div>
+                                    </script>
+                                </li>
+                                <br>
+                            </form>
+                        {% endfor %}
+                    </div>
+                </td>
+            </tr>
         {% endif %}
     </table>
-    {% if message %}
-        <p>{{ message }}</p>
-    {% endif %}
+    {% if message %}<p>{{ message }}</p>{% endif %}
     <script>
-        $(document).ready(function() {
+        $(document).ready(() => {
             // remember defaults for select boxes in client side storage
             const defaultFields = [
                 { field: 'determining_char_id', containerType: 'char' },
@@ -248,63 +295,61 @@
                 }
                 if (dict.containerType) {
                     const $selectBoxes = $('.container-for-changed, .container-for-det');
-                    $selectBoxes.each(function() {
+                    $selectBoxes.each(() => {
                         const $selectBox = $(this);
-                        $selectBox.find('option').each(function() {
+                        $selectBox.find('option').each(() => {
                             const $option = $(this);
                             if ($option.data('container-type') === dict.containerType &&
                                 String($option.data('container-id')) === storedValue) {
                                 $option.prop('selected', true);
                                 return false;
                             }
+                            return true;
                         });
                     });
                 } else {
-                    const $fieldElement = $('#' + dict.field);
+                    const $fieldElement = $(`#${dict.field}`);
                     if ($fieldElement.length) {
                         $fieldElement.val(storedValue);
                     }
                 }
             });
-            $('.container-for-changed, .container-for-det').on('change', function() {
+            $('.container-for-changed, .container-for-det').on('change', () => {
                 const selectedOption = $(this).find('option:selected');
                 const selectedContainerId = selectedOption.data('container-id');
                 const selectedContainerType = selectedOption.data('container-type');
-                defaultFields.forEach(function(dict) {
+                defaultFields.forEach((dict) => {
                     if (selectedContainerId && 
                         dict.containerType === selectedContainerType) {
                         localStorage.setItem(dict.field, selectedContainerId);
                     }
                 });
             });
-            $('#difficulty').on('change', function() {
+            $('#difficulty').on('change', () => {
                 localStorage.setItem('difficulty', this.value);
             });
 
-            $('.container-for-det').change(function() {
-                const keyId = $(this).data('id');
-                const keyType = $(this).data('type');
+            $('.container-for-det').change(() => {
                 const keyMult = $(this).data('mult');
-                const keyRef = `_${keyType}_${keyId}`
                 const selectedIndex = $(this).prop('selectedIndex');
                 const selectedOption = $(this).find(':selected');
                 const containerVal = parseFloat(selectedOption.val()) || 0;
                 const currentAdjustment = parseFloat($('#stat_adjustment').val()) || 0;
                 if (selectedIndex !== 0) {
                     if (keyMult) {
-                        $('#stat_adjustment').val(currentAdjustment * containerVal);
+                        $('#stat_adjustment').val(`${currentAdjustment}${containerVal}`);
                     } else {
-                        $('#stat_adjustment').val(currentAdjustment + containerVal);
+                        $('#stat_adjustment').val(`${currentAdjustment}${containerVal}`);
                     }
                 }
             });
-            $('.fill-det-btn').on('click', function() {
+            $('.fill-det-btn').on('click', () => {
                 const entityId = $(this).data('id');
                 const entityType = $(this).data('type');
                 $(`#container-for-det_${entityType}_${entityId}`).change();
             });
 
-            $('.container-for-changed').change(function() {
+            $('.container-for-changed').change(() => {
                 const keyId = $(this).data('id');
                 const keyType = $(this).data('type');
                 const keyRef = `_${keyType}_${keyId}`
@@ -315,19 +360,19 @@
                 const outcomeFromRoll = parseFloat($('#outcome-display').data('outcome')) || 0;
                 const oldValText = $(`#oldval_${keyRef}`);
                 const newValInput = $(`#newval_${keyRef}`);
-                const newValue = containerVal + outcomeFromRoll;
+                const newValue = `${containerVal}${outcomeFromRoll}`;
                 oldValText.text(containerVal);
                 newValInput.val(newValue);
                 $(`#container_id${keyRef}`).val(containerId);
                 $(`#container_type${keyRef}`).val(containerType);
             });
-            $('.fill-changed-btn').on('click', function() {
+            $('.fill-changed-btn').on('click', () => {
                 const entityId = $(this).data('id');
                 const entityType = $(this).data('type');
                 $(`#container-for-changed_${entityType}_${entityId}`).change();
             });
 
-            $('#roll-btn').click(function() {
+            $('#roll-btn').click(() => {
                 const eventId = {{ current.id }};
                 const url = `/event/roll/${eventId}`;
                 const postData = {
@@ -336,7 +381,7 @@
                 };
                 $.ajax({
                     url: url,
-                    type: 'POST',
+                    type: 'post',
                     data: $.param(postData),
                     contentType: 'application/x-www-form-urlencoded',
                     success: function(data) {
@@ -348,8 +393,8 @@
                             $('#changed-row').css('opacity', 1);
                         }
                     },
-                    error: function(xhr, status, error) {
-                        alert('An error occurred. Please try again.');
+                    error: () => {
+                        alert('Could not get data from server. Please try again.');
                     }
                 });
             });

@@ -1,31 +1,36 @@
 {% extends 'base.html' %}
-
 {% block upper_left %}
     <div class="nav-container">
-        <a class="upper-left" href="{{ url_for('overview') }}">Overview</a>
+        <a class="upper-left" href="{{ url_for("overview") }}">Overview</a>
         <span class="separator">|</span>
-        <a href="{{ url_for('configure_index') }}">Main Setup Page</a>
+        <a href="{{ url_for("configure_index") }}">Main Setup Page</a>
     </div>
 {% endblock %}
-
 {% block content %}
     <h1>Item Setup</h1>
-    <p class="info">Basic building blocks. In addition to typical items such as resources, money, or equipment,
-    they can also represent an upgrade in production speed,
-    or conversation dialog.
-    They could even be people if they don't do much.
-    For more ideas on how items can be used, browse the pre-built scenarios.
+    <p class="info">
+        Basic building blocks. In addition to typical items such as resources, money, or equipment,
+        they can also represent an upgrade in production speed,
+        or conversation dialog.
+        They could even be people if they don't do much.
+        For more ideas on how items can be used, browse the pre-built scenarios.
     </p>
     <!--
-    <p class="info">Incidentally, in a pen-and-paper game, item progress could be determined from a clock,
-    by writing the start and stop time of an action and computing elapsed progress.</p>
+    <p class="info">Incidentally, in a pen-and-paper game, item progress could be
+    determined from a clock, by writing the start and stop time of an action and
+    computing elapsed progress.</p>
     -->
     <form method="post" style="padding-bottom: 60px">
         <label for="item-name">Name:</label>
-        <input type="text" id="item-name" name="item_name" value="{{ current.name }}" required><br>
-        <label for="item-description" >Description:</label>
-        <textarea id="item-description" name="item_description" rows="6" cols="50">{{ current.description }}</textarea><br>
-
+        <input type="text"
+               id="item-name"
+               name="item_name"
+               value="{{ current.name }}"
+               required>
+        <br>
+        <label for="item-description">Description:</label>
+        <textarea id="item-description" name="item_description" rows="6" cols="50">{{ current.description }}</textarea>
+        <br>
         <style>
             .storage-container {
                 display: flex;
@@ -35,24 +40,63 @@
         <div class="storage-container">
             <label>Storage:</label>
             <div class="storage-options">
-                <input type="radio" id="carried" name="storage_type" value="carried" {% if current.storage_type == 'carried' %}checked{% endif %}>
-                <label for="carried">Used when carried</label><br>
-                <input type="radio" id="local" name="storage_type" value="local" {% if current.storage_type == 'local' %}checked{% endif %}>
-                <label for="local">Resides at a location</label><br>
-                <input type="radio" id="universal" name="storage_type" value="universal" {% if current.storage_type == 'universal' %}checked{% endif %}>
+                <input type="radio"
+                       id="carried"
+                       name="storage_type"
+                       value="carried"
+                       {% if current.storage_type == 'carried' %}checked{% endif %}>
+                <label for="carried">Used when carried</label>
+                <br>
+                <input type="radio"
+                       id="local"
+                       name="storage_type"
+                       value="local"
+                       {% if current.storage_type == 'local' %}checked{% endif %}>
+                <label for="local">Resides at a location</label>
+                <br>
+                <input type="radio"
+                       id="universal"
+                       name="storage_type"
+                       value="universal"
+                       {% if current.storage_type == 'universal' %}checked{% endif %}>
                 <label for="universal">Accessible anywhere</label>
-                <input type="checkbox" id="top_level" name="top_level" style="margin-left: 10px;" {% if current.toplevel %}checked{% endif %}><label for="top_level">Show in Overview</label><br>
+                <input type="checkbox"
+                       id="top_level"
+                       name="top_level"
+                       style="margin-left: 10px"
+                       {% if current.toplevel %}checked{% endif %}>
+                <label for="top_level">Show in Overview</label>
+                <br>
             </div>
         </div>
         <label for="item-quantity">Quantity in General Storage:</label>
-        <input type="text" id="item-quantity" name="item_quantity" value="{{ current.quantity | formatNum }}" size="8"><span id="running-label"></span><br>
+        <input type="text"
+               id="item-quantity"
+               name="item_quantity"
+               value="{{ current.quantity | formatNum }}"
+               size="8">
+        <span id="running-label"></span>
+        <br>
         <label for="item-limit">Limit per Pile:</label>
-        <input type="text" id="item-limit" name="item_limit" value="{{ current.q_limit | formatNum }}" size="8"> <span class="label-like">0 for unlimited</span><br>
-        <input type="checkbox" id="masked" name="masked" {% if current.masked %}checked{% endif %}>
-        <label for="masked">Don't reveal until gained</label><br>
-        <input type="checkbox" id="mult" name="multiplicative" {% if current.mult %}checked{% endif %}>
-        <label for="mult">Quantity multiplies when used for events (adds if unchecked)</label><br>
-
+        <input type="text"
+               id="item-limit"
+               name="item_limit"
+               value="{{ current.q_limit | formatNum }}"
+               size="8">
+        <span class="label-like">0 for unlimited</span>
+        <br>
+        <input type="checkbox"
+               id="masked"
+               name="masked"
+               {% if current.masked %}checked{% endif %}>
+        <label for="masked">Don't reveal until gained</label>
+        <br>
+        <input type="checkbox"
+               id="mult"
+               name="multiplicative"
+               {% if current.mult %}checked{% endif %}>
+        <label for="mult">Quantity multiplies when used for events (adds if unchecked)</label>
+        <br>
         <div id="sources-container" class="outer-border">
             <!-- Placeholder for appending new recipes -->
             <div id="recipelist_end" style="width: 0; height: 0; opacity: 0;"></div>
@@ -61,9 +105,7 @@
                 <div class="select-box">
                     <select id="add-source-select">
                         <option value="" selected>(Select item)</option>
-                        {% for item in game_data.items %}
-                            <option value="{{ item.id }}">{{ item.name }}</option>
-                        {% endfor %}
+                        {% for item in game_data.items %}<option value="{{ item.id }}">{{ item.name }}</option>{% endfor %}
                     </select>
                     <button type="button" id="add-source-btn" class="lesser-button">Add Source</button>
                     <button type="button" id="add-byproduct-btn" class="lesser-button">Add Byproduct</button>
@@ -76,16 +118,18 @@
                 <div class="select-box">
                     <select id="add-recipeattrib-select">
                         <option value="" selected>(Select item)</option>
-                        {% for attrib in game_data.attribs %}
-                            <option value="{{ attrib.id }}">{{ attrib.name }}</option>
-                        {% endfor %}
+                        {% for attrib in game_data.attribs %}<option value="{{ attrib.id }}">{{ attrib.name }}</option>{% endfor %}
                     </select>
                     <button type="button" id="add-recipeattrib-btn" class="lesser-button">Add Required Attribute</button>
                 </div>
             {% endif %}
-            <button type="button" id="add-recipe-btn" class="lesser-button" {% if current.recipes | length == 0 %}style="display: none;"{% endif %}>Add Alternative Recipe</button>
+            <button type="button"
+                    id="add-recipe-btn"
+                    class="lesser-button"
+                    {% if current.recipes | length == 0 %}style="display: none;"{% endif %}>
+                Add Alternative Recipe
+            </button>
         </div>
-
         <div id="attrib-container" class="outer-border">
             <table id="attrib-table" style="display: none;">
                 <thead>
@@ -104,9 +148,7 @@
                     <div class="select-box">
                         <select id="add-attrib-select">
                             <option value="" selected>(Select attribute)</option>
-                            {% for attrib in game_data.attribs %}
-                                <option value="{{ attrib.id }}">{{ attrib.name }}</option>
-                            {% endfor %}
+                            {% for attrib in game_data.attribs %}<option value="{{ attrib.id }}">{{ attrib.name }}</option>{% endfor %}
                         </select>
                         <button type="button" id="add-attrib-btn" class="lesser-button">Add Attribute</button>
                     </div>
@@ -119,7 +161,10 @@
             <button type="submit" id="btn-save" name="save_changes">Save and Close</button>
             <button type="submit" id="btn-duplicate" name="make_duplicate">Save and Duplicate</button>
             <button type="submit" id="btn-cancel" name="cancel_changes" formnovalidate>Close without Saving</button>
-            <button type="submit" id="btn-delete" name="delete_item" class="dangerous-button">Delete Item</button>
+            <button type="submit"
+                    id="btn-delete"
+                    name="delete_item"
+                    class="dangerous-button">Delete Item</button>
         </div>
     </form>
     <script>
@@ -134,7 +179,7 @@
             }
         }
 
-        $(document).ready(function() {
+        $(document).ready(() => {
             {% if current.id > 0 %}
                 $('#btn-delete').removeAttr('disabled');
             {% else %}
@@ -143,10 +188,10 @@
 
             // disable changing quantity if currently in progress
             const itemQuantityInput = $('#item-quantity');
-            if ({{ current.progress.is_ongoing|lower }}) {
+            {% if current.progress.is_ongoing|lower %}
                 itemQuantityInput.prop('disabled', true);
                 $('#running-label').text('(Running)');
-            }
+            {% endif %}
 
             let nextRecipeId = 0;
             function addRecipe(recipe_id=0, recipe_id_from='from_js', rate_amount = 1.0, rate_duration = 3.0, instant = false) {
@@ -174,7 +219,7 @@
                         </span>
                         <span class="spaced-checkbox">
                         <input type="checkbox" id="instant" name="recipe${recipe_id}_instant"
-                            ${instant ? 'checked' : ''} onChange="updateInstantVisibility(this);"
+                            ${instant ? 'checked' : ''}
                             ><label for="instant">Instant</label>
                         </span>
                         <button type="button" class="remove-recipe-btn lesser-button" id="remove-recipe${recipe_id}" style="margin: 10px">Remove Recipe</button>
@@ -189,8 +234,11 @@
                 `;
                 $('#recipelist_end').before(recipeHtml);
                 toggleAddRecipeButtonVisibility();
-                const newCheckbox = $(`#instant[name="recipe${recipe_id}_instant"]`)[0];
-                $(newCheckbox).trigger('change');
+                const instantCheckbox = $(`#instant[name="recipe${recipe_id}_instant"]`)[0];
+                $(instantCheckbox).change(() => {
+                    updateInstantVisibility(this);
+                });
+                $(instantCheckbox).trigger('change');
                 return recipe_id;
             }
 
@@ -258,7 +306,7 @@
                     return;
                 }
                 {% if current.id > 0 %}
-                if (byproductId == {{ current.id }}) {
+                if (byproductId === {{ current.id }}) {
                     alert(`"${byproductName}" is the primary item produced by this recipe, so it cannot also be a byproduct of the recipe.`);
                     return;
                 }
@@ -279,11 +327,11 @@
                 console.log("added byproductHtml before byproductlist_end");
                 toggleAddRecipeButtonVisibility();
             }
-            $('#add-source-btn').click(function() {
+            $('#add-source-btn').click(() => {
                 const selectedOption = $('#add-source-select option:selected');
                 const sourceId = selectedOption.val();
                 const sourceName = selectedOption.text();
-                if (sourceId == "") {
+                if (sourceId === "") {
                     return; // Don't add if the selected option is the placeholder
                 }
                 let recipeId;
@@ -305,11 +353,11 @@
                 addSource(recipeId, sourceId, sourceName);
                 toggleAddRecipeButtonVisibility();
             });
-            $('#add-byproduct-btn').click(function() {
+            $('#add-byproduct-btn').click(() => {
                 const selectedOption = $('#add-source-select option:selected');
                 const byproductId = selectedOption.val();
                 const byproductName = selectedOption.text();
-                if (byproductId == "") {
+                if (byproductId === "") {
                     return; // Don't add if the selected option is the placeholder
                 }
                 let recipeId;
@@ -332,11 +380,11 @@
                 addByproduct(recipeId, byproductId, byproductName);
                 toggleAddRecipeButtonVisibility();
             });
-            $('#add-recipeattrib-btn').click(function() {
+            $('#add-recipeattrib-btn').click(() => {
                 const selectedOption = $('#add-recipeattrib-select option:selected');
                 const attribId = selectedOption.val();
                 const attribName = selectedOption.text();
-                if (attribId == "") {
+                if (attribId === "") {
                     return; // Don't add if the selected option is the placeholder
                 }
                 let recipeId;
@@ -391,23 +439,22 @@
                 {% endfor %}
             {% endfor %}
 
-            $('#sources-container').on('click', '.remove-source-btn', function() {
+            $('#sources-container').on('click', '.remove-source-btn', () => {
                 const recipeContainer = $(this).closest('.recipe-container');
                 const sourceContainer = $(this).closest('.source');
                 sourceContainer.remove();
-                if (recipeContainer.find('.source').length == 0) {
+                if (recipeContainer.find('.source').length === 0) {
                     recipeContainer.remove();
                 }
                 toggleAddRecipeButtonVisibility();
             });
-            $('#sources-container').on('click', '.remove-byproduct-btn', function() {
-                const recipeContainer = $(this).closest('.recipe-container');
+            $('#sources-container').on('click', '.remove-byproduct-btn', () => {
                 const byproductContainer = $(this).closest('.byproduct');
                 byproductContainer.remove();
                 toggleAddRecipeButtonVisibility();
             });
 
-            $('#sources-container').on('click', '.remove-recipe-btn', function() {
+            $('#sources-container').on('click', '.remove-recipe-btn', () => {
                 const recipeContainer = $(this).closest('.recipe-container');
                 recipeContainer.remove();
                 toggleAddRecipeButtonVisibility();
@@ -426,7 +473,7 @@
             }
             toggleAddRecipeButtonVisibility();
 
-            $('#add-recipe-btn').click(function() {
+            $('#add-recipe-btn').click(() => {
                 console.log("add-recipe-btn.click()");
                 addRecipe();
             });
@@ -446,14 +493,14 @@
                 $('#attrib-rows').prepend(attribHtml);
                 $('#attrib-table').show();
             }
-            $('#add-attrib-btn').click(function() {
+            $('#add-attrib-btn').click(() => {
                 const selectedOption = $('#add-attrib-select option:selected');
                 const attribId = selectedOption.val();
                 const attribName = selectedOption.text();
-                if (attribId == "") {
+                if (attribId === "") {
                     return; // don't add if the selected option is the placeholder
                 }
-                const existingAttrib = $('#attrib-rows input[name="attrib_id[]"][value="' + attribId + '"]').closest('tr');
+                const existingAttrib = $(`#attrib-rows input[name="attrib_id[]"][value="${attribId}"]`).closest('tr');
                 if (existingAttrib.length > 0) {
                     alert('Attribute already exists.');
                     return;
@@ -468,7 +515,7 @@
                     {{ attrib_of.val | formatNum }});
             {% endfor %}
 
-            $('#attrib-container').on('click', '.remove-attrib-btn', function() {
+            $('#attrib-container').on('click', '.remove-attrib-btn', () => {
                 const attribRow = $(this).closest('tr');
                 attribRow.remove();
                 if ($('#attrib-rows').children().length === 0) {
@@ -487,7 +534,7 @@
             }
             updateTopLevelCheckbox();
 
-            $('input[name="storage_type"]').on('change', function() {
+            $('input[name="storage_type"]').on('change', () => {
                 updateTopLevelCheckbox();
             });
         });

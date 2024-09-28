@@ -39,7 +39,6 @@ class UserInteraction(DbSerializable):
     """
     def __init__(self, username):
         super().__init__()
-        self.game_token = g.game_token
         self.username = username
         self.timestamp = datetime.min
         self.route_endpoint = ""  # for example "configure_item"

@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 class Pile(DbSerializable):
     def __init__(self, item=None, container=None, item_id=0):
+        super().__init__()
         self.item = item
         self.item_id = item_id
         self.container = container  # character or location where item is
@@ -30,16 +31,6 @@ class Pile(DbSerializable):
         data = self.prepare_dict(data)
         self.item_id = int(data.get('item_id', 0))
         self.quantity = data.get('quantity', 0)
-
-    @classmethod
-    def load_all_pile_data(cls):
-        """Query all items and all containers with non-zero
-        piles of each item, including general storage.
-        [item_id]: [(container_type, container_id, quantity)]
-        """
-        from .character import Character
-        from .item import Item
-        from .location import Location
 
 def load_piles(current_item, char_id, loc_id, main_pile_type):
     """Assign a pile from this location or char inventory

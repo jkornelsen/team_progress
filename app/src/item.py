@@ -130,7 +130,7 @@ class Item(Identifiable):
             self.execute_change(f"""
                 DELETE FROM {rel_table}
                 WHERE item_id = %s AND game_token = %s
-                """, (self.id, self.game_token))
+                """, (self.id, g.game_token))
         if self.attribs:
             values = [
                 (g.game_token, self.id, attrib_id, attrib_for.val)

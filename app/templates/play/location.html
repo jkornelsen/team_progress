@@ -1,18 +1,17 @@
 {% extends 'base.html' %}
-
 {% block upper_left %}
     <div class="nav-container">
-        <a class="upper-left" href="{{ url_for('overview') }}">[O]verview</a>
+        <a class="upper-left" href="{{ url_for("overview") }}">[O]verview</a>
         <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for('configure_index') }}">[M]ain Setup</a>
+        <a class="upper-left" href="{{ url_for("configure_index") }}">[M]ain Setup</a>
         <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for('configure_location', loc_id=current.id) }}">Location S[e]tup</a>
+        <a class="upper-left"
+           href="{{ url_for('configure_location', loc_id=current.id) }}">Location S[e]tup</a>
     </div>
 {% endblock %}
-
 {% block content %}
     <div id="content" style="display:none;">
-    <script>
+        <script>
         const keyToMovement = {
             'ArrowUp': { xChange: 0, yChange: -1 },
             'ArrowDown': { xChange: 0, yChange: 1 },
@@ -27,7 +26,7 @@
             'Numpad1': { xChange: -1, yChange: 1 },
             'Numpad3': { xChange: 1, yChange: 1 }
         };
-        document.addEventListener('keydown', function (event) {
+        document.addEventListener('keydown', (event) => {
             const movement = keyToMovement[event.code];
             if (movement) {
                 moveCharacter(movement.xChange, movement.yChange);
@@ -38,108 +37,96 @@
             'm': '{{ url_for('configure_index') }}',
             'e': '{{ url_for('configure_location', loc_id=current.id) }}',
         };
-        document.addEventListener('DOMContentLoaded', function () {
-            document.addEventListener('keypress', function (event) {
+        document.addEventListener('DOMContentLoaded', () => {
+            document.addEventListener('keypress', (event) => {
                 const key = event.key.toLowerCase();
                 if (linkForKey[key]) {
                     window.location.href = linkForKey[key];
                 }
             });
         });
-    </script>
-    <h1>{{ current.name }}</h1>
-    {% if current.description %}
-        <p>{{ current.description|htmlify }}</p>
-    {% endif %}
-
-    {% set width, height = current.grid.dimensions %}
-    {% set has_grid = False %}
-    {% if width > 0 and height > 0 %}
-        {% set has_grid = True %}
-    {% endif %}
-    <table style="background: transparent"><tr><td class="align-top">
-
-    {% set has = namespace(chars=False) %}
-    {% for char in game_data.characters if char.location.id == current.id %}
-        {% set has.chars = True %}
-    {% endfor %}
-    {% if has.chars %}
-        <h2>Characters Here</h2>
-        <ul>
-        {% for char in game_data.characters if char.location.id == current.id %}
-            {% set link = url_for('play_char', char_id=char.id) %}
-            {% set letter = link_letters.next(link) %}
-            <script>
-                linkForKey['{{ letter }}'] = "{{ link }}";
-            </script>
-            <span>[{{ letter }}]</span>
-            <a href="{{ link }}">{{ char.name }}</a>
-            {% if has_grid %}
-                <span class="label-like char-position" data-char-id="{{ char.id }}">&nbsp;[{{char.position[0]}},{{char.position[1]}}]</span>
-            {% endif %}
-            <br>
-        {% else %}
-            <p>(None)</p>
-        {% endfor %}
-        </ul>
-    {% endif %}
-
-    {% if current.items %}
-        <h2>Items Here</h2>
-        <ul class="item-list">
-        {% for item_at in current.items.values() %}
-            {% set item = item_at.item %}
-            {% set link = url_for('play_item', item_id=item.id, loc_id=current.id, main='local') %}
-            {% set letter = link_letters.next(link) %}
-            <script>
-                linkForKey['{{ letter }}'] = "{{ link|safe }}";
-            </script>
-            <span>[{{ letter }}]</span>
-            <span class="item-name">
-                <a href="{{ link }}">{{ item.name }}</a>
-            </span>
-            <span class="item-quantity" id="item-{{ item.id }}-quantity">
-                {% if not (item_at.item.q_limit == 1 and item_at.quantity == 1) %}
-                    {{ item_at.quantity | formatNum }}
-                {% endif %}
-            </span>
-            {% if has_grid %}
-                <span class="label-like">&nbsp;[{{item_at.position[0]}},{{item_at.position[1]}}]</span>
-            {% endif %}
-            <br>
-        {% else %}
-            <p>(None)</p>
-        {% endfor %}
-        </ul>
-    {% endif %}
-
-    {% if current.destinations %}
-        <h2>Neighboring Locations</h2>
-        <ul>
-        {% for dest in current.destinations.values() %}
-            {% if dest.loc.masked %}
-                (Unvisited)
-            {% else %}
-                {% set link = url_for('play_location', loc_id=dest.loc.id) %}
-                {% set letter = link_letters.next(link) %}
-                <script>
-                    linkForKey['{{ letter }}'] = "{{ link }}";
-                </script>
-                <span>[{{ letter }}]</span>
-                <a href="{{ link }}">{{ dest.loc.name }}</a>
-            {% endif %}
-            — Distance {{ dest.distance | formatNum }}<br>
-        {% else %}
-            <p>(None)</p>
-        {% endfor %}
-        </ul>
-    {% endif %}
-
-    </td>
-    {% set left, top, right, bottom = current.grid.excluded %}
-    {% if has_grid %}
-    <td class="align-top">
-        <style>
+        </script>
+        <h1>{{ current.name }}</h1>
+        {% if current.description %}<p>{{ current.description|htmlify }}</p>{% endif %}
+        {% set width, height = current.grid.dimensions %}
+        {% set has_grid = False %}
+        {% if width > 0 and height > 0 %}
+            {% set has_grid = True %}
+        {% endif %}
+        <table style="background: transparent">
+            <tr>
+                <td class="align-top">
+                    {% set has = namespace(chars=False) %}
+                    {% for char in game_data.characters if char.location.id == current.id %}
+                        {% set has.chars = True %}
+                    {% endfor %}
+                    {% if has.chars %}
+                        <h2>Characters Here</h2>
+                        <ul>
+                            {% for char in game_data.characters if char.location.id == current.id %}
+                                {% set link = url_for('play_char', char_id=char.id) %}
+                                {% set letter = link_letters.next(link) %}
+                                <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                                <span>[{{ letter }}]</span>
+                                <a href="{{ link }}">{{ char.name }}</a>
+                                {% if has_grid %}
+                                    <span class="label-like char-position" data-char-id="{{ char.id }}">&nbsp;[{{ char.position[0] }},{{ char.position[1] }}]</span>
+                                {% endif %}
+                                <br>
+                            {% else %}
+                                <p>(None)</p>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                    {% if current.items %}
+                        <h2>Items Here</h2>
+                        <ul class="item-list">
+                            {% for item_at in current.items.values() %}
+                                {% set item = item_at.item %}
+                                {% set link = url_for('play_item', item_id=item.id, loc_id=current.id, main='local') %}
+                                {% set letter = link_letters.next(link) %}
+                                <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
+                                <span>[{{ letter }}]</span>
+                                <span class="item-name">
+                                    <a href="{{ link }}">{{ item.name }}</a>
+                                </span>
+                                <span class="item-quantity" id="item-{{ item.id }}-quantity">
+                                    {% if not (item_at.item.q_limit == 1 and item_at.quantity == 1) %}{{ item_at.quantity | formatNum }}{% endif %}
+                                </span>
+                                {% if has_grid %}
+                                    <span class="label-like">&nbsp;[{{ item_at.position[0] }},{{ item_at.position[1] }}]</span>
+                                {% endif %}
+                                <br>
+                            {% else %}
+                                <p>(None)</p>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                    {% if current.destinations %}
+                        <h2>Neighboring Locations</h2>
+                        <ul>
+                            {% for dest in current.destinations.values() %}
+                                {% if dest.loc.masked %}
+                                    (Unvisited)
+                                {% else %}
+                                    {% set link = url_for('play_location', loc_id=dest.loc.id) %}
+                                    {% set letter = link_letters.next(link) %}
+                                    <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                                    <span>[{{ letter }}]</span>
+                                    <a href="{{ link }}">{{ dest.loc.name }}</a>
+                                {% endif %}
+                                — Distance {{ dest.distance | formatNum }}
+                                <br>
+                            {% else %}
+                                <p>(None)</p>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </td>
+                {% set left, top, right, bottom = current.grid.excluded %}
+                {% if has_grid %}
+                    <td class="align-top">
+                        <style>
             td.grid {
                 width: 2em;
                 height: 2em;
@@ -154,22 +141,24 @@
                 border: 1px solid gray;
                 background-color: #2a2a2a;
             }
-        </style>
-        <table style="background: transparent; border-collapse: collapse; font-family: monospace;">
-        {% for y in range(1, height + 1) %}
-            <tr>
-                {% for x in range(1, width + 1) %}
-                    {% if left <= x <= right and top <= y <= bottom %}
-                        <td class="grid excluded" id="cell-{{ x }}-{{ y }}"></td>
-                    {% else %}
-                        <td class="grid included" id="cell-{{ x }}-{{ y }}"></td>
-                    {% endif %}
-                {% endfor %}
-            </tr>
-        {% endfor %}
-        </table>
-        {% if has.chars %}
-            <style>
+                        </style>
+                        <table style="background: transparent;
+                                      border-collapse: collapse;
+                                      font-family: monospace">
+                            {% for y in range(1, height + 1) %}
+                                <tr>
+                                    {% for x in range(1, width + 1) %}
+                                        {% if left <= x <= right and top <= y <= bottom %}
+                                            <td class="grid excluded" id="cell-{{ x }}-{{ y }}"></td>
+                                        {% else %}
+                                            <td class="grid included" id="cell-{{ x }}-{{ y }}"></td>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        </table>
+                        {% if has.chars %}
+                            <style>
                 .navigation-container {
                     display: grid;
                     grid-template-columns: auto auto auto;
@@ -187,29 +176,39 @@
                 .empty {
                     visibility: hidden; /* Hide the empty grid spaces */
                 }
-            </style>
-            <div class="navigation-container">
-                <button type="button" data-x="-1" data-y="-1">&#8598;</button> <!-- Top Left -->
-                <button type="button" data-x="0" data-y="-1">&#8593;</button> <!-- Up -->
-                <button type="button" data-x="1" data-y="-1">&#8599;</button> <!-- Top Right -->
-                <button type="button" data-x="-1" data-y="0">&#8592;</button> <!-- Left -->
-                <div></div>
-                <button type="button" data-x="1" data-y="0">&#8594;</button> <!-- Right -->
-                <select id="char-to-move" style="grid-column: span 3;">
-                    {% for char in game_data.characters if char.location.id == current.id %}
-                        <option value="{{ char.id }}" {% if char.id == defaults.move_char %}selected{% endif %}>{{ char.name }}</option>
-                    {% endfor %}
-                </select>
-                <button type="button" data-x="-1" data-y="1">&#8601;</button> <!-- Bottom Left -->
-                <button type="button" data-x="0" data-y="1">&#8595;</button> <!-- Down -->
-                <button type="button" data-x="1" data-y="1">&#8600;</button> <!-- Bottom Right -->
-            </div>
-        {% endif %}
-    </td>
-    {% endif %}
-    </tr></table>
-
-    <script>
+                            </style>
+                            <div class="navigation-container">
+                                <!-- Top Left (Northwest) -->
+                                <button type="button" data-x="-1" data-y="-1">↖</button>
+                                <!-- Up -->
+                                <button type="button" data-x="0" data-y="-1">↑</button>
+                                <!-- Top Right (Northeast) -->
+                                <button type="button" data-x="1" data-y="-1">↗</button>
+                                <!-- Left -->
+                                <button type="button" data-x="-1" data-y="0">←</button>
+                                <!-- Right -->
+                                <button type="button" data-x="1" data-y="0">→</button>
+                                <select id="char-to-move" style="grid-column: span 3;">
+                                    {% for char in game_data.characters if char.location.id == current.id %}
+                                        <option value="{{ char.id }}"
+                                                {% if char.id == defaults.move_char %}selected{% endif %}>
+                                            {{ char.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <!-- Bottom Left (Southwest) -->
+                                <button type="button" data-x="-1" data-y="1">↙</button>
+                                <!-- Down -->
+                                <button type="button" data-x="0" data-y="1">↓</button>
+                                <!-- Bottom Right (Southeast) -->
+                                <button type="button" data-x="1" data-y="1">↘</button>
+                            </div>
+                        {% endif %}
+                    </td>
+                {% endif %}
+            </tr>
+        </table>
+        <script>
         const door_letter = "🚪"
         const characters = {
             {% for char in game_data.characters if char.location.id == current.id %}
@@ -267,13 +266,13 @@
                     cell.innerHTML = '';
                 });
             }
-            for (const [id, char] of Object.entries(characters)) {
+            for (const [, char] of Object.entries(characters)) {
                 setCellContents(char.x, char.y, char.letter);
             }
-            for (const [id, item_at] of Object.entries(items)) {
+            for (const [, item_at] of Object.entries(items)) {
                 setCellContents(item_at.x, item_at.y, item_at.letter);
             }
-            for (const [id, door] of Object.entries(doors)) {
+            for (const [, door] of Object.entries(doors)) {
                 setCellContents(door.x, door.y, door.letter);
             }
         }
@@ -306,11 +305,11 @@
             }
         }
 
-        $(document).ready(function() {
+        $(document).ready(() => {
             function updateQuantities() {
                 {% for item_at in current.items.values() %}
                     // Make AJAX request for item quantity
-                    $.get('/item/progress_data/{{ item_at.item.id }}', function(data) {
+                    $.get('/item/progress_data/{{ item_at.item.id }}', (data) => {
                         $('#item-{{ item_at.item.id }}-quantity').text(data.quantity_str);
                     });
                 {% endfor %}
@@ -320,10 +319,10 @@
             }
             async function initializePage() {
                 // Update quantities initially
-                //updateQuantities();
+                updateQuantities();
 
                 // Update quantities periodically
-                //setInterval(updateQuantities, 10000);
+                setInterval(updateQuantities, 10000);
                 showContent();
             }
             initializePage();
@@ -336,6 +335,7 @@
                 });
             });
         });
-    </script>
-    </div><!-- content -->
+        </script>
+    </div>
+    <!-- content -->
 {% endblock %}

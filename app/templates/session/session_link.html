@@ -1,21 +1,19 @@
 {% extends 'base.html' %}
-
 {% block upper_left %}
     <div class="nav-container">
-        <a class="upper-left" href="{{ url_for('overview') }}">[O]verview</a>
+        <a class="upper-left" href="{{ url_for("overview") }}">[O]verview</a>
         <span class="separator">|</span>
-        <a href="{{ url_for('configure_index') }}">[M]ain Setup</a>
+        <a href="{{ url_for("configure_index") }}">[M]ain Setup</a>
     </div>
 {% endblock %}
-
 {% block content %}
     <script>
         const linkForKey = {
             'o': '{{ url_for('overview') }}',
             'm': '{{ url_for('configure_index') }}',
         };
-        document.addEventListener('DOMContentLoaded', function () {
-            document.addEventListener('keypress', function (event) {
+        document.addEventListener('DOMContentLoaded', () => {
+            document.addEventListener('keypress', (event) => {
                 const key = event.key.toLowerCase();
                 if (linkForKey[key]) {
                     window.location.href = linkForKey[key];
@@ -25,5 +23,7 @@
     </script>
     <h1>Session Link</h1>
     <p class="info">Share the following link to join the current game.</p>
-    <p><a href="{{ url }}">{{ url }}</a></p>
+    <p>
+        <a href="{{ url }}">{{ url }}</a>
+    </p>
 {% endblock %}

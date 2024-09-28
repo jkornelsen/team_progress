@@ -3,12 +3,12 @@ import random
 
 from flask import g, session
 
-from .attrib import Attrib
-from .character import Character
+from .attrib import Attrib, AttribFor
+from .character import Character, OwnedItem
 from .db_serializable import (
     DbError, DeletionError, Identifiable, QueryHelper, coldef)
 from .item import Item
-from .location import Location
+from .location import ItemAt, Location
 from .utils import (
     NumTup, RequestHelper, create_entity, entity_class, format_num)
 
@@ -123,10 +123,10 @@ class Event(Identifiable):
     def to_db(self):
         logger.debug("to_db()")
         super().to_db()
-        self.execute_change(f"""
+        self.execute_change("""
             DELETE FROM event_entities
             WHERE event_id = %s AND game_token = %s
-            """, (self.id, self.game_token))
+            """, (self.id, g.game_token))
         entity_values = {}  # keyed by entity typename
         for reltype in RELATION_TYPES:
             entities = getattr(self, f'{reltype}_entities')
@@ -279,7 +279,6 @@ class Event(Identifiable):
             )
         elif self.outcome_type == OUTCOME_NUMERIC:
             range_min, range_max = self.numeric_range
-            sign = 1 if range_max >= 0 else -1
             sides = range_max - range_min
             roll = roll_dice(sides)
             outcome = range_min + roll + stat_adjustment

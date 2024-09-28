@@ -1,36 +1,48 @@
 {% extends 'base.html' %}
-
 {% block upper_left %}
     <div class="nav-container">
-        <a class="upper-left" href="{{ url_for('overview') }}">Overview</a>
+        <a class="upper-left" href="{{ url_for("overview") }}">Overview</a>
         <span class="separator">|</span>
-        <a href="{{ url_for('configure_index') }}">Main Setup Page</a>
+        <a href="{{ url_for("configure_index") }}">Main Setup Page</a>
     </div>
 {% endblock %}
-
 {% block content %}
     <h1>Attribute Setup</h1>
     <p class="info">Stat or state of a character or item, such as Strength, or Poisoned.</p>
-    <p class="info">Alternatively, set up an item to represent a status
-    that needs to be incremented,
-    such as the remaining HP of a tree to be felled.</p>
+    <p class="info">
+        Alternatively, set up an item to represent a status
+        that needs to be incremented,
+        such as the remaining HP of a tree to be felled.
+    </p>
     <form method="post">
         <label for="attrib-name">Name:</label>
-        <input type="text" id="attrib-name" name="attrib_name" value="{{ current.name }}" required><br>
-        <label for="attrib-description" >Description:</label>
-        <textarea id="attrib-description" name="attrib_description" rows="10" cols="50">{{ current.description }}</textarea><br>
-        <input type="checkbox" id="mult" name="multiplicative" {% if current.mult %}checked{% endif %}>
-        <label for="mult">Multiplicative</label><br>
-
+        <input type="text"
+               id="attrib-name"
+               name="attrib_name"
+               value="{{ current.name }}"
+               required>
+        <br>
+        <label for="attrib-description">Description:</label>
+        <textarea id="attrib-description" name="attrib_description" rows="10" cols="50">{{ current.description }}</textarea>
+        <br>
+        <input type="checkbox"
+               id="mult"
+               name="multiplicative"
+               {% if current.mult %}checked{% endif %}>
+        <label for="mult">Multiplicative</label>
+        <br>
         <div class="footer-buttons">
             <button type="submit" id="btn-save" name="save_changes">Save and Close</button>
             <button type="submit" id="btn-duplicate" name="make_duplicate">Save and Duplicate</button>
             <button type="submit" id="btn-cancel" name="cancel_changes" formnovalidate>Close without Saving</button>
-            <button type="submit" id="btn-delete" name="delete_attrib" class="dangerous-button">Delete Attribute</button>
+            <button type="submit"
+                    id="btn-delete"
+                    name="delete_attrib"
+                    class="dangerous-button">Delete Attribute</button>
         </div>
     </form>
     <script>
-        $(document).ready(function() {
+        $(document).ready(() => {
             {% if current.id > 0 %}
                 $('#btn-delete').removeAttr('disabled');
             {% else %}

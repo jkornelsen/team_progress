@@ -1,4 +1,8 @@
-
 ---- Other useful commands not described in Instructions.md ----
+
 pip show flask
+
 \pset pager off
+
+djlint templates/ --configuration ../dev/djlintrc
+djlint templates/configure/event.html --reformat --quiet --configuration ../dev/djlintrc

@@ -1,25 +1,23 @@
 <!-- base.html -->
 <!DOCTYPE html>
-<html>
-<head>
-    <title>{{ config['TITLE'] }}</title>
-    <meta charset="UTF-8">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-</head>
-<body>
-    <!-- Upper Left menu block -->
-    {% block upper_left %}
-    {% endblock %}
-
-    <!-- Upper Right menu block -->
-    {% block upper_right %}
-    {% include 'session/upper_right_menu.html' %}
-    {% endblock %}
-
-    <!-- Other content -->
-    {% block content %}
-    {% endblock %}
-</body>
+<html lang="en">
+    <head>
+        <title>{{ config['TITLE'] }}</title>
+        <meta charset="UTF-8">
+        <meta name="description"
+              content="ttrpg + incremental game implemented in python flask">
+        <link rel="stylesheet"
+              href="{{ url_for('static', filename='styles.css') }}">
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    </head>
+    <body>
+        <!-- Upper Left menu block -->
+        {% block upper_left %}{% endblock %}
+        <!-- Upper Right menu block -->
+        {% block upper_right %}
+            {% include 'session/upper_right_menu.html' %}
+        {% endblock %}
+        <!-- Other content -->
+        {% block content %}{% endblock %}
+    </body>
 </html>
-

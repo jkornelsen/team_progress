@@ -1,20 +1,18 @@
 {% extends 'base.html' %}
-
 {% block upper_left %}
     <div class="nav-container">
         <span class="upper-left">Overview</span>
         <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for('configure_index') }}">[M]ain Setup</a>
+        <a class="upper-left" href="{{ url_for("configure_index") }}">[M]ain Setup</a>
     </div>
 {% endblock %}
-
 {% block content %}
     <script>
         const linkForKey = {
             'm': '{{ url_for('configure_index') }}',
         };
-        document.addEventListener('DOMContentLoaded', function () {
-            document.addEventListener('keypress', function (event) {
+        document.addEventListener('DOMContentLoaded', () => {
+            document.addEventListener('keypress', (event) => {
                 const key = event.key.toLowerCase();
                 if (linkForKey[key]) {
                     window.location.href = linkForKey[key];
@@ -23,18 +21,20 @@
         });
     </script>
     {% if current.have_won() %}
-        <h1 style="color:green">&#10004; <!-- Checkmark -->
-    {% else %}
-        <h1>
-    {% endif %}
-        {{ current.title }}
+        <h1 style="color:green">
+            ⅴ <!-- Checkmark -->
+            {{ current.title }}
         </h1>
+    {% else %}
+        <h1>{{ current.title }}</h1>
+    {% endif %}
     <p class="info">{{ current.description|htmlify }}</p>
-
     <!-- Top-level Events -->
     {% if active.events %}
         <div class="popup-button" style="margin-bottom: 20px">
-            <button>Events <span class="dropdown-icon">&#9662;</span></button>
+            <button>
+                Events <span class="dropdown-icon">▼</span>
+            </button>
             <div class="popup-frame">
                 <div class="popup-list">
                     {% for event in active.events %}
@@ -44,7 +44,6 @@
             </div>
         </div>
     {% endif %}
-
     <!-- Top-level Characters and their Location -->
     {% if active.characters %}
         <table class="spacious">
@@ -53,31 +52,29 @@
                 <th>At</th>
             </tr>
             {% for char in active.characters %}
-                <tr><td>
-                    {% if char.char_id %}
-                        {% set link = url_for('play_char', char_id=char.char_id) %}
-                        {% set letter = link_letters.next(link) %}
-                        <script>
-                            linkForKey['{{ letter }}'] = "{{ link }}";
-                        </script>
-                        <span>[{{ letter }}]</span>
-                        <a href="{{ link }}">{{ char.char_name }}</a>
-                    {% endif %}
-                </td><td>
-                    {% if char.loc_id %}
-                        {% set link = url_for('play_location', loc_id=char.loc_id) %}
-                        {% set letter = link_letters.next(link) %}
-                        <script>
-                            linkForKey['{{ letter }}'] = "{{ link }}";
-                        </script>
-                        <span>[{{ letter }}]</span>
-                        <a href="{{ link }}">{{ char.loc_name }}</a>
-                    {% endif %}
-                </td></tr>
+                <tr>
+                    <td>
+                        {% if char.char_id %}
+                            {% set link = url_for('play_char', char_id=char.char_id) %}
+                            {% set letter = link_letters.next(link) %}
+                            <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                            <span>[{{ letter }}]</span>
+                            <a href="{{ link }}">{{ char.char_name }}</a>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if char.loc_id %}
+                            {% set link = url_for('play_location', loc_id=char.loc_id) %}
+                            {% set letter = link_letters.next(link) %}
+                            <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                            <span>[{{ letter }}]</span>
+                            <a href="{{ link }}">{{ char.loc_name }}</a>
+                        {% endif %}
+                    </td>
+                </tr>
             {% endfor %}
         </table>
     {% endif %}
-
     <!-- Top-level Locations -->
     {% if active.locations %}
         <table class="spacious">
@@ -87,9 +84,7 @@
             {% for loc in active.locations %}
                 {% set link = url_for('play_location', loc_id=loc.id) %}
                 {% set letter = link_letters.next(link) %}
-                <script>
-                    linkForKey['{{ letter }}'] = "{{ link }}";
-                </script>
+                <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
                 <tr>
                     <td>
                         <span>[{{ letter }}]</span>
@@ -99,7 +94,6 @@
             {% endfor %}
         </table>
     {% endif %}
-
     <!-- Items in General Storage -->
     {% if active.items %}
         <table class="spacious">
@@ -110,9 +104,7 @@
             {% for item in active.items %}
                 {% set link = url_for('play_item', item_id=item.id, main='universal') %}
                 {% set letter = link_letters.next(link) %}
-                <script>
-                    linkForKey['{{ letter }}'] = "{{ link }}";
-                </script>
+                <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
                 <tr>
                     <td>
                         <span>[{{ letter }}]</span>
@@ -123,13 +115,12 @@
             {% endfor %}
         </table>
     {% endif %}
-
     <script>
-        $(document).ready(function() {
+        $(document).ready(() => {
             function updateQuantities() {
                 {% for item in active.items %}
                     // Make AJAX request for item quantity
-                    $.get('/item/progress/{{ item.id }}', function(data) {
+                    $.get('/item/progress/{{ item.id }}', (data) => {
                         $('#item-{{ item.id }}-quantity').text(data.quantity_str);
                     });
                 {% endfor %}

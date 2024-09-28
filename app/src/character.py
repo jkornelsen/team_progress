@@ -4,7 +4,7 @@ from flask import g, session
 
 from .attrib import Attrib, AttribFor
 from .db_serializable import (
-    DbError, DeletionError, Identifiable, QueryHelper, Serializable, coldef)
+    DbError, DeletionError, Identifiable, QueryHelper, coldef)
 from .item import Item
 from .location import Destination, Location
 from .pile import Pile
@@ -149,7 +149,7 @@ class Character(Identifiable):
             self.execute_change(f"""
                 DELETE FROM {rel_table}
                 WHERE char_id = %s AND game_token = %s
-                """, (self.id, self.game_token))
+                """, (self.id, g.game_token))
         if self.attribs:
             values = []
             for attrib_for in self.attribs.values():

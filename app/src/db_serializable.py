@@ -86,11 +86,6 @@ class DbSerializable(Serializable):
     """Abstract class for methods for serializing to database."""
     __abstract__ = True
 
-    def __init__(self):
-        super().__init__()
-        self.game_token = g.game_token
-        self.game_data = None
-
     @classmethod
     def basename(cls):
         return cls.__name__.lower()
@@ -335,7 +330,7 @@ class Identifiable(DbSerializable):
         self.execute_change("""
             DELETE FROM {table}
             WHERE game_token = %s AND id = %s
-            """, (self.game_token, self.id))
+            """, (g.game_token, self.id))
         entity_list = self.get_list()
         if self in entity_list:
             entity_list.remove(self)

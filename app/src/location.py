@@ -57,7 +57,7 @@ class ItemAt(Pile):
         return data
 
     @classmethod
-    def from_data(cls, data, loc):
+    def from_data(cls, data, loc=None):  #pylint: disable=arguments-differ
         data = cls.prepare_dict(data)
         instance = cls(None, loc)
         instance.set_basic_data(data)
@@ -227,7 +227,7 @@ class Location(Identifiable):
             self.execute_change(f"""
                 DELETE FROM {rel_table}
                 WHERE loc_id = %s AND game_token = %s
-                """, (self.id, self.game_token))
+                """, (self.id, g.game_token))
         if self.destinations:
             values = []
             for dest in self.destinations.values():

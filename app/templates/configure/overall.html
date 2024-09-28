@@ -1,24 +1,30 @@
 {% extends 'base.html' %}
-
 {% block upper_left %}
     <div class="nav-container">
-        <a class="upper-left" href="{{ url_for('overview') }}">Overview</a>
+        <a class="upper-left" href="{{ url_for("overview") }}">Overview</a>
         <span class="separator">|</span>
-        <a href="{{ url_for('configure_index') }}">Main Setup Page</a>
+        <a href="{{ url_for("configure_index") }}">Main Setup Page</a>
     </div>
 {% endblock %}
-
 {% block content %}
     <h1>Overall Settings</h1>
-    <p class="info">When all win conditions are fulfilled,
-    a checkmark will be shown by the title on the Overview screen.
-    At that point, you can either consider the scenario finished
-    or continue playing and perhaps adjust the win conditions.</p>
+    <p class="info">
+        When all win conditions are fulfilled,
+        a checkmark will be shown by the title on the Overview screen.
+        At that point, you can either consider the scenario finished
+        or continue playing and perhaps adjust the win conditions.
+    </p>
     <form method="post">
         <label for="title">Scenario Title:</label>
-        <input type="text" id="title" name="scenario_title" value="{{ current.title }}" required><br>
+        <input type="text"
+               id="title"
+               name="scenario_title"
+               value="{{ current.title }}"
+               required>
+        <br>
         <label for="description">Scenario Description:</label>
-        <textarea id="description" name="scenario_description" rows="8" cols="50">{{ current.description }}</textarea><br>
+        <textarea id="description" name="scenario_description" rows="8" cols="50">{{ current.description }}</textarea>
+        <br>
         <style>
             .winning-container label,
             .winning-container select,
@@ -29,8 +35,9 @@
         <div class="winning-container">
             <!-- List of added requirements -->
             <label>Win Conditions:</label>
-            <div id="req-list" class="outer-border" {% if current.win_reqs|length == 0 %}style="display: none;"{% endif %}>
-            </div>
+            <div id="req-list"
+                 class="outer-border"
+                 {% if current.win_reqs|length == 0 %}style="display: none;"{% endif %}></div>
             <button type="button" id="add-item-req-button" class="lesser-button">Set Up Item Requirement</button>
             <button type="button" id="add-char-req-button" class="lesser-button">Set Up Character Requirement</button>
             <!-- Form to add Character requirement -->
@@ -39,45 +46,52 @@
                 <select class="character-select">
                     <option value="" selected>(None)</option>
                     {% for character in game_data.characters %}
-                        <option value="{{ character.id }}" {% if current.win_reqs.character and current.win_reqs.character.id == character.id %}selected{% endif %}>{{ character.name }}</option>
+                        <option value="{{ character.id }}"
+                                {% if current.win_reqs.character and current.win_reqs.character.id == character.id %}selected{% endif %}>
+                            {{ character.name }}
+                        </option>
                     {% endfor %}
                 </select>
                 <label>At Location:</label>
                 <select class="location-select">
                     <option value="" selected>(None)</option>
                     {% for location in game_data.locations %}
-                        <option value="{{ location.id }}" {% if current.win_reqs.location and current.win_reqs.location.id == location.id %}selected{% endif %}>{{ location.name }}</option>
+                        <option value="{{ location.id }}"
+                                {% if current.win_reqs.location and current.win_reqs.location.id == location.id %}selected{% endif %}>
+                            {{ location.name }}
+                        </option>
                     {% endfor %}
                 </select>
                 <label>Has Attribute:</label>
                 <select class="attrib-select">
                     <option value="" selected>(None)</option>
                     {% for attrib in game_data.attribs %}
-                        <option value="{{ attrib.id }}" {% if current.win_reqs.attrib and current.win_reqs.attrib.id == attrib.id %}selected{% endif %}>{{ attrib.name }}</option>
+                        <option value="{{ attrib.id }}"
+                                {% if current.win_reqs.attrib and current.win_reqs.attrib.id == attrib.id %}selected{% endif %}>
+                            {{ attrib.name }}
+                        </option>
                     {% endfor %}
                 </select>
                 <label for="attrib-value">Attribute Value:</label>
-                <input type="text" id="attrib-value" name="attrib_value" value="{{ current.win_reqs.attrib_value|default(0) }}">
+                <input type="text"
+                       id="attrib-value"
+                       name="attrib_value"
+                       value="{{ current.win_reqs.attrib_value|default(0) }}">
                 <button type="button" id="add-char-req" class="lesser-button">Save Requirement</button>
             </div>
-            
             <!-- Form to add Item requirement -->
             <div class="item-req-container" style="display: none;">
                 <label>Item:</label>
                 <select class="item-select">
                     <option value="" selected>(None)</option>
-                    {% for item in game_data.items %}
-                        <option value="{{ item.id }}">{{ item.name }}</option>
-                    {% endfor %}
+                    {% for item in game_data.items %}<option value="{{ item.id }}">{{ item.name }}</option>{% endfor %}
                 </select>
                 <label for="item-quantity">Quantity:</label>
                 <input type="text" id="item-quantity" name="item_quantity" value="0">
                 <label>At Location:</label>
                 <select class="location-select">
                     <option value="" selected>(None)</option>
-                    {% for location in game_data.locations %}
-                        <option value="{{ location.id }}">{{ location.name }}</option>
-                    {% endfor %}
+                    {% for location in game_data.locations %}<option value="{{ location.id }}">{{ location.name }}</option>{% endfor %}
                 </select>
                 <label>Owned by Character:</label>
                 <select class="character-select">
@@ -87,7 +101,9 @@
                     {% endfor %}
                 </select>
                 <button type="button" id="add-item-req" class="lesser-button">Save Requirement</button>
-        </div><br>
+            </div>
+        </div>
+        <br>
         <br>
         <label for="number_format">Number Format:</label>
         <select id="number_format" name="number_format">
@@ -96,30 +112,32 @@
             <option value="en_US">International 1,230,000</option>
             <option value="en_IN">Indian 12,30,000</option>
             <option value="de_DE">European 1.230.000,00</option>
-        </select><br>
+        </select>
+        <br>
         <label for="slots">Equipment Slots:</label>
-        <textarea id="slots" name="slots" rows="5" cols="15">{{ '\n'.join(current.slots) }}</textarea><br>
+        <textarea id="slots" name="slots" rows="5" cols="15">{{ '\n'.join(current.slots) }}</textarea>
+        <br>
         <div class="footer-buttons">
             <button type="submit" id="btn-save" name="save_changes">Save and Continue</button>
             <button type="submit" id="btn-cancel" name="cancel_changes" formnovalidate>Don't Save</button>
         </div>
     </form>
     <script>
-        $(document).ready(function() {
+        $(document).ready(() => {
             // default for select box
             const defaultNumberFormat = '{{ current.number_format }}';
             if (defaultNumberFormat) {
                 $('#number_format').val(defaultNumberFormat);
             }
 
-            document.getElementById('add-char-req-button').addEventListener('click', function () {
+            document.getElementById('add-char-req-button').addEventListener('click', () => {
                 document.querySelector('.char-req-container').style.display = 'block';
                 document.querySelector('.item-req-container').style.display = 'none';
                 document.querySelector('#add-char-req').style.display = 'block';
                 document.querySelector('#add-item-req').style.display = 'none';
             });
 
-            document.getElementById('add-item-req-button').addEventListener('click', function () {
+            document.getElementById('add-item-req-button').addEventListener('click', () => {
                 document.querySelector('.item-req-container').style.display = 'block';
                 document.querySelector('.char-req-container').style.display = 'none';
                 document.querySelector('#add-item-req').style.display = 'block';
@@ -159,7 +177,7 @@
                     }
                 } else {
                     newRow += `
-                        <input type="hidden" name="${winreqPrefix}char_id" value="${charId}">
+                        <input type="hidden" name="${winreqPrefix}char_id" value="${characterId}">
                         ${characterName}
                     `;
                     if (locationId !== "") {
@@ -168,7 +186,7 @@
                             at ${locationName}
                         `;
                     }
-                    if (attribId !== "" && attribValue != 0) {
+                    if (attribId !== "" && attribValue !== 0) {
                         newRow += `
                             <input type="hidden" name="${winreqPrefix}attrib_id" value="${attribId}">
                             <input type="hidden" name="${winreqPrefix}attribValue" value="${attribValue}">
@@ -203,7 +221,7 @@
                 const attrib = getSelectData('attrib-select');
                 item.quantity = document.getElementById('item-quantity').value;
                 attrib.value = document.getElementById('attrib-value').value;
-                if (item.id !== "" && item.quantity == 0) {
+                if (item.id !== "" && item.quantity === 0) {
                     alert("Please specify a winning quantity for the item.");
                     return;
                 }
@@ -244,7 +262,7 @@
                 addRequirement(paramsToSend);
             {% endfor %}
 
-            document.getElementById('add-item-req').addEventListener('click', function () {
+            document.getElementById('add-item-req').addEventListener('click', () => {
                 const item = getSelectData('item-select');
                 if (item.id === "") {
                     alert("Please select an item.");
@@ -253,7 +271,7 @@
                 addSelectedRequirement();
             });
 
-            document.getElementById('add-char-req').addEventListener('click', function () {
+            document.getElementById('add-char-req').addEventListener('click', () => {
                 const character = getSelectData('character-select');
                 if (character.id === "") {
                     alert("Please select a character.");
@@ -262,7 +280,7 @@
                 addSelectedRequirement();
             });
 
-            document.querySelector('#req-list').addEventListener('click', function (event) {
+            document.querySelector('#req-list').addEventListener('click', (event) => {
                 if (event.target.classList.contains('remove-req-button')) {
                     const reqDiv = event.target.closest('.req');
                     reqDiv.remove();

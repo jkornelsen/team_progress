@@ -1,24 +1,30 @@
 {% extends 'base.html' %}
-
 {% block upper_left %}
     <div class="nav-container">
-        <a class="upper-left" href="{{ url_for('overview') }}">Overview</a>
+        <a class="upper-left" href="{{ url_for("overview") }}">Overview</a>
         <span class="separator">|</span>
-        <a href="{{ url_for('configure_index') }}">Main Setup</a>
+        <a href="{{ url_for("configure_index") }}">Main Setup</a>
     </div>
 {% endblock %}
-
 {% block content %}
     <h1>Change User ID</h1>
-    <p class="info">So friends can see who is connected.
-    For example, the initials of your first and last name,
-    or the name of the character you're playing.
-    Resets when the session times out.</p>
+    <p class="info">
+        So friends can see who is connected.
+        For example, the initials of your first and last name,
+        or the name of the character you're playing.
+        Resets when the session times out.
+    </p>
     <p class="info">Leave blank to generate random letters.</p>
-    <form method="POST" action="{{ url_for('change_user') }}">
+    <form method="post" action="{{ url_for("change_user") }}">
         <label for="username">User ID:</label>
-        <input type="text" id="username" name="username" value="{{ current_username }}" autofocus>
-        <button type="submit">Submit</button><br><br>
+        <input type="text"
+               id="username"
+               name="username"
+               value="{{ current_username }}"
+               autofocus>
+        <button type="submit">Submit</button>
+        <br>
+        <br>
         <!--
         {% if characters %}
             <select id="char">
@@ -31,8 +37,8 @@
         -->
     </form>
     <script>
-        $(document).ready(function(){
-            $('#char-btn').click(function(){
+        $(document).ready(() => {
+            $('#char-btn').click(() => {
                 const selectedChar = $('#char').val();
                 const currentUsername = $('#username').val();
                 if (currentUsername.includes(selectedChar)) {
