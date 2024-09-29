@@ -330,6 +330,8 @@ class Location(Identifiable):
             if char.location.id == current_obj.id:
                 if not current_obj.grid.in_grid(char.position):
                     char.position = current_obj.grid.default_pos
+        from .event import Event
+        events = Event.load_triggers_for_loc(id_to_get)
         return current_obj
 
     def configure_by_form(self):

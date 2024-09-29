@@ -31,7 +31,7 @@ OUTCOMES = [
     OUTCOME_MINOR_SUCCESS,
     OUTCOME_MAJOR_SUCCESS) = range(len(OUTCOMES))
 OUTCOME_MARGIN = 9  # difference required to get major or critical
-RELATION_TYPES = ['determining', 'changed', 'trigger']
+RELATION_TYPES = ['determining', 'changed', 'triggers']
 ENTITY_TYPES = [Attrib, Item, Location]
 
 logger = logging.getLogger(__name__)
@@ -62,7 +62,7 @@ class Event(Identifiable):
         self.selection_strings = ""  # newline-separated possible outcomes
         self.determining_entities = []  # these determine the outcome
         self.changed_entities = []  # changed by the outcome
-        self.trigger_entities = []  # can trigger the event
+        self.triggers_entities = []  # can trigger the event
         self.trigger_chance = NumTup((0, 1))  # (numerator, denominator)
         self.trigger_by_duration = True  # during progress or when finished
 

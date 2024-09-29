@@ -188,21 +188,9 @@
                             <input type="checkbox" id="show-all-buttons" />
                             <label for="show-all-buttons">Show all actions</label>
                         </div>
-                        <div>
-                            <br>
-                            <br>
-                            <br>
-                        </div>
-                        <!-- so that buttons appearing doesn't cause movement -->
                     </div>
                 </td>
             </tr>
-            <!--
-        <tr>
-            <td style="background-color: #2a2a2a; border-bottom: 2px solid #ffffff;">
-            </td>
-        </tr>
--->
             {% if current.description %}
                 <tr>
                     <td>
@@ -499,9 +487,10 @@
                 });
                 mainQuantity = data.quantity;
                 // Source item quantities required
+                let url; // eslint-disable-line no-unused-vars
                 {% for recipe in current.recipes %}
                     {% for source in recipe.sources %}
-                        const url = getItemProgressUrl({{ source.item.id }})
+                        url = getItemProgressUrl({{ source.item.id }})
                         $.get(url, (data) => {
                             $('#recipe-{{ recipe.id }}-source-{{ source.item.id }}-quantity').text(data.quantity_str);
                         });

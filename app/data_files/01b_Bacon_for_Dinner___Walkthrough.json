@@ -1,0 +1,565 @@
+{
+    "attribs": [
+        {
+            "description": "Knowledge of the woods.",
+            "id": 1,
+            "mult": false,
+            "name": "Pathfinding"
+        },
+        {
+            "description": "Can do chores.",
+            "id": 2,
+            "mult": false,
+            "name": "Willing to do Odd Jobs"
+        },
+        {
+            "description": "Has money to pay for chores.",
+            "id": 3,
+            "mult": false,
+            "name": "Pays for Odd Jobs"
+        }
+    ],
+    "characters": [
+        {
+            "attribs": [
+                [
+                    3,
+                    1.0
+                ]
+            ],
+            "description": "Will pay a modest salary for chores.",
+            "dest_id": null,
+            "id": 3,
+            "items": [],
+            "location_id": 3,
+            "masked": false,
+            "name": "Uncle",
+            "position": [
+                0,
+                0
+            ],
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": false
+        },
+        {
+            "attribs": [
+                [
+                    1,
+                    7.0
+                ]
+            ],
+            "description": "An NPC. You can still control her actions, though, if she is needed in the woods later to rescue Suzy.\r\n\r\nAfter viewing this character, the first time, press the key shown in brackets [ ] to return to <i>Home</i>.",
+            "dest_id": null,
+            "id": 2,
+            "items": [],
+            "location_id": 1,
+            "masked": false,
+            "name": "Mom",
+            "position": [
+                0,
+                0
+            ],
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": true
+        },
+        {
+            "attribs": [
+                [
+                    1,
+                    2.0
+                ],
+                [
+                    2,
+                    1.0
+                ]
+            ],
+            "description": "This is your player character for the scenario. Now, under <i>Player</i> in the upper right hand corner, <i>Change User ID</i> to \"<c=\"yellow\">Playing as Suzy</c>\".\r\n\r\nOnce you're finished at <i>Home</i> and are ready to travel, take a look at the possible destinations to travel to. It looks like there's only one, so select it (initially listed as <i>a location not yet visited</i>) and <i>Start</i> travel to find out what's there. On arrival, click on <i>Sketchy-Path Forest</i> for further instructions.\r\n\r\n* * * * *\r\n\r\nIf you've finished getting bacon, then it's time to go back. Getting <i>to</i> the forest won't be a problem, but <i>leaving</i> it will be. If the event pops up, this time press <b>Y</b> to open. Otherwise, we'll still say the event happened, so make sure Suzy is in the forest and click on <i>Travel Danger</i>, either from the forest or the overview. Continue by following instructions for that event.",
+            "dest_id": null,
+            "id": 1,
+            "items": [
+                {
+                    "item_id": 9,
+                    "quantity": 1.0,
+                    "slot": ""
+                },
+                {
+                    "item_id": 10,
+                    "quantity": 1.0,
+                    "slot": ""
+                }
+            ],
+            "location_id": 1,
+            "masked": false,
+            "name": "Suzy",
+            "position": [
+                0,
+                0
+            ],
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": true
+        }
+    ],
+    "events": [
+        {
+            "changed": [],
+            "description": "Set difficulty to Moderate (the default), meaning the chance of getting lost or eaten by wolves in this particular forest is decent but not overwhelming. If Suzy is alone in the forest, select her name to fill in 2 for stat adjustment, or press <i>Add</i> if her name is already selected. Then press <i>Roll</i>.\r\n\r\nFor the walkthrough, because she's very tired after all those chores, we'll play at a disadvantage, which means we take the worst of two rolls. So, remember the first result and then press Roll again.\r\n\r\nActually, in this case, we need it to be a <i>Minor Failure</i>, so keep rolling until that happens. We'll take that to mean that she's lost but there are no wolves or twisted ankles or other problems.\r\n\r\nTo get out of this pickle, press <b>O</b> to return to the overview and go to the <i>Connect to Service</i> event.",
+            "determining": [
+                [
+                    "attrib",
+                    1
+                ]
+            ],
+            "id": 1,
+            "name": "Travel Danger",
+            "numeric_range": [
+                0,
+                1
+            ],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": true,
+            "trigger_by_duration": true,
+            "trigger_chance": [
+                1,
+                25
+            ],
+            "triggers": [
+                [
+                    "loc",
+                    2
+                ]
+            ]
+        },
+        {
+            "changed": [],
+            "description": "Suzy needs to call her Mother for help of some kind. Choose Easy difficulty since we won't be far from civilization, then roll.\r\n\r\nFor a major success, Mother will explain to Suzy how to get home, meaning that she will arrive home without further incident. For a minor success, Mother can travel to the woods and lead Suzy out, using her higher <i>Pathfinding</i> skill so that <i>Travel Danger</i> has a better chance to succeed.\r\n\r\nFor a single minor failure, Suzy can probably just try to call again (wouldn't you, if you were her?) But if things get worse, you might have to go to setup and add a <i>Wolf</i> character, then roll either <i>Travel Danger</i> or a new event such as <i>Danger Interaction</i> to see if it is close enough to be threatening. If push comes to shove, maybe she can grab a branch to fend it off (set up as a new item), or climb a tree, or yell.\r\n\r\nThis is the end of the walkthrough explanation. After returning home, Suzy can cook the bacon. Once the win condition described under <i>Overall Settings</i> is met, a green checkmark should show on the overview page, indicating that the scenario is successfully completed.",
+            "determining": [],
+            "id": 2,
+            "name": "Connect to Service",
+            "numeric_range": [
+                0,
+                1
+            ],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": true,
+            "trigger_by_duration": true,
+            "trigger_chance": [
+                1,
+                10
+            ],
+            "triggers": []
+        }
+    ],
+    "items": [
+        {
+            "attribs": [],
+            "description": "For butchering.",
+            "id": 9,
+            "masked": false,
+            "mult": false,
+            "name": "Knife",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "carried",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "Suzy's mother is the first number on the contacts list.",
+            "id": 10,
+            "masked": false,
+            "mult": false,
+            "name": "Phone",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "carried",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "This item isn't meant to be carried. Now, it's true that clicking <i>Show all actions</i> allows you to pick it up, and much more is possible by changing the <i>Item Setup</i>. There's nothing wrong with changing the setup whenever needed. However, if it doesn't make sense for the story (Suzy wouldn't be strong enough to carry such a large object or put it in her pack), then treat it as illegal in the game.\r\n\r\nInstead, this item functions as a crafting station, fixed at the <i>Home</i> location. Useful for producing items from recipes, namely, <i>Cooked Bacon</i> \u2014 click on it if you haven't done so yet.",
+            "id": 14,
+            "masked": false,
+            "mult": false,
+            "name": "Wood Stove",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "local",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "\"0 / 30\" means that although there are none yet, we can have up to 30 at a time.\r\n\r\nLooks like crafting requires <i>Raw Bacon</i>, but we do not start with any in stock. Where could that be found? Keep an eye out for possible sources as you investigate and travel.\r\n\r\nWe'll also need the <i>Wood Stove</i> to cook the bacon, which means Suzy will need to be at home to do so. Notice that the <i>Where</i> column for the wood stove shows <i>Home</i>, indicating that it's currently available.",
+            "id": 6,
+            "masked": false,
+            "mult": false,
+            "name": "Cooked Bacon",
+            "progress": {},
+            "q_limit": 30.0,
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 15,
+                    "instant": false,
+                    "item_id": 6,
+                    "rate_amount": 1.0,
+                    "rate_duration": 2.0,
+                    "sources": [
+                        {
+                            "item_id": 7,
+                            "preserve": false,
+                            "q_required": 1.0
+                        },
+                        {
+                            "item_id": 14,
+                            "preserve": true,
+                            "q_required": 1.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "carried",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "A crafting station, similar to the <i>Wood Stove</i>.",
+            "id": 13,
+            "masked": true,
+            "mult": false,
+            "name": "Barn",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "local",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "The most efficient plan would be to raise more pigs <i>before</i> butchering them, by pressing <i>Start</i> on the row where pigs are the <i>Source</i> (as well as the result). However, since no doubt you were smart enough to figure that out already, let's do it the hard way this time. Go to <i>Raw Bacon</i> and start slaughtering!\r\n\r\nAfter you've dispensed of the original pair, it's time to get some cash to buy more. Click on <i>Cash</i> and then <i>Chores</i> to continue.",
+            "id": 8,
+            "masked": false,
+            "mult": false,
+            "name": "Pigs",
+            "progress": {},
+            "q_limit": 5.0,
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 16,
+                    "instant": false,
+                    "item_id": 8,
+                    "rate_amount": 1.0,
+                    "rate_duration": 8.0,
+                    "sources": [
+                        {
+                            "item_id": 8,
+                            "preserve": true,
+                            "q_required": 2.0
+                        }
+                    ]
+                },
+                {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 17,
+                    "instant": true,
+                    "item_id": 8,
+                    "rate_amount": 1.0,
+                    "rate_duration": 3.0,
+                    "sources": [
+                        {
+                            "item_id": 12,
+                            "preserve": false,
+                            "q_required": 60.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "local",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "In this scenario, Chores and Cash are <i>general storage</i> items (or <i>universal</i>), meaning that they can be used anywhere and don't have to be carried by a specific person.\r\n\r\nPress <i>Start</i> to do some chores. There's no limit to the chores that can be done, but you can only get paid for 10 at a time. Go to <i>Cash</i> to get your earnings.",
+            "id": 11,
+            "masked": false,
+            "mult": false,
+            "name": "Chores",
+            "progress": {},
+            "q_limit": 10.0,
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "attribs": [
+                        [
+                            2,
+                            1.0
+                        ]
+                    ],
+                    "byproducts": [],
+                    "id": 14,
+                    "instant": false,
+                    "item_id": 11,
+                    "rate_amount": 1.0,
+                    "rate_duration": 3.0,
+                    "sources": [
+                        {
+                            "item_id": 13,
+                            "preserve": true,
+                            "q_required": 1.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "universal",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "Getting paid doesn't take any particular amount of time, so there's a <i>Gain</i> button instead of <i>Start</i>, but otherwise, it works the same. To get paid all at once, enter a higher number such as 11 \u2014 it won't do more than what you have available. \r\n\r\nIf you don't have enough cash to buy a pig yet, go back to <i>Chores</i> and repeat this process. Also, of course, you'll need more than one pig in order to get baby pigs.",
+            "id": 12,
+            "masked": false,
+            "mult": false,
+            "name": "Cash",
+            "progress": {},
+            "q_limit": 100.0,
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "attribs": [
+                        [
+                            3,
+                            1.0
+                        ]
+                    ],
+                    "byproducts": [],
+                    "id": 13,
+                    "instant": true,
+                    "item_id": 12,
+                    "rate_amount": 3.0,
+                    "rate_duration": 3.0,
+                    "sources": [
+                        {
+                            "item_id": 11,
+                            "preserve": false,
+                            "q_required": 1.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "universal",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "Now we can make use of that <i>Knife</i> Suzy has been carrying. There are 2 pigs currently at the farm. Press <i>Start</i> and wait while she turns both of them into neatly sized pieces of meat.\r\n\r\nIf Suzy is not shown under <i>Where</i> as carrying the knife, you may need to go back to her screen and click on the knife to get to this raw bacon screen. Similarly, if the pigs are at the farm but not shown, navigate back to the farm and then click through the pigs to get here. Exactly how this works could change with updates to <c=\"goldenrod\">Team Progress</c>, as the game tries to find the most suitable match.\r\n\r\nYou may notice that Suzy tries for a third time to produce bacon even though there are no pigs left. She will only stop trying when she fails to produce anything (because it could still work in case more pigs were to show up during this time). If you want, you can press the <i>Stop</i> button to spare her the wasted effort.\r\n\r\nLooks like we ran out. Go back to <i>Pigs</i> and see how to get more.\r\n\r\nOnce you have a full load of raw bacon (30), it's time for Suzy to start the perilous trip back home. Navigate to her page to do so.",
+            "id": 7,
+            "masked": false,
+            "mult": false,
+            "name": "Raw Bacon",
+            "progress": {},
+            "q_limit": 30.0,
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 18,
+                    "instant": false,
+                    "item_id": 7,
+                    "rate_amount": 10.0,
+                    "rate_duration": 10.0,
+                    "sources": [
+                        {
+                            "item_id": 8,
+                            "preserve": false,
+                            "q_required": 1.0
+                        },
+                        {
+                            "item_id": 9,
+                            "preserve": true,
+                            "q_required": 1.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "carried",
+            "toplevel": false
+        }
+    ],
+    "locations": [
+        {
+            "description": "First, take a look around. Click on her Mom and then Suzy to see that both have <i>Pathfinding</i>, but Suzy's is lower. This means she'll be more likely to get lost or have other trouble in <i>Events</i> that may happen in the woods if her Mom isn't there.\r\n\r\nAlso, right-click on the <i>Wood Stove</i> to open it in a new tab. After finishing those instructions, close the tab to return to this page.\r\n\r\nNext, it's time to explore. The only location we can get to from home shows <i>Unvisited</i>, meaning we don't know anything about it yet. Bring up <i>Suzy</i>'s page again to travel.",
+            "destinations": [
+                {
+                    "dest_id": 2,
+                    "distance": 1.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
+                }
+            ],
+            "dimensions": [
+                0,
+                0
+            ],
+            "excluded": [
+                0,
+                0,
+                0,
+                0
+            ],
+            "id": 1,
+            "items": [
+                {
+                    "item_id": 14,
+                    "position": [
+                        0,
+                        0
+                    ],
+                    "quantity": 1.0
+                }
+            ],
+            "masked": false,
+            "name": "Home",
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": false
+        },
+        {
+            "description": "The notable thing about this forest is the <i>Travel Danger</i> event. There is a chance of automatically triggering while character travel from (not to) this area is in progress. \r\n\r\nSince the trip back home is longer than to <i>Uncle's Farm</i>, the chance is higher. For this walkthrough, we'll say that nothing out of the ordinary happens on the way to the farm. So, if the event does trigger then, press <b>N</b> to ignore.\r\n\r\nGo ahead and bring Suzy to the farm if you haven't done so yet. Then continue with the instructions described under <i>Uncle's Farm</i>.",
+            "destinations": [
+                {
+                    "dest_id": 3,
+                    "distance": 5.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
+                },
+                {
+                    "dest_id": 1,
+                    "distance": 15.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
+                }
+            ],
+            "dimensions": [
+                0,
+                0
+            ],
+            "excluded": [
+                0,
+                0,
+                0,
+                0
+            ],
+            "id": 2,
+            "items": [],
+            "masked": true,
+            "name": "Sketchy-Path Forest",
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": false
+        },
+        {
+            "description": "Hopefully, you immediately recognized that <i>Pigs</i> mean <b>bacon</b>, which is what we're after. Click on them to continue.",
+            "destinations": [
+                {
+                    "dest_id": 2,
+                    "distance": 2.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
+                }
+            ],
+            "dimensions": [
+                0,
+                0
+            ],
+            "excluded": [
+                0,
+                0,
+                0,
+                0
+            ],
+            "id": 3,
+            "items": [
+                {
+                    "item_id": 13,
+                    "position": [
+                        0,
+                        0
+                    ],
+                    "quantity": 1.0
+                },
+                {
+                    "item_id": 8,
+                    "position": [
+                        0,
+                        0
+                    ],
+                    "quantity": 2.0
+                }
+            ],
+            "masked": true,
+            "name": "Uncle's Farm",
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": false
+        }
+    ],
+    "overall": {
+        "description": "After trying the first scenario, consider going through this guided tour to learn more about how the game works. Same story but with detailed instructions and explanations, in lieu of a help section.\r\n\r\nTo begin, load the scenario and press <b>O</b> for the <i>Overview</i>. From there, click on the <i>Home</i> location and continue with those instructions.",
+        "number_format": "en_US",
+        "slots": [],
+        "title": "Bacon for Dinner \u2013 Walkthrough",
+        "win_reqs": [
+            {
+                "attrib_id": null,
+                "attrib_value": 0.0,
+                "char_id": null,
+                "id": 2,
+                "item_id": 6,
+                "loc_id": 1,
+                "quantity": 30.0
+            }
+        ]
+    }
+}

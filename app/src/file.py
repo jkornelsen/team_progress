@@ -13,7 +13,7 @@ from database import set_autocommit
 from .game_data import GameData
 from .db_serializable import DbSerializable
 from .overall import Overall
-from .utils import RequestHelper
+from .utils import LinkLetters, RequestHelper
 
 logger = logging.getLogger(__name__)
 
@@ -132,7 +132,8 @@ def set_routes(app):
             return render_template(
                 'configure/scenarios.html',
                 scenarios=scenarios,
-                sort_by=sort_by)
+                sort_by=sort_by,
+                link_letters=LinkLetters('mos'))
         scenario_file = request.form.get('scenario_file')
         scenario_title = request.form.get('scenario_title')
         if not scenario_file:

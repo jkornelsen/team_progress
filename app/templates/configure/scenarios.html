@@ -12,11 +12,14 @@
             'o': '{{ url_for('overview') }}',
             'm': '{{ url_for('configure_index') }}',
         };
+        const funcForKey = {};
         document.addEventListener('DOMContentLoaded', () => {
             document.addEventListener('keypress', (event) => {
                 const key = event.key.toLowerCase();
                 if (linkForKey[key]) {
                     window.location.href = linkForKey[key];
+                } else if (funcForKey[key]) {
+                    funcForKey[key]();
                 }
             });
         });
@@ -32,7 +35,15 @@
                 <option value="popularity"
                         {% if sort_by == 'popularity' %}selected{% endif %}>Most Played</option>
             </select>
-            <button type="submit">Sort</button>
+            <button type="submit"
+                    id="submit_sort_by">
+                [S]ort
+            </button>
+            <script>
+            funcForKey['s'] = () => {
+                document.querySelector('#submit_sort_by').click();
+            };
+            </script>
         </div>
     </form>
     <table class="spacious">
@@ -41,7 +52,18 @@
             <tr>
                 <td class="align-top">
                     <form method="post" action="{{ url_for("browse_scenarios") }}">
-                        <button type="submit">Load Scenario</button>
+                        {% set scenario_id = loop.index0 %}
+                        {% set letter = link_letters.next() %}
+                        <button type="submit"
+                                id="submit_load_scenario_{{ scenario_id }}">
+                            Load Scenario
+                            [{{ letter }}]
+                        </button>
+                        <script>
+                        funcForKey['{{ letter }}'] = () => {
+                            document.querySelector('#submit_load_scenario_{{ scenario_id }}').click();
+                        };
+                        </script>
                         <input type="hidden" name="scenario_file" value="{{ scenario.filename }}">
                         <input type="hidden" name="scenario_title" value="{{ scenario.title }}">
                     </form>
@@ -49,7 +71,7 @@
                 <td class="align-top">
                     <span style="font-size: 1.3em; font-weight: bold">{{ scenario.title }}</span>
                 </td>
-                <td class="align-top">{{ scenario.description|htmlify }}</td>
+                <td class="align-top">{{ scenario.description|removeLinks|htmlify }}</td>
             </tr>
         {% endfor %}
     </table>

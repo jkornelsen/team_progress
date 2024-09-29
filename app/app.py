@@ -3,6 +3,7 @@ The main entry point for the server app.
 Sets up routes that get called by clients.
 """
 from inspect import signature
+import io
 import logging
 import os
 import random
@@ -43,6 +44,7 @@ def set_up_logging():
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(
         logging.Formatter('%(filename)s:%(lineno)d  %(message)s'))
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
     stdout_handler = logging.StreamHandler(sys.stdout)
     stdout_handler.setLevel(logging.ERROR)
     logging.basicConfig(
@@ -132,9 +134,52 @@ def generate_username():
     consonants = ''.join(c for c in string.ascii_lowercase if c not in 'aeiouyl')
     return ''.join(random.choice(consonants) for _ in range(10))
 
+def _set_filters():
+    """Values available in all templates."""
+    @app.context_processor
+    def inject_username():
+        return {'current_username': session.get('username')}
+
+    @app.template_filter('formatNum')
+    def format_num_filter(value):
+        return format_num(value)
+
+    @app.template_filter('htmlify')
+    def htmlify_filter(html):
+        html = re.sub(r'<c\s*=', r'<font color=', html)
+        html = re.sub(r'</c\s*>', r'</font>', html)
+        html = bleach.clean(
+            html,
+            tags={'a', 'b', 'i', 'font'},
+            attributes={
+                'a': ['href', 'title'],
+                'font': ['color']
+                }
+            )
+        def sanitize_href(match):
+            href = match.group(2).strip()
+            if not re.match(r'^/[a-zA-Z0-9/=?]*["\']?$', href):
+                return 'href="#"'
+            return match.group(0)
+
+        html = re.sub(r'href\s*=\s*(["\']?)([^>]+)', sanitize_href, html)
+        html = re.sub(r'\r?\n', '<br>', html)
+        html = Markup(html)  # so Flask will consider the content safe
+        return html
+
+    @app.template_filter('removeLinks')
+    def remove_links_filter(html):
+        html = re.sub(r'<a\s+[^>]*>(.*?)<\/a>', r'\1', html)
+        return html
+
+    app.jinja_env.globals['getattr'] = getattr
+    app.jinja_env.globals['max'] = max
+    app.jinja_env.globals['MAX_INT_32'] = 2**31 - 1
+
 _set_app_routes()
 _set_game_routes(app)
 _set_file_routes(app)
+_set_filters()
 init_cache(app)
 
 def get_parameter_name(endpoint):
@@ -147,42 +192,6 @@ def get_parameter_name(endpoint):
         if len(parameters) > 0:
             return parameters[0]
     return None
-
-# Define the context processor to make values available in all templates.
-@app.context_processor
-def inject_username():
-    return {'current_username': session.get('username')}
-
-def format_num_filter(value):
-    return format_num(value)
-
-def htmlify_filter(text):
-    text = re.sub(r'<c\s*=', r'<font color=', text)
-    text = re.sub(r'</c\s*>', r'</font>', text)
-    text = bleach.clean(
-        text,
-        tags={'a', 'b', 'i', 'font'},
-        attributes={
-            'a': ['href', 'title'],
-            'font': ['color']
-            }
-        )
-    def sanitize_href(match):
-        href = match.group(2).strip()
-        if not re.match(r'^/[a-zA-Z0-9/=?]*["\']?$', href):
-            return 'href="#"'
-        return match.group(0)
-
-    text = re.sub(r'href\s*=\s*(["\']?)([^>]+)', sanitize_href, text)
-    text = re.sub(r'\r?\n', '<br>', text)
-    text = Markup(text)  # instead of adding |safe
-    return text
-
-app.jinja_env.filters['formatNum'] = format_num_filter
-app.jinja_env.filters['htmlify'] = htmlify_filter
-app.jinja_env.globals['getattr'] = getattr
-app.jinja_env.globals['max'] = max
-app.jinja_env.globals['MAX_INT_32'] = 2**31 - 1
 
 @app.errorhandler(Exception)
 def handle_exception(ex):

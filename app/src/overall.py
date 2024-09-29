@@ -100,6 +100,7 @@ class Overall(DbSerializable):
             " and describe your idea, along with a title."
             " Next, add a few initial items or characters."
             " More can be set up as the game goes along."
+            " An AI may be helpful to fill in lists or add accurate details."
             )
         self.win_reqs = []
         self.number_format = 'en_US'

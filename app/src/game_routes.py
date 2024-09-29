@@ -19,7 +19,7 @@ from .event import Event
 from .location import Location, ItemAt
 from .overall import Overall
 from .progress import Progress
-from .utils import NumTup, RequestHelper, format_num
+from .utils import LinkLetters, NumTup, RequestHelper, format_num
 
 logger = logging.getLogger(__name__)
 
@@ -708,27 +708,6 @@ def set_routes(app):
             char.position = loc.grid.default_pos
             char.to_db()
         return jsonify({'position': char.position.as_tuple()})
-
-class LinkLetters:
-    """Letters to add before a link for hotkeys."""
-    def __init__(self, excluded='o'):
-        self.letter_index = 0
-        self.letters = [
-            chr(c) for c in range(ord('a'), ord('z') + 1)
-            if chr(c) not in excluded]
-        self.links = {}
-
-    def next(self, link=None):
-        """:param link: returns same letter for identical links"""
-        if link in self.links:
-            return self.links[link]
-        if self.letter_index < len(self.letters):
-            letter = self.letters[self.letter_index]
-            self.letter_index += 1
-            if link:
-                self.links[link] = letter
-            return letter
-        return ''
 
 def back_to_referrer():
     referrer = session.pop('referrer', None)

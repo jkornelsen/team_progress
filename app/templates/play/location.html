@@ -56,14 +56,10 @@
         <table style="background: transparent">
             <tr>
                 <td class="align-top">
-                    {% set has = namespace(chars=False) %}
-                    {% for char in game_data.characters if char.location.id == current.id %}
-                        {% set has.chars = True %}
-                    {% endfor %}
-                    {% if has.chars %}
+                    {% if game_data.characters %}
                         <h2>Characters Here</h2>
                         <ul>
-                            {% for char in game_data.characters if char.location.id == current.id %}
+                            {% for char in game_data.characters %}
                                 {% set link = url_for('play_char', char_id=char.id) %}
                                 {% set letter = link_letters.next(link) %}
                                 <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
@@ -95,6 +91,24 @@
                                 </span>
                                 {% if has_grid %}
                                     <span class="label-like">&nbsp;[{{ item_at.position[0] }},{{ item_at.position[1] }}]</span>
+                                {% endif %}
+                                <br>
+                            {% else %}
+                                <p>(None)</p>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                    {% if game_data.events %}
+                        <h2>Local Events</h2>
+                        <ul>
+                            {% for evt in game_data.events %}
+                                {% set link = url_for('play_event', event_id=evt.id) %}
+                                {% set letter = link_letters.next(link) %}
+                                <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                                <span>[{{ letter }}]</span>
+                                <a href="{{ link }}">{{ evt.name }}</a>
+                                {% if evt.trigger_chance[0] > 0 %}
+                                    <span class="label-like">&nbsp;(chance to trigger)</span>
                                 {% endif %}
                                 <br>
                             {% else %}
@@ -157,7 +171,7 @@
                                 </tr>
                             {% endfor %}
                         </table>
-                        {% if has.chars %}
+                        {% if game_data.characters %}
                             <style>
                 .navigation-container {
                     display: grid;
@@ -309,7 +323,7 @@
             function updateQuantities() {
                 {% for item_at in current.items.values() %}
                     // Make AJAX request for item quantity
-                    $.get('/item/progress_data/{{ item_at.item.id }}', (data) => {
+                    $.get('/item/progress/{{ item_at.item.id }}', (data) => {
                         $('#item-{{ item_at.item.id }}-quantity').text(data.quantity_str);
                     });
                 {% endfor %}

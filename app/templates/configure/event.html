@@ -172,7 +172,7 @@
             </div>
         </div>
         <div class="entity-list-container outer-border"
-             id="trigger-entities-container">
+             id="triggers-entities-container">
             <div id="trigger-chance-container">
                 <label>Trigger Chance:</label>
                 <input type="text"
@@ -206,7 +206,7 @@
                 </label>
                 <br>
                 <!-- Placeholder for appending new entities -->
-                <div id="trigger_list_end" style="unobtrusive"></div>
+                <div id="triggers_list_end" style="unobtrusive"></div>
                 <div class="select-box-container">
                     {% if game_data.items %}
                         <div class="select-box" title="Triggered by production of this item.">
@@ -216,7 +216,7 @@
                             </select>
                             <button type="button"
                                     class="add-entity-btn lesser-button"
-                                    data-relType="trigger"
+                                    data-relType="triggers"
                                     data-entityType="item">Add</button>
                         </div>
                     {% endif %}
@@ -228,7 +228,7 @@
                             </select>
                             <button type="button"
                                     class="add-entity-btn lesser-button"
-                                    data-relType="trigger"
+                                    data-relType="triggers"
                                     data-entityType="loc">Add</button>
                         </div>
                     {% endif %}
@@ -314,7 +314,7 @@
             }
 
             // load data initially
-            {% for relType in ['determining', 'changed', 'trigger'] %}
+            {% for relType in ['determining', 'changed', 'triggers'] %}
                 {% set list = getattr(current, relType + '_entities', []) %}
                 console.log("{{ relType }}[{{ list | length }}]");
                 {% for entity in list %}
@@ -346,7 +346,7 @@
                 if (entityId === '') {
                     return; // Don't add if the selected option is the placeholder
                 }
-                const existingItem = $(`.entity-trigger-container`)
+                const existingItem = $(`.entity-triggers-container`)
                     .find(`.entity[data-entity-id="${entityId}"][data-entity-type="${entityType}"]`);
                 if (existingItem.length > 0) {
                     alert(`${capitalizeFirstLetter(entityType)} already added.`);

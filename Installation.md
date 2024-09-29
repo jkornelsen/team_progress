@@ -1,4 +1,4 @@
-# Team Progress
+# Installing
 ## I. Overview
 
 The basic steps are to download, install and configure python
