@@ -131,7 +131,7 @@
                     <li>
                         <span>[{{ letter }}]</span>
                         <a href="{{ link }}">{{ attrib_of.attrib.name }}</a>
-                        {% if attrib_of.val !== 1 %}{{ attrib_of.val | formatNum }}{% endif %}
+                        {% if attrib_of.val != 1 %}{{ attrib_of.val | formatNum }}{% endif %}
                     </li>
                 {% endfor %}
             </ul>

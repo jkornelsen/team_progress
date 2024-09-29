@@ -73,8 +73,8 @@
                     <script>
                         $(document).ready(() => {
                             // Enable or disable the distance fields based on the selected destination
-                            $('#dest-select').change(() => {
-                                const selectedOption = $(this).find(':selected');
+                            $('#dest-select').change((event) => {
+                                const selectedOption = $(event.currentTarget).find(':selected');
                                 const isDestinationSelected = (selectedOption.val() !== '');
                                 $('.distance-field').prop('disabled', !isDestinationSelected);
                             });
@@ -195,8 +195,8 @@
                     );
             {% endfor %}
 
-            $('#destinations-container').on('click', '.remove-dest-btn', () => {
-                const destContainer = $(this).closest('.destination');
+            $('#destinations-container').on('click', '.remove-dest-btn', (event) => {
+                const destContainer = $(event.currentTarget).closest('.destination');
                 destContainer.remove();
             });
 
@@ -217,8 +217,8 @@
                 $('#items-rows').prepend(itemHtml);
                 $('#items-table').show();
             }
-            $('.add-item-btn').click(() => {
-                const selectBox = $(this).prev('.item-select');
+            $('.add-item-btn').click((event) => {
+                const selectBox = $(event.currentTarget).prev('.item-select');
                 const selectedOption = selectBox.find(':selected');
                 const itemId = selectedOption.val();
                 const itemName = selectedOption.text();
@@ -241,8 +241,8 @@
                     {{ item_at.quantity | formatNum }},
                     "{{ item_at.position[0] }},{{ item_at.position[1] }}");
             {% endfor %}
-            $('#items-rows').on('click', '.remove-item-btn', () => {
-                const itemContainer = $(this).closest('tr');
+            $('#items-rows').on('click', '.remove-item-btn', (event) => {
+                const itemContainer = $(event.currentTarget).closest('tr');
                 itemContainer.remove();
             });
         });

@@ -328,13 +328,13 @@
                 {% endfor %}
             {% endfor %}
 
-            $('.entity-list-container').on('click', '.remove-entity-btn', () => {
-                const entityContainer = $(this).closest('.entity');
+            $('.entity-list-container').on('click', '.remove-entity-btn', (event) => {
+                const entityContainer = $(event.currentTarget).closest('.entity');
                 entityContainer.remove();
             });
 
-            $('.add-entity-btn').click(() => {
-                const button = $(this);
+            $('.add-entity-btn').click((event) => {
+                const button = $(event.currentTarget);
                 const entityType = button.attr('data-entityType');
                 const container = button.closest('.entity-list-container');
                 const relType = container.attr('id').split('-')[0];

@@ -295,10 +295,10 @@
                 }
                 if (dict.containerType) {
                     const $selectBoxes = $('.container-for-changed, .container-for-det');
-                    $selectBoxes.each(() => {
-                        const $selectBox = $(this);
-                        $selectBox.find('option').each(() => {
-                            const $option = $(this);
+                    $selectBoxes.each((index, element) => {
+                        const $selectBox = $(element);
+                        $selectBox.find('option').each((index, element) => {
+                            const $option = $(element);
                             if ($option.data('container-type') === dict.containerType &&
                                 String($option.data('container-id')) === storedValue) {
                                 $option.prop('selected', true);
@@ -314,8 +314,8 @@
                     }
                 }
             });
-            $('.container-for-changed, .container-for-det').on('change', () => {
-                const selectedOption = $(this).find('option:selected');
+            $('.container-for-changed, .container-for-det').on('change', (event) => {
+                const selectedOption = $(event.currentTarget).find('option:selected');
                 const selectedContainerId = selectedOption.data('container-id');
                 const selectedContainerType = selectedOption.data('container-type');
                 defaultFields.forEach((dict) => {
@@ -325,14 +325,14 @@
                     }
                 });
             });
-            $('#difficulty').on('change', () => {
-                localStorage.setItem('difficulty', this.value);
+            $('#difficulty').on('change', (event) => {
+                localStorage.setItem('difficulty', event.currentTarget.value);
             });
 
-            $('.container-for-det').change(() => {
-                const keyMult = $(this).data('mult');
-                const selectedIndex = $(this).prop('selectedIndex');
-                const selectedOption = $(this).find(':selected');
+            $('.container-for-det').change((event) => {
+                const keyMult = $(event.currentTarget).data('mult');
+                const selectedIndex = $(event.currentTarget).prop('selectedIndex');
+                const selectedOption = $(event.currentTarget).find(':selected');
                 const containerVal = parseFloat(selectedOption.val()) || 0;
                 const currentAdjustment = parseFloat($('#stat_adjustment').val()) || 0;
                 if (selectedIndex !== 0) {
@@ -343,17 +343,17 @@
                     }
                 }
             });
-            $('.fill-det-btn').on('click', () => {
-                const entityId = $(this).data('id');
-                const entityType = $(this).data('type');
+            $('.fill-det-btn').on('click', (event) => {
+                const entityId = $(event.currentTarget).data('id');
+                const entityType = $(event.currentTarget).data('type');
                 $(`#container-for-det_${entityType}_${entityId}`).change();
             });
 
-            $('.container-for-changed').change(() => {
-                const keyId = $(this).data('id');
-                const keyType = $(this).data('type');
+            $('.container-for-changed').change((event) => {
+                const keyId = $(event.currentTarget).data('id');
+                const keyType = $(event.currentTarget).data('type');
                 const keyRef = `_${keyType}_${keyId}`
-                const selectedOption = $(this).find(':selected');
+                const selectedOption = $(event.currentTarget).find(':selected');
                 const containerVal = parseFloat(selectedOption.val()) || 0;
                 const containerId = selectedOption.data('container-id');
                 const containerType = selectedOption.data('container-type');
@@ -366,9 +366,9 @@
                 $(`#container_id${keyRef}`).val(containerId);
                 $(`#container_type${keyRef}`).val(containerType);
             });
-            $('.fill-changed-btn').on('click', () => {
-                const entityId = $(this).data('id');
-                const entityType = $(this).data('type');
+            $('.fill-changed-btn').on('click', (event) => {
+                const entityId = $(event.currentTarget).data('id');
+                const entityType = $(event.currentTarget).data('type');
                 $(`#container-for-changed_${entityType}_${entityId}`).change();
             });
 

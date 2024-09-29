@@ -641,7 +641,7 @@ def set_routes(app):
     @app.route('/item/equip/<int:item_id>/char/<int:char_id>/slot/<string:slot>', methods=['POST'])
     def equip_item(item_id, char_id, slot):
         logger.debug(
-            "%s\nequip_item(item_id=%d, char_id=%d, slot=%d)",
+            "%s\nequip_item(item_id=%d, char_id=%d, slot=%s)",
             "-" * 80, item_id, char_id, slot)
         session['default_slot'] = slot
         item = Item.data_for_play(

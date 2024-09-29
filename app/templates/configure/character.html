@@ -96,8 +96,8 @@
                     <div class="select-box">
                         <select class="item-select" name="item_select">
                             <option value="" selected>(Select item)</option>
-                            {% for item in game_data.items %}
-                                {% if item.id not in current.items %}<option value="{{ item.id }}">{{ item.name }}</option>{% endif %}
+                            {% for item in game_data.items if item.id not in current.items %}
+                                <option value="{{ item.id }}">{{ item.name }}</option>
                             {% endfor %}
                         </select>
                         <button type="button" class="add-item-btn lesser-button">Add Item</button>
@@ -107,6 +107,10 @@
                 {% endif %}
             </div>
         </div>
+        <br>
+        <br>
+        <br>
+        <br>
         <div class="footer-buttons">
             <button type="submit" id="btn-save" name="save_changes">Save and Close</button>
             <button type="submit" id="btn-duplicate" name="make_duplicate">Save and Duplicate</button>
@@ -142,11 +146,12 @@
                 $('#items-rows').prepend(itemHtml);
                 $('#items-table').show();
             }
-            $('.add-item-btn').click(() => {
-                const selectBox = $(this).prev('.item-select');
+            $('.add-item-btn').click((event) => {
+                const selectBox = $(event.currentTarget).prev('.item-select');
                 const selectedOption = selectBox.find(':selected');
                 const itemId = selectedOption.val();
                 const itemName = selectedOption.text();
+                console.log("Item ID:", selectedOption.val(), ", Name:", selectedOption.text());
                 if (itemId === '') {
                     return; // don't add if the selected option is the placeholder
                 }
@@ -167,8 +172,8 @@
                     {{ owned_item.quantity | formatNum }},
                     "{{ owned_item.slot }}");
             {% endfor %}
-            $('#items-rows').on('click', '.remove-item-btn', () => {
-                const itemContainer = $(this).closest('tr');
+            $('#items-rows').on('click', '.remove-item-btn', (event) => {
+                const itemContainer = $(event.currentTarget).closest('tr');
                 itemContainer.remove();
             });
 
@@ -208,8 +213,8 @@
                     "{{ attrib_of.attrib.name }}",
                     {{ attrib_of.val | formatNum }});
             {% endfor %}
-            $('#attrib-container').on('click', '.remove-attrib-btn', () => {
-                const attribRow = $(this).closest('tr');
+            $('#attrib-container').on('click', '.remove-attrib-btn', (event) => {
+                const attribRow = $(event.currentTarget).closest('tr');
                 attribRow.remove();
                 if ($('#attrib-rows').children().length === 0) {
                     $('#attrib-table').hide();

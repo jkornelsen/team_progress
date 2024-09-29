@@ -117,7 +117,7 @@
                 <!-- Select box for adding another recipe attrib -->
                 <div class="select-box">
                     <select id="add-recipeattrib-select">
-                        <option value="" selected>(Select item)</option>
+                        <option value="" selected>(Select attribute)</option>
                         {% for attrib in game_data.attribs %}<option value="{{ attrib.id }}">{{ attrib.name }}</option>{% endfor %}
                     </select>
                     <button type="button" id="add-recipeattrib-btn" class="lesser-button">Add Required Attribute</button>
@@ -188,7 +188,7 @@
 
             // disable changing quantity if currently in progress
             const itemQuantityInput = $('#item-quantity');
-            {% if current.progress.is_ongoing|lower %}
+            {% if current.progress.is_ongoing|lower == 'true' %}
                 itemQuantityInput.prop('disabled', true);
                 $('#running-label').text('(Running)');
             {% endif %}
@@ -235,8 +235,8 @@
                 $('#recipelist_end').before(recipeHtml);
                 toggleAddRecipeButtonVisibility();
                 const instantCheckbox = $(`#instant[name="recipe${recipe_id}_instant"]`)[0];
-                $(instantCheckbox).change(() => {
-                    updateInstantVisibility(this);
+                $(instantCheckbox).change((event) => {
+                    updateInstantVisibility(event.currentTarget);
                 });
                 $(instantCheckbox).trigger('change');
                 return recipe_id;
@@ -439,23 +439,23 @@
                 {% endfor %}
             {% endfor %}
 
-            $('#sources-container').on('click', '.remove-source-btn', () => {
-                const recipeContainer = $(this).closest('.recipe-container');
-                const sourceContainer = $(this).closest('.source');
+            $('#sources-container').on('click', '.remove-source-btn', (event) => {
+                const recipeContainer = $(event.currentTarget).closest('.recipe-container');
+                const sourceContainer = $(event.currentTarget).closest('.source');
                 sourceContainer.remove();
                 if (recipeContainer.find('.source').length === 0) {
                     recipeContainer.remove();
                 }
                 toggleAddRecipeButtonVisibility();
             });
-            $('#sources-container').on('click', '.remove-byproduct-btn', () => {
-                const byproductContainer = $(this).closest('.byproduct');
+            $('#sources-container').on('click', '.remove-byproduct-btn', (event) => {
+                const byproductContainer = $(event.currentTarget).closest('.byproduct');
                 byproductContainer.remove();
                 toggleAddRecipeButtonVisibility();
             });
 
-            $('#sources-container').on('click', '.remove-recipe-btn', () => {
-                const recipeContainer = $(this).closest('.recipe-container');
+            $('#sources-container').on('click', '.remove-recipe-btn', (event) => {
+                const recipeContainer = $(event.currentTarget).closest('.recipe-container');
                 recipeContainer.remove();
                 toggleAddRecipeButtonVisibility();
             });
@@ -515,8 +515,8 @@
                     {{ attrib_of.val | formatNum }});
             {% endfor %}
 
-            $('#attrib-container').on('click', '.remove-attrib-btn', () => {
-                const attribRow = $(this).closest('tr');
+            $('#attrib-container').on('click', '.remove-attrib-btn', (event) => {
+                const attribRow = $(event.currentTarget).closest('tr');
                 attribRow.remove();
                 if ($('#attrib-rows').children().length === 0) {
                     $('#attrib-table').hide();
