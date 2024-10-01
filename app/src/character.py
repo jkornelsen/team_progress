@@ -11,6 +11,7 @@ from .pile import Pile
 from .progress import Progress
 from .utils import NumTup, RequestHelper
 
+logger = logging.getLogger(__name__)
 tables_to_create = {
     'characters': f"""
         {coldef('name')},
@@ -25,8 +26,7 @@ tables_to_create = {
             REFERENCES progress (game_token, id)
             DEFERRABLE INITIALLY DEFERRED
         """,
-}
-logger = logging.getLogger(__name__)
+    }
 
 class OwnedItem(Pile):
     def __init__(self, item, char):
@@ -64,7 +64,7 @@ class Character(Identifiable):
         super().__init__(new_id)
         self.name = ""
         self.description = ""
-        self.toplevel = True
+        self.toplevel = False
         self.masked = False
         self.attribs = {}  # AttribFor objects keyed by attr id
         self.items = {}  # OwnedItem objects keyed by item id

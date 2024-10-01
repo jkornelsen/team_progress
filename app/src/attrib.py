@@ -6,13 +6,13 @@ from .db_serializable import (
     DbError, DeletionError, Identifiable, QueryHelper, Serializable, coldef)
 from .utils import RequestHelper
 
+logger = logging.getLogger(__name__)
 tables_to_create = {
     'attribs': f"""
         {coldef('name')},
         mult boolean NOT NULL
         """
     }
-logger = logging.getLogger(__name__)
 
 class AttribFor(Serializable):
     """Value for attribute of a particular entity,

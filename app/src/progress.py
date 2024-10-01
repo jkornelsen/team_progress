@@ -8,6 +8,7 @@ from flask import g
 from .db_serializable import Identifiable, QueryHelper, coldef
 from .utils import format_num
 
+logger = logging.getLogger(__name__)
 tables_to_create = {
     'progress': f"""
         {coldef('id')},
@@ -18,8 +19,7 @@ tables_to_create = {
         batches_processed integer NOT NULL,
         is_ongoing boolean NOT NULL
         """
-}
-logger = logging.getLogger(__name__)
+    }
 
 class Progress(Identifiable):
     """Track progress over time."""
@@ -195,6 +195,8 @@ class Progress(Identifiable):
                         "change_quantity(): byproduct.pile.container[%s].to_db()",
                         byproduct.pile.container.name)
                     byproduct.pile.container.to_db()
+            if not self.can_produce():
+                stop_when_done = True
             if stop_when_done:
                 self.stop()
             return num_batches > 0
@@ -226,8 +228,10 @@ class Progress(Identifiable):
                 self.recipe = recipe
                 return
 
-    def can_produce(self):
+    def can_produce(self, recipe_id=None):
         """True if at least one batch can be produced."""
+        if recipe_id is not None:
+            self.set_recipe_by_id(recipe_id)
         if self.recipe is None:
             self.report_failure("No recipe.")
             return False

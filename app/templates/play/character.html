@@ -26,7 +26,7 @@
                 const key = event.key.toLowerCase();
                 if (key === 's') {
                     document.getElementById('start-travel-btn').click();
-                } else if (key === 't') {
+                } else if (key === 'g') {
                     const selectBox = document.getElementById('destination-select');
                     selectBox.focus();
                     if (selectBox.selectedIndex === 0) {
@@ -51,7 +51,7 @@
                 <a href="{{ link }}">{{ current.location.name }}</a>
                 {% if current.location.destinations %}
                     <div class="flexdiv">
-                        <label for="destination-select">[T]ravel To</label>
+                        <label for="destination-select">[G]o To</label>
                         <select id="destination-select" class="select-box">
                             <option value="" data-distance="-1">(Select destination)</option>
                             {% for dest_id, dest in current.location.destinations.items() %}

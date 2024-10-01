@@ -31,12 +31,6 @@
             "name": "Modesty"
         },
         {
-            "description": "Physical arousal, not necessarily love. 0 could be considered average for a person of whatever age they are, while negative values could possibly indicate sluggishness. But generally, the number increases in steamy situations.",
-            "id": 9,
-            "mult": false,
-            "name": "Arousal"
-        },
-        {
             "description": "Love     above  50\r\nDislike  -1 to -50\r\nLike      1 to  50\r\nHate     below -50",
             "id": 11,
             "mult": false,
@@ -59,6 +53,36 @@
             "id": 13,
             "mult": false,
             "name": "Can Lecture"
+        },
+        {
+            "description": "Measured by whether a person can calculate tips correctly, or how many lines of Shakespeare they can recite. Whether that makes conversations more interesting or not depends on who is listening.",
+            "id": 14,
+            "mult": false,
+            "name": "Intelligence"
+        },
+        {
+            "description": "Physical arousal, not necessarily love. 1 could be considered average for a person of whatever age they are, while negative values indicate feeling sluggish or creeped out. Otherwise, the number increases in steamy situations.",
+            "id": 9,
+            "mult": false,
+            "name": "Arousal"
+        },
+        {
+            "description": "Ballroom dancing or just the Macarena.",
+            "id": 15,
+            "mult": false,
+            "name": "Dancing Skill"
+        },
+        {
+            "description": "Either cash on hand or at the bank.",
+            "id": 17,
+            "mult": false,
+            "name": "Funds"
+        },
+        {
+            "description": "Even a little could be relaxing. A moderate amount is unsafe to drive under, while a lot could mean acting wildly or even passing out.",
+            "id": 16,
+            "mult": false,
+            "name": "Intoxicated"
         }
     ],
     "characters": [
@@ -95,6 +119,195 @@
         {
             "attribs": [
                 [
+                    10,
+                    1.0
+                ],
+                [
+                    11,
+                    1.0
+                ],
+                [
+                    14,
+                    5.0
+                ],
+                [
+                    9,
+                    1.0
+                ],
+                [
+                    8,
+                    10.0
+                ],
+                [
+                    6,
+                    5.0
+                ],
+                [
+                    4,
+                    5.0
+                ],
+                [
+                    5,
+                    5.0
+                ]
+            ],
+            "description": "",
+            "dest_id": null,
+            "id": 6,
+            "items": [
+                {
+                    "item_id": 30,
+                    "quantity": 1.0,
+                    "slot": "Upper Body"
+                },
+                {
+                    "item_id": 31,
+                    "quantity": 1.0,
+                    "slot": "Legs"
+                },
+                {
+                    "item_id": 36,
+                    "quantity": 1.0,
+                    "slot": "Feet"
+                }
+            ],
+            "location_id": 4,
+            "masked": false,
+            "name": "Claudia",
+            "position": [
+                0,
+                0
+            ],
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": false
+        },
+        {
+            "attribs": [
+                [
+                    16,
+                    7.0
+                ],
+                [
+                    15,
+                    4.0
+                ],
+                [
+                    10,
+                    30.0
+                ],
+                [
+                    11,
+                    30.0
+                ],
+                [
+                    14,
+                    2.0
+                ],
+                [
+                    9,
+                    1.0
+                ],
+                [
+                    8,
+                    7.0
+                ],
+                [
+                    6,
+                    5.0
+                ],
+                [
+                    4,
+                    5.0
+                ],
+                [
+                    5,
+                    8.0
+                ]
+            ],
+            "description": "A young woman, not a lady, judging from her appearance. Auburn shoulder-length hair. Loves dancing even if she's not particularly skilled at it.",
+            "dest_id": null,
+            "id": 7,
+            "items": [
+                {
+                    "item_id": 36,
+                    "quantity": 1.0,
+                    "slot": "Feet"
+                },
+                {
+                    "item_id": 37,
+                    "quantity": 1.0,
+                    "slot": "Full Body"
+                }
+            ],
+            "location_id": 5,
+            "masked": false,
+            "name": "Sierra",
+            "position": [
+                0,
+                0
+            ],
+            "progress": {
+                "batches_processed": 1,
+                "id": 60,
+                "is_ongoing": false,
+                "item_id": 0,
+                "recipe_id": 0,
+                "start_time": "Mon, 30 Sep 2024 15:11:48 GMT",
+                "stop_time": "Mon, 30 Sep 2024 15:11:53 GMT"
+            },
+            "quantity": 0.0,
+            "toplevel": false
+        },
+        {
+            "attribs": [
+                [
+                    16,
+                    6.0
+                ]
+            ],
+            "description": "A lowlife. Sierra would probably prefer her mom sent him away, but he doesn't usually bother her, so it's fine.",
+            "dest_id": null,
+            "id": 8,
+            "items": [],
+            "location_id": 16,
+            "masked": false,
+            "name": "Sierra's Stepdad",
+            "position": [
+                0,
+                0
+            ],
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": false
+        },
+        {
+            "attribs": [
+                [
+                    17,
+                    9930.0
+                ],
+                [
+                    15,
+                    3.0
+                ],
+                [
+                    5,
+                    5.0
+                ],
+                [
+                    14,
+                    5.0
+                ],
+                [
+                    12,
+                    1.0
+                ],
+                [
+                    9,
+                    30.0
+                ],
+                [
                     8,
                     10.0
                 ],
@@ -103,16 +316,12 @@
                     3.0
                 ],
                 [
-                    9,
-                    1.0
-                ],
-                [
                     4,
                     3.0
                 ],
                 [
-                    12,
-                    1.0
+                    16,
+                    7.0
                 ]
             ],
             "description": "Work has left little time for social life, until now. With a few months off, this is the perfect time to reawaken that hidden charisma and those stifled interpersonal skills.\r\n\r\nThe initial setup is male seeking female \u2014 adjust as needed.",
@@ -120,14 +329,9 @@
             "id": 5,
             "items": [
                 {
-                    "item_id": 34,
+                    "item_id": 30,
                     "quantity": 1.0,
-                    "slot": ""
-                },
-                {
-                    "item_id": 32,
-                    "quantity": 1.0,
-                    "slot": "Feet"
+                    "slot": "Upper Body"
                 },
                 {
                     "item_id": 31,
@@ -135,24 +339,132 @@
                     "slot": "Legs"
                 },
                 {
-                    "item_id": 30,
+                    "item_id": 32,
                     "quantity": 1.0,
-                    "slot": "Upper Body"
+                    "slot": "Feet"
+                },
+                {
+                    "item_id": 34,
+                    "quantity": 1.0,
+                    "slot": ""
                 }
             ],
             "location_id": 6,
             "masked": false,
-            "name": "(Enter your name)",
+            "name": "Sam",
             "position": [
                 0,
                 0
             ],
-            "progress": {},
+            "progress": {
+                "batches_processed": 1,
+                "id": 62,
+                "is_ongoing": false,
+                "item_id": 0,
+                "recipe_id": 0,
+                "start_time": "Mon, 30 Sep 2024 15:12:02 GMT",
+                "stop_time": "Mon, 30 Sep 2024 15:12:06 GMT"
+            },
             "quantity": 0.0,
             "toplevel": true
         }
     ],
-    "events": [],
+    "events": [
+        {
+            "changed": [],
+            "description": "Based on appearance and greeting, people may like you, dislike you, or (maybe the worst if you want to be noticed) have no opinion about you.",
+            "determining": [
+                [
+                    "attrib",
+                    4
+                ],
+                [
+                    "attrib",
+                    5
+                ],
+                [
+                    "attrib",
+                    6
+                ],
+                [
+                    "attrib",
+                    7
+                ],
+                [
+                    "attrib",
+                    8
+                ],
+                [
+                    "attrib",
+                    14
+                ]
+            ],
+            "id": 1,
+            "name": "First Impression",
+            "numeric_range": [
+                0,
+                10
+            ],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": true,
+            "trigger_by_duration": true,
+            "trigger_chance": [
+                1,
+                1
+            ],
+            "triggers": []
+        },
+        {
+            "changed": [],
+            "description": "Does the person draw back or are they happy about the initiative taken. The attempt could be spoken or physical.",
+            "determining": [
+                [
+                    "attrib",
+                    4
+                ],
+                [
+                    "attrib",
+                    5
+                ],
+                [
+                    "attrib",
+                    6
+                ],
+                [
+                    "attrib",
+                    7
+                ],
+                [
+                    "attrib",
+                    8
+                ],
+                [
+                    "attrib",
+                    14
+                ],
+                [
+                    "attrib",
+                    15
+                ]
+            ],
+            "id": 2,
+            "name": "How an Advance is Received",
+            "numeric_range": [
+                0,
+                10
+            ],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": true,
+            "trigger_by_duration": true,
+            "trigger_chance": [
+                1,
+                1
+            ],
+            "triggers": []
+        }
+    ],
     "items": [
         {
             "attribs": [],
@@ -474,6 +786,87 @@
             "recipes": [],
             "storage_type": "carried",
             "toplevel": false
+        },
+        {
+            "attribs": [
+                [
+                    7,
+                    10.0
+                ],
+                [
+                    5,
+                    1.0
+                ],
+                [
+                    8,
+                    1.0
+                ]
+            ],
+            "description": "Good for work or spending time with friends, not hiking or sports.",
+            "id": 36,
+            "masked": false,
+            "mult": false,
+            "name": "Low Heels",
+            "progress": {},
+            "q_limit": 0.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "carried",
+            "toplevel": false
+        },
+        {
+            "attribs": [
+                [
+                    5,
+                    4.0
+                ],
+                [
+                    8,
+                    9.0
+                ],
+                [
+                    7,
+                    10.0
+                ]
+            ],
+            "description": "Good for a variety of occasions including work and free time.",
+            "id": 35,
+            "masked": false,
+            "mult": false,
+            "name": "Plain Black Dress",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "carried",
+            "toplevel": false
+        },
+        {
+            "attribs": [
+                [
+                    7,
+                    10.0
+                ],
+                [
+                    8,
+                    7.0
+                ],
+                [
+                    5,
+                    4.0
+                ]
+            ],
+            "description": "The bottom of the skirt rests just above the knees.",
+            "id": 37,
+            "masked": false,
+            "mult": false,
+            "name": "Revealing Leather Dress",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "carried",
+            "toplevel": false
         }
     ],
     "locations": [
@@ -648,52 +1041,6 @@
             "toplevel": false
         },
         {
-            "description": "Luxurious \u2014 three swimming pools, far more than your grandparents in India. Only for some reason they're all very small, about ankle deep. Well, it may not be the finest in the land, but it's nothing to be ashamed of either.",
-            "destinations": [
-                {
-                    "dest_id": 9,
-                    "distance": 5.0,
-                    "entrance": [
-                        0,
-                        0
-                    ],
-                    "exit": [
-                        0,
-                        0
-                    ]
-                },
-                {
-                    "dest_id": 11,
-                    "distance": 4.0,
-                    "entrance": [
-                        0,
-                        0
-                    ],
-                    "exit": [
-                        0,
-                        0
-                    ]
-                }
-            ],
-            "dimensions": [
-                0,
-                0
-            ],
-            "excluded": [
-                0,
-                0,
-                0,
-                0
-            ],
-            "id": 6,
-            "items": [],
-            "masked": false,
-            "name": "Home",
-            "progress": {},
-            "quantity": 0.0,
-            "toplevel": false
-        },
-        {
             "description": "Generally a bit more relaxed, and lower crime, than the main part of the city.",
             "destinations": [
                 {
@@ -752,88 +1099,6 @@
             "toplevel": false
         },
         {
-            "description": "The lights are much brighter, and the night life as well as the day life is humming.",
-            "destinations": [
-                {
-                    "dest_id": 6,
-                    "distance": 5.0,
-                    "entrance": [
-                        0,
-                        0
-                    ],
-                    "exit": [
-                        0,
-                        0
-                    ]
-                },
-                {
-                    "dest_id": 4,
-                    "distance": 1.0,
-                    "entrance": [
-                        0,
-                        0
-                    ],
-                    "exit": [
-                        0,
-                        0
-                    ]
-                },
-                {
-                    "dest_id": 5,
-                    "distance": 1.0,
-                    "entrance": [
-                        0,
-                        0
-                    ],
-                    "exit": [
-                        0,
-                        0
-                    ]
-                },
-                {
-                    "dest_id": 7,
-                    "distance": 1.0,
-                    "entrance": [
-                        0,
-                        0
-                    ],
-                    "exit": [
-                        0,
-                        0
-                    ]
-                },
-                {
-                    "dest_id": 12,
-                    "distance": 1.0,
-                    "entrance": [
-                        0,
-                        0
-                    ],
-                    "exit": [
-                        0,
-                        0
-                    ]
-                }
-            ],
-            "dimensions": [
-                0,
-                0
-            ],
-            "excluded": [
-                0,
-                0,
-                0,
-                0
-            ],
-            "id": 9,
-            "items": [],
-            "masked": false,
-            "name": "Downtown",
-            "progress": {},
-            "quantity": 0.0,
-            "toplevel": false
-        },
-        {
             "description": "Where else would you go to blow off steam and have a good time? There's certain to be people here to meet. The only question is whether the types who frequent this joint are worth your time.\r\n\r\nEven if you'd normally consider yourself too moral to indulge in such a lifestyle, you could still choose someone less worthy (but good-looking) in an attempt to get them back on the right road.\r\n\r\nIn a place like this, it might be a good idea to be patient and get to know someone you're interested in before you decide that they're all they seem to be.",
             "destinations": [
                 {
@@ -866,13 +1131,326 @@
             "progress": {},
             "quantity": 0.0,
             "toplevel": false
+        },
+        {
+            "description": "The mattress isn't worn out, comfortable enough unless the day has been too stressful to sleep. Held by slats in a wooden frame.\r\n\r\nWhile you <i>could</i> fit another person in, it wouldn't be comfortable. In that case, it would be better to buy a bigger bed.",
+            "destinations": [
+                {
+                    "dest_id": 13,
+                    "distance": 1.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
+                }
+            ],
+            "dimensions": [
+                0,
+                0
+            ],
+            "excluded": [
+                0,
+                0,
+                0,
+                0
+            ],
+            "id": 14,
+            "items": [],
+            "masked": false,
+            "name": "Single Bed",
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": false
+        },
+        {
+            "description": "Being single and living at your parents' house, this is the one true area of personal space. A dressor is against one wall, and there's also a closet with hangers. A window looks out to an old but healthy tree.\r\n\r\nOn a bookshelf is <i>How to feel good about yourself on dates</i> and <i>A guide to not feeling lonely</i>. Might be best to hide those if anyone comes to visit.",
+            "destinations": [
+                {
+                    "dest_id": 14,
+                    "distance": 1.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
+                },
+                {
+                    "dest_id": 6,
+                    "distance": 1.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
+                }
+            ],
+            "dimensions": [
+                0,
+                0
+            ],
+            "excluded": [
+                0,
+                0,
+                0,
+                0
+            ],
+            "id": 13,
+            "items": [],
+            "masked": false,
+            "name": "Your Bedroom",
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": false
+        },
+        {
+            "description": "Shower with hot water if you flip on the small water heater for a short time.\r\n\r\nIn a drawer is toothpaste and other toiletries. A shelf contains towels. The door has a hook for a bathrobe.",
+            "destinations": [
+                {
+                    "dest_id": 6,
+                    "distance": 1.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
+                }
+            ],
+            "dimensions": [
+                0,
+                0
+            ],
+            "excluded": [
+                0,
+                0,
+                0,
+                0
+            ],
+            "id": 15,
+            "items": [],
+            "masked": false,
+            "name": "Your Bathroom",
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": false
+        },
+        {
+            "description": "Luxurious \u2014 three swimming pools, far more than your grandparents in India. Only for some reason they're all very small, about ankle deep. Well, it may not be the finest in the land, but it's nothing to be ashamed of either.",
+            "destinations": [
+                {
+                    "dest_id": 15,
+                    "distance": 1.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
+                },
+                {
+                    "dest_id": 11,
+                    "distance": 4.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
+                },
+                {
+                    "dest_id": 9,
+                    "distance": 5.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
+                },
+                {
+                    "dest_id": 13,
+                    "distance": 1.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
+                }
+            ],
+            "dimensions": [
+                0,
+                0
+            ],
+            "excluded": [
+                0,
+                0,
+                0,
+                0
+            ],
+            "id": 6,
+            "items": [],
+            "masked": false,
+            "name": "Your Home",
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": false
+        },
+        {
+            "description": "An old house with white siding.\r\n\r\nWithin walking distance of the bar. The streets are well lit at night, but it's still not a great part of town, so she doesn't love walking alone.",
+            "destinations": [
+                {
+                    "dest_id": 9,
+                    "distance": 1.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
+                }
+            ],
+            "dimensions": [
+                0,
+                0
+            ],
+            "excluded": [
+                0,
+                0,
+                0,
+                0
+            ],
+            "id": 16,
+            "items": [],
+            "masked": false,
+            "name": "Sierra's House",
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": false
+        },
+        {
+            "description": "The lights are much brighter, and the night life as well as the day life is humming.",
+            "destinations": [
+                {
+                    "dest_id": 16,
+                    "distance": 1.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
+                },
+                {
+                    "dest_id": 12,
+                    "distance": 1.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
+                },
+                {
+                    "dest_id": 7,
+                    "distance": 1.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
+                },
+                {
+                    "dest_id": 5,
+                    "distance": 1.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
+                },
+                {
+                    "dest_id": 4,
+                    "distance": 1.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
+                },
+                {
+                    "dest_id": 6,
+                    "distance": 5.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
+                }
+            ],
+            "dimensions": [
+                0,
+                0
+            ],
+            "excluded": [
+                0,
+                0,
+                0,
+                0
+            ],
+            "id": 9,
+            "items": [],
+            "masked": false,
+            "name": "Downtown",
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": false
         }
     ],
     "overall": {
-        "description": "Your Indian mother has decided it's time. She's fine with you having a ❤️ love marriage, but if you don't find someone soon, she has in mind a match with a well-off family. The problem is that they're ugly!\r\n\r\nFirst, <a href=\"/play/item/24/\">talk things over with your Maa</a>, then make a visit to either the church or the bar to start meeting people.\r\n\r\nRomance is highly dependent on your personal morals, so customize accordingly. The initial setup aims to be acceptable for most people.",
+        "description": "Your Indian mother has decided it's time. She's fine with you having a \u2764\ufe0f love marriage, but if you don't find someone soon, she has in mind a match with a well-off family. The problem is that they're ugly!\r\n\r\nFirst, <a href=\"/play/item/24/\">talk things over with your Maa</a>, then make a visit to either the church or the bar to start meeting people.\r\n\r\nRomance is highly dependent on your personal morals, so customize accordingly. The initial setup aims to be acceptable for most people.",
         "number_format": "en_US",
         "slots": [
             "Upper Body",
+            "Full Body",
             "Legs",
             "Feet"
         ],

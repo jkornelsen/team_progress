@@ -9,6 +9,7 @@ from .pile import Pile
 from .progress import Progress
 from .utils import NumTup, RequestHelper
 
+logger = logging.getLogger(__name__)
 tables_to_create = {
     'locations': f"""
         {coldef('name')},
@@ -22,8 +23,7 @@ tables_to_create = {
             REFERENCES progress (game_token, id)
             DEFERRABLE INITIALLY DEFERRED
         """
-}
-logger = logging.getLogger(__name__)
+    }
 
 class ItemAt(Pile):
     def __init__(self, item, loc):
@@ -145,7 +145,7 @@ class Location(Identifiable):
         super().__init__(new_id)
         self.name = ""
         self.description = ""
-        self.toplevel = True
+        self.toplevel = False
         self.masked = False
         self.destinations = {}  # Destination objects keyed by loc id
         self.items = {}  # ItemAt objects keyed by item id

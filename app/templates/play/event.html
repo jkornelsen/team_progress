@@ -329,24 +329,22 @@
                 localStorage.setItem('difficulty', event.currentTarget.value);
             });
 
-            $('.container-for-det').change((event) => {
-                const keyMult = $(event.currentTarget).data('mult');
-                const selectedIndex = $(event.currentTarget).prop('selectedIndex');
-                const selectedOption = $(event.currentTarget).find(':selected');
+            $('.fill-det-btn').on('click', (event) => {
+                const entityId = $(event.currentTarget).data('id');
+                const entityType = $(event.currentTarget).data('type');
+                const containerSelect = $(`#container-for-det_${entityType}_${entityId}`)
+                const keyMult = $(containerSelect).data('mult');
+                const selectedIndex = $(containerSelect).prop('selectedIndex');
+                const selectedOption = $(containerSelect).find(':selected');
                 const containerVal = parseFloat(selectedOption.val()) || 0;
                 const currentAdjustment = parseFloat($('#stat_adjustment').val()) || 0;
                 if (selectedIndex !== 0) {
                     if (keyMult) {
-                        $('#stat_adjustment').val(`${currentAdjustment}${containerVal}`);
+                        $('#stat_adjustment').val(currentAdjustment + containerVal);
                     } else {
-                        $('#stat_adjustment').val(`${currentAdjustment}${containerVal}`);
+                        $('#stat_adjustment').val(currentAdjustment + containerVal);
                     }
                 }
-            });
-            $('.fill-det-btn').on('click', (event) => {
-                const entityId = $(event.currentTarget).data('id');
-                const entityType = $(event.currentTarget).data('type');
-                $(`#container-for-det_${entityType}_${entityId}`).change();
             });
 
             $('.container-for-changed').change((event) => {

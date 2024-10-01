@@ -9,7 +9,7 @@ from database import column_counts, pretty
 from .utils import NumTup
 
 logger = logging.getLogger(__name__)
-#logger.setLevel(logging.CRITICAL)  # turn off for this module
+#logger.setLevel(logging.INFO)  # don't log all SQL
 
 def coldef(which):
     """Definitions for commonly used columns for creating a table."""
@@ -324,7 +324,10 @@ class Identifiable(DbSerializable):
             RETURNING id
             """
         row = self.execute_change(query, values, fetch=True)
+        old_id = self.id
         self.id = row.id
+        if self.id != old_id:
+            logger.info("updated id from %s to %s", old_id, self.id)
 
     def remove_from_db(self):
         self.execute_change("""

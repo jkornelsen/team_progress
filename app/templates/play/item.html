@@ -119,7 +119,7 @@
                             {% if container.pile.slot %}
                                 <div class="button-column" id="unequip-container">
                                     <button id="unequip-btn" class="go-button">Une[q]uip</button>
-                                    {{ container.pile.slot }}
+                                    <span class="text-by-button">{{ container.pile.slot }}</span>
                                 </div>
                             {% else %}
                                 {% if game_data.overall.slots %}
@@ -253,6 +253,7 @@
                                     {% if loop.first %}
                                         <tr>
                                             <td>
+                                                {% if current.progress.can_produce(recipe.id) %}
                                                 {% if recipe.instant %}
                                                     <input type="text"
                                                            class="quantity_to_gain"
@@ -269,6 +270,10 @@
                                                             class="start-stop-btn go-button"
                                                             id="start-stop-btn_{{ recipe.id }}"
                                                             data-recipe-id="{{ recipe.id }}">Start</button>
+                                                {% endif %}
+                                                {% else %}
+                                                    <span style="font-size: 1em"
+                                                          title="Not all requirements met. If there is a page that should be shown in the 'Where' column, first navigate to that page.">🚫</span>
                                                 {% endif %}
                                             </td>
                                             <td>

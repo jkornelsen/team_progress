@@ -6,7 +6,6 @@ from flask import g, request, url_for
 from .db_serializable import DbSerializable, coldef
 
 logger = logging.getLogger(__name__)
-
 tables_to_create = {
     'user_interactions': f"""
         {coldef('game_token')} NOT NULL,

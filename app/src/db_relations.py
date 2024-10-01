@@ -141,7 +141,6 @@ tables_to_create = {
         item_id integer,
         loc_id integer,
         reltype varchar(20) CHECK (reltype IN ('determining', 'changed', 'triggers')),
-        determining boolean,
         UNIQUE (game_token, event_id, attrib_id, item_id, loc_id, reltype),
         FOREIGN KEY (game_token, event_id)
             REFERENCES events (game_token, id)

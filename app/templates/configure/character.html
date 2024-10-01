@@ -137,7 +137,17 @@
                         </td><td>
                             <input type="text" name="item_qty[]" value="${itemQty}" size="8">
                         </td><td>
-                            <input type="text" name="item_slot[]" value="${itemSlot}" size="8">
+                            <select name="item_slot[]">
+                                <option value="">–</option>
+                                {% if game_data.overall.slots %}
+                                    {% for slot in game_data.overall.slots %}
+                                        <option value="{{ slot }}">{{ slot }}</option>
+                                    {% endfor %}
+                                {% else %}
+                                    <option value="" selected></option>
+                                    <option value="">(see Overall Settings)</option>
+                                {% endif %}
+                            </select>
                         </td><td>
                             <button type="button" class="remove-item-btn lesser-button">Remove</button>
                         </td>
@@ -145,6 +155,7 @@
                 `;
                 $('#items-rows').prepend(itemHtml);
                 $('#items-table').show();
+                $('#items-rows').find('tr:first select[name="item_slot[]"]').val(itemSlot);
             }
             $('.add-item-btn').click((event) => {
                 const selectBox = $(event.currentTarget).prev('.item-select');

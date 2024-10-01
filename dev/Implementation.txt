@@ -1,18 +1,11 @@
+add attribute field for boolean
+that is, a field to say whether the value should be interpreted as
+false (0) or true (1 or otherwise non-zero)
+configure screen shows radio buttons (o) Number () True/False
+character configure screens should then show checkboxes instead of number
 
-Saving duplicate item with recipe:
-duplicate key value violates unique constraint "recipe_sources_pkey" DETAIL: Key (game_token, recipe_id, item_id)=(2611f107-0a28-4e4c-b3ca-037207f36c86, 8, 25) already exists.
-still a problem? maybe it happened before 'this' references were fixed.
+list triggerable and callable events on play item
 
-equipped slot on char configure should be a select box
-
-probably should show triggerable events for item production
-and any other events for that item
-that would be useful for items such as the phone in the first scenario
-try a separate table, like "used for"
-
-don't show start/gain button unless conditions are met
-instead, put a 🚫
-
-after a batch is produced, call can_produce() before starting a new batch
-and stop if there's no more to do
-maybe in item_progress
+create char_events table
+add usable events to char configure screen
+then list on char play

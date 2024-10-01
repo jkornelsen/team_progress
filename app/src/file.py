@@ -16,7 +16,6 @@ from .overall import Overall
 from .utils import LinkLetters, RequestHelper
 
 logger = logging.getLogger(__name__)
-
 tables_to_create = {
     'scenario_log': """
         filename varchar(50) NOT NULL,
@@ -25,7 +24,11 @@ tables_to_create = {
         """
     }
 
+DEFAULT_SCENARIO = "00_Default.json"
+
 def set_routes(app):
+    DATA_DIR = app.config['DATA_DIR']
+
     @app.route('/configure')
     def configure_index():
         file_message = session.pop('file_message', False)
@@ -77,7 +80,7 @@ def set_routes(app):
         filepath = os.path.join(UPLOAD_DIR, filename)
         uploaded_file.save(filepath)
         try:
-            load_data_from_file(filepath)
+            load_file_into_db(filepath)
         except Exception:
             logger.exception("")
             return render_template(
@@ -97,7 +100,6 @@ def set_routes(app):
 
     @app.route('/browse_scenarios', methods=['GET', 'POST'])
     def browse_scenarios():
-        DATA_DIR = app.config['DATA_DIR']
         if request.method == 'GET':
             scenarios = []
             popularity = {}
@@ -107,7 +109,7 @@ def set_routes(app):
             for row in rows:
                 popularity[row.filename] = row.times_loaded
             for filename in os.listdir(DATA_DIR):
-                if filename.endswith('.json'):
+                if filename.endswith('.json') and filename != DEFAULT_SCENARIO:
                     filepath = os.path.join(DATA_DIR, filename)
                     try:
                         scenario = load_scenario_metadata(filepath)
@@ -142,7 +144,7 @@ def set_routes(app):
                 message="No scenario file was specified.")
         filepath = os.path.join(DATA_DIR, scenario_file)
         try:
-            load_data_from_file(filepath)
+            load_file_into_db(filepath)
         except Exception as ex:
             logger.exception("")
             return render_template(
@@ -160,16 +162,19 @@ def set_routes(app):
 
     @app.route('/blank_scenario')
     def blank_scenario():
-        GameData.clear_db_for_token()
-        GameData()
-        g.game_data.to_db()
+        load_file_into_db(os.path.join(DATA_DIR, DEFAULT_SCENARIO))
         session['file_message'] = 'Starting game with default setup.'
         return redirect(url_for('configure_index'))
 
-def load_data_from_file(filepath):
-    with open(filepath, 'r', encoding='utf-8') as infile:
-        data = json.load(infile)
-    g.game_data.from_json(data)
+    def default_scenario():
+        load_file(os.path.join(DATA_DIR, DEFAULT_SCENARIO))
+
+    # callable from outside the module
+    globals()['default_scenario'] = default_scenario
+
+def load_file_into_db(filepath):
+    """Load game data from file and store into db."""
+    load_file(filepath)
     GameData.clear_db_for_token()
     set_autocommit(False)
     try:
@@ -183,6 +188,12 @@ def load_data_from_file(filepath):
         raise ex
     finally:
         set_autocommit(True)
+
+def load_file(filepath):
+    """Load game data from file."""
+    with open(filepath, 'r', encoding='utf-8') as infile:
+        data = json.load(infile)
+    g.game_data.from_json(data)
 
 def load_scenario_metadata(filepath):
     with open(filepath, 'r', encoding='utf-8') as infile:

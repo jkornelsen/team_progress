@@ -10,6 +10,7 @@ from .progress import Progress
 from .recipe import Byproduct, Recipe, Source
 from .utils import RequestHelper, Storage
 
+logger = logging.getLogger(__name__)
 tables_to_create = {
     'items': f"""
         {coldef('name')},
@@ -25,7 +26,6 @@ tables_to_create = {
             DEFERRABLE INITIALLY DEFERRED
         """,
     }
-logger = logging.getLogger(__name__)
 
 class GeneralPile(Pile):
     def __init__(self, item=None, quantity=None):
@@ -52,7 +52,7 @@ class Item(Identifiable):
         self.name = ""
         self.description = ""
         self.storage_type = Storage.UNIVERSAL  # behavior, not pile type
-        self.toplevel = True
+        self.toplevel = False
         self.masked = False
         self.mult = False
         self.attribs = {}  # AttribFor objects keyed by attrib id

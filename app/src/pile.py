@@ -101,14 +101,14 @@ def load_piles(current_item, char_id, loc_id, main_pile_type):
         for attrib_id, req in recipe.attribs.items():
             for item in g.game_data.items:
                 attrib_for = item.attribs.get(attrib_id)
-                if attrib_for is not None and attrib_for.val >= req.val:
+                if attrib_for and attrib_for.val >= req.val:
                     req.entity = item
                     logger.debug("attrib %s req %.1f met by item %s %.1f",
                         attrib_for.attrib_id, req.val,
                         item.name, attrib_for.val)
             for char in chars:
                 attrib_for = char.attribs.get(attrib_id)
-                if attrib_for is not None and attrib_for.val >= req.val:
+                if attrib_for and attrib_for.val >= req.val:
                     req.entity = char
                     logger.debug("attrib %s req %.1f met by char %s %.1f",
                         attrib_for.attrib_id, req.val,
@@ -143,6 +143,9 @@ def _assign_pile(
         # Select a char at this loc who owns one
         for char in chars:
             for owned_item_id, owned_item in char.items.items():
+                # XXX: If there are two candidates but only one
+                # has enough to meet source.q_required,
+                # mightn't this choose the one that falls short?
                 if (owned_item_id == pile_item.id and
                         (owned_item.quantity != 0 or not pile)):
                     pile = owned_item

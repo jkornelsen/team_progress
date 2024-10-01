@@ -164,10 +164,18 @@ that would make it easier to take 1 ticket or Rs.5 per x distance
 
 add Characters to a group to travel together -- group_name string
 strip spaces and case insensitive
-only works if all in the list are at starting loc
-otherwise display missing member in alert
 checkbox "Group1 Together" to travel,
 if group_name isn't empty and there are at least 2 members
+only works if all in the list are at starting loc?
+no, list who's included and missing next to checkbox
+
+although that would require configuring
+what about on character screen,
+multi-select select box of others to travel with
+can we store results of multi-selection in session?
+
+other than travel, don't need to show group because they'll all
+be listed on the location screen
 
 would attributes be useful for locations?
 for example, how dark a room is,
@@ -188,18 +196,52 @@ and the implementation would be an input box showing * 0.9
 perhaps one event could contain references to other (sub-)events,
 for example, an attack would be a chance of changing hp
 as well as a chance at poisoning
-if nothing else, could explain subevents in description
+could explain and link to related events in description
 
 chances could be at a disadvantage (lowest of two rolls)
 or advantage (highest of two roles) based on story context
 on event play screen
 advantage: single roll, best of two, worst of two -- radio buttons
 
-event trigger chance based on produced item quantity
-or character attribute
+events should automatically select last character viewed?
+seems better to have select box to select from all lists
+wouldn't change selection if a particular box doesn't have it
+could only show for three or more -- "Select all"
+seems good as long as we can find an intuitive place to put it on the page
 
-during encounters, time is turn-based and rotational,
-at other times, it is much freer
+what about an item that can shoot?
+that seems driven like characters do,
+although the current triggers setup could function for that
+if we duplicate a gun, we would expect that the duplicate
+could shoot as well
+
+a field that would make sense is trigger (boolean)
+for local and item events
+or maybe a trigger chance,
+which seems good because a better quality gun
+would have a lower chance of misfiring for example
+
+dropping the item and another character picking it
+up seems like the event should go with the item
+like "Connect to Service" for the phone
+
+if item play gets too cluttered we could make a recipe play screen
+it wouldn't have the upper button actions such as pickup
+that would be the only place where progress would be shown
+some events could be related to production, including all
+automatically triggered ones,
+while 'shoot' would make more sense on item play instead
+
+what doesn't need to change:
+locations and items can trigger events automatically or manually
+manually triggering is functionally and, depending on the
+situation, conceptually equivalent to characters using abilities
+the only difference might be in the configure screens
+play location already lists triggerable and callable events
+play attrib and play item don't need to show lists
+for determines and changed by events,
+because clicking on an event is for when we want to run it,
+not adjust it
 
 mouseover grid letters to show name of what is there
 
@@ -269,6 +311,10 @@ could stop progress if an event occurs
 or maybe no offline progress
 the idea of farming for something for hours, hoping for a certain chance,
 is exciting but can also feel like being tied up
+
+for four-way rolls maybe select the base score,
+like maybe out of 100.
+would that be 1d100, or subtract that value from adjusted stat value?
 
 ---- scenarios ----
 

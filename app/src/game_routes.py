@@ -60,6 +60,7 @@ def set_routes(app):
             if not req.has_key('duplicated'):
                 session['referrer'] = request.referrer
             char = Character.data_for_configure(char_id)
+            g.game_data.overall = Overall.load_complete_object()
             return render_template(
                 'configure/character.html',
                 current=char,
@@ -135,7 +136,13 @@ def set_routes(app):
             dup_item.id = 0
             dup_item.name = increment_name(new_item.name)
             dup_item.progress = Progress(container=dup_item)
+            recipes = new_item.recipes
+            dup_item.recipes = []
             dup_item.to_db()  # Changes the ID
+            for recipe in recipes:
+                recipe.id = 0
+                recipe.item_produced = dup_item
+                recipe.to_db()  # Changes the ID
             return redirect(
                 url_for('configure_item', item_id=dup_item.id,
                 duplicated=True))
@@ -235,7 +242,7 @@ def set_routes(app):
             'play/character.html',
             current=instance,
             game_data=g.game_data,
-            link_letters=LinkLetters('emost')
+            link_letters=LinkLetters('egoms')
             )
 
     @app.route('/play/event/<int:event_id>', methods=['GET', 'POST'])

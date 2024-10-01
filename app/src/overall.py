@@ -11,6 +11,7 @@ from .item import Item
 from .location import Location
 from .utils import RequestHelper
 
+logger = logging.getLogger(__name__)
 tables_to_create = {
     'overall': f"""
         {coldef('game_token')},
@@ -20,8 +21,7 @@ tables_to_create = {
         slots TEXT[],
         PRIMARY KEY (game_token)
         """
-}
-logger = logging.getLogger(__name__)
+    }
 
 class WinRequirement(Identifiable):
     """One of:
@@ -89,22 +89,11 @@ class Overall(DbSerializable):
 
     def __init__(self):
         super().__init__()
-        self.title = "Generic Adventure"
-        self.description = (
-            "Go to <i>Main Setup</i> (or press M)."
-            " Then, to continue a game you've already started,"
-            " click <i>Load from File</i>."
-            " Otherwise, browse the <i>Pre-Built Scenarios</i>."
-            "\r\n\r\n"
-            "Or, to start from scratch, go to <i>Overall Settings</i>"
-            " and describe your idea, along with a title."
-            " Next, add a few initial items or characters."
-            " More can be set up as the game goes along."
-            " An AI may be helpful to fill in lists or add accurate details."
-            )
+        self.title = ""
+        self.description = ""
         self.win_reqs = []
         self.number_format = 'en_US'
-        self.slots = ["Main Hand", "Off Hand", "Body Armor"]
+        self.slots = []
 
     @classmethod
     def tablename(cls):
@@ -191,8 +180,10 @@ class Overall(DbSerializable):
                 instance.win_reqs.append(
                     WinRequirement.from_data(winreq_data))
         if not instance:
-            logger.debug("overall data not found -- making generic object")
-            instance = cls()
+            logger.debug("loading default scenario")
+            from .file import default_scenario
+            default_scenario()
+            instance = g.game_data.overall
         return instance
 
     def to_db(self):

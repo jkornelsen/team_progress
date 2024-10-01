@@ -12,6 +12,19 @@ from .location import ItemAt, Location
 from .utils import (
     NumTup, RequestHelper, create_entity, entity_class, format_num)
 
+logger = logging.getLogger(__name__)
+tables_to_create = {
+    'events': f"""
+        {coldef('name')},
+        toplevel boolean NOT NULL,
+        outcome_type varchar(20) not null,
+        trigger_chance integer[2],
+        trigger_by_duration boolean,
+        numeric_range integer[2],
+        selection_strings text
+        """
+    }
+
 OUTCOME_TYPES = [
     'fourway',  # critical/minor failure or success
     'numeric',  # such as a damage number
@@ -34,22 +47,8 @@ OUTCOME_MARGIN = 9  # difference required to get major or critical
 RELATION_TYPES = ['determining', 'changed', 'triggers']
 ENTITY_TYPES = [Attrib, Item, Location]
 
-logger = logging.getLogger(__name__)
-
 def roll_dice(sides):
     return random.randint(1, sides)
-
-tables_to_create = {
-    'events': f"""
-        {coldef('name')},
-        toplevel boolean NOT NULL,
-        outcome_type varchar(20) not null,
-        trigger_chance integer[2],
-        trigger_by_duration boolean,
-        numeric_range integer[2],
-        selection_strings text
-        """
-}
 
 class Event(Identifiable):
     def __init__(self, new_id=""):

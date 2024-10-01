@@ -6,6 +6,7 @@ from .attrib import AttribFor
 from .db_serializable import (
     Identifiable, QueryHelper, Serializable, coldef)
 
+logger = logging.getLogger(__name__)
 tables_to_create = {
     'recipes': f"""
         {coldef('id')},
@@ -19,7 +20,6 @@ tables_to_create = {
             DEFERRABLE INITIALLY DEFERRED
         """,
     }
-logger = logging.getLogger(__name__)
 
 class Source(Serializable):
     def __init__(self, new_id=0):
