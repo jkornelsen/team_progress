@@ -218,13 +218,12 @@ def set_routes(app):
             req.debug()
             session['last_operand'] = req.get_str('operand')
             session['last_operator'] = req.get_str('operator')
-            result = req.get_int('result', None)
-            if result is not None:
-                attrib_for.val = result
-                subject.to_db()
-                # Reload from database
-                subject = func_load_subject(subject_id)
-                attrib_for = subject.attribs.get(attrib_id, 0)
+            result = req.get_int('result')
+            attrib_for.val = result
+            subject.to_db()
+            # Reload from database
+            subject = func_load_subject(subject_id)
+            attrib_for = subject.attribs.get(attrib_id, 0)
         return render_template(
             'play/attrib.html',
             current=attrib,

@@ -150,7 +150,7 @@
                             <option value="" selected>(Select attribute)</option>
                             {% for attrib in game_data.attribs %}
                                 <option value="{{ attrib.id }}"
-                                    data-binary="{{ attrib.binary }}">
+                                    data-binary="{{ attrib.binary | lower }}">
                                     {{ attrib.name }}
                                 </option>
                             {% endfor %}

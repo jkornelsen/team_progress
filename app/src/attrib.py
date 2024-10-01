@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 tables_to_create = {
     'attribs': f"""
         {coldef('name')},
+        enum_list TEXT[],
         is_binary boolean NOT NULL,
         mult boolean NOT NULL
         """
@@ -48,6 +49,7 @@ class Attrib(Identifiable):
         self.name = ""
         self.description = ""
         self.binary = False  # true/false or number
+        self.enum = []  # list of strings to set numerical attrib value
         self.mult = False  # multiplicative or additive
 
     def _base_export_data(self):
@@ -56,6 +58,7 @@ class Attrib(Identifiable):
             'name': self.name,
             'description': self.description,
             'is_binary': self.binary,
+            'enum_list': self.enum,
             'mult': self.mult,
             }
 
@@ -64,6 +67,7 @@ class Attrib(Identifiable):
         data = cls.prepare_dict(data)
         instance = super().from_data(data)
         instance.binary = data.get('is_binary', False)
+        instance.enum = list(data.get('enum_list') or [])
         instance.mult = data.get('mult', False)
         return instance
 
@@ -98,7 +102,12 @@ class Attrib(Identifiable):
             req.debug()
             self.name = req.get_str('attrib_name')
             self.description = req.get_str('attrib_description')
-            self.binary = req.get_str('value_type') == 'binary'
+            self.enum = [
+                line.strip()
+                for line in req.get_str('enum').splitlines()
+                if line.strip()]
+            self.binary = (
+                req.get_str('value_type') == 'binary' and not self.enum)
             self.mult = req.get_str('mult') == 'mult'
             self.to_db()
         elif req.has_key('delete_attrib'):

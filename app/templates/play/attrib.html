@@ -30,7 +30,7 @@
     {% if subject.typename == 'char' %}
         {% set link = url_for('play_char', char_id=subject.id) %}
     {% elif subject.typename == 'item' %}
-        {% set link = url_for('play_location', item_id=subject.id) %}
+        {% set link = url_for('play_item', item_id=subject.id) %}
     {% else %}
         Unexpected type {{ subject.typename }}
     {% endif %}
@@ -66,7 +66,7 @@
                            name="operand"
                            id="operand"
                            size="8"
-                           value="{{ session.get('last_operand', 0) }}">
+                           value="{{ session.get('last_operand', 1) }}">
                 </td>
                 <td>
                     =
@@ -80,6 +80,27 @@
                     <button type="submit" name="change" id="change-btn">[C]hange</button>
                 </td>
             </tr>
+            {% if current.enum %}
+                {% set index_from_val = subject_attrib_val | int %}
+                <tr>
+                    <td>
+                        {% if index_from_val in range(current.enum | length) %}
+                            {{ current.enum[index_from_val] }}
+                        {% else %}
+                            ?
+                        {% endif %}
+                    </td>
+                    <td></td>
+                    <td>
+                        <select id="enum_list">
+                            {% for index in range(current.enum | length) %}
+                                {% set identifier = current.enum[index] %}
+                                <option value="{{ index }}" {% if index == index_from_val %}selected{% endif %}>{{ identifier }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                </tr>
+            {% endif %}
         </table>
     </form>
     <script>
@@ -92,9 +113,18 @@
                 switch (operator) {
                     case 'add':
                         result += operand;
+                        {% if current.enum %}
+                            //result = result % {{ current.enum | length }};
+                            result = (result + {{ current.enum | length }}) % {{ current.enum | length }};
+                        {% endif %}
                         break;
                     case 'sub':
                         result -= operand;
+                        {% if current.enum %}
+                            //if (result < 0) {
+                                result = (result + {{ current.enum | length }}) % {{ current.enum | length }};
+                            //}
+                        {% endif %}
                         break;
                     case 'mult':
                         result *= operand;
@@ -121,10 +151,20 @@
                     default:
                         result = subjectAttribVal;
                 }
-                $('#result').val(result.toFixed(2));
+                //$('#result').val(result.toFixed(2));
+                $('#result').val(result);
+                {% if current.enum %}
+                    $('#enum_list').prop('selectedIndex', result);
+                {% endif %}
             }
             $('#operator, #operand').on('change', calculate);
             calculate(); // on page load
+
+            $('#enum_list').change((event) => {
+                const selectedOption = $(event.currentTarget).find(':selected');
+                const enumVal = parseFloat(selectedOption.val()) || 0;
+                $('#result').val(enumVal);
+            });
         });
     </script>
 {% endblock %}

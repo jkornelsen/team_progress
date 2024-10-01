@@ -3,6 +3,7 @@
 pip show flask
 
 \pset pager off
+SET client_encoding TO 'UTF8';
 
 djlint templates/ --configuration ../dev/djlintrc
 djlint templates/configure/event.html --reformat --quiet --configuration ../dev/djlintrc

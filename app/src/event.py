@@ -127,6 +127,7 @@ class Event(Identifiable):
         self.execute_change("""
             DELETE FROM event_entities
             WHERE event_id = %s AND game_token = %s
+                AND char_id IS NULL
             """, (self.id, g.game_token))
         entity_values = {}  # keyed by entity typename
         for reltype in RELATION_TYPES:

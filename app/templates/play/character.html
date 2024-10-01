@@ -121,21 +121,6 @@
                 {% endfor %}
             </ul>
         {% endif %}
-        {% if current.attribs %}
-            <h2>Attributes</h2>
-            <ul>
-                {% for attrib_of in current.attribs.values() %}
-                    {% set link = url_for('play_attrib', attrib_id=attrib_of.attrib_id, subject_type='char', subject_id=current.id) %}
-                    {% set letter = link_letters.next(link) %}
-                    <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
-                    <li>
-                        <span>[{{ letter }}]</span>
-                        <a href="{{ link }}">{{ attrib_of.attrib.name }}</a>
-                        {% if not attrib_of.attrib.binary %}{{ attrib_of.val | formatNum }}{% endif %}
-                    </li>
-                {% endfor %}
-            </ul>
-        {% endif %}
         {% if game_data.events %}
             <h2>Abilities</h2>
             <ul>
@@ -148,6 +133,30 @@
                     <br>
                 {% else %}
                     <p>(None)</p>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {% if current.attribs %}
+            <h2>Attributes</h2>
+            <ul>
+                {% for attrib_of in current.attribs.values() %}
+                    {% set link = url_for('play_attrib', attrib_id=attrib_of.attrib_id, subject_type='char', subject_id=current.id) %}
+                    {% set letter = link_letters.next(link) %}
+                    <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
+                    <li>
+                        <span>[{{ letter }}]</span>
+                        <a href="{{ link }}">{{ attrib_of.attrib.name }}</a>
+                        {% if attrib_of.attrib.enum %}
+                            {% set index = attrib_of.val | int %}
+                            {% if index in range(attrib_of.attrib.enum | length) %}
+                                {{ attrib_of.attrib.enum[index] }}
+                            {% else %}
+                                ?
+                            {% endif %}
+                        {% elif not attrib_of.attrib.binary %}
+                            {{ attrib_of.val | formatNum }}
+                        {% endif %}
+                    </li>
                 {% endfor %}
             </ul>
         {% endif %}

@@ -204,9 +204,22 @@
                         <h2>Attributes</h2>
                         <ul>
                             {% for attrib_of in current.attribs.values() %}
+                                {% set link = url_for('play_attrib', attrib_id=attrib_of.attrib_id, subject_type='item', subject_id=current.id) %}
+                                {% set letter = link_letters.next(link) %}
+                                <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
                                 <li>
-                                    {{ attrib_of.attrib.name }}
-                                    {% if attrib_of.val != 1 %}{{ attrib_of.val | formatNum }}{% endif %}
+                                    <span>[{{ letter }}]</span>
+                                    <a href="{{ link }}">{{ attrib_of.attrib.name }}</a>
+                                    {% if attrib_of.attrib.enum %}
+                                        {% set index = attrib_of.val | int %}
+                                        {% if index in range(attrib_of.attrib.enum | length) %}
+                                            {{ attrib_of.attrib.enum[index] }}
+                                        {% else %}
+                                            ?
+                                        {% endif %}
+                                    {% elif not attrib_of.attrib.binary %}
+                                        {{ attrib_of.val | formatNum }}
+                                    {% endif %}
                                 </li>
                             {% else %}
                                 (None)
