@@ -3,27 +3,40 @@
         {
             "description": "Knowledge of the woods.",
             "id": 1,
+            "is_binary": false,
+            "mult": false,
             "name": "Pathfinding"
-        },
-        {
-            "description": "Can do chores.",
-            "id": 2,
-            "name": "Willing to do Odd Jobs"
         },
         {
             "description": "Has money to pay for chores.",
             "id": 3,
+            "is_binary": true,
+            "mult": false,
             "name": "Pays for Odd Jobs"
+        },
+        {
+            "description": "Can do chores.",
+            "id": 2,
+            "is_binary": true,
+            "mult": false,
+            "name": "Willing to do Odd Jobs"
         }
     ],
     "characters": [
         {
             "attribs": [
-                [1, 2.0],
-                [2, 1.0]
+                [
+                    1,
+                    2.0
+                ],
+                [
+                    2,
+                    1.0
+                ]
             ],
             "description": "Sent to fetch bacon for dinner by her mother.",
             "dest_id": null,
+            "events": [],
             "id": 1,
             "items": [
                 {
@@ -38,49 +51,72 @@
                 }
             ],
             "location_id": 1,
+            "masked": false,
             "name": "Suzy",
+            "position": [
+                0,
+                0
+            ],
             "progress": {},
             "quantity": 0.0,
-            "toplevel": true,
-            "masked": false
+            "toplevel": true
         },
         {
             "attribs": [
-                [1, 7.0]
+                [
+                    1,
+                    7.0
+                ]
             ],
             "description": "Suzy's mother. Good understanding of the trails in the woods.",
             "dest_id": null,
+            "events": [],
             "id": 2,
             "items": [],
             "location_id": 1,
+            "masked": false,
             "name": "Mom",
+            "position": [
+                0,
+                0
+            ],
             "progress": {},
             "quantity": 0.0,
-            "toplevel": true,
-            "masked": false
+            "toplevel": true
         },
         {
             "attribs": [
-                [3, 1.0]
+                [
+                    3,
+                    1.0
+                ]
             ],
             "description": "Will pay a modest salary for chores.",
             "dest_id": null,
+            "events": [],
             "id": 3,
             "items": [],
             "location_id": 3,
+            "masked": true,
             "name": "Uncle",
+            "position": [
+                0,
+                0
+            ],
             "progress": {},
             "quantity": 0.0,
-            "toplevel": false,
-            "masked": true
+            "toplevel": false
         }
     ],
     "events": [
         {
-            "changed_attrs": [],
+            "changed": [],
             "description": "Chance of something happening during a trip, such as getting lost in the woods. If relevant, enter the adjustment from Suzy's or her mother's Pathfinding skill.",
-            "determining_attrs": [
-                1
+            "determining": [
+                [
+                    "attrib",
+                    1
+                ]
             ],
             "id": 1,
             "name": "Travel Danger",
@@ -90,7 +126,7 @@
             ],
             "outcome_type": "fourway",
             "selection_strings": "",
-            "toplevel": true,
+            "toplevel": false,
             "trigger_by_duration": true,
             "trigger_chance": [
                 1,
@@ -104,9 +140,9 @@
             ]
         },
         {
-            "changed_attrs": [],
+            "changed": [],
             "description": "Attempt to connect a device. Choose Easy difficulty since we won't be far from civilization.",
-            "determining_attrs": [],
+            "determining": [],
             "id": 2,
             "name": "Connect to Service",
             "numeric_range": [
@@ -115,30 +151,41 @@
             ],
             "outcome_type": "fourway",
             "selection_strings": "",
-            "toplevel": true,
+            "toplevel": false,
             "trigger_by_duration": true,
-            "trigger_chance": [],
-            "triggers": []
+            "trigger_chance": [
+                0,
+                1
+            ],
+            "triggers": [
+                [
+                    "item",
+                    10
+                ]
+            ]
         }
     ],
     "items": [
         {
-            "attribs": {},
+            "attribs": [],
             "description": "Where chores are done.",
             "id": 13,
+            "masked": true,
+            "mult": false,
             "name": "Barn",
             "progress": {},
             "q_limit": 1.0,
             "quantity": 0.0,
             "recipes": [],
             "storage_type": "local",
-            "toplevel": false,
-            "masked": true
+            "toplevel": false
         },
         {
-            "attribs": {},
+            "attribs": [],
             "description": "Get paid for chores. Useful for purchasing pigs at the market in case breeding doesn't work out.",
             "id": 12,
+            "masked": false,
+            "mult": false,
             "name": "Cash",
             "progress": {},
             "q_limit": 100.0,
@@ -146,30 +193,35 @@
             "recipes": [
                 {
                     "attribs": [
-                        [3, 1.0]
+                        [
+                            3,
+                            1.0
+                        ]
                     ],
+                    "byproducts": [],
+                    "id": 1,
                     "instant": true,
                     "item_id": 12,
                     "rate_amount": 3.0,
                     "rate_duration": 3.0,
-                    "recipe_id": 1,
                     "sources": [
                         {
+                            "item_id": 11,
                             "preserve": false,
-                            "q_required": 1.0,
-                            "item_id": 11
+                            "q_required": 1.0
                         }
                     ]
                 }
             ],
             "storage_type": "universal",
-            "toplevel": false,
-            "masked": false
+            "toplevel": false
         },
         {
-            "attribs": {},
+            "attribs": [],
             "description": "Pitchforking hay to feed animals. Mucking manure. Milking cows. When enough chores are done, find Uncle to get paid for them.",
             "id": 11,
+            "masked": false,
+            "mult": false,
             "name": "Chores",
             "progress": {},
             "q_limit": 10.0,
@@ -177,169 +229,182 @@
             "recipes": [
                 {
                     "attribs": [
-                        [2, 1.0]
+                        [
+                            2,
+                            1.0
+                        ]
                     ],
+                    "byproducts": [],
+                    "id": 2,
                     "instant": false,
                     "item_id": 11,
                     "rate_amount": 1.0,
                     "rate_duration": 3.0,
-                    "recipe_id": 2,
                     "sources": [
                         {
+                            "item_id": 13,
                             "preserve": true,
-                            "q_required": 1.0,
-                            "item_id": 13
+                            "q_required": 1.0
                         }
                     ]
                 }
             ],
             "storage_type": "universal",
-            "toplevel": false,
-            "masked": false
+            "toplevel": false
         },
         {
-            "attribs": {},
+            "attribs": [],
             "description": "Cooked on the wood stove in a cast iron skillet at home.",
             "id": 6,
+            "masked": false,
+            "mult": false,
             "name": "Cooked Bacon",
             "progress": {},
             "q_limit": 30.0,
             "quantity": 0.0,
             "recipes": [
                 {
-                    "attribs": {},
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 3,
                     "instant": false,
                     "item_id": 6,
                     "rate_amount": 1.0,
                     "rate_duration": 2.0,
-                    "recipe_id": 3,
                     "sources": [
                         {
+                            "item_id": 7,
                             "preserve": false,
-                            "q_required": 1.0,
-                            "item_id": 7
+                            "q_required": 1.0
                         },
                         {
+                            "item_id": 14,
                             "preserve": true,
-                            "q_required": 1.0,
-                            "item_id": 14
+                            "q_required": 1.0
                         }
                     ]
                 }
             ],
             "storage_type": "carried",
-            "toplevel": false,
-            "masked": false
+            "toplevel": false
         },
         {
-            "attribs": {},
+            "attribs": [],
             "description": "For butchering.",
             "id": 9,
+            "masked": false,
+            "mult": false,
             "name": "Knife",
             "progress": {},
             "q_limit": 1.0,
             "quantity": 0.0,
             "recipes": [],
             "storage_type": "carried",
-            "toplevel": false,
-            "masked": false
+            "toplevel": false
         },
         {
-            "attribs": {},
+            "attribs": [],
             "description": "Suzy's mother is the first number on the contacts list.",
             "id": 10,
+            "masked": false,
+            "mult": false,
             "name": "Phone",
             "progress": {},
             "q_limit": 1.0,
             "quantity": 0.0,
             "recipes": [],
             "storage_type": "carried",
-            "toplevel": false,
-            "masked": false
+            "toplevel": false
         },
         {
-            "attribs": {},
+            "attribs": [],
             "description": "Where bacon comes from. Can be raised or else bought from the market.",
             "id": 8,
+            "masked": false,
+            "mult": false,
             "name": "Pigs",
             "progress": {},
             "q_limit": 5.0,
             "quantity": 0.0,
             "recipes": [
                 {
-                    "attribs": {},
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 4,
                     "instant": false,
                     "item_id": 8,
                     "rate_amount": 1.0,
                     "rate_duration": 8.0,
-                    "recipe_id": 4,
                     "sources": [
                         {
+                            "item_id": 8,
                             "preserve": true,
-                            "q_required": 2.0,
-                            "item_id": 8
+                            "q_required": 2.0
                         }
                     ]
                 },
                 {
-                    "attribs": {},
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 5,
                     "instant": true,
                     "item_id": 8,
                     "rate_amount": 1.0,
                     "rate_duration": 3.0,
-                    "recipe_id": 5,
                     "sources": [
                         {
+                            "item_id": 12,
                             "preserve": false,
-                            "q_required": 60.0,
-                            "item_id": 12
+                            "q_required": 60.0
                         }
                     ]
                 }
             ],
             "storage_type": "local",
-            "toplevel": false,
-            "masked": false
+            "toplevel": false
         },
         {
-            "attribs": {},
+            "attribs": [],
             "description": "Straight from the pig.",
             "id": 7,
+            "masked": false,
+            "mult": false,
             "name": "Raw Bacon",
             "progress": {},
             "q_limit": 30.0,
             "quantity": 0.0,
             "recipes": [
                 {
-                    "attribs": {},
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 6,
                     "instant": false,
                     "item_id": 7,
                     "rate_amount": 10.0,
                     "rate_duration": 10.0,
-                    "recipe_id": 6,
                     "sources": [
                         {
+                            "item_id": 8,
                             "preserve": false,
-                            "q_required": 1.0,
-                            "item_id": 8
+                            "q_required": 1.0
                         },
                         {
+                            "item_id": 9,
                             "preserve": true,
-                            "q_required": 1.0,
-                            "item_id": 9
+                            "q_required": 1.0
                         }
                     ]
                 }
             ],
             "storage_type": "carried",
-            "toplevel": false,
-            "masked": false
+            "toplevel": false
         },
         {
-            "attribs": {},
+            "attribs": [],
             "description": "For cooking in the kitchen.",
             "id": 14,
             "masked": false,
+            "mult": false,
             "name": "Wood Stove",
             "progress": {},
             "q_limit": 1.0,
@@ -351,16 +416,32 @@
     ],
     "locations": [
         {
-            "id": 3,
-            "name": "Uncle's Farm",
             "description": "Suzy's uncle is okay with her butchering pigs from time to time.",
-            "masked": true,
             "destinations": [
                 {
-                    "dest_id": "2",
-                    "distance": 2.0
+                    "dest_id": 2,
+                    "distance": 2.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
                 }
             ],
+            "dimensions": [
+                0,
+                0
+            ],
+            "excluded": [
+                0,
+                0,
+                0,
+                0
+            ],
+            "id": 3,
             "items": [
                 {
                     "item_id": 8,
@@ -378,19 +459,40 @@
                     ],
                     "quantity": 1.0
                 }
-            ]
+            ],
+            "masked": true,
+            "name": "Uncle's Farm",
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": false
         },
         {
-            "id": 1,
-            "name": "Home",
             "description": "Starting point, and we'll return here at the end.",
-            "masked": false,
             "destinations": [
                 {
-                    "dest_id": "2",
-                    "distance": 1.0
+                    "dest_id": 2,
+                    "distance": 1.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
                 }
             ],
+            "dimensions": [
+                0,
+                0
+            ],
+            "excluded": [
+                0,
+                0,
+                0,
+                0
+            ],
+            "id": 1,
             "items": [
                 {
                     "item_id": 14,
@@ -400,28 +502,63 @@
                     ],
                     "quantity": 1.0
                 }
-            ]
+            ],
+            "masked": false,
+            "name": "Home",
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": false
         },
         {
-            "id": 2,
-            "name": "Sketchy-Path Forest",
             "description": "Easy to get lost in.",
-            "masked": true,
             "destinations": [
                 {
-                    "dest_id": "1",
-                    "distance": 15.0
+                    "dest_id": 1,
+                    "distance": 15.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
                 },
                 {
-                    "dest_id": "3",
-                    "distance": 5.0
+                    "dest_id": 3,
+                    "distance": 5.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
                 }
             ],
-            "items": []
+            "dimensions": [
+                0,
+                0
+            ],
+            "excluded": [
+                0,
+                0,
+                0,
+                0
+            ],
+            "id": 2,
+            "items": [],
+            "masked": true,
+            "name": "Sketchy-Path Forest",
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": false
         }
     ],
     "overall": {
         "description": "Suzy must get bacon from the farm and then return home to cook it.\r\n\r\nA complete scenario intended for a single player, and a good <c=yellow>introduction to the game</c>.",
+        "number_format": "en_US",
         "slots": [],
         "title": "Bacon for Dinner",
         "win_reqs": [

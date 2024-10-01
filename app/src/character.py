@@ -67,6 +67,7 @@ class Character(Identifiable):
         self.toplevel = False
         self.masked = False
         self.attribs = {}  # AttribFor objects keyed by attr id
+        self.events = []  # Event IDs -- abilities
         self.items = {}  # OwnedItem objects keyed by item id
         self.location = None  # Location object where char is
         self.position = NumTup((0, 0))
@@ -97,6 +98,7 @@ class Character(Identifiable):
             'attribs': [
                 attrib_for.as_tuple()
                 for attrib_for in self.attribs.values()],
+            'events': self.events,
             'items': [
                 owned.dict_for_json() for owned in self.items.values()],
             'progress': self.progress.dict_for_json(),
@@ -131,6 +133,7 @@ class Character(Identifiable):
         instance.attribs = {
             attrib_id: AttribFor(attrib_id, val)
             for attrib_id, val in data.get('attribs', [])}
+        instance.events = data.get('events', [])
         instance.location = Location(
             int(data['location_id'])) if data.get('location_id', 0) else None
         instance.position = NumTup.from_list(data.get('position', [0, 0]))
@@ -145,7 +148,7 @@ class Character(Identifiable):
         logger.debug("to_db()")
         self.progress.to_db()
         super().to_db()
-        for rel_table in ('char_attribs', 'char_items'):
+        for rel_table in ('char_attribs', 'char_items', 'event_entities'):
             self.execute_change(f"""
                 DELETE FROM {rel_table}
                 WHERE char_id = %s AND game_token = %s
@@ -162,6 +165,13 @@ class Character(Identifiable):
                 "char_attribs",
                 "game_token, char_id, attrib_id, value",
                 values)
+        if self.events:
+            values = [
+                (g.game_token, self.id, event_id)
+                for event_id in self.events
+                ]
+            self.insert_multiple(
+                "event_entities", "game_token, char_id, event_id", values)
         if self.items:
             logger.debug("items: %s", self.items)
             values = []
@@ -198,41 +208,6 @@ class Character(Identifiable):
         return chars
 
     @classmethod
-    def load_characters_for_event(cls, event_id, load=True):
-        """Get characters that have attributes used for the event."""
-        characters_rows = cls.execute_select("""
-            SELECT *
-            FROM {tables[0]}
-            INNER JOIN {tables[1]}
-                ON {tables[1]}.game_token = {tables[0]}.game_token
-                AND {tables[1]}.char_id = {tables[0]}.id
-            INNER JOIN {tables[2]}
-                ON {tables[2]}.game_token = {tables[0]}.game_token
-                AND {tables[2]}.event_id = %s
-                AND {tables[2]}.attrib_id = {tables[1]}.attrib_id
-            WHERE {tables[0]}.game_token = %s
-            """, (event_id, g.game_token),
-            ['characters', 'char_attribs', 'event_entities'])
-        chars = {}
-        for char_row in characters_rows:
-            if char_row.id not in chars:
-                chars[char_row.id] = Character.from_data(char_row)
-        # Get char attrib data
-        attrib_rows = cls.execute_select("""
-            SELECT *
-            FROM char_attribs
-            WHERE game_token = %s
-            """, [g.game_token])
-        for row in attrib_rows:
-            char = chars.get(row.char_id, None)
-            if char:
-                # XXX: Couldn't we have done this in the first query?
-                char.attribs[row.attrib_id] = AttribFor.from_data(row)
-        if load:
-            g.game_data.set_list(Character, chars.values())
-        return chars
-
-    @classmethod
     def load_complete_objects(cls, id_to_get=None):
         logger.debug("load_complete_objects(%s)", id_to_get)
         if id_to_get in ['new', '0', 0]:
@@ -250,6 +225,18 @@ class Character(Identifiable):
             char = chars[row.char_id]
             char.setdefault(
                 'attribs', []).append((row.attrib_id, row.value))
+        # Get event relation data
+        qhelper = QueryHelper("""
+            SELECT *
+            FROM event_entities
+            WHERE game_token = %s
+                AND char_id IS NOT NULL
+            """, [g.game_token])
+        qhelper.add_limit("char_id", id_to_get)
+        event_rows = cls.execute_select(qhelper=qhelper)
+        for row in event_rows:
+            char = chars[row.char_id]
+            char.setdefault('events', []).append(row.event_id)
         # Get item relation data
         qhelper = QueryHelper("""
             SELECT *
@@ -275,7 +262,8 @@ class Character(Identifiable):
         logger.debug("data_for_configure(%s)", id_to_get)
         current_obj = cls.load_complete_objects(id_to_get)
         # Replace partial objects with fully populated objects
-        g.game_data.from_db_flat([Attrib, Location, Item])
+        from .event import Event
+        g.game_data.from_db_flat([Attrib, Event, Location, Item])
         for attrib_id, attrib_for in current_obj.attribs.items():
             attrib_for.attrib = Attrib.get_by_id(attrib_id)
         for item_id, owned_item in current_obj.items.items():
@@ -322,6 +310,9 @@ class Character(Identifiable):
                     current_obj.destination.id, None)
                 if dest:
                     current_obj.pile.item.q_limit = dest.distance
+        # Abilities
+        from .event import Event
+        Event.load_triggers_for_type(id_to_get, cls.typename)
         return current_obj
 
     def configure_by_form(self):
@@ -355,6 +346,7 @@ class Character(Identifiable):
             for attrib_id in attrib_ids:
                 attrib_val = req.get_float(f'attrib{attrib_id}_val', 0.0)
                 self.attribs[attrib_id] = AttribFor(attrib_id, attrib_val)
+            self.events = req.get_list('event_id[]')
             self.to_db()
         elif req.has_key('delete_character'):
             try:

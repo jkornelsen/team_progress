@@ -321,12 +321,18 @@
 
         $(document).ready(() => {
             function updateQuantities() {
+                {#
+                Does it make sense to update quantities if for example
+                characters may have moved away by this time?
+                Better to update everything, or things with direct meaning
+                such as production on item play.
                 {% for item_at in current.items.values() %}
                     // Make AJAX request for item quantity
                     $.get('/item/progress/{{ item_at.item.id }}', (data) => {
                         $('#item-{{ item_at.item.id }}-quantity').text(data.quantity_str);
                     });
                 {% endfor %}
+                #}
             }
             function showContent() {
                 document.getElementById("content").style.display = "block";

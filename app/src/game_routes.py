@@ -60,6 +60,9 @@ def set_routes(app):
             if not req.has_key('duplicated'):
                 session['referrer'] = request.referrer
             char = Character.data_for_configure(char_id)
+            char.events = [
+                Event.get_by_id(event_id)
+                for event_id in char.events]
             g.game_data.overall = Overall.load_complete_object()
             return render_template(
                 'configure/character.html',
@@ -356,7 +359,8 @@ def set_routes(app):
                     })
             if char.progress.is_ongoing:
                 time_spent = char.progress.batches_for_elapsed_time()
-                events = Event.load_triggers_for_loc(char.location.id)
+                events = Event.load_triggers_for_type(
+                    char.location.id, Location.typename)
                 req = RequestHelper('args')
                 ignore_event_id = req.get_int('ignore_event', '')
                 for event in events:

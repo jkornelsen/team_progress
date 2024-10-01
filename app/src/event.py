@@ -46,6 +46,7 @@ OUTCOMES = [
 OUTCOME_MARGIN = 9  # difference required to get major or critical
 RELATION_TYPES = ['determining', 'changed', 'triggers']
 ENTITY_TYPES = [Attrib, Item, Location]
+ENTITY_TYPENAMES = [entity.typename for entity in ENTITY_TYPES]
 
 def roll_dice(sides):
     return random.randint(1, sides)
@@ -106,16 +107,17 @@ class Event(Identifiable):
         instance = super().from_data(data)
         instance.toplevel = data.get('toplevel', True)
         instance.outcome_type = data.get('outcome_type', OUTCOME_FOURWAY)
-        instance.numeric_range = NumTup(data.get('numeric_range', (0, 10)))
+        instance.numeric_range = NumTup(data.get('numeric_range') or (0, 10))
         instance.selection_strings = data.get('selection_strings', "")
         for reltype in RELATION_TYPES:
             setattr(
                 instance, f'{reltype}_entities', [
                     create_entity(typename, entity_id, ENTITY_TYPES)
                     for typename, entity_id in data.get(reltype, [])
+                    if typename in ENTITY_TYPENAMES
                     ]
                 )
-        instance.trigger_chance = NumTup(data.get('trigger_chance', (0, 1)))
+        instance.trigger_chance = NumTup(data.get('trigger_chance') or (0, 1))
         instance.trigger_by_duration = data.get('trigger_by_duration', True)
         return instance
 
@@ -199,20 +201,22 @@ class Event(Identifiable):
         return current_obj
 
     @classmethod
-    def load_triggers_for_loc(cls, loc_id):
-        logger.debug("load_triggers_for_loc()")
-        events_rows = cls.execute_select("""
-            SELECT {table}.*
-            FROM event_entities
-            INNER JOIN {table}
-                ON {table}.id = event_entities.event_id
-                AND {table}.game_token = event_entities.game_token
-            WHERE event_entities.game_token = %s
-                AND event_entities.loc_id = %s
-            """, (g.game_token, loc_id))
+    def load_triggers_for_type(cls, id_to_get, typename):
+        logger.debug("load_triggers_for_type()")
+        qhelper = QueryHelper("""
+            SELECT {tables[0]}.*
+            FROM {tables[1]}
+            INNER JOIN {tables[0]}
+                ON {tables[0]}.id = {tables[1]}.event_id
+                AND {tables[0]}.game_token = {tables[1]}.game_token
+            WHERE {tables[1]}.game_token = %s
+            """, [g.game_token])
+        qhelper.add_limit(f"{{tables[1]}}.{typename}_id", id_to_get)
+        rows = cls.execute_select(
+            qhelper=qhelper, tables=['events', 'event_entities'])
         g.game_data.events = []
-        for event_row in events_rows:
-            g.game_data.events.append(Event.from_data(event_row))
+        for row in rows:
+            g.game_data.events.append(Event.from_data(row))
         return g.game_data.events
 
     def configure_by_form(self):
@@ -226,7 +230,7 @@ class Event(Identifiable):
             self.outcome_type = req.get_str('outcome_type')
             self.numeric_range = NumTup((
                 req.get_int('numeric_min', 0),
-                req.get_int('numeric_max', 1)))
+                req.get_int('numeric_max', 10)))
             self.selection_strings = req.get_str('selection_strings', "")
             for reltype in RELATION_TYPES:
                 setattr(
@@ -238,8 +242,8 @@ class Event(Identifiable):
                         ]
                     )
             self.trigger_chance = NumTup((
-                req.get_int('trigger_numerator', 1),
-                req.get_int('trigger_denominator', 10)))
+                req.get_int('trigger_numerator', 0),
+                req.get_int('trigger_denominator', 1)))
             self.trigger_by_duration = (
                 req.get_str('trigger_timing') == 'during_progress')
             self.to_db()

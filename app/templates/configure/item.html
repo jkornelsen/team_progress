@@ -148,7 +148,12 @@
                     <div class="select-box">
                         <select id="add-attrib-select">
                             <option value="" selected>(Select attribute)</option>
-                            {% for attrib in game_data.attribs %}<option value="{{ attrib.id }}">{{ attrib.name }}</option>{% endfor %}
+                            {% for attrib in game_data.attribs %}
+                                <option value="{{ attrib.id }}"
+                                    data-binary="{{ attrib.binary }}">
+                                    {{ attrib.name }}
+                                </option>
+                            {% endfor %}
                         </select>
                         <button type="button" id="add-attrib-btn" class="lesser-button">Add Attribute</button>
                     </div>
@@ -478,13 +483,20 @@
                 addRecipe();
             });
 
-            function addAttrib(attribId, attribName, attribVal = 1) {
+            function addAttrib(attribId, attribName, isBinary, attribVal = 1) {
                 const attribHtml = `
                     <tr>
                         <td>${attribName}
                             <input type="hidden" name="attrib_id[]" value="${attribId}">
                         </td><td>
-                            <input type="text" name="attrib${attribId}_val" value="${attribVal}" size="8">
+                            ${isBinary 
+                                ? `<input type="checkbox"
+                                          name="attrib${attribId}_val"
+                                          value="1" ${attribVal === 1 ? 'checked' : ''}>` 
+                                : `<input type="text"
+                                          name="attrib${attribId}_val"
+                                          value="${attribVal}"
+                                          size="8">`}
                         </td><td>
                             <button type="button" class="remove-attrib-btn lesser-button">Remove</button>
                         </td>
@@ -497,6 +509,7 @@
                 const selectedOption = $('#add-attrib-select option:selected');
                 const attribId = selectedOption.val();
                 const attribName = selectedOption.text();
+                const isBinary = selectedOption.data('binary');
                 if (attribId === "") {
                     return; // don't add if the selected option is the placeholder
                 }
@@ -505,13 +518,14 @@
                     alert('Attribute already exists.');
                     return;
                 }
-                addAttrib(attribId, attribName);
+                addAttrib(attribId, attribName, isBinary);
             });
             console.log("number of attribs={{ current.attribs.keys() | length }}");
             {% for attrib_id, attrib_of in current.attribs.items() %}
                 addAttrib(
                     {{ attrib_id }},
                     "{{ attrib_of.attrib.name }}",
+                    {{ attrib_of.attrib.binary | lower }},
                     {{ attrib_of.val | formatNum }});
             {% endfor %}
 

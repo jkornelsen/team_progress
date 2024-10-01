@@ -138,16 +138,21 @@ tables_to_create = {
         {coldef('game_token')},
         event_id integer NOT NULL,
         attrib_id integer,
+        char_id integer,
         item_id integer,
         loc_id integer,
         reltype varchar(20) CHECK (reltype IN ('determining', 'changed', 'triggers')),
-        UNIQUE (game_token, event_id, attrib_id, item_id, loc_id, reltype),
+        UNIQUE (game_token, event_id, attrib_id, char_id, item_id, loc_id, reltype),
         FOREIGN KEY (game_token, event_id)
             REFERENCES events (game_token, id)
             ON DELETE CASCADE
             DEFERRABLE INITIALLY DEFERRED,
         FOREIGN KEY (game_token, attrib_id)
             REFERENCES attribs (game_token, id)
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED,
+        FOREIGN KEY (game_token, char_id)
+            REFERENCES characters (game_token, id)
             ON DELETE CASCADE
             DEFERRABLE INITIALLY DEFERRED,
         FOREIGN KEY (game_token, item_id)

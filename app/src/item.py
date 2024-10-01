@@ -242,6 +242,8 @@ class Item(Identifiable):
                 for related_list in (recipe.sources, recipe.byproducts):
                     for related in related_list:
                         related.item = Item.get_by_id(related.item_id)
+        from .event import Event
+        Event.load_triggers_for_type(id_to_get, cls.typename)
         return current_obj
 
     def configure_by_form(self):

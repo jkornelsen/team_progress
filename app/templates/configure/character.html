@@ -68,7 +68,12 @@
                     <div class="select-box">
                         <select id="add-attrib-select">
                             <option value="" selected>(Select attribute)</option>
-                            {% for attrib in game_data.attribs %}<option value="{{ attrib.id }}">{{ attrib.name }}</option>{% endfor %}
+                            {% for attrib in game_data.attribs %}
+                                <option value="{{ attrib.id }}"
+                                    data-binary="{{ attrib.binary }}">
+                                    {{ attrib.name }}
+                                </option>
+                            {% endfor %}
                         </select>
                         <button type="button" id="add-attrib-btn" class="lesser-button">Add Attribute</button>
                     </div>
@@ -104,6 +109,32 @@
                     </div>
                 {% else %}
                     <p class="no-entities">(No other items)</p>
+                {% endif %}
+            </div>
+        </div>
+        <div id="event-container" class="outer-border">
+            <table id="event-table" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Abilities (Events)</th>
+                        <th class="transparent-col"></th>
+                    </tr>
+                </thead>
+                <tbody id="event-rows">
+                </tbody>
+            </table>
+            <div>
+                {% if game_data.events %}
+                    <!-- Select box for adding another event -->
+                    <div class="select-box">
+                        <select id="add-event-select">
+                            <option value="" selected>(Select event)</option>
+                            {% for event in game_data.events %}<option value="{{ event.id }}">{{ event.name }}</option>{% endfor %}
+                        </select>
+                        <button type="button" id="add-event-btn" class="lesser-button">Add Event</button>
+                    </div>
+                {% else %}
+                    <p class="no-entities">(No events)</p>
                 {% endif %}
             </div>
         </div>
@@ -188,13 +219,61 @@
                 itemContainer.remove();
             });
 
-            function addAttrib(attribId, attribName, attribVal = 1) {
+            function addEvent(eventId, eventName) {
+                const eventHtml = `
+                    <tr>
+                        <td>${eventName}
+                            <input type="hidden" name="event_id[]" value="${eventId}">
+                        </td><td>
+                            <button type="button" class="remove-event-btn lesser-button">Remove</button>
+                        </td>
+                    </tr>
+                `;
+                $('#event-rows').prepend(eventHtml);
+                $('#event-table').show();
+            }
+            $('#add-event-btn').click(() => {
+                const selectedOption = $('#add-event-select option:selected');
+                const eventId = selectedOption.val();
+                const eventName = selectedOption.text();
+                if (eventId === "") {
+                    return; // don't add if the selected option is the placeholder
+                }
+                const existingEvent = $(`#event-rows input[name="event_id[]"][value="${eventId}"]`).closest('tr');
+                if (existingEvent.length > 0) {
+                    alert('Event already exists.');
+                    return;
+                }
+                addEvent(eventId, eventName);
+            });
+            console.log("number of events={{ current.events | length }}");
+            {% for event in current.events %}
+                addEvent(
+                    {{ event.id }},
+                    "{{ event.name }}");
+            {% endfor %}
+            $('#event-container').on('click', '.remove-event-btn', (event) => {
+                const eventRow = $(event.currentTarget).closest('tr');
+                eventRow.remove();
+                if ($('#event-rows').children().length === 0) {
+                    $('#event-table').hide();
+                }
+            });
+
+            function addAttrib(attribId, attribName, isBinary, attribVal = 1) {
                 const attribHtml = `
                     <tr>
                         <td>${attribName}
                             <input type="hidden" name="attrib_id[]" value="${attribId}">
                         </td><td>
-                            <input type="text" name="attrib${attribId}_val" value="${attribVal}" size="10">
+                            ${isBinary 
+                                ? `<input type="checkbox"
+                                          name="attrib${attribId}_val"
+                                          value="1" ${attribVal === 1 ? 'checked' : ''}>` 
+                                : `<input type="text"
+                                          name="attrib${attribId}_val"
+                                          value="${attribVal}"
+                                          size="8">`}
                         </td><td>
                             <button type="button" class="remove-attrib-btn lesser-button">Remove</button>
                         </td>
@@ -207,6 +286,7 @@
                 const selectedOption = $('#add-attrib-select option:selected');
                 const attribId = selectedOption.val();
                 const attribName = selectedOption.text();
+                const isBinary = selectedOption.data('binary');
                 if (attribId === "") {
                     return; // don't add if the selected option is the placeholder
                 }
@@ -215,13 +295,14 @@
                     alert('Attribute already exists.');
                     return;
                 }
-                addAttrib(attribId, attribName);
+                addAttrib(attribId, attribName, isBinary);
             });
             console.log("number of attribs={{ current.attribs.keys() | length }}");
             {% for attrib_id, attrib_of in current.attribs.items() %}
                 addAttrib(
                     {{ attrib_id }},
                     "{{ attrib_of.attrib.name }}",
+                    {{ attrib_of.attrib.binary | lower }},
                     {{ attrib_of.val | formatNum }});
             {% endfor %}
             $('#attrib-container').on('click', '.remove-attrib-btn', (event) => {

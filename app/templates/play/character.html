@@ -131,8 +131,23 @@
                     <li>
                         <span>[{{ letter }}]</span>
                         <a href="{{ link }}">{{ attrib_of.attrib.name }}</a>
-                        {% if attrib_of.val != 1 %}{{ attrib_of.val | formatNum }}{% endif %}
+                        {% if not attrib_of.attrib.binary %}{{ attrib_of.val | formatNum }}{% endif %}
                     </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {% if game_data.events %}
+            <h2>Abilities</h2>
+            <ul>
+                {% for evt in game_data.events %}
+                    {% set link = url_for('play_event', event_id=evt.id) %}
+                    {% set letter = link_letters.next(link) %}
+                    <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                    <span>[{{ letter }}]</span>
+                    <a href="{{ link }}">{{ evt.name }}</a>
+                    <br>
+                {% else %}
+                    <p>(None)</p>
                 {% endfor %}
             </ul>
         {% endif %}

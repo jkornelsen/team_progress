@@ -85,11 +85,11 @@ def column_counts(table_name):
         ORDER BY table_name;
     """
     lookup = {
-        'attribs': 5,
+        'attribs': 6,
         'char_attribs': 4,
         'char_items': 5,
         'characters': 11,
-        'event_entities': 6,
+        'event_entities': 7,
         'events': 10,
         'item_attribs': 4,
         'items': 11,
