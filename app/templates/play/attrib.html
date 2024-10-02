@@ -14,7 +14,7 @@
         const linkForKey = {
             'o': '{{ url_for('overview') }}',
             'm': '{{ url_for('configure_index') }}',
-            'e': '{{ url_for('configure_event', event_id=current.id) }}',
+            'e': '{{ url_for('configure_attrib', attrib_id=current.id) }}',
         };
         document.addEventListener('DOMContentLoaded', () => {
             document.addEventListener('keypress', (event) => {

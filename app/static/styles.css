@@ -297,13 +297,16 @@ textarea {
 
 .progress-container {
     position: relative;
+    display: flex; 
+    flex-basis: auto;
     background-color: #2a2a2a; /* Dark gray background for the remaining progress */
     border-radius: 10px; /* Round box */
     overflow: hidden; /* Ensure that the progress bar stays within the container */
 }
-
 .progress-bar {
     height: 20px;
+    width: 100%;
+    flex-basis: auto;
     background-color: transparent;
     -webkit-appearance: none; /* Remove default styling for WebKit browsers */
 }

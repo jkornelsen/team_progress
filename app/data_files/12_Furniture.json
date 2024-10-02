@@ -1,0 +1,477 @@
+{
+    "attribs": [
+        {
+            "description": "How worn down furniture covering or other parts are. 0 is brand new, 100 is completely done for.",
+            "enum_list": [],
+            "id": 20,
+            "is_binary": false,
+            "mult": false,
+            "name": "Wear Level"
+        },
+        {
+            "description": "10 is clean, 0 is very dirty.",
+            "enum_list": [],
+            "id": 21,
+            "is_binary": false,
+            "mult": false,
+            "name": "Clean"
+        },
+        {
+            "description": "Soft is cozy \u2014 is that what people want in furniture?",
+            "enum_list": [],
+            "id": 22,
+            "is_binary": false,
+            "mult": false,
+            "name": "Softness"
+        },
+        {
+            "description": "How someone feels about you, up to 100.",
+            "enum_list": [],
+            "id": 23,
+            "is_binary": false,
+            "mult": false,
+            "name": "Favor"
+        },
+        {
+            "description": "What time it is",
+            "enum_list": [
+                "12am",
+                "1am",
+                "2am",
+                "3am",
+                "4am",
+                "5am",
+                "6am",
+                "7am",
+                "8am",
+                "9am",
+                "10am",
+                "11am",
+                "12pm",
+                "1pm",
+                "2pm",
+                "3pm",
+                "4pm",
+                "5pm",
+                "6pm",
+                "7pm",
+                "8pm",
+                "9pm",
+                "10pm",
+                "11pm"
+            ],
+            "id": 19,
+            "is_binary": false,
+            "mult": false,
+            "name": "Hour"
+        },
+        {
+            "description": "How many tiles between two places on the grid, such as how far away a person is from you. It often depends on the path they take, where they're coming from and going to.\r\n\r\nCloser proximity increases likelihood of interaction. Typically, divide likelihood by proximity.",
+            "enum_list": [],
+            "id": 26,
+            "is_binary": false,
+            "mult": true,
+            "name": "Proximity"
+        },
+        {
+            "description": "Second time seen entering the room each day.",
+            "enum_list": [
+                "12am",
+                "1am",
+                "2am",
+                "3am",
+                "4am",
+                "5am",
+                "6am",
+                "7am",
+                "8am",
+                "9am",
+                "10am",
+                "11am",
+                "12pm",
+                "1pm",
+                "2pm",
+                "3pm",
+                "4pm",
+                "5pm",
+                "6pm",
+                "7pm",
+                "8pm",
+                "9pm",
+                "10pm",
+                "11pm"
+            ],
+            "id": 25,
+            "is_binary": false,
+            "mult": false,
+            "name": "Arrival 2nd"
+        },
+        {
+            "description": "Time first seen entering the room each day.",
+            "enum_list": [
+                "12am",
+                "1am",
+                "2am",
+                "3am",
+                "4am",
+                "5am",
+                "6am",
+                "7am",
+                "8am",
+                "9am",
+                "10am",
+                "11am",
+                "12pm",
+                "1pm",
+                "2pm",
+                "3pm",
+                "4pm",
+                "5pm",
+                "6pm",
+                "7pm",
+                "8pm",
+                "9pm",
+                "10pm",
+                "11pm"
+            ],
+            "id": 24,
+            "is_binary": false,
+            "mult": false,
+            "name": "Arrival 1st"
+        }
+    ],
+    "characters": [
+        {
+            "attribs": [
+                [
+                    26,
+                    6.0
+                ],
+                [
+                    23,
+                    10.0
+                ],
+                [
+                    24,
+                    7.0
+                ]
+            ],
+            "description": "Punctual, doesn't sleep late. Maybe a nice soft sofa is just what he needs to rest those weary bones.\r\n\r\nSchedule\r\n~~~~~~~~\r\nEarly morning: Comes from northwest room.",
+            "dest_id": null,
+            "events": [],
+            "id": 11,
+            "items": [],
+            "location_id": 24,
+            "masked": false,
+            "name": "Old Man",
+            "position": [
+                0,
+                0
+            ],
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": false
+        }
+    ],
+    "events": [
+        {
+            "changed": [],
+            "description": "Maybe they walk on through, or maybe they sit somewhere. Hopefully on you.",
+            "determining": [
+                [
+                    "attrib",
+                    23
+                ],
+                [
+                    "attrib",
+                    21
+                ],
+                [
+                    "attrib",
+                    22
+                ],
+                [
+                    "attrib",
+                    20
+                ],
+                [
+                    "attrib",
+                    19
+                ]
+            ],
+            "id": 3,
+            "name": "Chance to Sit",
+            "numeric_range": [
+                0,
+                10
+            ],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": false,
+            "trigger_by_duration": true,
+            "trigger_chance": [
+                0,
+                1
+            ],
+            "triggers": [
+                [
+                    "loc",
+                    23
+                ]
+            ]
+        },
+        {
+            "changed": [],
+            "description": "Automatic trigger chance. Try running for what counts as an hour at a time, over 20 seconds. It can potentially run for multiple hours, until something happens. If successful, check schedules to see if we know who comes, and if no one is scheduled, roll from a list to see who it is.",
+            "determining": [
+                [
+                    "attrib",
+                    19
+                ],
+                [
+                    "attrib",
+                    24
+                ],
+                [
+                    "attrib",
+                    25
+                ]
+            ],
+            "id": 4,
+            "name": "Chance of Arrival",
+            "numeric_range": [
+                0,
+                10
+            ],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": false,
+            "trigger_by_duration": true,
+            "trigger_chance": [
+                1,
+                2
+            ],
+            "triggers": [
+                [
+                    "item",
+                    45
+                ]
+            ]
+        }
+    ],
+    "items": [
+        {
+            "attribs": [
+                [
+                    22,
+                    4.0
+                ],
+                [
+                    21,
+                    10.0
+                ],
+                [
+                    20,
+                    10.0
+                ]
+            ],
+            "description": "Yes, this a player character, believe it or not.\r\n\r\nPet hair and spilled food are not something this sofa appreciates.",
+            "id": 44,
+            "masked": false,
+            "mult": false,
+            "name": "Beige Sofa",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "local",
+            "toplevel": false
+        },
+        {
+            "attribs": [
+                [
+                    20,
+                    0.0
+                ],
+                [
+                    21,
+                    10.0
+                ],
+                [
+                    22,
+                    3.0
+                ]
+            ],
+            "description": "All black leather, seems suspicious.\r\n\r\nThis looks like potential competition, intent on getting people to sit on it instead, perhaps for some insidious purpose such as giving them a backache.",
+            "id": 46,
+            "masked": false,
+            "mult": false,
+            "name": "Brand New Lounge Chair",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "local",
+            "toplevel": false
+        },
+        {
+            "attribs": [
+                [
+                    19,
+                    5.0
+                ]
+            ],
+            "description": "Tells time, although it must constantly be wound by hand.",
+            "id": 45,
+            "masked": false,
+            "mult": false,
+            "name": "Grandfather Clock",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 13,
+                    "instant": false,
+                    "item_id": 45,
+                    "rate_amount": 0.0,
+                    "rate_duration": 20.0,
+                    "sources": [
+                        {
+                            "item_id": 45,
+                            "preserve": true,
+                            "q_required": 1.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "local",
+            "toplevel": false
+        }
+    ],
+    "locations": [
+        {
+            "description": "Not much is currently known about this room except the direction. Perhaps listening and observing would yield some information.",
+            "destinations": [
+                {
+                    "dest_id": 23,
+                    "distance": 1.0,
+                    "entrance": [
+                        7,
+                        1
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
+                }
+            ],
+            "dimensions": [
+                0,
+                0
+            ],
+            "excluded": [
+                0,
+                0,
+                0,
+                0
+            ],
+            "id": 24,
+            "items": [],
+            "masked": false,
+            "name": "Northwest Room",
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": false
+        },
+        {
+            "description": "You don't know everything about it yet (you were initially wrapped on arrival and couldn't see), but it seems to be rather large, with several people living in it.",
+            "destinations": [],
+            "dimensions": [
+                0,
+                0
+            ],
+            "excluded": [
+                0,
+                0,
+                0,
+                0
+            ],
+            "id": 25,
+            "items": [],
+            "masked": false,
+            "name": "House",
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": false
+        },
+        {
+            "description": "Used for both transit and gathering.",
+            "destinations": [
+                {
+                    "dest_id": 24,
+                    "distance": 1.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        7,
+                        1
+                    ]
+                }
+            ],
+            "dimensions": [
+                8,
+                8
+            ],
+            "excluded": [
+                3,
+                1,
+                6,
+                2
+            ],
+            "id": 23,
+            "items": [
+                {
+                    "item_id": 44,
+                    "position": [
+                        3,
+                        4
+                    ],
+                    "quantity": 1.0
+                },
+                {
+                    "item_id": 45,
+                    "position": [
+                        8,
+                        2
+                    ],
+                    "quantity": 1.0
+                }
+            ],
+            "masked": false,
+            "name": "Central Hall",
+            "progress": {
+                "batches_processed": 1,
+                "id": 108,
+                "is_ongoing": false,
+                "item_id": 45,
+                "recipe_id": 13,
+                "start_time": "Tue, 01 Oct 2024 23:00:50 GMT",
+                "stop_time": "Tue, 01 Oct 2024 23:01:12 GMT"
+            },
+            "quantity": 1.0,
+            "toplevel": true
+        }
+    ],
+    "overall": {
+        "description": "Play as a sofa in the central hall. Upgrades such as softer cushions <c=\"lemonchiffon\">encourage potential sitters</c>. Relocation may make a difference, if you can manage it somehow, whether that be to a different spot in the room or somewhere else entirely.",
+        "number_format": "en_US",
+        "slots": [],
+        "title": "Furniture",
+        "win_reqs": []
+    }
+}

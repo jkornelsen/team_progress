@@ -88,11 +88,14 @@
             </tr>
             <tr>
                 <td>
-                    <span id="recipe-progress-label" style="">Recipe Progress:</span>
+                    <span id="recipe-progress-label">Recipe Progress:</span>
                     <div id="action-progress-container"
-                         class="progress-container hidden"
-                         style="display: inline-flex">
-                        <progress id="action-progress-bar" class="progress-bar" value="0" max="100"></progress>
+                         style="width: 60%;"
+                         class="progress-container hidden">
+                        <progress id="action-progress-bar"
+                            class="progress-bar"
+                            value="0"
+                            max="100"></progress>
                         <span class="progress-label" id="action-progress-label">0%</span>
                     </div>
                     <span id="elapsed-time" class="hidden">...</span>
@@ -198,37 +201,6 @@
                     </td>
                 </tr>
             {% endif %}
-            {% if current.attribs %}
-                <tr>
-                    <td>
-                        <h2>Attributes</h2>
-                        <ul>
-                            {% for attrib_of in current.attribs.values() %}
-                                {% set link = url_for('play_attrib', attrib_id=attrib_of.attrib_id, subject_type='item', subject_id=current.id) %}
-                                {% set letter = link_letters.next(link) %}
-                                <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
-                                <li>
-                                    <span>[{{ letter }}]</span>
-                                    <a href="{{ link }}">{{ attrib_of.attrib.name }}</a>
-                                    {% if attrib_of.attrib.enum %}
-                                        {% set index = attrib_of.val | int %}
-                                        {% if index in range(attrib_of.attrib.enum | length) %}
-                                            {{ attrib_of.attrib.enum[index] }}
-                                        {% else %}
-                                            ?
-                                        {% endif %}
-                                    {% elif not attrib_of.attrib.binary %}
-                                        {{ attrib_of.val | formatNum }}
-                                    {% endif %}
-                                </li>
-                            {% else %}
-                                (None)
-                                <br>
-                            {% endfor %}
-                        </ul>
-                    </td>
-                </tr>
-            {% endif %}
             {% if current.recipes %}
                 <tr>
                     <td>
@@ -254,7 +226,7 @@
                                 <th>Source</th>
                                 <th>Required</th>
                                 <th>In Stock</th>
-                                <th>Where</th>
+                                <th title="If there is a page that should be shown in this column, first navigate to that page.">Where</th>
                             </tr>
                             {% for recipe in current.recipes %}
                                 {% if not loop.first %}<tr style="border-top: 1px solid #888;"></tr>{% endif %}
@@ -286,7 +258,7 @@
                                                 {% endif %}
                                                 {% else %}
                                                     <span style="font-size: 1em"
-                                                          title="Not all requirements met. If there is a page that should be shown in the 'Where' column, first navigate to that page.">🚫</span>
+                                                          title=" {{ current.progress.failure_reason }}">🚫</span>
                                                 {% endif %}
                                             </td>
                                             <td>
@@ -484,6 +456,37 @@
                                 </tr>
                             {% endfor %}
                         </table>
+                    </td>
+                </tr>
+            {% endif %}
+            {% if current.attribs %}
+                <tr>
+                    <td>
+                        <h2>Attributes</h2>
+                        <ul>
+                            {% for attrib_of in current.attribs.values() %}
+                                {% set link = url_for('play_attrib', attrib_id=attrib_of.attrib_id, subject_type='item', subject_id=current.id) %}
+                                {% set letter = link_letters.next(link) %}
+                                <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
+                                <li>
+                                    <span>[{{ letter }}]</span>
+                                    <a href="{{ link }}">{{ attrib_of.attrib.name }}</a>
+                                    {% if attrib_of.attrib.enum %}
+                                        {% set index = attrib_of.val | int %}
+                                        {% if index in range(attrib_of.attrib.enum | length) %}
+                                            {{ attrib_of.attrib.enum[index] }}
+                                        {% else %}
+                                            ?
+                                        {% endif %}
+                                    {% elif not attrib_of.attrib.binary %}
+                                        {{ attrib_of.val | formatNum }}
+                                    {% endif %}
+                                </li>
+                            {% else %}
+                                (None)
+                                <br>
+                            {% endfor %}
+                        </ul>
                     </td>
                 </tr>
             {% endif %}

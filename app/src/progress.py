@@ -235,12 +235,13 @@ class Progress(Identifiable):
         if self.recipe is None:
             self.report_failure("No recipe.")
             return False
-        if not self.recipe.rate_amount:
-            self.report_failure("Recipe production rate is 0.")
-            return False
-        if ((self.q_limit > 0.0 and self.pile.quantity >= self.q_limit)
-                or (self.q_limit < 0.0 and self.pile.quantity <= self.q_limit)):
-            self.report_failure("Limit {self.q_limit} reached.")
+        if ((self.q_limit > 0.0
+                    and self.pile.quantity >= self.q_limit
+                    and self.recipe.rate_amount > 0)
+                or (self.q_limit < 0.0
+                    and self.pile.quantity <= self.q_limit
+                    and self.recipe.rate_amount < 0)):
+            self.report_failure(f"Limit {self.q_limit} reached.")
             return False
         for source in self.recipe.sources:
             req_qty = source.q_required
@@ -261,11 +262,7 @@ class Progress(Identifiable):
         if self.is_ongoing:
             logger.debug("Already ongoing.")
             return True
-        if self.recipe.rate_amount == 0:
-            self.report_failure("Recipe production rate is 0.")
-            return False
         if not self.can_produce():
-            self.stop()
             return False
         self.start_time = datetime.now()
         self.batches_processed = 0

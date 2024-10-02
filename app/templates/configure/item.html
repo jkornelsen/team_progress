@@ -97,6 +97,38 @@
                {% if current.mult %}checked{% endif %}>
         <label for="mult">Quantity multiplies when used for events (adds if unchecked)</label>
         <br>
+        <div id="attrib-container" class="outer-border">
+            <table id="attrib-table" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Attribute</th>
+                        <th>Value</th>
+                        <th class="transparent-col"></th>
+                    </tr>
+                </thead>
+                <tbody id="attrib-rows">
+                </tbody>
+            </table>
+            <div>
+                {% if game_data.attribs %}
+                    <!-- Select box for adding another attribute -->
+                    <div class="select-box">
+                        <select id="add-attrib-select">
+                            <option value="" selected>(Select attribute)</option>
+                            {% for attrib in game_data.attribs %}
+                                <option value="{{ attrib.id }}"
+                                    data-binary="{{ attrib.binary | lower }}">
+                                    {{ attrib.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <button type="button" id="add-attrib-btn" class="lesser-button">Add Attribute</button>
+                    </div>
+                {% else %}
+                    <p class="no-entities">(No attributes)</p>
+                {% endif %}
+            </div>
+        </div>
         <div id="sources-container" class="outer-border">
             <!-- Placeholder for appending new recipes -->
             <div id="recipelist_end" style="width: 0; height: 0; opacity: 0;"></div>
@@ -129,38 +161,6 @@
                     {% if current.recipes | length == 0 %}style="display: none;"{% endif %}>
                 Add Alternative Recipe
             </button>
-        </div>
-        <div id="attrib-container" class="outer-border">
-            <table id="attrib-table" style="display: none;">
-                <thead>
-                    <tr>
-                        <th>Attribute</th>
-                        <th>Value</th>
-                        <th class="transparent-col"></th>
-                    </tr>
-                </thead>
-                <tbody id="attrib-rows">
-                </tbody>
-            </table>
-            <div>
-                {% if game_data.attribs %}
-                    <!-- Select box for adding another attribute -->
-                    <div class="select-box">
-                        <select id="add-attrib-select">
-                            <option value="" selected>(Select attribute)</option>
-                            {% for attrib in game_data.attribs %}
-                                <option value="{{ attrib.id }}"
-                                    data-binary="{{ attrib.binary | lower }}">
-                                    {{ attrib.name }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                        <button type="button" id="add-attrib-btn" class="lesser-button">Add Attribute</button>
-                    </div>
-                {% else %}
-                    <p class="no-entities">(No attributes)</p>
-                {% endif %}
-            </div>
         </div>
         <div class="footer-buttons">
             <button type="submit" id="btn-save" name="save_changes">Save and Close</button>
