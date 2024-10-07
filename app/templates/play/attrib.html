@@ -41,7 +41,10 @@
     <span>[{{ letter }}]</span>
     <br>
     <h2>{{ current.name }}</h2>
-    {% if current.description %}<pre>{{ current.description|htmlify }}</pre>{% endif %}
+    {% if current.description %}
+        <pre style="white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word;"
+            >{{ current.description|htmlify }}</pre>
+    {% endif %}
     <hr>
     <form method="post">
         <table>

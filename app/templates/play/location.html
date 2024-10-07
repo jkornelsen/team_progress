@@ -102,7 +102,7 @@
                         <h2>Local Events</h2>
                         <ul>
                             {% for evt in game_data.events %}
-                                {% set link = url_for('play_event', event_id=evt.id) %}
+                                {% set link = url_for('play_event', event_id=evt.id, from_id=current.id, from_typename=current.typename) %}
                                 {% set letter = link_letters.next(link) %}
                                 <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
                                 <span>[{{ letter }}]</span>

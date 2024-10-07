@@ -118,7 +118,8 @@
                             <option value="" selected>(Select attribute)</option>
                             {% for attrib in game_data.attribs %}
                                 <option value="{{ attrib.id }}"
-                                    data-binary="{{ attrib.binary | lower }}">
+                                    data-binary="{{ attrib.binary | lower }}"
+                                    data-enum='{{ attrib.enum | tojson }}'>
                                     {{ attrib.name }}
                                 </option>
                             {% endfor %}
@@ -484,13 +485,19 @@
                 addRecipe();
             });
 
-            function addAttrib(attribId, attribName, isBinary, attribVal = 1) {
+            function addAttrib(attribId, attribName, isBinary, enumVals, attribVal = 1) {
                 const attribHtml = `
                     <tr>
                         <td>${attribName}
                             <input type="hidden" name="attrib_id[]" value="${attribId}">
                         </td><td>
-                            ${isBinary 
+                            ${enumVals.length > 0 
+                                ? `<select name="attrib${attribId}_val">
+                                    ${enumVals.map((val, index) => `
+                                        <option value="${index}" ${attribVal == index ? 'selected' : ''}>${val}</option>
+                                    `).join('')}
+                                   </select>`
+                            : isBinary 
                                 ? `<input type="checkbox"
                                           name="attrib${attribId}_val"
                                           value="1" ${attribVal === 1 ? 'checked' : ''}>` 
@@ -511,6 +518,8 @@
                 const attribId = selectedOption.val();
                 const attribName = selectedOption.text();
                 const isBinary = selectedOption.data('binary');
+                const enumValues = selectedOption.data('enum');
+                console.log("enumValues:", enumValues);
                 if (attribId === "") {
                     return; // don't add if the selected option is the placeholder
                 }
@@ -519,7 +528,7 @@
                     alert('Attribute already exists.');
                     return;
                 }
-                addAttrib(attribId, attribName, isBinary);
+                addAttrib(attribId, attribName, isBinary, enumValues);
             });
             console.log("number of attribs={{ current.attribs.keys() | length }}");
             {% for attrib_id, attrib_of in current.attribs.items() %}
@@ -527,6 +536,7 @@
                     {{ attrib_id }},
                     "{{ attrib_of.attrib.name }}",
                     {{ attrib_of.attrib.binary | lower }},
+                    {{ attrib_of.attrib.enum | tojson }},
                     {{ attrib_of.val | formatNum }});
             {% endfor %}
 

@@ -19,7 +19,7 @@ from .event import Event
 from .location import Location, ItemAt
 from .overall import Overall
 from .progress import Progress
-from .utils import LinkLetters, NumTup, RequestHelper, format_num
+from .utils import LinkLetters, NumTup, RequestHelper, entity_class, format_num
 
 logger = logging.getLogger(__name__)
 
@@ -249,7 +249,12 @@ def set_routes(app):
 
     @app.route('/play/event/<int:event_id>', methods=['GET', 'POST'])
     def play_event(event_id):
-        logger.debug("%s\nplay_event(event_id=%d)", "-" * 80, event_id)
+        req = RequestHelper('args')
+        from_id = req.get_int('from_id', '')
+        from_typename = req.get_str('from_typename', '')
+        logger.debug(
+            "%s\nplay_event(event_id=%d) from %s %s", "-" * 80,
+            event_id, from_typename, from_id)
         instance = Event.data_for_configure(event_id)
         if not instance:
             return "Event not found"
@@ -257,10 +262,16 @@ def set_routes(app):
             Character.load_complete_objects()
             Item.load_complete_objects()
             Location.load_complete_objects()
+            from_entity = None
+            if from_typename:
+                from_cls = entity_class(
+                    from_typename, [Character, Item, Location])
+                from_entity = from_cls.get_by_id(from_id)
             message = session.pop('message', False)
             return render_template(
                 'play/event.html',
                 current=instance,
+                from_entity=from_entity,
                 game_data=g.game_data,
                 message=message,
                 link_letters=LinkLetters('emor')

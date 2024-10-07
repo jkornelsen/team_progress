@@ -30,6 +30,23 @@
             });
         });
     </script>
+    {% if from_entity %}
+        {% if from_entity.typename == 'char' %}
+            {% set link = url_for('play_char', char_id=from_entity.id) %}
+        {% elif from_entity.typename == 'loc' %}
+            {% set link = url_for('play_location', loc_id=from_entity.id) %}
+        {% elif from_entity.typename == 'item' %}
+            {% set link = url_for('play_item', item_id=from_entity.id) %}
+        {% else %}
+            <!-- unexpected from entity '{{ from_entity.typename }}' -->
+        {% endif %}
+        {% set letter = link_letters.next(link) %}
+        <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+        &larr; back to
+        <a href="{{ link }}">{{ from_entity.name }}</a>
+        <span>[{{ letter }}]</span>
+        <br>
+    {% endif %}
     <h1>{{ current.name }}</h1>
     {% if current.description %}<p>{{ current.description|htmlify }}</p>{% endif %}
     <table class="spacious">
@@ -358,7 +375,7 @@
                 const outcomeFromRoll = parseFloat($('#outcome-display').data('outcome')) || 0;
                 const oldValText = $(`#oldval_${keyRef}`);
                 const newValInput = $(`#newval_${keyRef}`);
-                const newValue = `${containerVal}${outcomeFromRoll}`;
+                const newValue = containerVal + outcomeFromRoll;
                 oldValText.text(containerVal);
                 newValInput.val(newValue);
                 $(`#container_id${keyRef}`).val(containerId);
