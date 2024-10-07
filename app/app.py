@@ -202,6 +202,11 @@ def handle_exception(ex):
         message="An unexpected error occurred.",
         details=str(ex))
 
+@app.errorhandler(404)
+def page_not_found(e):
+    logger.error(f"404 Error: URL {request.url} not found")
+    return "Page not found", 404
+
 @app.teardown_appcontext
 def teardown(ctx):  # pylint: disable=unused-argument
     close_db()

@@ -72,7 +72,7 @@
                                  class="progress-container"
                                  style="display: inline-flex;
                                         align-items: center;
-                                        margin-left: 10px">
+                                        margin-left: 10px;">
                                 <progress id="storage-progress-bar" class="progress-bar" value="0" max="100"></progress>
                                 <span class="progress-label"
                                       id="storage-progress-label"
@@ -549,12 +549,12 @@
                 const quantity = data.quantity || 0;
                 const maxQuantity = data.max_quantity || 0;
                 if (maxQuantity === 0) {
-                    // Don't show bar
+                    // There shouldn't be any bar
                     return;
                 }
                 const progressPercent = (quantity / maxQuantity) * 100;
-                progressBar.attr('value', progressPercent);
                 progressBar.attr('max', 100);
+                progressBar.attr('value', progressPercent);
                 progressLabel.text(`${quantity} / ${maxQuantity}`);
             }
             function getItemProgressUrl(itemId, mainPileType='') {

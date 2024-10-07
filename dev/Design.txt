@@ -33,8 +33,12 @@ deduct whichever is found first
 if say 5 are required, two are held and three are on floor,
 then require the character to either pick up three or drop two
 
-locations should have one record for two sides
-or at least, create both sides at once
+checkbox, selected by default, to create both directions for destination
+removing deletes both
+door coordinates are the same for both ends
+specify only source door coordinates on each side
+distance also will affect both unless box is unchecked
+"make reverse direction the same"
 
 checkbox to mask items until gained or while none
 replace all non-spaces with "*" or "?"
@@ -301,6 +305,12 @@ source more scenarios from community
 perhaps submit to github via enhancement requests
 or reddit
 
+for dating scenario, note on street that a bus goes downtown
+add a washing machine, maybe in bathroom
+clean attr should only be for people? to be less tedious
+maybe dirty attr for clothes, if higher than 1 can affect person
+(in desc) doesn't need to be fully tracked, just to help the clean person stat
+
 scenario: Fission Plant
 win condition is at least a certain amount of power
 and no more than a certain amount of pollution
@@ -327,17 +337,19 @@ currency name: credits
 While this is one of the more obvious ways to play the game,
 the game is intended to allow for a wide variety of scenarios,
 not just this type.
+sales can increase in complexity, adding stores and store management
+NPCs can work at stores
+items of a single name are unique
+so if we want multiple stores, make "store 1", "store 2"
+could also divide money into "store 1 money" and "general money"
+    and they could require each other to allow transfers
 
-scenario: Growing Up
-classes cost money but gain knowledge and grades
-start with savings or go into debt for college
-work odd jobs and eventually get a decent paying job
-buy a house
+scenario: Furniture
+People: old man, young husband, young wife, elementary schooler, baby, dog, cat
 
-scenario: Squirrel
-gather nuts for the winter
-or ant and grasshopper
-or cheetah and rabbit
+scenario: Breed Livestock
+Offspring have event-based chances to inherit or get new traits.
+Could also grow crops on the same farm.
 
 scenario: Lumber Business
 events to make progress on a tree
@@ -347,73 +359,51 @@ can either chop manually (faster) or in background
     chance of success for incrementing
 event chance may depend on stats (attributes) of characters or items involved
 sell for profit
+honeycomb raid like tribal adventure
 
-scenario: Train Trip
-Travel from Chennai to Dehradun.
-limited money
-during a strike and an election, so many things might go wrong
-Possibly allow other forms of transportation for part of the trip: bus, plane, auto, taxi.
-english, tamil, hindi -- transliterated? Spoken lines could be item sources.
-encounter with cross-dressers begging
-buy food
-train may break down or be full and have to change
-navigate train station with coolies and boarding
-sleep is a resource -- too low gives rolls disadvantage
-similar to Oregon Trail
+scenario: Live Long and Happy
+insight from blue zones: things that help live long also make life worth living
+diet and exercise
+goals and belief
+connect with others
+maybe things from regrets book
+how to play a game yet make talking about good health feel right?
+maybe it could be more educational than fun
+like, it may not be fun to eat veggies in a game but it could feel interesting
+mention in description that it's more straight shooting;
+consider giving it a try after playing one of the more intense scenarios
+not recommended to try to be evil in this particular scenario,
+as thinking leads to doing
+put responsibility on player to judge how happy the character is
+
+---- less likely but could consider listing as unformed ideas ----
 
 scenario: Hunting
 Bring back enough food to survive.
 Cut down on deer population to limit the spread of Lyme disease.
 
-scenario: River Crossing
-The problem is clear, but you'll need to decide how to solve it.
-Chop down trees to build a raft, or swim across (might want to practice first),
-or build a bridge, or look for vines.
-
-scenario: Breed Livestock
-Offspring have event-based chances to inherit or get new traits.
-Could also grow crops on the same farm.
-
-scenario: Franchise
-sales can increase in complexity, adding stores and store management
-NPCs can work at stores
-items of a single name are unique
-so if we want multiple stores, make "store 1", "store 2"
-could also divide money into "store 1 money" and "general money"
-    and they could require each other to allow transfers
-
-scenario: Empire
-Attempt to take over the world, or at least a significant part of it.
-Develop technology and build resources along the way, or simply start attacking.
-This could also be in outer space, battling over planets and solar systems.
-
-scenario: Governor
-curry favor with politicians
-get elected
-Persuade congress to pass important laws that the people care about,
-such as, More Dogs and Fewer Cats (or vice versa).
-Try an inspiring slogan to gain popularity, such as: Change for a brighter future!
-Set up by default for lighthearted play,
-but this could be configured for serious, real-world political parties,
-social and economic issues.
+scenario: Squirrel
+gather nuts for the winter
+or ant and grasshopper
+or cheetah and rabbit
 
 scenario: Hospital
 For those who have watched medical drama tv shows, this should be straightforward.
 
-scenario: Police Force
-You run a crime unit.
-Sadly, in the past few years, crime has been rampant.
-Your goal is to weaken gangs and criminal organizations to
-make the citizens of the city feel safe once again.
-
 scenario: Escape from Prison
 will need to do lots of stealth or persuasion checks to deal with guards
+
+scenario: History
+revolutionary war of an actual country
+such as the U.S. with George Washington
 
 scenario: Matrix
 You have always thought of yourself as an ordinary person leading an ordinary
 life, but lately, there have been signs that the world is not what it seems to be.
 In fact, it's almost as if the whole thing has been starting to glitch.
 Which shouldn't be possible, right?
+This seems interesting but not sure how to implement.
+Might be hard to have so much unknown in this type of game.
 
 scenario: Time Travel
 Or body switching.
@@ -423,48 +413,12 @@ scenario: Race
 Perhaps horse racing or a triathalon.
 Track the distance of each competitor during the race to see who's ahead.
 
-scenario: Furniture
-Play a sofa whose goal is to get people to relax on its cushions.
-Upgrades such as softer cushions encourage potential sitters.
-Pet hair and spilled food are not something this sofa appreciates.
-Relocation may make a difference,
-whether that be to a different spot in the room, a different room,
-or an entirely different building.
-Also, there is competition, other furniture intent on getting people
-to sit on them instead,
-perhaps for some insidious purpose such as giving them a backache.
-Maybe there's something that can be done to stop them.
-People: old man, young husband, young wife, elementary schooler, baby, dog, cat
-
 scenario: Babysitter
 You've worked as a babysitter for years.
 Today, an eccentric couple from the backwoods asked you
 to take care of their 15 children for a week.
 They warned, though, that children can be a handful -- you've gotta watch 'em.
 Inspired by the works of Betty MacDonald.
-
-scenario: how to live a happy life
-or maybe the reverse would be more interesting:
-keys to unhappiness
-diet and exercise
-goals and belief
-connect with others
-
-scenario: Design House
-Various room locations and items in those rooms.
-Include plenty of visual details in descriptions.
-Either work together, or build separate houses and see who
-can win an award for the best design.
-Operate on a budget or have access to unlimited resources.
-This scenario is more open-ended than most,
-focused on designing rather than working towards a goal.
-
-scenario: History
-revolutionary war of an actual country
-such as the U.S. with George Washington
-
-scenario: Honeycomb Raid
-like Winnie-the-Pooh, or more like tribal adventure
 
 scenario: Crystal Gardeners
 In the crystalline gardens of Xanthuria, ethereal beings are tasked with
@@ -474,15 +428,3 @@ plants require light, heat, water, or vibrational rhythm
 invasive crystal pests, erratic energy surges, cosmic disturbances
 create potions, enchantments, and artifacts that aid in their caretaking duties
 and unlock new areas of the garden
-
-scenario: Underwater Abyss
-divers discover a labyrinth created by an unknown race in the past
-many connected locations unfold, including area hints in the descriptions
-legends speak of a Nexus where all currents meet, with healing powers
-bring back water in special container to drink
-to save loved one who is gravely ill
-coral reefs, caverns, pressure
-sea creatures, treasures, ancient ruins, sunken ships
-inventory: diving equipment and submersibles
-or set in desert, with tombs, traps, camels, and mirages
-

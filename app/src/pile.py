@@ -177,6 +177,7 @@ def _assign_pile(
                 "assigned empty itemAt from %s", pile.container.name)
     if not pile:
         pile = GeneralPile(pile_item)
+        pile_item.pile = pile
         logger.debug(
             "assigned general storage qty %.1f", pile.quantity)
     return pile

@@ -1,0 +1,671 @@
+{
+    "attribs": [
+        {
+            "description": "",
+            "enum_list": [
+                "Sunday",
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday"
+            ],
+            "id": 27,
+            "is_binary": false,
+            "mult": false,
+            "name": "Day of Week"
+        }
+    ],
+    "characters": [
+        {
+            "attribs": [],
+            "description": "Early 20's, high school diploma.",
+            "dest_id": null,
+            "events": [],
+            "id": 12,
+            "items": [],
+            "location_id": 30,
+            "masked": false,
+            "name": "(Enter your name)",
+            "position": [
+                0,
+                0
+            ],
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": true
+        }
+    ],
+    "events": [],
+    "items": [
+        {
+            "attribs": [],
+            "description": "Buy at the grocery store.",
+            "id": 53,
+            "masked": false,
+            "mult": false,
+            "name": "Unprepared Food",
+            "progress": {},
+            "q_limit": 0.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "universal",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "Number of days since beginning the game.",
+            "id": 50,
+            "masked": false,
+            "mult": false,
+            "name": "Days Count",
+            "progress": {},
+            "q_limit": 0.0,
+            "quantity": 2.0,
+            "recipes": [],
+            "storage_type": "universal",
+            "toplevel": true
+        },
+        {
+            "attribs": [
+                [
+                    27,
+                    2.0
+                ]
+            ],
+            "description": "Tells the day of the week. Must be marked by hand.",
+            "id": 49,
+            "masked": false,
+            "mult": false,
+            "name": "Calendar",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 1.0,
+            "recipes": [],
+            "storage_type": "universal",
+            "toplevel": true
+        },
+        {
+            "attribs": [],
+            "description": "One meal a day should be plenty. Healthier (producing fuller energy) if cooked rather than eaten straight out of a box. You could prepare several portions and refrigerate them.",
+            "id": 52,
+            "masked": false,
+            "mult": false,
+            "name": "Meal",
+            "progress": {},
+            "q_limit": 5.0,
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 15,
+                    "instant": false,
+                    "item_id": 52,
+                    "rate_amount": 1.0,
+                    "rate_duration": 8.0,
+                    "sources": [
+                        {
+                            "item_id": 53,
+                            "preserve": false,
+                            "q_required": 3.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "universal",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "Requires daily rest and food.\r\n\r\n10 is full alertness, focus, and strength. Energy reserves should go higher than that at the end of each day, to prepare for the next. Reserves won't make you feel better, though.",
+            "id": 51,
+            "masked": false,
+            "mult": false,
+            "name": "Energy",
+            "progress": {},
+            "q_limit": 20.0,
+            "quantity": 10.0,
+            "recipes": [
+                {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 16,
+                    "instant": false,
+                    "item_id": 51,
+                    "rate_amount": 1.0,
+                    "rate_duration": 8.0,
+                    "sources": [
+                        {
+                            "item_id": 52,
+                            "preserve": false,
+                            "q_required": 1.0
+                        },
+                        {
+                            "item_id": 48,
+                            "preserve": false,
+                            "q_required": 8.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "universal",
+            "toplevel": true
+        },
+        {
+            "attribs": [],
+            "description": "Places you find at the park.",
+            "id": 55,
+            "masked": false,
+            "mult": false,
+            "name": "Park Facilities",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "local",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "Pay for classes, rent, buy food and clothing.",
+            "id": 47,
+            "masked": false,
+            "mult": false,
+            "name": "Money",
+            "progress": {},
+            "q_limit": 0.0,
+            "quantity": 100.0,
+            "recipes": [],
+            "storage_type": "universal",
+            "toplevel": true
+        },
+        {
+            "attribs": [],
+            "description": "Byproduct of certain actions. Don't let it build up too high. The best way to blow off steam is to hang out at the park with friends.",
+            "id": 54,
+            "masked": false,
+            "mult": false,
+            "name": "Stress",
+            "progress": {},
+            "q_limit": 100.0,
+            "quantity": 1.0,
+            "recipes": [
+                {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 17,
+                    "instant": false,
+                    "item_id": 54,
+                    "rate_amount": -1.0,
+                    "rate_duration": 3.0,
+                    "sources": [
+                        {
+                            "item_id": 55,
+                            "preserve": true,
+                            "q_required": 1.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "universal",
+            "toplevel": true
+        },
+        {
+            "attribs": [],
+            "description": "If you take out a loan now, monthly payments will be required later. Interest on these loans is not too bad, however, as the government encourages people to get college degrees.",
+            "id": 56,
+            "masked": false,
+            "mult": false,
+            "name": "Student Loan",
+            "progress": {},
+            "q_limit": 0.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "universal",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "The basic measure of time needed to accomplish things. Starts (with 24 hours left) at sunrise \u2014 the hours aren't counted from midnight, even when staying up all night.\r\n\r\nTo conserve time (by sleeping less) and food, you could lower the energy required to start the next day. But you won't be at peak performance, and if too low, that might mean lying in bed all day.\r\n\r\nCould make sense if your character is too sick to keep food down. Hopefully, you don't let them get depressed and avoid food, sleep, and work.",
+            "id": 48,
+            "masked": false,
+            "mult": false,
+            "name": "Hours",
+            "progress": {},
+            "q_limit": 24.0,
+            "quantity": 24.0,
+            "recipes": [
+                {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 14,
+                    "instant": true,
+                    "item_id": 48,
+                    "rate_amount": 24.0,
+                    "rate_duration": 3.0,
+                    "sources": [
+                        {
+                            "item_id": 50,
+                            "preserve": false,
+                            "q_required": -1.0
+                        },
+                        {
+                            "item_id": 51,
+                            "preserve": false,
+                            "q_required": 10.0
+                        },
+                        {
+                            "item_id": 57,
+                            "preserve": false,
+                            "q_required": 1.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "universal",
+            "toplevel": true
+        },
+        {
+            "attribs": [],
+            "description": "",
+            "id": 62,
+            "masked": false,
+            "mult": false,
+            "name": "Classroom",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "local",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "",
+            "id": 61,
+            "masked": false,
+            "mult": false,
+            "name": "Biology 101 Taken",
+            "progress": {},
+            "q_limit": 5.0,
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 21,
+                    "instant": false,
+                    "item_id": 61,
+                    "rate_amount": 1.0,
+                    "rate_duration": 3.0,
+                    "sources": [
+                        {
+                            "item_id": 59,
+                            "preserve": false,
+                            "q_required": 1.0
+                        },
+                        {
+                            "item_id": 62,
+                            "preserve": true,
+                            "q_required": 1.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "universal",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "This degree isn't designed as an end, but rather, a means to eventually finish an M.D. and become a physician. If you're not interested in that much school, then it would be better to choose a different major.\r\n\r\nUndergrad degrees at this school typically require 8 classes taken. So, to finish this degree, add 6 more as sources for the recipe.",
+            "id": 60,
+            "masked": false,
+            "mult": false,
+            "name": "Pre-Med",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 20,
+                    "instant": true,
+                    "item_id": 60,
+                    "rate_amount": 1.0,
+                    "rate_duration": 3.0,
+                    "sources": [
+                        {
+                            "item_id": 58,
+                            "preserve": true,
+                            "q_required": 5.0
+                        },
+                        {
+                            "item_id": 61,
+                            "preserve": true,
+                            "q_required": 5.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "universal",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "Important for medical or other science related fields.\r\n\r\nTo start the class, pay for it and include it to be subtracted for the daily recipe to gain hours, like how Math 101 is set up.\r\n\r\nThe class will be taught over 1 week, and you'll need to attend most of the classes to get the best grades.",
+            "id": 59,
+            "masked": false,
+            "mult": false,
+            "name": "Biology 101",
+            "progress": {},
+            "q_limit": 12.0,
+            "quantity": 12.0,
+            "recipes": [
+                {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 19,
+                    "instant": true,
+                    "item_id": 59,
+                    "rate_amount": 12.0,
+                    "rate_duration": 3.0,
+                    "sources": [
+                        {
+                            "item_id": 47,
+                            "preserve": false,
+                            "q_required": 5000.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "universal",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "This is a good time to decide whether you're happy enough to study strange symbols like capital greek letter sigma and elongated S's, or whether you'll switch to Art or another major to avoid further punishment.\r\n\r\nThe class will be taught over 1 week, and you'll need to attend most of the classes to get the best grades.",
+            "id": 57,
+            "masked": false,
+            "mult": false,
+            "name": "Math 101",
+            "progress": {},
+            "q_limit": 12.0,
+            "quantity": 12.0,
+            "recipes": [],
+            "storage_type": "universal",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "Hopefully you will attend class each day. This is your record of attendance. If it's too low, you're sure to get a poor or failing grade. You can attend 1 hour each day, while the class lasts.",
+            "id": 58,
+            "masked": false,
+            "mult": false,
+            "name": "Math 101 Taken",
+            "progress": {},
+            "q_limit": 5.0,
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 18,
+                    "instant": false,
+                    "item_id": 58,
+                    "rate_amount": 1.0,
+                    "rate_duration": 3.0,
+                    "sources": [
+                        {
+                            "item_id": 57,
+                            "preserve": false,
+                            "q_required": 1.0
+                        },
+                        {
+                            "item_id": 62,
+                            "preserve": true,
+                            "q_required": 1.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "universal",
+            "toplevel": false
+        }
+    ],
+    "locations": [
+        {
+            "description": "Buy either unprepared food or boxed meals.",
+            "destinations": [
+                {
+                    "dest_id": 30,
+                    "distance": 1.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
+                }
+            ],
+            "dimensions": [
+                0,
+                0
+            ],
+            "excluded": [
+                0,
+                0,
+                0,
+                0
+            ],
+            "id": 27,
+            "items": [],
+            "masked": false,
+            "name": "Grocery Store",
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": false
+        },
+        {
+            "description": "Good place to hang out and reduce stress. Trees, basketball courts, skateboarding.",
+            "destinations": [
+                {
+                    "dest_id": 30,
+                    "distance": 1.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
+                }
+            ],
+            "dimensions": [
+                0,
+                0
+            ],
+            "excluded": [
+                0,
+                0,
+                0,
+                0
+            ],
+            "id": 26,
+            "items": [
+                {
+                    "item_id": 55,
+                    "position": [
+                        0,
+                        0
+                    ],
+                    "quantity": 1.0
+                }
+            ],
+            "masked": false,
+            "name": "Park",
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": false
+        },
+        {
+            "description": "More expensive than the grocery store but doesn't require preparation and more filling than boxed food.",
+            "destinations": [
+                {
+                    "dest_id": 30,
+                    "distance": 1.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
+                }
+            ],
+            "dimensions": [
+                0,
+                0
+            ],
+            "excluded": [
+                0,
+                0,
+                0,
+                0
+            ],
+            "id": 28,
+            "items": [],
+            "masked": false,
+            "name": "Restaurant",
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": false
+        },
+        {
+            "description": "An adequate apartment. Could buy a nice house with mortgage payment, otherwise rent.\r\n\r\nSleep and cook meals here.",
+            "destinations": [
+                {
+                    "dest_id": 27,
+                    "distance": 1.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
+                },
+                {
+                    "dest_id": 26,
+                    "distance": 1.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
+                },
+                {
+                    "dest_id": 28,
+                    "distance": 1.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
+                },
+                {
+                    "dest_id": 29,
+                    "distance": 1.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
+                }
+            ],
+            "dimensions": [
+                0,
+                0
+            ],
+            "excluded": [
+                0,
+                0,
+                0,
+                0
+            ],
+            "id": 30,
+            "items": [],
+            "masked": false,
+            "name": "Home",
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": false
+        },
+        {
+            "description": "Full time is generally considered to be 2 classes, although classes vary as to how demanding they are. You could push and go up to 3, or take only 1 for a part-time load.\r\n\r\nGrades are from homework, the final test (which can be studied for), and a penalty if the attendance limit is not reached.",
+            "destinations": [
+                {
+                    "dest_id": 30,
+                    "distance": 1.0,
+                    "entrance": [
+                        0,
+                        0
+                    ],
+                    "exit": [
+                        0,
+                        0
+                    ]
+                }
+            ],
+            "dimensions": [
+                0,
+                0
+            ],
+            "excluded": [
+                0,
+                0,
+                0,
+                0
+            ],
+            "id": 29,
+            "items": [
+                {
+                    "item_id": 62,
+                    "position": [
+                        0,
+                        0
+                    ],
+                    "quantity": 1.0
+                }
+            ],
+            "masked": false,
+            "name": "School",
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": true
+        }
+    ],
+    "overall": {
+        "description": "Attend class or go to work. Figure out <i>what</i> you want to do with your life; then, figure out <i>how</i> to do that. Or maybe the other way around. In this scenario, resources such as time and money are tightly controlled, so <c=\"CadetBlue\">spend them wisely</c>.\r\n\r\nYou've just enrolled in the first class, Math 101, which starts tomorrow morning. It counts as credit towards a variety of different degrees. Arrangements have also been made to continue working part time at a grocery store in the afternoons and evenings.",
+        "number_format": "en_US",
+        "slots": [],
+        "title": "Making a Living",
+        "win_reqs": []
+    }
+}

@@ -100,6 +100,7 @@
             <tr>
                 <th>General Storage</th>
                 <th>Quantity</th>
+                <th>Attributes</th>
             </tr>
             {% for item in active.items %}
                 {% set link = url_for('play_item', item_id=item.id, main='universal') %}
@@ -110,12 +111,37 @@
                         <span>[{{ letter }}]</span>
                         <a href="{{ link }}">{{ item.name }}</a>
                     </td>
-                    <td id="item-{{ item.id }}-quantity">...</td>
+                    <td id="item-{{ item.id }}-quantity">{{ item.quantity | formatNum }}</td>
+                    <td>
+                        {% if item.attribs %}
+                            {% for attrib_of in item.attribs[:2] %}
+                                {% set link = url_for('play_attrib', attrib_id=attrib_of.attrib_id, subject_type='item', subject_id=item.id) %}
+                                {% set letter = link_letters.next(link) %}
+                                <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
+                                <span>[{{ letter }}]</span>
+                                <a href="{{ link }}">{{ attrib_of.attrib.name }}</a>{% if not attrib_of.attrib.binary %}<span>:</span>{% endif %}
+                                {% if attrib_of.attrib.enum %}
+                                    {% set index = attrib_of.val | int %}
+                                    {% if index in range(attrib_of.attrib.enum | length) %}
+                                        {{ attrib_of.attrib.enum[index] }}
+                                    {% else %}
+                                        ?
+                                    {% endif %}
+                                {% elif not attrib_of.attrib.binary %}
+                                     {{ attrib_of.val | formatNum }}
+                                {% endif %}
+                            {% else %}
+                                (None)
+                                <br>
+                            {% endfor %}
+                        {% endif %}
+                    </td>
                 </tr>
             {% endfor %}
         </table>
     {% endif %}
     <script>
+        /*
         $(document).ready(() => {
             function updateQuantities() {
                 {% for item in active.items %}
@@ -130,7 +156,8 @@
             updateQuantities();
 
             // Update quantities periodically
-            //setInterval(updateQuantities, 10000);
+            setInterval(updateQuantities, 10000);
         });
+        */
     </script>
 {% endblock %}

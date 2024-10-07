@@ -466,7 +466,7 @@ def set_routes(app):
         progress = pile.container.progress
         logger.debug(
             "Retrieved item %d from DB: %d recipes\n"
-            "Pile type %s from %s",
+            "Pile type %s from %s container",
             item.id, len(item.recipes), pile.container_type,
             pile.container.name)
         if progress.is_ongoing:

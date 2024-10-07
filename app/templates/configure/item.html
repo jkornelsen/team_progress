@@ -12,13 +12,14 @@
         Basic building blocks. In addition to typical items such as resources, money, or equipment,
         they can also represent an upgrade in production speed,
         or conversation dialog.
-        They could even be people if they don't do much.
-        For more ideas on how items can be used, browse the pre-built scenarios.
+        They could even be people if they don't take actions.
     </p>
     <!--
-    <p class="info">Incidentally, in a pen-and-paper game, item progress could be
+    For more ideas on how items can be used, browse the pre-built scenarios.
+
+    Incidentally, in a pen-and-paper game, item progress could be
     determined from a clock, by writing the start and stop time of an action and
-    computing elapsed progress.</p>
+    computing elapsed progress.
     -->
     <form method="post" style="padding-bottom: 60px">
         <label for="item-name">Name:</label>
@@ -73,7 +74,7 @@
         <input type="text"
                id="item-quantity"
                name="item_quantity"
-               value="{{ current.quantity | formatNum }}"
+               value="{{ current.pile.quantity | formatNum }}"
                size="8">
         <span id="running-label"></span>
         <br>

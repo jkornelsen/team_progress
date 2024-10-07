@@ -3,7 +3,7 @@ import logging
 
 from flask import g
 
-from .attrib import Attrib
+from .attrib import Attrib, AttribFor
 from .character import Character
 from .cache import cache
 from .db_serializable import DbSerializable, Identifiable, QueryHelper, coldef
@@ -254,18 +254,16 @@ class Overall(DbSerializable):
                 AND {tables[0]}.toplevel = TRUE
             ORDER BY {tables[0]}.name
             """, (g.game_token,), ['characters', 'locations'])
-        CharacterRow = namedtuple('CharacterRow',
-            ['char_id', 'char_name', 'loc_id', 'loc_name'])
-        character_list = []
+        CharacterRow = namedtuple(
+            'CharacterRow', ['char_id', 'char_name', 'loc_id', 'loc_name'])
+        g.active.characters = []
         for char_data, loc_data in tables_rows:
             row = CharacterRow(
                 char_id=char_data.id,
                 char_name=char_data.name,
                 loc_id=loc_data.id,
                 loc_name=loc_data.name)
-            character_list.append(row)
-        logger.debug("character_list=%s", character_list)
-        g.active.characters = character_list
+            g.active.characters.append(row)
         loc_rows = cls.execute_select("""
             SELECT id, name
             FROM locations
@@ -274,14 +272,31 @@ class Overall(DbSerializable):
             ORDER BY name
             """, (g.game_token,))
         g.active.locations = loc_rows
-        item_rows = cls.execute_select("""
-            SELECT id, name
-            FROM items
-            WHERE toplevel = TRUE
-                AND game_token = %s
-            ORDER BY name
-            """, (g.game_token,))
-        g.active.items = item_rows
+        # Items and their Attribs
+        tables_rows = cls.select_tables("""
+            SELECT *
+            FROM {tables[0]}
+            LEFT JOIN {tables[1]}
+                ON {tables[1]}.item_id = {tables[0]}.id
+                AND {tables[1]}.game_token = {tables[0]}.game_token
+            LEFT JOIN {tables[2]}
+                ON {tables[2]}.id = {tables[1]}.attrib_id
+                AND {tables[2]}.game_token = {tables[0]}.game_token
+            WHERE {tables[0]}.toplevel = TRUE
+                AND {tables[0]}.game_token = %s
+                AND ({tables[1]}.item_id IS NULL OR {tables[2]}.id IS NOT NULL)
+            ORDER BY {tables[0]}.name
+            """, (g.game_token,), ['items', 'item_attribs', 'attribs'])
+        items_data = {}
+        for item_data, item_attrib_data, attrib_data in tables_rows:
+            item_row = items_data.setdefault(item_data.id, item_data)
+            if attrib_data.id:
+                if not hasattr(item_row, 'attribs'):
+                    setattr(item_row, 'attribs', [])
+                attrib_for = AttribFor(attrib_data.id, item_attrib_data.value)
+                attrib_for.attrib = Attrib.from_data(attrib_data)
+                item_row.attribs.append(attrib_for)
+        g.active.items = list(items_data.values())
         event_rows = cls.execute_select("""
             SELECT id, name
             FROM events
