@@ -1,17 +1,12 @@
+---- system setup ----
+
 hosting possibilities:
 Pythonanywhere should be able to host postgres and flask web app.
 https://www.reddit.com/r/flask/comments/12beskr/free_hosting_sites_compatible_with_flask/
 render.com is an alternative.
-perhaps could offer some users on Pythonanywhere and also option to download
-code for playing on a LAN
-
-another option would be, in addition to LAN multiplayer from GitHub,
-offer an online single-player version that doesn't require a database
-maybe to get something working, it would be better to change to Solo Progress
-socket.io (e.g. Flask-SocketIO) is another tech often mentioned for
-synching between multiple players, like Scribbl.io
 
 prompt each player to save to their PC occasionally
+only if no one recently saved from that session
 
 limit upload file size
 for example 10 Mb
@@ -19,12 +14,15 @@ at 90% warn to remove content to avoid going over limit
 
 try selenium to test client side
 
+communication can be done with an app such as discord
+or simply a text file
+log should just be manual via chat instead of automatic
+even a successful attack requires interpretation
+
+---- general gameplay ----
+
 gain all instant could be more convenient than entering e.g. 9999 batches
 maybe a button or 0 for number of batches, or "(A)ll"
-
-can move items from carried to general storage
-input quantity to transfer
-overview shows general storage
 
 first check if source item is carried,
 then if on floor,
@@ -32,13 +30,6 @@ and finally, if in general storage
 deduct whichever is found first
 if say 5 are required, two are held and three are on floor,
 then require the character to either pick up three or drop two
-
-checkbox, selected by default, to create both directions for destination
-removing deletes both
-door coordinates are the same for both ends
-specify only source door coordinates on each side
-distance also will affect both unless box is unchecked
-"make reverse direction the same"
 
 checkbox to mask items until gained or while none
 replace all non-spaces with "*" or "?"
@@ -49,53 +40,6 @@ yes or no choice would consume a source
 mask characters we haven't met yet
 those not marked as maskable are the starting set
 go to location to unmask all characters there
-
-checkbox to hide events on config screen would be useful for gamemaster
-
-perhaps a checkbox on locations screen to automatically add
-reverse direction when new destinations are added
-
-stamina points
-train stamina by swimming in pool
-each player char has stats (attributes) that are chosen at the beginning of the game
-select from a list or specify custom
-strength, intelligence, dexterity, stamina (current/max), health (current/max)
-perception, athletics
-status conditions
-states (effects / attributes) may change over time, such as poisoning
-turn-based, not with a time delay
-
-different players may be given different authority (rights, privileges),
-for example, only managers can spend money to open new stores
-an easy distinction would be that only the gamemaster can change setup
-checkbox on overall config screen to say I am the gamemaster (like an admin)
-checkbox to prevent all others from making setup changes
-can also set config permissions for a particular player on a particular entity
-or play permissions -- might even be more helpful than setup permissions
-anyone can make setup changes, but only certain people can do certain actions
-users will need passwords so someone can't just say they're a different user
-or how about a downloadable key file
-maybe give each player the choice of auth method
-a player could choose no auth if desired
-
-chance of Event to occur during Item progress
-
-win requirements
-Item quantity optionally at a Location or held by Character
-Character at required Location or with required Attribute
-attrib could be Defeated >= 1
-on config screen, button to set up item or char requirement
-when pressed, display (unhide) relevant select boxes
-select for example an Item, specify a quantity, and a Location,
-then press Add Requirement
-button to Remove requirement
-can modify quantity or val of attrib?
-table win_requirements
-item_id, quantity, location_id, character_id, attrib_id, attrib_val
-
-win requirement: character has a certain item
-win requirement: character is in a certain location
-all conditions must be met to win
 
 action could be an event, or whatever was the most recent item interacted
 with for a particular character, even if the action is finished
@@ -110,51 +54,6 @@ all ongoing progress actions have a swirling icon next to the action name
                             Pens    userwithoutchar
     Peter       Woods       wolf
 
-separate lists on overview screen
-- players and their most recent route
-    if it's ajax, get the page from request to store as the interaction
-- chars and their loc
-- items in general storage
-- events that can be run
-- log of game changes without mentioning player
-log is in separate column
-create new game_log tbl
-
-shared game log
-shown in a scrollable text box
-load recent history when page is loaded
-check every few seconds for new entries that need to be added at the top
-    added item1
-    modified item1
-    gained 22 item1
-    char1 travelled 22 distance
-    char2 arrived at loc2
-    event1 (minor success)
-repeated actions such as item progress get merged into one
-would be nice to move it to the top of the list in that case
-
-event log to show outcomes
-would be nice for e.g. digging holes competition
-for example, "depth gained: 3.5" where event has chance from 1 to 5
-wouldn't have to keep initiating the event for each step
-or maybe that wouldn't be so bad, if only one button press
-is required for a step
-maybe we can view an event and another page at the same time
-either a separate part of the page,
-or in a different tab
-or maybe the event can automatically update a value and show the
-change as well as the updated value
-
-configure event to add log template: "$x hit $y for $z hp"
-
-be able to type in what happened -- "log entry"
-brighter colors or more bold than automatically logged actions
-general communication can be done in person or with an app such as discord
-so don't design this for chat
-
-maybe the log should just be manual via chat instead of automatic
-because logging items or travel doesn't seem useful
-would be nice to have fighting message log though
 show most recent result on event screen so anyone can view it
 
 travel could take a resource such as food for each distance step
@@ -162,20 +61,27 @@ the character object would have this resource
 or use an instant item to do this manually
 that would make it easier to take 1 ticket or Rs.5 per x distance
 
-add Characters to a group to travel together -- group_name string
+in char config, specify group to travel together -- group_name string
 strip spaces and case insensitive
+or multi-select select box of others to travel with
+can we store results of multi-selection in session?
 checkbox "Group1 Together" to travel,
 if group_name isn't empty and there are at least 2 members
 only works if all in the list are at starting loc?
 no, list who's included and missing next to checkbox
 
-although that would require configuring
-what about on character screen,
-multi-select select box of others to travel with
-can we store results of multi-selection in session?
-
 other than travel, don't need to show group because they'll all
 be listed on the location screen
+
+to travel from one location to another, selecting from a dropdown may
+be a bit tedious
+could have buttons instead to start travelling to a location
+perhaps we could use those instead of a single start button
+would still have a single stop button
+only a single distance display as well
+maybe display would include destination name: "Distance to Home: 3 of 10"
+since button would simply show "Travelling."
+other buttons would be greyed out if travelling.
 
 would attributes be useful for locations?
 for example, how dark a room is,
@@ -193,16 +99,6 @@ distance if season is winter
 winter would be explained in the attr description,
 and the implementation would be an input box showing * 0.9
 
-perhaps one event could contain references to other (sub-)events,
-for example, an attack would be a chance of changing hp
-as well as a chance at poisoning
-could explain and link to related events in description
-
-chances could be at a disadvantage (lowest of two rolls)
-or advantage (highest of two roles) based on story context
-on event play screen
-advantage: single roll, best of two, worst of two -- radio buttons
-
 events should automatically select last character viewed?
 seems better to have select box to select from all lists
 wouldn't change selection if a particular box doesn't have it
@@ -214,9 +110,6 @@ to more clearly indicate that it automatically triggers
 that would grey out the trigger chance and set to 0
 then we could remove the comment on the config screen
 
-event play screen is a bit of a dead end
-can't get back to char or location
-
 if item play gets too cluttered we could make a recipe play screen
 it wouldn't have the upper button actions such as pickup
 that would be the only place where progress would be shown
@@ -227,43 +120,17 @@ while 'shoot' would make more sense on item play instead
 mouseover grid letters to show name of what is there
 
 if a grid is defined then char must either be at same or adjacent pos
-to pick up pile and use local item sources
+to pick up pile, use local item sources, or travel through door
 
 no travel time progress between subdivisions,
 but speed could make it so can move two at a time
 compared to another character's one at a time
-number pad or arrow keys to change position
-also arrow buttons
-radio button or select box to specify which character to move
-
-randomly populate room with items to pick up
-by running events
-chance based on item rarity
-or other attrs, for example, some items more likely in fire caves
-and others more likely in ice
-also randomly populate with monsters
-allow only one of each type of item pile at a loc
-location config screen lists all items and their positions and quantities
 
 for locations, have speed as well as distance
 characters would have travel speed for a particular location?
 for example, a swimming speed and a walking speed
 speed for a particular type of terrain, and a location would have a type of terrain
 or we could manually change the character's speed when entering a new location
-
-to travel from one location to another, selecting from a dropdown may
-be a bit tedious
-could have buttons instead to start travelling to a location
-perhaps we could use those instead of a single start button
-would still have a single stop button
-only a single distance display as well
-maybe display would include destination name: "Distance to Home: 3 of 10"
-since button would simply show "Travelling."
-other buttons would be greyed out if travelling.
-
-Piles of the same item currently share the same attribute values.
-For example, all swords of the same type are equally sharp.
-Maybe this is fine -- need to make a slightly different kind to change attribs.
 
 prompt before overwriting another action in progress
 such as if a character is already doing something else
@@ -305,11 +172,23 @@ source more scenarios from community
 perhaps submit to github via enhancement requests
 or reddit
 
-for dating scenario, note on street that a bus goes downtown
+scenario: Dating Scenario
+note on street that a bus goes downtown
 add a washing machine, maybe in bathroom
 clean attr should only be for people? to be less tedious
 maybe dirty attr for clothes, if higher than 1 can affect person
 (in desc) doesn't need to be fully tracked, just to help the clean person stat
+
+scenario: Dungeon Crawl
+stamina for physical actions
+perception
+randomly populate room with items to pick up
+by running events
+chance based on item rarity
+or other attrs, for example, some items more likely in fire caves
+and others more likely in ice
+also randomly populate with monsters
+allow only one of each type of item pile at a loc
 
 scenario: Fission Plant
 win condition is at least a certain amount of power

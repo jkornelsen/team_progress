@@ -329,7 +329,7 @@ class Character(Identifiable):
             for item_id, item_qty, item_slot in zip(
                     req.get_list('item_id[]'),
                     req.get_list('item_qty[]'),
-                    req.get_list('item_slot[]')
+                    req.get_list('item_slot[]'),
                     ):
                 ownedItem = OwnedItem(Item(int(item_id)), self)
                 ownedItem.slot = item_slot

@@ -38,9 +38,9 @@ class GameData:
     def __init__(self):
         g.game_data = self
         ActiveData()
+        self.overall = Overall()
         for entity_cls in ENTITIES:
             self.set_list(entity_cls, [])
-        self.overall = Overall()
 
     def __getitem__(self, key):
         """Allow attributes to be read with square bracket notation,
@@ -62,34 +62,33 @@ class GameData:
 
     def dict_for_json(self):
         logger.debug("dict_for_json()")
-        data = {}
+        data = {'overall': self.overall.dict_for_json()}
         for entity_cls in ENTITIES:
             entity_data = [
                 entity_obj.dict_for_json()
                 for entity_obj in self.get_list(entity_cls)]
             data[entity_cls.listname] = entity_data
-        data['overall'] = self.overall.dict_for_json()
         return data
 
     def from_json(self, all_data):
         """Load all data from file."""
         logger.debug("from_json()")
+        self.overall = Overall.from_data(all_data['overall'])
         for entity_cls in ENTITIES:
             self.set_list(entity_cls, [])
             entities_data = all_data[entity_cls.listname]
             for entity_data in entities_data:
                 instance = entity_cls.from_data(entity_data)
                 self.get_list(entity_cls).append(instance)
-        self.overall = Overall.from_data(all_data['overall'])
 
     def load_for_file(self, entities=None):
         logger.debug("load_complete()")
+        self.overall = Overall.load_complete_object()
         if entities is None:
             entities = ENTITIES
         for entity_cls in entities:
             self.set_list(
                 entity_cls, entity_cls.load_complete_objects())
-        self.overall = Overall.load_complete_object()
 
     def from_db_flat(self, entities=None):
         """Don't include entity relation data, just the base tables."""
@@ -129,11 +128,11 @@ class GameData:
 
     def to_db(self):
         logger.debug("to_db()")
+        self.overall.to_db()
         for entity_cls in ENTITIES:
             logger.debug("entity %s", entity_cls.listname)
             for entity in self.get_list(entity_cls):
                 entity.to_db()
-        self.overall.to_db()
 
     @staticmethod
     def clear_db_for_token():

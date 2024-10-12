@@ -201,7 +201,7 @@
             {% endif %}
 
             let nextRecipeId = 0;
-            function addRecipe(recipe_id=0, recipe_id_from='from_js', rate_amount = 1.0, rate_duration = 3.0, instant = false) {
+            function addRecipe(recipe_id=0, recipe_id_from='from_js', rate_amount = "1.0", rate_duration = "3.0", instant = false) {
                 console.log(`addRecipe(${recipe_id}, ${recipe_id_from}) counter=${nextRecipeId}`);
                 if (recipe_id_from === 'from_db') {
                     // Ensure nextRecipeId is ahead of the highest id from the database
@@ -250,7 +250,7 @@
             }
 
             function addSource(recipeId, sourceId, sourceName,
-                    sourceQtyReq = 1.0, preserve = false) {
+                    sourceQtyReq = "1.0", preserve = false) {
                 console.log(`addSource() ${sourceId}`);
                 const recipeContainer = $('.recipe-container').last();
                 const existingSource = recipeContainer.find(`.source[data-source-id="${sourceId}"]`);
@@ -278,7 +278,7 @@
                 console.log("added sourceHtml before sourcelist_end");
                 toggleAddRecipeButtonVisibility();
             }
-            function addRecipeAttrib(recipeId, attribId, attribName, attribValue = 1) {
+            function addRecipeAttrib(recipeId, attribId, attribName, attribValue = "1") {
                 console.log(`addRecipeAttrib() ${attribId}`);
                 console.log(`attribName: ${attribName}`);
                 console.log(`debugging`);
@@ -304,7 +304,7 @@
                 console.log("added attribHtml before recipeattribs_end");
                 toggleAddRecipeButtonVisibility();
             }
-            function addByproduct(recipeId, byproductId, byproductName, rateAmount = 1.0) {
+            function addByproduct(recipeId, byproductId, byproductName, rateAmount = "1.0") {
                 console.log(`addByproduct() ${byproductId}`);
                 const recipeContainer = $('.recipe-container').last();
                 const existingByproduct = recipeContainer.find(`.byproduct[data-byproduct-id="${byproductId}"]`);
@@ -419,30 +419,34 @@
                 addRecipe(
                     {{ recipe.id }},
                     'from_db',
-                    {{ recipe.rate_amount | formatNum }},
-                    {{ recipe.rate_duration | formatNum }},
-                    {{ recipe.instant | lower }});
+                    "{{ recipe.rate_amount | formatNum }}",
+                    "{{ recipe.rate_duration | formatNum }}",
+                    {{ recipe.instant | lower }}
+                    );
                 {% for source in recipe.sources %}
                     addSource(
                         {{ recipe.id }},
                         {{ source.item.id }},
                         "{{ source.item.name }}",
-                        {{ source.q_required | formatNum }},
-                        {{ source.preserve | lower }});
+                        "{{ source.q_required | formatNum }}",
+                        {{ source.preserve | lower }}
+                        );
                 {% endfor %}
                 {% for byproduct in recipe.byproducts %}
                     addByproduct(
                         {{ recipe.id }},
                         {{ byproduct.item.id }},
                         "{{ byproduct.item.name }}",
-                        {{ byproduct.rate_amount | formatNum }});
+                        "{{ byproduct.rate_amount | formatNum }}"
+                        );
                 {% endfor %}
                 {% for attrib_id, req in recipe.attribs.items() %}
                     addRecipeAttrib(
                         {{ recipe.id }},
                         {{ attrib_id }},
                         "{{ req.attrib.name }}",
-                        {{ req.val | formatNum }});
+                        "{{ req.val | formatNum }}"
+                        );
                 {% endfor %}
             {% endfor %}
 

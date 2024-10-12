@@ -158,35 +158,6 @@
                                 </select>
                             </div>
                         {% endif %}
-                        {% if container.pile.container_type == 'general' %}
-                            <div class="button-column" id="move_to_char-container">
-                                <button id="move_to_char-btn" class="go-button">Move to [C]haracter</button>
-                                <select id="char-moving-to">
-                                    {% for char in game_data.characters %}
-                                        <option value="{{ char.id }}"
-                                                {% if char.id == defaults.movingto_char %}selected{% endif %}>
-                                            {{ char.name }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="button-column" id="move_to_loc-container">
-                                <button id="move_to_loc-btn" class="go-button">Move to [L]ocation</button>
-                                <select id="loc-moving-to">
-                                    {% for loc in game_data.locations %}
-                                        <option value="{{ loc.id }}"
-                                                {% if loc.id == defaults.movingto_loc %}selected{% endif %}>
-                                            {{ loc.name }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        {% else %}
-                            <div class="button-column" id="move_to_general-container">
-                                <button id="move_to_general-btn" class="go-button">Move to [G]eneral Storage</button>
-                                <input type="text" id="quantity_to_move" size="10" value="1">
-                            </div>
-                        {% endif %}
                         <div id="show_all_buttons-container">
                             <input type="checkbox" id="show-all-buttons" />
                             <label for="show-all-buttons">Show all actions</label>
@@ -853,20 +824,20 @@
             });
 
             async function updateVisibility() {
-                const storageType = '{{ current.storage_type }}';
-                const showAll = $('#show-all-buttons').is(':checked');
-                const storage_carried = storageType === 'carried';
                 const notEmpty = mainQuantity !== 0;
-                const slot = {{ 'true' if container.pile.slot else 'false' }};
+                const showAll = $('#show-all-buttons').is(':checked');
+                const storage_carried = '{{ current.storage_type }}' === 'carried';
+                const storage_local = '{{ current.storage_type }}' === 'local';
+                const atLoc = '{{ container.pile.container_type }}' === 'loc';
+                const inventory = '{{ container.pile.container_type }}' === 'char';
+                const charAtLoc = {{ container.location is not none | lower }};
+                const inSlot = '{{ container.pile.slot }}' !== '';
                 const visibilityMap = {
-                    'unequip-container': (notEmpty && slot && (showAll || storage_carried)),
-                    'equip-container': (notEmpty && (showAll || storage_carried)),
-                    'drop-container': (notEmpty && !slot && (showAll || storage_carried)),
-                    'pickup-container': (notEmpty && (showAll || storage_carried)),
-                    'move_to_char-container': (notEmpty && (showAll || storage_carried)),
-                    'move_to_loc-container': (notEmpty && (showAll || storageType === 'local')),
-                    'move_to_general-container': (notEmpty && (showAll || storageType === 'general')),
-                    'show_all_buttons-container': (mainQuantity !== 0),
+                    'equip-container': notEmpty && inventory && storage_carried && !inSlot,
+                    'pickup-container': notEmpty && atLoc && (!storage_local || showAll),
+                    'unequip-container': notEmpty && inSlot,
+                    'drop-container': notEmpty && inventory && charAtLoc && !inSlot,
+                    'show_all_buttons-container': notEmpty && atLoc && storage_local,
                 };
                 Object.keys(visibilityMap).forEach((id) => {
                     if (visibilityMap[id]) {
@@ -875,73 +846,6 @@
                         $(`#${id}`).hide();
                     }
                 });
-                const showThese = [];
-                const hideThese = [];
-                $('.show-if-carried').each((index, element) => {
-                    if (showAll || storageType === 'carried') {
-                        showThese.push(element);
-                    } else {
-                        hideThese.push(element);
-                    }
-                });
-                $('.show-if-local').each((index, element) => {
-                    if (showAll || storageType === 'local') {
-                        showThese.push(element);
-                    } else {
-                        hideThese.push(element);
-                    }
-                });
-                $('.show-if-universal').each((index, element) => {
-                    if (showAll || storageType === 'universal') {
-                        showThese.push(element);
-                    } else {
-                        hideThese.push(element);
-                    }
-                });
-                $('.hide-if-empty').each((index, element) => {
-                    if (mainQuantity !== 0) {
-                        /*
-                        if (!showThese.includes(element)) {
-                            showThese.push(element);
-                        }
-                        const index = showThese.indexOf(element);
-                        if (index > -1) {
-                            hideThese.splice(index, 1);
-                        }
-                        */
-                    } else {
-                        const index = showThese.indexOf(element);
-                        if (index > -1) {
-                            showThese.splice(index, 1);
-                        }
-                        if (!hideThese.includes(element)) {
-                            hideThese.push(element);
-                        }
-                    }
-                });
-                $('.hide-if-slot').each((index, element) => {
-                    {% if container.pile.slot %}
-                        if (showAll) {
-                            if (!showThese.includes(element)) {
-                                showThese.push(element);
-                            }
-                            const index = showThese.indexOf(element);
-                            if (index > -1) {
-                                hideThese.splice(index, 1);
-                            }
-                        } else {
-                            const index = showThese.indexOf(element);
-                            if (index > -1) {
-                                showThese.splice(index, 1);
-                            }
-                            if (!hideThese.includes(element)) {
-                                hideThese.push(element);
-                            }
-                        }
-                    {% endif %}
-                });
-                showThese.forEach(el => $(el).show());
-                hideThese.forEach(el => $(el).hide());
             }
             $('#show-all-buttons').on('change', () => {
                 updateVisibility();

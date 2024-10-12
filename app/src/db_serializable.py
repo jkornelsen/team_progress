@@ -6,7 +6,7 @@ from psycopg2.extras import RealDictCursor, execute_values
 import psycopg2
 
 from database import column_counts, pretty
-from .utils import NumTup
+from .utils import NumTup, caller_info
 
 logger = logging.getLogger(__name__)
 #logger.setLevel(logging.INFO)  # don't log all SQL
@@ -109,13 +109,16 @@ class DbSerializable(Serializable):
             query = query_without_tables.format(tables=tables)
         else:
             query = query_without_tables.format(table=cls.tablename())
-        logger.debug(pretty(query, values))
+        logger.debug("%s\n%s", caller_info(), pretty(query, values))
         with g.db.cursor(cursor_factory=RealDictCursor) as cursor:
             cursor.execute(query, values)
             if fetch_all:
                 result = [MutableNamespace(**row) for row in cursor.fetchall()]
+                logger.debug("got %d rows", len(result))
             else:
                 result = MutableNamespace(**(cursor.fetchone() or {}))
+                if result:
+                    logger.debug("got a result")
             return result
 
     @classmethod
@@ -131,15 +134,18 @@ class DbSerializable(Serializable):
             query_without_tables = qhelper.query
             values = qhelper.values
         query = query_without_tables.format(tables=tables)
-        logger.debug(pretty(query, values))
+        logger.debug("%s\n%s", caller_info(), pretty(query, values))
         results = []
         with g.db.cursor() as cursor:
             cursor.execute(query, values)
             if fetch_all:
                 rows = cursor.fetchall()
+                logger.debug("got %d rows", len(rows))
             else:
                 row = cursor.fetchone()
                 rows = [row] if row else []
+                if row:
+                    logger.debug("got a result")
             column_names = [desc[0] for desc in cursor.description]
             table_column_indices = {}
             current_column = 0
@@ -168,13 +174,15 @@ class DbSerializable(Serializable):
         if values is None:
             values = []
         query = query_without_table.format(table=cls.tablename())
-        logger.debug(pretty(query, values))
+        logger.debug("%s\n%s", caller_info(), pretty(query, values))
         result = None
         try:
             with g.db.cursor(cursor_factory=RealDictCursor) as cursor:
                 cursor.execute(query, tuple(values))
                 if fetch:
                     result = MutableNamespace(**cursor.fetchone())
+                    if result:
+                        logger.debug("got a result")
         except (psycopg2.OperationalError, psycopg2.ProgrammingError,
                 psycopg2.IntegrityError, psycopg2.InterfaceError,
                 psycopg2.InternalError) as e:
@@ -189,9 +197,10 @@ class DbSerializable(Serializable):
             INSERT INTO {table} ({column_names})
             VALUES %s
             """
-        logger.debug(pretty(sql, values))
+        logger.debug("%s\n%s", caller_info(), pretty(sql, values))
         with g.db.cursor() as cursor:
             execute_values(cursor, sql, values, template=None, page_size=100)
+            logger.debug("Inserted %d rows.", cursor.rowcount)
 
     @classmethod
     def insert_single(cls, table, column_names, values):

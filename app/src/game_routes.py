@@ -19,7 +19,8 @@ from .event import Event
 from .location import Location, ItemAt
 from .overall import Overall
 from .progress import Progress
-from .utils import LinkLetters, NumTup, RequestHelper, entity_class, format_num
+from .utils import (
+    LinkLetters, NumTup, RequestHelper, Storage, entity_class, format_num)
 
 logger = logging.getLogger(__name__)
 
@@ -59,11 +60,11 @@ def set_routes(app):
             req = RequestHelper('args')
             if not req.has_key('duplicated'):
                 session['referrer'] = request.referrer
+            g.game_data.overall = Overall.load_complete_object()
             char = Character.data_for_configure(char_id)
             char.events = [
                 Event.get_by_id(event_id)
                 for event_id in char.events]
-            g.game_data.overall = Overall.load_complete_object()
             return render_template(
                 'configure/character.html',
                 current=char,
@@ -297,6 +298,7 @@ def set_routes(app):
         logger.debug(
             "%s\nplay_item(item_id=%d, char_id=%s, loc_id=%s)",
             "-" * 80, item_id, char_id, loc_id)
+        g.game_data.overall = Overall.load_complete_object()
         item = Item.data_for_play(
             item_id, char_id, loc_id, complete_sources=False,
             main_pile_type=main_pile_type)
@@ -307,7 +309,6 @@ def set_routes(app):
             'movingto_char': session.get('default_movingto_char', ''),
             'slot': session.get('default_slot', '')
             }
-        g.game_data.overall = Overall.load_complete_object()
         return render_template(
             'play/item.html',
             current=item,
@@ -591,8 +592,7 @@ def set_routes(app):
         logger.debug(
             "%s\ndrop_item(item_id=%d, char_id=%d)",
             "-" * 80, item_id, char_id)
-        item = Item.data_for_play(
-            item_id, char_id, complete_sources=False)
+        item = Item.load_complete_objects(item_id)
         char = Character.load_complete_objects(char_id)
         owned_item = char.items.get(item_id)
         if not owned_item:
@@ -622,20 +622,21 @@ def set_routes(app):
             'message': f'Dropped {item.name}.'
             })
 
-    @app.route('/item/pickup/<int:item_id>/loc/<int:loc_id>/char/<int:char_id>', methods=['POST'])
+    @app.route(
+        '/item/pickup/<int:item_id>/loc/<int:loc_id>/char/<int:char_id>',
+        methods=['POST'])
     def pickup_item(item_id, loc_id, char_id):
         logger.debug(
             "%s\npickup_item(item_id=%d, loc_id=%d, char_id=%d)",
             "-" * 80, item_id, loc_id, char_id)
         session['default_pickup_char'] = char_id
-        item = Item.data_for_play(
-            item_id, at_loc_id=loc_id, complete_sources=False)
+        item = Item.load_complete_objects(item_id)
         loc = Location.load_complete_objects(loc_id)
         item_at = loc.items.get(item_id)
         if not item_at:
             return jsonify({
                 'status': 'error',
-                'message': f'No item {item.name} at {item.pile.container.name}.'
+                'message': f'No item {item.name} at {loc.name}.'
                 })
         new_qty = item_at.quantity
         char = Character.load_complete_objects(char_id)
@@ -659,41 +660,43 @@ def set_routes(app):
             f'Picked up {item.name}.'
             })
 
-    @app.route('/item/equip/<int:item_id>/char/<int:char_id>/slot/<string:slot>', methods=['POST'])
+    @app.route(
+        '/item/equip/<int:item_id>/char/<int:char_id>/slot/<string:slot>',
+        methods=['POST'])
     def equip_item(item_id, char_id, slot):
         logger.debug(
             "%s\nequip_item(item_id=%d, char_id=%d, slot=%s)",
             "-" * 80, item_id, char_id, slot)
         session['default_slot'] = slot
-        item = Item.data_for_play(
-            item_id, char_id, complete_sources=False)
-        char = item.pile.container
+        item = Item.load_complete_objects(item_id)
+        char = Character.load_complete_objects(char_id)
         owned_item = char.items.get(item_id)
         if not owned_item:
             return jsonify({
                 'status': 'error',
-                'message': f'No item {item.name} in {item.pile.container.name}\'s inventory.'
+                'message': f"No item {item.name} in {char.name}'s inventory."
                 })
         owned_item.slot = slot
         char.to_db()
         return jsonify({
-            'status': 'success', 'message':
-            f'Equipped {item.name}.'
+            'status': 'success',
+            'message': f'Equipped {item.name}.'
             })
 
-    @app.route('/item/unequip/<int:item_id>/char/<int:char_id>', methods=['POST'])
+    @app.route(
+        '/item/unequip/<int:item_id>/char/<int:char_id>',
+        methods=['POST'])
     def unequip_item(item_id, char_id):
         logger.debug(
             "%s\nequip_item(item_id=%d, char_id=%d)",
             "-" * 80, item_id, char_id)
-        item = Item.data_for_play(
-            item_id, char_id, complete_sources=False)
-        char = item.pile.container
+        item = Item.load_complete_objects(item_id)
+        char = Character.load_complete_objects(char_id)
         owned_item = char.items.get(item_id)
         if not owned_item:
             return jsonify({
                 'status': 'error',
-                'message': f'No item {item.name} in {item.pile.container.name}\'s inventory.'
+                'message': "No item {item.name} in {char.name}\'s inventory."
                 })
         owned_item.slot = ''
         char.to_db()
@@ -704,7 +707,8 @@ def set_routes(app):
 
     @app.route('/char/move/<int:char_id>'
                 '/x_change/<int(signed=True):x_change>'
-                '/y_change/<int(signed=True):y_change>', methods=['POST'])
+                '/y_change/<int(signed=True):y_change>',
+                methods=['POST'])
     def move_char(char_id, x_change, y_change):
         logger.debug(
             "%s\nmove_char(%d,%d,%d)",

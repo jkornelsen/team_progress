@@ -109,7 +109,7 @@
                         <button type="button" class="add-item-btn lesser-button">Add Item</button>
                     </div>
                 {% else %}
-                    <p class="no-entities">(No other items)</p>
+                    <p class="no-entities">(No items)</p>
                 {% endif %}
             </div>
         </div>
@@ -161,7 +161,7 @@
                 $('#btn-delete').attr('disabled', 'disabled');
             {% endif %}
 
-            function addItem(itemId, itemName, itemQty = 1, itemSlot = "") {
+            function addItem(itemId, itemName, itemQty = "1", itemSlot = "") {
                 const itemHtml = `
                     <tr>
                         <td>${itemName}
@@ -169,9 +169,11 @@
                         </td><td>
                             <input type="text" name="item_qty[]" value="${itemQty}" size="8">
                         </td><td>
+                            <!-- causes item_slot[] key (as well as item_slot key) to be included in form submission even when no value -->
+                            <input type="hidden" name="item_slot" value="">
                             <select name="item_slot[]">
-                                <option value="">–</option>
                                 {% if game_data.overall.slots %}
+                                    <option value="">–</option>
                                     {% for slot in game_data.overall.slots %}
                                         <option value="{{ slot }}">{{ slot }}</option>
                                     {% endfor %}
@@ -212,8 +214,9 @@
                 addItem(
                     {{ owned_item.item.id }},
                     "{{ owned_item.item.name }}",
-                    {{ owned_item.quantity | formatNum }},
-                    "{{ owned_item.slot }}");
+                    "{{ owned_item.quantity | formatNum }}",
+                    "{{ owned_item.slot }}"
+                    );
             {% endfor %}
             $('#items-rows').on('click', '.remove-item-btn', (event) => {
                 const itemContainer = $(event.currentTarget).closest('tr');
@@ -313,7 +316,8 @@
                     "{{ attrib_of.attrib.name }}",
                     {{ attrib_of.attrib.binary | lower }},
                     {{ attrib_of.attrib.enum | tojson }},
-                    {{ attrib_of.val | formatNum }});
+                    "{{ attrib_of.val | formatNum }}"
+                    );
             {% endfor %}
             $('#attrib-container').on('click', '.remove-attrib-btn', (event) => {
                 const attribRow = $(event.currentTarget).closest('tr');

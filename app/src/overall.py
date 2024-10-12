@@ -244,6 +244,7 @@ class Overall(DbSerializable):
     @classmethod
     def data_for_overview(cls):
         logger.debug("data_for_overview()")
+        g.active.overall = cls.load_complete_object()
         tables_rows = cls.select_tables("""
             SELECT *
             FROM {tables[0]}
@@ -305,11 +306,9 @@ class Overall(DbSerializable):
             ORDER BY name
             """, (g.game_token,))
         g.active.events = event_rows
-        instance = cls.load_complete_object()
-        g.active.overall = instance
         # Win requirement results
         req_by_id = {}
-        for win_req in instance.win_reqs:
+        for win_req in g.active.overall.win_reqs:
             win_req.id_to_refs_from_game_data()
             req_by_id[win_req.id] = win_req
         NUM_QUERIES = 5

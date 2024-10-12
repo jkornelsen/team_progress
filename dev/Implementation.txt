@@ -1,14 +1,16 @@
 
-9,910 becomes 9 on char configure page
-5000 becomes 5, so it's not just commas.
+hotkeys for starting recipes
+
+don't allow production if byproducts would exceed limit
 
 implement checking triggers for item progress
 maybe in item_progress, similar to call in char_progress
 event.check_trigger_for_duration(time_spent)
 pop up event in play/item.html like in play/character.html
 
-hotkeys for starting recipes
-
-don't allow production if byproducts would exceed limit
-
-pressing letter for location to event doesn't send the "from" info
+checkbox, selected by default, to create both directions for destination
+removing deletes both
+door coordinates are the same for both ends
+specify only source door coordinates on each side
+distance also will affect both unless box is unchecked
+"make reverse direction the same"

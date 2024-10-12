@@ -142,7 +142,7 @@
                 $('#btn-delete').attr('disabled', 'disabled');
             {% endif %}
 
-            function addDestination(destId, destName, distance = 1, exitPos = "0,0", entrancePos = "0,0") {
+            function addDestination(destId, destName, distance = "1", exitPos = "0,0", entrancePos = "0,0") {
                 const destHtml = `
                     <table class="destination"><tr>
                         <td class="align-top" style="padding: 5px;">
@@ -200,7 +200,7 @@
                 destContainer.remove();
             });
 
-            function addItem(itemId, itemName, itemQty = 1, itemPos = "0,0") {
+            function addItem(itemId, itemName, itemQty = "1", itemPos = "0,0") {
                 const itemHtml = `
                     <tr>
                         <td>${itemName}
@@ -238,7 +238,7 @@
                 addItem(
                     {{ item_at.item.id }},
                     "{{ item_at.item.name }}",
-                    {{ item_at.quantity | formatNum }},
+                    "{{ item_at.quantity | formatNum }}",
                     "{{ item_at.position[0] }},{{ item_at.position[1] }}");
             {% endfor %}
             $('#items-rows').on('click', '.remove-item-btn', (event) => {

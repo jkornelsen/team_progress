@@ -1,5 +1,7 @@
+import inspect
 import locale
 import logging
+import os
 import re
 
 from flask import g, request
@@ -157,6 +159,16 @@ class LinkLetters:
             return letter
         return ''
 
+def caller_info(format_str="called from {filename}:{line}"):
+    CALLER_INDEX = 2  # the caller of the function that called where we are now
+    stack = inspect.stack()
+    if len(stack) > CALLER_INDEX:
+        frame = stack[CALLER_INDEX]
+        return format_str.format(
+            filename=os.path.basename(frame.filename),
+            line=frame.lineno)
+    return ""
+
 def entity_class(typename, entity_classes):
     for entity_cls in entity_classes:
         if typename == entity_cls.typename:
@@ -202,8 +214,11 @@ def format_num(value):
         locale.setlocale(locale.LC_ALL, nformat)
     except locale.Error:
         locale.setlocale(locale.LC_ALL, 'C')  # 1230000
+    decimal_places = 0 if value == int(value) else len(
+        str(value).split('.')[1])
     try:
-        value_str = locale.format_string("%.10f", value, grouping=True)
+        value_str = locale.format_string(
+            f"%.{decimal_places}f", value, grouping=True)
         value_str = re.sub(r'(\.\d*?[1-9])0+$', r'\1', value_str)
         value_str = re.sub(r'\.0*$', '', value_str)
     except (ValueError, TypeError):
