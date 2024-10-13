@@ -217,6 +217,19 @@ class Location(Identifiable):
         instance.toplevel = data.get('toplevel', False)
         instance.masked = data.get('masked', False)
         for dest_data in data.get('destinations', []):
+            loc1_id = dest_data.get('loc1_id', 0)
+            loc2_id = dest_data.get('loc2_id', 0)
+            if loc1_id != instance.id and loc2_id != instance.id:
+                logger.debug(
+                    "neither loc_id is %s; expected when loading from json",
+                    instance.id)
+                if loc2_id and not loc1_id:
+                    dest_data['loc1_id'] = instance.id
+                elif loc1_id and not loc2_id:
+                    dest_data['loc2_id'] = instance.id
+                else:
+                    raise ValueError(
+                        "Incorrect dest data for loc %s", instance.id)
             instance.destinations.append(
                 Destination.from_data(dest_data, instance.id))
         for item_data in data.get('items', []):
@@ -237,22 +250,18 @@ class Location(Identifiable):
         logger.debug("to_db()")
         self.progress.to_db()
         super().to_db()
-        # XXX: What happens when we load data from both ends for JSON?
-        # This will delete the other end and we won't be able to recreate
-        # any that aren't bidirectional.
         self.execute_change("""
             DELETE FROM loc_destinations
-            WHERE game_token = %s AND
-                (loc1_id = %s OR loc2_id = %s)
-            """, (g.game_token, self.id, self.id))
+            WHERE game_token = %s AND loc1_id = %s
+            """, (g.game_token, self.id))
         self.execute_change("""
             DELETE FROM loc_items
             WHERE game_token = %s AND loc_id = %s
             """, (g.game_token, self.id))
         if self.destinations:
-            values = []
+            values_to_insert = []
             for dest in self.destinations:
-                values.append((
+                values_to_insert.append((
                     g.game_token,
                     dest.loc1.id,
                     dest.loc2.id,
@@ -261,15 +270,21 @@ class Location(Identifiable):
                     dest.door2.as_pg_array(),
                     dest.bidirectional,
                     ))
+                if dest.loc2.id == self.id:
+                    self.execute_change("""
+                        DELETE FROM loc_destinations
+                        WHERE game_token = %s
+                            AND loc1_id = %s AND loc2_id = %s
+                        """, (g.game_token, dest.loc1.id, dest.loc2.id))
             self.insert_multiple(
                 "loc_destinations",
                 "game_token, loc1_id, loc2_id, distance,"
                 " door1, door2, bidirectional",
-                values)
+                values_to_insert)
         if self.items:
-            values = []
+            values_to_insert = []
             for item_id, item_at in self.items.items():
-                values.append((
+                values_to_insert.append((
                     g.game_token, self.id,
                     item_id,
                     item_at.quantity,
@@ -278,7 +293,7 @@ class Location(Identifiable):
             self.insert_multiple(
                 "loc_items",
                 "game_token, loc_id, item_id, quantity, position",
-                values)
+                values_to_insert)
 
     def unmask(self):
         """Mark this location as visited if it hasn't been yet."""
@@ -364,6 +379,10 @@ class Location(Identifiable):
             if char.location.id == current_obj.id:
                 if not current_obj.grid.in_grid(char.position):
                     char.position = current_obj.grid.default_pos
+        current_obj.destinations = [
+            dest for dest in current_obj.destinations
+            if dest.bidirectional or dest.loc1.id == current_obj.id
+            ]
         from .event import Event
         Event.load_triggers_for_type(id_to_get, cls.typename)
         return current_obj

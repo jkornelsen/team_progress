@@ -133,7 +133,7 @@
         </div>
         <div id="sources-container" class="outer-border">
             <!-- Placeholder for appending new recipes -->
-            <div id="recipelist_end" style="width: 0; height: 0; opacity: 0;"></div>
+            <div id="recipelist_end" class="unobtrusive"></div>
             {% if game_data.items | length > 0 %}
                 <!-- Select box for adding another source -->
                 <div class="select-box">
@@ -231,11 +231,11 @@
                         </span>
                         <button type="button" class="remove-recipe-btn lesser-button" id="remove-recipe${recipe_id}" style="margin: 10px">Remove Recipe</button>
                         <!-- Placeholder for appending new sources -->
-                        <div class="sourcelist_end" style="width: 0; height: 0; opacity: 0;"></div>
+                        <div class="sourcelist_end" class="unobtrusive"></div>
                         <!-- Placeholder for appending new byproducts -->
-                        <div class="byproductlist_end" style="width: 0; height: 0; opacity: 0;"></div>
+                        <div class="byproductlist_end" class="unobtrusive"></div>
                         <!-- Placeholder for appending new attribs required for recipe -->
-                        <div class="recipeattribs_end" style="unobtrusive"></div>
+                        <div class="recipeattribs_end" class="unobtrusive"></div>
                         </div>
                     </div>
                 `;

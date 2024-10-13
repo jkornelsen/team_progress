@@ -52,6 +52,7 @@ def set_routes(app):
 
     @app.route('/save_to_file')
     def save_to_file():
+        logger.debug("%s\nsave_to_file()", "-" * 80)
         g.game_data.load_for_file()
         data_to_save = g.game_data.dict_for_json()
         filename = generate_filename(g.game_data.overall.title)
@@ -62,6 +63,7 @@ def set_routes(app):
 
     @app.route('/load_from_file', methods=['GET', 'POST'])
     def load_from_file():
+        logger.debug("%s\nload_from_file()", "-" * 80)
         UPLOAD_DIR = app.config['UPLOAD_DIR']
         if request.method == 'GET':
             file_message = session.pop('file_message', False)
@@ -101,6 +103,7 @@ def set_routes(app):
 
     @app.route('/browse_scenarios', methods=['GET', 'POST'])
     def browse_scenarios():
+        logger.debug("%s\nbrowse_scenarios()", "-" * 80)
         if request.method == 'GET':
             scenarios = []
             popularity = {}
@@ -163,6 +166,7 @@ def set_routes(app):
 
     @app.route('/blank_scenario')
     def blank_scenario():
+        logger.debug("%s\nblank_scenario()", "-" * 80)
         load_file_into_db(os.path.join(DATA_DIR, DEFAULT_SCENARIO))
         session['file_message'] = 'Starting game with default setup.'
         return redirect(url_for('configure_index'))

@@ -61,6 +61,8 @@
         <span class="label-like">left,top to right,bottom</span>
         <br>
         <div id="destinations-container" class="outer-border">
+            <!-- Placeholder for appending new destinations -->
+            <div id="destlist_end" class="unobtrusive"></div>
             <div>
                 {% set outerscope = namespace(has_other_location = false) %}
                 {% for location in game_data.locations %}
@@ -70,16 +72,6 @@
                 {% endfor %}
                 {% if outerscope.has_other_location %}
                     <!-- Select box for adding another destination -->
-                    <script>
-                        //$(document).ready(() => {
-                            // Enable or disable the distance fields based on the selected destination
-                            //$('#dest-select').change((event) => {
-                            //    const selectedOption = $(event.currentTarget).find(':selected');
-                            //    const isDestinationSelected = (selectedOption.val() !== '');
-                            //    $('.distance-field').prop('disabled', !isDestinationSelected);
-                            //});
-                        //});
-                    </script>
                     <div class="select-box">
                         <select id="dest-select">
                             <option value="" selected>(Select location)</option>
@@ -189,7 +181,7 @@
                                 <input type="hidden" 
                                        name="oneway[]" 
                                        value="${bidirectional ? '0' : '1'}">
-                                <span>Arrive Only</span>
+                                ${!bidirectional ? '<span>Arrive Only</span>' : ''}
                             `}
                         </td><td class="align-top">
                             ${!(is_loc1 || bidirectional) ? '' : `
@@ -200,7 +192,7 @@
                         </td>
                     </tr></table>
                 `;
-                $('#destinations-container').prepend(destHtml);
+                $('#destlist_end').before(destHtml);
             }
             $('#add-dest-btn').click(() => {
                 const selectedOption = $('#dest-select option:selected');
