@@ -1,4 +1,5 @@
 import logging
+from typing import Tuple, Union
 
 from flask import g, session
 
@@ -66,79 +67,93 @@ class ItemAt(Pile):
         return instance
 
 class Destination(Serializable):
-    def __init__(self, loc):
+    def __init__(
+            self,
+            loc1: 'Location',
+            loc2: 'Location',
+            current_loc_id: int = 0):
         super().__init__()
-        self.loc = loc
+        self.loc1 = loc1
+        self.loc2 = loc2
         self.distance = 1
-        self.exit = (0, 0)  # in loc coming from
-        self.entrance = (0, 0)  # in dest loc
+        self.door1 = (0, 0)  # at loc 1
+        self.door2 = (0, 0)  # at loc 2
+        self.bidirectional = True
+        self.current_loc_id = current_loc_id  # which loc is "here"
 
     def _base_export_data(self):
         """Prepare the base dictionary for JSON and DB."""
         return {
-            'dest_id': self.loc.id,
             'distance': self.distance,
+            'bidirectional': self.bidirectional,
             }
 
     def dict_for_json(self):
         data = self._base_export_data()
         data.update({
-            'exit': self.exit.as_list(),
-            'entrance': self.entrance.as_list(),
+            'loc2_id': self.loc2.id,
+            'door1': self.door1.as_list(),
+            'door2': self.door2.as_list(),
             })
         return data
 
     def dict_for_main_table(self):
         data = self._base_export_data()
         data.update({
-            'exit': self.exit,
-            'entrance': self.entrance,
+            'loc1_id': self.loc1.id,
+            'loc2_id': self.loc2.id,
+            'door1': self.door1,
+            'door2': self.door2,
             })
         return data
 
     @classmethod
-    def from_data(cls, data):
+    def from_data(
+            cls,
+            data: Union[dict, 'MutableNamespace'],
+            current_loc_id: int = 0):
         data = cls.prepare_dict(data)
-        dest_id = int(data.get('dest_id', 0))
-        instance = cls(Location(dest_id))
+        instance = cls(
+            Location(int(data.get('loc1_id', 0))),
+            Location(int(data.get('loc2_id', 0))),
+            current_loc_id)
         instance.distance = data.get('distance', 0)
-        instance.exit = NumTup(data.get('exit', (0, 0)))
-        instance.entrance = NumTup(data.get('entrance', (0, 0)))
+        instance.door1 = NumTup(data.get('door1', (0, 0)))
+        instance.door2 = NumTup(data.get('door2', (0, 0)))
+        instance.bidirectional = data.get('bidirectional', True)
         return instance
 
-class Grid:
-    def __init__(self):
-        self.dimensions = NumTup((0, 0))  # width, height
-        self.excluded = NumTup((0, 0, 0, 0))  # left, top, right, bottom
-        self.default_pos = None  # legal position in grid if any
-
-    def set_default_pos(self):
-        """Returns None if there are no legal positions.
-        Call this method whenever changing dimensions or excluded.
+    def _other_index(self, other: bool):
+        """Get the one for 'there' if other is true.
+        Unless otherwise specified, loc1 is 'here'.
         """
-        width, height = self.dimensions.as_tuple()
-        left, top, right, bottom = self.excluded.as_tuple()
-        for y in range(1, height + 1):
-            for x in range(1, width + 1):
-                if not (left <= x <= right and top <= y <= bottom):
-                    self.default_pos = NumTup((x, y))
-                    return
-        self.default_pos = None
+        if self.current_loc_id and self.loc2.id == self.current_loc_id:
+            return 0 if other else 1
+        return 1 if other else 0
 
-    def in_grid(self, pos):
-        """Returns True if position is legally in the grid."""
-        if not pos:
-            return False
-        x, y = pos
-        width, height = self.dimensions.as_tuple()
-        left, top, right, bottom = self.excluded.as_tuple()
-        if x < 1 or x > width:
-            return False
-        if y < 1 or y > height:
-            return False
-        if left <= x <= right and top <= y <= bottom:
-            return False
-        return True
+    def _get_loc(self, other: bool) -> 'Location':
+        locs = [self.loc1, self.loc2]
+        return locs[self._other_index(other)]
+
+    def _get_door(self, other: bool) -> Tuple[int, int]:
+        doors = [self.door1, self.door2]
+        return doors[self._other_index(other)]
+
+    @property
+    def other_loc(self) -> 'Location':
+        return self._get_loc(True)
+
+    @property
+    def loc_here(self) -> 'Location':
+        return self._get_loc(False)
+
+    @property
+    def other_door(self) -> Tuple[int, int]:
+        return self._get_door(True)
+
+    @property
+    def door_here(self) -> Tuple[int, int]:
+        return self._get_door(False)
 
 class Location(Identifiable):
     def __init__(self, new_id=""):
@@ -147,7 +162,7 @@ class Location(Identifiable):
         self.description = ""
         self.toplevel = False
         self.masked = False
-        self.destinations = {}  # Destination objects keyed by loc id
+        self.destinations = []  # Destination objects
         self.items = {}  # ItemAt objects keyed by item id
         # producing local items? Maybe char would do that.
         self.progress = Progress(container=self)
@@ -175,7 +190,8 @@ class Location(Identifiable):
         data.update({
             'destinations': [
                 dest.dict_for_json()
-                for dest in self.destinations.values()],
+                for dest in self.destinations
+                if dest.loc1.id == self.id],
             'items': [
                 item_at.dict_for_json()
                 for item_at in self.items.values()],
@@ -201,10 +217,8 @@ class Location(Identifiable):
         instance.toplevel = data.get('toplevel', False)
         instance.masked = data.get('masked', False)
         for dest_data in data.get('destinations', []):
-            if not isinstance(dest_data, dict):
-                dest_data = vars(dest_data)
-            instance.destinations[
-                dest_data.get('dest_id', 0)] = Destination.from_data(dest_data)
+            instance.destinations.append(
+                Destination.from_data(dest_data, instance.id))
         for item_data in data.get('items', []):
             if not isinstance(item_data, dict):
                 item_data = vars(item_data)
@@ -223,24 +237,34 @@ class Location(Identifiable):
         logger.debug("to_db()")
         self.progress.to_db()
         super().to_db()
-        for rel_table in ('loc_destinations', 'loc_items'):
-            self.execute_change(f"""
-                DELETE FROM {rel_table}
-                WHERE loc_id = %s AND game_token = %s
-                """, (self.id, g.game_token))
+        # XXX: What happens when we load data from both ends for JSON?
+        # This will delete the other end and we won't be able to recreate
+        # any that aren't bidirectional.
+        self.execute_change("""
+            DELETE FROM loc_destinations
+            WHERE game_token = %s AND
+                (loc1_id = %s OR loc2_id = %s)
+            """, (g.game_token, self.id, self.id))
+        self.execute_change("""
+            DELETE FROM loc_items
+            WHERE game_token = %s AND loc_id = %s
+            """, (g.game_token, self.id))
         if self.destinations:
             values = []
-            for dest in self.destinations.values():
+            for dest in self.destinations:
                 values.append((
-                    g.game_token, self.id,
-                    dest.loc.id,
+                    g.game_token,
+                    dest.loc1.id,
+                    dest.loc2.id,
                     dest.distance,
-                    dest.exit.as_pg_array(),
-                    dest.entrance.as_pg_array(),
+                    dest.door1.as_pg_array(),
+                    dest.door2.as_pg_array(),
+                    dest.bidirectional,
                     ))
             self.insert_multiple(
                 "loc_destinations",
-                "game_token, loc_id, dest_id, distance, exit, entrance",
+                "game_token, loc1_id, loc2_id, distance,"
+                " door1, door2, bidirectional",
                 values)
         if self.items:
             values = []
@@ -281,10 +305,15 @@ class Location(Identifiable):
             FROM loc_destinations
             WHERE game_token = %s
             """, [g.game_token])
-        qhelper.add_limit("loc_id", id_to_get)
+        qhelper.add_limit_expr(
+            "(loc1_id = %s OR loc2_id = %s)",
+            [id_to_get, id_to_get])
         dest_rows = cls.execute_select(qhelper=qhelper)
         for row in dest_rows:
-            loc = locs[row.loc_id]
+            loc_id = row.loc1_id
+            if id_to_get and row.loc2_id == int(id_to_get):
+                loc_id = row.loc2_id
+            loc = locs[loc_id]
             loc.setdefault('destinations', []).append(row)
         # Get this location's item relation data
         qhelper = QueryHelper("""
@@ -312,8 +341,13 @@ class Location(Identifiable):
         current_obj = cls.load_complete_objects(id_to_get)
         # Replace partial objects with fully populated objects
         g.game_data.from_db_flat([Location, Item])
-        for dest_id, dest in current_obj.destinations.items():
-            dest.loc = Location.get_by_id(dest_id)
+        for dest in current_obj.destinations:
+            if dest.loc1.id == int(id_to_get):
+                dest.loc1 = current_obj
+                dest.loc2 = Location.get_by_id(dest.loc2.id)
+            else:
+                dest.loc2 = current_obj
+                dest.loc1 = Location.get_by_id(dest.loc1.id)
         for item_at in current_obj.items.values():
             item_at.item = Item.get_by_id(item_at.item.id)
             if not current_obj.grid.in_grid(item_at.position):
@@ -353,18 +387,26 @@ class Location(Identifiable):
                 req.get_numtup('excluded_right_bottom', (0, 0))
                 )
             self.grid.set_default_pos()
-            self.destinations = {}
-            for dest_id, dest_dist, dest_exit, dest_entrance in zip(
-                    req.get_list('dest_id[]'),
-                    req.get_list('dest_distance[]'),
-                    req.get_list('dest_exit[]'),
-                    req.get_list('dest_entrance[]')
+            self.destinations = []
+            for dest_id, dist, dest_door, other_door, oneway, is_loc1 in zip(
+                    req.get_list('other_loc_id[]'),
+                    req.get_list('distance[]'),
+                    req.get_list('door_here[]'),
+                    req.get_list('other_door[]'),
+                    req.get_list('oneway[]'),
+                    req.get_list('is_loc1[]')
                     ):
-                dest = Destination(Location(dest_id))
-                dest.distance = int(dest_dist)
-                dest.exit = NumTup.from_str(dest_exit, (0, 0))
-                dest.entrance = NumTup.from_str(dest_entrance, (0, 0))
-                self.destinations[dest_id] = dest
+                locs = [self.id, dest_id]
+                doors = [dest_door, other_door]
+                if is_loc1 != 'true':
+                    locs.reverse()
+                    doors.reverse()
+                dest = Destination(Location(locs[0]), Location(locs[1]))
+                dest.door1 = NumTup.from_str(doors[0], (0, 0))
+                dest.door2 = NumTup.from_str(doors[1], (0, 0))
+                dest.distance = int(dist)
+                dest.bidirectional = not int(oneway)
+                self.destinations.append(dest)
             self.items = {}
             old = Location.load_complete_objects(self.id)
             for item_id, item_qty, item_pos in zip(
@@ -389,3 +431,37 @@ class Location(Identifiable):
             logger.debug("Cancelling changes.")
         else:
             logger.debug("Neither button was clicked.")
+
+class Grid:
+    def __init__(self):
+        self.dimensions = NumTup((0, 0))  # width, height
+        self.excluded = NumTup((0, 0, 0, 0))  # left, top, right, bottom
+        self.default_pos = None  # legal position in grid if any
+
+    def set_default_pos(self):
+        """Returns None if there are no legal positions.
+        Call this method whenever changing dimensions or excluded.
+        """
+        width, height = self.dimensions.as_tuple()
+        left, top, right, bottom = self.excluded.as_tuple()
+        for y in range(1, height + 1):
+            for x in range(1, width + 1):
+                if not (left <= x <= right and top <= y <= bottom):
+                    self.default_pos = NumTup((x, y))
+                    return
+        self.default_pos = None
+
+    def in_grid(self, pos):
+        """Returns True if position is legally in the grid."""
+        if not pos:
+            return False
+        x, y = pos
+        width, height = self.dimensions.as_tuple()
+        left, top, right, bottom = self.excluded.as_tuple()
+        if x < 1 or x > width:
+            return False
+        if y < 1 or y > height:
+            return False
+        if left <= x <= right and top <= y <= bottom:
+            return False
+        return True

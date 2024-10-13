@@ -71,14 +71,14 @@
                 {% if outerscope.has_other_location %}
                     <!-- Select box for adding another destination -->
                     <script>
-                        $(document).ready(() => {
+                        //$(document).ready(() => {
                             // Enable or disable the distance fields based on the selected destination
-                            $('#dest-select').change((event) => {
-                                const selectedOption = $(event.currentTarget).find(':selected');
-                                const isDestinationSelected = (selectedOption.val() !== '');
-                                $('.distance-field').prop('disabled', !isDestinationSelected);
-                            });
-                        });
+                            //$('#dest-select').change((event) => {
+                            //    const selectedOption = $(event.currentTarget).find(':selected');
+                            //    const isDestinationSelected = (selectedOption.val() !== '');
+                            //    $('.distance-field').prop('disabled', !isDestinationSelected);
+                            //});
+                        //});
                     </script>
                     <div class="select-box">
                         <select id="dest-select">
@@ -135,6 +135,11 @@
         </div>
     </form>
     <script>
+        function handleCheckboxChange() {
+            const $hiddenInput = $(this).closest('td').find('input[type=hidden][name="oneway[]"]');
+            $hiddenInput.val(this.checked ? '1' : '0');
+        }
+
         $(document).ready(() => {
             {% if current.id > 0 %}
                 $('#btn-delete').removeAttr('disabled');
@@ -142,22 +147,56 @@
                 $('#btn-delete').attr('disabled', 'disabled');
             {% endif %}
 
-            function addDestination(destId, destName, distance = "1", exitPos = "0,0", entrancePos = "0,0") {
+            function addDestination(other_loc_id, other_loc_name, distance = "1", door_here = "0,0", other_door = "0,0", bidirectional = true, is_loc1 = true) {
                 const destHtml = `
                     <table class="destination"><tr>
                         <td class="align-top" style="padding: 5px;">
-                            <input type="hidden" name="dest_id[]" value="${destId}">
-                            ${destName}
+                            <input type="hidden"
+                                name="other_loc_id[]"
+                                value="${other_loc_id}">
+                            <input type="hidden"
+                                name="is_loc1[]"
+                                value="${is_loc1}">
+                            ${other_loc_name}
                         </td><td class="align-top">
-                            <label for="dest-distance-${destId}">Distance:</label>
-                            <input type="text" id="dest-distance-${destId}" name="dest_distance[]" value="${distance}" class="distance-field" size="5">
+                            <label for="distance-${other_loc_id}">Distance:</label>
+                            <input type="text"
+                                id="distance-${other_loc_id}"
+                                name="distance[]"
+                                value="${distance}"
+                                class="distance-field"
+                                size="5">
                         </td><td class="align-top">
-                            <label for="exit-pos-${destId}">Exit (Here):</label>
-                            <input type="text" id="exit-pos-${destId}" name="dest_exit[]" value="${exitPos}" size="8"><br>
-                            <label for="entrance-pos-${destId}">Entrance (There):</label>
-                            <input type="text" id="entrance-pos-${destId}" name="dest_entrance[]" value="${entrancePos}" size="8">
+                            <label for="door-here-${other_loc_id}">Door:</label>
+                            <input type="text"
+                                id="door-here-${other_loc_id}"
+                                name="door_here[]"
+                                value="${door_here}"
+                                size="8"><br>
+                            <input type="hidden" name="other_door[]" value="${other_door}">
                         </td><td class="align-top">
-                            <button type="button" class="remove-dest-btn lesser-button">Remove Destination</button>
+                            ${is_loc1 ? `
+                                <!-- set hidden value when checkbox is clicked so that a
+                                     oneway[] key will be included in form submission
+                                     even when unchecked -->
+                                <input type="checkbox" 
+                                    id="oneway-${other_loc_id}" 
+                                    ${bidirectional ? '' : 'checked'} 
+                                    onchange="handleCheckboxChange.call(this)">
+                                <label for="oneway-${other_loc_id}">One-Way</label>
+                                <input type="hidden" name="oneway[]" value="${bidirectional ? '0' : '1'}">
+                            ` : `
+                                <input type="hidden" 
+                                       name="oneway[]" 
+                                       value="${bidirectional ? '0' : '1'}">
+                                <span>Arrive Only</span>
+                            `}
+                        </td><td class="align-top">
+                            ${!(is_loc1 || bidirectional) ? '' : `
+                                <button type="button" class="remove-dest-btn lesser-button">
+                                    Remove Destination
+                                </button>
+                            `}
                         </td>
                     </tr></table>
                 `;
@@ -185,13 +224,15 @@
                 }
                 addDestination(destId, destName);
             });
-            {% for dest in current.destinations.values() %}
+            {% for dest in current.destinations %}
                 addDestination(
-                    {{ dest.loc.id }},
-                    "{{ dest.loc.name }}",
+                    {{ dest.other_loc.id }},
+                    "{{ dest.other_loc.name }}",
                     "{{ dest.distance | formatNum }}",
-                    "{{ dest.exit }}",
-                    "{{ dest.entrance }}",
+                    "{{ dest.door_here }}",
+                    "{{ dest.other_door }}",
+                    {{ dest.bidirectional | lower }},
+                    {{ (dest.loc1.id == current.id) | lower }}
                     );
             {% endfor %}
 

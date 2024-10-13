@@ -68,8 +68,7 @@ create database app with encoding 'UTF8' template template0;
 
 ### 5. Create tables
 ```
-drop schema public cascade;[^2]
-create schema public;[^2]
+drop schema public cascade; create schema public;[^2]
 python database.py
 ```
 

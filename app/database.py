@@ -18,13 +18,16 @@ except ImportError:
 
 def get_db():
     if 'db' not in g:
-        g.db = psycopg2.connect(
-            dbname='app',
-            user='postgres',
-            password=DB_PASSWORD,
-            host='localhost',
-            port='5432'
-        )
+        try:
+            g.db = psycopg2.connect(
+                dbname='app',
+                user='postgres',
+                password=DB_PASSWORD,
+                host='localhost',
+                port='5432'
+            )
+        except psycopg2.OperationalError as ex:
+            raise ValueError("Could not connect to database.") from ex
     set_autocommit(True)
     return g.db
 

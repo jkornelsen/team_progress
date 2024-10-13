@@ -31,6 +31,7 @@ def set_routes(app):
 
     @app.route('/configure')
     def configure_index():
+        logger.debug("%s\nconfigure_index()", "-" * 80)
         file_message = session.pop('file_message', False)
         g.game_data.entity_names_from_db()
         for session_key in (

@@ -54,14 +54,14 @@
                         <label for="destination-select">[G]o To</label>
                         <select id="destination-select" class="select-box">
                             <option value="" data-distance="-1">(Select destination)</option>
-                            {% for dest_id, dest in current.location.destinations.items() %}
-                                <option value="{{ dest_id }}"
+                            {% for dest in current.location.destinations %}
+                                <option value="{{ dest.other_loc.id }}"
                                         data-distance="{{ dest.distance | formatNum }}"
-                                        {% if current.destination and current.destination.id == dest_id %}selected{% endif %}>
-                                    {% if dest.loc.masked %}
+                                        {% if current.destination and current.destination.id == dest.other_loc.id %}selected{% endif %}>
+                                    {% if dest.other_loc.masked %}
                                         a location not yet visited
                                     {% else %}
-                                        {{ dest.loc.name }}
+                                        {{ dest.other_loc.name }}
                                     {% endif %}
                                 </option>
                             {% endfor %}

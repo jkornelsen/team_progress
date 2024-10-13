@@ -119,15 +119,16 @@
                     {% if current.destinations %}
                         <h2>Neighboring Locations</h2>
                         <ul>
-                            {% for dest in current.destinations.values() %}
-                                {% if dest.loc.masked %}
+                            {% for dest in current.destinations %}
+                                {% set other_loc = dest.get_loc() %}
+                                {% if other_loc.masked %}
                                     (Unvisited)
                                 {% else %}
-                                    {% set link = url_for('play_location', loc_id=dest.loc.id) %}
+                                    {% set link = url_for('play_location', loc_id=other_loc.id) %}
                                     {% set letter = link_letters.next(link) %}
                                     <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
                                     <span>[{{ letter }}]</span>
-                                    <a href="{{ link }}">{{ dest.loc.name }}</a>
+                                    <a href="{{ link }}">{{ other_loc.name }}</a>
                                 {% endif %}
                                 — Distance {{ dest.distance | formatNum }}
                                 <br>
@@ -241,11 +242,11 @@
             {% endfor %}
         };
         const doors = {
-            {% for dest in current.destinations.values() %}
-                "{{ dest.loc.id }}": {
+            {% for dest in current.destinations %}
+                "{{ dest.other_loc.id }}": {
                     letter: door_letter,
-                    x: "{{ dest.exit[0] }}",
-                    y: "{{ dest.exit[1] }}" },
+                    x: "{{ dest.door_here[0] }}",
+                    y: "{{ dest.door_here[1] }}" },
             {% endfor %}
         };
         function moveCharacter(xChange, yChange) {

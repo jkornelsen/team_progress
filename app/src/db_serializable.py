@@ -382,6 +382,12 @@ class QueryHelper:
             self.query += f" AND {field} = %s"
             self.values.append(value)
 
+    def add_limit_expr(self, expr, values):
+        """Add a freeform limiting expression."""
+        if values and values[0]:
+            self.query += f" AND {expr}"
+            self.values.extend(values)
+
     def sort_by(self, field):
         self.query += f"\nORDER BY {field}"
 
