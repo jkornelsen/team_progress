@@ -27,12 +27,12 @@
             });
         });
     </script>
-    {% if subject.typename == 'char' %}
+    {% if subject.typename() == 'char' %}
         {% set link = url_for('play_char', char_id=subject.id) %}
-    {% elif subject.typename == 'item' %}
+    {% elif subject.typename() == 'item' %}
         {% set link = url_for('play_item', item_id=subject.id) %}
     {% else %}
-        Unexpected type {{ subject.typename }}
+        Unexpected type {{ subject.typename() }}
     {% endif %}
     {% set letter = link_letters.next(link) %}
     <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>

@@ -33,10 +33,9 @@ class OwnedItem(Pile):
         super().__init__(item=item, container=char)
         self.slot = ''  # for example, "main hand"
 
-    @classmethod
-    @property
-    def container_type(cls):
-        return Character.typename
+    @staticmethod
+    def container_type():
+        return Character.typename()
 
     def _base_export_data(self):
         return {
@@ -76,7 +75,6 @@ class Character(Identifiable):
         self.pile = Pile(container=self)  # for Progress
 
     @classmethod
-    @property
     def typename(cls):
         return 'char'
 
@@ -287,32 +285,19 @@ class Character(Identifiable):
     def data_for_play(cls, id_to_get):
         logger.debug("data_for_play()")
         current_obj = cls.data_for_configure(id_to_get)
-        if current_obj.location:
-            current_obj.location.unmask()
-            # Get the current location's destination data
-            tables_rows = cls.select_tables("""
-                SELECT *
-                FROM {tables[0]}
-                INNER JOIN {tables[1]}
-                    ON {tables[1]}.id = {tables[0]}.dest_id
-                    AND {tables[1]}.game_token = {tables[0]}.game_token
-                WHERE {tables[0]}.game_token = %s
-                    AND {tables[0]}.loc_id = %s
-                """, [g.game_token, current_obj.location.id],
-                ['loc_destinations', 'locations'])
-            for dest_data, loc_data in tables_rows:
-                dest = Destination.from_data(dest_data)
-                dest.loc = Location.from_data(loc_data)
-                current_obj.location.destinations[loc_data.id] = dest
-            # Travel distance
-            if current_obj.destination:
-                dest = current_obj.location.destinations.get(
-                    current_obj.destination.id, None)
-                if dest:
-                    current_obj.pile.item.q_limit = dest.distance
+        cur_loc = current_obj.location
+        cur_dest_loc = current_obj.destination
+        if cur_loc:
+            cur_loc.unmask()
+            dests, current_dest = Location.get_destinations_from(
+                cur_loc.id,
+                cur_dest_loc.id if cur_dest_loc else 0)
+            current_obj.location.destinations = dests
+            if current_dest:
+                current_obj.pile.item.q_limit = current_dest.distance
         # Abilities
         from .event import Event
-        Event.load_triggers_for_type(id_to_get, cls.typename)
+        Event.load_triggers_for_type(id_to_get, cls.typename())
         return current_obj
 
     def configure_by_form(self):

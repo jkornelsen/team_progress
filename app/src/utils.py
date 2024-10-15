@@ -171,7 +171,7 @@ def caller_info(format_str="called from {filename}:{line}"):
 
 def entity_class(typename, entity_classes):
     for entity_cls in entity_classes:
-        if typename == entity_cls.typename:
+        if typename == entity_cls.typename():
             return entity_cls
     raise ValueError(f"Unexpected type: '{typename}'")
 

@@ -32,9 +32,8 @@ class ItemAt(Pile):
         self.position = NumTup((0, 0))
 
     @classmethod
-    @property
     def container_type(cls):
-        return Location.typename
+        return Location.typename()
 
     def _base_export_data(self):
         """Prepare the base dictionary for JSON and DB."""
@@ -123,13 +122,20 @@ class Destination(Serializable):
         instance.bidirectional = data.get('bidirectional', True)
         return instance
 
+    @property
+    def is_main(self):
+        """The current location is the main one for this dest pair,
+        so it's loc1, and json data is stored under this loc.
+        """
+        return self.current_loc_id and self.loc1.id == self.current_loc_id
+
     def _other_index(self, other: bool):
         """Get the one for 'there' if other is true.
         Unless otherwise specified, loc1 is 'here'.
         """
-        if self.current_loc_id and self.loc2.id == self.current_loc_id:
-            return 0 if other else 1
-        return 1 if other else 0
+        if self.is_main:
+            return 1 if other else 0
+        return 0 if other else 1
 
     def _get_loc(self, other: bool) -> 'Location':
         locs = [self.loc1, self.loc2]
@@ -170,7 +176,6 @@ class Location(Identifiable):
         self.grid = Grid()
 
     @classmethod
-    @property
     def typename(cls):
         return 'loc'
 
@@ -219,7 +224,7 @@ class Location(Identifiable):
         for dest_data in data.get('destinations', []):
             loc1_id = dest_data.get('loc1_id', 0)
             loc2_id = dest_data.get('loc2_id', 0)
-            if loc1_id != instance.id and loc2_id != instance.id:
+            if instance.id not in (loc1_id, loc2_id):
                 logger.debug(
                     "neither loc_id is %s; expected when loading from json",
                     instance.id)
@@ -229,7 +234,7 @@ class Location(Identifiable):
                     dest_data['loc2_id'] = instance.id
                 else:
                     raise ValueError(
-                        "Incorrect dest data for loc %s", instance.id)
+                        f"Incorrect destination data for loc {instance.id}")
             instance.destinations.append(
                 Destination.from_data(dest_data, instance.id))
         for item_data in data.get('items', []):
@@ -303,6 +308,51 @@ class Location(Identifiable):
                 SET masked = false
                 WHERE id = %s AND masked = true
                 """, (self.id,))
+
+    @classmethod
+    def get_destinations_from(cls, departure_id, current_dest_id):
+        """Get all the destinations you can travel to from the given
+        departure_id.
+        Also, returns the destination matching current_dest_id, if any.
+        """
+        # Retrieve the destination loc (not the departure loc)
+        # for paths between locations when the current location
+        # is involved in the connection
+        # and the path can be travelled from this direction. 
+        tables_rows = cls.select_tables("""
+            SELECT *
+            FROM {tables[0]}
+            INNER JOIN {tables[1]}
+                ON ({tables[1]}.id = {tables[0]}.loc2_id
+                    OR ({tables[1]}.id = {tables[0]}.loc1_id
+                        AND {tables[0]}.bidirectional = TRUE))
+                AND {tables[1]}.game_token = {tables[0]}.game_token
+            WHERE {tables[0]}.game_token = %s
+                AND ({tables[0]}.loc1_id = %s
+                    OR ({tables[0]}.loc2_id = %s
+                    AND {tables[0]}.bidirectional = TRUE))
+            """, [g.game_token, departure_id, departure_id],
+            ['loc_destinations', 'locations'])
+        destinations = []
+        for dest_data, dest_loc_data in tables_rows:
+            dest = Destination.from_data(dest_data, departure_id)
+            dest_loc = Location.from_data(dest_loc_data)
+            if dest.is_main:
+                dest.loc2 = dest_loc
+            else:
+                dest.loc1 = dest_loc
+            destinations.append(dest)
+        current_dest = None
+        if current_dest_id:
+            for dest in destinations:
+                if ((dest.is_main and dest.loc2.id == current_dest_id)
+                        or (dest.loc2.id == departure_id
+                            and dest.loc1.id == current_dest_id
+                            and dest.bidirectional)):
+                    current_dest = dest
+                    break
+        logger.debug("Destinations: %s", destinations)
+        return destinations, current_dest
 
     @classmethod
     def load_complete_objects(cls, id_to_get=None):
@@ -384,7 +434,7 @@ class Location(Identifiable):
             if dest.bidirectional or dest.loc1.id == current_obj.id
             ]
         from .event import Event
-        Event.load_triggers_for_type(id_to_get, cls.typename)
+        Event.load_triggers_for_type(id_to_get, cls.typename())
         return current_obj
 
     def configure_by_form(self):

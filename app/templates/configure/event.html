@@ -320,7 +320,7 @@
                 {% for entity in list %}
                     addEntity(
                         "{{ relType }}",
-                        "{{ entity.typename }}",
+                        "{{ entity.typename() }}",
                         "{{ entity.id }}",
                         "{{ entity.name }}",
                         {{ entity.mult | default(False) | lower }}

@@ -2,19 +2,25 @@
     "attribs": [
         {
             "description": "Knowledge of the woods.",
+            "enum_list": [],
             "id": 1,
+            "is_binary": false,
             "mult": false,
             "name": "Pathfinding"
         },
         {
             "description": "Can do chores.",
+            "enum_list": [],
             "id": 2,
+            "is_binary": false,
             "mult": false,
             "name": "Willing to do Odd Jobs"
         },
         {
             "description": "Has money to pay for chores.",
+            "enum_list": [],
             "id": 3,
+            "is_binary": false,
             "mult": false,
             "name": "Pays for Odd Jobs"
         }
@@ -22,61 +28,46 @@
     "characters": [
         {
             "attribs": [
-                [
-                    3,
-                    1.0
-                ]
+                [3, 1.0]
             ],
             "description": "Will pay a modest salary for chores.",
             "dest_id": null,
+            "events": [],
             "id": 3,
             "items": [],
             "location_id": 3,
             "masked": false,
             "name": "Uncle",
-            "position": [
-                0,
-                0
-            ],
+            "position": [0,0],
             "progress": {},
             "quantity": 0.0,
             "toplevel": false
         },
         {
             "attribs": [
-                [
-                    1,
-                    7.0
-                ]
+                [1, 7.0]
             ],
             "description": "An NPC. You can still control her actions, though, if she is needed in the woods later to rescue Suzy.\r\n\r\nAfter viewing this character, the first time, press the key shown in brackets [ ] to return to <i>Home</i>.",
             "dest_id": null,
+            "events": [],
             "id": 2,
             "items": [],
             "location_id": 1,
             "masked": false,
             "name": "Mom",
-            "position": [
-                0,
-                0
-            ],
+            "position": [0,0],
             "progress": {},
             "quantity": 0.0,
             "toplevel": true
         },
         {
             "attribs": [
-                [
-                    1,
-                    2.0
-                ],
-                [
-                    2,
-                    1.0
-                ]
+                [1, 2.0],
+                [2, 1.0]
             ],
             "description": "This is your player character for the scenario. Now, under <i>Player</i> in the upper right hand corner, <i>Change User ID</i> to \"<c=\"yellow\">Playing as Suzy</c>\".\r\n\r\nOnce you're finished at <i>Home</i> and are ready to travel, take a look at the possible destinations to travel to. It looks like there's only one, so select it (initially listed as <i>a location not yet visited</i>) and <i>Start</i> travel to find out what's there. On arrival, click on <i>Sketchy-Path Forest</i> for further instructions.\r\n\r\n* * * * *\r\n\r\nIf you've finished getting bacon, then it's time to go back. Getting <i>to</i> the forest won't be a problem, but <i>leaving</i> it will be. If the event pops up, this time press <b>Y</b> to open. Otherwise, we'll still say the event happened, so make sure Suzy is in the forest and click on <i>Travel Danger</i>, either from the forest or the overview. Continue by following instructions for that event.",
             "dest_id": null,
+            "events": [],
             "id": 1,
             "items": [
                 {
@@ -93,10 +84,7 @@
             "location_id": 1,
             "masked": false,
             "name": "Suzy",
-            "position": [
-                0,
-                0
-            ],
+            "position": [0,0],
             "progress": {},
             "quantity": 0.0,
             "toplevel": true
@@ -107,30 +95,18 @@
             "changed": [],
             "description": "Set difficulty to Moderate (the default), meaning the chance of getting lost or eaten by wolves in this particular forest is decent but not overwhelming. If Suzy is alone in the forest, select her name to fill in 2 for stat adjustment, or press <i>Add</i> if her name is already selected. Then press <i>Roll</i>.\r\n\r\nFor the walkthrough, because she's very tired after all those chores, we'll play at a disadvantage, which means we take the worst of two rolls. So, remember the first result and then press Roll again.\r\n\r\nActually, in this case, we need it to be a <i>Minor Failure</i>, so keep rolling until that happens. We'll take that to mean that she's lost but there are no wolves or twisted ankles or other problems.\r\n\r\nTo get out of this pickle, press <b>O</b> to return to the overview and go to the <i>Connect to Service</i> event.",
             "determining": [
-                [
-                    "attrib",
-                    1
-                ]
+                ["attrib", 1]
             ],
             "id": 1,
             "name": "Travel Danger",
-            "numeric_range": [
-                0,
-                1
-            ],
+            "numeric_range": [0, 1],
             "outcome_type": "fourway",
             "selection_strings": "",
             "toplevel": true,
             "trigger_by_duration": true,
-            "trigger_chance": [
-                1,
-                25
-            ],
+            "trigger_chance": [1, 25],
             "triggers": [
-                [
-                    "loc",
-                    2
-                ]
+                ["loc", 2]
             ]
         },
         {
@@ -139,23 +115,14 @@
             "determining": [],
             "id": 2,
             "name": "Connect to Service",
-            "numeric_range": [
-                0,
-                1
-            ],
+            "numeric_range": [0, 1],
             "outcome_type": "fourway",
             "selection_strings": "",
             "toplevel": true,
             "trigger_by_duration": true,
-            "trigger_chance": [
-                0,
-                1
-            ],
+            "trigger_chance": [0, 1],
             "triggers": [
-                [
-                    "item",
-                    10
-                ]
+                ["item", 10]
             ]
         }
     ],
@@ -312,10 +279,7 @@
             "recipes": [
                 {
                     "attribs": [
-                        [
-                            2,
-                            1.0
-                        ]
+                        [2, 1.0]
                     ],
                     "byproducts": [],
                     "id": 14,
@@ -348,10 +312,7 @@
             "recipes": [
                 {
                     "attribs": [
-                        [
-                            3,
-                            1.0
-                        ]
+                        [3, 1.0]
                     ],
                     "byproducts": [],
                     "id": 13,
@@ -413,36 +374,20 @@
             "description": "First, take a look around. Click on her Mom and then Suzy to see that both have <i>Pathfinding</i>, but Suzy's is lower. This means she'll be more likely to get lost or have other trouble in <i>Events</i> that may happen in the woods if her Mom isn't there.\r\n\r\nAlso, right-click on the <i>Wood Stove</i> to open it in a new tab. After finishing those instructions, close the tab to return to this page.\r\n\r\nNext, it's time to explore. The only location we can get to from home shows <i>Unvisited</i>, meaning we don't know anything about it yet. Bring up <i>Suzy</i>'s page again to travel.",
             "destinations": [
                 {
-                    "dest_id": 2,
+                    "bidirectional": false,
                     "distance": 1.0,
-                    "entrance": [
-                        0,
-                        0
-                    ],
-                    "exit": [
-                        0,
-                        0
-                    ]
+                    "door1": [0,0],
+                    "door2": [0,0],
+                    "loc2_id": 2
                 }
             ],
-            "dimensions": [
-                0,
-                0
-            ],
-            "excluded": [
-                0,
-                0,
-                0,
-                0
-            ],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
             "id": 1,
             "items": [
                 {
                     "item_id": 14,
-                    "position": [
-                        0,
-                        0
-                    ],
+                    "position": [0,0],
                     "quantity": 1.0
                 }
             ],
@@ -456,40 +401,22 @@
             "description": "The notable thing about this forest is the <i>Travel Danger</i> event. There is a chance of automatically triggering while character travel from (not to) this area is in progress. \r\n\r\nSince the trip back home is longer than to <i>Uncle's Farm</i>, the chance is higher. For this walkthrough, we'll say that nothing out of the ordinary happens on the way to the farm. So, if the event does trigger then, press <b>N</b> to ignore.\r\n\r\nGo ahead and bring Suzy to the farm if you haven't done so yet. Then continue with the instructions described under <i>Uncle's Farm</i>.",
             "destinations": [
                 {
-                    "dest_id": 3,
+                    "bidirectional": false,
                     "distance": 5.0,
-                    "entrance": [
-                        0,
-                        0
-                    ],
-                    "exit": [
-                        0,
-                        0
-                    ]
+                    "door1": [0,0],
+                    "door2": [0,0],
+                    "loc2_id": 3
                 },
                 {
-                    "dest_id": 1,
+                    "bidirectional": false,
                     "distance": 15.0,
-                    "entrance": [
-                        0,
-                        0
-                    ],
-                    "exit": [
-                        0,
-                        0
-                    ]
+                    "door1": [0,0],
+                    "door2": [0,0],
+                    "loc2_id": 1
                 }
             ],
-            "dimensions": [
-                0,
-                0
-            ],
-            "excluded": [
-                0,
-                0,
-                0,
-                0
-            ],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
             "id": 2,
             "items": [],
             "masked": true,
@@ -502,44 +429,25 @@
             "description": "Hopefully, you immediately recognized that <i>Pigs</i> mean <b>bacon</b>, which is what we're after. Click on them to continue.",
             "destinations": [
                 {
-                    "dest_id": 2,
+                    "bidirectional": false,
                     "distance": 2.0,
-                    "entrance": [
-                        0,
-                        0
-                    ],
-                    "exit": [
-                        0,
-                        0
-                    ]
+                    "door1": [0,0],
+                    "door2": [0,0],
+                    "loc2_id": 2
                 }
             ],
-            "dimensions": [
-                0,
-                0
-            ],
-            "excluded": [
-                0,
-                0,
-                0,
-                0
-            ],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
             "id": 3,
             "items": [
                 {
                     "item_id": 13,
-                    "position": [
-                        0,
-                        0
-                    ],
+                    "position": [0,0],
                     "quantity": 1.0
                 },
                 {
                     "item_id": 8,
-                    "position": [
-                        0,
-                        0
-                    ],
+                    "position": [0,0],
                     "quantity": 2.0
                 }
             ],

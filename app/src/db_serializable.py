@@ -264,7 +264,6 @@ class Identifiable(DbSerializable):
             if instance.id == id_to_get), None)
 
     @classmethod
-    @property
     def listname(cls):
         """Attributes of GameData and ActiveData for each entity.
         Same as table name.
@@ -272,19 +271,16 @@ class Identifiable(DbSerializable):
         return cls.tablename()
 
     @classmethod
-    @property
     def typename(cls):
         """Short string to refer to an entity class."""
         return cls.basename()
 
     @classmethod
-    @property
     def id_field(cls):
         """String to refer to an entity id outside of its base table."""
-        return f'{cls.typename}_id'
+        return f'{cls.typename()}_id'
 
     @classmethod
-    @property
     def readable_type(cls):
         """Used to display error messages."""
         return cls.tablename().capitalize()

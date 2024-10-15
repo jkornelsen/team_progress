@@ -143,18 +143,9 @@
     "characters": [
         {
             "attribs": [
-                [
-                    26,
-                    6.0
-                ],
-                [
-                    23,
-                    10.0
-                ],
-                [
-                    24,
-                    7.0
-                ]
+                [26, 6.0],
+                [23, 10.0],
+                [24, 7.0]
             ],
             "description": "Punctual, doesn't sleep late. Maybe a nice soft sofa is just what he needs to rest those weary bones.\r\n\r\nSchedule\r\n~~~~~~~~\r\nEarly morning: Comes from northwest room.",
             "dest_id": null,
@@ -164,10 +155,7 @@
             "location_id": 24,
             "masked": false,
             "name": "Old Man",
-            "position": [
-                0,
-                0
-            ],
+            "position": [0,0],
             "progress": {},
             "quantity": 0.0,
             "toplevel": false
@@ -178,102 +166,51 @@
             "changed": [],
             "description": "Maybe they walk on through, or maybe they sit somewhere. Hopefully on you.",
             "determining": [
-                [
-                    "attrib",
-                    23
-                ],
-                [
-                    "attrib",
-                    21
-                ],
-                [
-                    "attrib",
-                    22
-                ],
-                [
-                    "attrib",
-                    20
-                ],
-                [
-                    "attrib",
-                    19
-                ]
+                ["attrib", 23],
+                ["attrib", 21],
+                ["attrib", 22],
+                ["attrib", 20],
+                ["attrib", 19]
             ],
             "id": 3,
             "name": "Chance to Sit",
-            "numeric_range": [
-                0,
-                10
-            ],
+            "numeric_range": [0, 10],
             "outcome_type": "fourway",
             "selection_strings": "",
             "toplevel": false,
             "trigger_by_duration": true,
-            "trigger_chance": [
-                0,
-                1
-            ],
+            "trigger_chance": [0, 1],
             "triggers": [
-                [
-                    "loc",
-                    23
-                ]
+                ["loc", 23]
             ]
         },
         {
             "changed": [],
             "description": "Automatic trigger chance. Try running for what counts as an hour at a time, over 20 seconds. It can potentially run for multiple hours, until something happens. If successful, check schedules to see if we know who comes, and if no one is scheduled, roll from a list to see who it is.",
             "determining": [
-                [
-                    "attrib",
-                    19
-                ],
-                [
-                    "attrib",
-                    24
-                ],
-                [
-                    "attrib",
-                    25
-                ]
+                ["attrib", 19],
+                ["attrib", 24],
+                ["attrib", 25]
             ],
             "id": 4,
             "name": "Chance of Arrival",
-            "numeric_range": [
-                0,
-                10
-            ],
+            "numeric_range": [0, 10],
             "outcome_type": "fourway",
             "selection_strings": "",
             "toplevel": false,
             "trigger_by_duration": true,
-            "trigger_chance": [
-                1,
-                2
-            ],
+            "trigger_chance": [1, 2],
             "triggers": [
-                [
-                    "item",
-                    45
-                ]
+                ["item", 45]
             ]
         }
     ],
     "items": [
         {
             "attribs": [
-                [
-                    22,
-                    4.0
-                ],
-                [
-                    21,
-                    10.0
-                ],
-                [
-                    20,
-                    10.0
-                ]
+                [22, 4.0],
+                [21, 10.0],
+                [20, 10.0]
             ],
             "description": "Yes, this a player character, believe it or not.\r\n\r\nPet hair and spilled food are not something this sofa appreciates.",
             "id": 44,
@@ -289,18 +226,9 @@
         },
         {
             "attribs": [
-                [
-                    20,
-                    0.0
-                ],
-                [
-                    21,
-                    10.0
-                ],
-                [
-                    22,
-                    3.0
-                ]
+                [20, 0.0],
+                [21, 10.0],
+                [22, 3.0]
             ],
             "description": "All black leather, seems suspicious.\r\n\r\nThis looks like potential competition, intent on getting people to sit on it instead, perhaps for some insidious purpose such as giving them a backache.",
             "id": 46,
@@ -316,10 +244,7 @@
         },
         {
             "attribs": [
-                [
-                    19,
-                    5.0
-                ]
+                [19, 5.0]
             ],
             "description": "Tells time, although it must constantly be wound by hand.",
             "id": 45,
@@ -354,30 +279,9 @@
     "locations": [
         {
             "description": "Not much is currently known about this room except the direction. Perhaps listening and observing would yield some information.",
-            "destinations": [
-                {
-                    "dest_id": 23,
-                    "distance": 1.0,
-                    "entrance": [
-                        7,
-                        1
-                    ],
-                    "exit": [
-                        0,
-                        0
-                    ]
-                }
-            ],
-            "dimensions": [
-                0,
-                0
-            ],
-            "excluded": [
-                0,
-                0,
-                0,
-                0
-            ],
+            "destinations": [],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
             "id": 24,
             "items": [],
             "masked": false,
@@ -389,16 +293,8 @@
         {
             "description": "You don't know everything about it yet (you were initially wrapped on arrival and couldn't see), but it seems to be rather large, with several people living in it.",
             "destinations": [],
-            "dimensions": [
-                0,
-                0
-            ],
-            "excluded": [
-                0,
-                0,
-                0,
-                0
-            ],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
             "id": 25,
             "items": [],
             "masked": false,
@@ -411,44 +307,25 @@
             "description": "Used for both transit and gathering.",
             "destinations": [
                 {
-                    "dest_id": 24,
+                    "bidirectional": true,
                     "distance": 1.0,
-                    "entrance": [
-                        0,
-                        0
-                    ],
-                    "exit": [
-                        7,
-                        1
-                    ]
+                    "door1": [7,1],
+                    "door2": [0,0],
+                    "loc2_id": 24
                 }
             ],
-            "dimensions": [
-                8,
-                8
-            ],
-            "excluded": [
-                3,
-                1,
-                6,
-                2
-            ],
+            "dimensions": [8,8],
+            "excluded": [3,1,6,2],
             "id": 23,
             "items": [
                 {
                     "item_id": 44,
-                    "position": [
-                        3,
-                        4
-                    ],
+                    "position": [3,4],
                     "quantity": 1.0
                 },
                 {
                     "item_id": 45,
-                    "position": [
-                        8,
-                        2
-                    ],
+                    "position": [8,2],
                     "quantity": 1.0
                 }
             ],
@@ -460,8 +337,8 @@
                 "is_ongoing": false,
                 "item_id": 45,
                 "recipe_id": 13,
-                "start_time": "Tue, 01 Oct 2024 23:00:50 GMT",
-                "stop_time": "Tue, 01 Oct 2024 23:01:12 GMT"
+                "start_time": "2024-10-01 23:00:50",
+                "stop_time": "2024-10-01 23:01:12"
             },
             "quantity": 1.0,
             "toplevel": true

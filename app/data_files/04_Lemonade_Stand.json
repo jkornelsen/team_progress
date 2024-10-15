@@ -4,154 +4,190 @@
     "events": [],
     "items": [
         {
-            "attribs": {},
+            "attribs": [],
             "description": "",
             "id": 13,
+            "masked": false,
+            "mult": false,
             "name": "Dollars",
             "progress": {},
+            "q_limit": 0.0,
             "quantity": 5.0,
             "recipes": [
                 {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 1,
                     "instant": false,
                     "item_id": 13,
                     "rate_amount": 0.5,
                     "rate_duration": 8.0,
-                    "recipe_id": 1,
                     "sources": [
                         {
+                            "item_id": 15,
                             "preserve": false,
-                            "quantity": 1.0,
-                            "item_id": 15
+                            "q_required": 1.0
                         }
                     ]
                 }
             ],
+            "storage_type": "universal",
             "toplevel": true
         },
         {
-            "attribs": {},
+            "attribs": [],
             "description": "number of glasses",
             "id": 15,
+            "masked": false,
+            "mult": false,
             "name": "Lemonade",
             "progress": {},
+            "q_limit": 0.0,
             "quantity": 0.0,
             "recipes": [
                 {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 2,
                     "instant": false,
                     "item_id": 15,
                     "rate_amount": 1.0,
                     "rate_duration": 5.0,
-                    "recipe_id": 2,
                     "sources": [
                         {
+                            "item_id": 14,
                             "preserve": false,
-                            "quantity": 1.0,
-                            "item_id": 14
+                            "q_required": 1.0
                         },
                         {
+                            "item_id": 16,
                             "preserve": false,
-                            "quantity": 1.0,
-                            "item_id": 16
+                            "q_required": 1.0
                         },
                         {
+                            "item_id": 17,
                             "preserve": false,
-                            "quantity": 2.0,
-                            "item_id": 17
+                            "q_required": 1.0
                         }
                     ]
                 }
             ],
+            "storage_type": "universal",
             "toplevel": true
         },
         {
-            "attribs": {},
+            "attribs": [],
             "description": "",
             "id": 14,
+            "masked": false,
+            "mult": false,
             "name": "Lemons",
             "progress": {},
+            "q_limit": 0.0,
             "quantity": 0.0,
             "recipes": [
                 {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 3,
                     "instant": true,
                     "item_id": 14,
                     "rate_amount": 1.0,
                     "rate_duration": 3.0,
-                    "recipe_id": 3,
                     "sources": [
                         {
+                            "item_id": 13,
                             "preserve": false,
-                            "quantity": 0.25,
-                            "item_id": 13
+                            "q_required": 1.0
                         }
                     ]
                 }
             ],
+            "storage_type": "universal",
             "toplevel": false
         },
         {
-            "attribs": {},
+            "attribs": [],
             "description": "Counted in cups, bought in bags.",
             "id": 16,
+            "masked": false,
+            "mult": false,
             "name": "Sugar",
             "progress": {},
+            "q_limit": 0.0,
             "quantity": 0.0,
             "recipes": [
                 {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 4,
                     "instant": true,
                     "item_id": 16,
                     "rate_amount": 10.0,
                     "rate_duration": 3.0,
-                    "recipe_id": 4,
                     "sources": [
                         {
+                            "item_id": 13,
                             "preserve": false,
-                            "quantity": 1.0,
-                            "item_id": 13
+                            "q_required": 1.0
                         }
                     ]
                 }
             ],
+            "storage_type": "universal",
             "toplevel": false
         },
         {
-            "attribs": {},
+            "attribs": [],
             "description": "source of water",
             "id": 18,
+            "masked": false,
+            "mult": false,
             "name": "Tap",
             "progress": {},
+            "q_limit": 0.0,
             "quantity": 1.0,
             "recipes": [],
+            "storage_type": "universal",
             "toplevel": false
         },
         {
-            "attribs": {},
+            "attribs": [],
             "description": "cups",
             "id": 17,
+            "masked": false,
+            "mult": false,
             "name": "Water",
             "progress": {},
+            "q_limit": 0.0,
             "quantity": 0.0,
             "recipes": [
                 {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 5,
                     "instant": false,
                     "item_id": 17,
                     "rate_amount": 1.0,
                     "rate_duration": 2.0,
-                    "recipe_id": 5,
                     "sources": [
                         {
+                            "item_id": 18,
                             "preserve": true,
-                            "quantity": 1.0,
-                            "item_id": 18
+                            "q_required": 1.0
                         }
                     ]
                 }
             ],
+            "storage_type": "universal",
             "toplevel": false
         }
     ],
     "locations": [],
     "overall": {
         "description": "After finding a small wad of money on the sidewalk, you decide to start a lemonade stand. A short, simple <c=\"green\">business</c> idler.\r\n\r\nIt could be extended  to eventually start a corporation with multiple stores. Or, you could start with a <a href=\"/configure\">blank setup</a> and build a factory for something interesting such as <i>Hoth walkers</i>.",
+        "number_format": "en_US",
+        "slots": [],
         "title": "Lemonade Stand",
         "win_reqs": []
     }

@@ -20,7 +20,7 @@ from .location import Location, ItemAt
 from .overall import Overall
 from .progress import Progress
 from .utils import (
-    LinkLetters, NumTup, RequestHelper, Storage, entity_class, format_num)
+    LinkLetters, NumTup, RequestHelper, entity_class, format_num)
 
 logger = logging.getLogger(__name__)
 

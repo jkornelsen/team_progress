@@ -31,14 +31,14 @@
         });
     </script>
     {% if from_entity %}
-        {% if from_entity.typename == 'char' %}
+        {% if from_entity.typename() == 'char' %}
             {% set link = url_for('play_char', char_id=from_entity.id) %}
-        {% elif from_entity.typename == 'loc' %}
+        {% elif from_entity.typename() == 'loc' %}
             {% set link = url_for('play_location', loc_id=from_entity.id) %}
-        {% elif from_entity.typename == 'item' %}
+        {% elif from_entity.typename() == 'item' %}
             {% set link = url_for('play_item', item_id=from_entity.id) %}
         {% else %}
-            <!-- unexpected from entity '{{ from_entity.typename }}' -->
+            <!-- unexpected from entity '{{ from_entity.typename() }}' -->
         {% endif %}
         {% set letter = link_letters.next(link) %}
         <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
@@ -73,28 +73,28 @@
                                    value="{{ current.stat_adjustment }}">
                             <br>
                             {% for det in current.determining_entities %}
-                                {% set det_ref = "_" ~ det.typename ~ "_" ~ det.id %}
+                                {% set det_ref = "_" ~ det.typename() ~ "_" ~ det.id %}
                                 <li style="margin-top: 5px">
                                     {{ det.name }}
                                     <select class="container-for-det"
                                             id="container-for-det{{ det_ref }}"
                                             data-id="{{ det.id }}"
-                                            data-type="{{ det.typename }}"
+                                            data-type="{{ det.typename() }}"
                                             data-mult="{{ det.mult | lower }}">
                                         <option value="" selected>(Select to adjust roll)</option>
                                         {% for char in game_data.characters %}
                                             {% set adjust_factor = None %}
-                                            {% if det.typename == 'attrib' and det.id in char.attribs %}
+                                            {% if det.typename() == 'attrib' and det.id in char.attribs %}
                                                 {% set adjust_factor = char.attribs[det.id].val %}
-                                            {% elif det.typename == 'item' and det.id in char.items %}
+                                            {% elif det.typename() == 'item' and det.id in char.items %}
                                                 {% set adjust_factor = char.items[det.id].quantity %}
                                             {% endif %}
                                             {% if adjust_factor is not none %}
                                                 <option value="{{ adjust_factor }}"
                                                         data-container-id="{{ char.id }}"
-                                                        data-container-type="{{ char.typename }}">
+                                                        data-container-type="{{ char.typename() }}">
                                                     {{ char.name }}
-                                                    {% if det.typename == 'attrib' %}
+                                                    {% if det.typename() == 'attrib' %}
                                                         stat
                                                     {% else %}
                                                         has
@@ -105,17 +105,17 @@
                                         {% endfor %}
                                         {% for item in game_data.items %}
                                             {% set adjust_factor = None %}
-                                            {% if det.typename == 'attrib' and det.id in item.attribs %}
+                                            {% if det.typename() == 'attrib' and det.id in item.attribs %}
                                                 {% set adjust_factor = item.attribs[det.id].val %}
-                                            {% elif det.typename == 'item' and det.id == item.id %}
+                                            {% elif det.typename() == 'item' and det.id == item.id %}
                                                 {% set adjust_factor = item.pile.quantity %}
                                             {% endif %}
                                             {% if adjust_factor is not none %}
                                                 <option value="{{ adjust_factor }}"
                                                         data-container-id="{{ item.id }}"
-                                                        data-container-type="{{ item.typename }}">
+                                                        data-container-type="{{ item.typename() }}">
                                                     {{ item.name }}
-                                                    {% if det.typename == 'attrib' %}
+                                                    {% if det.typename() == 'attrib' %}
                                                         stat
                                                     {% else %}
                                                         general
@@ -126,13 +126,13 @@
                                         {% endfor %}
                                         {% for loc in game_data.locations %}
                                             {% set adjust_factor = None %}
-                                            {% if det.typename == 'item' and det.id in loc.items %}
+                                            {% if det.typename() == 'item' and det.id in loc.items %}
                                                 {% set adjust_factor = loc.items[det.id].quantity %}
                                             {% endif %}
                                             {% if adjust_factor is not none %}
                                                 <option value="{{ adjust_factor }}"
                                                         data-container-id="{{ loc.id }}"
-                                                        data-container-type="{{ loc.typename }}">
+                                                        data-container-type="{{ loc.typename() }}">
                                                     at {{ loc.name }}: {{ adjust_factor | formatNum }}
                                                 </option>
                                             {% endif %}
@@ -143,7 +143,7 @@
                                             class="fill-det-btn"
                                             id="fill-det-btn_{{ det_ref }}"
                                             data-id="{{ det.id }}"
-                                            data-type="{{ det.typename }}">
+                                            data-type="{{ det.typename() }}">
                                         [{{ letter }}]
                                         {% if det.mult %}
                                             Multiply
@@ -183,8 +183,8 @@
                                      attribute is the key, so on the server we would modify
                                      that attribue of that character. -->
                                 <input type="hidden" name="key_id" value="{{ chg.id }}">
-                                <input type="hidden" name="key_type" value="{{ chg.typename }}">
-                                {% set chg_ref = "_" ~ chg.typename ~ "_" ~ chg.id %}
+                                <input type="hidden" name="key_type" value="{{ chg.typename() }}">
+                                {% set chg_ref = "_" ~ chg.typename() ~ "_" ~ chg.id %}
                                 <input type="hidden"
                                        name="container_id"
                                        value="0"
@@ -198,21 +198,21 @@
                                     <select class="container-for-changed"
                                             id="container-for-changed{{ chg_ref }}"
                                             data-id="{{ chg.id }}"
-                                            data-type="{{ chg.typename }}">
+                                            data-type="{{ chg.typename() }}">
                                         <option value="">(Select for changing value)</option>
                                         {% for char in game_data.characters %}
                                             {% set oldval = None %}
-                                            {% if chg.typename == 'attrib' and chg.id in char.attribs %}
+                                            {% if chg.typename() == 'attrib' and chg.id in char.attribs %}
                                                 {% set oldval = char.attribs[chg.id].val %}
-                                            {% elif chg.typename == 'item' and chg.id in char.items %}
+                                            {% elif chg.typename() == 'item' and chg.id in char.items %}
                                                 {% set oldval = char.items[chg.id].quantity %}
                                             {% endif %}
                                             {% if oldval is not none %}
                                                 <option value="{{ oldval }}"
                                                         data-container-id="{{ char.id }}"
-                                                        data-container-type="{{ char.typename }}">
+                                                        data-container-type="{{ char.typename() }}">
                                                     {{ char.name }}
-                                                    {% if chg.typename == 'attrib' %}
+                                                    {% if chg.typename() == 'attrib' %}
                                                         stat
                                                     {% else %}
                                                         has
@@ -223,17 +223,17 @@
                                         {% endfor %}
                                         {% for item in game_data.items %}
                                             {% set oldval = None %}
-                                            {% if chg.typename == 'attrib' and chg.id in item.attribs %}
+                                            {% if chg.typename() == 'attrib' and chg.id in item.attribs %}
                                                 {% set oldval = item.attribs[chg.id].val %}
-                                            {% elif chg.typename == 'item' and chg.id == item.id %}
+                                            {% elif chg.typename() == 'item' and chg.id == item.id %}
                                                 {% set oldval = item.pile.quantity %}
                                             {% endif %}
                                             {% if oldval is not none %}
                                                 <option value="{{ oldval }}"
                                                         data-container-id="{{ item.id }}"
-                                                        data-container-type="{{ item.typename }}">
+                                                        data-container-type="{{ item.typename() }}">
                                                     {{ item.name }}
-                                                    {% if chg.typename == 'attrib' %}
+                                                    {% if chg.typename() == 'attrib' %}
                                                         stat
                                                     {% else %}
                                                         general
@@ -244,13 +244,13 @@
                                         {% endfor %}
                                         {% for loc in game_data.locations %}
                                             {% set oldval = None %}
-                                            {% if chg.typename == 'item' and chg.id in loc.items %}
+                                            {% if chg.typename() == 'item' and chg.id in loc.items %}
                                                 {% set oldval = loc.items[chg.id].quantity %}
                                             {% endif %}
                                             {% if oldval is not none %}
                                                 <option value="{{ oldval }}"
                                                         data-container-id="{{ loc.id }}"
-                                                        data-container-type="{{ loc.typename }}">
+                                                        data-container-type="{{ loc.typename() }}">
                                                     at {{ loc.name }}: {{ oldval | formatNum }}
                                                 </option>
                                             {% endif %}
@@ -261,7 +261,7 @@
                                             class="fill-changed-btn"
                                             id="fill-changed-btn_{{ chg_ref }}"
                                             data-id="{{ chg.id }}"
-                                            data-type="{{ chg.typename }}">[{{ letter }}] Fill</button>
+                                            data-type="{{ chg.typename() }}">[{{ letter }}] Fill</button>
                                     <script>
                     funcForKey['{{ letter }}'] = () => {
                         document.querySelector('#fill-changed-btn_{{ chg_ref }}').click();

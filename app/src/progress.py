@@ -235,12 +235,17 @@ class Progress(Identifiable):
         if self.recipe is None:
             self.report_failure("No recipe.")
             return False
-        if ((self.q_limit > 0.0
-                    and self.pile.quantity >= self.q_limit
-                    and self.recipe.rate_amount > 0)
-                or (self.q_limit < 0.0
-                    and self.pile.quantity <= self.q_limit
-                    and self.recipe.rate_amount < 0)):
+        limit_positive = (
+            self.q_limit > 0.0
+            and self.pile.quantity >= self.q_limit
+            and self.recipe.rate_amount > 0
+            )
+        limit_negative = (
+            self.q_limit < 0.0
+            and self.pile.quantity <= self.q_limit
+            and self.recipe.rate_amount < 0
+            )
+        if limit_positive or limit_negative:
             self.report_failure(f"Limit {self.q_limit} reached.")
             return False
         for source in self.recipe.sources:

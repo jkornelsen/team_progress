@@ -35,9 +35,8 @@ class GeneralPile(Pile):
         elif item and hasattr(item, 'pile') and hasattr(item.pile, 'quantity'):
             self.quantity = item.pile.quantity
 
-    @classmethod
-    @property
-    def container_type(cls):
+    @staticmethod
+    def container_type():
         return 'general'
 
     def dict_for_json(self):
@@ -243,7 +242,7 @@ class Item(Identifiable):
                     for related in related_list:
                         related.item = Item.get_by_id(related.item_id)
         from .event import Event
-        Event.load_triggers_for_type(id_to_get, cls.typename)
+        Event.load_triggers_for_type(id_to_get, cls.typename())
         return current_obj
 
     def configure_by_form(self):

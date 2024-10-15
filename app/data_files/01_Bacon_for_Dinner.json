@@ -2,6 +2,7 @@
     "attribs": [
         {
             "description": "Knowledge of the woods.",
+            "enum_list": [],
             "id": 1,
             "is_binary": false,
             "mult": false,
@@ -9,6 +10,7 @@
         },
         {
             "description": "Has money to pay for chores.",
+            "enum_list": [],
             "id": 3,
             "is_binary": true,
             "mult": false,
@@ -16,6 +18,7 @@
         },
         {
             "description": "Can do chores.",
+            "enum_list": [],
             "id": 2,
             "is_binary": true,
             "mult": false,
@@ -25,14 +28,8 @@
     "characters": [
         {
             "attribs": [
-                [
-                    1,
-                    2.0
-                ],
-                [
-                    2,
-                    1.0
-                ]
+                [1, 2.0],
+                [2, 1.0]
             ],
             "description": "Sent to fetch bacon for dinner by her mother.",
             "dest_id": null,
@@ -53,20 +50,14 @@
             "location_id": 1,
             "masked": false,
             "name": "Suzy",
-            "position": [
-                0,
-                0
-            ],
+            "position": [0,0],
             "progress": {},
             "quantity": 0.0,
             "toplevel": true
         },
         {
             "attribs": [
-                [
-                    1,
-                    7.0
-                ]
+                [1, 7.0]
             ],
             "description": "Suzy's mother. Good understanding of the trails in the woods.",
             "dest_id": null,
@@ -76,20 +67,14 @@
             "location_id": 1,
             "masked": false,
             "name": "Mom",
-            "position": [
-                0,
-                0
-            ],
+            "position": [0,0],
             "progress": {},
             "quantity": 0.0,
             "toplevel": true
         },
         {
             "attribs": [
-                [
-                    3,
-                    1.0
-                ]
+                [3, 1.0]
             ],
             "description": "Will pay a modest salary for chores.",
             "dest_id": null,
@@ -99,10 +84,7 @@
             "location_id": 3,
             "masked": true,
             "name": "Uncle",
-            "position": [
-                0,
-                0
-            ],
+            "position": [0,0],
             "progress": {},
             "quantity": 0.0,
             "toplevel": false
@@ -113,30 +95,18 @@
             "changed": [],
             "description": "Chance of something happening during a trip, such as getting lost in the woods. If relevant, enter the adjustment from Suzy's or her mother's Pathfinding skill.",
             "determining": [
-                [
-                    "attrib",
-                    1
-                ]
+                ["attrib", 1]
             ],
             "id": 1,
             "name": "Travel Danger",
-            "numeric_range": [
-                0,
-                1
-            ],
+            "numeric_range": [0, 1],
             "outcome_type": "fourway",
             "selection_strings": "",
             "toplevel": false,
             "trigger_by_duration": true,
-            "trigger_chance": [
-                1,
-                25
-            ],
+            "trigger_chance": [1, 25],
             "triggers": [
-                [
-                    "loc",
-                    2
-                ]
+                ["loc", 2]
             ]
         },
         {
@@ -145,23 +115,14 @@
             "determining": [],
             "id": 2,
             "name": "Connect to Service",
-            "numeric_range": [
-                0,
-                1
-            ],
+            "numeric_range": [0, 1],
             "outcome_type": "fourway",
             "selection_strings": "",
             "toplevel": false,
             "trigger_by_duration": true,
-            "trigger_chance": [
-                0,
-                1
-            ],
+            "trigger_chance": [0, 1],
             "triggers": [
-                [
-                    "item",
-                    10
-                ]
+                ["item", 10]
             ]
         }
     ],
@@ -193,10 +154,7 @@
             "recipes": [
                 {
                     "attribs": [
-                        [
-                            3,
-                            1.0
-                        ]
+                        [3, 1.0]
                     ],
                     "byproducts": [],
                     "id": 1,
@@ -229,10 +187,7 @@
             "recipes": [
                 {
                     "attribs": [
-                        [
-                            2,
-                            1.0
-                        ]
+                        [2, 1.0]
                     ],
                     "byproducts": [],
                     "id": 2,
@@ -419,44 +374,25 @@
             "description": "Suzy's uncle is okay with her butchering pigs from time to time.",
             "destinations": [
                 {
-                    "dest_id": 2,
+                    "bidirectional": false,
                     "distance": 2.0,
-                    "entrance": [
-                        0,
-                        0
-                    ],
-                    "exit": [
-                        0,
-                        0
-                    ]
+                    "door1": [0,0],
+                    "door2": [0,0],
+                    "loc2_id": 2
                 }
             ],
-            "dimensions": [
-                0,
-                0
-            ],
-            "excluded": [
-                0,
-                0,
-                0,
-                0
-            ],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
             "id": 3,
             "items": [
                 {
                     "item_id": 8,
-                    "position": [
-                        0,
-                        0
-                    ],
+                    "position": [0,0],
                     "quantity": 2.0
                 },
                 {
                     "item_id": 13,
-                    "position": [
-                        0,
-                        0
-                    ],
+                    "position": [0,0],
                     "quantity": 1.0
                 }
             ],
@@ -470,36 +406,20 @@
             "description": "Starting point, and we'll return here at the end.",
             "destinations": [
                 {
-                    "dest_id": 2,
+                    "bidirectional": false,
                     "distance": 1.0,
-                    "entrance": [
-                        0,
-                        0
-                    ],
-                    "exit": [
-                        0,
-                        0
-                    ]
+                    "door1": [0,0],
+                    "door2": [0,0],
+                    "loc2_id": 2
                 }
             ],
-            "dimensions": [
-                0,
-                0
-            ],
-            "excluded": [
-                0,
-                0,
-                0,
-                0
-            ],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
             "id": 1,
             "items": [
                 {
                     "item_id": 14,
-                    "position": [
-                        0,
-                        0
-                    ],
+                    "position": [0,0],
                     "quantity": 1.0
                 }
             ],
@@ -513,40 +433,22 @@
             "description": "Easy to get lost in.",
             "destinations": [
                 {
-                    "dest_id": 1,
+                    "bidirectional": false,
                     "distance": 15.0,
-                    "entrance": [
-                        0,
-                        0
-                    ],
-                    "exit": [
-                        0,
-                        0
-                    ]
+                    "door1": [0,0],
+                    "door2": [0,0],
+                    "loc2_id": 1
                 },
                 {
-                    "dest_id": 3,
+                    "bidirectional": false,
                     "distance": 5.0,
-                    "entrance": [
-                        0,
-                        0
-                    ],
-                    "exit": [
-                        0,
-                        0
-                    ]
+                    "door1": [0,0],
+                    "door2": [0,0],
+                    "loc2_id": 3
                 }
             ],
-            "dimensions": [
-                0,
-                0
-            ],
-            "excluded": [
-                0,
-                0,
-                0,
-                0
-            ],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
             "id": 2,
             "items": [],
             "masked": true,

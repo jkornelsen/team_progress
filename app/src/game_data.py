@@ -29,7 +29,7 @@ class ActiveData:
     def __init__(self):
         g.active = self
         for entity_cls in ENTITIES:
-            setattr(self, entity_cls.listname, {})
+            setattr(self, entity_cls.listname(), {})
 
 class GameData:
     """Store complete sets of data such as for file export,
@@ -50,15 +50,15 @@ class GameData:
     @classmethod
     def entity_for(cls, listname):
         for entity_cls in ENTITIES:
-            if entity_cls.listname == listname:
+            if entity_cls.listname() == listname:
                 return entity_cls
         return None
 
     def get_list(self, entity_cls):
-        return getattr(self, entity_cls.listname)
+        return getattr(self, entity_cls.listname())
 
     def set_list(self, entity_cls, newval):
-        setattr(self, entity_cls.listname, newval)
+        setattr(self, entity_cls.listname(), newval)
 
     def dict_for_json(self):
         logger.debug("dict_for_json()")
@@ -67,7 +67,7 @@ class GameData:
             entity_data = [
                 entity_obj.dict_for_json()
                 for entity_obj in self.get_list(entity_cls)]
-            data[entity_cls.listname] = entity_data
+            data[entity_cls.listname()] = entity_data
         return data
 
     def from_json(self, all_data):
@@ -76,7 +76,7 @@ class GameData:
         self.overall = Overall.from_data(all_data['overall'])
         for entity_cls in ENTITIES:
             self.set_list(entity_cls, [])
-            entities_data = all_data[entity_cls.listname]
+            entities_data = all_data[entity_cls.listname()]
             for entity_data in entities_data:
                 instance = entity_cls.from_data(entity_data)
                 self.get_list(entity_cls).append(instance)
@@ -130,7 +130,7 @@ class GameData:
         logger.debug("to_db()")
         self.overall.to_db()
         for entity_cls in ENTITIES:
-            logger.debug("entity %s", entity_cls.listname)
+            logger.debug("entity %s", entity_cls.listname())
             for entity in self.get_list(entity_cls):
                 entity.to_db()
 

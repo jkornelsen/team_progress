@@ -58,14 +58,8 @@
     "characters": [
         {
             "attribs": [
-                [
-                    31,
-                    5.0
-                ],
-                [
-                    30,
-                    5.0
-                ]
+                [31, 5.0],
+                [30, 5.0]
             ],
             "description": "Early 20's, high school diploma.",
             "dest_id": null,
@@ -75,10 +69,7 @@
             "location_id": 30,
             "masked": false,
             "name": "(Enter your name)",
-            "position": [
-                0,
-                0
-            ],
+            "position": [0,0],
             "progress": {},
             "quantity": 0.0,
             "toplevel": true
@@ -87,37 +78,22 @@
     "events": [
         {
             "changed": [
-                [
-                    "attrib",
-                    29
-                ]
+                ["attrib", 29]
             ],
             "description": "Main factor to determine class grade.\r\n\r\nThere's some possible variation on outcomes, but mostly it's determined by studying. Based on time spent doing homework, add up to 80 for stat adjustment.",
             "determining": [
-                [
-                    "item",
-                    63
-                ]
+                ["item", 63]
             ],
             "id": 5,
             "name": "Final Test",
-            "numeric_range": [
-                0,
-                20
-            ],
+            "numeric_range": [0, 20],
             "outcome_type": "numeric",
             "selection_strings": "",
             "toplevel": false,
             "trigger_by_duration": true,
-            "trigger_chance": [
-                0,
-                1
-            ],
+            "trigger_chance": [0, 1],
             "triggers": [
-                [
-                    "loc",
-                    29
-                ]
+                ["loc", 29]
             ]
         }
     ],
@@ -152,10 +128,7 @@
         },
         {
             "attribs": [
-                [
-                    27,
-                    2.0
-                ]
+                [27, 2.0]
             ],
             "description": "Tells the day of the week. Must be marked by hand.",
             "id": 49,
@@ -554,14 +527,8 @@
         },
         {
             "attribs": [
-                [
-                    29,
-                    1.0
-                ],
-                [
-                    28,
-                    1.0
-                ]
+                [29, 1.0],
+                [28, 1.0]
             ],
             "description": "",
             "id": 61,
@@ -599,14 +566,8 @@
         },
         {
             "attribs": [
-                [
-                    29,
-                    1.0
-                ],
-                [
-                    28,
-                    1.0
-                ]
+                [29, 1.0],
+                [28, 1.0]
             ],
             "description": "Hopefully you will attend class each day. This is your record of attendance. If it's too low, you're sure to get a poor or failing grade. You can attend 1 hour each day, while the class lasts.",
             "id": 58,
@@ -646,38 +607,14 @@
     "locations": [
         {
             "description": "Good place to hang out and reduce stress. Trees, basketball courts, skateboarding.",
-            "destinations": [
-                {
-                    "dest_id": 30,
-                    "distance": 1.0,
-                    "entrance": [
-                        0,
-                        0
-                    ],
-                    "exit": [
-                        0,
-                        0
-                    ]
-                }
-            ],
-            "dimensions": [
-                0,
-                0
-            ],
-            "excluded": [
-                0,
-                0,
-                0,
-                0
-            ],
+            "destinations": [],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
             "id": 26,
             "items": [
                 {
                     "item_id": 55,
-                    "position": [
-                        0,
-                        0
-                    ],
+                    "position": [0,0],
                     "quantity": 1.0
                 }
             ],
@@ -689,30 +626,9 @@
         },
         {
             "description": "More expensive than the grocery store but doesn't require preparation and more filling than boxed food.",
-            "destinations": [
-                {
-                    "dest_id": 30,
-                    "distance": 1.0,
-                    "entrance": [
-                        0,
-                        0
-                    ],
-                    "exit": [
-                        0,
-                        0
-                    ]
-                }
-            ],
-            "dimensions": [
-                0,
-                0
-            ],
-            "excluded": [
-                0,
-                0,
-                0,
-                0
-            ],
+            "destinations": [],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
             "id": 28,
             "items": [],
             "masked": false,
@@ -723,38 +639,14 @@
         },
         {
             "description": "Full time is generally considered to be 2 classes, although classes vary as to how demanding they are. You could push and go up to 3, or take only 1 for a part-time load.",
-            "destinations": [
-                {
-                    "dest_id": 30,
-                    "distance": 1.0,
-                    "entrance": [
-                        0,
-                        0
-                    ],
-                    "exit": [
-                        0,
-                        0
-                    ]
-                }
-            ],
-            "dimensions": [
-                0,
-                0
-            ],
-            "excluded": [
-                0,
-                0,
-                0,
-                0
-            ],
+            "destinations": [],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
             "id": 29,
             "items": [
                 {
                     "item_id": 62,
-                    "position": [
-                        0,
-                        0
-                    ],
+                    "position": [0,0],
                     "quantity": 1.0
                 }
             ],
@@ -768,76 +660,43 @@
             "description": "An adequate apartment. Could buy a nice house with mortgage payment, otherwise rent.\r\n\r\nSleep and cook meals here.",
             "destinations": [
                 {
-                    "dest_id": 31,
+                    "bidirectional": true,
                     "distance": 1.0,
-                    "entrance": [
-                        0,
-                        0
-                    ],
-                    "exit": [
-                        0,
-                        0
-                    ]
+                    "door1": [0,0],
+                    "door2": [0,0],
+                    "loc2_id": 31
                 },
                 {
-                    "dest_id": 29,
+                    "bidirectional": true,
                     "distance": 1.0,
-                    "entrance": [
-                        0,
-                        0
-                    ],
-                    "exit": [
-                        0,
-                        0
-                    ]
+                    "door1": [0,0],
+                    "door2": [0,0],
+                    "loc2_id": 29
                 },
                 {
-                    "dest_id": 28,
+                    "bidirectional": true,
                     "distance": 1.0,
-                    "entrance": [
-                        0,
-                        0
-                    ],
-                    "exit": [
-                        0,
-                        0
-                    ]
+                    "door1": [0,0],
+                    "door2": [0,0],
+                    "loc2_id": 28
                 },
                 {
-                    "dest_id": 26,
+                    "bidirectional": true,
                     "distance": 1.0,
-                    "entrance": [
-                        0,
-                        0
-                    ],
-                    "exit": [
-                        0,
-                        0
-                    ]
+                    "door1": [0,0],
+                    "door2": [0,0],
+                    "loc2_id": 26
                 },
                 {
-                    "dest_id": 27,
+                    "bidirectional": true,
                     "distance": 1.0,
-                    "entrance": [
-                        0,
-                        0
-                    ],
-                    "exit": [
-                        0,
-                        0
-                    ]
+                    "door1": [0,0],
+                    "door2": [0,0],
+                    "loc2_id": 27
                 }
             ],
-            "dimensions": [
-                0,
-                0
-            ],
-            "excluded": [
-                0,
-                0,
-                0,
-                0
-            ],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
             "id": 30,
             "items": [],
             "masked": false,
@@ -848,38 +707,14 @@
         },
         {
             "description": "Fraternities and Sororities have the wildest parties.",
-            "destinations": [
-                {
-                    "dest_id": 30,
-                    "distance": 1.0,
-                    "entrance": [
-                        0,
-                        0
-                    ],
-                    "exit": [
-                        0,
-                        0
-                    ]
-                }
-            ],
-            "dimensions": [
-                0,
-                0
-            ],
-            "excluded": [
-                0,
-                0,
-                0,
-                0
-            ],
+            "destinations": [],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
             "id": 31,
             "items": [
                 {
                     "item_id": 64,
-                    "position": [
-                        0,
-                        0
-                    ],
+                    "position": [0,0],
                     "quantity": 1.0
                 }
             ],
@@ -891,38 +726,14 @@
         },
         {
             "description": "Buy either unprepared food or boxed meals.\r\n\r\nThere are several types of jobs available here:\r\n\u2022 Cashier\r\n\u2022 Bagger\r\n\u2022 Stocker\r\n\u2022 Manager",
-            "destinations": [
-                {
-                    "dest_id": 30,
-                    "distance": 1.0,
-                    "entrance": [
-                        0,
-                        0
-                    ],
-                    "exit": [
-                        0,
-                        0
-                    ]
-                }
-            ],
-            "dimensions": [
-                0,
-                0
-            ],
-            "excluded": [
-                0,
-                0,
-                0,
-                0
-            ],
+            "destinations": [],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
             "id": 27,
             "items": [
                 {
                     "item_id": 65,
-                    "position": [
-                        0,
-                        0
-                    ],
+                    "position": [0,0],
                     "quantity": 1.0
                 }
             ],

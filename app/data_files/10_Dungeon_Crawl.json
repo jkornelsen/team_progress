@@ -2,67 +2,106 @@
     "attribs": [
         {
             "description": "Dungeon level. Could be specified in feet or meters, but it's simpler to use the number of floors.",
+            "enum_list": [],
             "id": 1,
+            "is_binary": false,
+            "mult": false,
             "name": "Depth"
         },
         {
             "description": "Magic Points \u2014 reserves of magical energy used for casting.",
+            "enum_list": [],
             "id": 5,
+            "is_binary": false,
+            "mult": false,
             "name": "MP"
         },
         {
             "description": "Hit Points \u2014 current health of a character.",
+            "enum_list": [],
             "id": 6,
+            "is_binary": false,
+            "mult": false,
             "name": "HP"
         },
         {
             "description": "How full magic reserves can be for a character. Also determines MP regen rate.",
+            "enum_list": [],
             "id": 8,
+            "is_binary": false,
+            "mult": false,
             "name": "Max MP"
         },
         {
             "description": "Turns remaining for the negative status to last.",
+            "enum_list": [],
             "id": 9,
+            "is_binary": false,
+            "mult": false,
             "name": "Poisoned"
         },
         {
             "description": "Turns remaining for the negative status to last.",
+            "enum_list": [],
             "id": 10,
+            "is_binary": false,
+            "mult": false,
             "name": "Burning"
         },
         {
             "description": "Experience is gained from combat or other actions. When high enough, set to 0 and increment XP Level.",
+            "enum_list": [],
             "id": 12,
+            "is_binary": false,
+            "mult": false,
             "name": "XP"
         },
         {
             "description": "Level that indicates how powerful and advanced a character is. Increment when enough XP is gained.\r\n\r\n+-----------+------------+\r\n| XP Level  | XP Required|\r\n+-----------+------------+\r\n|    1      |     0      |\r\n|    2      |    20      |\r\n|    3      |    60      |\r\n|    4      |   120      |\r\n|    5      |   200      |\r\n|    6      |   300      |\r\n|    7      |   420      |\r\n|    8      |   560      |\r\n|    9      |   720      |\r\n|   10      |   900      |\r\n|   11      |  1100      |\r\n|   12      |  1320      |\r\n|   13      |  1560      |\r\n|   14      |  1820      |\r\n|   15      |  2100      |\r\n|   16      |  2400      |\r\n|   17      |  2720      |\r\n|   18      |  3060      |\r\n|   19      |  3420      |\r\n|   20      |  3800      |\r\n+-----------+------------+",
+            "enum_list": [],
             "id": 11,
+            "is_binary": false,
+            "mult": false,
             "name": "XP Level"
         },
         {
             "description": "Dexterity increases accuracy, evasion, and ranged damage dealt.\r\n\r\nChoosing the Thief class grants 3 Dex.\r\n\r\nChoosing the Archer class grants 2 Dex and 1 Str.",
+            "enum_list": [],
             "id": 3,
+            "is_binary": false,
+            "mult": false,
             "name": "Dex"
         },
         {
             "description": "Strength increases melee damage dealt.\r\n\r\nChoosing the Melee class grants 2 Str, 1 Dex, and 2 Max HP.",
+            "enum_list": [],
             "id": 2,
+            "is_binary": false,
+            "mult": false,
             "name": "Str"
         },
         {
             "description": "Intelligence increases magic success, reserves (MP), and damage.\r\n\r\nChoosing the Mage class grants 2 Int, 1 Dex, and 1 Max MP.\r\n\r\nChoosing the Priest class grants 1 Int, 1 Max HP, and 2 Max MP.",
+            "enum_list": [],
             "id": 4,
+            "is_binary": false,
+            "mult": false,
             "name": "Int"
         },
         {
             "description": "Amount when fully healthy. Also determines HP regen rate.\r\n\r\nTo calculate, add the base species and class stat and multiply the result by XP Level.",
+            "enum_list": [],
             "id": 7,
+            "is_binary": false,
+            "mult": false,
             "name": "Max HP"
         },
         {
             "description": "Harder is better quality but more difficult to craft.",
+            "enum_list": [],
             "id": 13,
+            "is_binary": false,
+            "mult": false,
             "name": "Density"
         }
     ],
@@ -81,15 +120,13 @@
             ],
             "description": "Dwarves are strong and tough, natural Melee Fighters, but clumsy and poor at magic.\r\n\r\nDuplicate to create either a player char or NPC.",
             "dest_id": null,
+            "events": [],
             "id": 4,
             "items": [],
             "location_id": null,
             "masked": false,
             "name": "Dwarf Template",
-            "position": [
-                0,
-                0
-            ],
+            "position": [0,0],
             "progress": {},
             "quantity": 0.0,
             "toplevel": false
@@ -108,15 +145,13 @@
             ],
             "description": "Orcs are versatile fighters and can see in the dark. However, they're not well-liked.\r\n\r\nDuplicate to create either a player char or NPC.",
             "dest_id": null,
+            "events": [],
             "id": 5,
             "items": [],
             "location_id": null,
             "masked": false,
             "name": "Orc Template",
-            "position": [
-                0,
-                0
-            ],
+            "position": [0,0],
             "progress": {},
             "quantity": 0.0,
             "toplevel": false
@@ -135,15 +170,13 @@
             ],
             "description": "Halflings are highly nimble, master Thieves and good with ranged weapons.\r\n\r\nDuplicate to create either a player char or NPC.",
             "dest_id": null,
+            "events": [],
             "id": 6,
             "items": [],
             "location_id": null,
             "masked": false,
             "name": "Halfling Template",
-            "position": [
-                0,
-                0
-            ],
+            "position": [0,0],
             "progress": {},
             "quantity": 0.0,
             "toplevel": false
@@ -162,15 +195,13 @@
             ],
             "description": "Elves are intelligent and light on their feet, known especially for their Mages.\r\n\r\nDuplicate to create either a player char or NPC.",
             "dest_id": null,
+            "events": [],
             "id": 3,
             "items": [],
             "location_id": null,
             "masked": false,
             "name": "Elf Template",
-            "position": [
-                0,
-                0
-            ],
+            "position": [0,0],
             "progress": {},
             "quantity": 0.0,
             "toplevel": false
@@ -189,15 +220,13 @@
             ],
             "description": "Elf Archer, a player character (for example). A patch over his left eye has left him slower to react (-1 Dex), but his battle scars have made him resilient (+2 Max HP).",
             "dest_id": null,
+            "events": [],
             "id": 7,
             "items": [],
             "location_id": 1,
             "masked": false,
             "name": "Thornwick",
-            "position": [
-                0,
-                0
-            ],
+            "position": [0,0],
             "progress": {},
             "quantity": 0.0,
             "toplevel": true
@@ -205,25 +234,17 @@
     ],
     "events": [
         {
-            "changed_attrs": [],
+            "changed": [],
             "description": "Shape bow and attach string. Success requires dexterity.",
-            "determining_attrs": [
-                3
-            ],
+            "determining": [],
             "id": 1,
             "name": "Carve",
-            "numeric_range": [
-                0,
-                10
-            ],
+            "numeric_range": [0, 10],
             "outcome_type": "fourway",
             "selection_strings": "",
             "toplevel": true,
             "trigger_by_duration": true,
-            "trigger_chance": [
-                1,
-                1
-            ],
+            "trigger_chance": [1, 1],
             "triggers": []
         }
     ],
@@ -235,6 +256,7 @@
             "description": "Can be carved into weapons or torches or burned for fuel.",
             "id": 2,
             "masked": false,
+            "mult": false,
             "name": "Pine Wood",
             "progress": {},
             "q_limit": 0.0,
@@ -244,10 +266,11 @@
             "toplevel": false
         },
         {
-            "attribs": {},
+            "attribs": [],
             "description": "For carving. Includes shelves to hold a selection of different kinds of wood.",
             "id": 1,
             "masked": false,
+            "mult": false,
             "name": "Woodworking Table",
             "progress": {},
             "q_limit": 1.0,
@@ -262,28 +285,15 @@
             "description": "Torchlit and lined with crafting stations. A large central pillar supports the towering ceiling.",
             "destinations": [
                 {
-                    "dest_id": "2",
+                    "bidirectional": true,
                     "distance": 3.0,
-                    "entrance": [
-                        1,
-                        6
-                    ],
-                    "exit": [
-                        3,
-                        1
-                    ]
+                    "door1": [3,1],
+                    "door2": [1,6],
+                    "loc2_id": 2
                 }
             ],
-            "dimensions": [
-                7,
-                7
-            ],
-            "excluded": [
-                3,
-                3,
-                5,
-                5
-            ],
+            "dimensions": [7,7],
+            "excluded": [3,3,5,5],
             "id": 1,
             "items": [],
             "masked": false,
@@ -294,22 +304,9 @@
         },
         {
             "description": "North of Entry Cavern.",
-            "destinations": [
-                {
-                    "dest_id": "1",
-                    "distance": 3.0
-                }
-            ],
-            "dimensions": [
-                3,
-                6
-            ],
-            "excluded": [
-                3,
-                3,
-                3,
-                5
-            ],
+            "destinations": [],
+            "dimensions": [3,6],
+            "excluded": [3,3,3,5],
             "id": 2,
             "items": [],
             "masked": true,
@@ -320,7 +317,7 @@
         }
     ],
     "overall": {
-        "description": "Your party was responding to a mysterious distress signal when suddenly, the ground below collapsed, and all fell down a nearly vertical shaft. No one seems to be injured <i>(yet)</i>. Doubtless there are <c=lightcoral>enemies</c> in the surrounding caverns—good source of <c=blue>XP</c>, an optimist would say.\r\n\r\nModeled after classic tabletop RPGs or roguelikes. Start by creating your player characters based on templates for species and class. Then craft rudimentary supplies before embarking on an escape to the surface or delving deeper. ",
+        "description": "Your party was responding to a mysterious distress signal when suddenly, the ground below collapsed, and all fell down a nearly vertical shaft. No one seems to be injured <i>(yet)</i>. Doubtless there are <c=lightcoral>enemies</c> in the surrounding caverns\u2014good source of <c=blue>XP</c>, an optimist would say.\r\n\r\nModeled after classic tabletop RPGs or roguelikes. Start by creating your player characters based on templates for species and class. Then craft rudimentary supplies before embarking on an escape to the surface or delving deeper. ",
         "number_format": "en_US",
         "slots": [
             "Main Hand",

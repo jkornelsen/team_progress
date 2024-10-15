@@ -2,6 +2,7 @@ import datetime
 from json import JSONDecodeError
 import logging
 import os
+import re
 import tempfile
 
 from flask import (
@@ -25,8 +26,10 @@ tables_to_create = {
     }
 
 DEFAULT_SCENARIO = "00_Default.json"
+DATA_DIR = None
 
 def set_routes(app):
+    global DATA_DIR
     DATA_DIR = app.config['DATA_DIR']
 
     @app.route('/configure')
@@ -55,10 +58,12 @@ def set_routes(app):
         logger.debug("%s\nsave_to_file()", "-" * 80)
         g.game_data.load_for_file()
         data_to_save = g.game_data.dict_for_json()
+        json_output = json.dumps(data_to_save, indent=4, default=str)
+        json_output = flatten_tuples(json_output)
         filename = generate_filename(g.game_data.overall.title)
         with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
             filepath = temp_file.name
-            json.dump(data_to_save, temp_file, indent=4)
+            temp_file.write(json_output)
         return send_file(filepath, as_attachment=True, download_name=filename)
 
     @app.route('/load_from_file', methods=['GET', 'POST'])
@@ -171,11 +176,8 @@ def set_routes(app):
         session['file_message'] = 'Starting game with default setup.'
         return redirect(url_for('configure_index'))
 
-    def default_scenario():
-        load_file(os.path.join(DATA_DIR, DEFAULT_SCENARIO))
-
-    # callable from outside the module
-    globals()['default_scenario'] = default_scenario
+def default_scenario():
+    load_file(os.path.join(DATA_DIR, DEFAULT_SCENARIO))
 
 def load_file_into_db(filepath):
     """Load game data from file and store into db."""
@@ -217,3 +219,26 @@ def generate_filename(title):
     filename = filename[:MAX_FILENAME_LENGTH]  # Limit filename length
     filename = "{}.json".format(filename)
     return filename
+
+def flatten_tuples(json_output):
+    """Condense json output a bit. For example, change [0,0] to be on a single
+    line instead of four lines.
+    """
+    def format_two_element_lists(match):
+        contents = match.group(1) + ", " + match.group(2)
+        return f'[{contents}]'
+
+    json_output = re.sub(
+        r'\[\s*([\d.]+|".*?")\s*,\s*([\d.]+|".*?")\s*\]',
+        format_two_element_lists, json_output)
+    def format_tuple(match):
+        contents = match.group(2).replace("\n", "").replace(" ", "")
+        formatted_contents = ",".join(contents.split(","))
+        return f'"{match.group(1)}": [{formatted_contents}]'
+
+    tuple_keys = ["door1", "door2", "dimensions", "excluded", "position"]
+    key_pattern = "|".join(tuple_keys)
+    pattern = rf'"({key_pattern})":\s*\[(.*?)\]'
+    json_output = re.sub(pattern, format_tuple, json_output, flags=re.DOTALL)
+    return json_output
+

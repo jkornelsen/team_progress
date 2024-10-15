@@ -46,7 +46,7 @@ OUTCOMES = [
 OUTCOME_MARGIN = 9  # difference required to get major or critical
 RELATION_TYPES = ['determining', 'changed', 'triggers']
 ENTITY_TYPES = [Attrib, Item, Location]
-ENTITY_TYPENAMES = [entity.typename for entity in ENTITY_TYPES]
+ENTITY_TYPENAMES = [entity.typename() for entity in ENTITY_TYPES]
 
 def roll_dice(sides):
     return random.randint(1, sides)
@@ -88,7 +88,7 @@ class Event(Identifiable):
             entities = getattr(self, f'{reltype}_entities')
             data.update({
                 reltype: [
-                    [entity.typename, entity.id]
+                    [entity.typename(), entity.id]
                     for entity in entities],
                 })
         return data
@@ -133,7 +133,7 @@ class Event(Identifiable):
         for reltype in RELATION_TYPES:
             entities = getattr(self, f'{reltype}_entities')
             for entity in entities:
-                entity_values.setdefault(entity.typename, []).append((
+                entity_values.setdefault(entity.typename(), []).append((
                     g.game_token, self.id, entity.id, reltype
                     ))
         for typename, values in entity_values.items():
@@ -167,12 +167,12 @@ class Event(Identifiable):
             evt = events.setdefault(base_row.id, base_row)
             entity_cls = next(
                 (e_cls for e_cls in ENTITY_TYPES
-                if getattr(entities_row, e_cls.id_field)), None
+                if getattr(entities_row, e_cls.id_field())), None
                 )
             if entity_cls:
                 entity_tup = (
-                    entity_cls.typename,
-                    getattr(entities_row, entity_cls.id_field)
+                    entity_cls.typename(),
+                    getattr(entities_row, entity_cls.id_field())
                     )
                 evt.setdefault(entities_row.reltype, []).append(entity_tup)
         # Set list of objects
@@ -319,7 +319,7 @@ class Event(Identifiable):
             container_type, [Character, Item, Location])
         container = container_cls.load_complete_objects(container_id)
         if not container:
-            raise ValueError(f"{container_cls.readable_type} not found")
+            raise ValueError(f"{container_cls.readable_type()} not found")
         oldval = ""
         if rel_type == 'attrib':
             rel_dict = container.attribs
@@ -356,7 +356,7 @@ class Event(Identifiable):
         rel_obj_cls = entity_class(rel_type, [Attrib, Item])
         rel_base_obj = rel_obj_cls.load_complete_objects(rel_id)
         if not rel_base_obj:
-            raise ValueError(f"{rel_obj_cls.readable_type} not found")
+            raise ValueError(f"{rel_obj_cls.readable_type()} not found")
         session['message'] = (
             f"Changed {rel_base_obj.name}"
             f" of {container.name} from {oldval} to {newval}")

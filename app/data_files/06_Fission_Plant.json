@@ -3,48 +3,33 @@
     "characters": [],
     "events": [
         {
-            "changed_attrs": [],
+            "changed": [],
             "description": "Get more information about a problem that occurred.",
-            "determining_attrs": [],
+            "determining": [],
             "id": 2,
             "name": "Fission Problem Type",
-            "numeric_range": [
-                0,
-                10
-            ],
+            "numeric_range": [0, 10],
             "outcome_type": "selection",
             "selection_strings": "Radioactive Waste Leak\r\nWaste Bacteria Inert\r\nCooling System Leak\r\nMechanical Failure\r\nElectricity Down\r\nUnusable Amenities\r\nEnergy Not Gained\r\nExcess Energy\r\nCore Meltdown",
             "toplevel": true,
             "trigger_by_duration": true,
-            "trigger_chance": [
-                1,
-                1
-            ],
+            "trigger_chance": [1, 1],
             "triggers": []
         },
         {
-            "changed_attrs": [],
+            "changed": [],
             "description": "Minor problems, such as waste leaks, up to the worst case, core meltdown.\r\n\r\nWaste buildup increases the chance of something going wrong, so take that into account when troubleshooting. Or, run <a href=\"/play/event/2\">Fission Problem Type</a> afterwards to help determine which problem occurred.",
-            "determining_attrs": [],
+            "determining": [],
             "id": 1,
             "name": "Fission Problem",
-            "numeric_range": [
-                0,
-                10
-            ],
+            "numeric_range": [0, 10],
             "outcome_type": "fourway",
             "selection_strings": "",
             "toplevel": true,
             "trigger_by_duration": false,
-            "trigger_chance": [
-                1,
-                20
-            ],
+            "trigger_chance": [1, 20],
             "triggers": [
-                [
-                    "item",
-                    20
-                ]
+                ["item", 20]
             ]
         }
     ],
@@ -238,24 +223,13 @@
         {
             "description": "Large chamber with a controlled environment where fission takes place.",
             "destinations": [],
-            "dimensions": [
-                0,
-                0
-            ],
-            "excluded": [
-                0,
-                0,
-                0,
-                0
-            ],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
             "id": 5,
             "items": [
                 {
                     "item_id": 21,
-                    "position": [
-                        0,
-                        0
-                    ],
+                    "position": [0,0],
                     "quantity": 1.0
                 }
             ],
@@ -268,24 +242,13 @@
         {
             "description": "Handle excess heat away from the main room.",
             "destinations": [],
-            "dimensions": [
-                0,
-                0
-            ],
-            "excluded": [
-                0,
-                0,
-                0,
-                0
-            ],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
             "id": 6,
             "items": [
                 {
                     "item_id": 19,
-                    "position": [
-                        0,
-                        0
-                    ],
+                    "position": [0,0],
                     "quantity": 1.0
                 }
             ],

@@ -16,9 +16,8 @@ class Pile(DbSerializable):
         self.container = container  # character or location where item is
         self.quantity = 0
 
-    @classmethod
-    @property
-    def container_type(cls):
+    @staticmethod
+    def container_type():
         """Short string to refer to the container class."""
         raise NotImplementedError()
 
