@@ -327,11 +327,12 @@ class Location(Identifiable):
                     OR ({tables[1]}.id = {tables[0]}.loc1_id
                         AND {tables[0]}.bidirectional = TRUE))
                 AND {tables[1]}.game_token = {tables[0]}.game_token
+                AND {tables[1]}.id != %s
             WHERE {tables[0]}.game_token = %s
                 AND ({tables[0]}.loc1_id = %s
                     OR ({tables[0]}.loc2_id = %s
                     AND {tables[0]}.bidirectional = TRUE))
-            """, [g.game_token, departure_id, departure_id],
+            """, [departure_id, g.game_token, departure_id, departure_id],
             ['loc_destinations', 'locations'])
         destinations = []
         for dest_data, dest_loc_data in tables_rows:
@@ -351,7 +352,7 @@ class Location(Identifiable):
                             and dest.bidirectional)):
                     current_dest = dest
                     break
-        logger.debug("Destinations: %s", destinations)
+        logger.debug("Destinations: %s", len(destinations))
         return destinations, current_dest
 
     @classmethod

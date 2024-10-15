@@ -39,10 +39,10 @@
         <table style="width: 100%; max-width: 80%; margin: 0 auto;">
             <tr>
                 <td>
-                    {% if container.pile.container_type == 'general' %}
+                    {% if container.pile.container_type() == 'general' %}
                         General Storage
                         <br>
-                    {% elif container.pile.container_type == 'char' %}
+                    {% elif container.pile.container_type() == 'char' %}
                         {% set link = url_for('play_char', char_id=container.id) %}
                         {% set letter = link_letters.next(link) %}
                         <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
@@ -50,7 +50,7 @@
                         <a href="{{ link }}">{{ container.name }}</a>
                         <span>[{{ letter }}]</span>
                         <br>
-                    {% elif container.pile.container_type == 'loc' %}
+                    {% elif container.pile.container_type() == 'loc' %}
                         {% set link = url_for('play_location', loc_id=container.id) %}
                         {% set letter = link_letters.next(link) %}
                         <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
@@ -118,7 +118,7 @@
                 </style>
                 <td>
                     <div class="button-container">
-                        {% if container.pile.container_type == 'char' %}
+                        {% if container.pile.container_type() == 'char' %}
                             {% if container.pile.slot %}
                                 <div class="button-column" id="unequip-container">
                                     <button id="unequip-btn" class="go-button">Une[q]uip</button>
@@ -145,7 +145,7 @@
                         {% for char in game_data.characters if char.location.id == loc_id %}
                             {% set has.chars = True %}
                         {% endfor %}
-                        {% if container.pile.container_type == 'loc' and loc_id and has.chars %}
+                        {% if container.pile.container_type() == 'loc' and loc_id and has.chars %}
                             <div class="button-column" id="pickup-container">
                                 <button id="pickup-btn" class="go-button">[P]ick Up</button>
                                 <select id="char-picking-up">
@@ -307,12 +307,12 @@
                                                     <td id="recipe-{{ recipe.id }}-source-{{ item.id }}-at">
                                                         {% if source.pile and source.pile.quantity > 0 %}
                                                             {% set container = source.pile.container %}
-                                                            {% if source.pile.container_type == 'general' %}
+                                                            {% if source.pile.container_type() == 'general' %}
                                                                 (General)
                                                             {% else %}
-                                                                {% if source.pile.container_type == 'char' %}
+                                                                {% if source.pile.container_type() == 'char' %}
                                                                     {% set link = url_for('play_char', char_id=container.id) %}
-                                                                {% elif source.pile.container_type == 'loc' %}
+                                                                {% elif source.pile.container_type() == 'loc' %}
                                                                     {% set link = url_for('play_location', loc_id=container.id) %}
                                                                 {% else %}
                                                                     {% set link = "/unexpected-pile-type" %}
@@ -828,8 +828,8 @@
                 const showAll = $('#show-all-buttons').is(':checked');
                 const storage_carried = '{{ current.storage_type }}' === 'carried';
                 const storage_local = '{{ current.storage_type }}' === 'local';
-                const atLoc = '{{ container.pile.container_type }}' === 'loc';
-                const inventory = '{{ container.pile.container_type }}' === 'char';
+                const atLoc = '{{ container.pile.container_type() }}' === 'loc';
+                const inventory = '{{ container.pile.container_type() }}' === 'char';
                 const charAtLoc = {{ container.location is not none | lower }};
                 const inSlot = '{{ container.pile.slot }}' !== '';
                 const visibilityMap = {

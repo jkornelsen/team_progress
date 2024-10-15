@@ -44,7 +44,7 @@
         {% if current.location %}
             <h2>Location</h2>
             <ul>
-                {% set link = url_for('play_location', loc_id=current.location.id, char_id=current.id) %}
+                {% set link = url_for('play_location', loc_id=current.location.id, char_id=current.id) | safe %}
                 {% set letter = link_letters.next(link) %}
                 <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
                 <span>[{{ letter }}]</span>
@@ -87,7 +87,7 @@
             <ul>
                 {% for owned in current.items.values() if owned.quantity > 0 and owned.slot %}
                     {% set item = owned.item %}
-                    {% set link = url_for('play_item', item_id=item.id, char_id=current.id, main='carried') %}
+                    {% set link = url_for('play_item', item_id=item.id, char_id=current.id, main='carried') | safe %}
                     {% set letter = link_letters.next(link) %}
                     <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
                     <span class="item-name">
@@ -107,7 +107,7 @@
             <ul>
                 {% for owned in current.items.values() if owned.quantity > 0 and not owned.slot %}
                     {% set item = owned.item %}
-                    {% set link = url_for('play_item', item_id=item.id, char_id=current.id, main='carried') %}
+                    {% set link = url_for('play_item', item_id=item.id, char_id=current.id, main='carried') | safe %}
                     {% set letter = link_letters.next(link) %}
                     <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
                     <span class="item-name">
@@ -125,7 +125,7 @@
             <h2>Abilities</h2>
             <ul>
                 {% for evt in game_data.events %}
-                    {% set link = url_for('play_event', event_id=evt.id, from_id=current.id, from_typename=current.typename()) %}
+                    {% set link = url_for('play_event', event_id=evt.id, from_id=current.id, from_typename=current.typename()) | safe %}
                     {% set letter = link_letters.next(link) %}
                     <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
                     <span>[{{ letter }}]</span>
@@ -140,7 +140,7 @@
             <h2>Attributes</h2>
             <ul>
                 {% for attrib_of in current.attribs.values() %}
-                    {% set link = url_for('play_attrib', attrib_id=attrib_of.attrib_id, subject_type='char', subject_id=current.id) %}
+                    {% set link = url_for('play_attrib', attrib_id=attrib_of.attrib_id, subject_type='char', subject_id=current.id) | safe %}
                     {% set letter = link_letters.next(link) %}
                     <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
                     <li>
@@ -208,7 +208,7 @@
                 stopFetchingProgress();
                 const confirmed = await showCustomConfirm(data.message);
                 if (confirmed) {
-                    const baseEventUrl = "{{ url_for('play_event', event_id=MAX_INT_32, char_id=current.id) }}"
+                    const baseEventUrl = "{{ url_for('play_event', event_id=MAX_INT_32, char_id=current.id, from_id=current.id, from_typename=current.typename()) | safe }}"
                     const url = baseEventUrl.replace('{{ MAX_INT_32 }}', data.event_id);
                     console.log("Confirmed to go to ", url);
                     stopTravel();
@@ -291,8 +291,10 @@
                     });
                 });
                 console.log('Received data:', data);
-                updateTravelProgress(data);
-                updateStartButtonLabel(data);
+                if (data) {
+                    updateTravelProgress(data);
+                    updateStartButtonLabel(data);
+                }
             }
             let intervalId;
             function startFetchingProgress() {

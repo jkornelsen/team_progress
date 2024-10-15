@@ -16,9 +16,11 @@ so we do use the new IDs but neglect to remove or replace the old ones
 
 hotkeys for starting recipes
 
-don't allow production if byproducts would exceed limit
-
 implement checking triggers for item progress
 maybe in item_progress, similar to call in char_progress
 event.check_trigger_for_duration(time_spent)
 pop up event in play/item.html like in play/character.html
+
+items at location in configure are showing as "," rather than "0,0"
+
+changing destinations shows full travel bar

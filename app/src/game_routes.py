@@ -371,7 +371,7 @@ def set_routes(app):
             if char.progress.is_ongoing:
                 time_spent = char.progress.batches_for_elapsed_time()
                 events = Event.load_triggers_for_type(
-                    char.location.id, Location.typename)
+                    char.location.id, Location.typename())
                 req = RequestHelper('args')
                 ignore_event_id = req.get_int('ignore_event', '')
                 for event in events:
@@ -479,7 +479,7 @@ def set_routes(app):
         logger.debug(
             "Retrieved item %d from DB: %d recipes\n"
             "Pile type %s from %s container",
-            item.id, len(item.recipes), pile.container_type,
+            item.id, len(item.recipes), pile.container_type(),
             pile.container.name)
         if progress.is_ongoing:
             progress.batches_for_elapsed_time()

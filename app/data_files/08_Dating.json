@@ -105,14 +105,6 @@
             "name": "Intoxicated"
         },
         {
-            "description": "State of a piece of clothing. 10 for completely clean, 0 for dirtiest.\r\n\r\nMost clothes get dirty from wearing, while shoes only get dirty if stepping in something such as mud.",
-            "enum_list": [],
-            "id": 7,
-            "is_binary": false,
-            "mult": false,
-            "name": "Clean"
-        },
-        {
             "description": "",
             "enum_list": [
                 "Sunday",
@@ -127,6 +119,22 @@
             "is_binary": false,
             "mult": false,
             "name": "Day of Week"
+        },
+        {
+            "description": "For example, shoes get dirty if stepping in something such as mud. May affect how clean a person is. 0 is not dirty, up to 10.",
+            "enum_list": [],
+            "id": 19,
+            "is_binary": false,
+            "mult": false,
+            "name": "Dirty"
+        },
+        {
+            "description": "State of a person. 10 for completely clean, 0 for dirtiest.\r\n\r\nFactors include how long since showered, and clothing washed. Most clothes get less clean from wearing (but not shoes), although tracking this gets tedious.\r\n\r\nSee also: <a href=\"/configure/attrib/19\">Dirty</a>",
+            "enum_list": [],
+            "id": 7,
+            "is_binary": false,
+            "mult": false,
+            "name": "Clean"
         }
     ],
     "characters": [
@@ -203,67 +211,6 @@
             "progress": {},
             "quantity": 0.0,
             "toplevel": false
-        },
-        {
-            "attribs": [
-                [7, 10.0],
-                [16, 0.0],
-                [4, 3.0],
-                [6, 3.0],
-                [8, 10.0],
-                [9, 1.0],
-                [12, 1.0],
-                [14, 5.0],
-                [5, 5.0],
-                [15, 3.0],
-                [17, 9910.0]
-            ],
-            "description": "Work has left little time for social life, until now. With a few months off, this is the perfect time to reawaken that hidden charisma and those stifled interpersonal skills.\r\n\r\nThe default setup is male seeking female.",
-            "dest_id": null,
-            "events": [2, 1],
-            "id": 5,
-            "items": [
-                {
-                    "item_id": 30,
-                    "quantity": 1.0,
-                    "slot": "Upper Body"
-                },
-                {
-                    "item_id": 31,
-                    "quantity": 1.0,
-                    "slot": "Legs"
-                },
-                {
-                    "item_id": 32,
-                    "quantity": 1.0,
-                    "slot": "Feet"
-                },
-                {
-                    "item_id": 34,
-                    "quantity": 1.0,
-                    "slot": ""
-                },
-                {
-                    "item_id": 38,
-                    "quantity": 1.0,
-                    "slot": "Wrist"
-                }
-            ],
-            "location_id": 20,
-            "masked": false,
-            "name": "(Enter a name)",
-            "position": [0,0],
-            "progress": {
-                "batches_processed": 1,
-                "id": 75,
-                "is_ongoing": false,
-                "item_id": 0,
-                "recipe_id": 0,
-                "start_time": "2024-10-01 13:57:15",
-                "stop_time": "2024-10-01 13:57:19"
-            },
-            "quantity": 0.0,
-            "toplevel": true
         },
         {
             "attribs": [],
@@ -344,6 +291,67 @@
             "progress": {},
             "quantity": 0.0,
             "toplevel": false
+        },
+        {
+            "attribs": [
+                [7, 10.0],
+                [16, 0.0],
+                [4, 3.0],
+                [6, 3.0],
+                [8, 10.0],
+                [9, 1.0],
+                [12, 1.0],
+                [14, 5.0],
+                [5, 5.0],
+                [15, 3.0],
+                [17, 9910.0]
+            ],
+            "description": "Work has left little time for social life, until now. With a few months off, this is the perfect time to reawaken that hidden charisma and those stifled interpersonal skills.\r\n\r\nThe default setup is male seeking female.",
+            "dest_id": null,
+            "events": [2, 1],
+            "id": 5,
+            "items": [
+                {
+                    "item_id": 30,
+                    "quantity": 1.0,
+                    "slot": "Upper Body"
+                },
+                {
+                    "item_id": 31,
+                    "quantity": 1.0,
+                    "slot": "Legs"
+                },
+                {
+                    "item_id": 32,
+                    "quantity": 1.0,
+                    "slot": "Feet"
+                },
+                {
+                    "item_id": 34,
+                    "quantity": 1.0,
+                    "slot": ""
+                },
+                {
+                    "item_id": 38,
+                    "quantity": 1.0,
+                    "slot": "Wrist"
+                }
+            ],
+            "location_id": 20,
+            "masked": false,
+            "name": "(Enter a name)",
+            "position": [0,0],
+            "progress": {
+                "batches_processed": 1,
+                "id": 75,
+                "is_ongoing": false,
+                "item_id": 0,
+                "recipe_id": 0,
+                "start_time": "2024-10-15 13:19:05.333958",
+                "stop_time": "2024-10-15 13:19:08.536828"
+            },
+            "quantity": 0.0,
+            "toplevel": true
         }
     ],
     "events": [
@@ -466,8 +474,8 @@
             "recipes": [
                 {
                     "attribs": [
-                        [13, 1.0],
-                        [12, 1.0]
+                        [12, 1.0],
+                        [13, 1.0]
                     ],
                     "byproducts": [],
                     "id": 12,
@@ -644,146 +652,6 @@
         },
         {
             "attribs": [
-                [8, 3.0],
-                [7, 10.0],
-                [5, 2.0]
-            ],
-            "description": "Decent looking shirt.",
-            "id": 30,
-            "masked": false,
-            "mult": false,
-            "name": "Button Shirt",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [],
-            "storage_type": "carried",
-            "toplevel": false
-        },
-        {
-            "attribs": [
-                [8, 1.0],
-                [7, 10.0],
-                [5, 1.0]
-            ],
-            "description": "Easy to put on although not the most secure.",
-            "id": 32,
-            "masked": false,
-            "mult": false,
-            "name": "Loafers",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [],
-            "storage_type": "carried",
-            "toplevel": false
-        },
-        {
-            "attribs": [
-                [7, 10.0],
-                [5, 1.0],
-                [8, 1.0]
-            ],
-            "description": "Good for work or spending time with friends, not hiking or sports.",
-            "id": 36,
-            "masked": false,
-            "mult": false,
-            "name": "Low Heels",
-            "progress": {},
-            "q_limit": 0.0,
-            "quantity": 0.0,
-            "recipes": [],
-            "storage_type": "carried",
-            "toplevel": false
-        },
-        {
-            "attribs": [
-                [5, 4.0],
-                [8, 9.0],
-                [7, 10.0]
-            ],
-            "description": "Good for a variety of occasions including work and free time.",
-            "id": 35,
-            "masked": false,
-            "mult": false,
-            "name": "Plain Black Dress",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [],
-            "storage_type": "carried",
-            "toplevel": false
-        },
-        {
-            "attribs": [
-                [7, 10.0],
-                [8, 7.0],
-                [5, 4.0]
-            ],
-            "description": "The bottom of the skirt rests just above the knees.",
-            "id": 37,
-            "masked": false,
-            "mult": false,
-            "name": "Revealing Leather Dress",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [],
-            "storage_type": "carried",
-            "toplevel": false
-        },
-        {
-            "attribs": [
-                [5, 1.0],
-                [7, 10.0],
-                [8, 6.0]
-            ],
-            "description": "Nothing special, but passable away from home.",
-            "id": 31,
-            "masked": false,
-            "mult": false,
-            "name": "Jeans",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [],
-            "storage_type": "carried",
-            "toplevel": false
-        },
-        {
-            "attribs": [
-                [8, 8.0],
-                [7, 10.0],
-                [5, 1.0]
-            ],
-            "description": "Not necessarily immodest if a guy wears these at a public place to swim. Could even be attractive if he's fit.",
-            "id": 39,
-            "masked": false,
-            "mult": false,
-            "name": "Swim Trunks",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [],
-            "storage_type": "carried",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "To dry off or wrap around.",
-            "id": 42,
-            "masked": false,
-            "mult": false,
-            "name": "Towel",
-            "progress": {},
-            "q_limit": 0.0,
-            "quantity": 0.0,
-            "recipes": [],
-            "storage_type": "carried",
-            "toplevel": false
-        },
-        {
-            "attribs": [
                 [14, 1.0],
                 [4, 0.0]
             ],
@@ -829,6 +697,162 @@
             "quantity": 0.0,
             "recipes": [],
             "storage_type": "carried",
+            "toplevel": false
+        },
+        {
+            "attribs": [
+                [19, 0.0],
+                [8, 3.0],
+                [5, 2.0]
+            ],
+            "description": "Decent looking shirt.",
+            "id": 30,
+            "masked": false,
+            "mult": false,
+            "name": "Button Shirt",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "carried",
+            "toplevel": false
+        },
+        {
+            "attribs": [
+                [19, 0.0],
+                [5, 1.0],
+                [8, 6.0]
+            ],
+            "description": "Nothing special, but passable away from home.",
+            "id": 31,
+            "masked": false,
+            "mult": false,
+            "name": "Jeans",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "carried",
+            "toplevel": false
+        },
+        {
+            "attribs": [
+                [19, 0.0],
+                [8, 1.0],
+                [5, 1.0]
+            ],
+            "description": "Easy to put on although not the most secure.",
+            "id": 32,
+            "masked": false,
+            "mult": false,
+            "name": "Loafers",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "carried",
+            "toplevel": false
+        },
+        {
+            "attribs": [
+                [19, 0.0],
+                [5, 1.0],
+                [8, 1.0]
+            ],
+            "description": "Good for work or spending time with friends, not hiking or sports.",
+            "id": 36,
+            "masked": false,
+            "mult": false,
+            "name": "Low Heels",
+            "progress": {},
+            "q_limit": 0.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "carried",
+            "toplevel": false
+        },
+        {
+            "attribs": [
+                [19, 0.0],
+                [5, 4.0],
+                [8, 9.0]
+            ],
+            "description": "Good for a variety of occasions including work and free time.",
+            "id": 35,
+            "masked": false,
+            "mult": false,
+            "name": "Plain Black Dress",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "carried",
+            "toplevel": false
+        },
+        {
+            "attribs": [
+                [19, 0.0],
+                [8, 7.0],
+                [5, 4.0]
+            ],
+            "description": "The bottom of the skirt rests just above the knees.",
+            "id": 37,
+            "masked": false,
+            "mult": false,
+            "name": "Revealing Leather Dress",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "carried",
+            "toplevel": false
+        },
+        {
+            "attribs": [
+                [19, 0.0],
+                [8, 8.0],
+                [5, 1.0]
+            ],
+            "description": "Not necessarily immodest if a guy wears these at a public place to swim. Could even be attractive if he's fit.",
+            "id": 39,
+            "masked": false,
+            "mult": false,
+            "name": "Swim Trunks",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "carried",
+            "toplevel": false
+        },
+        {
+            "attribs": [
+                [19, 0.0]
+            ],
+            "description": "To dry off or wrap around.",
+            "id": 42,
+            "masked": false,
+            "mult": false,
+            "name": "Towel",
+            "progress": {},
+            "q_limit": 0.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "carried",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "Removes dirt from clothes. Doesn't work on people \u2014 use a shower for that.",
+            "id": 44,
+            "masked": false,
+            "mult": false,
+            "name": "Washing Machine",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "local",
             "toplevel": false
         }
     ],
@@ -953,39 +977,8 @@
             "toplevel": false
         },
         {
-            "description": "Shower with hot water if you flip on the small water heater for a short time.\r\n\r\nIn a drawer is toothpaste and other toiletries. A shelf contains towels. The door has a hook for a bathrobe.",
-            "destinations": [],
-            "dimensions": [0,0],
-            "excluded": [0,0,0,0],
-            "id": 15,
-            "items": [
-                {
-                    "item_id": 41,
-                    "position": [0,0],
-                    "quantity": 7.0
-                },
-                {
-                    "item_id": 42,
-                    "position": [0,0],
-                    "quantity": 1.0
-                }
-            ],
-            "masked": false,
-            "name": "Your Bathroom",
-            "progress": {},
-            "quantity": 0.0,
-            "toplevel": false
-        },
-        {
             "description": "Luxurious \u2014 three swimming pools, far more than your grandparents in India. Only for some reason they're all very small, about ankle deep. Well, it may not be the finest in the land, but it's nothing to be ashamed of either.",
             "destinations": [
-                {
-                    "bidirectional": true,
-                    "distance": 1.0,
-                    "door1": [0,0],
-                    "door2": [0,0],
-                    "loc2_id": 6
-                },
                 {
                     "bidirectional": true,
                     "distance": 1.0,
@@ -998,14 +991,21 @@
                     "distance": 1.0,
                     "door1": [0,0],
                     "door2": [0,0],
-                    "loc2_id": 15
+                    "loc2_id": 19
                 },
                 {
                     "bidirectional": true,
                     "distance": 1.0,
                     "door1": [0,0],
                     "door2": [0,0],
-                    "loc2_id": 19
+                    "loc2_id": 6
+                },
+                {
+                    "bidirectional": true,
+                    "distance": 1.0,
+                    "door1": [0,0],
+                    "door2": [0,0],
+                    "loc2_id": 15
                 }
             ],
             "dimensions": [0,0],
@@ -1033,34 +1033,6 @@
             "items": [],
             "masked": false,
             "name": "Market",
-            "progress": {},
-            "quantity": 0.0,
-            "toplevel": false
-        },
-        {
-            "description": "Partway between downtown and the outskirts, it's a good place to get somewhere easily from.",
-            "destinations": [
-                {
-                    "bidirectional": true,
-                    "distance": 4.0,
-                    "door1": [0,0],
-                    "door2": [0,0],
-                    "loc2_id": 11
-                },
-                {
-                    "bidirectional": true,
-                    "distance": 5.0,
-                    "door1": [0,0],
-                    "door2": [0,0],
-                    "loc2_id": 9
-                }
-            ],
-            "dimensions": [0,0],
-            "excluded": [0,0,0,0],
-            "id": 6,
-            "items": [],
-            "masked": false,
-            "name": "Your Street",
             "progress": {},
             "quantity": 0.0,
             "toplevel": false
@@ -1145,6 +1117,63 @@
             "toplevel": false
         },
         {
+            "description": "Partway between downtown and the outskirts, it's a good place to get somewhere easily from.\r\n\r\nThere is a bus stop with routes to downtown.",
+            "destinations": [
+                {
+                    "bidirectional": true,
+                    "distance": 4.0,
+                    "door1": [0,0],
+                    "door2": [0,0],
+                    "loc2_id": 11
+                },
+                {
+                    "bidirectional": true,
+                    "distance": 5.0,
+                    "door1": [0,0],
+                    "door2": [0,0],
+                    "loc2_id": 9
+                }
+            ],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
+            "id": 6,
+            "items": [],
+            "masked": false,
+            "name": "Your Street",
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": false
+        },
+        {
+            "description": "Shower with hot water if you flip on the small water heater for a short time.\r\n\r\nIn a drawer is toothpaste and other toiletries. A shelf contains towels. The door has a hook for a bathrobe.",
+            "destinations": [],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
+            "id": 15,
+            "items": [
+                {
+                    "item_id": 44,
+                    "position": [0,0],
+                    "quantity": 1.0
+                },
+                {
+                    "item_id": 42,
+                    "position": [0,0],
+                    "quantity": 1.0
+                },
+                {
+                    "item_id": 41,
+                    "position": [0,0],
+                    "quantity": 7.0
+                }
+            ],
+            "masked": false,
+            "name": "Your Bathroom",
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": false
+        },
+        {
             "description": "The lights are much brighter, and the night life as well as the day life is humming.",
             "destinations": [
                 {
@@ -1196,7 +1225,15 @@
             "items": [],
             "masked": false,
             "name": "Downtown",
-            "progress": {},
+            "progress": {
+                "batches_processed": 1,
+                "id": 75,
+                "is_ongoing": false,
+                "item_id": 0,
+                "recipe_id": 0,
+                "start_time": "2024-10-15 13:19:05.333958",
+                "stop_time": "2024-10-15 13:19:08.536828"
+            },
             "quantity": 0.0,
             "toplevel": false
         }
