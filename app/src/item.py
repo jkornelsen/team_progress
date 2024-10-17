@@ -1,6 +1,6 @@
 import logging
 
-from flask import g, session
+from flask import g, session, url_for
 
 from .attrib import Attrib, AttribFor
 from .db_serializable import (
@@ -8,7 +8,7 @@ from .db_serializable import (
 from .pile import Pile, load_piles
 from .progress import Progress
 from .recipe import Byproduct, Recipe, Source
-from .utils import RequestHelper, Storage, non_empty
+from .utils import RequestHelper, Storage
 
 logger = logging.getLogger(__name__)
 tables_to_create = {
@@ -154,7 +154,7 @@ class Item(CompleteIdentifiable):
                 if id_ in g.active.items]
             if len(loaded_items) == len(ids):
                 logger.debug("already loaded")
-                return loaded_items.values()
+                return loaded_items
         items = Progress.load_base_data_dict(cls, ids)
         # Get attrib relation data
         qhelper = QueryHelper("""
@@ -171,7 +171,7 @@ class Item(CompleteIdentifiable):
         # Get source relation data
         all_recipes_data = Recipe.load_complete_data_dict(ids)
         for item_id, recipes_data in all_recipes_data.items():
-            item = items[item_id]  #FIXME: item_id is str '17' instead of int
+            item = items[item_id]
             item.recipes = recipes_data.values()
         # Set list of objects
         instances = {}
@@ -321,6 +321,7 @@ class Item(CompleteIdentifiable):
             try:
                 self.remove_from_db()
                 session['file_message'] = 'Removed item.'
+                session['referrer'] = url_for('configure_index')
             except DbError as e:
                 raise DeletionError(str(e))
         elif req.has_key('cancel_changes'):

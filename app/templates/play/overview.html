@@ -111,7 +111,10 @@
                         <span>[{{ letter }}]</span>
                         <a href="{{ link }}">{{ item.name }}</a>
                     </td>
-                    <td id="item-{{ item.id }}-quantity">{{ item.quantity | formatNum }}</td>
+                    <td id="item-{{ item.id }}-quantity">
+                        {{ item.quantity | formatNum }}
+                        {% if item.is_ongoing %}<span title="currently in production">🔄</span>{% endif %}
+                    </td>
                     <td>
                         {% if item.attribs %}
                             {% for attrib_of in item.attribs[:2] %}

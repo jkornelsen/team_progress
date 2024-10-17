@@ -91,7 +91,6 @@
             </tr>
             <tr>
                 <td>
-                    <span id="recipe-progress-label">Recipe Progress:</span>
                     <div id="action-progress-container"
                          style="width: 60%;"
                          class="progress-container hidden">
@@ -101,7 +100,6 @@
                             max="100"></progress>
                         <span class="progress-label" id="action-progress-label">0%</span>
                     </div>
-                    <span id="elapsed-time" class="hidden">...</span>
                 </td>
             </tr>
             <tr>
@@ -498,9 +496,10 @@
         </table>
         <script>
         $(document).ready(() => {
-            let mainQuantity = 0;
+            let hasMainQuantity = false;
 
             function updateQuantity(data) {
+                console.log('updateQuantity()');
                 // Main item quantity
                 const quantityText = data.quantity_str;
                 const qLimit = {{ current.q_limit }};
@@ -511,7 +510,7 @@
                     quantity: data.quantity,
                     max_quantity: {{ current.q_limit or 0 }}
                 });
-                mainQuantity = data.quantity;
+                hasMainQuantity = data.quantity !== 0;
                 // Source item quantities required
                 let url; // eslint-disable-line no-unused-vars
                 {% for recipe in current.recipes %}
@@ -564,10 +563,10 @@
             let in_progress = false;
 
             function updateActionProgress() {
-                console.log('Updating progress bar:', { elapsedTime, rateDuration });
+                //console.log('Updating progress bar:', { elapsedTime, rateDuration });
                 const progressBar = $('#action-progress-bar');
                 const progressLabel = $('#action-progress-label');
-                const effectiveElapsedTime = elapsedTime % rateDuration;
+                const effectiveElapsedTime = Math.ceil(elapsedTime) % rateDuration;
                 const progressPercent = (effectiveElapsedTime / rateDuration) * 100;
                 progressBar.val(progressPercent);
                 progressLabel.text(`${Math.floor(effectiveElapsedTime)} / ${rateDuration} sec`);
@@ -575,19 +574,10 @@
 
             // Update the elapsed time on the client.
             function updateElapsedTime() {
-                // Increment the elapsed time by 1 second
                 if (in_progress) {
                     elapsedTime += 1;
                 }
-                $('#elapsed-time').text(formatTime(elapsedTime));
-            }
-
-            // Function to format the time in HH:MM:SS format.
-            function formatTime(time) {
-              const hours = Math.floor(time / 3600);
-              const minutes = Math.floor((time % 3600) / 60);
-              const seconds = Math.floor(time % 60);
-              return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                updateActionProgress();
             }
 
             // Reconcile the elapsed time with the server-side progress time.
@@ -597,7 +587,6 @@
                 } else {
                     elapsedTime = 0;
                 }
-                //$('#dest-time').text(formatTime(elapsedTime));
             }
 
             // the Start button can change to "Stop"
@@ -624,15 +613,12 @@
             function updateProgressVisibility() {
                 if (!in_progress) {
                     $('#action-progress-container').addClass('hidden');
-                    $('#recipe-progress-label').addClass('hidden');
                     return;
                 }
                 if (rateDuration < 5) {
                     $('#action-progress-container').addClass('hidden');
-                    $('#recipe-progress-label').addClass('hidden');
                 } else {
                     $('#action-progress-container').removeClass('hidden');
-                    $('#recipe-progress-label').removeClass('hidden');
                 }
             }
 
@@ -647,7 +633,6 @@
                     });
                 });
                 updateQuantity(data);
-                updateActionProgress();
                 in_progress = data.is_ongoing;
                 reconcileElapsedTime(data);
                 updateStartButtonLabel(data, data.recipe_id);
@@ -661,7 +646,7 @@
                 await fetchProgressData();
                 startFetchingProgress();
                 updateElapsedTime();
-                setInterval(updateElapsedTime, 1000);
+                setInterval(updateElapsedTime, 1900);
                 await updateVisibility();
                 showContent();
             }
@@ -836,7 +821,7 @@
             });
 
             async function updateVisibility() {
-                const notEmpty = mainQuantity !== 0;
+                const notEmpty = hasMainQuantity;
                 const showAll = $('#show-all-buttons').is(':checked');
                 const storage_carried = '{{ current.storage_type }}' === 'carried';
                 const storage_local = '{{ current.storage_type }}' === 'local';

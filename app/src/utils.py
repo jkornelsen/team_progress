@@ -214,8 +214,16 @@ def format_num(value):
         locale.setlocale(locale.LC_ALL, nformat)
     except locale.Error:
         locale.setlocale(locale.LC_ALL, 'C')  # 1230000
-    decimal_places = 0 if value == int(value) else len(
-        str(value).split('.')[1])
+    PRECISION = 7  # 12,345,670
+    decimal_places = PRECISION
+    if value > 0:
+        magnitude = int(value)
+        decimal_places = max(PRECISION - len(str(magnitude)), 0)
+    elif value < 0:
+        decimal_portion = str(value).split('.')[1]
+        start = re.match(r"^(0*)([1-9])", decimal_portion)
+        if start:
+            decimal_places = len(start.group(1)) + PRECISION
     try:
         value_str = locale.format_string(
             f"%.{decimal_places}f", value, grouping=True)

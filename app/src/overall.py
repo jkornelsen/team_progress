@@ -287,9 +287,11 @@ class Overall(DbSerializable):
             WHERE {tables[0]}.game_token = %s
                 AND {tables[0]}.toplevel
             """, [g.game_token,], ['items', 'progress'])
-        items = Item.load_complete_objects(
-            [item_row.id for item_row in item_rows])
-        for item in items:
+        ongoing_item_ids = [item_row.id for item_row in item_rows]
+        for item in [
+                Item.data_for_play(id_)
+                for id_ in ongoing_item_ids
+                ]:
             item.progress.batches_for_elapsed_time()
         # All top-level Items and their Attribs
         tables_rows = cls.select_tables("""
@@ -308,6 +310,7 @@ class Overall(DbSerializable):
             """, (g.game_token,), ['items', 'item_attribs', 'attribs'])
         items_data = {}
         for item_data, item_attrib_data, attrib_data in tables_rows:
+            item_data.is_ongoing = item_data.id in ongoing_item_ids
             item_row = items_data.setdefault(item_data.id, item_data)
             if attrib_data.id:
                 if not hasattr(item_row, 'attribs'):

@@ -18,14 +18,8 @@ implement checking triggers for item progress
 maybe in item_progress, similar to call in char_progress
 event.check_trigger_for_duration(time_spent)
 pop up event in play/item.html like in play/character.html
+we'll also want it for overview eventually
 
 items at location in configure are showing as "," rather than "0,0"
 
 changing destinations shows full travel bar
-
-rate didn't keep -- 0.5 in 8 became 1 in 3
-looks like configuring item changes value in db correctly,
-but then reconfiguring doesn't load changed values,
-so saving that changes db data back to default
-seems to be a common type of problem in this project
-a read error that acts like a write error

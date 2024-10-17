@@ -76,7 +76,7 @@
                name="item_quantity"
                value="{{ current.pile.quantity | formatNum }}"
                size="8">
-        <span id="running-label"></span>
+        <span id="running-label" title="currently in production"></span>
         <br>
         <label for="item-limit">Limit per Pile:</label>
         <input type="text"
@@ -197,7 +197,7 @@
             const itemQuantityInput = $('#item-quantity');
             {% if current.progress.is_ongoing|lower == 'true' %}
                 itemQuantityInput.prop('readonly', true);
-                $('#running-label').text('(Running)');
+                $('#running-label').text('🔄');
             {% endif %}
 
             let nextRecipeId = 0;

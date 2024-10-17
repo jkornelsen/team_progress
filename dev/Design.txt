@@ -136,15 +136,6 @@ or we could manually change the character's speed when entering a new location
 prompt before overwriting another action in progress
 such as if a character is already doing something else
 
-global stop button on overview screen
-
-limit actions in progress to 10 concurrent per session?
-or two per user?
-but there might be several long-term actions in progress,
-such as an animal born once an hour
-limit elapsed time to 24 hours at least
-after that, though, it doesn't have to be stopped -- it's just not counted for more
-
 will it be difficult if several elapsed-time actions depend on each other?
 pen requires lid requires plastic, and each is incremented regularly
 when querying an item, first recursively query
@@ -152,14 +143,13 @@ all of its sources that are in progress
 avoid recursion loops by maintaining a set of items to query
 the set would need to be a local variable passed as a parameter
 
-offline events can occur?
-multiple would get a bit crazy if they are not handled automatically,
-like, multiple event screens to work through when logging back in
-probably not what we want
-could stop progress if an event occurs
-or maybe no offline progress
-the idea of farming for something for hours, hoping for a certain chance,
-is exciting but can also feel like being tied up
+the player could control this by playing the source item first
+although that wouldn't be obvious at all
+going to overview would also take away that choice for top-level items
+
+check for triggered events in overview
+
+are item triggers only for general qty?
 
 for four-way rolls maybe select the base score,
 like maybe out of 100.

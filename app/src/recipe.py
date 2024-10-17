@@ -202,7 +202,7 @@ class Recipe(DependentIdentifiable):
         :param id_to_get: specify to only load a single recipe
         :returns: dict of recipes for each item
         """
-        logger.debug("load_complete_datalist(%s)", id_to_get)
+        logger.debug("load_complete_data(%s)", id_to_get)
         if cls.empty_values([id_to_get]):
             return {}
         # Get recipe, source, and byproduct data
@@ -245,7 +245,11 @@ class Recipe(DependentIdentifiable):
             return cls.load_complete_data(None)
         if cls.empty_values(ids):
             return {}
-        return {id_: cls.load_complete_data(id_) for id_ in map(int, ids)}
+        merged_dict = {}
+        for id_ in map(int, ids):
+            data = cls.load_complete_data(id_)
+            merged_dict.update(data)
+        return merged_dict
 
     @classmethod
     def load_data_by_source(cls, id_to_get):

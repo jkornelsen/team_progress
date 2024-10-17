@@ -1,7 +1,7 @@
 import logging
 import random
 
-from flask import g, session
+from flask import g, session, url_for
 
 from .attrib import Attrib, AttribFor
 from .character import Character, OwnedItem
@@ -251,6 +251,7 @@ class Event(CompleteIdentifiable):
             try:
                 self.remove_from_db()
                 session['file_message'] = 'Removed event.'
+                session['referrer'] = url_for('configure_index')
             except DbError as e:
                 raise DeletionError(str(e))
         elif req.has_key('cancel_changes'):

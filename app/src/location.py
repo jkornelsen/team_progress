@@ -1,7 +1,7 @@
 import logging
 from typing import Tuple, Union
 
-from flask import g, session
+from flask import g, session, url_for
 
 from .db_serializable import (
     DbError, DeletionError, CompleteIdentifiable, QueryHelper, Serializable,
@@ -494,6 +494,7 @@ class Location(CompleteIdentifiable):
             try:
                 self.remove_from_db()
                 session['file_message'] = 'Removed location.'
+                session['referrer'] = url_for('configure_index')
             except DbError as e:
                 raise DeletionError(str(e))
         elif req.has_key('cancel_changes'):
