@@ -196,7 +196,7 @@
             // disable changing quantity if currently in progress
             const itemQuantityInput = $('#item-quantity');
             {% if current.progress.is_ongoing|lower == 'true' %}
-                itemQuantityInput.prop('disabled', true);
+                itemQuantityInput.prop('readonly', true);
                 $('#running-label').text('(Running)');
             {% endif %}
 

@@ -5,7 +5,7 @@ import threading
 
 from flask import g
 
-from .db_serializable import Identifiable, QueryHelper, coldef
+from .db_serializable import DependentIdentifiable, QueryHelper, coldef
 from .utils import format_num
 
 logger = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ tables_to_create = {
         """
     }
 
-class Progress(Identifiable):
+class Progress(DependentIdentifiable):
     """Track progress over time."""
     def __init__(self, new_id="", container=None, recipe=None):
         super().__init__(new_id)
@@ -88,11 +88,11 @@ class Progress(Identifiable):
         return 'progress'  # no extra 's' at the end
 
     @classmethod
-    def load_base_data(cls, entity_cls, id_to_get=None):
-        """Load all (or the specified id) from the entity's base table
+    def load_base_data_dict(cls, entity_cls, ids=None):
+        """Load all (or the specified IDs) from the entity's base table
         along with progress data.
         """
-        logger.debug("load_complete_objects(%s)", id_to_get)
+        logger.debug("load_base_data_list(%s)", ids)
         qhelper = QueryHelper("""
             SELECT *
             FROM {tables[0]}
@@ -101,7 +101,7 @@ class Progress(Identifiable):
                 AND {tables[1]}.game_token = {tables[0]}.game_token
             WHERE {tables[0]}.game_token = %s
             """, [g.game_token])
-        qhelper.add_limit("{tables[0]}.id", id_to_get)
+        qhelper.add_limit_in("{tables[0]}.id", ids)
         tables_rows = entity_cls.select_tables(
             qhelper=qhelper, tables=[entity_cls.tablename(), 'progress'])
         entities_data = {}  # data (not objects) keyed by ID

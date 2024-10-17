@@ -3,7 +3,8 @@ import logging
 from flask import g, session
 
 from .db_serializable import (
-    DbError, DeletionError, Identifiable, QueryHelper, Serializable, coldef)
+    DbError, DeletionError, CompleteIdentifiable, QueryHelper, Serializable,
+    coldef)
 from .utils import RequestHelper
 
 logger = logging.getLogger(__name__)
@@ -38,7 +39,7 @@ class AttribFor(Serializable):
     def as_tuple(self):
         return (self.attrib_id, self.val)
 
-class Attrib(Identifiable):
+class Attrib(CompleteIdentifiable):
     """Stat or state or other type of attribute for a character or item.
     Examples: Perception, XP, Max HP, Current HP, Poisoned
     Values of the attrib can be stored as values in attrib dicts of other
@@ -72,28 +73,27 @@ class Attrib(Identifiable):
         return instance
 
     @classmethod
-    def load_complete_objects(cls, id_to_get=None):
-        """Load objects with everything needed for storing to db
-        or JSON file.
-        :param id_to_get: specify to only load a single object
-        """
-        logger.debug("load_complete_objects(%s)", id_to_get)
-        if id_to_get in ['new', '0', 0]:
-            return cls()
+    def load_complete_objects(cls, ids=None):
+        logger.debug("load_complete_objects(%s)", ids)
+        if cls.empty_values(ids):
+            return [cls()]
         qhelper = QueryHelper("""
             SELECT *
             FROM {table}
             WHERE game_token = %s
             """, [g.game_token])
-        qhelper.add_limit("id", id_to_get)
+        qhelper.add_limit_in("id", ids)
         rows = cls.execute_select(qhelper=qhelper)
-        instances = []
-        for row in rows:
-            instances.append(cls.from_data(row))
-        if id_to_get:
-            return instances[0]
-        g.game_data.set_list(cls, instances)
-        return instances
+        instances = {}
+        for data in rows:
+            instances[data.id] = cls.from_data(data)
+        if ids and any(ids):
+            if not instances:
+                raise ValueError(f"Could not load attributes {ids}.")
+            setattr(g.active, cls.listname(), instances)
+        else:
+            g.game_data.set_list(cls, instances.values())
+        return instances.values()
 
     def configure_by_form(self):
         req = RequestHelper('form')

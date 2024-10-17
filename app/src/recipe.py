@@ -4,7 +4,7 @@ from flask import g
 
 from .attrib import AttribFor
 from .db_serializable import (
-    Identifiable, QueryHelper, Serializable, coldef)
+    DependentIdentifiable, QueryHelper, Serializable, coldef)
 
 logger = logging.getLogger(__name__)
 tables_to_create = {
@@ -64,7 +64,7 @@ class Byproduct(Serializable):
         instance.rate_amount = data.get('rate_amount', 1.0)
         return instance
 
-class Recipe(Identifiable):
+class Recipe(DependentIdentifiable):
     def __init__(self, new_id=0, item=None):
         super().__init__(new_id)
         self.item_produced = item
@@ -202,8 +202,8 @@ class Recipe(Identifiable):
         :param id_to_get: specify to only load a single recipe
         :returns: dict of recipes for each item
         """
-        logger.debug("load_complete_data(%s)", id_to_get)
-        if id_to_get in ['new', '0', 0]:
+        logger.debug("load_complete_datalist(%s)", id_to_get)
+        if cls.empty_values([id_to_get]):
             return {}
         # Get recipe, source, and byproduct data
         source_rows, byproduct_rows = cls.item_relation_data(id_to_get)
@@ -240,10 +240,18 @@ class Recipe(Identifiable):
         return item_recipes
 
     @classmethod
+    def load_complete_data_dict(cls, ids):
+        if not ids:
+            return cls.load_complete_data(None)
+        if cls.empty_values(ids):
+            return {}
+        return {id_: cls.load_complete_data(id_) for id_ in map(int, ids)}
+
+    @classmethod
     def load_data_by_source(cls, id_to_get):
         """What is the specified item used for."""
         logger.debug("load_data_by_source(%s)", id_to_get)
-        if id_to_get in ['new', '0', 0, None]:
+        if cls.empty_values([id_to_get]):
             return {}
         source_rows, byproduct_rows = cls.item_relation_data(id_to_get, True)
         item_recipes = {}  # recipe data keyed by item ID

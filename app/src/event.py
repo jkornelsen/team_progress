@@ -6,7 +6,7 @@ from flask import g, session
 from .attrib import Attrib, AttribFor
 from .character import Character, OwnedItem
 from .db_serializable import (
-    DbError, DeletionError, Identifiable, QueryHelper, coldef)
+    DbError, DeletionError, CompleteIdentifiable, QueryHelper, coldef)
 from .item import Item
 from .location import ItemAt, Location
 from .utils import (
@@ -51,7 +51,7 @@ ENTITY_TYPENAMES = [entity.typename() for entity in ENTITY_TYPES]
 def roll_dice(sides):
     return random.randint(1, sides)
 
-class Event(Identifiable):
+class Event(CompleteIdentifiable):
     def __init__(self, new_id=""):
         super().__init__(new_id)
         self.name = ""
@@ -143,14 +143,10 @@ class Event(Identifiable):
                 values)
 
     @classmethod
-    def load_complete_objects(cls, id_to_get=None):
-        """Load objects with everything needed for storing to db
-        or JSON file.
-        :param id_to_get: specify to only load a single object
-        """
-        logger.debug("load_complete_objects(%s)", id_to_get)
-        if id_to_get in ['new', '0', 0]:
-            return cls()
+    def load_complete_objects(cls, ids=None):
+        logger.debug("load_complete_objects(%s)", ids)
+        if cls.empty_values(ids):
+            return [cls()]
         qhelper = QueryHelper("""
             SELECT *
             FROM {tables[0]}
@@ -159,7 +155,7 @@ class Event(Identifiable):
                 AND {tables[1]}.event_id = {tables[0]}.id
             WHERE {tables[0]}.game_token = %s
             """, [g.game_token])
-        qhelper.add_limit("{tables[0]}.id", id_to_get)
+        qhelper.add_limit_in("{tables[0]}.id", ids)
         rows = cls.select_tables(
             qhelper=qhelper, tables=['events', 'event_entities'])
         events = {}  # data (not objects) keyed by ID
@@ -176,18 +172,21 @@ class Event(Identifiable):
                     )
                 evt.setdefault(entities_row.reltype, []).append(entity_tup)
         # Set list of objects
-        instances = []
+        instances = {}
         for data in events.values():
-            instances.append(cls.from_data(data))
-        if id_to_get:
-            return instances[0]
-        g.game_data.set_list(cls, instances)
-        return instances
+            instances[data.id] = cls.from_data(data)
+        if ids and any(ids):
+            if not instances:
+                raise ValueError(f"Could not load events {ids}.")
+            setattr(g.active, cls.listname(), instances)
+        else:
+            g.game_data.set_list(cls, instances.values())
+        return instances.values()
 
     @classmethod
     def data_for_configure(cls, id_to_get):
         logger.debug("data_for_configure(%s)", id_to_get)
-        current_obj = cls.load_complete_objects(id_to_get)
+        current_obj = cls.load_complete_object(id_to_get)
         # Get all basic data
         g.game_data.from_db_flat([Attrib, Event, Item, Location])
         # Replace partial objects with fully populated objects
@@ -317,7 +316,7 @@ class Event(Identifiable):
         newval = req.get_str('newval', "0")
         container_cls = entity_class(
             container_type, [Character, Item, Location])
-        container = container_cls.load_complete_objects(container_id)
+        container = container_cls.load_complete_object(container_id)
         if not container:
             raise ValueError(f"{container_cls.readable_type()} not found")
         oldval = ""
@@ -354,7 +353,7 @@ class Event(Identifiable):
                 raise ValueError(f"Unexpected rel type '{rel_type}'.")
         container.to_db()
         rel_obj_cls = entity_class(rel_type, [Attrib, Item])
-        rel_base_obj = rel_obj_cls.load_complete_objects(rel_id)
+        rel_base_obj = rel_obj_cls.load_complete_object(rel_id)
         if not rel_base_obj:
             raise ValueError(f"{rel_obj_cls.readable_type()} not found")
         session['message'] = (

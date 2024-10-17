@@ -6,7 +6,8 @@ from flask import g
 from .attrib import Attrib, AttribFor
 from .character import Character
 from .cache import cache
-from .db_serializable import DbSerializable, Identifiable, QueryHelper, coldef
+from .db_serializable import (
+    DbSerializable, DependentIdentifiable, QueryHelper, coldef)
 from .item import Item
 from .location import Location
 from .utils import RequestHelper
@@ -23,7 +24,7 @@ tables_to_create = {
         """
     }
 
-class WinRequirement(Identifiable):
+class WinRequirement(DependentIdentifiable):
     """One of:
         * Items with qty and Attrib, at Location or Character
         * Characters with Attrib at Location
@@ -162,7 +163,7 @@ class Overall(DbSerializable):
     @classmethod
     def load_complete_object(cls):
         """Load everything needed to serialize the Overall object."""
-        logger.debug("load_complete_objects()")
+        logger.debug("load_complete_object()")
         qhelper = QueryHelper("""
             SELECT *
             FROM {tables[0]}
@@ -245,6 +246,7 @@ class Overall(DbSerializable):
     def data_for_overview(cls):
         logger.debug("data_for_overview()")
         g.active.overall = cls.load_complete_object()
+        # Characters
         tables_rows = cls.select_tables("""
             SELECT *
             FROM {tables[0]}
@@ -252,7 +254,7 @@ class Overall(DbSerializable):
                 ON {tables[1]}.id = {tables[0]}.location_id
                 AND {tables[1]}.game_token = {tables[0]}.game_token
             WHERE {tables[0]}.game_token = %s
-                AND {tables[0]}.toplevel = TRUE
+                AND {tables[0]}.toplevel
             ORDER BY {tables[0]}.name
             """, (g.game_token,), ['characters', 'locations'])
         CharacterRow = namedtuple(
@@ -265,15 +267,31 @@ class Overall(DbSerializable):
                 loc_id=loc_data.id,
                 loc_name=loc_data.name)
             g.active.characters.append(row)
+        # Locations
         loc_rows = cls.execute_select("""
             SELECT id, name
             FROM locations
-            WHERE toplevel = TRUE
-                AND game_token = %s
+            WHERE game_token = %s
+                AND toplevel
             ORDER BY name
             """, (g.game_token,))
         g.active.locations = loc_rows
-        # Items and their Attribs
+        # Update Progress for General Items
+        item_rows = cls.execute_select("""
+            SELECT {tables[0]}.id
+            FROM {tables[0]}
+            INNER JOIN {tables[1]}
+                ON {tables[1]}.id = {tables[0]}.progress_id
+                AND {tables[1]}.game_token = {tables[0]}.game_token
+                AND {tables[1]}.is_ongoing
+            WHERE {tables[0]}.game_token = %s
+                AND {tables[0]}.toplevel
+            """, [g.game_token,], ['items', 'progress'])
+        items = Item.load_complete_objects(
+            [item_row.id for item_row in item_rows])
+        for item in items:
+            item.progress.batches_for_elapsed_time()
+        # All top-level Items and their Attribs
         tables_rows = cls.select_tables("""
             SELECT *
             FROM {tables[0]}
@@ -283,8 +301,8 @@ class Overall(DbSerializable):
             LEFT JOIN {tables[2]}
                 ON {tables[2]}.id = {tables[1]}.attrib_id
                 AND {tables[2]}.game_token = {tables[0]}.game_token
-            WHERE {tables[0]}.toplevel = TRUE
-                AND {tables[0]}.game_token = %s
+            WHERE {tables[0]}.game_token = %s
+                AND {tables[0]}.toplevel
                 AND ({tables[1]}.item_id IS NULL OR {tables[2]}.id IS NOT NULL)
             ORDER BY {tables[0]}.name
             """, (g.game_token,), ['items', 'item_attribs', 'attribs'])
@@ -298,11 +316,12 @@ class Overall(DbSerializable):
                 attrib_for.attrib = Attrib.from_data(attrib_data)
                 item_row.attribs.append(attrib_for)
         g.active.items = list(items_data.values())
+        # Events
         event_rows = cls.execute_select("""
             SELECT id, name
             FROM events
-            WHERE toplevel = TRUE
-                AND game_token = %s
+            WHERE game_token = %s
+                AND toplevel
             ORDER BY name
             """, (g.game_token,))
         g.active.events = event_rows

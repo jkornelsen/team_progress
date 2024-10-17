@@ -59,8 +59,8 @@ def load_piles(current_item, char_id, loc_id, main_pile_type):
         #position = char.position
     if loc_id:
         # Get all items at this loc
-        #loc = Location.load_complete_objects(loc_id, position)
-        loc = Location.load_complete_objects(loc_id)
+        #loc = Location.load_complete_object(loc_id, position)
+        loc = Location.load_complete_object(loc_id)
         if not position:
             # TODO: assign position to first useful local pile found
             #_assign_pile(

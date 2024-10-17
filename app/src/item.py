@@ -4,11 +4,11 @@ from flask import g, session
 
 from .attrib import Attrib, AttribFor
 from .db_serializable import (
-    DbError, DeletionError, Identifiable, QueryHelper, coldef)
+    DbError, DeletionError, CompleteIdentifiable, QueryHelper, coldef)
 from .pile import Pile, load_piles
 from .progress import Progress
 from .recipe import Byproduct, Recipe, Source
-from .utils import RequestHelper, Storage
+from .utils import RequestHelper, Storage, non_empty
 
 logger = logging.getLogger(__name__)
 tables_to_create = {
@@ -45,9 +45,9 @@ class GeneralPile(Pile):
     def dict_for_main_table(self):
         return self.item.dict_for_main_table()
 
-class Item(Identifiable):
+class Item(CompleteIdentifiable):
     def __init__(self, new_id=""):
-        Identifiable.__init__(self, new_id)
+        super().__init__(new_id)
         self.name = ""
         self.description = ""
         self.storage_type = Storage.UNIVERSAL  # behavior, not pile type
@@ -142,52 +142,53 @@ class Item(Identifiable):
             recipe.to_db()
 
     @classmethod
-    def load_complete_objects(cls, id_to_get=None):
-        """Load objects with everything needed for storing to db
-        or JSON file.
-        :param id_to_get: specify to only load a single object
-        """
-        logger.debug("load_complete_objects(%s)", id_to_get)
-        if id_to_get in ['new', '0', 0]:
-            return cls()
-        if id_to_get and id_to_get in g.active.items:
-            logger.debug("already loaded")
-            return g.active.items[id_to_get]
-        items = Progress.load_base_data(cls, id_to_get)
+    def load_complete_objects(cls, ids=None):
+        logger.debug("load_complete_objects(%s)", ids)
+        if ids:
+            if cls.empty_values(ids):
+                return [cls()]
+            # Check if all IDs are already loaded
+            loaded_items = [
+                g.active.items[id_]
+                for id_ in ids
+                if id_ in g.active.items]
+            if len(loaded_items) == len(ids):
+                logger.debug("already loaded")
+                return loaded_items.values()
+        items = Progress.load_base_data_dict(cls, ids)
         # Get attrib relation data
         qhelper = QueryHelper("""
             SELECT *
             FROM item_attribs
             WHERE game_token = %s
             """, [g.game_token])
-        qhelper.add_limit("item_id", id_to_get)
+        qhelper.add_limit_in("item_id", ids)
         attrib_rows = cls.execute_select(qhelper=qhelper)
         for row in attrib_rows:
             item = items[row.item_id]
             item.setdefault(
                 'attribs', []).append((row.attrib_id, row.value))
         # Get source relation data
-        all_recipes_data = Recipe.load_complete_data(id_to_get)
+        all_recipes_data = Recipe.load_complete_data_dict(ids)
         for item_id, recipes_data in all_recipes_data.items():
-            item = items[item_id]
+            item = items[item_id]  #FIXME: item_id is str '17' instead of int
             item.recipes = recipes_data.values()
         # Set list of objects
-        instances = []
+        instances = {}
         for data in items.values():
-            instances.append(cls.from_data(data))
-        if id_to_get:
+            instances[data.id] = cls.from_data(data)
+        if ids and any(ids):
             if not instances:
-                raise ValueError(f"Could not load item {id_to_get}.")
-            instance = instances[0]
-            g.active.items[id_to_get] = instance
-            return instance
-        g.game_data.set_list(cls, instances)
-        return instances
+                raise ValueError(f"Could not load items {ids}.")
+            setattr(g.active, cls.listname(), instances)
+        else:
+            g.game_data.set_list(cls, instances.values())
+        return instances.values()
 
     @classmethod
     def data_for_configure(cls, id_to_get):
         logger.debug("data_for_configure(%s)", id_to_get)
-        current_obj = cls.load_complete_objects(id_to_get)
+        current_obj = cls.load_complete_object(id_to_get)
         # Get all basic attrib and item data
         g.game_data.from_db_flat([Attrib, Item])
         # Replace partial objects with fully populated objects
@@ -218,7 +219,7 @@ class Item(Identifiable):
             for related_list in (recipe.sources, recipe.byproducts):
                 for related in related_list:
                     if complete_sources:
-                        related.item = cls.load_complete_objects(
+                        related.item = cls.load_complete_object(
                             related.item_id)
                     else:
                         related.item = Item.get_by_id(related.item_id)
@@ -256,7 +257,7 @@ class Item(Identifiable):
             self.toplevel = req.get_bool('top_level')
             self.masked = req.get_bool('masked')
             self.mult = req.get_bool('mult')
-            old = Item.load_complete_objects(self.id)
+            old = Item.load_complete_object(self.id)
             self.q_limit = req.set_num_if_changed(
                 req.get_str('item_limit'), old.q_limit)
             self.pile = GeneralPile(

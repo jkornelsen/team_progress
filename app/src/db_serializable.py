@@ -245,10 +245,29 @@ class Identifiable(DbSerializable):
     """Abstract class for objects that have a unique id in the database."""
     def __init__(self, new_id=0):
         super().__init__()
-        if new_id == 'new' or not new_id:
-            self.id = 0
-        else:
-            self.id = int(new_id)
+        self.id = self.single_id([new_id])
+
+    @classmethod
+    def single_id(cls, ids):
+        """Return the single id from a list as int, or else 0."""
+        if not ids or cls.empty_values(ids):
+            return 0
+        if len(ids) == 1:
+            id_ = ids[0]
+            return int(id_)
+        return 0
+
+    @staticmethod
+    def empty_values(ids):
+        """Returns True if the list has elements but consists only of empty
+        values.
+        """
+        if not ids:
+            return False
+        if all(not id_ or id_ in ['new', '0']
+                for id_ in ids):
+            return True
+        return False
 
     @classmethod
     def get_by_id(cls, id_to_get):
@@ -343,13 +362,30 @@ class Identifiable(DbSerializable):
         if self in entity_list:
             entity_list.remove(self)
 
+class CompleteIdentifiable(Identifiable):
+    """Classes such as Item that can write to DB alone.
+    Top level in JSON.
+    """
+    __abstract__ = True
+
     @classmethod
-    def load_complete_objects(cls, id_to_get=None):
+    def load_complete_objects(cls, ids=None):
         """Load objects from db with everything needed for storing
         to db or JSON file.
-        :param id_to_get: specify to only load a single object
+        :param ids: only load the specified objects
         """
         raise NotImplementedError()
+
+    @classmethod
+    def load_complete_object(cls, id_to_get):
+        return next(iter(cls.load_complete_objects([id_to_get])), None)
+
+class DependentIdentifiable(Identifiable):
+    """Classes such as Recipe that may be able to write to DB
+    but only within the context of another class.
+    Not top level in JSON.
+    """
+    __abstract__ = True
 
 class DbError(Exception):
     """Custom exception for database-related errors."""
@@ -377,6 +413,22 @@ class QueryHelper:
         if value:
             self.query += f" AND {field} = %s"
             self.values.append(value)
+
+    def add_limit_in(self, fields, values, conjunction="IN"):
+        """Add a limiting condition for multiple fields, such as IDs."""
+        if values:
+            values = [v for v in values if v]
+        if values:
+            placeholders = ', '.join(['%s'] * len(values))
+            condition = f"{conjunction} ({placeholders})"
+            if isinstance(fields, str):
+                self.query += f" AND {fields} {condition}"
+                self.values.extend(values)
+            else:
+                fields_condition = ' OR '.join(
+                    [f"{field} {condition}" for field in fields])
+                self.query += f" AND ({fields_condition})"
+                self.values.extend(values * len(fields))
 
     def add_limit_expr(self, expr, values):
         """Add a freeform limiting expression."""

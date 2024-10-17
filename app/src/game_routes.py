@@ -28,7 +28,7 @@ def set_routes(app):
     @app.route('/configure/attrib/<attrib_id>', methods=['GET', 'POST'])
     def configure_attrib(attrib_id):
         logger.debug("%s\nconfigure_attrib(%s)", "-" * 80, attrib_id)
-        attrib = Attrib.load_complete_objects(attrib_id)
+        attrib = Attrib.load_complete_object(attrib_id)
         if request.method == 'GET':
             req = RequestHelper('args')
             if not req.has_key('duplicated'):
@@ -203,13 +203,13 @@ def set_routes(app):
         logger.debug(
             "%s\nplay_attrib(attrib_id=%d, subject_type=%s, subject_id=%d)",
             "-" * 80, attrib_id, subject_type, subject_id)
-        attrib = Attrib.load_complete_objects(attrib_id)
+        attrib = Attrib.load_complete_object(attrib_id)
         if not attrib:
             return "Attribute not found"
         if subject_type == 'char':
-            func_load_subject = Character.load_complete_objects
+            func_load_subject = Character.load_complete_object
         elif subject_type == 'item':
-            func_load_subject = Item.load_complete_objects
+            func_load_subject = Item.load_complete_object
         else:
             return f"Unexpected subject type '{subject_type}'"
         subject = func_load_subject(subject_id)
@@ -592,8 +592,8 @@ def set_routes(app):
         logger.debug(
             "%s\ndrop_item(item_id=%d, char_id=%d)",
             "-" * 80, item_id, char_id)
-        item = Item.load_complete_objects(item_id)
-        char = Character.load_complete_objects(char_id)
+        item = Item.load_complete_object(item_id)
+        char = Character.load_complete_object(char_id)
         owned_item = char.items.get(item_id)
         if not owned_item:
             return jsonify({
@@ -601,7 +601,7 @@ def set_routes(app):
                 'message': f'No item {item.name} in {char.name} inventory.'
                 })
         new_qty = owned_item.quantity
-        loc = Location.load_complete_objects(char.location.id)
+        loc = Location.load_complete_object(char.location.id)
         if item_id in loc.items:
             item_at = loc.items[item_id]
             new_qty += item_at.quantity
@@ -630,8 +630,8 @@ def set_routes(app):
             "%s\npickup_item(item_id=%d, loc_id=%d, char_id=%d)",
             "-" * 80, item_id, loc_id, char_id)
         session['default_pickup_char'] = char_id
-        item = Item.load_complete_objects(item_id)
-        loc = Location.load_complete_objects(loc_id)
+        item = Item.load_complete_object(item_id)
+        loc = Location.load_complete_object(loc_id)
         item_at = loc.items.get(item_id)
         if not item_at:
             return jsonify({
@@ -639,7 +639,7 @@ def set_routes(app):
                 'message': f'No item {item.name} at {loc.name}.'
                 })
         new_qty = item_at.quantity
-        char = Character.load_complete_objects(char_id)
+        char = Character.load_complete_object(char_id)
         if item_id in char.items:
             owned_item = char.items[item_id]
             new_qty += owned_item.quantity
@@ -668,8 +668,8 @@ def set_routes(app):
             "%s\nequip_item(item_id=%d, char_id=%d, slot=%s)",
             "-" * 80, item_id, char_id, slot)
         session['default_slot'] = slot
-        item = Item.load_complete_objects(item_id)
-        char = Character.load_complete_objects(char_id)
+        item = Item.load_complete_object(item_id)
+        char = Character.load_complete_object(char_id)
         owned_item = char.items.get(item_id)
         if not owned_item:
             return jsonify({
@@ -690,8 +690,8 @@ def set_routes(app):
         logger.debug(
             "%s\nequip_item(item_id=%d, char_id=%d)",
             "-" * 80, item_id, char_id)
-        item = Item.load_complete_objects(item_id)
-        char = Character.load_complete_objects(char_id)
+        item = Item.load_complete_object(item_id)
+        char = Character.load_complete_object(char_id)
         owned_item = char.items.get(item_id)
         if not owned_item:
             return jsonify({
@@ -713,11 +713,11 @@ def set_routes(app):
         logger.debug(
             "%s\nmove_char(%d,%d,%d)",
             "-" * 80, char_id, x_change, y_change)
-        char = Character.load_complete_objects(char_id)
+        char = Character.load_complete_object(char_id)
         if not char:
             return "Character not found"
         session['default_move_char'] = char_id
-        loc = Location.load_complete_objects(char.location.id)
+        loc = Location.load_complete_object(char.location.id)
         cur_x, cur_y = char.position.as_tuple()
         newpos = NumTup((
             cur_x + x_change,

@@ -4,7 +4,8 @@ from typing import Tuple, Union
 from flask import g, session
 
 from .db_serializable import (
-    DbError, DeletionError, Identifiable, QueryHelper, Serializable, coldef)
+    DbError, DeletionError, CompleteIdentifiable, QueryHelper, Serializable,
+    coldef)
 from .item import Item
 from .pile import Pile
 from .progress import Progress
@@ -161,7 +162,7 @@ class Destination(Serializable):
     def door_here(self) -> Tuple[int, int]:
         return self._get_door(False)
 
-class Location(Identifiable):
+class Location(CompleteIdentifiable):
     def __init__(self, new_id=""):
         super().__init__(new_id)
         self.name = ""
@@ -356,28 +357,23 @@ class Location(Identifiable):
         return destinations, current_dest
 
     @classmethod
-    def load_complete_objects(cls, id_to_get=None):
-        """Load objects with everything needed for storing to db
-        or JSON file.
-        :param id_to_get: specify to only load a single object
-        """
-        logger.debug("load_complete_objects(%s)", id_to_get)
-        if id_to_get in ['new', '0', 0]:
-            return cls()
-        locs = Progress.load_base_data(cls, id_to_get)
+    def load_complete_objects(cls, ids=None):
+        logger.debug("load_complete_objects(%s)", ids)
+        if cls.empty_values(ids):
+            return [cls()]
+        locs = Progress.load_base_data_dict(cls, ids)
         # Get destination data
         qhelper = QueryHelper("""
             SELECT *
             FROM loc_destinations
             WHERE game_token = %s
             """, [g.game_token])
-        qhelper.add_limit_expr(
-            "(loc1_id = %s OR loc2_id = %s)",
-            [id_to_get, id_to_get])
+        qhelper.add_limit_in(["loc1_id", "loc2_id"], ids)
         dest_rows = cls.execute_select(qhelper=qhelper)
+        id_ = cls.single_id(ids)
         for row in dest_rows:
             loc_id = row.loc1_id
-            if id_to_get and row.loc2_id == int(id_to_get):
+            if id_ and row.loc2_id == int(id_):
                 loc_id = row.loc2_id
             loc = locs[loc_id]
             loc.setdefault('destinations', []).append(row)
@@ -387,24 +383,27 @@ class Location(Identifiable):
             FROM loc_items
             WHERE game_token = %s
             """, [g.game_token])
-        qhelper.add_limit("loc_id", id_to_get)
+        qhelper.add_limit_in("loc_id", ids)
         item_rows = cls.execute_select(qhelper=qhelper)
         for row in item_rows:
             loc = locs[row.loc_id]
             loc.setdefault('items', []).append(row)
         # Set list of objects
-        instances = []
+        instances = {}
         for data in locs.values():
-            instances.append(cls.from_data(data))
-        if id_to_get:
-            return instances[0]
-        g.game_data.set_list(cls, instances)
-        return instances
+            instances[data.id] = cls.from_data(data)
+        if ids and any(ids):
+            if not instances:
+                raise ValueError(f"Could not load locations {ids}.")
+            setattr(g.active, cls.listname(), instances)
+        else:
+            g.game_data.set_list(cls, instances.values())
+        return instances.values()
 
     @classmethod
     def data_for_configure(cls, id_to_get):
         logger.debug("data_for_configure(%s)", id_to_get)
-        current_obj = cls.load_complete_objects(id_to_get)
+        current_obj = cls.load_complete_object(id_to_get)
         # Replace partial objects with fully populated objects
         g.game_data.from_db_flat([Location, Item])
         for dest in current_obj.destinations:
@@ -478,7 +477,7 @@ class Location(Identifiable):
                 dest.bidirectional = not int(oneway)
                 self.destinations.append(dest)
             self.items = {}
-            old = Location.load_complete_objects(self.id)
+            old = Location.load_complete_object(self.id)
             for item_id, item_qty, item_pos in zip(
                     req.get_list('item_id[]'),
                     req.get_list('item_qty[]'),

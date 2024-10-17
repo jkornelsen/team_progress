@@ -4,7 +4,7 @@ from flask import g, session
 
 from .attrib import Attrib, AttribFor
 from .db_serializable import (
-    DbError, DeletionError, Identifiable, QueryHelper, coldef)
+    DbError, DeletionError, CompleteIdentifiable, QueryHelper, coldef)
 from .item import Item
 from .location import Destination, Location
 from .pile import Pile
@@ -58,7 +58,7 @@ class OwnedItem(Pile):
         inventory, such as a backpack."""
         return bool(self.slot)
 
-class Character(Identifiable):
+class Character(CompleteIdentifiable):
     def __init__(self, new_id=""):
         super().__init__(new_id)
         self.name = ""
@@ -206,18 +206,18 @@ class Character(Identifiable):
         return chars
 
     @classmethod
-    def load_complete_objects(cls, id_to_get=None):
-        logger.debug("load_complete_objects(%s)", id_to_get)
-        if id_to_get in ['new', '0', 0]:
-            return cls()
-        chars = Progress.load_base_data(cls, id_to_get)
+    def load_complete_objects(cls, ids=None):
+        logger.debug("load_complete_objects(%s)", ids)
+        if cls.empty_values(ids):
+            return [cls()]
+        chars = Progress.load_base_data_dict(cls, ids)
         # Get attrib relation data
         qhelper = QueryHelper("""
             SELECT *
             FROM char_attribs
             WHERE game_token = %s
             """, [g.game_token])
-        qhelper.add_limit("char_id", id_to_get)
+        qhelper.add_limit_in("char_id", ids)
         attrib_rows = cls.execute_select(qhelper=qhelper)
         for row in attrib_rows:
             char = chars[row.char_id]
@@ -230,7 +230,7 @@ class Character(Identifiable):
             WHERE game_token = %s
                 AND char_id IS NOT NULL
             """, [g.game_token])
-        qhelper.add_limit("char_id", id_to_get)
+        qhelper.add_limit_in("char_id", ids)
         event_rows = cls.execute_select(qhelper=qhelper)
         for row in event_rows:
             char = chars[row.char_id]
@@ -241,24 +241,27 @@ class Character(Identifiable):
             FROM char_items
             WHERE game_token = %s
             """, [g.game_token])
-        qhelper.add_limit("char_id", id_to_get)
+        qhelper.add_limit_in("char_id", ids)
         item_rows = cls.execute_select(qhelper=qhelper)
         for row in item_rows:
             char = chars[row.char_id]
             char.setdefault('items', []).append(row)
         # Set list of objects
-        instances = []
+        instances = {}
         for data in chars.values():
-            instances.append(cls.from_data(data))
-        if id_to_get:
-            return instances[0]
-        g.game_data.set_list(cls, instances)
-        return instances
+            instances[data.id] = cls.from_data(data)
+        if ids and any(ids):
+            if not instances:
+                raise ValueError(f"Could not load characters {ids}.")
+            setattr(g.active, cls.listname(), instances)
+        else:
+            g.game_data.set_list(cls, instances.values())
+        return instances.values()
 
     @classmethod
     def data_for_configure(cls, id_to_get):
         logger.debug("data_for_configure(%s)", id_to_get)
-        current_obj = cls.load_complete_objects(id_to_get)
+        current_obj = cls.load_complete_object(id_to_get)
         # Replace partial objects with fully populated objects
         from .event import Event
         g.game_data.from_db_flat([Attrib, Event, Location, Item])
@@ -310,7 +313,7 @@ class Character(Identifiable):
             self.toplevel = req.get_bool('top_level')
             self.masked = req.get_bool('masked')
             self.items = {}
-            old = Character.load_complete_objects(self.id)
+            old = Character.load_complete_object(self.id)
             for item_id, item_qty, item_slot in zip(
                     req.get_list('item_id[]'),
                     req.get_list('item_qty[]'),
