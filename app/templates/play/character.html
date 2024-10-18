@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 {% block upper_left %}
     <div class="nav-container">
-        <a class="upper-left" href="{{ url_for("overview") }}">[O]verview</a>
+        <a class="upper-left" href="{{ url_for('overview') }}">[O]verview</a>
         <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for("configure_index") }}">[M]ain Setup</a>
+        <a class="upper-left" href="{{ url_for('configure_index') }}">[M]ain Setup</a>
         <span class="separator">|</span>
         <a class="upper-left"
            href="{{ url_for('configure_char', char_id=current.id) }}">Character S[e]tup</a>
@@ -24,10 +24,12 @@
                     return;
                 }
                 const key = event.key.toLowerCase();
-                if (key === 's') {
-                    document.getElementById('start-travel-btn').click();
-                } else if (key === 'g') {
-                    const selectBox = document.getElementById('destination-select');
+                if (key === 'g') {
+                    $('#do-travel-btn').click();
+                } else if (key === 's') {
+                    $('#start-travel-btn').click();
+                } else if (key === 't') {
+                    const selectBox = $('#destination-select');
                     selectBox.focus();
                     if (selectBox.selectedIndex === 0) {
                         selectBox.selectedIndex = 1;  // first location in list
@@ -51,7 +53,7 @@
                 <a href="{{ link }}">{{ current.location.name }}</a>
                 {% if current.location.destinations %}
                     <div class="flexdiv">
-                        <label for="destination-select">[G]o To</label>
+                        <label for="destination-select">Go [T]o</label>
                         <select id="destination-select" class="select-box">
                             <option value="" data-distance="-1">(Select destination)</option>
                             {% for dest in current.location.destinations %}
@@ -62,12 +64,14 @@
                                         a location not yet visited
                                     {% else %}
                                         {{ dest.other_loc.name }}
+                                        {% if dest.distance == 0 %}(here){% endif %}
                                     {% endif %}
                                 </option>
                             {% endfor %}
                         </select>
+                        <button type="button" id="do-travel-btn" style="display: hidden">[G]o</button>
                     </div>
-                    <div id="destination-info" class="flexdiv">
+                    <div id="destination-progress" class="flexdiv">
                         <div class="progress-container">
                             <progress class="progress-bar" max="100" value="0"></progress>
                             <span class="progress-label">0 / 0</span>
@@ -173,12 +177,12 @@
         $(document).ready(() => {
             function showCustomConfirm(message) {
                 return new Promise((resolve,) => {
-                    const modal = document.getElementById('custom-confirm-modal');
-                    const messageElement = document.getElementById('custom-confirm-message');
-                    const yesButton = document.getElementById('custom-confirm-yes');
-                    const noButton = document.getElementById('custom-confirm-no');
+                    const modal = $('#custom-confirm-modal');
+                    const messageElement = $('#custom-confirm-message');
+                    const yesButton = $('#custom-confirm-yes');
+                    const noButton = $('#custom-confirm-no');
                     messageElement.innerHTML = message;
-                    modal.style.display = 'block';
+                    modal.css('display', 'block');
                     isModalOpen = true;
                     function handleKeydown(event) {
                         const key = event.key.toLowerCase();
@@ -190,13 +194,13 @@
                     }
                     document.addEventListener('keydown', handleKeydown);
                     yesButton.onclick = () => {
-                        modal.style.display = 'none';
+                        modal.css('display', 'none');
                         document.removeEventListener('keydown', handleKeydown);
                         isModalOpen = false;
                         resolve(true);  // confirm
                     };
                     noButton.onclick = () => {
-                        modal.style.display = 'none';
+                        modal.css('display', 'none');
                         document.removeEventListener('keydown', handleKeydown);
                         isModalOpen = false;
                         resolve(false);  // cancel
@@ -235,34 +239,40 @@
                 if (ongoing && selectedDestId !== data.dest_id) {
                     destSel.val(data.dest_id);
                 }
-                const selectedOption = destSel.find(":selected");
-                const distance = selectedOption.data("distance");
-                const destInfo = $('#destination-info');
+                const selectedOption = destSel.find(':selected');
+                const distance = selectedOption.data('distance');
+                const goBtn = $('#do-travel-btn');
+                const destInfo = $('#destination-progress');
                 const progressBar = $('.progress-bar');
                 const progressLabel = $('.progress-label');
                 if (selectedDestId || ongoing) {
                     if ('status' in data && data.status === 'arrived') {
                         console.log('Arrived; reloading.');
                         location.reload();
-                    //TODO: rethink how this should work
+                    //XXX: rethink how this should work
                     //} else if ('status' in data && data.status === 'error' && data.message === 'No travel destination.') {
                     //    console.log(data.message);
-                    } else {
+                    } else if (distance >= 2) {
                         const quantity = 'quantity' in data ? data.quantity : 0;
                         const progressPercentage = (quantity / distance) * 100;
                         progressBar.attr('value', progressPercentage);
                         progressLabel.text(`${quantity} / ${distance}`);
                         destInfo.show();
+                        goBtn.css('display', 'none');
+                    } else {
+                        destInfo.hide();
+                        goBtn.css('display', 'block');
                     }
                 } else {
                     destInfo.hide();
+                    goBtn.css('display', 'none');
                 }
             }
 
             function updateStartButtonLabel(data) {
-                const startBtn = document.getElementById("start-travel-btn");
-                const stopBtn = document.getElementById("stop-travel-btn");
-                const destSel = document.getElementById("destination-select");
+                const startBtn = $('#start-travel-btn');
+                const stopBtn = $('#stop-travel-btn');
+                const destSel = $('#destination-select');
                 const ongoing = (data && data.status === 'ongoing' && data.is_ongoing)
                 if (!startBtn || !stopBtn || !destSel) {
                     return;
@@ -305,7 +315,7 @@
             }
 
             function showContent() {
-                document.getElementById("content").style.display = "block";
+                $('#content').css('display', 'block');
             }
             async function initializePage() {
                 localStorage.removeItem('ignore_event_id');
@@ -318,10 +328,30 @@
             $('#destination-select').change(() => {
                 fetchProgressData();
             });
+            $('#do-travel-btn').click(() => {
+                const destinationId = $('#destination-select').val();
+                console.log('goChar(): {{ current.id }}');
+                $.ajax({
+                    url: `/char/go/{{ current.id }}`,
+                    method: 'post',
+                    data: { dest_id: destinationId },
+                    success: (response) => {
+                        if (response.status === 'error') {
+                            console.error(response.message);
+                            alert(response.message);
+                        }
+                        location.reload();
+                    },
+                    error: (error) => {
+                        console.error('Error:', error);
+                        alert(`Error: ${error}`);
+                    }
+                });
+            });
             $('#start-travel-btn').click(() => {
                 // Start the progress for the selected destination
                 const destinationId = $('#destination-select').val();
-                console.log('startItem(): {{ current.id }}');
+                console.log('startChar(): {{ current.id }}');
                 $.ajax({
                     url: '/char/start/{{ current.id }}',
                     method: 'POST',
@@ -343,7 +373,7 @@
             });
             function stopTravel() {
                 // Stop the progress
-                console.log('stopItem(){{ current.id }}');
+                console.log('stopChar(){{ current.id }}');
                 fetch('/char/stop/{{ current.id }}')
                     .then(response => response.json())
                     .then(data => {

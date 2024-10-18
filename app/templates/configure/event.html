@@ -258,30 +258,30 @@
                 $('#btn-delete').attr('disabled', 'disabled');
             {% endif %}
 
-            const outcomeTypeContainer = document.getElementById("outcome-type-container");
+            const outcomeTypeContainer = $('#outcome-type-container');
             function outcomeTypeVisibility() {
                 const outcomeType = outcomeTypeContainer.querySelector(
                     'input[name="outcome_type"]:checked').value;
                 console.log(`outcomeType=${outcomeType}`);
-                const numericFactorsDiv = document.getElementById("numeric-factors");
-                const selectionStringsDiv = document.getElementById("selection-container");
-                const determiningAttribsDiv = document.getElementById("determining-entities-container");
-                const changedAttribsDiv = document.getElementById("changed-entities-container");
+                const numericFactorsDiv = $('#numeric-factors');
+                const selectionStringsDiv = $('#selection-container');
+                const determiningAttribsDiv = $('#determining-entities-container');
+                const changedAttribsDiv = $('#changed-entities-container');
                 if (outcomeType === "numeric") {
-                    numericFactorsDiv.style.display = "block";
-                    selectionStringsDiv.style.display = "none";
-                    determiningAttribsDiv.style.display = "block";
-                    changedAttribsDiv.style.display = "block";
+                    numericFactorsDiv.css('display', 'block');
+                    selectionStringsDiv.css('display', 'none');
+                    determiningAttribsDiv.css('display', 'block');
+                    changedAttribsDiv.css('display', 'block');
                 } else if (outcomeType === "selection") {
-                    numericFactorsDiv.style.display = "none";
-                    selectionStringsDiv.style.display = "block";
-                    determiningAttribsDiv.style.display = "none";
-                    changedAttribsDiv.style.display = "none";
+                    numericFactorsDiv.css('display', 'none');
+                    selectionStringsDiv.css('display', 'block');
+                    determiningAttribsDiv.css('display', 'none');
+                    changedAttribsDiv.css('display', 'none');
                 } else {
-                    numericFactorsDiv.style.display = "none";
-                    selectionStringsDiv.style.display = "none";
-                    determiningAttribsDiv.style.display = "block";
-                    changedAttribsDiv.style.display = "block";
+                    numericFactorsDiv.css('display', 'none');
+                    selectionStringsDiv.css('display', 'none');
+                    determiningAttribsDiv.css('display', 'block');
+                    changedAttribsDiv.css('display', 'block');
                 }
             }
             outcomeTypeContainer.querySelectorAll('input[name="outcome_type"]').forEach(

@@ -22,14 +22,14 @@
             document.addEventListener('keypress', (event) => {
                 const key = event.key.toLowerCase();
                 if (key === 'd') {
-                    document.getElementById('drop-btn').click();
+                    $('#drop-btn').click();
                 } else if (key === 'p') {
-                    document.getElementById('pickup-btn').click();
+                    $('#pickup-btn').click();
                 } else if (key === 'q') {
                     {% if container.pile.slot %}
-                        document.getElementById('unequip-btn').click();
+                        $('#unequip-btn').click();
                     {% elif game_data.overall.slots %}
-                        document.getElementById('equip-btn').click();
+                        $('#equip-btn').click();
                     {% endif %}
                 } else if (linkForKey[key]) {
                     window.location.href = linkForKey[key];
@@ -640,7 +640,7 @@
                 updateVisibility();
             }
             function showContent() {
-                document.getElementById("content").style.display = "block";
+                $('#content').css('display', 'block');
             }
             async function initializePage() {
                 await fetchProgressData();

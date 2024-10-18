@@ -228,6 +228,7 @@
             {% for char in game_data.characters if char.location.id == current.id %}
                 "{{ char.id }}": {
                     letter: '{{ char.name[0] }}',
+                    title: '{{ char.name }}',
                     x: "{{ char.position[0] }}",
                     y: "{{ char.position[1] }}" },
             {% endfor %}
@@ -236,6 +237,7 @@
             {% for item_at in current.items.values() %}
                 "{{ item_at.item.id }}": {
                     letter: '{{ item_at.item.name[0] }}',
+                    title: '{{ item_at.item.name }}',
                     x: "{{ item_at.position[0] }}",
                     y: "{{ item_at.position[1] }}" },
             {% endfor %}
@@ -244,13 +246,14 @@
             {% for dest in current.destinations %}
                 "{{ dest.other_loc.id }}": {
                     letter: door_letter,
+                    title: 'door',
                     x: "{{ dest.door_here[0] }}",
                     y: "{{ dest.door_here[1] }}" },
             {% endfor %}
         };
         function moveCharacter(xChange, yChange) {
-            const selectBox = document.getElementById('char-to-move');
-            const charId = (selectBox ? selectBox.value : null);
+            const selectBox = $('#char-to-move');
+            const charId = (selectBox.length ? selectBox.val() : null);
             if (!charId) {
                 alert("Select a character to move.");
                 return;
@@ -280,24 +283,27 @@
                     cell.innerHTML = '';
                 });
             }
-            for (const [, char] of Object.entries(characters)) {
-                setCellContents(char.x, char.y, char.letter);
+            for (const [, charr] of Object.entries(characters)) {
+                setCellContents(charr.x, charr.y, charr.letter, charr.title);
             }
             for (const [, item_at] of Object.entries(items)) {
-                setCellContents(item_at.x, item_at.y, item_at.letter);
+                setCellContents(item_at.x, item_at.y, item_at.letter, item_at.title);
             }
             for (const [, door] of Object.entries(doors)) {
-                setCellContents(door.x, door.y, door.letter);
+                setCellContents(door.x, door.y, door.letter, door.title);
             }
         }
-        function setCellContents(x, y, content, replace = false) {
+        function setCellContents(x, y, content, title, replace = false) {
             if (!x && !y) {
                 return;
             }
-            const cell = document.getElementById(`cell-${x}-${y}`);
-            if (cell) {
-                if (replace || cell.innerHTML.trim() === '') {
-                    cell.innerHTML = content;
+            const cell = $(`#cell-${x}-${y}`);
+            if (cell.length) {
+                if (replace || cell.html().trim() === '') {
+                    if (title) {
+                        content = `<span title="${title}">${content}</span>`;
+                    }
+                    cell.html(content);
                 } else {
                     console.log(`Cell (${x}, ${y}) is already occupied.`);
                 }
@@ -335,7 +341,7 @@
                 #}
             }
             function showContent() {
-                document.getElementById("content").style.display = "block";
+                $('#content').css('display', 'block');
             }
             async function initializePage() {
                 // Update quantities initially

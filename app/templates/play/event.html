@@ -21,7 +21,7 @@
             document.addEventListener('keypress', (event) => {
                 const key = event.key.toLowerCase();
                 if (key === 'r') {
-                    document.getElementById('roll-btn').click();
+                    $('#roll-btn').click();
                 } else if (linkForKey[key]) {
                     window.location.href = linkForKey[key];
                 } else if (funcForKey[key]) {

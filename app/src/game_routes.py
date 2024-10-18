@@ -245,7 +245,7 @@ def set_routes(app):
             'play/character.html',
             current=instance,
             game_data=g.game_data,
-            link_letters=LinkLetters('egoms')
+            link_letters=LinkLetters('egomst')
             )
 
     @app.route('/play/event/<int:event_id>', methods=['GET', 'POST'])
@@ -439,6 +439,25 @@ def set_routes(app):
             char.to_db()
             return jsonify({'message': 'Progress paused.'})
         return jsonify({'message': 'Progress is already paused.'})
+
+    @app.route('/char/go/<int:char_id>', methods=['POST'])
+    def go_char(char_id):
+        logger.debug("%s\ngo_char(%d)", "-" * 80, char_id)
+        req = RequestHelper('form')
+        dest_id = req.get_int('dest_id')
+        char = Character.data_for_play(char_id)
+        char.location = Location.get_by_id(dest_id)
+        if not char.location:
+            return jsonify({
+                'status': 'error',
+                'message': 'No travel destination.',
+                'dest_id': dest_id
+                })
+        char.to_db()
+        return jsonify({
+            'status': 'arrived',
+            'current_loc_id': char.location.id
+            })
 
     @app.route('/event/roll/<int:event_id>', methods=['POST'])
     def event_roll(event_id):
