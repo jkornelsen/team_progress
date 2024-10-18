@@ -196,14 +196,14 @@ class Recipe(DependentIdentifiable):
         return source_rows, byproduct_rows
 
     @classmethod
-    def load_complete_data(cls, id_to_get):
+    def load_complete_data(cls, id_to_get=None):
         """Load all recipe data needed for creating Item objects
         that can be stored to db or JSON file.
         :param id_to_get: specify to only load a single recipe
         :returns: dict of recipes for each item
         """
         logger.debug("load_complete_data(%s)", id_to_get)
-        if cls.empty_values([id_to_get]):
+        if id_to_get is not None and cls.empty_values([id_to_get]):
             return {}
         # Get recipe, source, and byproduct data
         source_rows, byproduct_rows = cls.item_relation_data(id_to_get)

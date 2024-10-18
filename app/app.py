@@ -151,7 +151,7 @@ def _set_filters():
         html = re.sub(r'</c\s*>', r'</font>', html)
         html = bleach.clean(
             html,
-            tags={'a', 'b', 'i', 'font'},
+            tags={'a', 'b', 'i', 'font', 'pre'},
             attributes={
                 'a': ['href', 'title'],
                 'font': ['color']

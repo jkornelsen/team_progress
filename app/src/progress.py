@@ -52,6 +52,9 @@ class Progress(DependentIdentifiable):
 
     def _base_export_data(self):
         """Prepare the base dictionary for JSON and DB."""
+        if ((not self.start_time) or
+                (not self.is_ongoing and self.batches_processed == 0)):
+            return {}
         return {
             'id': self.id,
             'item_id': self.pile.item.id
@@ -62,12 +65,6 @@ class Progress(DependentIdentifiable):
             'batches_processed': self.batches_processed,
             'is_ongoing': self.is_ongoing,
             }
-
-    def dict_for_json(self):
-        if ((not self.start_time) or
-                (not self.is_ongoing and self.batches_processed == 0)):
-            return {}
-        return self._base_export_data()
 
     @classmethod
     def from_data(cls, data, container=None):

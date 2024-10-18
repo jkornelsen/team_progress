@@ -1,0 +1,325 @@
+{
+    "attribs": [],
+    "characters": [],
+    "events": [],
+    "items": [
+        {
+            "attribs": [],
+            "description": "<pre>\r\n  <c=\"black\">_____________\r\n<c=\"gray\">/</c>/____________/<c=\"gray\">/</c>\r\n</c></pre>\r\nRequires reset:\r\n1. Stop all source progress\r\n2. Produce as many as possible\r\n3. Set all source quantities to 0",
+            "id": 22,
+            "masked": false,
+            "mult": false,
+            "name": "Black Bar",
+            "progress": {},
+            "q_limit": 0.0,
+            "quantity": 12.0,
+            "recipes": [
+                {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 5,
+                    "instant": true,
+                    "item_id": 22,
+                    "rate_amount": 1.0,
+                    "rate_duration": 3.0,
+                    "sources": [
+                        {
+                            "item_id": 20,
+                            "preserve": false,
+                            "q_required": 1000.0
+                        },
+                        {
+                            "item_id": 15,
+                            "preserve": false,
+                            "q_required": 1000.0
+                        },
+                        {
+                            "item_id": 17,
+                            "preserve": false,
+                            "q_required": 1000.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "universal",
+            "toplevel": true
+        },
+        {
+            "attribs": [],
+            "description": "<pre><c=\"blue\"> _____________\r\n/____________/\r\n</c></pre>",
+            "id": 20,
+            "masked": false,
+            "mult": false,
+            "name": "Blue Bar",
+            "progress": {
+                "batches_processed": 7,
+                "id": 98,
+                "is_ongoing": true,
+                "item_id": 20,
+                "recipe_id": 2,
+                "start_time": "2024-10-17 21:36:52.361669",
+                "stop_time": null
+            },
+            "q_limit": 0.0,
+            "quantity": 68.0,
+            "recipes": [
+                {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 2,
+                    "instant": false,
+                    "item_id": 20,
+                    "rate_amount": 1.0,
+                    "rate_duration": 20.0,
+                    "sources": [
+                        {
+                            "item_id": 15,
+                            "preserve": false,
+                            "q_required": 2.0
+                        },
+                        {
+                            "item_id": 17,
+                            "preserve": false,
+                            "q_required": 1.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "universal",
+            "toplevel": true
+        },
+        {
+            "attribs": [],
+            "description": "<pre><c=\"green\"> _____________\r\n/____________/\r\n</c></pre>\r\nQuantity is how long the bar is.",
+            "id": 15,
+            "masked": false,
+            "mult": false,
+            "name": "Green Bar",
+            "progress": {
+                "batches_processed": 165,
+                "id": 96,
+                "is_ongoing": true,
+                "item_id": 15,
+                "recipe_id": 1,
+                "start_time": "2024-10-17 21:17:22.415238",
+                "stop_time": null
+            },
+            "q_limit": 0.0,
+            "quantity": 1365.0,
+            "recipes": [
+                {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 1,
+                    "instant": false,
+                    "item_id": 15,
+                    "rate_amount": 6.0,
+                    "rate_duration": 8.0,
+                    "sources": [
+                        {
+                            "item_id": 16,
+                            "preserve": true,
+                            "q_required": 1.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "universal",
+            "toplevel": true
+        },
+        {
+            "attribs": [],
+            "description": "<pre><c=\"yellow\">\r\n        *\r\n   |        <*>\r\n -<*>-\r\n   |\r\n</c></pre>\r\nWe appear to be in a void with flashes of energy all around. The energy currently seems unlimited. Maybe it even is.",
+            "id": 16,
+            "masked": false,
+            "mult": false,
+            "name": "Ambient Energy",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 1.0,
+            "recipes": [],
+            "storage_type": "universal",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "<pre><c=\"red\"> _____________\r\n/____________/\r\n</c></pre>",
+            "id": 17,
+            "masked": false,
+            "mult": false,
+            "name": "Red Bar",
+            "progress": {
+                "batches_processed": 163,
+                "id": 97,
+                "is_ongoing": true,
+                "item_id": 17,
+                "recipe_id": 3,
+                "start_time": "2024-10-17 21:17:34.565999",
+                "stop_time": null
+            },
+            "q_limit": 0.0,
+            "quantity": 63.5,
+            "recipes": [
+                {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 3,
+                    "instant": false,
+                    "item_id": 17,
+                    "rate_amount": 0.7,
+                    "rate_duration": 8.0,
+                    "sources": [
+                        {
+                            "item_id": 16,
+                            "preserve": true,
+                            "q_required": 1.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "universal",
+            "toplevel": true
+        },
+        {
+            "attribs": [],
+            "description": "rate amount + 0.2",
+            "id": 19,
+            "masked": false,
+            "mult": false,
+            "name": "Red Bar Boost I",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 7,
+                    "instant": true,
+                    "item_id": 19,
+                    "rate_amount": 1.0,
+                    "rate_duration": 3.0,
+                    "sources": [
+                        {
+                            "item_id": 20,
+                            "preserve": false,
+                            "q_required": 100.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "local",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "rate amount x2",
+            "id": 18,
+            "masked": false,
+            "mult": false,
+            "name": "Green Bar Boost I",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 6,
+                    "instant": true,
+                    "item_id": 18,
+                    "rate_amount": 1.0,
+                    "rate_duration": 3.0,
+                    "sources": [
+                        {
+                            "item_id": 17,
+                            "preserve": false,
+                            "q_required": 100.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "local",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "rate amount x3",
+            "id": 21,
+            "masked": false,
+            "mult": false,
+            "name": "Green Bar Boost II",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 4,
+                    "instant": true,
+                    "item_id": 21,
+                    "rate_amount": 1.0,
+                    "rate_duration": 3.0,
+                    "sources": [
+                        {
+                            "item_id": 18,
+                            "preserve": true,
+                            "q_required": 1.0
+                        },
+                        {
+                            "item_id": 15,
+                            "preserve": false,
+                            "q_required": 10000.0
+                        },
+                        {
+                            "item_id": 20,
+                            "preserve": false,
+                            "q_required": 100.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "local",
+            "toplevel": false
+        }
+    ],
+    "locations": [
+        {
+            "description": "",
+            "destinations": [],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
+            "id": 1,
+            "items": [
+                {
+                    "item_id": 21,
+                    "position": [0,0],
+                    "quantity": 1.0
+                },
+                {
+                    "item_id": 19,
+                    "position": [0,0],
+                    "quantity": 1.0
+                },
+                {
+                    "item_id": 18,
+                    "position": [0,0],
+                    "quantity": 1.0
+                }
+            ],
+            "masked": false,
+            "name": "Upgrades",
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": true
+        }
+    ],
+    "overall": {
+        "description": "Form colorful rectangular prisms at the beginning of time and space. A simple, abstract idler for <c=\"00FF00\">c</c><c=\"33CC00\">r</c><c=\"66CC00\">e</c><c=\"99CC00\">a</c><c=\"CCCC00\">t</c><c=\"CC9900\">i</c><c=\"FF6600\">v</c><c=\"FF3300\">i</c><c=\"FF0000\">t</c><c=\"CC0000\">y</c>—ascii art encouraged.<pre><c=\"green\">       #\r\n<c=\"red\">####</c>   #\r\n       #                  <c=\"blue\">###</c></c></pre>",
+        "number_format": "en_US",
+        "slots": [],
+        "title": "Rays",
+        "win_reqs": []
+    }
+}

@@ -1,19 +1,4 @@
 
-lots of rows in progress with item_id 0
-the item points to progress_id 1 while the IDs go all the way up to 20
-are we creating a new progress row each time we do Item.complete_data()?
-    item.py:126  to_db() for id=1
-    db_serializable.py:177  called from db_serializable.py:335
-        INSERT INTO progress (id, item_id, recipe_id, start_time, stop_time, batches_processed, is_ongoing, game_token)
-        VALUES (COALESCE((SELECT MAX(id) + 1 FROM progress), 1),%s,%s,%s,%s,%s,%s,%s)
-        ON CONFLICT (game_token, id) DO UPDATE
-        SET item_id=EXCLUDED.item_id, recipe_id=EXCLUDED.recipe_id, start_time=EXCLUDED.start_time, stop_time=EXCLUDED.stop_time, batches_processed=EXCLUDED.batches_processed, is_ongoing=EXCLUDED.is_ongoing
-        RETURNING id
-        values=[0, 0, None, None, 0, False, '4d7515a6-7ad9-4fe0-9ea6-a86ba028a3be']
-well, locations table does reference progress_id 15 and 20
-characters has progress_id 2
-so we do use the new IDs but neglect to remove or replace the old ones
-
 implement checking triggers for item progress
 maybe in item_progress, similar to call in char_progress
 event.check_trigger_for_duration(time_spent)
