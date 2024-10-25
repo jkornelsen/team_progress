@@ -142,6 +142,16 @@ input[type="number"] {
   width: 8ch;
 }
 
+input:disabled {
+    opacity: 0.4;
+}
+label.disabled {
+    opacity: 0.4;
+}
+input[type="checkbox"]:disabled {
+    opacity: 0.4;
+}
+
 select option {
     background-color: #2a2a2a;
     color: #ffffff;
@@ -245,7 +255,7 @@ table th {
     background-color: #2a2a2a;
 }
 
-.align-top {
+table.align-top td {
     vertical-align: top;
 }
 

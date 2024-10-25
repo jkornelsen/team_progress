@@ -21,7 +21,7 @@ def coldef(which):
         PRIMARY KEY (id, game_token)"""
     if which == 'name':
         return f"""{coldef('id')},
-            name varchar(255) NOT NULL,
+            name varchar(255) not null,
             description text"""
     raise ValueError(f"Unexpected coldef type '{which}'")
 

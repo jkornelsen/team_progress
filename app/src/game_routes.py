@@ -286,7 +286,6 @@ def set_routes(app):
         req = RequestHelper('args')
         char_id = req.get_int('char_id', '')
         loc_id = req.get_int('loc_id', '')
-        main_pile_type = req.get_str('main', '')
         if char_id:
             session['last_char_id'] = char_id
         if loc_id:
@@ -300,8 +299,7 @@ def set_routes(app):
             "-" * 80, item_id, char_id, loc_id)
         g.game_data.overall = Overall.load_complete_object()
         item = Item.data_for_play(
-            item_id, char_id, loc_id, complete_sources=False,
-            main_pile_type=main_pile_type)
+            item_id, char_id, loc_id, complete_sources=False)
         if not item:
             return "Item not found"
         defaults = {
@@ -315,7 +313,6 @@ def set_routes(app):
             container=item.pile.container,
             char_id=char_id,
             loc_id=loc_id,
-            main_pile_type=main_pile_type,
             defaults=defaults,
             game_data=g.game_data,
             link_letters=LinkLetters('cdelmopq')
@@ -481,7 +478,6 @@ def set_routes(app):
         req = RequestHelper('args')
         char_id = req.get_int('char_id', '')
         loc_id = req.get_int('loc_id', '')
-        main_pile_type = req.get_str('main', '')
         if not char_id and not loc_id:
             char_id = session.get('last_char_id', '')
             loc_id = session.get('last_loc_id', '')
@@ -489,8 +485,7 @@ def set_routes(app):
             "%s\nitem_progress(item_id=%d, char_id=%s, loc_id=%s)",
             "-" * 80, item_id, char_id, loc_id)
         item = Item.data_for_play(
-            item_id, char_id, loc_id, complete_sources=True,
-            main_pile_type=main_pile_type)
+            item_id, char_id, loc_id, complete_sources=True)
         if not item:
             return jsonify({'error': "Item not found"})
         pile = item.pile

@@ -103,7 +103,7 @@
                 <th>Attributes</th>
             </tr>
             {% for item in active.items %}
-                {% set link = url_for('play_item', item_id=item.id, main='universal') %}
+                {% set link = url_for('play_item', item_id=item.id) %}
                 {% set letter = link_letters.next(link) %}
                 <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
                 <tr>

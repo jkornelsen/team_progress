@@ -79,7 +79,7 @@
                         <ul class="item-list">
                             {% for item_at in current.items.values() %}
                                 {% set item = item_at.item %}
-                                {% set link = url_for('play_item', item_id=item.id, loc_id=current.id, main='local') %}
+                                {% set link = url_for('play_item', item_id=item.id, loc_id=current.id) %}
                                 {% set letter = link_letters.next(link) %}
                                 <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
                                 <span>[{{ letter }}]</span>
@@ -200,6 +200,8 @@
                                 <button type="button" data-x="1" data-y="-1">↗</button>
                                 <!-- Left -->
                                 <button type="button" data-x="-1" data-y="0">←</button>
+                                <!-- Middle (empty) -->
+                                <span></span>
                                 <!-- Right -->
                                 <button type="button" data-x="1" data-y="0">→</button>
                                 <select id="char-to-move" style="grid-column: span 3;">

@@ -38,6 +38,7 @@ pip install flask
 pip install flask-caching
 pip install psycopg2
 pip install bleach
+pip install tinycss2
 ```
 
 ## III. Database Installation and Setup

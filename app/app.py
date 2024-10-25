@@ -13,6 +13,7 @@ import sys
 import uuid
 
 import bleach
+from bleach.css_sanitizer import CSSSanitizer
 from flask import (
     Flask,
     g,
@@ -147,17 +148,37 @@ def _set_filters():
 
     @app.template_filter('htmlify')
     def htmlify_filter(html):
-        html = re.sub(r'<c\s*=', r'<font color=', html)
-        html = re.sub(r'</c\s*>', r'</font>', html)
+        # color tags
+        html = re.sub(
+            r'<c\s*=\s*["\']?([^"\'>]+)["\']?\s*>',
+            r'<span style="color:\1;">', html)
+        html = re.sub(r'</c\s*>', r'</span>', html)
+        # remove the first newline after <pre>
+        html = re.sub(
+            r'(<pre[^>]*>(?:<[^>]+>)*)\r?\n',
+            r'\1', html)
+        # add styling to <pre>
+        html = re.sub(
+            r'(<pre[^>]*)>', 
+            r'\1 style="white-space: pre-wrap; word-wrap: break-word;'
+            r' overflow-wrap: break-word;">', 
+            html)
+        # handle styles safely
+        css_sanitizer = CSSSanitizer(
+                allowed_css_properties=[
+                'color', 'white-space', 'word-wrap', 'overflow-wrap'])
         html = bleach.clean(
             html,
-            tags={'a', 'b', 'i', 'font', 'pre'},
+            tags={'a', 'b', 'i', 'span', 'pre'},
             attributes={
                 'a': ['href', 'title'],
-                'font': ['color']
-                }
+                'span': ['style'],
+                'pre': ['style']
+                },
+                css_sanitizer=css_sanitizer
             )
         def sanitize_href(match):
+            """Limit URLs to within the app."""
             href = match.group(2).strip()
             if not re.match(r'^/[a-zA-Z0-9/=?]*["\']?$', href):
                 return 'href="#"'

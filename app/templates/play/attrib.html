@@ -42,8 +42,7 @@
     <br>
     <h2>{{ current.name }}</h2>
     {% if current.description %}
-        <pre style="white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word;"
-            >{{ current.description|htmlify }}</pre>
+       {{ current.description|htmlify }}
     {% endif %}
     <hr>
     <form method="post">

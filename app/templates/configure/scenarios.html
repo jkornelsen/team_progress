@@ -30,10 +30,9 @@
             <label for="sort_by">Sort by:</label>
             <select name="sort_by" id="sort_by">
                 <option value="filename" {% if sort_by == 'filename' %}selected{% endif %}>Gameplay Concepts</option>
+                <option value="progress_type" {% if sort_by == 'progress_type' %}selected{% endif %}>Progress Type</option>
+                <option value="multiplayer" {% if sort_by == 'multiplayer' %}selected{% endif %}>Multiplayer</option>
                 <option value="filesize" {% if sort_by == 'filesize' %}selected{% endif %}>Size</option>
-                <option value="title" {% if sort_by == 'title' %}selected{% endif %}>Title</option>
-                <option value="popularity"
-                        {% if sort_by == 'popularity' %}selected{% endif %}>Most Played</option>
             </select>
             <button type="submit"
                     id="submit_sort_by">
@@ -46,11 +45,18 @@
             </script>
         </div>
     </form>
-    <table class="spacious">
+    <table class="align-top spacious">
+            <tr>
+                <th></th>
+                <th>Title</th>
+                <th>Description</th>
+                <th title="predominantly idle or character driven">Progress</th>
+                <th title="designed for multiplayer">MP?</th>
+            </tr>
         {% for scenario in scenarios %}
             <tr style="border-top: 1px solid #888;"></tr>
             <tr>
-                <td class="align-top">
+                <td>
                     <form method="post" action="{{ url_for("browse_scenarios") }}">
                         {% set scenario_id = loop.index0 %}
                         {% set letter = link_letters.next() %}
@@ -68,10 +74,12 @@
                         <input type="hidden" name="scenario_title" value="{{ scenario.title }}">
                     </form>
                 </td>
-                <td class="align-top">
+                <td>
                     <span style="font-size: 1.3em; font-weight: bold">{{ scenario.title }}</span>
                 </td>
-                <td class="align-top">{{ scenario.description|removeLinks|htmlify }}</td>
+                <td>{{ scenario.description|removeLinks|htmlify }}</td>
+                <td>{{ scenario.progress_type }}</td>
+                <td>{{ '☑' if scenario.multiplayer else '' }}</td>
             </tr>
         {% endfor %}
     </table>

@@ -159,10 +159,6 @@
                                 </select>
                             </div>
                         {% endif %}
-                        <div id="show_all_buttons-container">
-                            <input type="checkbox" id="show-all-buttons" />
-                            <label for="show-all-buttons">Show all actions</label>
-                        </div>
                     </div>
                 </td>
             </tr>
@@ -537,7 +533,7 @@
                 progressBar.attr('value', progressPercent);
                 progressLabel.text(`${quantity} / ${maxQuantity}`);
             }
-            function getItemProgressUrl(itemId, mainPileType='') {
+            function getItemProgressUrl(itemId) {
                 const queryParams = [];
                 const charId = "{{ char_id }}";
                 if (charId) {
@@ -546,9 +542,6 @@
                 const locId = "{{ loc_id }}";
                 if (locId) {
                     queryParams.push(`loc_id=${encodeURIComponent(locId)}`);
-                }
-                if (mainPileType) {
-                    queryParams.push(`main=${encodeURIComponent(mainPileType)}`);
                 }
                 let url = `/item/progress/${itemId}`;
                 if (queryParams.length > 0) {
@@ -624,7 +617,7 @@
 
             // Fetch progress data and update all relevant information
             async function fetchProgressData() {
-                const url = getItemProgressUrl({{ current.id }}, "{{ main_pile_type }}")
+                const url = getItemProgressUrl({{ current.id }})
                 const data = await new Promise((resolve, reject) => {
                     $.get(url, (response) => {
                         resolve(response);
@@ -822,7 +815,6 @@
 
             async function updateVisibility() {
                 const notEmpty = hasMainQuantity;
-                const showAll = $('#show-all-buttons').is(':checked');
                 const storage_carried = '{{ current.storage_type }}' === 'carried';
                 const storage_local = '{{ current.storage_type }}' === 'local';
                 const atLoc = '{{ container.pile.container_type() }}' === 'loc';
@@ -831,10 +823,9 @@
                 const inSlot = '{{ container.pile.slot }}' !== '';
                 const visibilityMap = {
                     'equip-container': notEmpty && inventory && storage_carried && !inSlot,
-                    'pickup-container': notEmpty && atLoc && (!storage_local || showAll),
+                    'pickup-container': notEmpty && atLoc && !storage_local,
                     'unequip-container': notEmpty && inSlot,
                     'drop-container': notEmpty && inventory && charAtLoc && !inSlot,
-                    'show_all_buttons-container': notEmpty && atLoc && storage_local,
                 };
                 Object.keys(visibilityMap).forEach((id) => {
                     if (visibilityMap[id]) {
@@ -844,9 +835,6 @@
                     }
                 });
             }
-            $('#show-all-buttons').on('change', () => {
-                updateVisibility();
-            });
         });
         </script>
     </div>

@@ -57,7 +57,7 @@
             "name": "XP"
         },
         {
-            "description": "Level that indicates how powerful and advanced a character is. Increment when enough XP is gained.\r\n\r\n+-----------+------------+\r\n| XP Level  | XP Required|\r\n+-----------+------------+\r\n|    1      |     0      |\r\n|    2      |    20      |\r\n|    3      |    60      |\r\n|    4      |   120      |\r\n|    5      |   200      |\r\n|    6      |   300      |\r\n|    7      |   420      |\r\n|    8      |   560      |\r\n|    9      |   720      |\r\n|   10      |   900      |\r\n|   11      |  1100      |\r\n|   12      |  1320      |\r\n|   13      |  1560      |\r\n|   14      |  1820      |\r\n|   15      |  2100      |\r\n|   16      |  2400      |\r\n|   17      |  2720      |\r\n|   18      |  3060      |\r\n|   19      |  3420      |\r\n|   20      |  3800      |\r\n+-----------+------------+",
+            "description": "Level that indicates how powerful and advanced a character is. Increment when enough XP is gained.\r\n<pre>\r\n+-----------+------------+\r\n| XP Level  | XP Required|\r\n+-----------+------------+\r\n|    1      |     0      |\r\n|    2      |    20      |\r\n|    3      |    60      |\r\n|    4      |   120      |\r\n|    5      |   200      |\r\n|    6      |   300      |\r\n|    7      |   420      |\r\n|    8      |   560      |\r\n|    9      |   720      |\r\n|   10      |   900      |\r\n|   11      |  1100      |\r\n|   12      |  1320      |\r\n|   13      |  1560      |\r\n|   14      |  1820      |\r\n|   15      |  2100      |\r\n|   16      |  2400      |\r\n|   17      |  2720      |\r\n|   18      |  3060      |\r\n|   19      |  3420      |\r\n|   20      |  3800      |\r\n+-----------+------------+\r\n</pre>",
             "enum_list": [],
             "id": 11,
             "is_binary": false,
@@ -295,7 +295,13 @@
             "dimensions": [7,7],
             "excluded": [3,3,5,5],
             "id": 1,
-            "items": [],
+            "items": [
+                {
+                    "item_id": 1,
+                    "position": [7,4],
+                    "quantity": 1.0
+                }
+            ],
             "masked": false,
             "name": "Entry Cavern",
             "progress": {},
@@ -317,7 +323,9 @@
         }
     ],
     "overall": {
-        "description": "Your party was responding to a mysterious distress signal when suddenly, the ground below collapsed, and all fell down a nearly vertical shaft. No one seems to be injured <i>(yet)</i>. Doubtless there are <c=lightcoral>enemies</c> in the surrounding caverns\u2014good source of <c=blue>XP</c>, an optimist would say.\r\n\r\nModeled after traditional tabletop RPGs or roguelikes. Start by creating your player characters based on templates for species and class. Then craft rudimentary supplies before embarking on an escape to the surface or delving deeper. ",
+        "description": "Your party was responding to a mysterious distress signal when suddenly, the ground below collapsed, and all fell down a nearly vertical shaft. No one seems to be injured <i>(yet)</i>. Doubtless there are <c=lightcoral>enemies</c> in the surrounding caverns\u2014good source of <c=blue>XP</c>, an optimist would say.\r\n\r\nModeled after traditional tabletop RPGs and roguelikes. Start by creating your player characters based on templates for species and class. Then craft rudimentary supplies before embarking on an escape to the surface or delving deeper. ",
+        "progress_type": "RPG",
+        "multiplayer": true,
         "number_format": "en_US",
         "slots": [
             "Main Hand",

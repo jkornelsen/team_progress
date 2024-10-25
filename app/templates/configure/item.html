@@ -9,18 +9,23 @@
 {% block content %}
     <h1>Item Setup</h1>
     <p class="info">
-        Basic building blocks. In addition to typical items such as resources, money, or equipment,
+        In addition to resources or equipment,
         they can also represent an upgrade in production speed,
         or conversation dialog.
         They could even be people if they don't take actions.
     </p>
-    <!--
-    For more ideas on how items can be used, browse the pre-built scenarios.
-
-    Incidentally, in a pen-and-paper game, item progress could be
-    determined from a clock, by writing the start and stop time of an action and
-    computing elapsed progress.
-    -->
+    <p class="info">
+        Storage type is important to consider. General (accessible anywhere) is
+        good for idle progress, while carried is for RPGs.
+        Items tied to a location include crafting stations and livestock,
+        and locations are also a good way to group items.
+        To store more than one way, create an additional item
+        and convert with a recipe.
+        For example:
+        <i>funds</i> in the bank (general) &rarr; <i>cash</i> on hand (carried),
+        or <i>cow</i> &rarr; <i>cow (transport)</i>
+        so it can be picked up by a truck.
+    </p>
     <form method="post" style="padding-bottom: 60px">
         <label for="item-name">Name:</label>
         <input type="text"
@@ -42,11 +47,24 @@
             <label>Storage:</label>
             <div class="storage-options">
                 <input type="radio"
+                       id="universal"
+                       name="storage_type"
+                       value="universal"
+                       {% if current.storage_type == 'universal' %}checked{% endif %}>
+                <label for="universal">Accessible anywhere</label>
+                <input type="checkbox"
+                       id="top-level"
+                       name="top_level"
+                       style="margin-left: 10px"
+                       {% if current.toplevel %}checked{% endif %}>
+                <label for="top-level">Show in Overview</label>
+                <br>
+                <input type="radio"
                        id="carried"
                        name="storage_type"
                        value="carried"
                        {% if current.storage_type == 'carried' %}checked{% endif %}>
-                <label for="carried">Used when carried</label>
+                <label for="carried">Can be carried by characters</label>
                 <br>
                 <input type="radio"
                        id="local"
@@ -54,19 +72,6 @@
                        value="local"
                        {% if current.storage_type == 'local' %}checked{% endif %}>
                 <label for="local">Resides at a location</label>
-                <br>
-                <input type="radio"
-                       id="universal"
-                       name="storage_type"
-                       value="universal"
-                       {% if current.storage_type == 'universal' %}checked{% endif %}>
-                <label for="universal">Accessible anywhere</label>
-                <input type="checkbox"
-                       id="top_level"
-                       name="top_level"
-                       style="margin-left: 10px"
-                       {% if current.toplevel %}checked{% endif %}>
-                <label for="top_level">Show in Overview</label>
                 <br>
             </div>
         </div>
@@ -555,10 +560,15 @@
             function updateTopLevelCheckbox() {
                 const selectedStorageType = $('input[name="storage_type"]:checked').val();
                 if (selectedStorageType === 'universal') {
-                    $('#top_level').prop('disabled', false);
+                    $('#top-level').prop('disabled', false);
+                    $('label[for="top-level"]').removeClass('disabled');
+                    $('#item-quantity').prop('disabled', false);
+                    $('label[for="item-quantity"]').removeClass('disabled');
                 } else {
-                    $('#top_level').prop('checked', false);
-                    $('#top_level').prop('disabled', true);
+                    $('#top-level').prop('disabled', true).prop('checked', false);
+                    $('label[for="top-level"]').addClass('disabled');
+                    $('#item-quantity').prop('disabled', true).val(0);
+                    $('label[for="item-quantity"]').addClass('disabled');
                 }
             }
             updateTopLevelCheckbox();

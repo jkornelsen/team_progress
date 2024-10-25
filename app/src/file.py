@@ -17,13 +17,6 @@ from .overall import Overall
 from .utils import LinkLetters, RequestHelper
 
 logger = logging.getLogger(__name__)
-tables_to_create = {
-    'scenario_log': """
-        filename varchar(50) NOT NULL,
-        times_loaded integer NOT NULL,
-        UNIQUE (filename)
-        """
-    }
 
 DEFAULT_SCENARIO = "00_Default.json"
 DATA_DIR = None
@@ -104,19 +97,13 @@ def set_routes(app):
             if file_age > MAX_FILE_AGE:
                 os.remove(file_path)
                 logger.info("Deleted %s (age: %s)", filename, file_age)
-        return redirect(url_for('configure_index'))
+        return redirect(url_for('overview'))
 
     @app.route('/browse_scenarios', methods=['GET', 'POST'])
     def browse_scenarios():
         logger.debug("%s\nbrowse_scenarios()", "-" * 80)
         if request.method == 'GET':
             scenarios = []
-            popularity = {}
-            rows = DbSerializable.execute_select("""
-                SELECT * FROM scenario_log
-                """)
-            for row in rows:
-                popularity[row.filename] = row.times_loaded
             for filename in os.listdir(DATA_DIR):
                 if filename.endswith('.json') and filename != DEFAULT_SCENARIO:
                     filepath = os.path.join(DATA_DIR, filename)
@@ -128,18 +115,12 @@ def set_routes(app):
                             message=f"Error reading {filename}",
                             details=str(e))
                     scenario['filename'] = filename
-                    scenario['popularity'] = popularity.get(filename, 0)
                     scenarios.append(scenario)
             req = RequestHelper('args')
             sort_by = req.get_str('sort_by', 'filename')
-            if sort_by == 'filename':
-                scenarios = sorted(scenarios, key=lambda x: x['filename'])
-            elif sort_by == 'title':
-                scenarios = sorted(scenarios, key=lambda x: x['title'])
-            elif sort_by == 'filesize':
-                scenarios = sorted(scenarios, key=lambda x: x['filesize'], reverse=True)
-            elif sort_by == 'popularity':
-                scenarios = sorted(scenarios, key=lambda x: x['popularity'], reverse=True)
+            reverse = sort_by in ('filesize', 'multiplayer')
+            scenarios = sorted(
+                scenarios, key=lambda x: x[sort_by], reverse=reverse)
             return render_template(
                 'configure/scenarios.html',
                 scenarios=scenarios,
@@ -160,14 +141,8 @@ def set_routes(app):
                 'error.html',
                 message=f"Could not load \"{scenario_title}\".",
                 details=str(ex))
-        DbSerializable.execute_change("""
-            INSERT INTO scenario_log (filename, times_loaded)
-            VALUES (%s, 1)  -- Start with 1 on the first load
-            ON CONFLICT (filename) DO UPDATE
-            SET times_loaded = scenario_log.times_loaded + 1
-            """, [scenario_file])
         session['file_message'] = 'Loaded scenario "{}"'.format(scenario_title)
-        return redirect(url_for('configure_index'))
+        return redirect(url_for('overview'))
 
     @app.route('/blank_scenario')
     def blank_scenario():
@@ -206,11 +181,12 @@ def load_scenario_metadata(filepath):
     with open(filepath, 'r', encoding='utf-8') as infile:
         data = json.load(infile)
     overall = Overall.from_data(data['overall'])
-    return {
-        'title': overall.title,
-        'description': overall.description,
-        'filesize': os.path.getsize(filepath)
+    metadata = {
+        attr: getattr(overall, attr)
+        for attr in ['title', 'description', 'multiplayer', 'progress_type']
         }
+    metadata['filesize'] = os.path.getsize(filepath)
+    return metadata
 
 def generate_filename(title):
     # Remove special characters and replace with '_'

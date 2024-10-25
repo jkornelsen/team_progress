@@ -16,10 +16,12 @@ logger = logging.getLogger(__name__)
 tables_to_create = {
     'overall': f"""
         {coldef('game_token')},
-        title varchar(255) NOT NULL,
+        title varchar(255) not null,
         description text,
-        number_format VARCHAR(5) NOT NULL,
-        slots TEXT[],
+        number_format varchar(5) not null,
+        slots text[],
+        progress_type varchar(20) not null,
+        multiplayer boolean not null,
         PRIMARY KEY (game_token)
         """
     }
@@ -95,6 +97,8 @@ class Overall(DbSerializable):
         self.win_reqs = []
         self.number_format = 'en_US'
         self.slots = []
+        self.progress_type = ""
+        self.multiplayer = False
 
     @classmethod
     def tablename(cls):
@@ -133,6 +137,8 @@ class Overall(DbSerializable):
             'description': self.description,
             'number_format': self.number_format,
             'slots': self.slots,
+            'progress_type': self.progress_type,
+            'multiplayer': self.multiplayer,
             }
 
     def dict_for_json(self):
@@ -158,6 +164,10 @@ class Overall(DbSerializable):
         instance.number_format = data.get(
             'number_format', instance.number_format)
         instance.slots = list(data.get('slots') or [])
+        instance.progress_type = data.get(
+            'progress_type', instance.progress_type)
+        instance.multiplayer = data.get(
+            'multiplayer', instance.multiplayer)
         return instance
 
     @classmethod
