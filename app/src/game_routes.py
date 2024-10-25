@@ -239,13 +239,21 @@ def set_routes(app):
         instance = Character.data_for_play(char_id)
         if not instance:
             return "Character not found"
+        travel_groups = []
+        if instance.location:
+            travel_groups = Character.load_travel_groups(
+                instance.location.id, instance.id)
         session['last_char_id'] = char_id
         session['default_pickup_char'] = char_id
+        defaults = {
+            'travel_with': session.get('default_travel_with', '')}
         return render_template(
             'play/character.html',
             current=instance,
             game_data=g.game_data,
-            link_letters=LinkLetters('egomst')
+            travel_groups=travel_groups,
+            defaults=defaults,
+            link_letters=LinkLetters('egomstw')
             )
 
     @app.route('/play/event/<int:event_id>', methods=['GET', 'POST'])
@@ -366,19 +374,19 @@ def set_routes(app):
                     'quantity': 0
                     })
             if char.progress.is_ongoing:
-                time_spent = char.progress.batches_for_elapsed_time()
+                batches_done = char.progress.batches_for_elapsed_time()
                 events = Event.load_triggers_for_type(
                     char.location.id, Location.typename())
                 req = RequestHelper('args')
                 ignore_event_id = req.get_int('ignore_event', '')
                 for event in events:
                     if event.id != ignore_event_id:
-                        if (event.trigger_by_duration
-                                and event.check_trigger_for_duration(time_spent)):
+                        if event.check_trigger(batches_done):
                             return jsonify({
                                 'status': 'interrupt',
-                                'message': f"<h2>{char.name} triggered {event.name}!</h2>"
-                                " Allow event?",
+                                'message': f"<h2>{char.name} triggered "
+                                           f"{event.name}!</h2> "
+                                           "Run the event now?",
                                 'event_id': event.id
                                 })
                 char.to_db()

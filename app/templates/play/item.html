@@ -369,24 +369,21 @@
                 </tr>
             {% endif %}
             {% set outerscope = namespace(used_as_source=[], produced_as_byproduct=[]) %}
-            {% for other_item in game_data.items %}
-                {% if other_item.id != current.id %}
-                    {# e.g. pigs breeding pigs #}
-                    {% for recipe in other_item.recipes %}
-                        {% for source in recipe.sources %}
-                            {% if current.id == source.item.id %}
-                                {% set _ = outerscope.used_as_source.append(
-                                                                {'item': other_item, 'q_required': source.q_required}) %}
-                            {% endif %}
-                        {% endfor %}
-                        {% for byproduct in recipe.byproducts %}
-                            {% if current.id == byproduct.item.id %}
-                                {% set _ = outerscope.produced_as_byproduct.append(
-                                                                {'item': other_item, 'rate_amount': byproduct.rate_amount}) %}
-                            {% endif %}
-                        {% endfor %}
+            {% for other_item in game_data.items if other_item.id != current.id %}{# e.g. pigs breeding pigs #}
+                {% for recipe in other_item.recipes %}
+                    {% for source in recipe.sources %}
+                        {% if current.id == source.item.id %}
+                            {% set _ = outerscope.used_as_source.append(
+                                {'item': other_item, 'q_required': source.q_required}) %}
+                        {% endif %}
                     {% endfor %}
-                {% endif %}
+                    {% for byproduct in recipe.byproducts %}
+                        {% if current.id == byproduct.item.id %}
+                            {% set _ = outerscope.produced_as_byproduct.append(
+                                {'item': other_item, 'rate_amount': byproduct.rate_amount}) %}
+                        {% endif %}
+                    {% endfor %}
+                {% endfor %}
             {% endfor %}
             {% if outerscope.used_as_source %}
                 <tr>
@@ -477,7 +474,7 @@
                                 <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
                                 <span>[{{ letter }}]</span>
                                 <a href="{{ link }}">{{ evt.name }}</a>
-                                {% if evt.trigger_chance[0] > 0 %}
+                                {% if evt.trigger_chance > 0 %}
                                     <span class="label-like">&nbsp;(chance to trigger)</span>
                                 {% endif %}
                                 <br>
@@ -584,23 +581,22 @@
 
             // the Start button can change to "Stop"
             function updateStartButtonLabel(data, recipe_id) {
-                const startBtns = document.querySelectorAll(".start-stop-btn");
-                for (const startBtn of startBtns) {
-                    const btnRecipeId = startBtn.getAttribute("data-recipe-id");
+                $(".start-stop-btn").each(function() {
+                    const btnRecipeId = $(this).data("recipe-id");
                     if (btnRecipeId && parseInt(btnRecipeId) === recipe_id) {
                         if (data && data.is_ongoing) {
-                            startBtn.innerHTML = "Stop";
-                            startBtn.classList.add("dangerous-button");
-                            startBtn.classList.remove("go-button");
-                            const row = $(startBtn).closest('tr');
+                            $(this).html("Stop")
+                                   .addClass("dangerous-button")
+                                   .removeClass("go-button");
+                            const row = $(this).closest('tr');
                             rateDuration = parseFloat(row.find('.rate-duration').text()) || 1;
                         } else {
-                            startBtn.innerHTML = "Start";
-                            startBtn.classList.add("go-button");
-                            startBtn.classList.remove("dangerous-button");
+                            $(this).html("Start")
+                                   .addClass("go-button")
+                                   .removeClass("dangerous-button");
                         }
                     }
-                }
+                });
             }
 
             function updateProgressVisibility() {

@@ -18,7 +18,7 @@ tables_to_create = {
         toplevel boolean NOT NULL,
         masked boolean NOT NULL,
         progress_id integer,
-        quantity float(4) NOT NULL,
+        quantity real NOT NULL,
         dimensions integer[2],
         excluded integer[4],
         FOREIGN KEY (game_token, progress_id)
@@ -226,9 +226,7 @@ class Location(CompleteIdentifiable):
             loc1_id = dest_data.get('loc1_id', 0)
             loc2_id = dest_data.get('loc2_id', 0)
             if instance.id not in (loc1_id, loc2_id):
-                logger.debug(
-                    "neither loc_id is %s; expected when loading from json",
-                    instance.id)
+                # expected when loading from json
                 if loc2_id and not loc1_id:
                     dest_data['loc1_id'] = instance.id
                 elif loc1_id and not loc2_id:

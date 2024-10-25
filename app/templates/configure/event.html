@@ -173,67 +173,41 @@
         </div>
         <div class="entity-list-container outer-border"
              id="triggers-entities-container">
-            <div id="trigger-chance-container">
-                <label>Trigger Chance:</label>
-                <input type="text"
-                       id="trigger-numerator"
-                       name="trigger_numerator"
-                       value="{{ current.trigger_chance[0] }}"
-                       size="3">
-                <label for="trigger-denominator">out of</label>
-                <input type="text"
-                       id="trigger-denominator"
-                       name="trigger_denominator"
-                       value="{{ current.trigger_chance[1] }}"
-                       size="8">
-                <span class="label-like">Set only if triggering automatically.</span>
-            </div>
-            <div id="triggered-for-container">
-                <label>Triggered For:</label>
-                <label>
-                    <input type="radio"
-                           name="trigger_timing"
-                           value="during_progress"
-                           {% if current.trigger_by_duration %}checked{% endif %}>
-                    Progress (Chance Per Second)
-                </label>
-                <label>
-                    <input type="radio"
-                           name="trigger_timing"
-                           value="when_finished"
-                           {% if not current.trigger_by_duration %}checked{% endif %}>
-                    When Finished
-                </label>
-                <br>
-                <!-- Placeholder for appending new entities -->
-                <div id="triggers_list_end" class="unobtrusive"></div>
-                <div class="select-box-container">
-                    {% if game_data.items %}
-                        <div class="select-box" title="Triggered by production of this item.">
-                            <select class="add-entity-select">
-                                <option value="" selected>(Select item)</option>
-                                {% for item in game_data.items %}<option value="{{ item.id }}">{{ item.name }}</option>{% endfor %}
-                            </select>
-                            <button type="button"
-                                    class="add-entity-btn lesser-button"
-                                    data-relType="triggers"
-                                    data-entityType="item">Add</button>
-                        </div>
-                    {% endif %}
-                    {% if game_data.locations %}
-                        <div class="select-box" title="Triggered by travel from this location.">
-                            <select class="add-entity-select">
-                                <option value="" selected>(Select location)</option>
-                                {% for loc in game_data.locations %}<option value="{{ loc.id }}">{{ loc.name }}</option>{% endfor %}
-                            </select>
-                            <button type="button"
-                                    class="add-entity-btn lesser-button"
-                                    data-relType="triggers"
-                                    data-entityType="loc">Add</button>
-                        </div>
-                    {% endif %}
-                    {% if not game_data.items and not game_data.locations %}<p class="no-entities">(No items or locations)</p>{% endif %}
-                </div>
+            <label>Trigger Chance:</label>
+            <input type="text"
+                   id="trigger-chance"
+                   name="trigger_chance"
+                   value="{{ current.trigger_chance }}"
+                   size="5">
+            <span class="label-like">0 to link but not trigger automatically.</span>
+            <!-- Placeholder for appending new entities -->
+            <div id="triggers_list_end" class="unobtrusive"></div>
+            <div class="select-box-container">
+                {% if game_data.items %}
+                    <div class="select-box" title="Triggered by production of this item.">
+                        <select class="add-entity-select">
+                            <option value="" selected>(Select item)</option>
+                            {% for item in game_data.items %}<option value="{{ item.id }}">{{ item.name }}</option>{% endfor %}
+                        </select>
+                        <button type="button"
+                                class="add-entity-btn lesser-button"
+                                data-relType="triggers"
+                                data-entityType="item">Add</button>
+                    </div>
+                {% endif %}
+                {% if game_data.locations %}
+                    <div class="select-box" title="Triggered by travel from this location.">
+                        <select class="add-entity-select">
+                            <option value="" selected>(Select location)</option>
+                            {% for loc in game_data.locations %}<option value="{{ loc.id }}">{{ loc.name }}</option>{% endfor %}
+                        </select>
+                        <button type="button"
+                                class="add-entity-btn lesser-button"
+                                data-relType="triggers"
+                                data-entityType="loc">Add</button>
+                    </div>
+                {% endif %}
+                {% if not game_data.items and not game_data.locations %}<p class="no-entities">(No items or locations)</p>{% endif %}
             </div>
         </div>
         <br>
@@ -260,8 +234,8 @@
 
             const outcomeTypeContainer = $('#outcome-type-container');
             function outcomeTypeVisibility() {
-                const outcomeType = outcomeTypeContainer.querySelector(
-                    'input[name="outcome_type"]:checked').value;
+                const outcomeType = outcomeTypeContainer.find(
+                    'input[name="outcome_type"]:checked').val();
                 console.log(`outcomeType=${outcomeType}`);
                 const numericFactorsDiv = $('#numeric-factors');
                 const selectionStringsDiv = $('#selection-container');
@@ -284,9 +258,8 @@
                     changedAttribsDiv.css('display', 'block');
                 }
             }
-            outcomeTypeContainer.querySelectorAll('input[name="outcome_type"]').forEach(
-                radio => {
-                radio.addEventListener("change", outcomeTypeVisibility);
+            outcomeTypeContainer.find('input[name="outcome_type"]').each(function() {
+                $(this).on("change", outcomeTypeVisibility);
             });
             outcomeTypeVisibility();
 
@@ -346,7 +319,7 @@
                 if (entityId === '') {
                     return; // Don't add if the selected option is the placeholder
                 }
-                const existingItem = $(`.entity-triggers-container`)
+                const existingItem = $(`.triggers-entities-container`)
                     .find(`.entity[data-entity-id="${entityId}"][data-entity-type="${entityType}"]`);
                 if (existingItem.length > 0) {
                     alert(`${capitalizeFirstLetter(entityType)} already added.`);

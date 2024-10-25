@@ -10,7 +10,7 @@ tables_to_create = {
         {coldef('game_token')},
         item_id integer not null,
         attrib_id integer not null,
-        value float(4) not null,
+        value real not null,
         PRIMARY KEY (game_token, item_id, attrib_id),
         FOREIGN KEY (game_token, item_id)
             REFERENCES items (game_token, id)
@@ -25,7 +25,7 @@ tables_to_create = {
         {coldef('game_token')},
         recipe_id integer not null,
         item_id integer not null,
-        q_required float(4) not null,
+        q_required real not null,
         preserve boolean not null,
         PRIMARY KEY (game_token, recipe_id, item_id),
         FOREIGN KEY (game_token, recipe_id)
@@ -41,7 +41,7 @@ tables_to_create = {
         {coldef('game_token')},
         recipe_id integer not null,
         item_id integer not null,
-        rate_amount float(4) not null,
+        rate_amount real not null,
         PRIMARY KEY (game_token, recipe_id, item_id),
         FOREIGN KEY (game_token, recipe_id)
             REFERENCES recipes (game_token, id)
@@ -56,7 +56,7 @@ tables_to_create = {
         {coldef('game_token')},
         recipe_id integer not null,
         attrib_id integer not null,
-        value float(4) not null,
+        value real not null,
         PRIMARY KEY (game_token, recipe_id, attrib_id),
         FOREIGN KEY (game_token, recipe_id)
             REFERENCES recipes (game_token, id)
@@ -72,7 +72,7 @@ tables_to_create = {
         {coldef('game_token')},
         char_id integer not null,
         attrib_id integer not null,
-        value float(4) not null,
+        value real not null,
         PRIMARY KEY (game_token, char_id, attrib_id),
         FOREIGN KEY (game_token, char_id)
             REFERENCES characters (game_token, id)
@@ -87,7 +87,7 @@ tables_to_create = {
         {coldef('game_token')},
         char_id integer not null,
         item_id integer not null,
-        quantity float(4) not null,
+        quantity real not null,
         slot varchar(50),
         PRIMARY KEY (game_token, char_id, item_id),
         FOREIGN KEY (game_token, char_id)
@@ -104,7 +104,7 @@ tables_to_create = {
         {coldef('game_token')},
         loc1_id integer not null,
         loc2_id integer not null,
-        distance float(4) not null,
+        distance real not null,
         door1 integer[2],
         door2 integer[2],
         bidirectional boolean not null,
@@ -122,7 +122,7 @@ tables_to_create = {
         {coldef('game_token')},
         loc_id integer not null,
         item_id integer not null,
-        quantity float(4) not null,
+        quantity real not null,
         position integer[2],
         PRIMARY KEY (game_token, loc_id, item_id),
         FOREIGN KEY (game_token, loc_id)
@@ -169,11 +169,11 @@ tables_to_create = {
     'win_requirements': f"""
         {coldef('id')},
         item_id integer,
-        quantity float(4),
+        quantity real,
         char_id integer,
         loc_id integer,
         attrib_id integer,
-        attrib_value float(4),
+        attrib_value real,
         UNIQUE (game_token, item_id, char_id, loc_id, attrib_id),
         FOREIGN KEY (game_token, item_id)
             REFERENCES items (game_token, id)

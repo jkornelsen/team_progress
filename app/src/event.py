@@ -18,8 +18,7 @@ tables_to_create = {
         {coldef('name')},
         toplevel boolean NOT NULL,
         outcome_type varchar(20) not null,
-        trigger_chance integer[2],
-        trigger_by_duration boolean,
+        trigger_chance real,
         numeric_range integer[2],
         selection_strings text
         """
@@ -63,8 +62,7 @@ class Event(CompleteIdentifiable):
         self.determining_entities = []  # these determine the outcome
         self.changed_entities = []  # changed by the outcome
         self.triggers_entities = []  # can trigger the event
-        self.trigger_chance = NumTup((0, 1))  # (numerator, denominator)
-        self.trigger_by_duration = True  # during progress or when finished
+        self.trigger_chance = 0.1  # 10% chance per batch
 
     def _base_export_data(self):
         """Prepare the base dictionary for JSON and DB."""
@@ -75,14 +73,13 @@ class Event(CompleteIdentifiable):
             'toplevel': self.toplevel,
             'outcome_type': self.outcome_type,
             'selection_strings': self.selection_strings,
-            'trigger_by_duration': self.trigger_by_duration,
+            'trigger_chance': self.trigger_chance,
             }
 
     def dict_for_json(self):
         data = self._base_export_data()
         data.update({
             'numeric_range': self.numeric_range.as_list(),
-            'trigger_chance': self.trigger_chance.as_list(),
             })
         for reltype in RELATION_TYPES:
             entities = getattr(self, f'{reltype}_entities')
@@ -97,7 +94,6 @@ class Event(CompleteIdentifiable):
         data = self._base_export_data()
         data.update({
             'numeric_range': self.numeric_range,
-            'trigger_chance': self.trigger_chance,
             })
         return data
 
@@ -117,8 +113,7 @@ class Event(CompleteIdentifiable):
                     if typename in ENTITY_TYPENAMES
                     ]
                 )
-        instance.trigger_chance = NumTup(data.get('trigger_chance') or (0, 1))
-        instance.trigger_by_duration = data.get('trigger_by_duration', True)
+        instance.trigger_chance = data.get('trigger_chance', 0.1)
         return instance
 
     def to_db(self):
@@ -241,11 +236,7 @@ class Event(CompleteIdentifiable):
                             req.get_list(f'{reltype}_id[]'))
                         ]
                     )
-            self.trigger_chance = NumTup((
-                req.get_int('trigger_numerator', 0),
-                req.get_int('trigger_denominator', 1)))
-            self.trigger_by_duration = (
-                req.get_str('trigger_timing') == 'during_progress')
+            self.trigger_chance = req.get_float('trigger_chance', 0.1)
             self.to_db()
         elif req.has_key('delete_event'):
             try:
@@ -361,33 +352,13 @@ class Event(CompleteIdentifiable):
             f"Changed {rel_base_obj.name}"
             f" of {container.name} from {oldval} to {newval}")
 
-    def check_trigger(self, elapsed_seconds):
-        if self.trigger_by_duration:
-            return self.check_trigger_for_duration(elapsed_seconds)
-        return self.check_trigger_once()
-
-    def check_trigger_once(self):
-        """Returns True if the event triggers."""
-        numerator, denominator = self.trigger_chance
-        if numerator <= 0:
+    def check_trigger(self, trials):
+        """Returns True if the event triggers at least once."""
+        logger.debug("check_trigger(%f)", trials)
+        if self.trigger_chance <= 0:
             return False
-        if denominator <= 0:
-            raise ValueError("Denominator must be greater than 0")
-        probability = numerator / denominator
-        random_value = random.random()  # between 0 and 1
-        return random_value < probability
-
-    def check_trigger_for_duration(self, elapsed_seconds):
-        """Returns True if the event triggers over the given duration."""
-        logger.debug("check_trigger_for_duration(%f)", elapsed_seconds)
-        numerator, denominator = self.trigger_chance
-        if numerator <= 0:
-            return False
-        if denominator <= 0:
-            raise ValueError("Denominator must be greater than 0")
-        p_success = numerator / denominator  # success in a single trial
-        p_failure = 1 - p_success  # failure in a single trial
-        p_overall_failure = p_failure ** elapsed_seconds  # failure over elapsed_seconds trials
+        p_failure = 1 - self.trigger_chance  # failure in a single trial
+        p_overall_failure = p_failure ** trials
         p_overall_success = 1 - p_overall_failure  # at least one success
         random_value = random.random()  # between 0 and 1
         return random_value < p_overall_success

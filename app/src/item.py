@@ -18,8 +18,8 @@ tables_to_create = {
         masked boolean not null,
         mult boolean not null,
         storage_type varchar(20) not null,
-        q_limit float(4) not null,
-        quantity float(4) not null,
+        q_limit real not null,
+        quantity real not null,
         progress_id integer,
         FOREIGN KEY (game_token, progress_id)
             REFERENCES progress (game_token, id)

@@ -107,7 +107,7 @@
                                 <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
                                 <span>[{{ letter }}]</span>
                                 <a href="{{ link }}">{{ evt.name }}</a>
-                                {% if evt.trigger_chance[0] > 0 %}
+                                {% if evt.trigger_chance > 0 %}
                                     <span class="label-like">&nbsp;(chance to trigger)</span>
                                 {% endif %}
                                 <br>
@@ -280,10 +280,7 @@
         }
         function fillGrid(redraw=true) {
             if (redraw) {
-                const cells = document.querySelectorAll('.grid');
-                cells.forEach(cell => {
-                    cell.innerHTML = '';
-                });
+                $('.grid').empty();
             }
             for (const [, charr] of Object.entries(characters)) {
                 setCellContents(charr.x, charr.y, charr.letter, charr.title);
@@ -319,9 +316,9 @@
         fillGrid(false);
 
         function updateCharacterDisplay(charId, position) {
-            const coordElement = document.querySelector(`span.char-position[data-char-id='${charId}']`);
-            if (coordElement) {
-                coordElement.innerHTML = `&nbsp;[${position[0]}, ${position[1]}]`;
+            const coordElement = $(`span.char-position[data-char-id='${charId}']`);
+            if (coordElement.length) {
+                coordElement.html(`&nbsp;[${position[0]}, ${position[1]}]`);
             } else {
                 console.error(`No coordinates element found for character ID ${charId}`);
             }
@@ -355,12 +352,10 @@
             }
             initializePage();
 
-            document.querySelectorAll('.navigation-container button').forEach(button => {
-                button.addEventListener('click', () => {
-                    const xChange = parseInt(button.getAttribute('data-x'));
-                    const yChange = parseInt(button.getAttribute('data-y'));
-                    moveCharacter(xChange, yChange);
-                });
+            $('.navigation-container button').on('click', function() {
+                const xChange = parseInt($(this).data('x'));
+                const yChange = parseInt($(this).data('y'));
+                moveCharacter(xChange, yChange);
             });
         });
         </script>

@@ -42,7 +42,7 @@ class RequestHelper:
         """Retrieve a string from the request.
         No special checks are needed -- just a thin wrapper method.
         """
-        return self._get_from_request(key) or default
+        return (self._get_from_request(key) or default).strip()
 
     def get_list(self, key):
         """Retrieve a list of results with the same name.

@@ -103,8 +103,7 @@
             "outcome_type": "fourway",
             "selection_strings": "",
             "toplevel": false,
-            "trigger_by_duration": true,
-            "trigger_chance": [1, 25],
+            "trigger_chance": 0.3,
             "triggers": [
                 ["loc", 2]
             ]
@@ -119,8 +118,7 @@
             "outcome_type": "fourway",
             "selection_strings": "",
             "toplevel": false,
-            "trigger_by_duration": true,
-            "trigger_chance": [0, 1],
+            "trigger_chance": 0.0,
             "triggers": [
                 ["item", 10]
             ]
@@ -430,11 +428,11 @@
             "toplevel": false
         },
         {
-            "description": "Easy to get lost in.",
+            "description": "Easy to get lost in after the sun goes down.",
             "destinations": [
                 {
                     "bidirectional": false,
-                    "distance": 15.0,
+                    "distance": 8.0,
                     "door1": [0,0],
                     "door2": [0,0],
                     "loc2_id": 1

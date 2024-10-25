@@ -29,11 +29,12 @@
                 } else if (key === 's') {
                     $('#start-travel-btn').click();
                 } else if (key === 't') {
-                    const selectBox = $('#destination-select');
-                    selectBox.focus();
+                    const $selectBox = $('#destination-select');
+                    $selectBox.focus();
+                    const selectBox = $selectBox[0];
                     if (selectBox.selectedIndex === 0) {
-                        selectBox.selectedIndex = 1;  // first location in list
-                        $(selectBox).trigger('change');
+                        selectBox.selectedIndex = 1;
+                        $selectBox.trigger('change');
                     }
                 } else if (linkForKey[key]) {
                     window.location.href = linkForKey[key];
@@ -53,7 +54,7 @@
                 <a href="{{ link }}">{{ current.location.name }}</a>
                 {% if current.location.destinations %}
                     <div class="flexdiv">
-                        <label for="destination-select">Go [T]o</label>
+                        <label for="destination-select">Go [T]o:</label>
                         <select id="destination-select" class="select-box">
                             <option value="" data-distance="-1">(Select destination)</option>
                             {% for dest in current.location.destinations %}
@@ -76,8 +77,27 @@
                             <progress class="progress-bar" max="100" value="0"></progress>
                             <span class="progress-label">0 / 0</span>
                         </div>
-                        <button type="button" id="start-travel-btn">[S]tart</button>
-                        <button type="button" id="stop-travel-btn">Stop</button>
+                        <button type="button"
+                                class="go-button"
+                                id="start-travel-btn">[S]tart</button>
+                    </div>
+                    <div id="travel-with-container" class="flexdiv">
+                        <label for="travel-with-select">Travel [W]ith:</label>
+                        <select id="travel-with-select" class="select-box">
+                            <option value="">(No one else)</option>
+                            {% for group_name, ids_str in travel_groups %}
+                                <option value="{{ ids_str }}"
+                                        {% if group_name == defaults.travel_with %}selected{% endif %}>
+                                    {{ group_name }}
+                                </option>
+                            {% endfor %}
+                            {% for char in game_data.characters if char.id != current.id %}
+                                <option value="{{ char.id }}"
+                                        {% if char.id == defaults.travel_with %}selected{% endif %}>
+                                    {{ char.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
                     </div>
                 {% endif %}
             </ul>
@@ -169,19 +189,19 @@
                 <p id="custom-confirm-message"></p>
                 <div class="modal-buttons">
                     <button type="button" id="custom-confirm-yes">[Y]es</button>
-                    <button type="button" id="custom-confirm-no">[N]o</button>
+                    <button type="button" id="custom-confirm-no">Ig[n]ore</button>
                 </div>
             </div>
         </div>
         <script>
         $(document).ready(() => {
             function showCustomConfirm(message) {
-                return new Promise((resolve,) => {
+                return new Promise((resolve) => {
                     const modal = $('#custom-confirm-modal');
                     const messageElement = $('#custom-confirm-message');
                     const yesButton = $('#custom-confirm-yes');
                     const noButton = $('#custom-confirm-no');
-                    messageElement.innerHTML = message;
+                    messageElement.html(message);
                     modal.css('display', 'block');
                     isModalOpen = true;
                     function handleKeydown(event) {
@@ -192,24 +212,25 @@
                             noButton.click();
                         }
                     }
-                    document.addEventListener('keydown', handleKeydown);
-                    yesButton.onclick = () => {
+                    $(document).on('keydown', handleKeydown);
+                    yesButton.on('click', () => {
                         modal.css('display', 'none');
-                        document.removeEventListener('keydown', handleKeydown);
+                        $(document).off('keydown', handleKeydown);
                         isModalOpen = false;
                         resolve(true);  // confirm
-                    };
-                    noButton.onclick = () => {
+                    });
+                    noButton.on('click', () => {
                         modal.css('display', 'none');
-                        document.removeEventListener('keydown', handleKeydown);
+                        $(document).off('keydown', handleKeydown);
                         isModalOpen = false;
                         resolve(false);  // cancel
-                    };
+                    });
                 });
             }
 
             async function handleInterrupt(data) {
                 stopFetchingProgress();
+                stopTravel();
                 const confirmed = await showCustomConfirm(data.message);
                 if (confirmed) {
                     const baseEventUrl = "{{ url_for('play_event', event_id=MAX_INT_32, char_id=current.id, from_id=current.id, from_typename=current.typename()) | safe }}"
@@ -219,6 +240,7 @@
                     window.location.href = url;
                 } else {
                     localStorage.setItem('ignore_event_id', data.event_id);
+                    startTravel();
                     startFetchingProgress();
                 }
             }
@@ -267,26 +289,26 @@
                     destInfo.hide();
                     goBtn.css('display', 'none');
                 }
+                updateStartButtonLabel(data);
             }
 
             function updateStartButtonLabel(data) {
                 const startBtn = $('#start-travel-btn');
-                const stopBtn = $('#stop-travel-btn');
                 const destSel = $('#destination-select');
-                const ongoing = (data && data.status === 'ongoing' && data.is_ongoing)
-                if (!startBtn || !stopBtn || !destSel) {
+                const ongoing = (data && data.status === 'ongoing' && data.is_ongoing);
+                if (!startBtn.length || !destSel.length) {
                     return;
                 }
                 if (ongoing) {
-                    startBtn.innerHTML = "Travelling...";
-                    startBtn.disabled = true;
-                    stopBtn.disabled = false;
-                    destSel.disabled = true;
+                    startBtn.html("[S]top")
+                            .addClass("dangerous-button")
+                            .removeClass("go-button");
+                    destSel.prop('disabled', true);
                 } else {
-                    startBtn.innerHTML = "[S]tart";
-                    startBtn.disabled = false;
-                    stopBtn.disabled = true;
-                    destSel.disabled = false;
+                    startBtn.html("[S]tart")
+                            .addClass("go-button")
+                            .removeClass("dangerous-button");
+                    destSel.prop('disabled', false);
                 }
             }
 
@@ -303,7 +325,6 @@
                 console.log('Received data:', data);
                 if (data) {
                     updateTravelProgress(data);
-                    updateStartButtonLabel(data);
                 }
             }
             let intervalId;
@@ -350,8 +371,16 @@
             });
             $('#start-travel-btn').click(() => {
                 // Start the progress for the selected destination
-                const destinationId = $('#destination-select').val();
                 console.log('startChar(): {{ current.id }}');
+                const startBtn = $('#start-travel-btn');
+                if (startBtn.text() === "[S]tart") {
+                    startTravel();
+                } else {
+                    stopTravel();
+                }
+            });
+            function startTravel() {
+                const destinationId = $('#destination-select').val();
                 $.ajax({
                     url: '/char/start/{{ current.id }}',
                     method: 'POST',
@@ -370,7 +399,7 @@
                         fetchProgressData();
                     }
                 });
-            });
+            }
             function stopTravel() {
                 // Stop the progress
                 console.log('stopChar(){{ current.id }}');
@@ -384,9 +413,6 @@
                         console.error('Error:', error);
                     });
             }
-            $('#stop-travel-btn').click(() => {
-                stopTravel();
-            });
         });
         </script>
     </div>

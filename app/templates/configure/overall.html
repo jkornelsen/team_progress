@@ -130,18 +130,17 @@
                 $('#number_format').val(defaultNumberFormat);
             }
 
-            document.getElementById('add-char-req-button').addEventListener('click', () => {
-                document.querySelector('.char-req-container').style.display = 'block';
-                document.querySelector('.item-req-container').style.display = 'none';
-                document.querySelector('#add-char-req').style.display = 'block';
-                document.querySelector('#add-item-req').style.display = 'none';
+            $('#add-char-req-button').on('click', () => {
+                $('.char-req-container').css('display', 'block');
+                $('.item-req-container').css('display', 'none');
+                $('#add-char-req').css('display', 'block');
+                $('#add-item-req').css('display', 'none');
             });
-
-            document.getElementById('add-item-req-button').addEventListener('click', () => {
-                document.querySelector('.item-req-container').style.display = 'block';
-                document.querySelector('.char-req-container').style.display = 'none';
-                document.querySelector('#add-item-req').style.display = 'block';
-                document.querySelector('#add-char-req').style.display = 'none';
+            $('#add-item-req-button').on('click', () => {
+                $('.item-req-container').css('display', 'block');
+                $('.char-req-container').css('display', 'none');
+                $('#add-item-req').css('display', 'block');
+                $('#add-char-req').css('display', 'none');
             });
 
             let winreqCounter = 0;
@@ -202,12 +201,12 @@
             }
 
             function getSelectData(className) {
-                const selects = document.querySelectorAll(`.${className}`);
-                for (const select of selects) {
-                    const parentDiv = select.closest('div');
-                    if (parentDiv.style.display !== 'none') {
-                        const id = select.value;
-                        const name = select.querySelector('option:checked').textContent;
+                $(`.${className}`).each((_, sel) => {
+                    const $sel = $(sel);
+                    const parentDiv = $sel.closest('div');
+                    if (parentDiv.css('display') !== 'none') {
+                        const id = $sel.val();
+                        const name = $sel.find('option:selected').text();
                         return { id, name };
                     }
                 }
@@ -242,8 +241,8 @@
                     attribValue: attrib.value
                 };
                 addRequirement(paramsToSend);
-                document.querySelector('.item-req-container').style.display = 'none';
-                document.querySelector('.char-req-container').style.display = 'none';
+                $('.item-req-container').hide();
+                $('.char-req-container').hide();
             }
 
             {% for req in current.win_reqs %}
@@ -280,14 +279,13 @@
                 addSelectedRequirement();
             });
 
-            document.querySelector('#req-list').addEventListener('click', (event) => {
-                if (event.target.classList.contains('remove-req-button')) {
-                    const reqDiv = event.target.closest('.req');
+            $('#req-list').on('click', (event) => {
+                if ($(event.target).hasClass('remove-req-button')) {
+                    const reqDiv = $(event.target).closest('.req');
                     reqDiv.remove();
-                    const reqElements = document.querySelectorAll('.req');
+                    const reqElements = $('.req');
                     if (reqElements.length === 0) {
-                        // If there are no .req elements, set req-list display to none
-                        document.querySelector('#req-list').style.display = 'none';
+                        $('#req-list').hide();
                     }
                 }
             });

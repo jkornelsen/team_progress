@@ -18,10 +18,11 @@ tables_to_create = {
         toplevel boolean NOT NULL,
         masked boolean NOT NULL,
         progress_id integer,
-        quantity float(4) NOT NULL,
+        quantity real NOT NULL,
         location_id integer,
         dest_id integer,
         position integer[2],
+        travel_group varchar(100),
         FOREIGN KEY (game_token, progress_id)
             REFERENCES progress (game_token, id)
             DEFERRABLE INITIALLY DEFERRED
@@ -65,6 +66,7 @@ class Character(CompleteIdentifiable):
         self.description = ""
         self.toplevel = False
         self.masked = False
+        self.travel_group = ""
         self.attribs = {}  # AttribFor objects keyed by attr id
         self.events = []  # Event IDs -- abilities
         self.items = {}  # OwnedItem objects keyed by item id
@@ -85,6 +87,7 @@ class Character(CompleteIdentifiable):
             'description': self.description,
             'toplevel': self.toplevel,
             'masked': self.masked,
+            'travel_group': self.travel_group,
             'location_id': self.location.id if self.location else None,
             'quantity': self.pile.quantity,
             'dest_id': self.destination.id if self.destination else None
@@ -118,6 +121,7 @@ class Character(CompleteIdentifiable):
         instance = super().from_data(data)
         instance.toplevel = data.get('toplevel', False)
         instance.masked = data.get('masked', False)
+        instance.travel_group = data.get('travel_group', "")
         for owned_data in data.get('items', []):
             try:
                 if not isinstance(owned_data, dict):
@@ -204,6 +208,31 @@ class Character(CompleteIdentifiable):
         if load:
             g.game_data.set_list(Character, chars)
         return chars
+
+    @classmethod
+    def load_travel_groups(cls, loc_id, char_id):
+        """Get travel groups for other characters.
+        @returns: list of tuples (group name, IDs joined by commas).
+        """
+        query = """
+            SELECT id, travel_group
+            FROM {table}
+            WHERE game_token = %s
+                AND travel_group != ''
+                AND location_id = %s
+                AND id != %s
+            ORDER BY travel_group
+            """
+        values = [g.game_token, loc_id, char_id]
+        rows = cls.execute_select(query, values)
+        groups = {}
+        for row in rows:
+            groups.setdefault(row.travel_group, []).append(row.id)
+        return [
+            (group_name, ', '.join(map(str, ids)))
+            for group_name, ids in groups.items()
+            if len(ids) >= 2
+            ]
 
     @classmethod
     def load_complete_objects(cls, ids=None):
@@ -298,6 +327,7 @@ class Character(CompleteIdentifiable):
             current_obj.location.destinations = dests
             if current_dest:
                 current_obj.pile.item.q_limit = current_dest.distance
+            cls.load_characters_at_loc(cur_loc.id)
         # Abilities
         from .event import Event
         Event.load_triggers_for_type(id_to_get, cls.typename())
@@ -312,6 +342,7 @@ class Character(CompleteIdentifiable):
             req = RequestHelper('form')
             self.toplevel = req.get_bool('top_level')
             self.masked = req.get_bool('masked')
+            self.travel_group = req.get_str('travel_group')
             self.items = {}
             old = Character.load_complete_object(self.id)
             for item_id, item_qty, item_slot in zip(

@@ -125,6 +125,10 @@ def _set_app_routes():
             'session/users.html',
             interactions=interactions)
 
+    @app.route('/favicon.ico')
+    def favicon():
+        return redirect(url_for('static', filename='favicon.ico'))
+
 def generate_game_token():
     """Generate a new unique token to keep games separate."""
     logger.debug("generate_game_token()")

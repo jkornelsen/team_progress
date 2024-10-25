@@ -199,10 +199,11 @@ class Progress(DependentIdentifiable):
             return num_batches > 0
 
     def batches_for_elapsed_time(self):
-        """Returns number of seconds spent if any work gets done."""
+        """Returns number of batches done."""
         self.set_recipe_by_id()
         elapsed_time = self.calculate_elapsed_time()
-        total_batches_needed = math.floor(elapsed_time / self.recipe.rate_duration)
+        total_batches_needed = math.floor(
+            elapsed_time / self.recipe.rate_duration)
         batches_to_do = total_batches_needed - self.batches_processed
         logger.debug(
             "batches_for_elapsed_time(): batches_to_do=%d (%.1f / %.1f - %d)",
@@ -210,9 +211,8 @@ class Progress(DependentIdentifiable):
             self.batches_processed)
         if batches_to_do > 0:
             success = self.change_quantity(batches_to_do)
-            time_spent = batches_to_do * self.recipe.rate_duration
             if success:
-                return time_spent
+                return batches_to_do
         return 0
 
     def set_recipe_by_id(self, recipe_id=0):
