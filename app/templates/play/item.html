@@ -530,7 +530,7 @@
                 progressBar.attr('value', progressPercent);
                 progressLabel.text(`${quantity} / ${maxQuantity}`);
             }
-            function getItemProgressUrl(itemId) {
+            function getItemProgressUrl(itemId, mainPileType='') {
                 const queryParams = [];
                 const charId = "{{ char_id }}";
                 if (charId) {
@@ -539,6 +539,9 @@
                 const locId = "{{ loc_id }}";
                 if (locId) {
                     queryParams.push(`loc_id=${encodeURIComponent(locId)}`);
+                }
+                if (mainPileType) {
+                    queryParams.push(`main=${encodeURIComponent(mainPileType)}`);
                 }
                 let url = `/item/progress/${itemId}`;
                 if (queryParams.length > 0) {
@@ -613,7 +616,7 @@
 
             // Fetch progress data and update all relevant information
             async function fetchProgressData() {
-                const url = getItemProgressUrl({{ current.id }})
+                const url = getItemProgressUrl({{ current.id }}, "{{ main_pile_type }}")
                 const data = await new Promise((resolve, reject) => {
                     $.get(url, (response) => {
                         resolve(response);
@@ -718,8 +721,9 @@
             $('#drop-btn').click(() => {
                 const itemId = "{{ current.id }}";
                 const charId = "{{ container.id }}";
+                const quantity = $('#quantity_to_drop').val();
                 $.ajax({
-                    url: `/item/drop/${itemId}/char/${charId}`,
+                    url: `/item/drop/${itemId}/char/${charId}/qty/${quantity}`,
                     method: 'post',
                     success: (response) => {
                         if (response.status === 'success') {

@@ -17,8 +17,8 @@
             'e': '{{ url_for('configure_event', event_id=current.id) }}',
         };
         const funcForKey = {};
-        document.addEventListener('DOMContentLoaded', () => {
-            document.addEventListener('keypress', (event) => {
+        $(document).ready(() => {
+            $(document).on('keypress', (event) => {
                 const key = event.key.toLowerCase();
                 if (key === 'r') {
                     $('#roll-btn').click();
@@ -26,24 +26,21 @@
                     window.location.href = linkForKey[key];
                 } else if (funcForKey[key]) {
                     funcForKey[key]();
+                } else {
+                    return;
                 }
+                event.preventDefault();
+                event.stopPropagation();
             });
         });
     </script>
-    {% if from_entity %}
-        {% if from_entity.typename() == 'char' %}
-            {% set link = url_for('play_char', char_id=from_entity.id) %}
-        {% elif from_entity.typename() == 'loc' %}
-            {% set link = url_for('play_location', loc_id=from_entity.id) %}
-        {% elif from_entity.typename() == 'item' %}
-            {% set link = url_for('play_item', item_id=from_entity.id) %}
-        {% else %}
-            <!-- unexpected from entity '{{ from_entity.typename() }}' -->
-        {% endif %}
+    {% set referrer_link = session.get('referrer_link') %}
+    {% if referrer_link %}
+        {% set link = referrer_link.get('url', '#') | safe %}
         {% set letter = link_letters.next(link) %}
         <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
         &larr; back to
-        <a href="{{ link }}">{{ from_entity.name }}</a>
+        <a href="{{ link }}">{{ referrer_link.get('name', 'Previous') }}</a>
         <span>[{{ letter }}]</span>
         <br>
     {% endif %}
@@ -66,11 +63,33 @@
                     {% endif %}
                     {% if current.outcome_type == 'fourway' or current.outcome_type == 'numeric' %}
                         <div style="background-color: black; margin: 3px; padding: 10px">
-                            <label for="stat_adjustment">Stat Adjustment:</label>
-                            <input type="text"
-                                   id="stat_adjustment"
-                                   name="stat_adjustment"
-                                   value="{{ current.stat_adjustment }}">
+                            {% if current.outcome_type == 'fourway' %}
+                                <label for="stat-adjustment">Stat Adjustment:</label>
+                                <input type="text"
+                                       id="stat-adjustment"
+                                       value="{{ current.stat_adjustment }}"
+                                       size="5">
+                            {% elif current.outcome_type == 'numeric' %}
+                                <label for="die-min">Die Min:</label>
+                                <input type="text"
+                                       id="die-min"
+                                       value="{{ current.numeric_range[0] }}"
+                                       size="5">
+                                <label for="adjust-die-min">
+                                    <input type="radio" id="adjust-die-min" name="adjusting" value="min" checked>
+                                    [A]djusting
+                                </label>
+                                <br>
+                                <label for="die-max">Die Max:</label>
+                                <input type="text"
+                                       id="die-max"
+                                       value="{{ current.numeric_range[1] }}"
+                                       size="5">
+                                <label for="adjust-die-max">
+                                    <input type="radio" id="adjust-die-max" name="adjusting" value="max">
+                                    [A]djusting
+                                </label>
+                            {% endif %}
                             <br>
                             {% for det in current.determining_entities %}
                                 {% set det_ref = "_" ~ det.typename() ~ "_" ~ det.id %}
@@ -175,7 +194,7 @@
             <tr id="changed-row" style="opacity: 0.1;">
                 <td>
                     <div style="background-color: black; margin: 3px; padding: 10px">
-                        <label for="stat_adjustment">Affected Stats:</label>
+                        <label>Affected Stats:</label>
                         {% for chg in current.changed_entities %}
                             <form method="post"
                                   action="{{ url_for('play_event', event_id=current.id) }}">
@@ -354,13 +373,23 @@
                 const selectedIndex = $(containerSelect).prop('selectedIndex');
                 const selectedOption = $(containerSelect).find(':selected');
                 const containerVal = parseFloat(selectedOption.val()) || 0;
-                const currentAdjustment = parseFloat($('#stat_adjustment').val()) || 0;
+                {% if current.outcome_type == 'fourway' %}
+                    const targetField = $('#stat-adjustment');
+                {% elif current.outcome_type == 'numeric' %}
+                    const targetField = $('#adjust-die-min').is(':checked') ? $('#die-min') : $('#die-max');
+                {% endif %}
+                const currentSetting = parseFloat(targetField.val()) || 0;
                 if (selectedIndex !== 0) {
+                    let newValue;
                     if (keyMult) {
-                        $('#stat_adjustment').val(currentAdjustment + containerVal);
+                        newValue = currentSetting * containerVal;
                     } else {
-                        $('#stat_adjustment').val(currentAdjustment + containerVal);
+                        newValue = currentSetting + containerVal;
                     }
+                    {% if current.outcome_type == 'numeric' %}
+                        newValue = Math.round(newValue);
+                    {% endif %}
+                    targetField.val(newValue);
                 }
             });
 
@@ -392,7 +421,9 @@
                 const url = `/event/roll/${eventId}`;
                 const postData = {
                     difficulty: $('#difficulty').val(),
-                    stat_adjustment: $('#stat_adjustment').val()
+                    stat_adjustment: $('#stat_adjustment').val(),
+                    die_min: $('#die-min').val(),
+                    die_max: $('#die-max').val()
                 };
                 $.ajax({
                     url: url,
@@ -413,6 +444,21 @@
                     }
                 });
             });
+            {% if current.outcome_type == 'numeric' %}
+                $(document).keypress(function(event) {
+                    if (event.key === 'a') {
+                        event.stopPropagation();
+                        if ($('#adjust-die-min').is(':checked')) {
+                            $('#adjust-die-max').prop('checked', true);
+                            $('#die-max').focus();
+                        } else {
+                            $('#adjust-die-min').prop('checked', true);
+                            $('#die-min').focus();
+                        }
+                        event.preventDefault();
+                    }
+                });
+            {% endif %}
         });
     </script>
 {% endblock %}

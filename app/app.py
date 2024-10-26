@@ -41,12 +41,16 @@ app.config['UPLOAD_DIR'] = os.path.join(app.config['DATA_DIR'], 'uploads')
 app.config['TEMPLATES_AUTO_RELOAD'] = True  # set to False for production
 
 def set_up_logging():
-    if sys.stdout.encoding != 'utf-8':
-        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-    file_handler = logging.FileHandler('app.log', encoding='utf-8')
+    class FlushFileHandler(logging.FileHandler):
+        def emit(self, record):
+            super().emit(record)
+            self.flush()
+    file_handler = FlushFileHandler('app.log', encoding='utf-8')
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(
         logging.Formatter('%(filename)s:%(lineno)d  %(message)s'))
+    if sys.stdout.encoding != 'utf-8':
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
     stdout_handler = logging.StreamHandler(sys.stdout)
     stdout_handler.setLevel(logging.ERROR)
     logging.basicConfig(

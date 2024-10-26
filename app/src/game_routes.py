@@ -28,6 +28,7 @@ def set_routes(app):
     @app.route('/configure/attrib/<attrib_id>', methods=['GET', 'POST'])
     def configure_attrib(attrib_id):
         logger.debug("%s\nconfigure_attrib(%s)", "-" * 80, attrib_id)
+        session['referrer_link'] = {}
         attrib = Attrib.load_complete_object(attrib_id)
         if request.method == 'GET':
             req = RequestHelper('args')
@@ -90,6 +91,7 @@ def set_routes(app):
     @app.route('/configure/event/<event_id>', methods=['GET', 'POST'])
     def configure_event(event_id):
         logger.debug("%s\nconfigure_event(%s)", "-" * 80, event_id)
+        session['referrer_link'] = {}
         if request.method == 'GET':
             req = RequestHelper('args')
             if not req.has_key('duplicated'):
@@ -245,6 +247,9 @@ def set_routes(app):
                 instance.location.id, instance.id)
         session['last_char_id'] = char_id
         session['default_pickup_char'] = char_id
+        session['referrer_link'] = {
+            'url': request.url,
+            'name': instance.name}
         defaults = {
             'travel_with': session.get('default_travel_with', '')}
         return render_template(
@@ -276,14 +281,14 @@ def set_routes(app):
                 from_cls = entity_class(
                     from_typename, [Character, Item, Location])
                 from_entity = from_cls.get_by_id(from_id)
-            message = session.pop('message', False)
+            message = session.pop('message', '')
             return render_template(
                 'play/event.html',
                 current=instance,
                 from_entity=from_entity,
                 game_data=g.game_data,
                 message=message,
-                link_letters=LinkLetters('emor')
+                link_letters=LinkLetters('aemor')
                 )
         Event.change_by_form()
         return redirect(
@@ -298,6 +303,7 @@ def set_routes(app):
             session['last_char_id'] = char_id
         if loc_id:
             session['last_loc_id'] = loc_id
+        main_pile_type = req.get_str('main', '')
         if not char_id:
             char_id = session.get('last_char_id', '')
         if not loc_id:
@@ -307,7 +313,8 @@ def set_routes(app):
             "-" * 80, item_id, char_id, loc_id)
         g.game_data.overall = Overall.load_complete_object()
         item = Item.data_for_play(
-            item_id, char_id, loc_id, complete_sources=False)
+            item_id, char_id, loc_id, complete_sources=False,
+            main_pile_type=main_pile_type)
         if not item:
             return "Item not found"
         defaults = {
@@ -315,12 +322,16 @@ def set_routes(app):
             'movingto_char': session.get('default_movingto_char', ''),
             'slot': session.get('default_slot', '')
             }
+        session['referrer_link'] = {
+            'url': request.url,
+            'name': item.name}
         return render_template(
             'play/item.html',
             current=item,
             container=item.pile.container,
             char_id=char_id,
             loc_id=loc_id,
+            main_pile_type=main_pile_type,
             defaults=defaults,
             game_data=g.game_data,
             link_letters=LinkLetters('cdelmopq')
@@ -333,6 +344,9 @@ def set_routes(app):
         if not instance:
             return "Location not found"
         session['last_loc_id'] = loc_id
+        session['referrer_link'] = {
+            'url': request.url,
+            'name': instance.name}
         req = RequestHelper('args')
         char_id = req.get_int('char_id', '')
         if char_id:
@@ -352,6 +366,9 @@ def set_routes(app):
 
     @app.route('/overview')
     def overview():
+        session['referrer_link'] = {
+            'url': request.url,
+            'name': 'Overview'}
         active = Overall.data_for_overview()
         return render_template(
             'play/overview.html',
@@ -474,7 +491,9 @@ def set_routes(app):
         req.debug()
         outcome, display = instance.roll_for_outcome(
             req.get_int('difficulty'),
-            req.get_float('stat_adjustment')
+            req.get_float('stat_adjustment'),
+            req.get_int('die_min'),
+            req.get_int('die_max')
             )
         return jsonify({
             'outcome': outcome,
@@ -489,11 +508,13 @@ def set_routes(app):
         if not char_id and not loc_id:
             char_id = session.get('last_char_id', '')
             loc_id = session.get('last_loc_id', '')
+        main_pile_type = req.get_str('main', '')
         logger.debug(
             "%s\nitem_progress(item_id=%d, char_id=%s, loc_id=%s)",
             "-" * 80, item_id, char_id, loc_id)
         item = Item.data_for_play(
-            item_id, char_id, loc_id, complete_sources=True)
+            item_id, char_id, loc_id, complete_sources=True,
+            main_pile_type=main_pile_type)
         if not item:
             return jsonify({'error': "Item not found"})
         pile = item.pile
@@ -609,11 +630,13 @@ def set_routes(app):
             'message': message
             })
 
-    @app.route('/item/drop/<int:item_id>/char/<int:char_id>', methods=['POST'])
-    def drop_item(item_id, char_id):
+    @app.route(
+        '/item/drop/<int:item_id>/char/<int:char_id>/qty/<int:qty_to_drop>',
+        methods=['POST'])
+    def drop_item(item_id, char_id, qty_to_drop):
         logger.debug(
-            "%s\ndrop_item(item_id=%d, char_id=%d)",
-            "-" * 80, item_id, char_id)
+            "%s\ndrop_item(item_id=%d, char_id=%d, qty=%d)",
+            "-" * 80, item_id, char_id, qty_to_drop)
         item = Item.load_complete_object(item_id)
         char = Character.load_complete_object(char_id)
         owned_item = char.items.get(item_id)
@@ -622,13 +645,14 @@ def set_routes(app):
                 'status': 'error',
                 'message': f'No item {item.name} in {char.name} inventory.'
                 })
-        new_qty = owned_item.quantity
+        new_qty = min(qty_to_drop, owned_item.quantity)
         loc = Location.load_complete_object(char.location.id)
         if item_id in loc.items:
             item_at = loc.items[item_id]
             new_qty += item_at.quantity
         else:
             item_at = ItemAt(owned_item.item, loc)
+            item_at.position = char.position
         if item.exceeds_limit(new_qty):
             return jsonify({
                 'status': 'error',
@@ -636,7 +660,10 @@ def set_routes(app):
                 })
         item_at.quantity = new_qty
         loc.items[item_id] = item_at
-        del char.items[item_id]
+        if qty_to_drop >= owned_item.quantity:
+            del char.items[item_id]
+        else:
+            owned_item.quantity -= qty_to_drop
         loc.to_db()
         char.to_db()
         return jsonify({

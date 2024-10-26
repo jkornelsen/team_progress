@@ -201,18 +201,19 @@
             }
 
             function getSelectData(className) {
+                let result = { id: '', name: '' };
                 $(`.${className}`).each((_, sel) => {
                     const $sel = $(sel);
                     const parentDiv = $sel.closest('div');
                     if (parentDiv.css('display') !== 'none') {
                         const id = $sel.val();
                         const name = $sel.find('option:selected').text();
-                        return { id, name };
+                        result = { id, name };
+                        return false;
                     }
-                }
-                return { id: '', name: '' };
+                });
+                return result;
             }
-
             function addSelectedRequirement() {
                 const item = getSelectData('item-select');
                 const loc = getSelectData('location-select');
@@ -249,14 +250,14 @@
                 const paramsToSend = {
                     'itemId': "{{ req.item.id }}",
                     'itemName': "{{ req.item.name }}",
-                    'itemQuantity': "{{ req.quantity }}",
+                    'itemQuantity': "{{ req.quantity | formatNum }}",
                     'locationId': "{{ req.location.id }}",
                     'locationName': "{{ req.location.name }}",
                     'characterId': "{{ req.character.id }}",
                     'characterName': "{{ req.character.name }}",
                     'attribId': "{{ req.attrib.id }}",
                     'attribName': "{{ req.attrib.name }}",
-                    'attribValue': "{{ req.attrib.value }}"
+                    'attribValue': "{{ req.attrib.value | formatNum }}"
                 };
                 addRequirement(paramsToSend);
             {% endfor %}

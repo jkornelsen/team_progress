@@ -276,10 +276,10 @@
                     <div class="entity flexdiv" data-entity-type="${entityType}" data-entity-id="${entityId}">
                         <input type="hidden" name="${relType}_type[]" value="${entityType}">
                         <input type="hidden" name="${relType}_id[]" value="${entityId}">
-                        ${entityName}
+                        ${entityName}&nbsp;<span class="label-like">
                         ${((relType === 'determining' || relType === 'changed') && mult) 
-                            ? '&nbsp;<span class="label-like">(Multiplied)</span>&nbsp;' 
-                            : ''}
+                            ? '(Multiplied)' 
+                            : '(Added)'}</span>&nbsp;
                         <button type="button" class="remove-entity-btn lesser-button">Remove</button>
                     </div>
                 `;

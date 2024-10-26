@@ -12,3 +12,12 @@ changing destinations shows full travel bar
 save default item type to session
 
 change destination for travel companions
+
+evt cfg isn't saving 0.0 as trigger chance
+
+can an attrib requirement be 0 or negative?
+-1 was accepted because none was found, which is 0
+but that doesn't make sense
+
+setting event range to (-10, 0) became (-10, 10)
+presumably because 0 goes to default which seems to be 10

@@ -111,7 +111,7 @@
             <ul>
                 {% for owned in current.items.values() if owned.quantity > 0 and owned.slot %}
                     {% set item = owned.item %}
-                    {% set link = url_for('play_item', item_id=item.id, char_id=current.id) | safe %}
+                    {% set link = url_for('play_item', item_id=item.id, char_id=current.id, main='carried') | safe %}
                     {% set letter = link_letters.next(link) %}
                     <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
                     <span class="item-name">
@@ -131,7 +131,7 @@
             <ul>
                 {% for owned in current.items.values() if owned.quantity > 0 and not owned.slot %}
                     {% set item = owned.item %}
-                    {% set link = url_for('play_item', item_id=item.id, char_id=current.id) | safe %}
+                    {% set link = url_for('play_item', item_id=item.id, char_id=current.id, main='carried') | safe %}
                     {% set letter = link_letters.next(link) %}
                     <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
                     <span class="item-name">

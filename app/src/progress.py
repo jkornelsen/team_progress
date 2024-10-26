@@ -129,7 +129,7 @@ class Progress(DependentIdentifiable):
                     "change_quantity(): num_batches=%d due to limit %d",
                     num_batches, self.q_limit)
                 if num_batches == 0:
-                    self.report_failure("Limit {self.q_limit} reached.")
+                    self.report_failure(f"Limit {self.q_limit} reached.")
             for source in self.recipe.sources:
                 eff_source_qty = num_batches * source.q_required
                 if eff_source_qty > 0:

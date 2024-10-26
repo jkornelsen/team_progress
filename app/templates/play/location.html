@@ -79,7 +79,7 @@
                         <ul class="item-list">
                             {% for item_at in current.items.values() %}
                                 {% set item = item_at.item %}
-                                {% set link = url_for('play_item', item_id=item.id, loc_id=current.id) %}
+                                {% set link = url_for('play_item', item_id=item.id, loc_id=current.id, main='local') %}
                                 {% set letter = link_letters.next(link) %}
                                 <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
                                 <span>[{{ letter }}]</span>

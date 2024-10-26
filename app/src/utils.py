@@ -192,6 +192,8 @@ def format_num(value):
         value = float(value)  # Ensure numeric
     except (ValueError, TypeError):
         return ''
+    if value < 1000 and int(value) == value:
+        return int(value)
     try:
         nformat = g.game_data.overall.number_format
     except AttributeError:

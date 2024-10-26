@@ -1,0 +1,307 @@
+{
+    "attribs": [
+        {
+            "description": "Used in event to determine where the next marked tree is.",
+            "enum_list": [],
+            "id": 4,
+            "is_binary": false,
+            "mult": false,
+            "name": "Harvest Area Width"
+        },
+        {
+            "description": "Used in event to determine where the next marked tree is.",
+            "enum_list": [],
+            "id": 5,
+            "is_binary": false,
+            "mult": false,
+            "name": "Harvest Area Height"
+        },
+        {
+            "description": "How much chopping still needs to be done to finish chopping down the tree. Once HP is 0, the tree can be cut into logs.",
+            "enum_list": [],
+            "id": 6,
+            "is_binary": false,
+            "mult": false,
+            "name": "HP"
+        },
+        {
+            "description": "Increases max cutting progress per chop.",
+            "enum_list": [],
+            "id": 7,
+            "is_binary": false,
+            "mult": true,
+            "name": "Strength"
+        },
+        {
+            "description": "Increases likelihood of getting better rolls for chopping.",
+            "enum_list": [],
+            "id": 8,
+            "is_binary": false,
+            "mult": true,
+            "name": "Accuracy"
+        },
+        {
+            "description": "Values are negative, to change a tree's HP. Similar to <i>Strength</i> but additive.",
+            "enum_list": [],
+            "id": 9,
+            "is_binary": false,
+            "mult": false,
+            "name": "Base Power"
+        }
+    ],
+    "characters": [
+        {
+            "attribs": [
+                [7, 1.1],
+                [8, 1.1]
+            ],
+            "description": "Player character who initially started the company.",
+            "dest_id": null,
+            "events": [
+                5
+            ],
+            "id": 4,
+            "items": [
+                {
+                    "item_id": 19,
+                    "quantity": 4.0,
+                    "slot": ""
+                },
+                {
+                    "item_id": 18,
+                    "quantity": 1.0,
+                    "slot": "Held"
+                }
+            ],
+            "location_id": 4,
+            "masked": false,
+            "name": "Owner",
+            "position": [14,3],
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": true,
+            "travel_group": ""
+        }
+    ],
+    "events": [
+        {
+            "changed": [],
+            "description": "Choose the horizontal grid coordinate of the next tree to be directly harvested on a plot.",
+            "determining": [],
+            "id": 3,
+            "name": "Mark a Tree\u2014Horizontal",
+            "numeric_range": [1, 20],
+            "outcome_type": "numeric",
+            "selection_strings": "",
+            "toplevel": false,
+            "trigger_chance": 0.1,
+            "triggers": [
+                ["item", 17],
+                ["loc", 4]
+            ]
+        },
+        {
+            "changed": [],
+            "description": "Choose the horizontal grid coordinate of the next tree to be directly harvested on a plot.",
+            "determining": [],
+            "id": 4,
+            "name": "Mark a Tree\u2014Vertical",
+            "numeric_range": [1, 10],
+            "outcome_type": "numeric",
+            "selection_strings": "",
+            "toplevel": false,
+            "trigger_chance": 0.1,
+            "triggers": [
+                ["item", 17],
+                ["loc", 4]
+            ]
+        },
+        {
+            "changed": [
+                ["attrib", 6]
+            ],
+            "description": "",
+            "determining": [
+                ["attrib", 7],
+                ["attrib", 8],
+                ["attrib", 9]
+            ],
+            "id": 5,
+            "name": "Swing to Chop",
+            "numeric_range": [
+                -10,
+                -1
+            ],
+            "outcome_type": "numeric",
+            "selection_strings": "",
+            "toplevel": false,
+            "trigger_chance": 0.1,
+            "triggers": []
+        }
+    ],
+    "items": [
+        {
+            "attribs": [
+                [6, 67.0]
+            ],
+            "description": "Plots generally have many trees, but only some are marked for harvesting.\r\n\r\n<b><c=\"saddlebrown\">To mark a new tree</c></b>:\r\n1. Run the events for the plot to assign a vertical and horizontal coordinate.\r\n2. Set the marked tree position to the new coordinates by configuring <i>Starting Plot</i>.\r\n3. Produce a <i>Marked Tree</i> from <i>Plot 1 Trees</i> so that the quantity goes from 0 to 1.\r\n4. Set HP to 100.\r\n\r\nNow the tree is ready for a character to <i>Swing to Chop</i>.",
+            "id": 15,
+            "masked": false,
+            "mult": false,
+            "name": "Marked Tree",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 7,
+                    "instant": true,
+                    "item_id": 15,
+                    "rate_amount": 1.0,
+                    "rate_duration": 3.0,
+                    "sources": [
+                        {
+                            "item_id": 17,
+                            "preserve": false,
+                            "q_required": 1.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "local",
+            "toplevel": false
+        },
+        {
+            "attribs": [
+                [8, 2.0],
+                [7, 2.0],
+                [
+                    9,
+                    -5.0
+                ]
+            ],
+            "description": "Handle has been reattached many times in the past.",
+            "id": 18,
+            "masked": false,
+            "mult": false,
+            "name": "Old Axe",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "carried",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "Landscape feature that can get in the way of a lumber operation.",
+            "id": 16,
+            "masked": false,
+            "mult": false,
+            "name": "Rock",
+            "progress": {},
+            "q_limit": 0.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "local",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "",
+            "id": 19,
+            "masked": false,
+            "mult": false,
+            "name": "Logs",
+            "progress": {},
+            "q_limit": 0.0,
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "attribs": [
+                        [
+                            6,
+                            -1.0
+                        ]
+                    ],
+                    "byproducts": [],
+                    "id": 8,
+                    "instant": false,
+                    "item_id": 19,
+                    "rate_amount": 10.0,
+                    "rate_duration": 8.0,
+                    "sources": [
+                        {
+                            "item_id": 15,
+                            "preserve": false,
+                            "q_required": 1.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "carried",
+            "toplevel": false
+        },
+        {
+            "attribs": [
+                [4, 20.0],
+                [5, 10.0]
+            ],
+            "description": "How many trees are available on a plot.",
+            "id": 17,
+            "masked": false,
+            "mult": false,
+            "name": "Plot 1 Trees",
+            "progress": {},
+            "q_limit": 0.0,
+            "quantity": 98.0,
+            "recipes": [],
+            "storage_type": "universal",
+            "toplevel": false
+        }
+    ],
+    "locations": [
+        {
+            "description": "This plot of land is your family inheritance and the basis for setting up the company. There is a pond in the southeast.",
+            "destinations": [],
+            "dimensions": [20,20],
+            "excluded": [8,12,18,17],
+            "id": 4,
+            "items": [
+                {
+                    "item_id": 15,
+                    "position": [15,4],
+                    "quantity": 1.0
+                },
+                {
+                    "item_id": 19,
+                    "position": [3,2],
+                    "quantity": 6.0
+                },
+                {
+                    "item_id": 16,
+                    "position": [14,5],
+                    "quantity": 1.0
+                }
+            ],
+            "masked": false,
+            "name": "Starting Plot",
+            "progress": {},
+            "quantity": 1.0,
+            "toplevel": false
+        }
+    ],
+    "overall": {
+        "description": "Run an outfit to <c=\"saddlebrown\">gather resources</c> either directly or idly. Could be expanded for fishing and mining.",
+        "multiplayer": true,
+        "number_format": "sci",
+        "progress_type": "Hybrid",
+        "slots": [
+            "Held"
+        ],
+        "title": "Lumber",
+        "win_reqs": []
+    }
+}

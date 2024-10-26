@@ -250,7 +250,7 @@ class Event(CompleteIdentifiable):
         else:
             logger.debug("Neither button was clicked.")
 
-    def roll_for_outcome(self, difficulty, stat_adjustment):
+    def roll_for_outcome(self, difficulty, stat_adjustment, die_min, die_max):
         if self.outcome_type == OUTCOME_FOURWAY:
             roll = roll_dice(20)
             total = roll + stat_adjustment - difficulty
@@ -273,20 +273,18 @@ class Event(CompleteIdentifiable):
                 OUTCOMES[outcome],
             )
         elif self.outcome_type == OUTCOME_NUMERIC:
-            range_min, range_max = self.numeric_range
-            sides = range_max - range_min
+            sides = die_max - die_min
             roll = roll_dice(sides)
-            outcome = range_min + roll + stat_adjustment
+            outcome = die_min + roll
             display = (
-                "Min ({}) + 1d{} ({}) + Stat Adjustment ({})<br>"
+                "{} + 1d{} ({})<br>"
                 "Outcome = {}"
-            ).format(
-                format_num(range_min),
-                format_num(sides),
-                format_num(roll),
-                format_num(stat_adjustment),
-                format_num(outcome),
-            )
+                ).format(
+                    format_num(die_min),
+                    format_num(sides),
+                    format_num(roll),
+                    format_num(outcome),
+                    )
         elif self.outcome_type == OUTCOME_SELECTION:
             strings_list = self.selection_strings.split('\n')
             random_string = random.choice(strings_list)

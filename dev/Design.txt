@@ -175,10 +175,7 @@ also randomly populate with monsters
 allow only one of each type of item pile at a loc
 
 scenario: Fission Plant
-win condition is at least a certain amount of power
-and no more than a certain amount of pollution
-need a way to destroy items as well as gain them
-set up an elapsed time decreasing production cycle: 2 waste -> 1 waste
+win condition includes no more than a certain amount of pollution
 events trigger during production of some recipes
 use waste as a determining attr for increased
 likelihood of bigger problem

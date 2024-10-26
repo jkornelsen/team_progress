@@ -30,7 +30,7 @@
             <label for="sort_by">Sort by:</label>
             <select name="sort_by" id="sort_by">
                 <option value="filename" {% if sort_by == 'filename' %}selected{% endif %}>Gameplay Concepts</option>
-                <option value="progress_type" {% if sort_by == 'progress_type' %}selected{% endif %}>Progress Type</option>
+                <option value="progress_type" {% if sort_by == 'progress_type' %}selected{% endif %}>Type of Progress</option>
                 <option value="multiplayer" {% if sort_by == 'multiplayer' %}selected{% endif %}>Multiplayer</option>
                 <option value="filesize" {% if sort_by == 'filesize' %}selected{% endif %}>Size</option>
             </select>
@@ -50,7 +50,7 @@
                 <th></th>
                 <th>Title</th>
                 <th>Description</th>
-                <th title="predominantly idle or character driven">Progress</th>
+                <th title="whether predominantly idle or character driven">Progress</th>
                 <th title="designed for multiplayer">MP?</th>
             </tr>
         {% for scenario in scenarios %}

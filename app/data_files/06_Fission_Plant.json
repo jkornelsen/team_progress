@@ -34,6 +34,73 @@
     "items": [
         {
             "attribs": [],
+            "description": "Quadruple the energy production speed to 8 per 8 seconds. This only improves speed, so also double the waste generated and resources required.",
+            "id": 24,
+            "masked": false,
+            "mult": false,
+            "name": "Production Speed II",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 20,
+                    "instant": false,
+                    "item_id": 24,
+                    "rate_amount": 1.0,
+                    "rate_duration": 300.0,
+                    "sources": [
+                        {
+                            "item_id": 23,
+                            "preserve": false,
+                            "q_required": 1000.0
+                        },
+                        {
+                            "item_id": 22,
+                            "preserve": true,
+                            "q_required": 1.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "local",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "Double energy production speed to 2 per 8 seconds. This only improves speed, so also double the waste generated and resources required.",
+            "id": 22,
+            "masked": false,
+            "mult": false,
+            "name": "Production Speed I",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 19,
+                    "instant": false,
+                    "item_id": 22,
+                    "rate_amount": 1.0,
+                    "rate_duration": 300.0,
+                    "sources": [
+                        {
+                            "item_id": 23,
+                            "preserve": false,
+                            "q_required": 100.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "local",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
             "description": "Valuable nuclear material used in a reactor to generate high energy levels.",
             "id": 15,
             "masked": false,
@@ -215,6 +282,37 @@
             "recipes": [],
             "storage_type": "local",
             "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "Money is required for purchasing upgrades. Ultimately, the goal is to store energy, so don't sell all of it.",
+            "id": 23,
+            "masked": false,
+            "mult": false,
+            "name": "Funds",
+            "progress": {},
+            "q_limit": 0.0,
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 18,
+                    "instant": true,
+                    "item_id": 23,
+                    "rate_amount": 10.0,
+                    "rate_duration": 3.0,
+                    "sources": [
+                        {
+                            "item_id": 20,
+                            "preserve": false,
+                            "q_required": 10.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "carried",
+            "toplevel": false
         }
     ],
     "locations": [
@@ -255,13 +353,37 @@
             "progress": {},
             "quantity": 0.0,
             "toplevel": true
+        },
+        {
+            "description": "Design and build upgrades to improve production.",
+            "destinations": [],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
+            "id": 7,
+            "items": [
+                {
+                    "item_id": 24,
+                    "position": [0,0],
+                    "quantity": 0.0
+                },
+                {
+                    "item_id": 22,
+                    "position": [0,0],
+                    "quantity": 0.0
+                }
+            ],
+            "masked": false,
+            "name": "Research and Development",
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": true
         }
     ],
     "overall": {
         "description": "Produce enough energy to fill a high-capacity battery while managing <c=orange>waste</c>. Handle any critical failures and then restore operations.",
-        "progress_type": "Idle",
         "multiplayer": true,
-        "number_format": "en_US",
+        "number_format": "sci",
+        "progress_type": "Idle",
         "slots": [],
         "title": "Fission Plant",
         "win_reqs": [
@@ -269,10 +391,10 @@
                 "attrib_id": null,
                 "attrib_value": 0.0,
                 "char_id": null,
-                "id": 1,
+                "id": 2,
                 "item_id": 20,
                 "loc_id": null,
-                "quantity": 1000.0
+                "quantity": 10000000.0
             }
         ]
     }

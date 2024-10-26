@@ -102,7 +102,8 @@
             <div>
                 {% set outerscope = namespace(other_items=[]) %}
                 {% for other_item in game_data.items
-                    if other_item.storage_type == 'local'
+                    if (other_item.storage_type == 'local'
+                        or other_item.storage_type == 'carried')
                     and other_item.id not in current.items %}
                     {% set _ = outerscope.other_items.append(other_item) %}
                 {% endfor %}
@@ -118,7 +119,7 @@
                         <button type="button" class="add-item-btn lesser-button">Add Item</button>
                     </div>
                 {% else %}
-                    <p class="no-entities">(No other local items)</p>
+                    <p class="no-entities">(No other locatable items)</p>
                 {% endif %}
             </div>
         </div>

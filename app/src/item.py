@@ -50,7 +50,7 @@ class Item(CompleteIdentifiable):
         super().__init__(new_id)
         self.name = ""
         self.description = ""
-        self.storage_type = Storage.CARRIED  # should match pile type
+        self.storage_type = Storage.CARRIED  # usually matches pile type
         self.toplevel = False
         self.masked = False
         self.mult = False
@@ -206,13 +206,14 @@ class Item(CompleteIdentifiable):
     @classmethod
     def data_for_play(
             cls, id_to_get, owner_char_id=0, at_loc_id=0,
-            complete_sources=True):
+            complete_sources=True, main_pile_type=''):
         """
         :param complete_sources: needed to safely call source.to_db() after
             potentially modifying source quantities
         """
         logger.debug(
-            "data_for_play(%s, %s, %s)", id_to_get, owner_char_id, at_loc_id)
+            "data_for_play(%s, %s, %s, %s)",
+            id_to_get, owner_char_id, at_loc_id, main_pile_type)
         current_obj = cls.data_for_configure(id_to_get)
         for recipe in current_obj.recipes:
             for related_list in (recipe.sources, recipe.byproducts):
@@ -229,7 +230,7 @@ class Item(CompleteIdentifiable):
         Character.load_complete_objects()
         # Get item data for the specific container,
         # and get piles at this loc or char that can be used for sources
-        load_piles(current_obj, owner_char_id, at_loc_id)
+        load_piles(current_obj, owner_char_id, at_loc_id, main_pile_type)
         # Get relation data for items that use this item as a source
         item_recipes_data = Recipe.load_data_by_source(id_to_get)
         for item_id, recipes_data in item_recipes_data.items():
