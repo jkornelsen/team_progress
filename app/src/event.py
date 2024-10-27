@@ -287,8 +287,8 @@ class Event(CompleteIdentifiable):
                     )
         elif self.outcome_type == OUTCOME_SELECTION:
             strings_list = self.selection_strings.split('\n')
-            random_string = random.choice(strings_list)
-            display = f"Outcome: {random_string}"
+            outcome = random.choice(strings_list)
+            display = f"Outcome: {outcome}"
         else:
             raise ValueError(f"Unexpected outcome_type {self.outcome_type}")
         return outcome, display

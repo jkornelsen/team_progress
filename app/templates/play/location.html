@@ -30,6 +30,8 @@
             const movement = keyToMovement[event.code];
             if (movement) {
                 moveCharacter(movement.xChange, movement.yChange);
+                event.preventDefault();
+                event.stopPropagation();
             }
         });
         const linkForKey = {
@@ -142,8 +144,8 @@
                     <td class="align-top">
                         <style>
             td.grid {
-                width: 2em;
-                height: 2em;
+                width: 1.5em;
+                height: 1.5em;
                 text-align: center;
                 vertical-align: middle;
                 padding: 0;
@@ -231,6 +233,7 @@
                 "{{ char.id }}": {
                     letter: '{{ char.name[0] }}',
                     title: '{{ char.name }}',
+                    link: "{{ url_for('play_char', char_id=char.id) }}",
                     x: "{{ char.position[0] }}",
                     y: "{{ char.position[1] }}" },
             {% endfor %}
@@ -240,6 +243,7 @@
                 "{{ item_at.item.id }}": {
                     letter: '{{ item_at.item.name[0] }}',
                     title: '{{ item_at.item.name }}',
+                    link: "{{ url_for('play_item', item_id=item_at.item.id, loc_id=current.id, main='local') }}",
                     x: "{{ item_at.position[0] }}",
                     y: "{{ item_at.position[1] }}" },
             {% endfor %}
@@ -248,11 +252,20 @@
             {% for dest in current.destinations %}
                 "{{ dest.other_loc.id }}": {
                     letter: door_letter,
-                    title: 'door',
+                    title: "{{ dest.other_loc.name }}",
+                    link: "{{ url_for('play_location', loc_id=dest.other_loc.id) }}",
                     x: "{{ dest.door_here[0] }}",
                     y: "{{ dest.door_here[1] }}" },
             {% endfor %}
         };
+        function updateCharacterDisplay(charId, position) {
+            const coordElement = $(`span.char-position[data-char-id='${charId}']`);
+            if (coordElement.length) {
+                coordElement.html(`&nbsp;[${position[0]}, ${position[1]}]`);
+            } else {
+                console.error(`No coordinates element found for character ID ${charId}`);
+            }
+        }
         function moveCharacter(xChange, yChange) {
             const selectBox = $('#char-to-move');
             const charId = (selectBox.length ? selectBox.val() : null);
@@ -282,26 +295,26 @@
             if (redraw) {
                 $('.grid').empty();
             }
-            for (const [, charr] of Object.entries(characters)) {
-                setCellContents(charr.x, charr.y, charr.letter, charr.title);
-            }
-            for (const [, item_at] of Object.entries(items)) {
-                setCellContents(item_at.x, item_at.y, item_at.letter, item_at.title);
-            }
-            for (const [, door] of Object.entries(doors)) {
-                setCellContents(door.x, door.y, door.letter, door.title);
+            for (const entity of [
+                    ...Object.values(characters),
+                    ...Object.values(items),
+                    ...Object.values(doors)]) {
+                setCellContents(entity);
             }
         }
-        function setCellContents(x, y, content, title, replace = false) {
+        function setCellContents(entity, replace = false) {
+            const { x, y, letter, title, link } = entity;
             if (!x && !y) {
                 return;
             }
             const cell = $(`#cell-${x}-${y}`);
             if (cell.length) {
                 if (replace || cell.html().trim() === '') {
+                    let content = letter;
                     if (title) {
                         content = `<span title="${title}">${content}</span>`;
                     }
+                    content = `<a href="${link}">${content}</a>`;
                     cell.html(content);
                 } else {
                     console.log(`Cell (${x}, ${y}) is already occupied.`);
@@ -310,53 +323,19 @@
                 console.error(`Cell (${x}, ${y}) not found.`);
             }
         }
-
+        async function initializePage() {
+            $('#content').css('display', 'block');
+        }
+        $('.navigation-container button').on('click', function() {
+            const xChange = parseInt($(this).data('x'));
+            const yChange = parseInt($(this).data('y'));
+            moveCharacter(xChange, yChange);
+        });
 
         // Initial setup of cell contents
         fillGrid(false);
-
-        function updateCharacterDisplay(charId, position) {
-            const coordElement = $(`span.char-position[data-char-id='${charId}']`);
-            if (coordElement.length) {
-                coordElement.html(`&nbsp;[${position[0]}, ${position[1]}]`);
-            } else {
-                console.error(`No coordinates element found for character ID ${charId}`);
-            }
-        }
-
         $(document).ready(() => {
-            function updateQuantities() {
-                {#
-                Does it make sense to update quantities if for example
-                characters may have moved away by this time?
-                Better to update everything, or things with direct meaning
-                such as production on item play.
-                {% for item_at in current.items.values() %}
-                    // Make AJAX request for item quantity
-                    $.get('/item/progress/{{ item_at.item.id }}', (data) => {
-                        $('#item-{{ item_at.item.id }}-quantity').text(data.quantity_str);
-                    });
-                {% endfor %}
-                #}
-            }
-            function showContent() {
-                $('#content').css('display', 'block');
-            }
-            async function initializePage() {
-                // Update quantities initially
-                updateQuantities();
-
-                // Update quantities periodically
-                setInterval(updateQuantities, 10000);
-                showContent();
-            }
             initializePage();
-
-            $('.navigation-container button').on('click', function() {
-                const xChange = parseInt($(this).data('x'));
-                const yChange = parseInt($(this).data('y'));
-                moveCharacter(xChange, yChange);
-            });
         });
         </script>
     </div>

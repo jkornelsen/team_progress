@@ -1,22 +1,6 @@
 {
     "attribs": [
         {
-            "description": "Used in event to determine where the next marked tree is.",
-            "enum_list": [],
-            "id": 4,
-            "is_binary": false,
-            "mult": false,
-            "name": "Harvest Area Width"
-        },
-        {
-            "description": "Used in event to determine where the next marked tree is.",
-            "enum_list": [],
-            "id": 5,
-            "is_binary": false,
-            "mult": false,
-            "name": "Harvest Area Height"
-        },
-        {
             "description": "How much chopping still needs to be done to finish chopping down the tree. Once HP is 0, the tree can be cut into logs.",
             "enum_list": [],
             "id": 6,
@@ -51,6 +35,28 @@
     ],
     "characters": [
         {
+            "attribs": [],
+            "description": "Carry logs. A driver travels with the truck.",
+            "dest_id": null,
+            "events": [],
+            "id": 5,
+            "items": [
+                {
+                    "item_id": 19,
+                    "quantity": 2.0,
+                    "slot": ""
+                }
+            ],
+            "location_id": 4,
+            "masked": false,
+            "name": "Truck",
+            "position": [4,2],
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": true,
+            "travel_group": ""
+        },
+        {
             "attribs": [
                 [7, 1.1],
                 [8, 1.1]
@@ -61,18 +67,7 @@
                 5
             ],
             "id": 4,
-            "items": [
-                {
-                    "item_id": 19,
-                    "quantity": 4.0,
-                    "slot": ""
-                },
-                {
-                    "item_id": 18,
-                    "quantity": 1.0,
-                    "slot": "Held"
-                }
-            ],
+            "items": [],
             "location_id": 4,
             "masked": false,
             "name": "Owner",
@@ -86,7 +81,40 @@
     "events": [
         {
             "changed": [],
-            "description": "Choose the horizontal grid coordinate of the next tree to be directly harvested on a plot.",
+            "description": "Run to get details on what happened.",
+            "determining": [],
+            "id": 7,
+            "name": "Chopping Mishap Type",
+            "numeric_range": [0, 10],
+            "outcome_type": "selection",
+            "selection_strings": "Tool damaged\r\nTool broken\r\nTool destroyed\r\nFewer resources gained\r\nResources lost\r\nNo progress\r\nMinor injury\r\nSevere injury",
+            "toplevel": false,
+            "trigger_chance": 0.1,
+            "triggers": [
+                ["loc", 4],
+                ["item", 15]
+            ]
+        },
+        {
+            "changed": [],
+            "description": "Chance of something bad, or possibly good, happening.",
+            "determining": [],
+            "id": 6,
+            "name": "Chopping Mishap",
+            "numeric_range": [0, 10],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": false,
+            "trigger_chance": 0.1,
+            "triggers": [
+                ["item", 19],
+                ["item", 15],
+                ["loc", 4]
+            ]
+        },
+        {
+            "changed": [],
+            "description": "Choose the horizontal grid coordinate of the next tree to be actively harvested on a plot.",
             "determining": [],
             "id": 3,
             "name": "Mark a Tree\u2014Horizontal",
@@ -102,7 +130,7 @@
         },
         {
             "changed": [],
-            "description": "Choose the horizontal grid coordinate of the next tree to be directly harvested on a plot.",
+            "description": "Choose the horizontal grid coordinate of the next tree to be actively harvested on a plot.",
             "determining": [],
             "id": 4,
             "name": "Mark a Tree\u2014Vertical",
@@ -140,6 +168,37 @@
         }
     ],
     "items": [
+        {
+            "attribs": [],
+            "description": "Purchase new equipment, and eventually, a new plot of land.",
+            "id": 25,
+            "masked": false,
+            "mult": false,
+            "name": "Cash",
+            "progress": {},
+            "q_limit": 0.0,
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 22,
+                    "instant": true,
+                    "item_id": 25,
+                    "rate_amount": 5.0,
+                    "rate_duration": 3.0,
+                    "sources": [
+                        {
+                            "item_id": 19,
+                            "preserve": false,
+                            "q_required": 10.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "universal",
+            "toplevel": true
+        },
         {
             "attribs": [
                 [6, 67.0]
@@ -210,7 +269,85 @@
         },
         {
             "attribs": [],
+            "description": "How many trees are available on a plot.",
+            "id": 17,
+            "masked": false,
+            "mult": false,
+            "name": "Plot 1 Trees",
+            "progress": {},
+            "q_limit": 0.0,
+            "quantity": 98.0,
+            "recipes": [],
+            "storage_type": "universal",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
             "description": "",
+            "id": 27,
+            "masked": false,
+            "mult": false,
+            "name": "Circular Saw",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "local",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "Cut from logs.",
+            "id": 26,
+            "masked": false,
+            "mult": false,
+            "name": "Boards",
+            "progress": {},
+            "q_limit": 0.0,
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 23,
+                    "instant": false,
+                    "item_id": 26,
+                    "rate_amount": 1.0,
+                    "rate_duration": 3.0,
+                    "sources": [
+                        {
+                            "item_id": 19,
+                            "preserve": false,
+                            "q_required": 1.0
+                        },
+                        {
+                            "item_id": 27,
+                            "preserve": true,
+                            "q_required": 1.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "universal",
+            "toplevel": true
+        },
+        {
+            "attribs": [],
+            "description": "Looks tempting. Smoke may help drive the bees away.",
+            "id": 28,
+            "masked": false,
+            "mult": false,
+            "name": "Honeycomb",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "local",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "Idle chopping is for when no characters are actively chopping, either because they are doing something else, or while offline.",
             "id": 19,
             "masked": false,
             "mult": false,
@@ -239,26 +376,25 @@
                             "q_required": 1.0
                         }
                     ]
+                },
+                {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 21,
+                    "instant": false,
+                    "item_id": 19,
+                    "rate_amount": 10.0,
+                    "rate_duration": 1200.0,
+                    "sources": [
+                        {
+                            "item_id": 17,
+                            "preserve": false,
+                            "q_required": 1.0
+                        }
+                    ]
                 }
             ],
             "storage_type": "carried",
-            "toplevel": false
-        },
-        {
-            "attribs": [
-                [4, 20.0],
-                [5, 10.0]
-            ],
-            "description": "How many trees are available on a plot.",
-            "id": 17,
-            "masked": false,
-            "mult": false,
-            "name": "Plot 1 Trees",
-            "progress": {},
-            "q_limit": 0.0,
-            "quantity": 98.0,
-            "recipes": [],
-            "storage_type": "universal",
             "toplevel": false
         }
     ],
@@ -271,14 +407,14 @@
             "id": 4,
             "items": [
                 {
+                    "item_id": 19,
+                    "position": [3,2],
+                    "quantity": 4.0
+                },
+                {
                     "item_id": 15,
                     "position": [15,4],
                     "quantity": 1.0
-                },
-                {
-                    "item_id": 19,
-                    "position": [3,2],
-                    "quantity": 6.0
                 },
                 {
                     "item_id": 16,
@@ -289,14 +425,68 @@
             "masked": false,
             "name": "Starting Plot",
             "progress": {},
-            "quantity": 1.0,
+            "quantity": 0.0,
+            "toplevel": false
+        },
+        {
+            "description": "",
+            "destinations": [
+                {
+                    "bidirectional": true,
+                    "distance": 1.0,
+                    "door1": [7,2],
+                    "door2": [1,2],
+                    "loc2_id": 4
+                }
+            ],
+            "dimensions": [7,3],
+            "excluded": [0,0,0,0],
+            "id": 10,
+            "items": [
+                {
+                    "item_id": 27,
+                    "position": [3,2],
+                    "quantity": 1.0
+                }
+            ],
+            "masked": false,
+            "name": "Lumber Yard",
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": false
+        },
+        {
+            "description": "Use this view for characters to climb a tree, starting from the bottom.",
+            "destinations": [
+                {
+                    "bidirectional": true,
+                    "distance": 1.0,
+                    "door1": [3,20],
+                    "door2": [4,9],
+                    "loc2_id": 4
+                }
+            ],
+            "dimensions": [4,20],
+            "excluded": [1,3,2,20],
+            "id": 9,
+            "items": [
+                {
+                    "item_id": 28,
+                    "position": [1,2],
+                    "quantity": 1.0
+                }
+            ],
+            "masked": false,
+            "name": "Tree \u2014 Climbing",
+            "progress": {},
+            "quantity": 0.0,
             "toplevel": false
         }
     ],
     "overall": {
-        "description": "Run an outfit to <c=\"saddlebrown\">gather resources</c> either directly or idly. Could be expanded for fishing and mining.",
+        "description": "Run an outfit to <c=\"saddlebrown\">gather resources</c> either actively or idly. Could be expanded for fishing and mining.",
         "multiplayer": true,
-        "number_format": "sci",
+        "number_format": "en_US",
         "progress_type": "Hybrid",
         "slots": [
             "Held"
