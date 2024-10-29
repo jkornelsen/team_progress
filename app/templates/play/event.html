@@ -50,53 +50,56 @@
         <tr>
             <td>
                 <form method="post"
-                      action="{{ url_for('play_event', event_id=current.id) }}">
+                      action="{{ url_for('play_event', event_id=current.id) }}"
+                      class="">
                     {% if current.outcome_type == 'fourway' %}
-                        <label for="difficulty" style="padding-left: 10px;">Difficulty:</label>
-                        <select id="difficulty" name="difficulty">
-                            <option value="5">Easy (5)</option>
-                            <option value="10">Moderate (10)</option>
-                            <option value="15">Hard (15)</option>
-                            <option value="20">Very Hard (20)</option>
+                        <label for="difficulty-select" style="padding-left: 10px;">Difficulty:</label>
+                        <select id="difficulty-select" name="difficulty">
+                            <option value="0.0">None</option>
+                            <option value="0.25">Easy (-25%)</option>
+                            <option value="0.50" selected>Moderate (-50%)</option>
+                            <option value="0.75">Hard (-75%)</option>
+                            <option value="1">Very Hard (-100%)</option>
                         </select>
                         <br>
+                        <label for="threshold" style="padding-left: 10px;">Major/Minor Threshold:</label>
+                        <span id="threshold">{{ (current.numeric_range[1] * 0.45) | formatNum }}</span>
                     {% endif %}
                     {% if current.outcome_type == 'fourway' or current.outcome_type == 'numeric' %}
                         <div style="background-color: black; margin: 3px; padding: 10px">
-                            {% if current.outcome_type == 'fourway' %}
-                                <label for="stat-adjustment">Stat Adjustment:</label>
-                                <input type="text"
-                                       id="stat-adjustment"
-                                       value="{{ current.stat_adjustment }}"
-                                       size="5">
-                            {% elif current.outcome_type == 'numeric' %}
-                                <label for="die-min">Die Min:</label>
-                                <input type="text"
-                                       id="die-min"
-                                       value="{{ current.numeric_range[0] }}"
-                                       size="5">
-                                <label for="adjust-die-min">
-                                    <input type="radio" id="adjust-die-min" name="adjusting" value="min" checked>
-                                    [A]djusting
-                                </label>
-                                <br>
-                                <label for="die-max">Die Max:</label>
-                                <input type="text"
-                                       id="die-max"
-                                       value="{{ current.numeric_range[1] }}"
-                                       size="5">
-                                <label for="adjust-die-max">
-                                    <input type="radio" id="adjust-die-max" name="adjusting" value="max">
-                                    [A]djusting
-                                </label>
-                            {% endif %}
+                            <label>[A]djust / Focus:</label>
+                            <label for="adjust-die-max">
+                                <input type="radio" id="adjust-die-both" name="adjusting" value="max" checked>
+                                <i>Both</i>
+                            </label>
+                            <label for="adjust-die-min">
+                                <input type="radio" id="adjust-die-min" name="adjusting" value="min">
+                                <i>Min</i>
+                            </label>
+                            <label for="adjust-die-max">
+                                <input type="radio" id="adjust-die-max" name="adjusting" value="max">
+                                <i>Max</i>
+                            </label>
+                            <br>
+                            <label for="die-min">Die Min:</label>
+                            <input type="text"
+                                   id="die-min"
+                                   value="{{ current.numeric_range[0] }}"
+                                   size="5">
+                            <br>
+                            <label for="die-max">Die Max:</label>
+                            <input type="text"
+                                   id="die-max"
+                                   value="{{ 20 if current.outcome_type == 'fourway' else current.numeric_range[1] }}"
+                                   size="5">
                             <br>
                             {% for det in current.determining_entities %}
                                 {% set det_ref = "_" ~ det.typename() ~ "_" ~ det.id %}
                                 <li style="margin-top: 5px">
                                     {{ det.name }}
                                     <select class="container-for-det"
-                                            id="container-for-det{{ det_ref }}"
+                                            id="det{{ det_ref }}"
+                                            data-purpose="determining"
                                             data-id="{{ det.id }}"
                                             data-type="{{ det.typename() }}"
                                             data-mult="{{ det.mult | lower }}">
@@ -181,6 +184,9 @@
                     {% endif %}
                     <div style="margin-top: 20px; text-align: center">
                         <button type="button" id="roll-btn">[R]oll</button>
+                        <i><span id="roll-counter" class="label-like">
+                            <span style="opacity: 0">Count: 0</span>
+                        </span></i>
                     </div>
                 </form>
             </td>
@@ -197,7 +203,8 @@
                         <label>Affected Stats:</label>
                         {% for chg in current.changed_entities %}
                             <form method="post"
-                                  action="{{ url_for('play_event', event_id=current.id) }}">
+                                  action="{{ url_for('play_event', event_id=current.id) }}"
+                                  class="save-when-submitted">
                                 <!-- For example, a character is the container and an
                                      attribute is the key, so on the server we would modify
                                      that attribue of that character. -->
@@ -215,7 +222,8 @@
                                 <li style="margin-top: 5px">
                                     {{ chg.name }}
                                     <select class="container-for-changed"
-                                            id="container-for-changed{{ chg_ref }}"
+                                            id="changed{{ chg_ref }}"
+                                            data-purpose="changed"
                                             data-id="{{ chg.id }}"
                                             data-type="{{ chg.typename() }}">
                                         <option value="">(Select for changing value)</option>
@@ -295,7 +303,8 @@
                                     <button type="submit"
                                             name="change_entity"
                                             class="change-entity-btn"
-                                            id="apply_{{ chg.id }}">[{{ letter }}] Apply</button>
+                                            id="apply_{{ chg.id }}"
+                                            onclick="saveSelections()">[{{ letter }}] Apply</button>
                                     <script>
                     funcForKey['{{ letter }}'] = () => {
                         document.querySelector('#apply_{{ chg.id }}').click();
@@ -314,83 +323,111 @@
     <script>
         $(document).ready(() => {
             // remember defaults for select boxes in client side storage
-            const defaultFields = [
-                { field: 'determining_char_id', containerType: 'char' },
-                { field: 'determining_loc_id', containerType: 'loc' },
-                { field: 'determining_item_id', containerType: 'item' },
-                { field: 'changed_char_id', containerType: 'char' },
-                { field: 'changed_loc_id', containerType: 'loc' },
-                { field: 'changed_item_id', containerType: 'item' },
-                { field: 'difficulty' }
-            ];
-            defaultFields.forEach(function(dict) {
-                let storedValue = localStorage.getItem(dict.field);
-                if (storedValue === null) {
-                    storedValue = dict.field === 'difficulty' ? '10' : '0';
-                    localStorage.setItem(dict.field, storedValue);
-                }
-                if (dict.containerType) {
-                    const $selectBoxes = $('.container-for-changed, .container-for-det');
-                    $selectBoxes.each((index, element) => {
-                        const $selectBox = $(element);
-                        $selectBox.find('option').each((index, element) => {
-                            const $option = $(element);
-                            if ($option.data('container-type') === dict.containerType &&
-                                String($option.data('container-id')) === storedValue) {
+            const $selectBoxes = $('.container-for-changed, .container-for-det, #difficulty-select');
+            window.saveSelections = function() {
+                console.log("Saving default form selections.");
+                const eventDefaults = {};
+                $selectBoxes.each((index, select) => {
+                    const $select = $(select);
+                    const selectedValue = $select.val();
+                    const selectId = $select.attr('id');
+                    const $selectedOption = $select.find('option:selected');
+                    eventDefaults[selectId] = {
+                        id: $selectedOption.data('container-id'),
+                        type: $selectedOption.data('container-type'),
+                        value: selectedValue
+                    };
+                });
+                localStorage.setItem('event_selection_defaults', JSON.stringify(eventDefaults));
+            }
+            // Load selections from local storage
+            function loadSelections() {
+                console.log("Loading default form selections.");
+                const eventDefaults = JSON.parse(localStorage.getItem('event_selection_defaults') || '{}');
+                $selectBoxes.each((index, select) => {
+                    const $select = $(select);
+                    const selectId = $select.attr('id');
+                    const is_difficulty = selectId === 'difficulty-select';
+                    let storedObj = eventDefaults[selectId];
+                    if (storedObj === undefined) {
+                        if (!is_difficulty) {
+                            return;
+                        }
+                        storedObj = { value: '10' };
+                    }
+                    console.log(`${selectId} default ${storedObj.type} ${storedObj.id}`);
+                    if (is_difficulty) {
+                        if ($select.length) {
+                            $select.val(storedObj.value);
+                        }
+                    } else {
+                        $select.find('option').each((index, option) => {
+                            const $option = $(option);
+                            if ($option.data('container-type') === storedObj.type &&
+                                $option.data('container-id') === storedObj.id) {
+                                console.log("selecting this option");
                                 $option.prop('selected', true);
                                 return false;
                             }
                             return true;
                         });
-                    });
-                } else {
-                    const $fieldElement = $(`#${dict.field}`);
-                    if ($fieldElement.length) {
-                        $fieldElement.val(storedValue);
-                    }
-                }
-            });
-            $('.container-for-changed, .container-for-det').on('change', (event) => {
-                const selectedOption = $(event.currentTarget).find('option:selected');
-                const selectedContainerId = selectedOption.data('container-id');
-                const selectedContainerType = selectedOption.data('container-type');
-                defaultFields.forEach((dict) => {
-                    if (selectedContainerId && 
-                        dict.containerType === selectedContainerType) {
-                        localStorage.setItem(dict.field, selectedContainerId);
                     }
                 });
+            }
+            loadSelections();
+
+            function calculateThreshold() {
+                const dieMin = parseFloat($('#die-min').val());
+                const dieMax = parseFloat($('#die-max').val());
+                const threshold = (dieMax - dieMin + 1) * 0.45;
+                $('#threshold').text(Math.round(threshold));
+            }
+            $('#die-min').on('input', calculateThreshold);
+            $('#die-max').on('input', calculateThreshold);
+            $('#difficulty-select').on('change', (event) => {
+                const difficulty = parseFloat(event.currentTarget.value);
+                localStorage.setItem('difficulty', difficulty);
+                $('#die-min, #die-max').off('input', calculateThreshold);
+                const dieMin = {{ current.numeric_range[0] }};
+                const dieMax = {{ current.numeric_range[1] }};
+                const dieRange = dieMax - dieMin + 1;
+                const adjustment = dieRange * difficulty;
+                const newDieMin = dieMin - adjustment;
+                const newDieMax = dieMax - adjustment;
+                $('#die-min').val(newDieMin);
+                $('#die-max').val(newDieMax);
+                calculateThreshold();
+                $('#die-min, #die-max').on('input', calculateThreshold);
             });
-            $('#difficulty').on('change', (event) => {
-                localStorage.setItem('difficulty', event.currentTarget.value);
-            });
+            $('#difficulty-select').trigger('change');
 
             $('.fill-det-btn').on('click', (event) => {
                 const entityId = $(event.currentTarget).data('id');
                 const entityType = $(event.currentTarget).data('type');
-                const containerSelect = $(`#container-for-det_${entityType}_${entityId}`)
+                const containerSelect = $(`#det_${entityType}_${entityId}`)
                 const keyMult = $(containerSelect).data('mult');
                 const selectedIndex = $(containerSelect).prop('selectedIndex');
                 const selectedOption = $(containerSelect).find(':selected');
                 const containerVal = parseFloat(selectedOption.val()) || 0;
-                {% if current.outcome_type == 'fourway' %}
-                    const targetField = $('#stat-adjustment');
-                {% elif current.outcome_type == 'numeric' %}
-                    const targetField = $('#adjust-die-min').is(':checked') ? $('#die-min') : $('#die-max');
-                {% endif %}
-                const currentSetting = parseFloat(targetField.val()) || 0;
-                if (selectedIndex !== 0) {
-                    let newValue;
-                    if (keyMult) {
-                        newValue = currentSetting * containerVal;
-                    } else {
-                        newValue = currentSetting + containerVal;
-                    }
-                    {% if current.outcome_type == 'numeric' %}
-                        newValue = Math.round(newValue);
-                    {% endif %}
-                    targetField.val(newValue);
+                const targetFields = [$('#die-min'), $('#die-max')];
+                if ($('#adjust-die-min').is(':checked')) {
+                    targetFields.pop();
+                } else if ($('#adjust-die-max').is(':checked')) {
+                    targetFields.shift();
                 }
+                targetFields.forEach(targetField => {
+                    const currentSetting = parseFloat(targetField.val()) || 0;
+                    if (selectedIndex !== 0) {
+                        let newValue;
+                        if (keyMult) {
+                            newValue = currentSetting * containerVal;
+                        } else {
+                            newValue = currentSetting + containerVal;
+                        }
+                        newValue = Math.round(newValue);
+                            targetField.val(newValue);
+                    }
+                });
             });
 
             $('.container-for-changed').change((event) => {
@@ -413,15 +450,15 @@
             $('.fill-changed-btn').on('click', (event) => {
                 const entityId = $(event.currentTarget).data('id');
                 const entityType = $(event.currentTarget).data('type');
-                $(`#container-for-changed_${entityType}_${entityId}`).change();
+                $(`#changed_${entityType}_${entityId}`).change();
             });
 
+            let rollCounter = 1;
             $('#roll-btn').click(() => {
+                saveSelections();
                 const eventId = {{ current.id }};
                 const url = `/event/roll/${eventId}`;
                 const postData = {
-                    difficulty: $('#difficulty').val(),
-                    stat_adjustment: $('#stat_adjustment').val(),
                     die_min: $('#die-min').val(),
                     die_max: $('#die-max').val()
                 };
@@ -434,6 +471,7 @@
                         if (data.error) {
                             alert(data.error);
                         } else {
+                            $('#roll-counter').text(`Count: ${rollCounter++}`);
                             $('#outcome-display').html(data.outcome_display);
                             $('#outcome-display').data('outcome', data.outcome);
                             $('#changed-row').css('opacity', 1);
@@ -444,13 +482,16 @@
                     }
                 });
             });
-            {% if current.outcome_type == 'numeric' %}
+            {% if current.outcome_type == 'fourway' or current.outcome_type == 'numeric' %}
                 $(document).keypress(function(event) {
                     if (event.key === 'a') {
                         event.stopPropagation();
                         if ($('#adjust-die-min').is(':checked')) {
                             $('#adjust-die-max').prop('checked', true);
                             $('#die-max').focus();
+                        } else if ($('#adjust-die-max').is(':checked')) {
+                            $('#adjust-die-both').prop('checked', true);
+                            $('#die-min').focus();
                         } else {
                             $('#adjust-die-min').prop('checked', true);
                             $('#die-min').focus();

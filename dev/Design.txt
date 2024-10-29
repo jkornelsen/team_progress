@@ -88,6 +88,7 @@ would attributes be useful for locations?
 for example, how dark a room is,
 or deep water would require swimming or limit evasion
 perhaps it would be better to simply mention such things in location description
+could also replace crafting stations
 
 base chances could be displayed in the form of 1 / 10000 ticks
 or 3 / 5 chance to hit
@@ -105,11 +106,6 @@ seems better to have select box to select from all lists
 wouldn't change selection if a particular box doesn't have it
 could only show for three or more -- "Select all"
 seems good as long as we can find an intuitive place to put it on the page
-
-maybe event trigger chance should have a checkbox
-to more clearly indicate that it automatically triggers
-that would grey out the trigger chance and set to 0
-then we could remove the comment on the config screen
 
 if item play gets too cluttered we could make a recipe play screen
 it wouldn't have the upper button actions such as pickup
@@ -149,9 +145,13 @@ check for triggered events in overview
 
 are item triggers only for general qty?
 
-for four-way rolls maybe select the base score,
-like maybe out of 100.
-would that be 1d100, or subtract that value from adjusted stat value?
+automatic trigger chance seems to work well for travel when
+checking for every unit of distance
+it's unintuitive though
+seems like chance should be based on 100% for a full trip or 1 batch
+could we set the chance that way but somehow still check each step?
+divide chance by distance, then what,
+multiply by distance so far that we haven't counted yet?
 
 don't allow production if byproducts would exceed limit
 or maybe allow but don't go past limit, and prefer no limit

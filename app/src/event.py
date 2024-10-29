@@ -42,7 +42,6 @@ OUTCOMES = [
     OUTCOME_MINOR_FAILURE,
     OUTCOME_MINOR_SUCCESS,
     OUTCOME_MAJOR_SUCCESS) = range(len(OUTCOMES))
-OUTCOME_MARGIN = 9  # difference required to get major or critical
 RELATION_TYPES = ['determining', 'changed', 'triggers']
 ENTITY_TYPES = [Attrib, Item, Location]
 ENTITY_TYPENAMES = [entity.typename() for entity in ENTITY_TYPES]
@@ -55,14 +54,14 @@ class Event(CompleteIdentifiable):
         super().__init__(new_id)
         self.name = ""
         self.description = ""
-        self.toplevel = True
+        self.toplevel = False
         self.outcome_type = OUTCOME_FOURWAY
-        self.numeric_range = NumTup((0, 10))  # (min, max)
+        self.numeric_range = NumTup((1, 20))  # (min, max)
         self.selection_strings = ""  # newline-separated possible outcomes
         self.determining_entities = []  # these determine the outcome
         self.changed_entities = []  # changed by the outcome
         self.triggers_entities = []  # can trigger the event
-        self.trigger_chance = 0.1  # 10% chance per batch
+        self.trigger_chance = 0.0
 
     def _base_export_data(self):
         """Prepare the base dictionary for JSON and DB."""
@@ -224,8 +223,8 @@ class Event(CompleteIdentifiable):
             self.toplevel = req.get_bool('top_level')
             self.outcome_type = req.get_str('outcome_type')
             self.numeric_range = NumTup((
-                req.get_int('numeric_min', 0),
-                req.get_int('numeric_max', 10)))
+                req.get_int('numeric_min', 1),
+                req.get_int('numeric_max', 20)))
             self.selection_strings = req.get_str('selection_strings', "")
             for reltype in RELATION_TYPES:
                 setattr(
@@ -236,7 +235,8 @@ class Event(CompleteIdentifiable):
                             req.get_list(f'{reltype}_id[]'))
                         ]
                     )
-            self.trigger_chance = req.get_float('trigger_chance', 0.1)
+            percent_str = req.get_str('trigger_chance', "0%")
+            self.trigger_chance = float(percent_str.strip('%')) / 100
             self.to_db()
         elif req.has_key('delete_event'):
             try:
@@ -250,45 +250,52 @@ class Event(CompleteIdentifiable):
         else:
             logger.debug("Neither button was clicked.")
 
-    def roll_for_outcome(self, difficulty, stat_adjustment, die_min, die_max):
-        if self.outcome_type == OUTCOME_FOURWAY:
-            roll = roll_dice(20)
-            total = roll + stat_adjustment - difficulty
-            if total <= -OUTCOME_MARGIN:
-                outcome = OUTCOME_CRITICAL_FAILURE
-            elif total <= 0:
-                outcome = OUTCOME_MINOR_FAILURE
-            elif total < OUTCOME_MARGIN:
-                outcome = OUTCOME_MINOR_SUCCESS
-            else:
-                outcome = OUTCOME_MAJOR_SUCCESS
-            display = (
-                "1d20 ({}) + Stat Adjustment {} - Difficulty {} = {}<br>"
-                "Outcome is a {}."
-            ).format(
-                roll,
-                format_num(stat_adjustment),
-                difficulty,
-                format_num(total),
-                OUTCOMES[outcome],
-            )
-        elif self.outcome_type == OUTCOME_NUMERIC:
-            sides = die_max - die_min
-            roll = roll_dice(sides)
-            outcome = die_min + roll
-            display = (
-                "{} + 1d{} ({})<br>"
-                "Outcome = {}"
-                ).format(
-                    format_num(die_min),
-                    format_num(sides),
-                    format_num(roll),
-                    format_num(outcome),
-                    )
-        elif self.outcome_type == OUTCOME_SELECTION:
+    def roll_for_outcome(self, die_min, die_max):
+        if self.outcome_type == OUTCOME_SELECTION:
             strings_list = self.selection_strings.split('\n')
             outcome = random.choice(strings_list)
             display = f"Outcome: {outcome}"
+            return outcome, display
+        sides = die_max - die_min + 1
+        roll = roll_dice(sides)
+        outcome_num = die_min + roll
+        if self.outcome_type == OUTCOME_NUMERIC:
+            outcome = outcome_num
+            display = (
+                "{} + {} (1d{})<br>"
+                "Outcome = {}"
+                ).format(
+                    format_num(die_min),
+                    format_num(roll),
+                    format_num(sides),
+                    format_num(outcome_num),
+                    )
+        elif self.outcome_type == OUTCOME_FOURWAY:
+            major_threshold = round((die_max - die_min + 1) * 0.45);
+            if outcome_num <= -major_threshold:
+                outcome = OUTCOME_CRITICAL_FAILURE
+                threshold_display = f"<= {-major_threshold}"
+            elif outcome_num <= 0:
+                outcome = OUTCOME_MINOR_FAILURE
+                threshold_display = f"> {-major_threshold}"
+            elif outcome_num < major_threshold:
+                outcome = OUTCOME_MINOR_SUCCESS
+                threshold_display = f"< {major_threshold}"
+            else:
+                outcome = OUTCOME_MAJOR_SUCCESS
+                threshold_display = f">= {major_threshold}"
+            display = (
+                "{} + {} (1d{}) = {}<br>"
+                "{} {} so Outcome is a {}."
+            ).format(
+                format_num(die_min),
+                format_num(roll),
+                format_num(sides),
+                format_num(outcome_num),
+                format_num(outcome_num),
+                threshold_display,
+                OUTCOMES[outcome],
+            )
         else:
             raise ValueError(f"Unexpected outcome_type {self.outcome_type}")
         return outcome, display
@@ -318,7 +325,7 @@ class Event(CompleteIdentifiable):
             rel_attr = 'quantity'
         if rel_id in rel_dict:
             rel_obj = rel_dict[rel_id]
-            oldval = "from " + format_num(getattr(rel_obj, rel_attr))
+            oldval = "from {}".format(format_num(getattr(rel_obj, rel_attr)))
             setattr(rel_obj, rel_attr, newval)
         else:
             if rel_type == 'attrib':

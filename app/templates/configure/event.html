@@ -9,19 +9,15 @@
 {% block content %}
     <h1>Event Setup</h1>
     <p class="info">
-        Chance of something happening, such as getting lost or
+        Chance or magnitude of something happening, such as getting lost or
         landing a certain type of attack.
     </p>
     <p class="info">
-        Show in Overview so the event can be started manually.
-        Or, set a chance to trigger during ongoing actions.
-    </p>
-    <p class="info">
-        Four-outcome rolls use a 20-sided die.
-        For example, if the die comes up as 15
-        and the difficulty selected is easy (5),
-        then 15 - 5 is greater than the major/minor threshold of 9,
-        so the outcome is a major success.
+        An example of a four-outcome roll is a 20-sided die
+        that comes up as 15,
+        with easy difficulty selected (-5).
+        Since 15 - 5 is greater than the major/minor threshold of 9,
+        the outcome is a major success.
     </p>
     <form method="post">
         <label for="event-name">Name:</label>
@@ -34,12 +30,17 @@
         <label for="event-description">Description:</label>
         <textarea id="event-description" name="event_description" rows="6" cols="50">{{ current.description }}</textarea>
         <br>
-        <input type="checkbox"
-               id="top_level"
-               name="top_level"
-               {% if current.toplevel %}checked{% endif %}>
-        <label for="top_level">Show in Overview</label>
-        <br>
+        <style>
+            .entity-list-container label,
+            .entity-list-container div {
+                padding: 4px;
+            }
+            .select-box-container {
+                display: flex;
+                flex-direction: row;
+                gap: 10px;
+            }
+        </style>
         <div id="outcome-type-container">
             <label>Outcome Type:</label>
             <label>
@@ -54,7 +55,7 @@
                        name="outcome_type"
                        value="numeric"
                        {% if current.outcome_type == 'numeric' %}checked{% endif %}>
-                Number
+                Only the Number
             </label>
             <label>
                 <input type="radio"
@@ -84,20 +85,13 @@
             <label for="selection-strings">Enter a list to choose from (one per line):</label>
             <textarea id="selection-strings" name="selection_strings" rows="10" cols="30">{{ current.selection_strings }}</textarea>
         </div>
-        <style>
-            .entity-list-container label,
-            .entity-list-container div {
-                padding: 4px;
-            }
-            .select-box-container {
-                display: flex;
-                flex-direction: row;
-                gap: 10px;
-            }
-        </style>
         <div class="entity-list-container outer-border"
              id="determining-entities-container">
-            <label>Determining Values:</label>
+            <h3 class="label-like">Determining Values</h3>
+            <p class="info label-like">
+            Stats such as strength, or item quantity, can help
+            determine the outcome by adjusting the die min and max.
+            </p>
             <!-- Placeholder for appending new entities -->
             <div id="determining_list_end" class="unobtrusive"></div>
             <div class="select-box-container">
@@ -136,7 +130,13 @@
         </div>
         <div class="entity-list-container outer-border"
              id="changed-entities-container">
-            <label>Values Changed:</label>
+            <h3 class="label-like">Values Changed</h3>
+            <p class="info label-like">
+                Attribute and item values can be chosen to change
+                based on the outcome.
+                For example, the HP of a character should be lowered by
+                the damage of a strike.
+            </p>
             <!-- Placeholder for appending new entities -->
             <div id="changed_list_end" class="unobtrusive"></div>
             <div class="select-box-container">
@@ -173,13 +173,16 @@
         </div>
         <div class="entity-list-container outer-border"
              id="triggers-entities-container">
-            <label>Trigger Chance:</label>
-            <input type="text"
-                   id="trigger-chance"
-                   name="trigger_chance"
-                   value="{{ current.trigger_chance }}"
-                   size="5">
-            <span class="label-like">0 to link but not trigger automatically.</span>
+            <h3 class="label-like">Triggers and Other Links</h3>
+            <p class="info label-like">
+                These items and locations show a link to the event.
+                With a trigger chance greater than 0,
+                items can automatically trigger
+                during production, and locations during travel;
+                otherwise, run events directly.
+                Events can also be shown in Overview,
+                and they can be linked in a Character's settings.
+            </p>
             <!-- Placeholder for appending new entities -->
             <div id="triggers_list_end" class="unobtrusive"></div>
             <div class="select-box-container">
@@ -209,7 +212,21 @@
                 {% endif %}
                 {% if not game_data.items and not game_data.locations %}<p class="no-entities">(No items or locations)</p>{% endif %}
             </div>
+            <label>Trigger Chance:</label>
+            <input type="text"
+                   id="trigger-chance"
+                   name="trigger_chance"
+                   value="{{ (current.trigger_chance * 100) | formatNum }}%"
+                   size="5">
+            <span style="position: absolute; right: 5px; top: 0; font-size: 0.9em;">%</span>
+            <br>
+            <input type="checkbox"
+                   id="top_level"
+                   name="top_level"
+                   {% if current.toplevel %}checked{% endif %}>
+            <label for="top_level">Show in Overview</label>
         </div>
+        <br>
         <br>
         <br>
         <br>
@@ -241,18 +258,13 @@
                 const selectionStringsDiv = $('#selection-container');
                 const determiningAttribsDiv = $('#determining-entities-container');
                 const changedAttribsDiv = $('#changed-entities-container');
-                if (outcomeType === "numeric") {
-                    numericFactorsDiv.css('display', 'block');
-                    selectionStringsDiv.css('display', 'none');
-                    determiningAttribsDiv.css('display', 'block');
-                    changedAttribsDiv.css('display', 'block');
-                } else if (outcomeType === "selection") {
+                if (outcomeType === "selection") {
                     numericFactorsDiv.css('display', 'none');
                     selectionStringsDiv.css('display', 'block');
                     determiningAttribsDiv.css('display', 'none');
                     changedAttribsDiv.css('display', 'none');
                 } else {
-                    numericFactorsDiv.css('display', 'none');
+                    numericFactorsDiv.css('display', 'block');
                     selectionStringsDiv.css('display', 'none');
                     determiningAttribsDiv.css('display', 'block');
                     changedAttribsDiv.css('display', 'block');
@@ -277,9 +289,9 @@
                         <input type="hidden" name="${relType}_type[]" value="${entityType}">
                         <input type="hidden" name="${relType}_id[]" value="${entityId}">
                         ${entityName}&nbsp;<span class="label-like">
-                        ${((relType === 'determining' || relType === 'changed') && mult) 
-                            ? '(Multiplied)' 
-                            : '(Added)'}</span>&nbsp;
+                        ${(relType === 'determining' || relType === 'changed') 
+                            ? (mult ? '(Multiplied)' : '(Added)') 
+                            : ''}</span>&nbsp;
                         <button type="button" class="remove-entity-btn lesser-button">Remove</button>
                     </div>
                 `;

@@ -490,8 +490,6 @@ def set_routes(app):
         req = RequestHelper('form')
         req.debug()
         outcome, display = instance.roll_for_outcome(
-            req.get_int('difficulty'),
-            req.get_float('stat_adjustment'),
             req.get_int('die_min'),
             req.get_int('die_max')
             )

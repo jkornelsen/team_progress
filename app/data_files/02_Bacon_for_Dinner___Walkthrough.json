@@ -93,13 +93,13 @@
     "events": [
         {
             "changed": [],
-            "description": "Set difficulty to Moderate (the default), meaning the chance of getting lost or eaten by wolves in this particular forest is decent but not overwhelming. If Suzy is alone in the forest, select her name to fill in 2 for stat adjustment, or press <i>Add</i> if her name is already selected. Then press <i>Roll</i>.\r\n\r\nFor the walkthrough, because she's very tired after all those chores, we'll play at a disadvantage, which means we take the worst of two rolls. So, remember the first result and then press Roll again.\r\n\r\nActually, in this case, we need it to be a <i>Minor Failure</i>, so keep rolling until that happens. We'll take that to mean that she's lost but there are no wolves or twisted ankles or other problems.\r\n\r\nTo get out of this pickle, press <b>O</b> to return to the overview and go to the <i>Connect to Service</i> event.",
+            "description": "If Suzy is alone in the forest, select her name with stat 2. Press <b>a</b> to adjust <i>Die Min</i> and press <i>Add</i>, and do the same for <i>Die Max</i>. Otherwise, select her Mother's name.\r\n\r\nSet difficulty to Moderate (the default), meaning the chance of getting lost or eaten by wolves in this particular forest is decent but not overwhelming. Then press <i>Roll</i>.\r\n\r\nFor the walkthrough, because she's tired after all those chores, we'll play at a disadvantage, which means we take the worst of two rolls. So, remember the first result and then press Roll again.\r\n\r\nActually, in this case, we need it to be a <i>Minor Failure</i>, so keep rolling until that happens. We'll take that to mean that she's lost but there are no wolves or twisted ankles or other problems.\r\n\r\nTo get out of this pickle, press <b>O</b> to return to the overview and go to the <i>Connect to Service</i> event.",
             "determining": [
                 ["attrib", 1]
             ],
             "id": 1,
             "name": "Travel Danger",
-            "numeric_range": [0, 1],
+            "numeric_range": [1, 20],
             "outcome_type": "fourway",
             "selection_strings": "",
             "toplevel": true,
@@ -114,7 +114,7 @@
             "determining": [],
             "id": 2,
             "name": "Connect to Service",
-            "numeric_range": [0, 1],
+            "numeric_range": [1, 20],
             "outcome_type": "fourway",
             "selection_strings": "",
             "toplevel": true,
