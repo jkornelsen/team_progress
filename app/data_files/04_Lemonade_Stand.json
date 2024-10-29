@@ -67,7 +67,7 @@
                         {
                             "item_id": 17,
                             "preserve": false,
-                            "q_required": 1.0
+                            "q_required": 2.0
                         }
                     ]
                 }
@@ -92,7 +92,7 @@
                     "id": 3,
                     "instant": true,
                     "item_id": 14,
-                    "rate_amount": 1.0,
+                    "rate_amount": 5.0,
                     "rate_duration": 3.0,
                     "sources": [
                         {
@@ -159,7 +159,7 @@
             "mult": false,
             "name": "Water",
             "progress": {},
-            "q_limit": 0.0,
+            "q_limit": 10.0,
             "quantity": 0.0,
             "recipes": [
                 {
@@ -185,12 +185,22 @@
     ],
     "locations": [],
     "overall": {
-        "description": "Upon finding a small bundle of money on the sidewalk, you decide to start a lemonade stand. A short <c=\"green\">business</c> incremental.\r\n\r\nIt could be extended  to eventually run a corporation with multiple stores and restaurants. Or, you could build a factory such as for <i>Hoth walkers</i> from a <a href=\"/configure\">blank setup</a>.",
-        "progress_type": "Idle",
+        "description": "Upon finding a small bundle of money on the sidewalk, you decide to start a lemonade stand. A short <c=\"green\">factory</c> incremental.\r\n\r\nIt could be extended to run a corporation with multiple stores and restaurants. Or, you could start with a blank setup and build something exotic such as <i>Hoth Walkers</i>.",
         "multiplayer": false,
         "number_format": "en_US",
+        "progress_type": "Idle",
         "slots": [],
         "title": "Lemonade Stand",
-        "win_reqs": []
+        "win_reqs": [
+            {
+                "attrib_id": null,
+                "attrib_value": 0.0,
+                "char_id": null,
+                "id": 3,
+                "item_id": 13,
+                "loc_id": null,
+                "quantity": 50.0
+            }
+        ]
     }
 }

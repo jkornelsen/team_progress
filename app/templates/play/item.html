@@ -207,19 +207,25 @@
                                         <tr>
                                             <td>
                                                 {% if current.progress.can_produce(recipe.id) %}
+                                                {% set letter = link_letters.next() %}
                                                 {% if recipe.instant %}
                                                     <input type="text"
                                                            class="quantity_to_gain"
                                                            id="quantity_to_gain_{{ recipe.id }}"
                                                            size="3"
                                                            value="{{ session['quantity_to_gain'] if session['quantity_to_gain'] else 1 }}">
+                                                    [{{ letter }}]
                                                     <button type="button"
                                                             data-recipe-id="{{ recipe.id }}"
                                                             data-rate-amount="{{ recipe.rate_amount }}"
                                                             class="gain-btn go-button"
                                                             id="gain-btn_{{ recipe.id }}">Gain</button>
+                                                    <script>
+                                                    funcForKey['{{ letter }}'] = () => {
+                                                        document.querySelector('#gain-btn_{{ recipe.id }}').click();
+                                                    };
+                                                    </script>
                                                 {% else %}
-                                                    {% set letter = link_letters.next() %}
                                                     [{{ letter }}]
                                                     <button type="button"
                                                             class="start-stop-btn go-button"
