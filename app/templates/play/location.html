@@ -175,23 +175,22 @@
                         </table>
                         {% if game_data.characters %}
                             <style>
-                .navigation-container {
-                    display: grid;
-                    grid-template-columns: auto auto auto;
-                    grid-template-rows: auto auto auto;
-                    gap: 10px;
-                    justify-content: center;
-                    align-items: center;
-                }
-                .navigation-container button {
-                    width: 50px;
-                    height: 50px;
-                    font-size: 16px;
-                    cursor: pointer;
-                }
-                .empty {
-                    visibility: hidden; /* Hide the empty grid spaces */
-                }
+                                .navigation-container {
+                                    display: grid;
+                                    grid-template-columns: auto auto auto;
+                                    grid-template-rows: auto auto auto;
+                                    gap: 5px;
+                                    justify-content: start;
+                                }
+                                .navigation-container button {
+                                    width: 30px;
+                                    height: 30px;
+                                    font-size: 12px;
+                                    cursor: pointer;
+                                }
+                                .empty {
+                                    visibility: hidden; /* Hide the empty grid spaces */
+                                }
                             </style>
                             <div class="navigation-container">
                                 <!-- Top Left (Northwest) -->
@@ -206,7 +205,16 @@
                                 <span></span>
                                 <!-- Right -->
                                 <button type="button" data-x="1" data-y="0">→</button>
-                                <select id="char-to-move" style="grid-column: span 3;">
+                                <!-- Bottom Left (Southwest) -->
+                                <button type="button" data-x="-1" data-y="1">↙</button>
+                                <!-- Down -->
+                                <button type="button" data-x="0" data-y="1">↓</button>
+                                <!-- Bottom Right (Southeast) -->
+                                <button type="button" data-x="1" data-y="1">↘</button>
+                            </div>
+                            <div style="margin-top: 5px;">
+                                <label for="char-to-move">Moving:</label>
+                                <select id="char-to-move">
                                     {% for char in game_data.characters if char.location.id == current.id %}
                                         <option value="{{ char.id }}"
                                                 {% if char.id == defaults.move_char %}selected{% endif %}>
@@ -214,12 +222,26 @@
                                         </option>
                                     {% endfor %}
                                 </select>
-                                <!-- Bottom Left (Southwest) -->
-                                <button type="button" data-x="-1" data-y="1">↙</button>
-                                <!-- Down -->
-                                <button type="button" data-x="0" data-y="1">↓</button>
-                                <!-- Bottom Right (Southeast) -->
-                                <button type="button" data-x="1" data-y="1">↘</button>
+                                <br>
+                                <label for="move-with">Move With:</label>
+                                <!-- default "{{ defaults.travel_with }}" -->
+                                <select id="move-with">
+                                    <option value="">(No one else)</option>
+                                    {% for group_name, ids_str in travel_groups %}
+                                        {% set ids_list = ids_str.split(',') | sort %}
+                                        {% set defaults_list = defaults.travel_with.split(',') | sort %}
+                                        <option value="{{ ids_str }}"
+                                                {% if ids_list == defaults_list %}selected{% endif %}>
+                                            {{ group_name }}
+                                        </option>
+                                    {% endfor %}
+                                    {% for char in game_data.characters %}
+                                        <option value="{{ char.id }}"
+                                                {% if char.id|string == defaults.travel_with %}selected{% endif %}>
+                                            {{ char.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
                             </div>
                         {% endif %}
                     </td>
@@ -261,35 +283,61 @@
         function updateCharacterDisplay(charId, position) {
             const coordElement = $(`span.char-position[data-char-id='${charId}']`);
             if (coordElement.length) {
-                coordElement.html(`&nbsp;[${position[0]}, ${position[1]}]`);
+                coordElement.html(`&nbsp;[${position[0]},${position[1]}]`);
             } else {
                 console.error(`No coordinates element found for character ID ${charId}`);
             }
         }
         function moveCharacter(xChange, yChange) {
             const selectBox = $('#char-to-move');
+            const moveWith = $('#move-with').val();
+            const selectMoveWith = $('#move-with');
+                            move_with: $('#move-with').val()
             const charId = (selectBox.length ? selectBox.val() : null);
             if (!charId) {
                 alert("Select a character to move.");
                 return;
             }
-            fetch(`/char/move/${charId}/x_change/${xChange}/y_change/${yChange}`, {
+            $.ajax({
+                url: `/char/move/${charId}/x_change/${xChange}/y_change/${yChange}`,
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'}
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.position) {
-                    console.log(`Character moved to ${data.position}`);
-                    characters[charId].x = data.position[0];
-                    characters[charId].y = data.position[1];
-                    fillGrid();
-                    updateCharacterDisplay(charId, data.position);
-                } else {
-                    console.error('Failed to move character');
+                contentType: 'application/x-www-form-urlencoded',
+                data: {
+                    travel_with: moveWith
+                },
+                success: (data) => {
+                    if (data.positions) {
+                        console.log("Character positions:", data.positions);
+                        for (const [id_str, position] of Object.entries(data.positions)) {
+                            const id = parseInt(id_str, 10);
+                            characters[id].x = position[0];
+                            characters[id].y = position[1];
+                            updateCharacterDisplay(id, position);
+                        }
+                        fillGrid();
+                    } else {
+                        console.error('Failed to move character');
+                    }
+/*
+                    if (data.position) {
+                        console.log(`Character moved to ${data.position}`);
+                        const moveWithIds = moveWith.split(",")
+                            .filter(_id => _id)
+                            .map(_id => parseInt(_id, 10));
+                        moveWithIds.push(charId);
+                        for (const id of moveWithIds) {
+                            characters[id].x = data.position[0];
+                            characters[id].y = data.position[1];
+                            updateCharacterDisplay(id, data.position);
+                        }
+                        fillGrid();
+*/
+                },
+                error: (error) => {
+                    console.error('Error:', error);
+                    alert(`Error: ${error}`);
                 }
-            })
-            .catch(error => console.error('Error:', error));
+            });
         }
         function fillGrid(redraw=true) {
             if (redraw) {
@@ -319,7 +367,7 @@
                 } else {
                     console.log(`Cell (${x}, ${y}) is already occupied.`);
                 }
-            } else {
+            } else if (Number(x) && Number(y)) {
                 console.error(`Cell (${x}, ${y}) not found.`);
             }
         }

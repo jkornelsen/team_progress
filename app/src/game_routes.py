@@ -346,6 +346,9 @@ def set_routes(app):
         instance = Location.data_for_play(loc_id)
         if not instance:
             return "Location not found"
+        travel_groups = []
+        if instance:
+            travel_groups = Character.load_travel_groups(instance.id)
         session['last_loc_id'] = loc_id
         session['referrer_link'] = {
             'url': request.url,
@@ -357,13 +360,15 @@ def set_routes(app):
         else:
             char_id = session.get('last_char_id', '')
         defaults = {
-            'move_char': session.get('default_move_char', '')}
+            'move_char': session.get('default_move_char', ''),
+            'travel_with': session.get('default_travel_with', '')}
         return render_template(
             'play/location.html',
             current=instance,
             char_id=char_id,
             defaults=defaults,
             game_data=g.game_data,
+            travel_groups=travel_groups,
             link_letters=LinkLetters('emo')
             )
 
@@ -380,7 +385,7 @@ def set_routes(app):
             link_letters=LinkLetters('m')
             )
 
-    @app.route('/char/progress/<int:char_id>')
+    @app.route('/char/progress/<int:char_id>', methods=['POST'])
     def char_progress(char_id):
         logger.debug("%s\nchar_progress(%d)", "-" * 80, char_id)
         char = Character.data_for_play(char_id)
@@ -393,11 +398,11 @@ def set_routes(app):
                     'current_loc_id': current_loc_id,
                     'quantity': 0
                     })
+            req = RequestHelper('form')
             if char.progress.is_ongoing:
                 batches_done = char.progress.batches_for_elapsed_time()
                 events = Event.load_triggers_for_type(
                     char.location.id, Location.typename())
-                req = RequestHelper('args')
                 ignore_event_id = req.get_int('ignore_event', '')
                 for event in events:
                     if event.id != ignore_event_id:
@@ -412,14 +417,16 @@ def set_routes(app):
                 char.to_db()
             if char.pile.quantity >= char.pile.item.q_limit:
                 # arrived at the destination
-                char.progress.stop()
-                char.pile.quantity = 0
-                char.location = char.destination
-                char.destination = None
-                char.to_db()
+                main_char = char
+                for char in get_travel_chars(req, char_id):
+                    char.progress.stop()
+                    char.pile.quantity = 0
+                    char.location = char.destination
+                    char.destination = None
+                    char.to_db()
                 return jsonify({
                     'status': 'arrived',
-                    'current_loc_id': char.location.id
+                    'current_loc_id': main_char.location.id
                     })
             logger.debug("dest_id: %d", char.destination.id)
             return jsonify({
@@ -440,48 +447,63 @@ def set_routes(app):
         logger.debug("%s\nstart_char(%d)", "-" * 80, char_id)
         req = RequestHelper('form')
         dest_id = req.get_int('dest_id')
-        char = Character.data_for_play(char_id)
-        if not char.destination or char.destination.id != dest_id:
-            char.destination = Location.get_by_id(dest_id)
-            char.pile.quantity = 0
-            char.to_db()
-        if char.progress.start():
-            char.to_db()
+        if not dest_id:
             return jsonify({
-                'status': 'success',
-                'message': 'Progress started.'
+                'status': 'error',
+                'message': 'No travel destination.',
+                'dest_id': dest_id
                 })
+        session['default_travel_with'] = req.get_str('travel_with')
+        for char in get_travel_chars(req, char_id):
+            logger.debug("char %d", char.id)
+            if not char.destination or char.destination.id != dest_id:
+                char.destination = Location(dest_id)
+                char.pile.quantity = 0
+                char.to_db()
+            if char.progress.start():
+                char.to_db()
+            else:
+                return jsonify({
+                    'status': 'error',
+                    'message': f'{char.name} could not start travel.'
+                    })
         return jsonify({
-            'status': 'error',
-            'message': 'Could not start.'
+            'status': 'success',
+            'message': 'Progress started.'
             })
 
-    @app.route('/char/stop/<int:char_id>')
+    @app.route('/char/stop/<int:char_id>', methods=['POST'])
     def stop_char(char_id):
         logger.debug("%s\nstop_char(%d)", "-" * 80, char_id)
-        char = Character.data_for_play(char_id)
-        if char.progress.stop():
-            char.to_db()
+        paused = False
+        req = RequestHelper('form')
+        for char in get_travel_chars(req, char_id):
+            if char.progress.stop():
+                char.to_db()
+                paused = True
+        if paused:
             return jsonify({'message': 'Progress paused.'})
-        return jsonify({'message': 'Progress is already paused.'})
+        else:
+            return jsonify({'message': 'Progress is already paused.'})
 
     @app.route('/char/go/<int:char_id>', methods=['POST'])
     def go_char(char_id):
         logger.debug("%s\ngo_char(%d)", "-" * 80, char_id)
         req = RequestHelper('form')
         dest_id = req.get_int('dest_id')
-        char = Character.data_for_play(char_id)
-        char.location = Location.get_by_id(dest_id)
-        if not char.location:
+        if not dest_id:
             return jsonify({
                 'status': 'error',
                 'message': 'No travel destination.',
                 'dest_id': dest_id
                 })
-        char.to_db()
+        session['default_travel_with'] = req.get_str('travel_with')
+        for char in get_travel_chars(req, char_id):
+            char.location = Location(dest_id)
+            char.to_db()
         return jsonify({
             'status': 'arrived',
-            'current_loc_id': char.location.id
+            'current_loc_id': dest_id
             })
 
     @app.route('/event/roll/<int:event_id>', methods=['POST'])
@@ -763,26 +785,36 @@ def set_routes(app):
         logger.debug(
             "%s\nmove_char(%d,%d,%d)",
             "-" * 80, char_id, x_change, y_change)
-        char = Character.load_complete_object(char_id)
-        if not char:
-            return "Character not found"
-        session['default_move_char'] = char_id
-        loc = Location.load_complete_object(char.location.id)
-        cur_x, cur_y = char.position.as_tuple()
-        newpos = NumTup((
-            cur_x + x_change,
-            cur_y + y_change))
-        logger.debug("from (%s) to (%s)", char.position, newpos)
-        if loc.grid.in_grid(newpos):
-            char.position = newpos
-            char.to_db()
-        elif loc.grid.in_grid(char.position):
-            # don't move
-            pass
-        else:
-            char.position = loc.grid.default_pos
-            char.to_db()
-        return jsonify({'position': char.position.as_tuple()})
+        main_char = None
+        req = RequestHelper('form')
+        loc = None
+        session['default_travel_with'] = req.get_str('travel_with')
+        positions = {}
+        for char in get_travel_chars(req, char_id):
+            if not char:
+                return "Character not found"
+            if char.id == char_id:
+                main_char = char
+            session['default_move_char'] = char_id
+            if not loc:
+                loc = Location.load_complete_object(char.location.id)
+            if not loc.grid.in_grid(char.position):
+                char.position = loc.grid.default_pos
+            cur_x, cur_y = char.position.as_tuple()
+            newpos = NumTup((
+                cur_x + x_change,
+                cur_y + y_change))
+            logger.debug("from (%s) to (%s)", char.position, newpos)
+            if loc.grid.in_grid(newpos):
+                char.position = newpos
+                char.to_db()
+            elif loc.grid.in_grid(char.position):
+                pass  # don't move
+            else:
+                char.position = loc.grid.default_pos
+                char.to_db()
+            positions[char.id] = char.position.as_tuple()
+        return jsonify({'positions': positions})
 
 def back_to_referrer():
     referrer = session.pop('referrer', None)
@@ -806,3 +838,9 @@ def increment_name(name):
     else:
         new_number = "2"
     return f"{base_name}{new_number}"
+
+def get_travel_chars(req, char_id):
+    travel_with = req.get_str('travel_with')
+    char_ids = [int(_id) for _id in travel_with.split(",") if _id] + [char_id]
+    logger.debug("travel char ids: %s", char_ids)
+    return Character.load_complete_objects(char_ids)

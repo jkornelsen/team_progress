@@ -210,7 +210,7 @@ class Character(CompleteIdentifiable):
         return chars
 
     @classmethod
-    def load_travel_groups(cls, loc_id, char_id):
+    def load_travel_groups(cls, loc_id, char_id = 0):
         """Get travel groups for other characters.
         @returns: list of tuples (group name, IDs joined by commas).
         """
@@ -229,7 +229,7 @@ class Character(CompleteIdentifiable):
         for row in rows:
             groups.setdefault(row.travel_group, []).append(row.id)
         return [
-            (group_name, ', '.join(map(str, ids)))
+            (group_name, ','.join(map(str, ids)))
             for group_name, ids in groups.items()
             if len(ids) >= 2
             ]

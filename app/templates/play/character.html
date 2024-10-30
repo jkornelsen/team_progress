@@ -36,6 +36,13 @@
                         selectBox.selectedIndex = 1;
                         $selectBox.trigger('change');
                     }
+                } else if (key === 'w') {
+                    const $selectBox = $('#travel-with-select');
+                    $selectBox.focus();
+                    const selectBox = $selectBox[0];
+                    if (selectBox.selectedIndex === 0) {
+                        selectBox.selectedIndex = 1;
+                    }
                 } else if (linkForKey[key]) {
                     window.location.href = linkForKey[key];
                 }
@@ -87,13 +94,13 @@
                             <option value="">(No one else)</option>
                             {% for group_name, ids_str in travel_groups %}
                                 <option value="{{ ids_str }}"
-                                        {% if group_name == defaults.travel_with %}selected{% endif %}>
+                                        {% if ids_str == defaults.travel_with %}selected{% endif %}>
                                     {{ group_name }}
                                 </option>
                             {% endfor %}
                             {% for char in game_data.characters if char.id != current.id %}
                                 <option value="{{ char.id }}"
-                                        {% if char.id == defaults.travel_with %}selected{% endif %}>
+                                        {% if char.id|string == defaults.travel_with %}selected{% endif %}>
                                     {{ char.name }}
                                 </option>
                             {% endfor %}
@@ -314,12 +321,21 @@
 
             async function fetchProgressData() {
                 const ignoreEventId = localStorage.getItem('ignore_event_id') || '';
-                const url = `/char/progress/{{ current.id }}${ignoreEventId ? `?ignore_event=${ignoreEventId}` : ''}`;
+                const url = `/char/progress/{{ current.id }}`;
                 const data = await new Promise((resolve, reject) => {
-                    $.get(url, (response) => {
-                        resolve(response);
-                    }).fail((xhr, status, error) => {
-                        reject(error);
+                    $.ajax({
+                        url: url,
+                        method: 'POST',
+                        data: {
+                            ignore_event: ignoreEventId,
+                            travel_with: $('#travel-with-select').val()
+                        },
+                        success: (response) => {
+                            resolve(response);
+                        },
+                        error: (xhr, status, error) => {
+                            reject(error);
+                        }
                     });
                 });
                 console.log('Received data:', data);
@@ -350,12 +366,14 @@
                 fetchProgressData();
             });
             $('#do-travel-btn').click(() => {
-                const destinationId = $('#destination-select').val();
                 console.log('goChar(): {{ current.id }}');
                 $.ajax({
                     url: `/char/go/{{ current.id }}`,
                     method: 'post',
-                    data: { dest_id: destinationId },
+                    data: {
+                        dest_id: $('#destination-select').val(),
+                        travel_with: $('#travel-with-select').val()
+                    },
                     success: (response) => {
                         if (response.status === 'error') {
                             console.error(response.message);
@@ -380,14 +398,16 @@
                 }
             });
             function startTravel() {
-                const destinationId = $('#destination-select').val();
                 $.ajax({
                     url: '/char/start/{{ current.id }}',
                     method: 'POST',
-                    data: { dest_id: destinationId },
+                    data: {
+                        dest_id: $('#destination-select').val(),
+                        travel_with: $('#travel-with-select').val()
+                    },
                     success: function(response) {
+                        console.log(response.message);
                         if (response.status === 'error') {
-                            console.error(response.message);
                             alert(response.message);
                         }
                         updateStartButtonLabel();
@@ -401,17 +421,24 @@
                 });
             }
             function stopTravel() {
-                // Stop the progress
                 console.log('stopChar(){{ current.id }}');
-                fetch('/char/stop/{{ current.id }}')
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log(data.message);
+                $.ajax({
+                    url: `/char/stop/{{ current.id }}`,
+                    method: 'POST',
+                    data: {
+                        travel_with: $('#travel-with-select').val()
+                    },
+                    success: function(response) {
+                        console.log(response.message);
+                        if (response.status === 'error') {
+                            alert(response.message);
+                        }
                         updateStartButtonLabel();
-                    })
-                    .catch(error => {
+                    },
+                    error: function(error) {
                         console.error('Error:', error);
-                    });
+                    }
+                });
             }
         });
         </script>

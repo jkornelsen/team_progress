@@ -166,13 +166,17 @@ class LinkLetters:
         return ''
 
 def caller_info(format_str="called from {filename}:{line}"):
-    CALLER_INDEX = 2  # the caller of the function that called where we are now
-    stack = inspect.stack()
-    if len(stack) > CALLER_INDEX:
-        frame = stack[CALLER_INDEX]
-        return format_str.format(
-            filename=os.path.basename(frame.filename),
-            line=frame.lineno)
+    """Iterate through the stack to find the first frame from a
+    different module.
+    """
+    stack = inspect.stack()[1:]  # exclude the first utils.py
+    last_module = stack[0].frame.f_globals["__name__"]
+    for i, frame in enumerate(stack):
+        module_name = frame.frame.f_globals.get("__name__", "")
+        if module_name != last_module:
+            return format_str.format(
+                filename=os.path.basename(frame.filename),
+                line=frame.lineno)
     return ""
 
 def entity_class(typename, entity_classes):
