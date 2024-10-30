@@ -126,6 +126,9 @@ def set_routes(app):
             if not req.has_key('duplicated'):
                 session['referrer'] = request.referrer
             item = Item.data_for_configure(item_id)
+            if item_id == 'new':
+                item.storage_type = session.get(
+                    'default_storage_type', item.storage_type)
             return render_template(
                 'configure/item.html',
                 current=item,
@@ -288,7 +291,7 @@ def set_routes(app):
                 from_entity=from_entity,
                 game_data=g.game_data,
                 message=message,
-                link_letters=LinkLetters('aemor')
+                link_letters=LinkLetters('ademor')
                 )
         Event.change_by_form()
         return redirect(

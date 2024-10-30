@@ -30,16 +30,6 @@ def set_routes(app):
         logger.debug("%s\nconfigure_index()", "-" * 80)
         file_message = session.pop('file_message', False)
         g.game_data.entity_names_from_db()
-        for session_key in (
-                'last_affected_char_id',
-                'last_char_id',
-                'last_loc_id',
-                'default_move_char',
-                'default_pickup_char',
-                'default_movingto_char',
-                'default_slot',
-            ):
-            session.pop(session_key, None)
         return render_template(
             'configure/index.html',
             game_data=g.game_data,
@@ -170,6 +160,7 @@ def load_file_into_db(filepath):
         raise ex
     finally:
         set_autocommit(True)
+    clear_session()
 
 def load_file(filepath):
     """Load game data from file."""
@@ -218,3 +209,15 @@ def flatten_tuples(json_output):
     json_output = re.sub(pattern, format_tuple, json_output, flags=re.DOTALL)
     return json_output
 
+def clear_session():
+    for session_key in (
+            'last_affected_char_id',
+            'last_char_id',
+            'last_loc_id',
+            'default_move_char',
+            'default_movingto_char',
+            'default_pickup_char',
+            'default_slot',
+            'default_storage_type',
+        ):
+        session.pop(session_key, None)

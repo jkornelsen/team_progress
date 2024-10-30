@@ -252,19 +252,23 @@ class Location(CompleteIdentifiable):
 
     def to_db(self):
         logger.debug("to_db()")
+        creating = not self.id
         self.progress.to_db()
         super().to_db()
-        self.execute_change("""
-            DELETE FROM loc_destinations
-            WHERE game_token = %s AND loc1_id = %s
-            """, (g.game_token, self.id))
-        self.execute_change("""
-            DELETE FROM loc_items
-            WHERE game_token = %s AND loc_id = %s
-            """, (g.game_token, self.id))
+        if not creating:
+            self.execute_change("""
+                DELETE FROM loc_destinations
+                WHERE game_token = %s AND loc1_id = %s
+                """, (g.game_token, self.id))
+            self.execute_change("""
+                DELETE FROM loc_items
+                WHERE game_token = %s AND loc_id = %s
+                """, (g.game_token, self.id))
         if self.destinations:
             values_to_insert = []
             for dest in self.destinations:
+                if creating:
+                     dest.loc1.id = self.id  # use the new id from db
                 values_to_insert.append((
                     g.game_token,
                     dest.loc1.id,
@@ -501,10 +505,11 @@ class Location(CompleteIdentifiable):
             logger.debug("Neither button was clicked.")
 
 class Grid:
+    """Grid of 1-based coordinates, so 0 is not a valid value."""
     def __init__(self):
         self.dimensions = NumTup((0, 0))  # width, height
         self.excluded = NumTup((0, 0, 0, 0))  # left, top, right, bottom
-        self.default_pos = None  # legal position in grid if any
+        self.default_pos = NumTup((0, 0))  # legal position in grid if any
 
     def set_default_pos(self):
         """Returns None if there are no legal positions.
@@ -517,7 +522,7 @@ class Grid:
                 if not (left <= x <= right and top <= y <= bottom):
                     self.default_pos = NumTup((x, y))
                     return
-        self.default_pos = None
+        self.default_pos = NumTup((0, 0))
 
     def in_grid(self, pos):
         """Returns True if position is legally in the grid."""

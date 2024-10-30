@@ -22,6 +22,10 @@
                 const key = event.key.toLowerCase();
                 if (key === 'r') {
                     $('#roll-btn').click();
+                {% if current.outcome_type == 'numeric' %}
+                } else if (key === 'd') {
+                    $('#reset-die-btn').click();
+                {% endif %}
                 } else if (linkForKey[key]) {
                     window.location.href = linkForKey[key];
                 } else if (funcForKey[key]) {
@@ -86,6 +90,12 @@
                                    id="die-min"
                                    value="{{ current.numeric_range[0] }}"
                                    size="5">
+                            {% if current.outcome_type == 'numeric' %}
+                                <button type="button"
+                                        id="reset-die-btn">
+                                        Reset [D]ie
+                                </button>
+                            {% endif %}
                             <br>
                             <label for="die-max">Die Max:</label>
                             <input type="text"
@@ -304,7 +314,8 @@
                                             name="change_entity"
                                             class="change-entity-btn"
                                             id="apply_{{ chg.id }}"
-                                            onclick="saveSelections()">[{{ letter }}] Apply</button>
+                                            onclick="saveSelections(); validateChanged('{{ chg_ref }}', this)"
+                                            >[{{ letter }}] Apply</button>
                                     <script>
                     funcForKey['{{ letter }}'] = () => {
                         document.querySelector('#apply_{{ chg.id }}').click();
@@ -324,6 +335,7 @@
         $(document).ready(() => {
             // remember defaults for select boxes in client side storage
             const $selectBoxes = $('.container-for-changed, .container-for-det, #difficulty-select');
+            const $dieFields = $('#die-min, #die-max');
             window.saveSelections = function() {
                 console.log("Saving default form selections.");
                 const eventDefaults = {};
@@ -339,6 +351,12 @@
                     };
                 });
                 localStorage.setItem('event_selection_defaults', JSON.stringify(eventDefaults));
+                $dieFields.each((index, input) => {
+                    const $input = $(input);
+                    const inputId = $input.attr('id');
+                    const specifiedValue = $input.val();
+                    localStorage.setItem(inputId, specifiedValue);
+                });
             }
             // Load selections from local storage
             function loadSelections() {
@@ -350,10 +368,10 @@
                     const is_difficulty = selectId === 'difficulty-select';
                     let storedObj = eventDefaults[selectId];
                     if (storedObj === undefined) {
-                        if (!is_difficulty) {
-                            return;
+                        if (is_difficulty) {
+                            $select.find('option').eq(2).prop('selected', true);
                         }
-                        storedObj = { value: '10' };
+                        return;
                     }
                     console.log(`${selectId} default ${storedObj.type} ${storedObj.id}`);
                     if (is_difficulty) {
@@ -373,8 +391,24 @@
                         });
                     }
                 });
+                $dieFields.each((index, input) => {
+                    const $input = $(input);
+                    const inputId = $input.attr('id');
+                    const storedValue = localStorage.getItem(inputId);
+                    if (storedValue !== null) {
+                        $input.val(storedValue);
+                    }
+                });
             }
             loadSelections();
+            window.validateChanged = function(chgRef, button) {
+                if ($(`#container_type${chgRef}`).val() !== "") { 
+                    button.click();
+                } else {
+                    event.preventDefault();
+                    alert('Please fill or select from the list before applying changes.');
+                }
+            };
 
             function calculateThreshold() {
                 const dieMin = parseFloat($('#die-min').val());
@@ -382,12 +416,11 @@
                 const threshold = (dieMax - dieMin + 1) * 0.45;
                 $('#threshold').text(Math.round(threshold));
             }
-            $('#die-min').on('input', calculateThreshold);
-            $('#die-max').on('input', calculateThreshold);
+            $dieFields.on('input', calculateThreshold);
             $('#difficulty-select').on('change', (event) => {
                 const difficulty = parseFloat(event.currentTarget.value);
                 localStorage.setItem('difficulty', difficulty);
-                $('#die-min, #die-max').off('input', calculateThreshold);
+                $dieFields.off('input', calculateThreshold);
                 const dieMin = {{ current.numeric_range[0] }};
                 const dieMax = {{ current.numeric_range[1] }};
                 const dieRange = dieMax - dieMin + 1;
@@ -397,7 +430,7 @@
                 $('#die-min').val(newDieMin);
                 $('#die-max').val(newDieMax);
                 calculateThreshold();
-                $('#die-min, #die-max').on('input', calculateThreshold);
+                $dieFields.on('input', calculateThreshold);
             });
             $('#difficulty-select').trigger('change');
 
@@ -430,11 +463,19 @@
                 });
             });
 
-            $('.container-for-changed').change((event) => {
-                const keyId = $(event.currentTarget).data('id');
-                const keyType = $(event.currentTarget).data('type');
+            function fill_container(selectBox) {
+                const keyId = $(selectBox).data('id');
+                const keyType = $(selectBox).data('type');
                 const keyRef = `_${keyType}_${keyId}`
-                const selectedOption = $(event.currentTarget).find(':selected');
+                let selectedOption = $(selectBox).find(':selected');
+                if (selectedOption.index() === 0) {
+                    const nextOption = $(selectBox).find('option').eq(1);
+                    if (nextOption.length) {
+                        selectedOption.prop('selected', false);
+                        nextOption.prop('selected', true);
+                        selectedOption = nextOption;
+                    }
+                }
                 const containerVal = parseFloat(selectedOption.val()) || 0;
                 const containerId = selectedOption.data('container-id');
                 const containerType = selectedOption.data('container-type');
@@ -446,6 +487,9 @@
                 newValInput.val(newValue);
                 $(`#container_id${keyRef}`).val(containerId);
                 $(`#container_type${keyRef}`).val(containerType);
+            }
+            $('.container-for-changed').change((event) => {
+                fill_container(event.currentTarget);
             });
             $('.fill-changed-btn').on('click', (event) => {
                 const entityId = $(event.currentTarget).data('id');
@@ -481,6 +525,10 @@
                         alert('Could not get data from server. Please try again.');
                     }
                 });
+            });
+            $('#reset-die-btn').click(() => {
+                $('#die-min').val({{ current.numeric_range[0] }});
+                $('#die-max').val({{ current.numeric_range[1] }});
             });
             {% if current.outcome_type == 'fourway' or current.outcome_type == 'numeric' %}
                 $(document).keypress(function(event) {

@@ -287,7 +287,7 @@
                                                 {% if row < recipe.sources|length %}
                                                     {% set source = recipe.sources[row] %}
                                                     {% set item = source.item %}
-                                                    {% if item.id == current.id %}
+                                                    {% if item.id == current.id or (item.storage_type == 'local' and not loc_id) %}
                                                         <td>
                                                             <strong>{{ item.name }}</strong>
                                                         </td>
@@ -400,16 +400,25 @@
                                 <th>Required</th>
                             </tr>
                             {% for used_for in outerscope.used_as_source %}
-                                {% set link = url_for('play_item', item_id=used_for.item.id, char_id=char_id, loc_id=loc_id) %}
-                                {% set letter = link_letters.next(link) %}
-                                <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
-                                <tr>
-                                    <td>
-                                        <span>[{{ letter }}]</span>
-                                        <a href="{{ link }}">{{ used_for.item.name }}</a>
-                                    </td>
-                                    <td>{{ used_for.q_required | formatNum }}</td>
-                                </tr>
+                                {% if used_for.item.storage_type == 'local' and not loc_id %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ used_for.item.name }}</strong>
+                                        </td>
+                                        <td>{{ used_for.q_required | formatNum }}</td>
+                                    </tr>
+                                {% else %}
+                                    {% set link = url_for('play_item', item_id=used_for.item.id, char_id=char_id, loc_id=loc_id) %}
+                                    {% set letter = link_letters.next(link) %}
+                                    <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
+                                    <tr>
+                                        <td>
+                                            <span>[{{ letter }}]</span>
+                                            <a href="{{ link }}">{{ used_for.item.name }}</a>
+                                        </td>
+                                        <td>{{ used_for.q_required | formatNum }}</td>
+                                    </tr>
+                                {% endif %}
                             {% endfor %}
                         </table>
                     </td>

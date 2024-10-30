@@ -320,9 +320,11 @@ class Event(CompleteIdentifiable):
         if rel_type == 'attrib':
             rel_dict = container.attribs
             rel_attr = 'val'
-        else:
+        elif container_type in ('char', 'loc'):
             rel_dict = container.items
             rel_attr = 'quantity'
+        else:
+            rel_dict = {}
         if rel_id in rel_dict:
             rel_obj = rel_dict[rel_id]
             oldval = "from {}".format(format_num(getattr(rel_obj, rel_attr)))

@@ -275,6 +275,7 @@
             console.log("number of items={{ current.items | length }}");
             {% for item_at in current.items.values() %}
                 console.log("name={{item_at.item.name}}");
+                console.log("position={{ item_at.position }}");
                 addItem(
                     {{ item_at.item.id }},
                     "{{ item_at.item.name }}",

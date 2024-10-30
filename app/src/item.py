@@ -253,7 +253,7 @@ class Item(CompleteIdentifiable):
             self.name = req.get_str('item_name')
             self.description = req.get_str('item_description')
             self.storage_type = req.get_str('storage_type')
-            req = RequestHelper('form')
+            session['default_storage_type'] = self.storage_type
             self.toplevel = req.get_bool('top_level')
             self.masked = req.get_bool('masked')
             self.mult = req.get_bool('mult')

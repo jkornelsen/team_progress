@@ -55,8 +55,10 @@ class RequestHelper:
         """Retrieve an integer value from the request."""
         formatted_str = self._get_from_request(key)
         value_str = unformat_num(formatted_str)
+        if formatted_str == '' or value_str == '':
+            return default
         try:
-            return int(value_str) if value_str else default
+            return int(value_str)
         except ValueError:
             return default
 
@@ -64,16 +66,20 @@ class RequestHelper:
         """Retrieve a floating point value from the request."""
         formatted_str = self._get_from_request(key)
         value_str = unformat_num(formatted_str)
+        if formatted_str == '' or value_str == '':
+            return default
         try:
-            return float(value_str) if value_str else default
+            return float(value_str)
         except ValueError:
             return default
 
     def get_bool(self, key, default=False):
         """Retrieve a boolean value from the request."""
         value_str = self._get_from_request(key)
+        if value_str == '':
+            return default
         try:
-            return bool(value_str) if value_str else default
+            return bool(value_str)
         except ValueError:
             return default
 
