@@ -9,6 +9,7 @@ from .db_serializable import (
     DbError, DeletionError, CompleteIdentifiable, QueryHelper, coldef)
 from .item import Item
 from .location import ItemAt, Location
+from .user_interaction import add_log
 from .utils import (
     NumTup, RequestHelper, create_entity, entity_class, format_num)
 
@@ -255,6 +256,7 @@ class Event(CompleteIdentifiable):
             strings_list = self.selection_strings.split('\n')
             outcome = random.choice(strings_list)
             display = f"Outcome: {outcome}"
+            add_log(f"{self.name} — {display}")
             return outcome, display
         sides = die_max - die_min + 1
         roll = roll_dice(sides)
@@ -298,6 +300,7 @@ class Event(CompleteIdentifiable):
             )
         else:
             raise ValueError(f"Unexpected outcome_type {self.outcome_type}")
+        add_log(f"{self.name} — {display}")
         return outcome, display
 
     @classmethod
@@ -355,9 +358,11 @@ class Event(CompleteIdentifiable):
         rel_base_obj = rel_obj_cls.load_complete_object(rel_id)
         if not rel_base_obj:
             raise ValueError(f"{rel_obj_cls.readable_type()} not found")
-        session['message'] = (
+        message = (
             f"Changed {rel_base_obj.name}"
             f" of {container.name} from {oldval} to {newval}")
+        session['message'] = message
+        add_log(message)
 
     def check_trigger(self, trials):
         """Returns True if the event triggers at least once."""

@@ -41,6 +41,22 @@ a:hover {
     color: #2a6496; /* Slightly darker blue on hover */
 }
 
+.column-container {
+    display: flex;
+    flex-direction: row; /* stack columns horizontally by default */
+    width: 95vw;
+    gap: 20px;
+}
+@media (max-width: 768px) {  /* stack vertically on smaller screens */
+    .column-container {
+        flex-direction: column;
+        gap: 0px;
+    }
+}
+.expand {
+    flex: 1;
+}
+
 .flexdiv {
     display: flex;
     align-items: center;

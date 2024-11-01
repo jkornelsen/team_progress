@@ -228,6 +228,7 @@ class Item(CompleteIdentifiable):
         from .character import Character
         g.game_data.entity_names_from_db([Location])
         Character.load_complete_objects()
+        Item.load_complete_objects()
         # Get item data for the specific container,
         # and get piles at this loc or char that can be used for sources
         load_piles(current_obj, owner_char_id, at_loc_id, main_pile_type)
@@ -277,6 +278,7 @@ class Item(CompleteIdentifiable):
                 recipe.rate_duration = req.get_float(f'{prefix}rate_duration')
                 recipe.instant = req.get_bool(f'{prefix}instant')
                 source_ids = req.get_list(f'{prefix}source_id')
+                logger.debug("prefix %s %s", prefix, recipe_id_from)
                 logger.debug("Source IDs: %s", source_ids)
                 for source_id in source_ids:
                     source_prefix = f'{prefix}source{source_id}_'
@@ -303,7 +305,7 @@ class Item(CompleteIdentifiable):
                 recipe_attrib_ids = req.get_list(f'{prefix}attrib_id')
                 for attrib_id in recipe_attrib_ids:
                     attrib_prefix = f'{prefix}attrib{attrib_id}_'
-                    attrib_value = req.get_float(f'{attrib_prefix}value', 1.0)
+                    attrib_value = req.get_float(f'{attrib_prefix}val', 1.0)
                     recipe.attribs[attrib_id] = AttribFor(
                         attrib_id, attrib_value)
                 self.recipes.append(recipe)

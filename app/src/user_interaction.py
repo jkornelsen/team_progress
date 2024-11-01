@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 import logging
 
-from flask import g, request, url_for
+from flask import g, request, session, url_for
 
 from .db_serializable import DbSerializable, coldef
 
@@ -151,3 +151,20 @@ class UserInteraction(DbSerializable):
             for row in rows
             if row.route != 'change_user']
         return interactions
+
+def add_log(message):
+    # Limit so the session doesn't get too full,
+    # and so the overview loads faster.
+    MAX_LENGTH = 30
+    log = session.setdefault('log', [])
+    COMBINE_RECENT = 5  # how far back to combine identical messages
+    for i, (msg, count) in enumerate(
+            log[-COMBINE_RECENT:], start=len(log) - COMBINE_RECENT):
+        if msg == message:
+            log[i] = (msg, count + 1)
+            break
+    else:
+        log.append((message, 1))
+    if len(log) > MAX_LENGTH:
+        log.pop(0)
+    session.modified = True

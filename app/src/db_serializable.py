@@ -283,6 +283,18 @@ class Identifiable(DbSerializable):
             if instance.id == id_to_get), None)
 
     @classmethod
+    def from_db_flat(cls, id_to_get):
+        """Make a single object with base table data."""
+        logger.debug("obj_from_db_flat()")
+        row = cls.execute_select("""
+            SELECT *
+            FROM {table}
+            WHERE game_token = %s
+                AND id = %s
+            """, (g.game_token, id_to_get), fetch_all=False)
+        return cls.from_data(row)
+
+    @classmethod
     def listname(cls):
         """Attributes of GameData and ActiveData for each entity.
         Same as table name.

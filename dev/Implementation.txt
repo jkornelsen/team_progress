@@ -5,9 +5,13 @@ event.check_trigger_for_duration(time_spent)
 pop up event in play/item.html like in play/character.html
 we'll also want it for overview eventually
 
-can an attrib requirement be 0 or negative?
+can a numeric attrib requirement be 0 or negative?
 -1 was accepted because none was found, which is 0
 but that doesn't make sense
+maybe recipe_attribs should have min_val and max_val
+    currently has "value real not null"
+that would make it possible to specify an exact val
+might want an AttribReq class derived from AttribFor
 
 dollars for lemonade stand suddenly lost its recipe, yet progress continued
 I think this was during item play, not configure

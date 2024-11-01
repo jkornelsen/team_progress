@@ -17,7 +17,7 @@
     <p class="info">
         Storage type is important to consider. General (accessible anywhere) is
         good for idle progress, while carried is for RPGs.
-        Items tied to a location include crafting stations and livestock,
+        Typical items tied to a location include crafting stations and livestock,
         and locations are also a good way to group items.
         To store more than one way, create an additional item
         and convert with a recipe.
@@ -157,7 +157,12 @@
                 <div class="select-box">
                     <select id="add-recipeattrib-select">
                         <option value="" selected>(Select attribute)</option>
-                        {% for attrib in game_data.attribs %}<option value="{{ attrib.id }}">{{ attrib.name }}</option>{% endfor %}
+                        {% for attrib in game_data.attribs %}
+                            <option value="{{ attrib.id }}"
+                                    data-binary="{{ attrib.binary | lower }}"
+                                    data-enum='{{ attrib.enum | tojson }}'>
+                                    {{ attrib.name }}</option>
+                        {% endfor %}
                     </select>
                     <button type="button" id="add-recipeattrib-btn" class="lesser-button">Add Required Attribute</button>
                 </div>
@@ -283,7 +288,7 @@
                 console.log("added sourceHtml before sourcelist_end");
                 toggleAddRecipeButtonVisibility();
             }
-            function addRecipeAttrib(recipeId, attribId, attribName, attribValue = "1") {
+            function addRecipeAttrib(recipeId, attribId, attribName, isBinary, enumVals, attribVal = "1") {
                 console.log(`addRecipeAttrib() ${attribId}`);
                 console.log(`attribName: ${attribName}`);
                 console.log(`debugging`);
@@ -301,7 +306,21 @@
                         <input type="hidden" name="recipe${recipeId}_attrib_id" value="${attribId}">
                         <label>Requires Attribute:</label>
                         ${attribName}
-                        <input type="text" id="${uniqueId}_value" name="${uniqueName}_value" value="${attribValue}" size="8">
+                        ${enumVals.length > 0 
+                            ? `<select name="${uniqueName}_val">
+                                ${enumVals.map((val, index) => `
+                                    <option value="${index}" ${attribVal == index ? 'selected' : ''}>${val}</option>
+                                `).join('')}
+                               </select>`
+                        : isBinary 
+                            ? `<input type="checkbox"
+                                      name="${uniqueName}_val"
+                                      value="1" ${attribVal === 1 ? 'checked' : ''}>` 
+                            : `<input type="text"
+                                      name="${uniqueName}_val"
+                                      id="${uniqueId}_value"
+                                      value="${attribVal}"
+                                      size="8">`}
                         <button type="button" class="remove-recipeattrib-btn lesser-button" id="remove-${uniqueId}">Remove</button>
                     </div>
                 `;
@@ -396,6 +415,8 @@
                 const selectedOption = $('#add-recipeattrib-select option:selected');
                 const attribId = selectedOption.val();
                 const attribName = selectedOption.text();
+                const isBinary = selectedOption.data('binary');
+                const enumValues = selectedOption.data('enum');
                 if (attribId === "") {
                     return; // Don't add if the selected option is the placeholder
                 }
@@ -415,8 +436,17 @@
                     console.log("no recipe containers found");
                     recipeId = addRecipe();
                 }
-                addRecipeAttrib(recipeId, attribId, attribName);
+                addRecipeAttrib(recipeId, attribId, attribName, isBinary, enumValues);
                 toggleAddRecipeButtonVisibility();
+            });
+            $('#sources-container').on('click', '.remove-recipeattrib-btn', (event) => {
+                console.log("removing recipe attrib");
+                const attribDiv = $(event.currentTarget).closest('.recipeattrib');
+                attribDiv.remove();
+                const recipeContainer = $(event.currentTarget).closest('.recipe-container');
+                if (recipeContainer.find('.recipeattrib').length === 0) {
+                    $(recipeContainer).remove();
+                }
             });
 
             console.log("number of recipes={{ current.recipes | length }}");
@@ -450,6 +480,8 @@
                         {{ recipe.id }},
                         {{ attrib_id }},
                         "{{ req.attrib.name }}",
+                        {{ req.attrib.binary | lower }},
+                        {{ req.attrib.enum | tojson }},
                         "{{ req.val | formatNum }}"
                         );
                 {% endfor %}
@@ -495,27 +527,28 @@
             });
 
             function addAttrib(attribId, attribName, isBinary, enumVals, attribVal = 1) {
+                const uniqueId = `attrib${attribId}`;
                 const attribHtml = `
                     <tr>
                         <td>${attribName}
                             <input type="hidden" name="attrib_id[]" value="${attribId}">
                         </td><td>
                             ${enumVals.length > 0 
-                                ? `<select name="attrib${attribId}_val">
+                                ? `<select name="${uniqueId}_val">
                                     ${enumVals.map((val, index) => `
                                         <option value="${index}" ${attribVal == index ? 'selected' : ''}>${val}</option>
                                     `).join('')}
                                    </select>`
                             : isBinary 
                                 ? `<input type="checkbox"
-                                          name="attrib${attribId}_val"
+                                          name="${uniqueId}_val"
                                           value="1" ${attribVal === 1 ? 'checked' : ''}>` 
                                 : `<input type="text"
-                                          name="attrib${attribId}_val"
+                                          name="${uniqueId}_val"
                                           value="${attribVal}"
                                           size="8">`}
                         </td><td>
-                            <button type="button" class="remove-attrib-btn lesser-button">Remove</button>
+                            <button type="button" class="remove-attrib-btn lesser-button" id="remove-${uniqueId}">Remove</button>
                         </td>
                     </tr>
                 `;

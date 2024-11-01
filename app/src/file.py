@@ -211,13 +211,14 @@ def flatten_tuples(json_output):
 
 def clear_session():
     for session_key in (
-            'last_affected_char_id',
-            'last_char_id',
-            'last_loc_id',
             'default_move_char',
             'default_movingto_char',
             'default_pickup_char',
             'default_slot',
             'default_storage_type',
+            'last_affected_char_id',
+            'last_char_id',
+            'last_loc_id',
+            'log',
         ):
         session.pop(session_key, None)

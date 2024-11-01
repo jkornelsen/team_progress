@@ -341,10 +341,27 @@
                                             {% elif attrib_index < attribs_list|length %}
                                                 {% set req = attribs_list[attrib_index] %}
                                                 <td>{{ req.attrib.name }}</td>
-                                                <td>({{ req.val | formatNum }})</td>
+                                                <td>
+                                                    {% if req.attrib.enum %}
+                                                        ({{ req.attrib.enum[req.val | int] }})
+                                                    {% elif req.attrib.binary %}
+                                                        ({{ bool(req.val) }})
+                                                    {% else %}
+                                                        ({{ req.val | formatNum }})
+                                                    {% endif %}
+                                                </td>
                                                 {% if req.entity %}
                                                     {% set entity = req.entity %}
-                                                    <td>{{ entity.attribs[req.attrib.id].val | formatNum }}</td>
+                                                    <td>
+                                                        {% set attrib_val = entity.attribs[req.attrib.id].val %}
+                                                        {% if req.attrib.enum %}
+                                                            {{ req.attrib.enum[attrib_val | int] }}
+                                                        {% elif req.attrib.isBinary %}
+                                                            {{ attrib_val | bool }}
+                                                        {% else %}
+                                                            {{ attrib_val | formatNum }}
+                                                        {% endif %}
+                                                    </td>
                                                     {% if entity.__class__.__name__ == 'Character' %}
                                                         {% set link = url_for('play_char', char_id=entity.id) %}
                                                     {% elif entity.__class__.__name__ == 'Item' %}

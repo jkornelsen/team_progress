@@ -2,32 +2,24 @@
 ----
 
 So, you can make stuff as well as fight and explore.
-
-Similar to a tabletop RPG,
+Like in tabletop RPGs,
 the driving forces are narrative and imagination along with chance.
-For example, set up a factory based on idle/incremental gameplay,
-but employees from a rival company invade and steal.
 
 A good place to start is the pre-built scenario "Bacon for Dinner."
 
-Setting up beforehand can take awhile.
-Instead, even if you're the Gamemaster,
-it might be better to do as the game progresses.
-For example, as the group enters a forest, talk about what could
+Setup is often part of playing rather than separate.
+For example, as the group enters a town, talk about what could
 be there and set it up accordingly.
-Some things might even need to change halfway through a fight,
-as the situation becomes clearer.
+And if you know what a value should be but there isn't
+any clear way to do it, go to settings and force the change.
 
-The original idea was to work like an idler such as Universal Paperclips.
-However, the flexible, multiplayer design
-has made it a somewhat different kind of game. It doesn't idle as smoothly
-but is surprisingly good at storytelling.
+There is a log of events similar to roguelikes.
+However, results are subject to interpretation by the Gamemaster.
+Communicate the narrative remotely using a chat app such as Discord.
+For solo RPGs, a text document works well.
 
-This design requires more on the server side.
-There are some websites such as pythonAnywhere that can host
-this type of project for free,
-so we'll see how it handles the load.
-
-Otherwise, consider downloading the project
-to run on a home network and forming a team of friends or family.
-For details, see [Installing](Installation.md).
+The flexible, multiplayer design requires more on the server side
+than normal idlers.
+Websites such as pythonAnywhere can host this type of project.
+Another option is to download and run on a home network.
+To do that, see [Installing](Installation.md).

@@ -15,10 +15,8 @@ at 90% warn to remove content to avoid going over limit
 
 try selenium to test client side
 
-communication can be done with an app such as discord
-or simply a text file
-log should just be manual via chat instead of automatic
-even a successful attack requires interpretation
+consider sharing community scenarios
+perhaps submit to reddit, or github via enhancement requests
 
 ---- general gameplay ----
 
@@ -42,37 +40,13 @@ mask characters we haven't met yet
 those not marked as maskable are the starting set
 go to location to unmask all characters there
 
-action could be an event, or whatever was the most recent item interacted
-with for a particular character, even if the action is finished
-username and character in the same row doesn't necessarily mean that character
-is a player character
-all ongoing progress actions have a swirling icon next to the action name
-
-    character   location    action  player
-    ~~~~~~~~    ~~~~~~~~    ~~~~~~  ~~~~~~~~
-    Suzy        Home        Ink     mycoolusername
-    George      Woods       travel  2kul4wrds
-                            Pens    userwithoutchar
-    Peter       Woods       wolf
-
-show most recent result on event screen so anyone can view it
+if a grid is defined then char must either be at same or adjacent pos
+to pick up pile, use local item sources, or travel through door
 
 travel could take a resource such as food for each distance step
 the character object would have this resource
 or use an instant item to do this manually
 that would make it easier to take 1 ticket or Rs.5 per x distance
-
-in char config, specify group to travel together -- group_name string
-strip spaces and case insensitive
-or multi-select select box of others to travel with
-can we store results of multi-selection in session?
-checkbox "Group1 Together" to travel,
-if group_name isn't empty and there are at least 2 members
-only works if all in the list are at starting loc?
-no, list who's included and missing next to checkbox
-
-other than travel, don't need to show group because they'll all
-be listed on the location screen
 
 to travel from one location to another, selecting from a dropdown may
 be a bit tedious
@@ -88,14 +62,20 @@ would attributes be useful for locations?
 for example, how dark a room is,
 or deep water would require swimming or limit evasion
 perhaps it would be better to simply mention such things in location description
-could also replace crafting stations
+however, this could replace crafting stations
+
+for locations, have speed as well as distance
+characters would have travel speed for a particular location?
+for example, a swimming speed and a walking speed
+speed for a particular type of terrain, and a location would have a type of terrain
+or we could manually change the character's speed when entering a new location
 
 base chances could be displayed in the form of 1 / 10000 ticks
 or 3 / 5 chance to hit
 also min and max result,
 for example, 70% chance to do between 30 and 60 damage.
 
-for example, an attribute could be the season
+an attribute could be the season
 so an event based on the season would have a worse chance or lower average
 distance if season is winter
 winter would be explained in the attr description,
@@ -113,19 +93,6 @@ that would be the only place where progress would be shown
 some events could be related to production, including all
 automatically triggered ones,
 while 'shoot' would make more sense on item play instead
-
-if a grid is defined then char must either be at same or adjacent pos
-to pick up pile, use local item sources, or travel through door
-
-no travel time progress between subdivisions,
-but speed could make it so can move two at a time
-compared to another character's one at a time
-
-for locations, have speed as well as distance
-characters would have travel speed for a particular location?
-for example, a swimming speed and a walking speed
-speed for a particular type of terrain, and a location would have a type of terrain
-or we could manually change the character's speed when entering a new location
 
 prompt before overwriting another action in progress
 such as if a character is already doing something else
@@ -156,11 +123,12 @@ multiply by distance so far that we haven't counted yet?
 don't allow production if byproducts would exceed limit
 or maybe allow but don't go past limit, and prefer no limit
 
----- scenarios ----
+---- scenario changes ----
 
-source scenarios from community
-perhaps submit to github via enhancement requests
-or reddit
+scenario: Bacon
+the current way the farm is set up makes it so
+pig breeding is easier to see first,
+so there's less reason to carelessly butcher
 
 scenario: Dungeon Crawl
 animal class, rat
@@ -183,79 +151,3 @@ chance could improve with upgrades
 
 scenario: Furniture
 People: old man, young husband, young wife, elementary schooler, baby, dog, cat
-
-scenario: Breed Livestock
-Offspring have event-based chances to inherit or get new traits.
-Could also grow crops on the same farm.
-
----- less likely but could consider listing as unformed ideas ----
-
-scenario: Live Long and Happy
-insight from blue zones: things that help live long also make life worth living
-diet and exercise
-goals and belief
-connect with others
-maybe things from regrets book
-how to play a game yet make talking about good health feel right?
-maybe it could be more educational than fun
-like, it may not be fun to eat veggies in a game but it could feel interesting
-mention in description that it's more straight shooting;
-consider giving it a try after playing one of the more intense scenarios
-not recommended to try to be evil in this particular scenario,
-as thinking leads to doing
-put responsibility on player to judge how happy the character is
-there are some problems:
-- likely to feel like unsolicited advice
-- how to make it playable
-- might not be relatable to even people with slightly different health issues
-
-scenario: Hunting
-Bring back enough food to survive.
-Cut down on deer population to limit the spread of Lyme disease.
-
-scenario: Squirrel
-gather nuts for the winter
-or ant and grasshopper
-or cheetah and rabbit
-
-scenario: Hospital
-For those who have watched medical drama tv shows, this should be straightforward.
-
-scenario: Escape from Prison
-will need to do lots of stealth or persuasion checks to deal with guards
-
-scenario: History
-revolutionary war of an actual country
-such as the U.S. with George Washington
-
-scenario: Matrix
-You have always thought of yourself as an ordinary person leading an ordinary
-life, but lately, there have been signs that the world is not what it seems to be.
-In fact, it's almost as if the whole thing has been starting to glitch.
-Which shouldn't be possible, right?
-This seems interesting but not sure how to implement.
-Might be hard to have so much unknown in this type of game.
-
-scenario: Time Travel
-Or body switching.
-Have a certain goal to fix, something that went wrong.
-
-scenario: Race
-Perhaps horse racing or a triathalon.
-Track the distance of each competitor during the race to see who's ahead.
-
-scenario: Babysitter
-You've worked as a babysitter for years.
-Today, an eccentric couple from the backwoods asked you
-to take care of their 15 children for a week.
-They warned, though, that children can be a handful -- you've gotta watch 'em.
-Inspired by the works of Betty MacDonald.
-
-scenario: Crystal Gardeners
-In the crystalline gardens of Xanthuria, ethereal beings are tasked with
-cultivating the vibrant crystal flora that sustains their civilization.
-balance the delicate energies of the garden
-plants require light, heat, water, or vibrational rhythm
-invasive crystal pests, erratic energy surges, cosmic disturbances
-create potions, enchantments, and artifacts that aid in their caretaking duties
-and unlock new areas of the garden

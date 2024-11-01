@@ -72,6 +72,13 @@ def load_piles(current_item, char_id, loc_id, main_pile_type):
         current_item, chars, loc, char_id, loc_id, main_pile_type)
     current_item.pile.item = current_item
     container = current_item.pile.container
+    item_piles_at_loc = []
+    from .item import Item
+    for item in g.game_data.items:
+        if item.pile.quantity != 0:  # general storage
+            pile = item.pile
+            pile.item = Item.get_by_id(item.id)
+            item_piles_at_loc.append(pile)
     if loc_id:
         # Get items for all chars at this loc
         # TODO: if position or grid then only consider chars by that pos
@@ -80,6 +87,15 @@ def load_piles(current_item, char_id, loc_id, main_pile_type):
         chars = [
             char for char in g.game_data.characters
             if char.location and char.location.id == loc_id]
+        for item_at in loc.items.values():
+            if item_at.quantity != 0:
+                item_at.item = Item.get_by_id(item_at.item.id)
+                item_piles_at_loc.append(item_at)
+        for char in chars:
+            for owned_item_id, owned_item in char.items.items():
+                if owned_item.quantity != 0:
+                    owned_item.item = Item.get_by_id(owned_item.item.id)
+                    item_piles_at_loc.append(owned_item)
     # This container item id was set by container.progress.from_data(),
     # loaded from the progress table.
     if container.pile.item.id != current_item.pile.item.id:
@@ -98,13 +114,26 @@ def load_piles(current_item, char_id, loc_id, main_pile_type):
                 byproduct.item, chars, loc, char_id, loc_id, main_pile_type)
         # Look for entities to meet attrib requirements
         for attrib_id, req in recipe.attribs.items():
-            for item in g.game_data.items:
+            logger.debug("attrib %s req %.1f", attrib_id, req.val);
+            for pile in item_piles_at_loc:
+                item = pile.item
                 attrib_for = item.attribs.get(attrib_id)
-                if attrib_for and attrib_for.val >= req.val:
-                    req.entity = item
-                    logger.debug("attrib %s req %.1f met by item %s %.1f",
-                        attrib_for.attrib_id, req.val,
-                        item.name, attrib_for.val)
+                if attrib_for:
+                    test_eq = bool(req.attrib.enum)
+                    logger.debug(
+                        "item %s container %s val %.1f test_eq %s",
+                        item.name, pile.container.name, attrib_for.val,
+                        test_eq)
+                    if (test_eq and attrib_for.val == req.val) or (
+                            not test_eq and attrib_for.val >= req.val):
+                        req.entity = item
+                        logger.debug("attrib %s req %.1f met by item %s %.1f",
+                            attrib_for.attrib_id, req.val,
+                            item.name, attrib_for.val)
+                else:
+                    logger.debug(
+                        "item %s container %s only has attribs %s",
+                        item.id, pile.container.name, item.attribs.keys())
             for char in chars:
                 attrib_for = char.attribs.get(attrib_id)
                 if attrib_for and attrib_for.val >= req.val:

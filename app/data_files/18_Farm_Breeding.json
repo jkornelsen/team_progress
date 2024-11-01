@@ -1,0 +1,342 @@
+{
+    "attribs": [
+        {
+            "description": "",
+            "enum_list": [],
+            "id": 12,
+            "is_binary": false,
+            "mult": false,
+            "name": "life expectancy"
+        },
+        {
+            "description": "Determines which pairs can breed.",
+            "enum_list": ["male", "female"],
+            "id": 10,
+            "is_binary": false,
+            "mult": false,
+            "name": "sex"
+        },
+        {
+            "description": "",
+            "enum_list": [],
+            "id": 11,
+            "is_binary": false,
+            "mult": false,
+            "name": "age (male)"
+        },
+        {
+            "description": "",
+            "enum_list": [],
+            "id": 14,
+            "is_binary": false,
+            "mult": false,
+            "name": "age (female)"
+        },
+        {
+            "description": "",
+            "enum_list": [
+                "Bovine",
+                "Sheep",
+                "Goat",
+                "Chicken"
+            ],
+            "id": 13,
+            "is_binary": false,
+            "mult": false,
+            "name": "species (male)"
+        },
+        {
+            "description": "",
+            "enum_list": [
+                "Bovine",
+                "Sheep",
+                "Goat",
+                "Chicken"
+            ],
+            "id": 15,
+            "is_binary": false,
+            "mult": false,
+            "name": "species (female)"
+        },
+        {
+            "description": "",
+            "enum_list": [
+                "Black and White",
+                "Brown",
+                "Red",
+                "Black",
+                "White"
+            ],
+            "id": 16,
+            "is_binary": false,
+            "mult": false,
+            "name": "bovine color"
+        },
+        {
+            "description": "Use this to calculate age at any given time.",
+            "enum_list": [],
+            "id": 17,
+            "is_binary": false,
+            "mult": false,
+            "name": "birth year"
+        },
+        {
+            "description": "What year it currently is. Increment to progress through life cycles.",
+            "enum_list": [],
+            "id": 18,
+            "is_binary": false,
+            "mult": false,
+            "name": "year"
+        }
+    ],
+    "characters": [
+        {
+            "attribs": [],
+            "description": "Herd (pick up) animals to move them from one place to the other.",
+            "dest_id": null,
+            "events": [],
+            "id": 9,
+            "items": [
+                {
+                    "item_id": 32,
+                    "quantity": 1.0,
+                    "slot": ""
+                }
+            ],
+            "location_id": 12,
+            "masked": false,
+            "name": "farmer",
+            "position": [0,0],
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": false,
+            "travel_group": ""
+        }
+    ],
+    "events": [
+        {
+            "changed": [],
+            "description": "Whether to inherit a trait such as color from mother or father. Small chance of developing a new color that's not inherited directly from either one, based on some combination of genetics from ancestors.",
+            "determining": [
+                ["attrib", 16]
+            ],
+            "id": 10,
+            "name": "inherit parent trait",
+            "numeric_range": [1, 20],
+            "outcome_type": "selection",
+            "selection_strings": "Mother\r\nMother\r\nMother\r\nMother\r\nMother\r\nNew Trait\r\nFather\r\nFather\r\nFather\r\nFather\r\nFather",
+            "toplevel": false,
+            "trigger_chance": 0.0,
+            "triggers": [
+                ["loc", 13]
+            ]
+        },
+        {
+            "changed": [],
+            "description": "",
+            "determining": [],
+            "id": 9,
+            "name": "sex of offspring",
+            "numeric_range": [1, 20],
+            "outcome_type": "selection",
+            "selection_strings": "Male \u2642\r\nFemale \u2640",
+            "toplevel": false,
+            "trigger_chance": 0.0,
+            "triggers": [
+                ["loc", 13]
+            ]
+        }
+    ],
+    "items": [
+        {
+            "attribs": [
+                [17, 1800.0],
+                [11, 4.0],
+                [13, 0.0],
+                [10, 0.0],
+                [12, 10.0],
+                [16, 1.0]
+            ],
+            "description": "A bull.",
+            "id": 31,
+            "masked": false,
+            "mult": false,
+            "name": "bovine 2 \u2642",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "carried",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "1. Bring parents to the <i>Breeding Pen</i> and use <i>newborn calf</i> for birth.\r\n2. After birth is finished, <i>Save and Duplicate</i> one of the parents, creating a carried item. This is now the new offspring, so name accordingly.\r\n3. Set the quantity of <i>newborn calf</i> in the <i>Breeding Pen</i> back to 0.\r\n4. Bring all three carried item bovines (parents plus the new offspring) back to the <i>Cow Pen</i>.",
+            "id": 34,
+            "masked": false,
+            "mult": false,
+            "name": "newborn calf",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "attribs": [
+                        [11, 3.0],
+                        [13, 0.0],
+                        [14, 3.0],
+                        [15, 0.0]
+                    ],
+                    "byproducts": [],
+                    "id": 24,
+                    "instant": false,
+                    "item_id": 34,
+                    "rate_amount": 1.0,
+                    "rate_duration": 8.0,
+                    "sources": []
+                }
+            ],
+            "storage_type": "local",
+            "toplevel": false
+        },
+        {
+            "attribs": [
+                [17, 1800.0],
+                [15, 0.0],
+                [14, 4.0],
+                [10, 1.0],
+                [12, 15.0],
+                [16, 1.0]
+            ],
+            "description": "A cow. To breed, see <a href=\"/play/item/34\">newborn calf</a>.",
+            "id": 30,
+            "masked": false,
+            "mult": false,
+            "name": "bovine 1 \u2640",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "carried",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "The tip emits an unpleasant electric shock.",
+            "id": 32,
+            "masked": false,
+            "mult": false,
+            "name": "prod",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "carried",
+            "toplevel": false
+        },
+        {
+            "attribs": [
+                [18, 1804.0]
+            ],
+            "description": "Keep track of year and perhaps season.",
+            "id": 35,
+            "masked": false,
+            "mult": false,
+            "name": "calendar",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 1.0,
+            "recipes": [],
+            "storage_type": "universal",
+            "toplevel": true
+        },
+        {
+            "attribs": [
+                [17, 1804.0],
+                [13, 0.0],
+                [11, 1.0],
+                [10, 0.0],
+                [12, 10.0],
+                [16, 1.0]
+            ],
+            "description": "A bull, offspring of bovine 1 & 2.",
+            "id": 33,
+            "masked": false,
+            "mult": false,
+            "name": "bovine 3 \u2642",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "carried",
+            "toplevel": false
+        }
+    ],
+    "locations": [
+        {
+            "description": "",
+            "destinations": [
+                {
+                    "bidirectional": true,
+                    "distance": 1.0,
+                    "door1": [0,0],
+                    "door2": [0,0],
+                    "loc2_id": 12
+                }
+            ],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
+            "id": 13,
+            "items": [
+                {
+                    "item_id": 34,
+                    "position": [0,0],
+                    "quantity": 0.0
+                }
+            ],
+            "masked": false,
+            "name": "Breeding Pen",
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": true
+        },
+        {
+            "description": "",
+            "destinations": [],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
+            "id": 12,
+            "items": [
+                {
+                    "item_id": 33,
+                    "position": [0,0],
+                    "quantity": 1.0
+                },
+                {
+                    "item_id": 31,
+                    "position": [0,0],
+                    "quantity": 1.0
+                },
+                {
+                    "item_id": 30,
+                    "position": [0,0],
+                    "quantity": 1.0
+                }
+            ],
+            "masked": false,
+            "name": "Cow Pen",
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": true
+        }
+    ],
+    "overall": {
+        "description": "Offspring have event-based chances to inherit <c=\"blue\">traits</c>. Could also grow crops.",
+        "multiplayer": false,
+        "number_format": "en_US",
+        "progress_type": "Hybrid",
+        "slots": [],
+        "title": "Farm Breeding",
+        "win_reqs": []
+    }
+}

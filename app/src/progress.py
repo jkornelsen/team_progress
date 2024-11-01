@@ -6,6 +6,7 @@ import threading
 from flask import g
 
 from .db_serializable import DependentIdentifiable, QueryHelper, coldef
+from .user_interaction import add_log
 from .utils import format_num
 
 logger = logging.getLogger(__name__)
@@ -180,6 +181,13 @@ class Progress(DependentIdentifiable):
                     "change_quantity(): self.container[%s].to_db()",
                     self.container.name)
                 self.container.to_db()
+                if self.pile.item.name:
+                    message = (
+                        f"{self.pile.item.name} increased"
+                        f" by {format_num(eff_result_qty)}")
+                    if self.container.name != self.pile.item.name:
+                        message = f"{self.container.name}'s " + message
+                    add_log(message);
                 # Add byproducts produced
                 for byproduct in self.recipe.byproducts:
                     eff_byproduct_qty = num_batches * byproduct.rate_amount
