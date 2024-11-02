@@ -345,7 +345,7 @@
                                                     {% if req.attrib.enum %}
                                                         ({{ req.attrib.enum[req.val | int] }})
                                                     {% elif req.attrib.binary %}
-                                                        ({{ bool(req.val) }})
+                                                        {{ ('&check;' if req.val else 'X') | safe }}
                                                     {% else %}
                                                         ({{ req.val | formatNum }})
                                                     {% endif %}
@@ -356,8 +356,8 @@
                                                         {% set attrib_val = entity.attribs[req.attrib.id].val %}
                                                         {% if req.attrib.enum %}
                                                             {{ req.attrib.enum[attrib_val | int] }}
-                                                        {% elif req.attrib.isBinary %}
-                                                            {{ attrib_val | bool }}
+                                                        {% elif req.attrib.binary %}
+                                                            {{ ('&check;' if attrib_val else 'X') | safe }}
                                                         {% else %}
                                                             {{ attrib_val | formatNum }}
                                                         {% endif %}

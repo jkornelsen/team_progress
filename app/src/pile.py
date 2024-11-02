@@ -77,7 +77,8 @@ def load_piles(current_item, char_id, loc_id, main_pile_type):
     for item in g.game_data.items:
         if item.pile.quantity != 0:  # general storage
             pile = item.pile
-            pile.item = Item.get_by_id(item.id)
+            if not pile.item:
+                pile.item = Item.get_by_id(item.id)
             item_piles_at_loc.append(pile)
     if loc_id:
         # Get items for all chars at this loc
@@ -89,12 +90,14 @@ def load_piles(current_item, char_id, loc_id, main_pile_type):
             if char.location and char.location.id == loc_id]
         for item_at in loc.items.values():
             if item_at.quantity != 0:
-                item_at.item = Item.get_by_id(item_at.item.id)
+                if not item_at.item:
+                    item_at.item = Item.get_by_id(item_at.item.id)
                 item_piles_at_loc.append(item_at)
         for char in chars:
             for owned_item_id, owned_item in char.items.items():
                 if owned_item.quantity != 0:
-                    owned_item.item = Item.get_by_id(owned_item.item.id)
+                    if not owned_item.item:
+                        owned_item.item = Item.get_by_id(owned_item.item.id)
                     item_piles_at_loc.append(owned_item)
     # This container item id was set by container.progress.from_data(),
     # loaded from the progress table.

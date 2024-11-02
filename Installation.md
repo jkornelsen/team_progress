@@ -83,7 +83,22 @@ python app.py
 Open a web browser to http://localhost:5000. 
 If it works, you're ready to play!
 
-## V. Database password
+## V. Grant LAN access
+
+Allow Python access to the network.
+For example, Windows Defender Firewall.
+Check box for Python and Private (home LAN) but not Public
+Set network settings to Private.
+Disconnect and perhaps forget connection, then reconnect.
+
+Then connect from another device.
+```
+ipconfig
+http://<your-computer-ip>:5000/
+```
+Pass to phone with https://www.qr-code-generator.com/
+
+## VI. Database password
 
 For running on a LAN, trust authentication is fine.
 Otherwise, set a password as follows.

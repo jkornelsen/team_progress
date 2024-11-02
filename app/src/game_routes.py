@@ -19,7 +19,7 @@ from .event import Event
 from .location import Location, ItemAt
 from .overall import Overall
 from .progress import Progress
-from .user_interaction import add_log
+from .user_interaction import MessageLog
 from .utils import (
     LinkLetters, NumTup, RequestHelper, entity_class, format_num)
 
@@ -232,7 +232,7 @@ def set_routes(app):
             # Reload from database
             subject = func_load_subject(subject_id)
             attrib_for = subject.attribs.get(attrib_id, 0)
-            add_log(
+            MessageLog.add(
                 f"Changed {subject.name} {attrib.name}"
                 f" from {format_num(oldval)} to {format_num(attrib_for.val)}")
         return render_template(
@@ -384,12 +384,12 @@ def set_routes(app):
             'name': 'Overview'}
         active = Overall.data_for_overview()
         if active.overall.have_won():
-            add_log("✅ You won the scenario!")
+            MessageLog.add("✅ You won the scenario!")
         return render_template(
             'play/overview.html',
             current=active.overall,
             active=active,
-            log_messages=session.get('log', []),
+            log_messages=MessageLog.get_recent(),
             link_letters=LinkLetters('m')
             )
 
@@ -415,7 +415,8 @@ def set_routes(app):
                 for event in events:
                     if event.id != ignore_event_id:
                         if event.check_trigger(batches_done):
-                            add_log(f"{char.name} triggered {event.name}.")
+                            MessageLog.add(
+                                f"{char.name} triggered {event.name}.")
                             return jsonify({
                                 'status': 'interrupt',
                                 'message': f"<h2>{char.name} triggered "
@@ -434,7 +435,7 @@ def set_routes(app):
                     char.destination = None
                     char.to_db()
                 loc = Location.from_db_flat(char.location.id)
-                add_log(f"{main_char.name} arrived at {loc.name}.")
+                MessageLog.add(f"{main_char.name} arrived at {loc.name}.")
                 return jsonify({
                     'status': 'arrived',
                     'current_loc_id': main_char.location.id
@@ -518,7 +519,7 @@ def set_routes(app):
             char.to_db()
         if main_char is None:
             raise ValueError(f"Could not find character {char_id} to travel.")
-        add_log(f"{main_char.name} went to {loc.name}.")
+        MessageLog.add(f"{main_char.name} went to {loc.name}.")
         return jsonify({
             'status': 'arrived',
             'current_loc_id': dest_id
@@ -658,7 +659,7 @@ def set_routes(app):
         progress.set_recipe_by_id(recipe_id)
         changed = progress.change_quantity(num_batches)
         if changed:
-            add_log(
+            MessageLog.add(
                 f'Gained {item.name}'
                 f' for {format_num(item.pile.quantity)} total.')
             return jsonify({

@@ -14,6 +14,7 @@ from database import set_autocommit
 from .game_data import GameData
 from .db_serializable import DbSerializable
 from .overall import Overall
+from .user_interaction import MessageLog
 from .utils import LinkLetters, RequestHelper
 
 logger = logging.getLogger(__name__)
@@ -160,6 +161,7 @@ def load_file_into_db(filepath):
         raise ex
     finally:
         set_autocommit(True)
+    MessageLog.clear()
     clear_session()
 
 def load_file(filepath):
@@ -219,6 +221,5 @@ def clear_session():
             'last_affected_char_id',
             'last_char_id',
             'last_loc_id',
-            'log',
         ):
         session.pop(session_key, None)

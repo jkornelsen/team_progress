@@ -14,7 +14,13 @@ tables_to_create = {
         route varchar(50) NOT NULL,
         entity_id varchar(20),
         UNIQUE (game_token, username, route, entity_id)
-        """
+        """,
+    'game_messages': f"""
+        {coldef('game_token')},
+        timestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        message text,
+        count integer
+        """,
     }
 
 def determine_entity_type(endpoint):
@@ -152,19 +158,50 @@ class UserInteraction(DbSerializable):
             if row.route != 'change_user']
         return interactions
 
-def add_log(message):
-    # Limit so the session doesn't get too full,
-    # and so the overview loads faster.
-    MAX_LENGTH = 30
-    log = session.setdefault('log', [])
-    COMBINE_RECENT = 5  # how far back to combine identical messages
-    for i, (msg, count) in enumerate(
-            log[-COMBINE_RECENT:], start=len(log) - COMBINE_RECENT):
-        if msg == message:
-            log[i] = (msg, count + 1)
-            break
-    else:
-        log.append((message, 1))
-    if len(log) > MAX_LENGTH:
-        log.pop(0)
-    session.modified = True
+class MessageLog(DbSerializable):
+    @classmethod
+    def tablename(cls):
+        return 'game_messages'
+
+    @classmethod
+    def add(cls, message):
+        result = cls.execute_select("""
+            SELECT count
+            FROM {table}
+            WHERE game_token = %s AND message = %s
+            ORDER BY timestamp DESC
+            LIMIT 5
+            """, (g.game_token, message),
+            fetch_all=False)
+        if result:
+            # Combine with other recent identical messages
+            count = result.count + 1
+            cls.execute_change("""
+                UPDATE {table}
+                SET count = %s
+                WHERE game_token = %s AND message = %s
+                """, (count, g.game_token, message))
+        else:
+            cls.execute_change("""
+                INSERT INTO {table} (game_token, message, count)
+                VALUES (%s, %s, %s)
+                """, (g.game_token, message, 1))
+
+    @classmethod
+    def get_recent(cls):
+        """Get the most recent messages, oldest at the top."""
+        rows = cls.execute_select("""
+            SELECT message, count
+            FROM {table}
+            WHERE game_token = %s
+            ORDER BY timestamp DESC
+            LIMIT 30
+            """, (g.game_token,))
+        return rows[::-1]
+
+    @classmethod
+    def clear(cls):
+        cls.execute_change("""
+            DELETE FROM {table}
+            WHERE game_token = %s
+            """, (g.game_token,))

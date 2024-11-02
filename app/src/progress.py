@@ -6,7 +6,7 @@ import threading
 from flask import g
 
 from .db_serializable import DependentIdentifiable, QueryHelper, coldef
-from .user_interaction import add_log
+from .user_interaction import MessageLog
 from .utils import format_num
 
 logger = logging.getLogger(__name__)
@@ -72,7 +72,7 @@ class Progress(DependentIdentifiable):
         data = cls.prepare_dict(data)
         instance = cls(data.get('id') or 0, container=container)
         from .item import Item, Recipe
-        if container:
+        if container and not instance.pile.item:
             instance.pile.item = Item(data.get('item_id') or 0)
         instance.recipe = Recipe(data.get('recipe_id') or 0)
         instance.start_time = data.get('start_time')
@@ -187,7 +187,7 @@ class Progress(DependentIdentifiable):
                         f" by {format_num(eff_result_qty)}")
                     if self.container.name != self.pile.item.name:
                         message = f"{self.container.name}'s " + message
-                    add_log(message);
+                    MessageLog.add(message);
                 # Add byproducts produced
                 for byproduct in self.recipe.byproducts:
                     eff_byproduct_qty = num_batches * byproduct.rate_amount
@@ -235,6 +235,7 @@ class Progress(DependentIdentifiable):
 
     def can_produce(self, recipe_id=None):
         """True if at least one batch can be produced."""
+        logger.debug("can_produce(%s)", recipe_id)
         if recipe_id is not None:
             self.set_recipe_by_id(recipe_id)
         if self.recipe is None:

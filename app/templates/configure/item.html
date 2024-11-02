@@ -288,7 +288,7 @@
                 console.log("added sourceHtml before sourcelist_end");
                 toggleAddRecipeButtonVisibility();
             }
-            function addRecipeAttrib(recipeId, attribId, attribName, isBinary, enumVals, attribVal = "1") {
+            function addRecipeAttrib(recipeId, attribId, attribName, isBinary, enumVals, attribVal = '1') {
                 console.log(`addRecipeAttrib() ${attribId}`);
                 console.log(`attribName: ${attribName}`);
                 console.log(`debugging`);
@@ -315,7 +315,7 @@
                         : isBinary 
                             ? `<input type="checkbox"
                                       name="${uniqueName}_val"
-                                      value="1" ${attribVal === 1 ? 'checked' : ''}>` 
+                                      value="1" ${attribVal === '1' ? 'checked' : ''}>` 
                             : `<input type="text"
                                       name="${uniqueName}_val"
                                       id="${uniqueId}_value"

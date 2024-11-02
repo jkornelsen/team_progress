@@ -55,9 +55,8 @@
         {% if width > 0 and height > 0 %}
             {% set has_grid = True %}
         {% endif %}
-        <table style="background: transparent">
-            <tr>
-                <td class="align-top">
+        <div class="column-container">
+            <div><!-- lefthand column -->
                     {% if game_data.characters %}
                         <h2>Characters Here</h2>
                         <ul>
@@ -79,7 +78,7 @@
                     {% if current.items %}
                         <h2>Items Here</h2>
                         <ul class="item-list">
-                            {% for item_at in current.items.values() %}
+                            {% for item_at in current.items.values() | sort(attribute='item.name') %}
                                 {% set item = item_at.item %}
                                 {% set link = url_for('play_item', item_id=item.id, loc_id=current.id, main='local') %}
                                 {% set letter = link_letters.next(link) %}
@@ -138,116 +137,115 @@
                             {% endfor %}
                         </ul>
                     {% endif %}
-                </td>
+            </div>
                 {% set left, top, right, bottom = current.grid.excluded %}
                 {% if has_grid %}
-                    <td class="align-top">
+            <div class="expand"><!-- righthand column -->
+                <style>
+                td.grid {
+                    width: 1.5em;
+                    height: 1.5em;
+                    text-align: center;
+                    vertical-align: middle;
+                    padding: 0;
+                }
+                td.excluded {
+                    border: none;
+                }
+                td.included {
+                    border: 1px solid gray;
+                    background-color: #2a2a2a;
+                }
+                    </style>
+                    <table style="background: transparent;
+                                  border-collapse: collapse;
+                                  font-family: monospace">
+                        {% for y in range(1, height + 1) %}
+                            <tr>
+                                {% for x in range(1, width + 1) %}
+                                    {% if left <= x <= right and top <= y <= bottom %}
+                                        <td class="grid excluded" id="cell-{{ x }}-{{ y }}"></td>
+                                    {% else %}
+                                        <td class="grid included" id="cell-{{ x }}-{{ y }}"></td>
+                                    {% endif %}
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </table>
+                    {% if game_data.characters %}
                         <style>
-            td.grid {
-                width: 1.5em;
-                height: 1.5em;
-                text-align: center;
-                vertical-align: middle;
-                padding: 0;
-            }
-            td.excluded {
-                border: none;
-            }
-            td.included {
-                border: 1px solid gray;
-                background-color: #2a2a2a;
-            }
+                            .navigation-container {
+                                display: grid;
+                                grid-template-columns: auto auto auto;
+                                grid-template-rows: auto auto auto;
+                                gap: 5px;
+                                justify-content: start;
+                            }
+                            .navigation-container button {
+                                width: 30px;
+                                height: 30px;
+                                font-size: 12px;
+                                cursor: pointer;
+                            }
+                            .empty {
+                                visibility: hidden; /* Hide the empty grid spaces */
+                            }
                         </style>
-                        <table style="background: transparent;
-                                      border-collapse: collapse;
-                                      font-family: monospace">
-                            {% for y in range(1, height + 1) %}
-                                <tr>
-                                    {% for x in range(1, width + 1) %}
-                                        {% if left <= x <= right and top <= y <= bottom %}
-                                            <td class="grid excluded" id="cell-{{ x }}-{{ y }}"></td>
-                                        {% else %}
-                                            <td class="grid included" id="cell-{{ x }}-{{ y }}"></td>
-                                        {% endif %}
-                                    {% endfor %}
-                                </tr>
-                            {% endfor %}
-                        </table>
-                        {% if game_data.characters %}
-                            <style>
-                                .navigation-container {
-                                    display: grid;
-                                    grid-template-columns: auto auto auto;
-                                    grid-template-rows: auto auto auto;
-                                    gap: 5px;
-                                    justify-content: start;
-                                }
-                                .navigation-container button {
-                                    width: 30px;
-                                    height: 30px;
-                                    font-size: 12px;
-                                    cursor: pointer;
-                                }
-                                .empty {
-                                    visibility: hidden; /* Hide the empty grid spaces */
-                                }
-                            </style>
-                            <div class="navigation-container">
-                                <!-- Top Left (Northwest) -->
-                                <button type="button" data-x="-1" data-y="-1">↖</button>
-                                <!-- Up -->
-                                <button type="button" data-x="0" data-y="-1">↑</button>
-                                <!-- Top Right (Northeast) -->
-                                <button type="button" data-x="1" data-y="-1">↗</button>
-                                <!-- Left -->
-                                <button type="button" data-x="-1" data-y="0">←</button>
-                                <!-- Middle (empty) -->
-                                <span></span>
-                                <!-- Right -->
-                                <button type="button" data-x="1" data-y="0">→</button>
-                                <!-- Bottom Left (Southwest) -->
-                                <button type="button" data-x="-1" data-y="1">↙</button>
-                                <!-- Down -->
-                                <button type="button" data-x="0" data-y="1">↓</button>
-                                <!-- Bottom Right (Southeast) -->
-                                <button type="button" data-x="1" data-y="1">↘</button>
-                            </div>
-                            <div style="margin-top: 5px;">
-                                <label for="char-to-move">Moving:</label>
-                                <select id="char-to-move">
-                                    {% for char in game_data.characters if char.location.id == current.id %}
-                                        <option value="{{ char.id }}"
-                                                {% if char.id == defaults.move_char %}selected{% endif %}>
-                                            {{ char.name }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                                <br>
-                                <label for="move-with">Move With:</label>
-                                <!-- default "{{ defaults.travel_with }}" -->
-                                <select id="move-with">
-                                    <option value="">(No one else)</option>
-                                    {% for group_name, ids_str in travel_groups %}
-                                        {% set ids_list = ids_str.split(',') | sort %}
-                                        {% set defaults_list = defaults.travel_with.split(',') | sort %}
-                                        <option value="{{ ids_str }}"
-                                                {% if ids_list == defaults_list %}selected{% endif %}>
-                                            {{ group_name }}
-                                        </option>
-                                    {% endfor %}
-                                    {% for char in game_data.characters %}
-                                        <option value="{{ char.id }}"
-                                                {% if char.id|string == defaults.travel_with %}selected{% endif %}>
-                                            {{ char.name }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        {% endif %}
-                    </td>
+                        <div class="navigation-container">
+                            <!-- Top Left (Northwest) -->
+                            <button type="button" data-x="-1" data-y="-1">↖</button>
+                            <!-- Up -->
+                            <button type="button" data-x="0" data-y="-1">↑</button>
+                            <!-- Top Right (Northeast) -->
+                            <button type="button" data-x="1" data-y="-1">↗</button>
+                            <!-- Left -->
+                            <button type="button" data-x="-1" data-y="0">←</button>
+                            <!-- Middle (empty) -->
+                            <span></span>
+                            <!-- Right -->
+                            <button type="button" data-x="1" data-y="0">→</button>
+                            <!-- Bottom Left (Southwest) -->
+                            <button type="button" data-x="-1" data-y="1">↙</button>
+                            <!-- Down -->
+                            <button type="button" data-x="0" data-y="1">↓</button>
+                            <!-- Bottom Right (Southeast) -->
+                            <button type="button" data-x="1" data-y="1">↘</button>
+                        </div>
+                        <div style="margin-top: 5px;">
+                            <label for="char-to-move">Moving:</label>
+                            <select id="char-to-move">
+                                {% for char in game_data.characters if char.location.id == current.id %}
+                                    <option value="{{ char.id }}"
+                                            {% if char.id == defaults.move_char %}selected{% endif %}>
+                                        {{ char.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <br>
+                            <label for="move-with">Move With:</label>
+                            <!-- default "{{ defaults.travel_with }}" -->
+                            <select id="move-with">
+                                <option value="">(No one else)</option>
+                                {% for group_name, ids_str in travel_groups %}
+                                    {% set ids_list = ids_str.split(',') | sort %}
+                                    {% set defaults_list = defaults.travel_with.split(',') | sort %}
+                                    <option value="{{ ids_str }}"
+                                            {% if ids_list == defaults_list %}selected{% endif %}>
+                                        {{ group_name }}
+                                    </option>
+                                {% endfor %}
+                                {% for char in game_data.characters %}
+                                    <option value="{{ char.id }}"
+                                            {% if char.id|string == defaults.travel_with %}selected{% endif %}>
+                                        {{ char.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    {% endif %}
+                </div>
                 {% endif %}
-            </tr>
-        </table>
+            </div>
         <script>
         const door_letter = "🚪"
         const characters = {

@@ -241,4 +241,5 @@ def teardown(ctx):  # pylint: disable=unused-argument
     close_db()
 
 if __name__ == '__main__':
-    app.run()
+    app.run()  # local machine access only
+    #app.run(host="0.0.0.0", port=5000)  # allow access from network

@@ -93,6 +93,7 @@ def column_counts(table_name):
         'characters': 12,
         'event_entities': 7,
         'events': 10,
+        'game_messages': 4,
         'item_attribs': 4,
         'items': 11,
         'loc_destinations': 6,
