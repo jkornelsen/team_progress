@@ -186,6 +186,7 @@ class MessageLog(DbSerializable):
                 INSERT INTO {table} (game_token, message, count)
                 VALUES (%s, %s, %s)
                 """, (g.game_token, message, 1))
+        return message
 
     @classmethod
     def get_recent(cls):
@@ -195,7 +196,7 @@ class MessageLog(DbSerializable):
             FROM {table}
             WHERE game_token = %s
             ORDER BY timestamp DESC
-            LIMIT 30
+            LIMIT 50
             """, (g.game_token,))
         return rows[::-1]
 

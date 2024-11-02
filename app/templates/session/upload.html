@@ -13,6 +13,9 @@
             'm': '{{ url_for('configure_index') }}',
         };
         document.addEventListener('DOMContentLoaded', () => {
+            if (isMobile) {
+                return;
+            }
             document.addEventListener('keypress', (event) => {
                 const key = event.key.toLowerCase();
                 if (linkForKey[key]) {

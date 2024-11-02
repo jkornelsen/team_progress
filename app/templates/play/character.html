@@ -19,6 +19,9 @@
             'e': '{{ url_for('configure_char', char_id=current.id) }}',
         };
         document.addEventListener('DOMContentLoaded', () => {
+            if (isMobile) {
+                return;
+            }
             document.addEventListener('keypress', (event) => {
                 if (isModalOpen) {
                     return;
@@ -46,6 +49,8 @@
                 } else if (linkForKey[key]) {
                     window.location.href = linkForKey[key];
                 }
+                event.preventDefault();
+                event.stopPropagation();
             });
         });
         </script>
@@ -57,7 +62,7 @@
                 {% set link = url_for('play_location', loc_id=current.location.id, char_id=current.id) | safe %}
                 {% set letter = link_letters.next(link) %}
                 <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
-                <span>[{{ letter }}]</span>
+                <span class="hotkey-indicator">[{{ letter }}]</span>
                 <a href="{{ link }}">{{ current.location.name }}</a>
                 {% if current.location.destinations %}
                     <div class="flexdiv">
@@ -122,7 +127,7 @@
                     {% set letter = link_letters.next(link) %}
                     <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
                     <span class="item-name">
-                        <span>[{{ letter }}]</span>
+                        <span class="hotkey-indicator">[{{ letter }}]</span>
                         <a href="{{ link }}">{{ item.name }}</a>
                     </span>
                     <span class="item-slot" id="item-{{ item.id }}-slot">— {{ owned.slot }}</span>
@@ -142,7 +147,7 @@
                     {% set letter = link_letters.next(link) %}
                     <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
                     <span class="item-name">
-                        <span>[{{ letter }}]</span>
+                        <span class="hotkey-indicator">[{{ letter }}]</span>
                         <a href="{{ link }}">{{ item.name }}</a>
                     </span>
                     <span class="item-quantity" id="item-{{ item.id }}-quantity">
@@ -159,7 +164,7 @@
                     {% set link = url_for('play_event', event_id=evt.id, from_id=current.id, from_typename=current.typename()) | safe %}
                     {% set letter = link_letters.next(link) %}
                     <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
-                    <span>[{{ letter }}]</span>
+                    <span class="hotkey-indicator">[{{ letter }}]</span>
                     <a href="{{ link }}">{{ evt.name }}</a>
                     <br>
                 {% else %}
@@ -175,7 +180,7 @@
                     {% set letter = link_letters.next(link) %}
                     <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
                     <li>
-                        <span>[{{ letter }}]</span>
+                        <span class="hotkey-indicator">[{{ letter }}]</span>
                         <a href="{{ link }}">{{ attrib_of.attrib.name }}</a>
                         {% if attrib_of.attrib.enum %}
                             {% set index = attrib_of.val | int %}
@@ -184,7 +189,9 @@
                             {% else %}
                                 ?
                             {% endif %}
-                        {% elif not attrib_of.attrib.binary %}
+                        {% elif attrib_of.attrib.binary %}
+                            {{ ('&check;' if attrib_of.val else 'X') | safe }}
+                        {% else %}
                             {{ attrib_of.val | formatNum }}
                         {% endif %}
                     </li>

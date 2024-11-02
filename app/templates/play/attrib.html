@@ -17,6 +17,9 @@
             'e': '{{ url_for('configure_attrib', attrib_id=current.id) }}',
         };
         document.addEventListener('DOMContentLoaded', () => {
+            if (isMobile) {
+                return;
+            }
             document.addEventListener('keypress', (event) => {
                 const key = event.key.toLowerCase();
                 if (key === 'c') {
@@ -34,7 +37,7 @@
         <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
         &larr; back to
         <a href="{{ link }}">{{ referrer_link.get('name', 'Previous') }}</a>
-        <span>[{{ letter }}]</span>
+        <span class="hotkey-indicator">[{{ letter }}]</span>
         <br>
     {% endif %}
     <h1>{{ current.name }} of {{ subject.name }}</h1>

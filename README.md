@@ -13,8 +13,7 @@ be there and set it up accordingly.
 And if you know what a value should be but there isn't
 any clear way to do it, go to settings and force the change.
 
-There is a log of events similar to roguelikes.
-However, results are subject to interpretation by the Gamemaster.
+Results are subject to interpretation by the Gamemaster.
 Communicate the narrative remotely using a chat app such as Discord.
 For solo RPGs, a text document works well.
 

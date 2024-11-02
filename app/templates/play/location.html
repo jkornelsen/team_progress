@@ -26,20 +26,25 @@
             'Numpad1': { xChange: -1, yChange: 1 },
             'Numpad3': { xChange: 1, yChange: 1 }
         };
-        document.addEventListener('keydown', (event) => {
-            const movement = keyToMovement[event.code];
-            if (movement) {
-                moveCharacter(movement.xChange, movement.yChange);
-                event.preventDefault();
-                event.stopPropagation();
-            }
-        });
+        if (!isMobile) {
+            document.addEventListener('keydown', (event) => {
+                const movement = keyToMovement[event.code];
+                if (movement) {
+                    moveCharacter(movement.xChange, movement.yChange);
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+            });
+        }
         const linkForKey = {
             'o': '{{ url_for('overview') }}',
             'm': '{{ url_for('configure_index') }}',
             'e': '{{ url_for('configure_location', loc_id=current.id) }}',
         };
         document.addEventListener('DOMContentLoaded', () => {
+            if (isMobile) {
+                return;
+            }
             document.addEventListener('keypress', (event) => {
                 const key = event.key.toLowerCase();
                 if (linkForKey[key]) {
@@ -64,7 +69,7 @@
                                 {% set link = url_for('play_char', char_id=char.id) %}
                                 {% set letter = link_letters.next(link) %}
                                 <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
-                                <span>[{{ letter }}]</span>
+                                <span class="hotkey-indicator">[{{ letter }}]</span>
                                 <a href="{{ link }}">{{ char.name }}</a>
                                 {% if has_grid %}
                                     <span class="label-like char-position" data-char-id="{{ char.id }}">&nbsp;[{{ char.position[0] }},{{ char.position[1] }}]</span>
@@ -83,7 +88,7 @@
                                 {% set link = url_for('play_item', item_id=item.id, loc_id=current.id, main='local') %}
                                 {% set letter = link_letters.next(link) %}
                                 <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
-                                <span>[{{ letter }}]</span>
+                                <span class="hotkey-indicator">[{{ letter }}]</span>
                                 <span class="item-name">
                                     <a href="{{ link }}">{{ item.name }}</a>
                                 </span>
@@ -106,7 +111,7 @@
                                 {% set link = url_for('play_event', event_id=evt.id, from_id=current.id, from_typename=current.typename()) | safe %}
                                 {% set letter = link_letters.next(link) %}
                                 <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
-                                <span>[{{ letter }}]</span>
+                                <span class="hotkey-indicator">[{{ letter }}]</span>
                                 <a href="{{ link }}">{{ evt.name }}</a>
                                 {% if evt.trigger_chance > 0 %}
                                     <span class="label-like">&nbsp;(chance to trigger)</span>
@@ -127,7 +132,7 @@
                                     {% set link = url_for('play_location', loc_id=dest.other_loc.id) %}
                                     {% set letter = link_letters.next(link) %}
                                     <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
-                                    <span>[{{ letter }}]</span>
+                                    <span class="hotkey-indicator">[{{ letter }}]</span>
                                     <a href="{{ link }}">{{ dest.other_loc.name }}</a>
                                 {% endif %}
                                 — Distance {{ dest.distance | formatNum }}

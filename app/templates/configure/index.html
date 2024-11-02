@@ -20,6 +20,9 @@
             'l': '{{ url_for('load_from_file') }}',
         };
         document.addEventListener('DOMContentLoaded', () => {
+            if (isMobile) {
+                return;
+            }
             document.addEventListener('keypress', (event) => {
                 const key = event.key.toLowerCase();
                 if (linkForKey[key]) {

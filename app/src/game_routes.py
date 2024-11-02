@@ -659,9 +659,6 @@ def set_routes(app):
         progress.set_recipe_by_id(recipe_id)
         changed = progress.change_quantity(num_batches)
         if changed:
-            MessageLog.add(
-                f'Gained {item.name}'
-                f' for {format_num(item.pile.quantity)} total.')
             return jsonify({
                 'status': 'success',
                 'message': f'Quantity of {item.name} changed.'
@@ -676,7 +673,7 @@ def set_routes(app):
             })
 
     @app.route(
-        '/item/drop/<int:item_id>/char/<int:char_id>/qty/<int:qty_to_drop>',
+        '/item/drop/<int:item_id>/char/<int:char_id>/qty/<float:qty_to_drop>',
         methods=['POST'])
     def drop_item(item_id, char_id, qty_to_drop):
         logger.debug(
@@ -713,7 +710,7 @@ def set_routes(app):
         char.to_db()
         return jsonify({
             'status': 'success',
-            'message': f'Dropped {item.name}.'
+            'message': MessageLog.add(f'{char.name} dropped {item.name}.')
             })
 
     @app.route(
@@ -750,8 +747,8 @@ def set_routes(app):
         char.to_db()
         loc.to_db()
         return jsonify({
-            'status': 'success', 'message':
-            f'Picked up {item.name}.'
+            'status': 'success',
+            'message': MessageLog.add(f'{char.name} picked up {item.name}.')
             })
 
     @app.route(
@@ -774,7 +771,7 @@ def set_routes(app):
         char.to_db()
         return jsonify({
             'status': 'success',
-            'message': f'Equipped {item.name}.'
+            'message': MessageLog.add(f'{char.name} equipped {item.name}.')
             })
 
     @app.route(
@@ -795,8 +792,8 @@ def set_routes(app):
         owned_item.slot = ''
         char.to_db()
         return jsonify({
-            'status': 'success', 'message':
-            f'Equipped {item.name}.'
+            'status': 'success',
+            'message': MessageLog.add(f'{char.name} unequipped {item.name}.')
             })
 
     @app.route('/char/move/<int:char_id>'

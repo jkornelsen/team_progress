@@ -13,6 +13,9 @@
             'm': '{{ url_for('configure_index') }}',
         };
         document.addEventListener('DOMContentLoaded', () => {
+            if (isMobile) {
+                return;
+            }
             document.addEventListener('keypress', (event) => {
                 const key = event.key.toLowerCase();
                 if (linkForKey[key]) {
@@ -24,6 +27,6 @@
     <h1>Session Link</h1>
     <p class="info">Share the following link to join the current game.</p>
     <p>
-        <a href="{{ url }}">{{ url }}</a>
+        <code>{{ url }}</code>
     </p>
 {% endblock %}

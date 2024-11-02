@@ -18,6 +18,9 @@
         };
         const funcForKey = {};
         $(document).ready(() => {
+            if (isMobile) {
+                return;
+            }
             $(document).on('keypress', (event) => {
                 const key = event.key.toLowerCase();
                 if (key === 'r') {
@@ -45,7 +48,7 @@
         <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
         &larr; back to
         <a href="{{ link }}">{{ referrer_link.get('name', 'Previous') }}</a>
-        <span>[{{ letter }}]</span>
+        <span class="hotkey-indicator">[{{ letter }}]</span>
         <br>
     {% endif %}
     <h1>{{ current.name }}</h1>

@@ -19,21 +19,29 @@
         };
         const funcForKey = {};
         document.addEventListener('DOMContentLoaded', () => {
+            if (isMobile) {
+                return;
+            }
             document.addEventListener('keypress', (event) => {
                 const key = event.key.toLowerCase();
                 if (key === 'd') {
+                    event.preventDefault();
                     $('#drop-btn').click();
                 } else if (key === 'p') {
+                    event.preventDefault();
                     $('#pickup-btn').click();
                 } else if (key === 'q') {
+                    event.preventDefault();
                     {% if container.pile.slot %}
                         $('#unequip-btn').click();
                     {% elif game_data.overall.slots %}
                         $('#equip-btn').click();
                     {% endif %}
                 } else if (linkForKey[key]) {
+                    event.preventDefault();
                     window.location.href = linkForKey[key];
                 } else if (funcForKey[key]) {
+                    event.preventDefault();
                     funcForKey[key]();
                 }
             });
@@ -51,7 +59,7 @@
                         <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
                         Carried by
                         <a href="{{ link }}">{{ container.name }}</a>
-                        <span>[{{ letter }}]</span>
+                        <span class="hotkey-indicator">[{{ letter }}]</span>
                         <br>
                     {% elif container.pile.container_type() == 'loc' %}
                         {% set link = url_for('play_location', loc_id=container.id) %}
@@ -59,7 +67,7 @@
                         <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
                         At
                         <a href="{{ link }}">{{ container.name }}</a>
-                        <span>[{{ letter }}]</span>
+                        <span class="hotkey-indicator">[{{ letter }}]</span>
                         <br>
                     {% else %}
                         General Storage (by default)
@@ -265,7 +273,7 @@
                                                 <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
                                                 <td>
                                                     <strong title="byproduct">&amp;</strong>
-                                                    <span>[{{ letter }}]</span>
+                                                    <span class="hotkey-indicator">[{{ letter }}]</span>
                                                     <a href="{{ link }}">{{ item.name }}</a>
                                                 </td>
                                                 <td>{{ byproduct.rate_amount | formatNum }}</td>
@@ -296,7 +304,7 @@
                                                         {% set letter = link_letters.next(link) %}
                                                         <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
                                                         <td>
-                                                            <span>[{{ letter }}]</span>
+                                                            <span class="hotkey-indicator">[{{ letter }}]</span>
                                                             <a href="{{ link }}">{{ item.name }}</a>
                                                         </td>
                                                     {% endif %}
@@ -329,7 +337,7 @@
                                                                 {% endif %}
                                                                 {% set letter = link_letters.next(link) %}
                                                                 <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
-                                                                <span>[{{ letter }}]</span>
+                                                                <span class="hotkey-indicator">[{{ letter }}]</span>
                                                                 <a href="{{ link }}">{{ container.name }}</a>
                                                                 <br>
                                                             {% endif %}
@@ -372,7 +380,7 @@
                                                     {% set letter = link_letters.next(link) %}
                                                     <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
                                                     <td>
-                                                        <span>[{{ letter }}]</span>
+                                                        <span class="hotkey-indicator">[{{ letter }}]</span>
                                                         <a href="{{ link }}">{{ entity.name }}</a>
                                                     </td>
                                                 {% else %}
@@ -430,7 +438,7 @@
                                     <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
                                     <tr>
                                         <td>
-                                            <span>[{{ letter }}]</span>
+                                            <span class="hotkey-indicator">[{{ letter }}]</span>
                                             <a href="{{ link }}">{{ used_for.item.name }}</a>
                                         </td>
                                         <td>{{ used_for.q_required | formatNum }}</td>
@@ -454,7 +462,7 @@
                                 <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
                                 <tr>
                                     <td>
-                                        <span>[{{ letter }}]</span>
+                                        <span class="hotkey-indicator">[{{ letter }}]</span>
                                         <a href="{{ link }}">{{ byproduct_of.item.name }}</a>
                                     </td>
                                 </tr>
@@ -473,7 +481,7 @@
                                 {% set letter = link_letters.next(link) %}
                                 <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
                                 <li>
-                                    <span>[{{ letter }}]</span>
+                                    <span class="hotkey-indicator">[{{ letter }}]</span>
                                     <a href="{{ link }}">{{ attrib_of.attrib.name }}</a>
                                     {% if attrib_of.attrib.enum %}
                                         {% set index = attrib_of.val | int %}
@@ -482,7 +490,9 @@
                                         {% else %}
                                             ?
                                         {% endif %}
-                                    {% elif not attrib_of.attrib.binary %}
+                                    {% elif attrib_of.attrib.binary %}
+                                        {{ ('&check;' if attrib_of.val else 'X') | safe }}
+                                    {% else %}
                                         {{ attrib_of.val | formatNum }}
                                     {% endif %}
                                 </li>
@@ -504,7 +514,7 @@
                                 {% set link = url_for('play_event', event_id=evt.id, from_id=current.id, from_typename=current.typename()) %}
                                 {% set letter = link_letters.next(link) %}
                                 <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
-                                <span>[{{ letter }}]</span>
+                                <span class="hotkey-indicator">[{{ letter }}]</span>
                                 <a href="{{ link }}">{{ evt.name }}</a>
                                 {% if evt.trigger_chance > 0 %}
                                     <span class="label-like">&nbsp;(chance to trigger)</span>
