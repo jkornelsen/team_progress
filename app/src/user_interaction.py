@@ -186,6 +186,13 @@ class MessageLog(DbSerializable):
                 INSERT INTO {table} (game_token, message, count)
                 VALUES (%s, %s, %s)
                 """, (g.game_token, message, 1))
+        counter_var = 'log_trim_count'
+        if counter_var not in session:
+            session[counter_var] = 0
+        session[counter_var] += 1
+        if session[counter_var] >= 20:
+            cls.trim()
+            session[counter_var] = 0
         return message
 
     @classmethod
@@ -206,3 +213,19 @@ class MessageLog(DbSerializable):
             DELETE FROM {table}
             WHERE game_token = %s
             """, (g.game_token,))
+
+    @classmethod
+    def trim(cls):
+        cls.execute_change("""
+            DELETE FROM {table}
+            WHERE game_token = %s
+            AND timestamp < (
+                SELECT MIN(timestamp) FROM (
+                    SELECT timestamp
+                    FROM {table}
+                    WHERE game_token = %s
+                    ORDER BY timestamp DESC
+                    LIMIT 50
+                ) AS recent
+            )
+            """, (g.game_token, g.game_token))

@@ -221,5 +221,6 @@ def clear_session():
             'last_affected_char_id',
             'last_char_id',
             'last_loc_id',
+            'log_trim_count',
         ):
         session.pop(session_key, None)

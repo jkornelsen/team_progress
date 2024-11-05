@@ -122,6 +122,7 @@ tables_to_create = {
         {coldef('game_token')},
         loc_id integer not null,
         item_id integer not null,
+        is_ref boolean not null,
         quantity real not null,
         position integer[2],
         PRIMARY KEY (game_token, loc_id, item_id),

@@ -8,8 +8,7 @@ from .db_serializable import (
     coldef)
 from .item import Item
 from .pile import Pile
-from .progress import Progress
-from .utils import NumTup, RequestHelper
+from .utils import NumTup, RequestHelper, Storage
 
 logger = logging.getLogger(__name__)
 tables_to_create = {
@@ -17,13 +16,8 @@ tables_to_create = {
         {coldef('name')},
         toplevel boolean NOT NULL,
         masked boolean NOT NULL,
-        progress_id integer,
-        quantity real NOT NULL,
         dimensions integer[2],
-        excluded integer[4],
-        FOREIGN KEY (game_token, progress_id)
-            REFERENCES progress (game_token, id)
-            DEFERRABLE INITIALLY DEFERRED
+        excluded integer[4]
         """
     }
 
@@ -171,9 +165,7 @@ class Location(CompleteIdentifiable):
         self.masked = False
         self.destinations = []  # Destination objects
         self.items = {}  # ItemAt objects keyed by item id
-        # producing local items? Maybe char would do that.
-        self.progress = Progress(container=self)
-        self.pile = Pile()  # for Progress
+        self.item_refs = []  # general items clickable from this loc
         self.grid = Grid()
 
     @classmethod
@@ -188,7 +180,6 @@ class Location(CompleteIdentifiable):
             'description': self.description,
             'toplevel': self.toplevel,
             'masked': self.masked,
-            'quantity': self.pile.quantity,
             }
 
     def dict_for_json(self):
@@ -201,7 +192,7 @@ class Location(CompleteIdentifiable):
             'items': [
                 item_at.dict_for_json()
                 for item_at in self.items.values()],
-            'progress': self.progress.dict_for_json(),
+            'item_refs': [item.id for item in self.item_refs],
             'dimensions': self.grid.dimensions.as_list(),
             'excluded': self.grid.excluded.as_list()
             })
@@ -210,7 +201,6 @@ class Location(CompleteIdentifiable):
     def dict_for_main_table(self):
         data = self._base_export_data()
         data.update({
-            'progress_id': self.progress.id or None,
             'dimensions': self.grid.dimensions,
             'excluded': self.grid.excluded
             })
@@ -241,10 +231,9 @@ class Location(CompleteIdentifiable):
                 item_data = vars(item_data)
             item_at = ItemAt.from_data(item_data, instance)
             instance.items[item_data.get('item_id', 0)] = item_at
-        instance.pile = Pile()
-        instance.pile.quantity = data.get('quantity', 0.0)
-        instance.progress = Progress.from_data(
-            data.get('progress', {}), instance)
+        instance.item_refs = [
+            Item(item_id)
+            for item_id in data.get('item_refs', [])]
         instance.grid.dimensions = NumTup(data.get('dimensions', (0, 0)))
         instance.grid.excluded = NumTup(data.get('excluded', (0, 0, 0, 0)))
         instance.grid.set_default_pos()
@@ -253,7 +242,6 @@ class Location(CompleteIdentifiable):
     def to_db(self):
         logger.debug("to_db()")
         creating = not self.id
-        self.progress.to_db()
         super().to_db()
         if not creating:
             self.execute_change("""
@@ -289,18 +277,22 @@ class Location(CompleteIdentifiable):
                 "game_token, loc1_id, loc2_id, distance,"
                 " door1, door2, bidirectional",
                 values_to_insert)
-        if self.items:
-            values_to_insert = []
-            for item_id, item_at in self.items.items():
-                values_to_insert.append((
-                    g.game_token, self.id,
-                    item_id,
-                    item_at.quantity,
-                    item_at.position.as_pg_array(),
-                    ))
+        values_to_insert = []
+        for item_id, item_at in self.items.items():
+            values_to_insert.append((
+                g.game_token, self.id,
+                item_id, False,
+                item_at.quantity,
+                item_at.position.as_pg_array(),
+                ))
+        for item in self.item_refs:
+            values_to_insert.append((
+                g.game_token, self.id,
+                item.id, True, 0, []))
+        if values_to_insert:
             self.insert_multiple(
                 "loc_items",
-                "game_token, loc_id, item_id, quantity, position",
+                "game_token, loc_id, item_id, is_ref, quantity, position",
                 values_to_insert)
 
     def unmask(self):
@@ -363,7 +355,16 @@ class Location(CompleteIdentifiable):
         logger.debug("load_complete_objects(%s)", ids)
         if cls.empty_values(ids):
             return [cls()]
-        locs = Progress.load_base_data_dict(cls, ids)
+        qhelper = QueryHelper("""
+            SELECT *
+            FROM {table}
+            WHERE game_token = %s
+            """, [g.game_token])
+        qhelper.add_limit_in("id", ids)
+        rows = cls.execute_select(qhelper=qhelper)
+        locs = {}  # data (not objects) keyed by ID
+        for data in rows:
+            locs[data.id] = data
         # Get destination data
         qhelper = QueryHelper("""
             SELECT *
@@ -389,7 +390,10 @@ class Location(CompleteIdentifiable):
         item_rows = cls.execute_select(qhelper=qhelper)
         for row in item_rows:
             loc = locs[row.loc_id]
-            loc.setdefault('items', []).append(row)
+            if row.is_ref:
+                loc.setdefault('item_refs', []).append(row.item_id)
+            else:
+                loc.setdefault('items', []).append(row)
         # Set list of objects
         instances = {}
         for data in locs.values():
@@ -419,6 +423,9 @@ class Location(CompleteIdentifiable):
             item_at.item = Item.get_by_id(item_at.item.id)
             if not current_obj.grid.in_grid(item_at.position):
                 item_at.position = current_obj.grid.default_pos
+        current_obj.item_refs = [
+            Item.get_by_id(item.id)
+            for item in current_obj.item_refs]
         return current_obj
 
     @classmethod
@@ -491,6 +498,9 @@ class Location(CompleteIdentifiable):
                 old_qty = old_item.quantity if old_item else 0
                 item_at.quantity = req.set_num_if_changed(item_qty, old_qty)
                 self.items[item_id] = item_at
+            self.item_refs = [
+                Item(item_id)
+                for item_id in req.get_list('ref_item_id[]')]
             self.to_db()
         elif req.has_key('delete_location'):
             try:

@@ -89,18 +89,25 @@
                                 {% set letter = link_letters.next(link) %}
                                 <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
                                 <span class="hotkey-indicator">[{{ letter }}]</span>
-                                <span class="item-name">
-                                    <a href="{{ link }}">{{ item.name }}</a>
-                                </span>
-                                <span class="item-quantity" id="item-{{ item.id }}-quantity">
-                                    {% if not (item_at.item.q_limit == 1 and item_at.quantity == 1) %}{{ item_at.quantity | formatNum }}{% endif %}
-                                </span>
+                                <a href="{{ link }}">{{ item.name }}</a>
+                                {% if not (item_at.item.q_limit == 1 and item_at.quantity == 1) %}{{ item_at.quantity | formatNum }}{% endif %}
                                 {% if has_grid %}
                                     <span class="label-like">&nbsp;[{{ item_at.position[0] }},{{ item_at.position[1] }}]</span>
                                 {% endif %}
                                 <br>
-                            {% else %}
-                                <p>(None)</p>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                    {% if current.item_refs %}
+                        <h2>Referenced Items</h2>
+                        <ul>
+                            {% for item in current.item_refs | sort(attribute='name') %}
+                                {% set link = url_for('play_item', item_id=item.id, loc_id=current.id, main='universal') %}
+                                {% set letter = link_letters.next(link) %}
+                                <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
+                                <span class="hotkey-indicator">[{{ letter }}]</span>
+                                <a href="{{ link }}">{{ item.name }}</a>
+                                <br>
                             {% endfor %}
                         </ul>
                     {% endif %}

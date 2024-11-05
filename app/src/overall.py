@@ -298,10 +298,8 @@ class Overall(DbSerializable):
                 AND {tables[0]}.toplevel
             """, [g.game_token,], ['items', 'progress'])
         ongoing_item_ids = [item_row.id for item_row in item_rows]
-        for item in [
-                Item.data_for_play(id_)
-                for id_ in ongoing_item_ids
-                ]:
+        for id_ in ongoing_item_ids:
+            item = Item.data_for_play(id_)
             item.progress.batches_for_elapsed_time()
         # All top-level Items and their Attribs
         tables_rows = cls.select_tables("""

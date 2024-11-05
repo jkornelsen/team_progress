@@ -10,7 +10,7 @@
     <h1>Location Setup</h1>
     <form method="post">
         <p class="info">
-            Room, area, or container where items and characters can be. It takes 3 seconds to travel 1 unit of distance between locations. May be subdivided into a grid.
+            Room, area, or container where items and characters can be. May be subdivided into a grid.
         </p>
         <label for="location-name">Name:</label>
         <input type="text"
@@ -110,19 +110,56 @@
                 {% if outerscope.other_items %}
                     <!-- Select box for adding another source -->
                     <div class="select-box">
-                        <select class="item-select">
+                        <select id="item-select">
                             <option value="" selected>(Select item)</option>
                             {% for item in outerscope.other_items %}
                                 <option value="{{ item.id }}">{{ item.name }}</option>
                             {% endfor %}
                         </select>
-                        <button type="button" class="add-item-btn lesser-button">Add Item</button>
+                        <button type="button" class="add-item-btn lesser-button">Add Item Here</button>
                     </div>
                 {% else %}
                     <p class="no-entities">(No other locatable items)</p>
                 {% endif %}
             </div>
         </div>
+        <div id="itemrefs-container" class="outer-border">
+            <table id="itemrefs-table" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Referenced Items</th>
+                        <th class="transparent-col"></th>
+                    </tr>
+                </thead>
+                <tbody id="itemrefs-rows">
+                </tbody>
+            </table>
+            <div>
+                {% set outerscope = namespace(universal_items=[]) %}
+                {% for item in game_data.items
+                    if item.storage_type == 'universal'
+                        and item.id not in current.item_refs %}
+                    {% set _ = outerscope.universal_items.append(item) %}
+                {% endfor %}
+                {% if outerscope.universal_items %}
+                    <!-- Select box for adding another item reference -->
+                    <div class="select-box">
+                        <select id="itemref-select">
+                            <option value="" selected>(Select item)</option>
+                            {% for item in outerscope.universal_items %}
+                                <option value="{{ item.id }}">{{ item.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="button" class="add-itemref-btn lesser-button">Add Referenced Item</button>
+                    </div>
+                {% else %}
+                    <p class="no-entities">(No other universal items)</p>
+                {% endif %}
+            </div>
+        </div>
+        <br>
+        <br>
+        <br>
         <div class="footer-buttons">
             <button type="submit" id="btn-save" name="save_changes">Save and Close</button>
             <button type="submit" id="btn-duplicate" name="make_duplicate">Save and Duplicate</button>
@@ -257,8 +294,21 @@
                 $('#items-rows').prepend(itemHtml);
                 $('#items-table').show();
             }
+            function addItemRef(itemId, itemName) {
+                const itemHtml = `
+                    <tr>
+                        <td>${itemName}
+                            <input type="hidden" name="ref_item_id[]" value="${itemId}">
+                        </td><td>
+                            <button type="button" class="remove-item-btn lesser-button">Remove</button>
+                        </td>
+                    </tr>
+                `;
+                $('#itemrefs-rows').prepend(itemHtml);
+                $('#itemrefs-table').show();
+            }
             $('.add-item-btn').click((event) => {
-                const selectBox = $(event.currentTarget).prev('.item-select');
+                const selectBox = $(event.currentTarget).prev('#item-select');
                 const selectedOption = selectBox.find(':selected');
                 const itemId = selectedOption.val();
                 const itemName = selectedOption.text();
@@ -272,17 +322,35 @@
                 }
                 addItem(itemId, itemName);
             });
+            $('.add-itemref-btn').click((event) => {
+                const selectBox = $(event.currentTarget).prev('#itemref-select');
+                const selectedOption = selectBox.find(':selected');
+                const itemId = selectedOption.val();
+                const itemName = selectedOption.text();
+                if (itemId === '') {
+                    return; // don't add if the selected option is the placeholder
+                }
+                const existingItem = $(`#itemrefs-rows input[name="ref_item_id[]"][value="${itemId}"]`).closest('tr');
+                if (existingItem.length > 0) {
+                    alert('Item already exists.');
+                    return;
+                }
+                addItemRef(itemId, itemName);
+            });
             console.log("number of items={{ current.items | length }}");
             {% for item_at in current.items.values() %}
-                console.log("name={{item_at.item.name}}");
-                console.log("position={{ item_at.position }}");
                 addItem(
                     {{ item_at.item.id }},
                     "{{ item_at.item.name }}",
                     "{{ item_at.quantity | formatNum }}",
                     "{{ item_at.position[0] }},{{ item_at.position[1] }}");
             {% endfor %}
-            $('#items-rows').on('click', '.remove-item-btn', (event) => {
+            {% for item in current.item_refs %}
+                addItemRef(
+                    {{ item.id }},
+                    "{{ item.name }}");
+            {% endfor %}
+            $('#items-rows, #itemrefs-rows').on('click', '.remove-item-btn', (event) => {
                 const itemContainer = $(event.currentTarget).closest('tr');
                 itemContainer.remove();
             });
