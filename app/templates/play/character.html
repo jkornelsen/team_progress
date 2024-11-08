@@ -68,23 +68,23 @@
                     <div class="flexdiv">
                         <label for="destination-select">Go [T]o:</label>
                         <select id="destination-select" class="select-box">
-                            <option value="" data-distance="-1">(Select destination)</option>
+                            <option value="" data-duration="-1">(Select destination)</option>
                             {% for dest in current.location.destinations %}
                                 <option value="{{ dest.other_loc.id }}"
-                                        data-distance="{{ dest.distance | formatNum }}"
+                                        data-duration="{{ dest.duration }}"
                                         {% if current.destination and current.destination.id == dest.other_loc.id %}selected{% endif %}>
                                     {% if dest.other_loc.masked %}
                                         a location not yet visited
                                     {% else %}
                                         {{ dest.other_loc.name }}
-                                        {% if dest.distance == 0 %}(here){% endif %}
+                                        {% if dest.duration == 0 %}(here){% endif %}
                                     {% endif %}
                                 </option>
                             {% endfor %}
                         </select>
-                        <button type="button" id="do-travel-btn" style="display: hidden">[G]o</button>
+                        <button type="button" id="do-travel-btn" style="display: none">[G]o</button>
                     </div>
-                    <div id="destination-progress" class="flexdiv">
+                    <div id="destination-progress" class="flexdiv" style="display: none">
                         <div class="progress-container">
                             <progress class="progress-bar" max="100" value="0"></progress>
                             <span class="progress-label">0 / 0</span>
@@ -258,6 +258,34 @@
                     startFetchingProgress();
                 }
             }
+            function showhide_dest(setProgressLabel=true) {
+                const destSel = $('#destination-select');
+                if (!destSel.length) {
+                    return;
+                }
+                const selectedDestId = destSel.val();
+                const selectedOption = destSel.find(':selected');
+                const duration = selectedOption.data('duration') || 0;
+                const destInfo = $('#destination-progress');
+                const goBtn = $('#do-travel-btn');
+                const progressLabel = $('.progress-label');
+                if (selectedDestId) {
+                    if (duration >= 2) {
+                        destInfo.show();
+                        goBtn.hide();
+                        if (setProgressLabel) {
+                            progressLabel.text(`0 / ${duration}`);
+                        }
+                    } else {
+                        destInfo.hide();
+                        goBtn.show();
+                    }
+                } else {
+                    destInfo.hide();
+                    goBtn.hide();
+                }
+            }
+            let exitNow = false;
             function updateTravelProgress(data) {
                 if ('status' in data && data.status === 'interrupt') {
                     handleInterrupt(data);
@@ -267,7 +295,8 @@
                 if (current_loc_id !== data.current_loc_id) {
                     console.log('Reloading to go to updated location.');
                     location.reload();
-                    return
+                    exitNow = true;
+                    return;
                 }
                 const destSel = $('#destination-select');
                 const selectedDestId = destSel.val();
@@ -276,7 +305,7 @@
                     destSel.val(data.dest_id);
                 }
                 const selectedOption = destSel.find(':selected');
-                const distance = selectedOption.data('distance');
+                const duration = selectedOption.data('duration');
                 const goBtn = $('#do-travel-btn');
                 const destInfo = $('#destination-progress');
                 const progressBar = $('.progress-bar');
@@ -285,31 +314,23 @@
                     if ('status' in data && data.status === 'arrived') {
                         console.log('Arrived; reloading.');
                         location.reload();
-                    //XXX: rethink how this should work
-                    //} else if ('status' in data && data.status === 'error' && data.message === 'No travel destination.') {
-                    //    console.log(data.message);
-                    } else if (distance >= 2) {
-                        const quantity = 'quantity' in data ? data.quantity : 0;
-                        const progressPercentage = (quantity / distance) * 100;
-                        progressBar.attr('value', progressPercentage);
-                        progressLabel.text(`${quantity} / ${distance}`);
-                        destInfo.show();
-                        goBtn.css('display', 'none');
-                    } else {
-                        destInfo.hide();
-                        goBtn.css('display', 'block');
+                        exitNow = true;
+                        return;
+                    } else if (duration >= 2) {
+                        const progressFraction = 'progress_fraction' in data ? data.progress_fraction : 0.0;
+                        const elapsedTime = 'elapsed_time' in data ? Math.floor(data.elapsed_time) : 0;
+                        progressBar.attr('value', progressFraction * 100);
+                        progressLabel.text(`${elapsedTime} / ${duration}`);
                     }
-                } else {
-                    destInfo.hide();
-                    goBtn.css('display', 'none');
                 }
+                showhide_dest(false);
                 updateStartButtonLabel(data);
             }
 
             function updateStartButtonLabel(data) {
                 const startBtn = $('#start-travel-btn');
                 const destSel = $('#destination-select');
-                const ongoing = (data && data.status === 'ongoing' && data.is_ongoing);
+                const ongoing = (data && data.is_ongoing);
                 if (!startBtn.length || !destSel.length) {
                     return;
                 }
@@ -327,6 +348,11 @@
             }
 
             async function fetchProgressData() {
+                const startBtn = $('#start-travel-btn');
+                const destSel = $('#destination-select');
+                if (!startBtn.length || !destSel.length || startBtn.html() !== "[S]top") {
+                    return;
+                }
                 const ignoreEventId = localStorage.getItem('ignore_event_id') || '';
                 const url = `/char/progress/{{ current.id }}`;
                 const data = await new Promise((resolve, reject) => {
@@ -365,12 +391,17 @@
                 localStorage.removeItem('ignore_event_id');
                 await fetchProgressData();
                 startFetchingProgress();
+                showhide_dest();
                 showContent();
             }
             initializePage();
 
             $('#destination-select').change(() => {
                 fetchProgressData();
+                if (exitNow) {
+                    return;
+                }
+                showhide_dest();
             });
             $('#do-travel-btn').click(() => {
                 console.log('goChar(): {{ current.id }}');
@@ -417,13 +448,10 @@
                         if (response.status === 'error') {
                             alert(response.message);
                         }
-                        updateStartButtonLabel();
+                        updateStartButtonLabel(response);
                     },
                     error: function(error) {
                         console.error('Error:', error);
-                    },
-                    complete: () => {
-                        fetchProgressData();
                     }
                 });
             }

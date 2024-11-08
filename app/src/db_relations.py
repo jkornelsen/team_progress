@@ -104,7 +104,7 @@ tables_to_create = {
         {coldef('game_token')},
         loc1_id integer not null,
         loc2_id integer not null,
-        distance real not null,
+        duration integer not null,
         door1 integer[2],
         door2 integer[2],
         bidirectional boolean not null,

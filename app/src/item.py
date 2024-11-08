@@ -58,7 +58,7 @@ class Item(CompleteIdentifiable):
         self.recipes = []  # list of Recipe objects
         self.q_limit = 0.0  # limit the quantity if not 0
         self.progress = Progress(container=self)  # for general storage
-        self.pile = GeneralPile(self)
+        self.pile = GeneralPile(self)  # assigned to best available pile
 
     def _base_export_data(self):
         """Prepare the base dictionary for JSON and DB."""

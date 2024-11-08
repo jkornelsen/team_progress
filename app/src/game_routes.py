@@ -397,61 +397,67 @@ def set_routes(app):
     def char_progress(char_id):
         logger.debug("%s\nchar_progress(%d)", "-" * 80, char_id)
         char = Character.data_for_play(char_id)
-        if char:
-            current_loc_id = char.location.id if char.location else 0
-            if not char.location or not char.destination:
-                return jsonify({
-                    'status': 'error',
-                    'message': 'No travel destination.',
-                    'current_loc_id': current_loc_id,
-                    'quantity': 0
-                    })
-            req = RequestHelper('form')
-            if char.progress.is_ongoing:
-                batches_done = char.progress.batches_for_elapsed_time()
-                events = Event.load_triggers_for_type(
-                    char.location.id, Location.typename())
-                ignore_event_id = req.get_int('ignore_event', '')
-                for event in events:
-                    if event.id != ignore_event_id:
-                        if event.check_trigger(batches_done):
-                            MessageLog.add(
-                                f"{char.name} triggered {event.name}.")
-                            return jsonify({
-                                'status': 'interrupt',
-                                'message': f"<h2>{char.name} triggered "
-                                           f"{event.name}!</h2> "
-                                           "Run the event now?",
-                                'event_id': event.id
-                                })
-                char.to_db()
-            if char.pile.quantity >= char.pile.item.q_limit:
-                # arrived at the destination
-                main_char = char
-                for char in get_travel_chars(req, char_id):
-                    char.progress.stop()
-                    char.pile.quantity = 0
-                    char.location = char.destination
-                    char.destination = None
-                    char.to_db()
-                loc = Location.from_db_flat(char.location.id)
-                MessageLog.add(f"{main_char.name} arrived at {loc.name}.")
-                return jsonify({
-                    'status': 'arrived',
-                    'current_loc_id': main_char.location.id
-                    })
-            logger.debug("dest_id: %d", char.destination.id)
+        if not char:
             return jsonify({
-                'status': 'ongoing',
-                'is_ongoing': char.progress.is_ongoing,
-                'current_loc_id': current_loc_id,
-                'dest_id': char.destination.id,
-                'quantity': int(char.pile.quantity),
-                'elapsed_time': char.progress.calculate_elapsed_time()
+                'status': 'error',
+                'message': "Character not found."
                 })
+        current_loc_id = char.location.id if char.location else 0
+        if not char.location or not char.destination:
+            return jsonify({
+                'status': 'error',
+                'message': 'No travel destination.',
+                'current_loc_id': current_loc_id
+                })
+        req = RequestHelper('form')
+        if not char.progress.is_ongoing:
+            message = "not travelling"
+            logger.debug(message)
+            return jsonify({
+                'status': message,
+                'current_loc_id': char.location.id
+                })
+        elapsed_time = char.progress.calculate_elapsed_time()
+        batches_done, fractional_batches = (
+            char.progress.batches_for_elapsed_time(elapsed_time))
+        events = Event.load_triggers_for_type(
+            char.location.id, Location.typename())
+        ignore_event_id = req.get_int('ignore_event', '')
+        for event in events:
+            if event.id != ignore_event_id:
+                if event.check_trigger(batches_done):
+                    MessageLog.add(
+                        f"{char.name} triggered {event.name}.")
+                    return jsonify({
+                        'status': 'interrupt',
+                        'message': f"<h2>{char.name} triggered "
+                                   f"{event.name}!</h2> "
+                                   "Run the event now?",
+                        'event_id': event.id
+                        })
+        char.to_db()
+        if batches_done:
+            # arrived at the destination
+            main_char = char
+            for char in get_travel_chars(req, char_id):
+                char.progress.stop()
+                char.location = char.destination
+                char.destination = None
+                char.to_db()
+            loc = Location.from_db_flat(char.location.id)
+            MessageLog.add(f"{main_char.name} arrived at {loc.name}.")
+            return jsonify({
+                'status': 'arrived',
+                'current_loc_id': main_char.location.id
+                })
+        logger.debug("dest_id: %d", char.destination.id)
         return jsonify({
-            'status': 'error',
-            'message': "Character not found."
+            'status': 'ongoing',
+            'is_ongoing': char.progress.is_ongoing,
+            'current_loc_id': current_loc_id,
+            'dest_id': char.destination.id,
+            'progress_fraction': fractional_batches,
+            'elapsed_time': elapsed_time
             })
 
     @app.route('/char/start/<int:char_id>', methods=['POST'])
@@ -470,18 +476,16 @@ def set_routes(app):
             logger.debug("char %d", char.id)
             if not char.destination or char.destination.id != dest_id:
                 char.destination = Location(dest_id)
-                char.pile.quantity = 0
                 char.to_db()
-            if char.progress.start():
-                char.to_db()
-            else:
+            if not char.progress.start():
                 return jsonify({
                     'status': 'error',
                     'message': f'{char.name} could not start travel.'
                     })
         return jsonify({
             'status': 'success',
-            'message': 'Progress started.'
+            'message': 'Progress started.',
+            'is_ongoing': char.progress.is_ongoing
             })
 
     @app.route('/char/stop/<int:char_id>', methods=['POST'])

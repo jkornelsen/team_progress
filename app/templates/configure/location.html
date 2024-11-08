@@ -183,7 +183,7 @@
                 $('#btn-delete').attr('disabled', 'disabled');
             {% endif %}
 
-            function addDestination(other_loc_id, other_loc_name, distance = "1", door_here = "0,0", other_door = "0,0", bidirectional = true, is_loc1 = true) {
+            function addDestination(other_loc_id, other_loc_name, duration = "1", door_here = "0,0", other_door = "0,0", bidirectional = true, is_loc1 = true) {
                 const destHtml = `
                     <table class="destination"><tr>
                         <td class="align-top" style="padding: 5px;">
@@ -195,12 +195,12 @@
                                 value="${is_loc1}">
                             ${other_loc_name}
                         </td><td class="align-top">
-                            <label for="distance-${other_loc_id}">Distance:</label>
+                            <label for="duration-${other_loc_id}">Duration:</label>
                             <input type="text"
-                                id="distance-${other_loc_id}"
-                                name="distance[]"
-                                value="${distance}"
-                                class="distance-field"
+                                id="duration-${other_loc_id}"
+                                name="duration[]"
+                                value="${duration}"
+                                class="duration-field"
                                 size="5">
                         </td><td class="align-top">
                             <label for="door-here-${other_loc_id}">Door:</label>
@@ -264,7 +264,7 @@
                 addDestination(
                     {{ dest.other_loc.id }},
                     "{{ dest.other_loc.name }}",
-                    "{{ dest.distance | formatNum }}",
+                    "{{ dest.duration }}",
                     "{{ dest.door_here }}",
                     "{{ dest.other_door }}",
                     {{ dest.bidirectional | lower }},

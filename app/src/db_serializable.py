@@ -219,6 +219,8 @@ class DbSerializable(Serializable):
 
     def to_db(self):
         """Write to the main table of this class."""
+        logging.debug(
+            "DbSerializable.to_db() self is %s", self.__class__.__name__)
         data = self.dict_for_main_table()
         data['game_token'] = g.game_token
         fields = data.keys()
@@ -332,6 +334,8 @@ class Identifiable(DbSerializable):
         return instance
 
     def to_db(self):
+        logging.debug(
+            "Identifiable.to_db() self is %s", self.__class__.__name__)
         data = self.dict_for_main_table()
         if not data:
             return

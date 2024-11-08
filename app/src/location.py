@@ -69,7 +69,7 @@ class Destination(Serializable):
         super().__init__()
         self.loc1 = loc1
         self.loc2 = loc2
-        self.distance = 1
+        self.duration = 1
         self.door1 = (0, 0)  # at loc 1
         self.door2 = (0, 0)  # at loc 2
         self.bidirectional = True
@@ -78,7 +78,7 @@ class Destination(Serializable):
     def _base_export_data(self):
         """Prepare the base dictionary for JSON and DB."""
         return {
-            'distance': self.distance,
+            'duration': self.duration,
             'bidirectional': self.bidirectional,
             }
 
@@ -111,7 +111,7 @@ class Destination(Serializable):
             Location(int(data.get('loc1_id', 0))),
             Location(int(data.get('loc2_id', 0))),
             current_loc_id)
-        instance.distance = data.get('distance', 0)
+        instance.duration = data.get('duration', 0)
         instance.door1 = NumTup(data.get('door1', (0, 0)))
         instance.door2 = NumTup(data.get('door2', (0, 0)))
         instance.bidirectional = data.get('bidirectional', True)
@@ -261,7 +261,7 @@ class Location(CompleteIdentifiable):
                     g.game_token,
                     dest.loc1.id,
                     dest.loc2.id,
-                    dest.distance,
+                    dest.duration,
                     dest.door1.as_pg_array(),
                     dest.door2.as_pg_array(),
                     dest.bidirectional,
@@ -274,7 +274,7 @@ class Location(CompleteIdentifiable):
                         """, (g.game_token, dest.loc1.id, dest.loc2.id))
             self.insert_multiple(
                 "loc_destinations",
-                "game_token, loc1_id, loc2_id, distance,"
+                "game_token, loc1_id, loc2_id, duration,"
                 " door1, door2, bidirectional",
                 values_to_insert)
         values_to_insert = []
@@ -468,7 +468,7 @@ class Location(CompleteIdentifiable):
             self.destinations = []
             for dest_id, dist, dest_door, other_door, oneway, is_loc1 in zip(
                     req.get_list('other_loc_id[]'),
-                    req.get_list('distance[]'),
+                    req.get_list('duration[]'),
                     req.get_list('door_here[]'),
                     req.get_list('other_door[]'),
                     req.get_list('oneway[]'),
@@ -482,7 +482,7 @@ class Location(CompleteIdentifiable):
                 dest = Destination(Location(locs[0]), Location(locs[1]))
                 dest.door1 = NumTup.from_str(doors[0], (0, 0))
                 dest.door2 = NumTup.from_str(doors[1], (0, 0))
-                dest.distance = int(dist)
+                dest.duration = int(dist)
                 dest.bidirectional = not int(oneway)
                 self.destinations.append(dest)
             self.items = {}

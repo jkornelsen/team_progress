@@ -142,7 +142,9 @@
                                     <span class="hotkey-indicator">[{{ letter }}]</span>
                                     <a href="{{ link }}">{{ dest.other_loc.name }}</a>
                                 {% endif %}
-                                — Distance {{ dest.distance | formatNum }}
+                                {% if dest.duration >= 2 %}
+                                    — {{ dest.duration }}s
+                                {% endif %}
                                 <br>
                             {% else %}
                                 <p>(None)</p>

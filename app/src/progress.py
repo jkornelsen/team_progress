@@ -6,6 +6,7 @@ import threading
 from flask import g
 
 from .db_serializable import DependentIdentifiable, QueryHelper, coldef
+from .recipe import Recipe
 from .user_interaction import MessageLog
 from .utils import format_num
 
@@ -26,11 +27,10 @@ class Progress(DependentIdentifiable):
     """Track progress over time."""
     def __init__(self, new_id="", container=None, recipe=None):
         super().__init__(new_id)
-        self.container = container  # e.g. Character that uses this object
+        self.container = container  # Character or Item that uses this object
         if recipe:
             self.recipe = recipe
         else:
-            from .item import Recipe
             self.recipe = Recipe()  # use default values
         self.start_time = None
         self.stop_time = None
@@ -41,7 +41,7 @@ class Progress(DependentIdentifiable):
 
     @property
     def pile(self):
-        if self.container:
+        if self.container and hasattr(self.container, 'pile'):
             return self.container.pile
         return None
 
@@ -53,9 +53,6 @@ class Progress(DependentIdentifiable):
 
     def _base_export_data(self):
         """Prepare the base dictionary for JSON and DB."""
-        if ((not self.start_time) or
-                (not self.is_ongoing and self.batches_processed == 0)):
-            return {}
         return {
             'id': self.id,
             'item_id': self.pile.item.id
@@ -67,12 +64,18 @@ class Progress(DependentIdentifiable):
             'is_ongoing': self.is_ongoing,
             }
 
+    def dict_for_json(self):
+        if ((not self.start_time) or
+                (not self.is_ongoing and self.batches_processed == 0)):
+            return {}
+        return self._base_export_data()
+
     @classmethod
     def from_data(cls, data, container=None):
         data = cls.prepare_dict(data)
         instance = cls(data.get('id') or 0, container=container)
-        from .item import Item, Recipe
-        if container and not instance.pile.item:
+        from .item import Item
+        if container and instance.pile and not instance.pile.item:
             instance.pile.item = Item(data.get('item_id') or 0)
         instance.recipe = Recipe(data.get('recipe_id') or 0)
         instance.start_time = data.get('start_time')
@@ -206,24 +209,31 @@ class Progress(DependentIdentifiable):
                 self.stop()
             return num_batches > 0
 
-    def batches_for_elapsed_time(self):
-        """Returns number of batches done."""
+    def batches_for_elapsed_time(self, elapsed_time=None):
+        """Returns the number of batches completed, along with
+        the fractional part of the next batch, if any.
+        """
         self.set_recipe_by_id()
-        elapsed_time = self.calculate_elapsed_time()
-        total_batches_needed = math.floor(
-            elapsed_time / self.recipe.rate_duration)
+        elapsed_time = elapsed_time or self.calculate_elapsed_time()
+        batch_ratio = elapsed_time / self.recipe.rate_duration
+        total_batches_needed = math.floor(batch_ratio)
+        fractional_batches = batch_ratio - total_batches_needed
         batches_to_do = total_batches_needed - self.batches_processed
+        if batches_to_do < 1:
+            batches_to_do = 0
         logger.debug(
-            "batches_for_elapsed_time(): batches_to_do=%d (%.1f / %.1f - %d)",
+            "batches_for_elapsed_time(): batches_to_do=%d (%.1f / %.1f - %d),"
+            " remainder=%.1f",
             batches_to_do, elapsed_time, self.recipe.rate_duration,
-            self.batches_processed)
-        if batches_to_do > 0:
-            success = self.change_quantity(batches_to_do)
-            if success:
-                return batches_to_do
-        return 0
+            self.batches_processed, fractional_batches)
+        if batches_to_do and self.pile:
+            if not self.change_quantity(batches_to_do):
+                return 0, 0
+        return batches_to_do, fractional_batches
 
     def set_recipe_by_id(self, recipe_id=0):
+        if not self.pile:
+            return
         if not recipe_id:
             recipe_id = self.recipe.id
             if not recipe_id:
@@ -269,6 +279,7 @@ class Progress(DependentIdentifiable):
         return True
 
     def start(self, recipe_id=0):
+        logger.debug("start()")
         self.set_recipe_by_id(recipe_id)
         if self.is_ongoing:
             logger.debug("Already ongoing.")
@@ -282,6 +293,7 @@ class Progress(DependentIdentifiable):
         return True
 
     def stop(self):
+        logger.debug("stop()")
         if self.is_ongoing:
             self.is_ongoing = False
             self.stop_time = datetime.now()

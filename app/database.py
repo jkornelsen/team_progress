@@ -90,7 +90,7 @@ def column_counts(table_name):
         'attribs': 7,
         'char_attribs': 4,
         'char_items': 5,
-        'characters': 12,
+        'characters': 11,
         'event_entities': 7,
         'events': 10,
         'game_messages': 4,

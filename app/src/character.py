@@ -15,14 +15,13 @@ logger = logging.getLogger(__name__)
 tables_to_create = {
     'characters': f"""
         {coldef('name')},
-        toplevel boolean NOT NULL,
-        masked boolean NOT NULL,
-        progress_id integer,
-        quantity real NOT NULL,
-        location_id integer,
-        dest_id integer,
-        position integer[2],
-        travel_group varchar(100),
+        toplevel boolean NOT NULL,  -- show in overview
+        masked boolean NOT NULL,  -- hide until met; not implemented
+        location_id integer,  -- current location
+        position integer[2],  -- position in the grid of the current location
+        progress_id integer,  -- id in progress table for any ongoing travel
+        dest_id integer,  -- selected location id to go to or in progress
+        travel_group varchar(100),  -- selectable for more than one companion
         FOREIGN KEY (game_token, progress_id)
             REFERENCES progress (game_token, id)
             DEFERRABLE INITIALLY DEFERRED
@@ -41,7 +40,7 @@ class OwnedItem(Pile):
     def _base_export_data(self):
         return {
             'item_id': self.item.id,
-            'quantity': self.quantity,
+            'progress_qty': self.progress_qty,
             'slot': self.slot,
             }
 
@@ -74,7 +73,6 @@ class Character(CompleteIdentifiable):
         self.position = NumTup((0, 0))
         self.destination = None  # Location object to travel to
         self.progress = Progress(container=self)  # travel or producing items
-        self.pile = Pile(container=self)  # for Progress
 
     @classmethod
     def typename(cls):
@@ -89,7 +87,6 @@ class Character(CompleteIdentifiable):
             'masked': self.masked,
             'travel_group': self.travel_group,
             'location_id': self.location.id if self.location else None,
-            'quantity': self.pile.quantity,
             'dest_id': self.destination.id if self.destination else None
             }
 
@@ -139,7 +136,6 @@ class Character(CompleteIdentifiable):
         instance.location = Location(
             int(data['location_id'])) if data.get('location_id', 0) else None
         instance.position = NumTup.from_list(data.get('position', [0, 0]))
-        instance.pile.quantity = data.get('quantity', 0.0)
         instance.progress = Progress.from_data(
             data.get('progress', {}), instance)
         instance.destination = Location(
@@ -326,7 +322,8 @@ class Character(CompleteIdentifiable):
                 cur_dest_loc.id if cur_dest_loc else 0)
             current_obj.location.destinations = dests
             if current_dest:
-                current_obj.pile.item.q_limit = current_dest.distance
+                current_obj.progress.recipe.rate_duration = (
+                    current_dest.duration)
             cls.load_characters_at_loc(cur_loc.id)
         # Abilities
         from .event import Event

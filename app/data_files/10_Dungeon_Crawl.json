@@ -49,7 +49,7 @@
             "name": "Burning"
         },
         {
-            "description": "Experience is gained from combat or other actions. When high enough, set to 0 and increment XP Level.",
+            "description": "Experience Points are gained through combat. Defeating an enemy yields 10 \u00d7 the enemy's XP level to each party member.\r\n\r\nWhen high enough, increase XP Level.",
             "enum_list": [],
             "id": 12,
             "is_binary": false,
@@ -129,7 +129,8 @@
             "position": [0,0],
             "progress": {},
             "quantity": 0.0,
-            "toplevel": false
+            "toplevel": false,
+            "travel_group": ""
         },
         {
             "attribs": [
@@ -154,7 +155,8 @@
             "position": [0,0],
             "progress": {},
             "quantity": 0.0,
-            "toplevel": false
+            "toplevel": false,
+            "travel_group": ""
         },
         {
             "attribs": [
@@ -179,7 +181,8 @@
             "position": [0,0],
             "progress": {},
             "quantity": 0.0,
-            "toplevel": false
+            "toplevel": false,
+            "travel_group": ""
         },
         {
             "attribs": [
@@ -204,7 +207,34 @@
             "position": [0,0],
             "progress": {},
             "quantity": 0.0,
-            "toplevel": false
+            "toplevel": false,
+            "travel_group": ""
+        },
+        {
+            "attribs": [
+                [12, 0.0],
+                [11, 1.0],
+                [8, 0.0],
+                [7, 10.0],
+                [6, 10.0],
+                [5, 0.0],
+                [4, 1.0],
+                [3, 5.0],
+                [2, 5.0]
+            ],
+            "description": "Animals rely on natural skills and do not use equipment.\r\n\r\nDuplicate to create enemies.",
+            "dest_id": null,
+            "events": [],
+            "id": 5,
+            "items": [],
+            "location_id": null,
+            "masked": false,
+            "name": "Animal Template",
+            "position": [0,0],
+            "progress": {},
+            "quantity": 0.0,
+            "toplevel": false,
+            "travel_group": ""
         },
         {
             "attribs": [
@@ -218,7 +248,7 @@
                 [7, 6.0],
                 [8, 3.0]
             ],
-            "description": "Elf Archer, a player character (for example). A patch over his left eye has left him slower to react (-1 Dex), but his battle scars have made him resilient (+2 Max HP).",
+            "description": "Elf Archer, an example player character. A patch over his left eye has left him slower to react (-1 Dex), but his battle scars have made him resilient (+2 Max HP).",
             "dest_id": null,
             "events": [],
             "id": 7,
@@ -229,7 +259,8 @@
             "position": [0,0],
             "progress": {},
             "quantity": 0.0,
-            "toplevel": true
+            "toplevel": true,
+            "travel_group": ""
         }
     ],
     "events": [
@@ -285,7 +316,7 @@
             "destinations": [
                 {
                     "bidirectional": true,
-                    "distance": 3.0,
+                    "duration": 3,
                     "door1": [3,1],
                     "door2": [1,6],
                     "loc2_id": 2
@@ -294,6 +325,7 @@
             "dimensions": [7,7],
             "excluded": [3,3,5,5],
             "id": 1,
+            "item_refs": [],
             "items": [
                 {
                     "item_id": 1,
@@ -303,8 +335,6 @@
             ],
             "masked": false,
             "name": "Entry Cavern",
-            "progress": {},
-            "quantity": 0.0,
             "toplevel": false
         },
         {
@@ -313,19 +343,18 @@
             "dimensions": [3,6],
             "excluded": [3,3,3,5],
             "id": 2,
+            "item_refs": [],
             "items": [],
             "masked": true,
             "name": "Room 2",
-            "progress": {},
-            "quantity": 0.0,
             "toplevel": false
         }
     ],
     "overall": {
         "description": "Your party was responding to a distress signal when suddenly, the ground below collapsed, and all fell down a nearly vertical shaft. No one seems to be injured <i>(yet)</i>. Doubtless there are <c=lightcoral>enemies</c> in the surrounding caverns\u2014good source of <c=lightcoral>XP</c>, an optimist would say.\r\n\r\nModeled after traditional tabletop RPGs and roguelikes. Start by creating your player characters based on templates for species and class. Then craft rudimentary supplies before embarking on an escape to the surface or delving deeper. ",
-        "progress_type": "RPG",
         "multiplayer": true,
         "number_format": "en_US",
+        "progress_type": "RPG",
         "slots": [
             "Main Hand",
             "Off Hand",

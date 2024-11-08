@@ -101,11 +101,13 @@ def load_piles(current_item, char_id, loc_id, main_pile_type):
                     item_piles_at_loc.append(owned_item)
     # This container item id was set by container.progress.from_data(),
     # loaded from the progress table.
-    if container.pile.item.id != current_item.pile.item.id:
+    if (hasattr(container, 'pile')
+            and container.pile.item.id !=
+            current_item.pile.item.id):
         # Don't carry over progress for a different item.
         # Replace the reference with an empty Progress object instead.
         container.progress = Progress(container=container)
-    container.pile = current_item.pile
+        container.pile = current_item.pile
     for recipe in current_item.recipes:
         for source in recipe.sources:
             logger.debug("source pile")

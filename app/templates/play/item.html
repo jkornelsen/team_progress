@@ -32,7 +32,7 @@
                     $('#pickup-btn').click();
                 } else if (key === 'q') {
                     event.preventDefault();
-                    {% if container.pile.slot %}
+                    {% if current.pile.slot %}
                         $('#unequip-btn').click();
                     {% elif game_data.overall.slots %}
                         $('#equip-btn').click();
@@ -50,10 +50,10 @@
         <table style="width: 100%; max-width: 80%; margin: 0 auto;">
             <tr>
                 <td>
-                    {% if container.pile.container_type() == 'general' %}
+                    {% if current.pile.container_type() == 'general' %}
                         General Storage
                         <br>
-                    {% elif container.pile.container_type() == 'char' %}
+                    {% elif current.pile.container_type() == 'char' %}
                         {% set link = url_for('play_char', char_id=container.id) %}
                         {% set letter = link_letters.next(link) %}
                         <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
@@ -61,7 +61,7 @@
                         <a href="{{ link }}">{{ container.name }}</a>
                         <span class="hotkey-indicator">[{{ letter }}]</span>
                         <br>
-                    {% elif container.pile.container_type() == 'loc' %}
+                    {% elif current.pile.container_type() == 'loc' %}
                         {% set link = url_for('play_location', loc_id=container.id) %}
                         {% set letter = link_letters.next(link) %}
                         <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
@@ -127,11 +127,11 @@
                 </style>
                 <td>
                     <div class="button-container">
-                        {% if container.pile.container_type() == 'char' %}
-                            {% if container.pile.slot %}
+                        {% if current.pile.container_type() == 'char' %}
+                            {% if current.pile.slot %}
                                 <div class="button-column" id="unequip-container">
                                     <button id="unequip-btn" class="go-button">Une[q]uip</button>
-                                    <span class="text-by-button">{{ container.pile.slot }}</span>
+                                    <span class="text-by-button">{{ current.pile.slot }}</span>
                                 </div>
                             {% else %}
                                 {% if game_data.overall.slots %}
@@ -154,7 +154,7 @@
                         {% for char in game_data.characters if char.location.id == loc_id %}
                             {% set has.chars = True %}
                         {% endfor %}
-                        {% if container.pile.container_type() == 'loc' and loc_id and has.chars %}
+                        {% if current.pile.container_type() == 'loc' and loc_id and has.chars %}
                             <div class="button-column" id="pickup-container">
                                 <button id="pickup-btn" class="go-button">[P]ick Up</button>
                                 <select id="char-picking-up">
@@ -859,10 +859,10 @@
                 const notEmpty = hasMainQuantity;
                 const storage_carried = '{{ current.storage_type }}' === 'carried';
                 const storage_local = '{{ current.storage_type }}' === 'local';
-                const atLoc = '{{ container.pile.container_type() }}' === 'loc';
-                const inventory = '{{ container.pile.container_type() }}' === 'char';
+                const atLoc = '{{ current.pile.container_type() }}' === 'loc';
+                const inventory = '{{ current.pile.container_type() }}' === 'char';
                 const charAtLoc = {{ container.location is not none | lower }};
-                const inSlot = '{{ container.pile.slot }}' !== '';
+                const inSlot = '{{ current.pile.slot }}' !== '';
                 const visibilityMap = {
                     'equip-container': notEmpty && inventory && storage_carried && !inSlot,
                     'pickup-container': notEmpty && atLoc && !storage_local,
