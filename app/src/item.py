@@ -57,8 +57,15 @@ class Item(CompleteIdentifiable):
         self.attribs = {}  # AttribFor objects keyed by attrib id
         self.recipes = []  # list of Recipe objects
         self.q_limit = 0.0  # limit the quantity if not 0
-        self.progress = Progress(container=self)  # for general storage
+        self._progress = Progress(pholder=self)  # for general storage
         self.pile = GeneralPile(self)  # assigned to best available pile
+
+    @property
+    def progress(self):
+        from .character import Character
+        if self.pile.container_type() == Character.typename():
+            return self.pile.container.progress
+        return self._progress
 
     def _base_export_data(self):
         """Prepare the base dictionary for JSON and DB."""
@@ -108,7 +115,7 @@ class Item(CompleteIdentifiable):
         instance.q_limit = data.get('q_limit', 0.0)
         instance.pile = GeneralPile(
             instance, data.get('quantity', 0.0))
-        instance.progress = Progress.from_data(
+        instance._progress = Progress.from_data(
             data.get('progress', {}), instance)
         instance.recipes = [
             Recipe.from_data(recipe_data, instance)

@@ -21,7 +21,7 @@ from .overall import Overall
 from .progress import Progress
 from .user_interaction import MessageLog
 from .utils import (
-    LinkLetters, NumTup, RequestHelper, entity_class, format_num)
+    LinkLetters, NumTup, RequestHelper, Storage, entity_class, format_num)
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +82,7 @@ def set_routes(app):
             dup_char = new_char
             dup_char.id = 0
             dup_char.name = increment_name(new_char.name)
-            dup_char.progress = Progress(container=dup_char)
+            dup_char.progress = Progress(pholder=dup_char)
             dup_char.to_db()  # Changes the ID
             return redirect(
                 url_for('configure_char', char_id=dup_char.id,
@@ -145,7 +145,7 @@ def set_routes(app):
             dup_item = new_item
             dup_item.id = 0
             dup_item.name = increment_name(new_item.name)
-            dup_item.progress = Progress(container=dup_item)
+            dup_item.progress = Progress(pholder=dup_item)
             recipes = new_item.recipes
             dup_item.recipes = []
             dup_item.to_db()  # Changes the ID
@@ -181,7 +181,6 @@ def set_routes(app):
             dup_loc = new_loc
             dup_loc.id = 0
             dup_loc.name = increment_name(new_loc.name)
-            dup_loc.progress = Progress(container=dup_loc)
             dup_loc.to_db()  # Changes the ID
             return redirect(
                 url_for('configure_location', loc_id=dup_loc.id,
@@ -440,10 +439,9 @@ def set_routes(app):
             # arrived at the destination
             main_char = char
             for char in get_travel_chars(req, char_id):
-                char.progress.stop()
                 char.location = char.destination
                 char.destination = None
-                char.to_db()
+                char.progress.stop()
             loc = Location.from_db_flat(char.location.id)
             MessageLog.add(f"{main_char.name} arrived at {loc.name}.")
             return jsonify({
@@ -495,7 +493,6 @@ def set_routes(app):
         req = RequestHelper('form')
         for char in get_travel_chars(req, char_id):
             if char.progress.stop():
-                char.to_db()
                 paused = True
         if paused:
             return jsonify({'message': 'Progress paused.'})
@@ -564,7 +561,7 @@ def set_routes(app):
         if not item:
             return jsonify({'error': "Item not found"})
         pile = item.pile
-        progress = pile.container.progress
+        progress = item.progress
         logger.debug(
             "Retrieved item %d from DB: %d recipes\n"
             "Pile type %s from %s container",
@@ -594,8 +591,7 @@ def set_routes(app):
             "-" * 80, item_id, recipe_id, char_id, loc_id)
         item = Item.data_for_play(
             item_id, char_id, loc_id, complete_sources=True)
-        pile = item.pile
-        progress = pile.container.progress
+        progress = item.progress
         if progress.start(recipe_id):
             return jsonify({
                 'status': 'success',
@@ -626,11 +622,10 @@ def set_routes(app):
         logger.debug("Retrieved item %d from DB: %d recipes",
             item.id, len(item.recipes))
         container = item.pile.container
-        progress = container.progress
+        progress = item.progress
         if progress.is_ongoing:
             progress.batches_for_elapsed_time()
             progress.stop()
-            container.to_db()
             return jsonify({
                 'status': 'success',
                 'message': 'Progress paused.',
@@ -659,7 +654,7 @@ def set_routes(app):
             "-" * 80, item_id, recipe_id, num_batches, char_id, loc_id)
         item = Item.data_for_play(
             item_id, char_id, loc_id, complete_sources=True)
-        progress = item.pile.container.progress
+        progress = item.progress
         progress.set_recipe_by_id(recipe_id)
         changed = progress.change_quantity(num_batches)
         if changed:

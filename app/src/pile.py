@@ -71,6 +71,7 @@ def load_piles(current_item, char_id, loc_id, main_pile_type):
     current_item.pile = _assign_pile(
         current_item, chars, loc, char_id, loc_id, main_pile_type)
     current_item.pile.item = current_item
+    current_item.progress.pile = current_item.pile
     container = current_item.pile.container
     item_piles_at_loc = []
     from .item import Item
@@ -106,7 +107,8 @@ def load_piles(current_item, char_id, loc_id, main_pile_type):
             current_item.pile.item.id):
         # Don't carry over progress for a different item.
         # Replace the reference with an empty Progress object instead.
-        container.progress = Progress(container=container)
+        container.progress = Progress(
+            container=container, pile=current_item.pile)
         container.pile = current_item.pile
     for recipe in current_item.recipes:
         for source in recipe.sources:

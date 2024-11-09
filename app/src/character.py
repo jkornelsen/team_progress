@@ -40,7 +40,7 @@ class OwnedItem(Pile):
     def _base_export_data(self):
         return {
             'item_id': self.item.id,
-            'progress_qty': self.progress_qty,
+            'quantity': self.quantity,
             'slot': self.slot,
             }
 
@@ -72,7 +72,7 @@ class Character(CompleteIdentifiable):
         self.location = None  # Location object where char is
         self.position = NumTup((0, 0))
         self.destination = None  # Location object to travel to
-        self.progress = Progress(container=self)  # travel or producing items
+        self.progress = Progress(pholder=self)  # travel or producing items
 
     @classmethod
     def typename(cls):

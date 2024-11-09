@@ -25,9 +25,10 @@ tables_to_create = {
 
 class Progress(DependentIdentifiable):
     """Track progress over time."""
-    def __init__(self, new_id="", container=None, recipe=None):
+    def __init__(self, new_id="", pholder=None, pile=None, recipe=None):
         super().__init__(new_id)
-        self.container = container  # Character or Item that uses this object
+        self.pholder = pholder  # Character or Item that stores Progress data
+        self.pile = pile  # Item produced -- quantity gets changed
         if recipe:
             self.recipe = recipe
         else:
@@ -38,12 +39,6 @@ class Progress(DependentIdentifiable):
         self.is_ongoing = False
         self.lock = threading.Lock()
         self.failure_reason = ""  # error message for caller to read
-
-    @property
-    def pile(self):
-        if self.container and hasattr(self.container, 'pile'):
-            return self.container.pile
-        return None
 
     @property
     def q_limit(self):
@@ -71,11 +66,11 @@ class Progress(DependentIdentifiable):
         return self._base_export_data()
 
     @classmethod
-    def from_data(cls, data, container=None):
+    def from_data(cls, data, pholder=None):
         data = cls.prepare_dict(data)
-        instance = cls(data.get('id') or 0, container=container)
+        instance = cls(data.get('id') or 0, pholder=pholder)
         from .item import Item
-        if container and instance.pile and not instance.pile.item:
+        if pholder and instance.pile and not instance.pile.item:
             instance.pile.item = Item(data.get('item_id') or 0)
         instance.recipe = Recipe(data.get('recipe_id') or 0)
         instance.start_time = data.get('start_time')
@@ -110,6 +105,19 @@ class Progress(DependentIdentifiable):
             entity_data = entities_data.setdefault(entity_rows.id, entity_rows)
             entity_data.progress = progress_rows
         return entities_data
+
+    def pholder_to_db(self):
+        """Calling pholder.to_db should include storing this class to db."""
+        logger.debug("self.pholder[%s].to_db()", self.pholder.name)
+        self.pholder.to_db()
+        if self.pile and (self.pholder != self.pile.container or
+                self.pholder.typename() != self.pile.container.typename() or
+                self.pholder.id != self.pile.container.id):
+            # Expected when pile is local item at loc, storing quantity.
+            # In that case, self.pholder is Item, storing Progress data.
+            logger.debug(
+                "self.pile.container[%s].to_db()", self.pile.container.name)
+            self.pile.container.to_db()
 
     # returns true if able to change quantity
     def change_quantity(self, batches_requested):
@@ -180,16 +188,13 @@ class Progress(DependentIdentifiable):
                     self.pile.quantity, eff_result_qty, self.pile.item.id)
                 self.pile.quantity += eff_result_qty
                 self.batches_processed += num_batches
-                logger.debug(
-                    "change_quantity(): self.container[%s].to_db()",
-                    self.container.name)
-                self.container.to_db()
+                self.pholder_to_db()
                 if self.pile.item.name:
                     message = (
                         f"{self.pile.item.name} increased"
                         f" by {format_num(eff_result_qty)}")
-                    if self.container.name != self.pile.item.name:
-                        message = f"{self.container.name}'s " + message
+                    if self.pile.container.name != self.pile.item.name:
+                        message = f"{self.pile.container.name}'s " + message
                     MessageLog.add(message);
                 # Add byproducts produced
                 for byproduct in self.recipe.byproducts:
@@ -289,7 +294,7 @@ class Progress(DependentIdentifiable):
         self.start_time = datetime.now()
         self.batches_processed = 0
         self.is_ongoing = True
-        self.container.to_db()
+        self.pholder_to_db()
         return True
 
     def stop(self):
@@ -297,8 +302,9 @@ class Progress(DependentIdentifiable):
         if self.is_ongoing:
             self.is_ongoing = False
             self.stop_time = datetime.now()
-            self.container.to_db()
+            self.pholder_to_db()
             return True
+        self.pholder_to_db()
         return False
 
     def calculate_elapsed_time(self):

@@ -1,3 +1,41 @@
+---- current focus ----
+
+producing raw bacon fails
+
+can a numeric attrib requirement be 0 or negative?
+-1 was accepted because none was found, which is 0
+but that doesn't make sense
+should be able to require both checked and unchecked?
+maybe recipe_attribs should have min_val and max_val
+    currently has "value real not null"
+that would make it possible to specify an exact val
+might want an AttribReq class derived from AttribFor
+we currently have this which seems pretty good:
+    def exceeds_limit(self, quantity):
+        return (
+            (self.q_limit > 0.0 and quantity > self.q_limit) or
+            (self.q_limit < 0.0 and quantity < self.q_limit)
+            )
+attribs maybe should use the same rules as items
+no, that's a limit, which is not the same as a requirement
+maybe recipe_attribs could have one of: '>=', '<=', '='
+no, min and max give more capability
+maybe if max is empty then treat as infinity like q_limit
+that shouldn't be too annoying for the user if it defaults to '>='
+also, add code to only count for 0 if the attr exists
+maybe hasattr, or .get('attrname', None) instead of ,0 as default
+example: new calf
+
+travel and item progress restarts instead of pausing when stopped
+if that is what we decide then the action bar should go immediately to 0
+
+---- issues ----
+
+shouldn't be able to have both a two-way dest and an arrival one-way dest
+
+dollars for lemonade stand suddenly lost its recipe, yet progress continued
+I think this was during item play, not configure
+
 ---- system setup ----
 
 hosting possibilities:
@@ -94,6 +132,11 @@ some events could be related to production, including all
 automatically triggered ones,
 while 'shoot' would make more sense on item play instead
 
+if an item cannot be produced,
+reload play item every 10 seconds until it can be?
+although that might not be why we're viewing the page,
+and if not, it could be annoying
+
 prompt before overwriting another action in progress
 such as if a character is already doing something else
 
@@ -109,6 +152,12 @@ although that wouldn't be obvious at all
 going to overview would also take away that choice for top-level items
 
 check for triggered events in overview
+
+implement checking triggers for item progress
+maybe in item_progress, similar to call in char_progress
+event.check_trigger_for_duration(time_spent)
+pop up event in play/item.html like in play/character.html
+we'll also want it for overview eventually
 
 are item triggers only for general qty?
 
