@@ -243,6 +243,7 @@ class Progress(DependentIdentifiable):
             recipe_id = self.recipe.id
             if not recipe_id:
                 return
+        self.recipe = None
         for recipe in self.pile.item.recipes:
             if recipe.id == recipe_id:
                 self.recipe = recipe
@@ -251,7 +252,7 @@ class Progress(DependentIdentifiable):
     def can_produce(self, recipe_id=None):
         """True if at least one batch can be produced."""
         logger.debug("can_produce(%s)", recipe_id)
-        if recipe_id is not None:
+        if recipe_id:
             self.set_recipe_by_id(recipe_id)
         if self.recipe is None:
             self.report_failure("No recipe.")

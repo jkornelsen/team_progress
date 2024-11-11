@@ -64,8 +64,14 @@ class Item(CompleteIdentifiable):
     def progress(self):
         from .character import Character
         if self.pile.container_type() == Character.typename():
-            return self.pile.container.progress
+            progress = self.pile.container.progress
+            if progress.pile and progress.pile.item.id == self.id:
+                return progress
         return self._progress
+
+    @progress.setter
+    def progress(self, value):
+        self._progress = value
 
     def _base_export_data(self):
         """Prepare the base dictionary for JSON and DB."""

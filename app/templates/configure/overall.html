@@ -228,7 +228,7 @@
                     alert("Please specify a winning value for the attribute.");
                     return;
                 }
-                const paramsToSend = {
+                addRequirement({
                     itemId: item.id,
                     itemName: item.name,
                     itemQuantity: item.quantity,
@@ -239,14 +239,13 @@
                     attribId: attrib.id,
                     attribName: attrib.name,
                     attribValue: attrib.value
-                };
-                addRequirement(paramsToSend);
+                });
                 $('.item-req-container').hide();
                 $('.char-req-container').hide();
             }
 
             {% for req in current.win_reqs %}
-                const paramsToSend = {
+                addRequirement({
                     'itemId': "{{ req.item.id }}",
                     'itemName': "{{ req.item.name }}",
                     'itemQuantity': "{{ req.quantity | formatNum }}",
@@ -257,8 +256,7 @@
                     'attribId': "{{ req.attrib.id }}",
                     'attribName': "{{ req.attrib.name }}",
                     'attribValue': "{{ req.attrib.value | formatNum }}"
-                };
-                addRequirement(paramsToSend);
+                });
             {% endfor %}
 
             document.getElementById('add-item-req').addEventListener('click', () => {

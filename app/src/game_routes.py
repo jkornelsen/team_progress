@@ -563,11 +563,11 @@ def set_routes(app):
         pile = item.pile
         progress = item.progress
         logger.debug(
-            "Retrieved item %d from DB: %d recipes\n"
-            "Pile type %s from %s container",
-            item.id, len(item.recipes), pile.container_type(),
-            pile.container.name)
-        if progress.is_ongoing:
+            "Retrieved item %d from DB: %d recipes, recipe id %d\n"
+            "Pile container: %s %s",
+            item.id, len(item.recipes), progress.recipe.id,
+            pile.container_type(), pile.container.name)
+        if progress.recipe.id and progress.is_ongoing:
             progress.batches_for_elapsed_time()
         return jsonify({
             'is_ongoing': progress.is_ongoing,
@@ -579,6 +579,11 @@ def set_routes(app):
 
     @app.route('/item/start/<int:item_id>/<int:recipe_id>')
     def start_item(item_id, recipe_id):
+        if not recipe_id:
+            return jsonify({
+                'status': 'error',
+                'message': "No recipe.",
+                })
         req = RequestHelper('args')
         char_id = req.get_int('char_id', '')
         loc_id = req.get_int('loc_id', '')
