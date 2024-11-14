@@ -30,7 +30,7 @@ from src.cache import init_cache
 from src.game_data import GameData
 from src.user_interaction import UserInteraction
 from src.file import set_routes as _set_file_routes
-from src.game_routes import set_routes as _set_game_routes
+from src.game_routes import set_routes as _set_game_routes, back_to_referrer
 from src.utils import format_num
 
 app = Flask(__name__)
@@ -112,6 +112,7 @@ def _set_app_routes():
         from src.character import Character
         g.game_data.from_db_flat([Character])
         if request.method == 'GET':
+            session['referrer'] = request.referrer
             return render_template(
                 'session/username.html',
                 characters=g.game_data.characters
@@ -120,7 +121,7 @@ def _set_app_routes():
         if not username:
             username = generate_username()
         session['username'] = username
-        return redirect(url_for('index'))
+        return back_to_referrer()
 
     @app.route('/session-users')
     def session_users():

@@ -116,7 +116,7 @@ def set_routes(app):
                 'configure/scenarios.html',
                 scenarios=scenarios,
                 sort_by=sort_by,
-                link_letters=LinkLetters('mos'))
+                link_letters=LinkLetters('mo'))
         scenario_file = request.form.get('scenario_file')
         scenario_title = request.form.get('scenario_title')
         if not scenario_file:

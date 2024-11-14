@@ -1,21 +1,18 @@
-# Team Progress &mdash; ttRPG + incremental
+# Team Progress: incremental + TTRPG
 ----
 
-So, you can make stuff as well as fight and explore.
-Like in tabletop RPGs,
-the driving forces are narrative and imagination along with chance.
+Produce, interact, and explore&mdash;modelling a wide variety of ideas.
+Like in tabletop RPGs, the driving forces are storytelling and chance.
 
 A good place to start is the pre-built scenario "Bacon for Dinner."
 
-Setup is often part of playing rather than separate.
-For example, as the group enters a town, talk about what could
-be there and set it up accordingly.
-And if you know what a value should be but there isn't
-any clear way to do it, go to settings and force the change.
+The setup section is often considered part of playing.
+For example, if you know what a value ought to be but there isn't
+any clear way to do it, go to settings and force the change,
+then describe what happened.
 
-Results are subject to interpretation by the Gamemaster.
-Communicate the narrative remotely using a chat app such as Discord.
-For solo RPGs, a text document works well.
+For solo RPGs, it helps to track the narrative in a
+text document rather than only looking at what is displayed.
 
 The flexible, multiplayer design requires more on the server side
 than normal idlers.

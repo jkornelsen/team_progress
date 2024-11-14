@@ -134,7 +134,8 @@
                         <ul>
                             {% for dest in current.destinations %}
                                 {% if dest.other_loc.masked %}
-                                    (Unvisited)
+                                    <span class="hotkey-indicator">[&nbsp;&nbsp;]</span>
+                                    Somewhere not yet visited
                                 {% else %}
                                     {% set link = url_for('play_location', loc_id=dest.other_loc.id) %}
                                     {% set letter = link_letters.next(link) %}

@@ -677,12 +677,19 @@ def set_routes(app):
             })
 
     @app.route(
-        '/item/drop/<int:item_id>/char/<int:char_id>/qty/<float:qty_to_drop>',
+        '/item/drop/<int:item_id>/char/<int:char_id>/qty/<string:qty_to_drop>',
         methods=['POST'])
     def drop_item(item_id, char_id, qty_to_drop):
         logger.debug(
-            "%s\ndrop_item(item_id=%d, char_id=%d, qty=%d)",
+            "%s\ndrop_item(item_id=%d, char_id=%d, qty=%s)",
             "-" * 80, item_id, char_id, qty_to_drop)
+        try:
+            qty_to_drop = float(qty_to_drop)
+        except ValueError:
+            return jsonify({
+                'status': 'error',
+                'message': 'Invalid quantity.'
+                })
         item = Item.load_complete_object(item_id)
         char = Character.load_complete_object(char_id)
         owned_item = char.items.get(item_id)

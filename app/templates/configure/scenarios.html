@@ -31,21 +31,12 @@
     <form method="get" action="{{ url_for("browse_scenarios") }}">
         <div style="text-align: right; padding-bottom: 10px;">
             <label for="sort_by">Sort by:</label>
-            <select name="sort_by" id="sort_by">
+            <select name="sort_by" id="sort_by" onchange="this.form.submit()">
                 <option value="filename" {% if sort_by == 'filename' %}selected{% endif %}>Gameplay Concepts</option>
                 <option value="progress_type" {% if sort_by == 'progress_type' %}selected{% endif %}>Progress Type</option>
                 <option value="multiplayer" {% if sort_by == 'multiplayer' %}selected{% endif %}>Multiplayer</option>
                 <option value="filesize" {% if sort_by == 'filesize' %}selected{% endif %}>Size</option>
             </select>
-            <button type="submit"
-                    id="submit_sort_by">
-                [S]ort
-            </button>
-            <script>
-            funcForKey['s'] = () => {
-                document.querySelector('#submit_sort_by').click();
-            };
-            </script>
         </div>
     </form>
     <table class="align-top spacious">

@@ -9,14 +9,6 @@
             "name": "Depth"
         },
         {
-            "description": "Magic Points \u2014 reserves of magical energy used for casting.",
-            "enum_list": [],
-            "id": 5,
-            "is_binary": false,
-            "mult": false,
-            "name": "MP"
-        },
-        {
             "description": "Hit Points \u2014 current health of a character.",
             "enum_list": [],
             "id": 6,
@@ -65,14 +57,6 @@
             "name": "XP Level"
         },
         {
-            "description": "Dexterity increases accuracy, evasion, and ranged damage dealt.\r\n\r\nChoosing the Thief class grants 3 Dex.\r\n\r\nChoosing the Archer class grants 2 Dex and 1 Str.",
-            "enum_list": [],
-            "id": 3,
-            "is_binary": false,
-            "mult": false,
-            "name": "Dex"
-        },
-        {
             "description": "Strength increases melee damage dealt.\r\n\r\nChoosing the Melee class grants 2 Str, 1 Dex, and 2 Max HP.",
             "enum_list": [],
             "id": 2,
@@ -103,9 +87,99 @@
             "is_binary": false,
             "mult": false,
             "name": "Density"
+        },
+        {
+            "description": "Magic Points \u2014 reserves of magical energy used for casting.",
+            "enum_list": [],
+            "id": 5,
+            "is_binary": false,
+            "mult": false,
+            "name": "MP"
+        },
+        {
+            "description": "Reserves of physical energy used for big actions.",
+            "enum_list": [],
+            "id": 14,
+            "is_binary": false,
+            "mult": false,
+            "name": "Stamina"
+        },
+        {
+            "description": "Dexterity increases accuracy, evasion, and ranged damage dealt.\r\n\r\nChoosing the Thief class grants 3 Dex.\r\n\r\nChoosing the Archer class grants 2 Dex and 1 Str.",
+            "enum_list": [],
+            "id": 3,
+            "is_binary": false,
+            "mult": false,
+            "name": "Dex"
+        },
+        {
+            "description": "Equipped armour can increase chance to dodge. Combines with character's Dex.",
+            "enum_list": [],
+            "id": 15,
+            "is_binary": false,
+            "mult": false,
+            "name": "Evasion"
+        },
+        {
+            "description": "Equipped weapons can increase chance to hit. Combines with character's Dex.",
+            "enum_list": [],
+            "id": 16,
+            "is_binary": false,
+            "mult": false,
+            "name": "Accuracy"
         }
     ],
     "characters": [
+        {
+            "attribs": [
+                [11, 1.0],
+                [12, 0.0],
+                [2, 1.0],
+                [3, 3.0],
+                [4, 5.0],
+                [5, 3.0],
+                [6, 4.0],
+                [7, 4.0],
+                [8, 3.0]
+            ],
+            "description": "Elves are intelligent and light on their feet, known especially for their Mages.\r\n\r\nDuplicate to create either a player char or NPC.",
+            "dest_id": null,
+            "events": [],
+            "id": 3,
+            "items": [],
+            "location_id": null,
+            "masked": false,
+            "name": "Elf Template",
+            "position": [0,0],
+            "progress": {},
+            "toplevel": false,
+            "travel_group": ""
+        },
+        {
+            "attribs": [
+                [2, 5.0],
+                [3, 5.0],
+                [4, 1.0],
+                [5, 0.0],
+                [6, 10.0],
+                [7, 10.0],
+                [8, 0.0],
+                [11, 1.0],
+                [12, 0.0]
+            ],
+            "description": "Animals rely on natural skills and do not use equipment.\r\n\r\nDuplicate to create enemies.",
+            "dest_id": null,
+            "events": [],
+            "id": 5,
+            "items": [],
+            "location_id": null,
+            "masked": false,
+            "name": "Animal Template",
+            "position": [0,0],
+            "progress": {},
+            "toplevel": false,
+            "travel_group": ""
+        },
         {
             "attribs": [
                 [11, 1.0],
@@ -128,33 +202,6 @@
             "name": "Dwarf Template",
             "position": [0,0],
             "progress": {},
-            "quantity": 0.0,
-            "toplevel": false,
-            "travel_group": ""
-        },
-        {
-            "attribs": [
-                [11, 1.0],
-                [12, 0.0],
-                [2, 4.0],
-                [3, 3.0],
-                [4, 2.0],
-                [5, 2.0],
-                [6, 7.0],
-                [7, 7.0],
-                [8, 2.0]
-            ],
-            "description": "Orcs are versatile fighters and can see in the dark. However, they're not well-liked.\r\n\r\nDuplicate to create either a player char or NPC.",
-            "dest_id": null,
-            "events": [],
-            "id": 5,
-            "items": [],
-            "location_id": null,
-            "masked": false,
-            "name": "Orc Template",
-            "position": [0,0],
-            "progress": {},
-            "quantity": 0.0,
             "toplevel": false,
             "travel_group": ""
         },
@@ -180,59 +227,6 @@
             "name": "Halfling Template",
             "position": [0,0],
             "progress": {},
-            "quantity": 0.0,
-            "toplevel": false,
-            "travel_group": ""
-        },
-        {
-            "attribs": [
-                [11, 1.0],
-                [12, 0.0],
-                [2, 1.0],
-                [3, 3.0],
-                [4, 5.0],
-                [5, 3.0],
-                [6, 4.0],
-                [7, 4.0],
-                [8, 3.0]
-            ],
-            "description": "Elves are intelligent and light on their feet, known especially for their Mages.\r\n\r\nDuplicate to create either a player char or NPC.",
-            "dest_id": null,
-            "events": [],
-            "id": 3,
-            "items": [],
-            "location_id": null,
-            "masked": false,
-            "name": "Elf Template",
-            "position": [0,0],
-            "progress": {},
-            "quantity": 0.0,
-            "toplevel": false,
-            "travel_group": ""
-        },
-        {
-            "attribs": [
-                [12, 0.0],
-                [11, 1.0],
-                [8, 0.0],
-                [7, 10.0],
-                [6, 10.0],
-                [5, 0.0],
-                [4, 1.0],
-                [3, 5.0],
-                [2, 5.0]
-            ],
-            "description": "Animals rely on natural skills and do not use equipment.\r\n\r\nDuplicate to create enemies.",
-            "dest_id": null,
-            "events": [],
-            "id": 5,
-            "items": [],
-            "location_id": null,
-            "masked": false,
-            "name": "Animal Template",
-            "position": [0,0],
-            "progress": {},
-            "quantity": 0.0,
             "toplevel": false,
             "travel_group": ""
         },
@@ -250,16 +244,40 @@
             ],
             "description": "Elf Archer, an example player character. A patch over his left eye has left him slower to react (-1 Dex), but his battle scars have made him resilient (+2 Max HP).",
             "dest_id": null,
-            "events": [],
+            "events": [5, 6],
             "id": 7,
             "items": [],
             "location_id": 1,
             "masked": false,
             "name": "Thornwick",
-            "position": [0,0],
+            "position": [1,6],
             "progress": {},
-            "quantity": 0.0,
             "toplevel": true,
+            "travel_group": ""
+        },
+        {
+            "attribs": [
+                [12, 0.0],
+                [11, 1.0],
+                [8, 0.0],
+                [7, 10.0],
+                [6, 10.0],
+                [5, 0.0],
+                [4, 1.0],
+                [3, 6.0],
+                [2, 1.0]
+            ],
+            "description": "Somehow they're always bigger when they're coming out of the shadows in an unexplored room.",
+            "dest_id": null,
+            "events": [],
+            "id": 8,
+            "items": [],
+            "location_id": 2,
+            "masked": false,
+            "name": "Rat",
+            "position": [2,1],
+            "progress": {},
+            "toplevel": false,
             "travel_group": ""
         }
     ],
@@ -273,6 +291,155 @@
             "numeric_range": [1, 20],
             "outcome_type": "fourway",
             "selection_strings": "",
+            "toplevel": false,
+            "trigger_chance": 0.0,
+            "triggers": [
+                ["item", 1]
+            ]
+        },
+        {
+            "changed": [],
+            "description": "Chance to detect items or stealthy characters, or avoid detection.\r\n\r\n\u2022 Int and Dex increase detection.\r\n\u2022 Dex increases stealth.",
+            "determining": [
+                ["attrib", 3],
+                ["attrib", 4]
+            ],
+            "id": 3,
+            "name": "Perception",
+            "numeric_range": [1, 20],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": true,
+            "trigger_chance": 0.0,
+            "triggers": []
+        },
+        {
+            "changed": [
+                ["attrib", 6]
+            ],
+            "description": "Dex increases both die min and max, while Str increases die min only.\r\n\r\nFirst roll <a href=\"/play/event/5\">Shoot -- Success</a> to determine if the attack hits.",
+            "determining": [
+                ["attrib", 3],
+                ["attrib", 2]
+            ],
+            "id": 6,
+            "name": "Shoot -- Dmg",
+            "numeric_range": [
+                -2,
+                -1
+            ],
+            "outcome_type": "numeric",
+            "selection_strings": "",
+            "toplevel": false,
+            "trigger_chance": 0.0,
+            "triggers": []
+        },
+        {
+            "changed": [],
+            "description": "Determines whether a ranged attack hits. Dexterity increases accuracy, while evasion decreases it.\r\n\r\nIf successful, also roll <a href=\"/play/event/6\">Shoot -- Dmg</a> to determine how much damage is done and apply to a target.",
+            "determining": [
+                ["attrib", 3]
+            ],
+            "id": 5,
+            "name": "Shoot -- Success",
+            "numeric_range": [1, 20],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": false,
+            "trigger_chance": 0.0,
+            "triggers": []
+        },
+        {
+            "changed": [],
+            "description": "Higher XP level means that more enemies may spawn. Also roll for:\r\n\u2022 <a href=\"/play/event/7\">Which Enemy</a>\r\n\u2022 <a href=\"/play/event/9\">Grid X</a>\r\n\u2022 <a href=\"/play/event/10\">Grid Y</a>",
+            "determining": [
+                ["attrib", 11]
+            ],
+            "id": 8,
+            "name": "Populate Room -- Number of Enemies",
+            "numeric_range": [0, 2],
+            "outcome_type": "numeric",
+            "selection_strings": "None\r\nRat",
+            "toplevel": true,
+            "trigger_chance": 0.0,
+            "triggers": []
+        },
+        {
+            "changed": [],
+            "description": "Higher XP level means that more enemies may spawn. Also roll for:\r\n\u2022 <a href=\"/play/event/12\">Which Item</a>\r\n\u2022 <a href=\"/play/event/9\">Grid X</a>\r\n\u2022 <a href=\"/play/event/10\">Grid Y</a>",
+            "determining": [
+                ["attrib", 11]
+            ],
+            "id": 11,
+            "name": "Populate Room -- Number of Items",
+            "numeric_range": [0, 2],
+            "outcome_type": "numeric",
+            "selection_strings": "None\r\nRat",
+            "toplevel": true,
+            "trigger_chance": 0.0,
+            "triggers": []
+        },
+        {
+            "changed": [],
+            "description": "Roll after <a href=\"/play/event/11\">Number of Items</a>.",
+            "determining": [],
+            "id": 12,
+            "name": "Populate Room -- Which Item",
+            "numeric_range": [1, 20],
+            "outcome_type": "selection",
+            "selection_strings": "None\r\nStone",
+            "toplevel": true,
+            "trigger_chance": 0.0,
+            "triggers": []
+        },
+        {
+            "changed": [],
+            "description": "Vertical grid coordinate starting from 1. If the roll hits a blocked-off area then roll again.\r\n\r\nAlso roll for <a href=\"/play/event/9\">Grid X</a>.",
+            "determining": [],
+            "id": 10,
+            "name": "Grid Y",
+            "numeric_range": [1, 5],
+            "outcome_type": "numeric",
+            "selection_strings": "",
+            "toplevel": true,
+            "trigger_chance": 0.0,
+            "triggers": []
+        },
+        {
+            "changed": [],
+            "description": "Determine who goes first in combat.\r\n\r\nHowever, this roll may not be needed if there is another way to determine who goes first. For example, if one party is stealthed and not detected, then they go first.",
+            "determining": [],
+            "id": 4,
+            "name": "Initiative",
+            "numeric_range": [1, 20],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": true,
+            "trigger_chance": 0.0,
+            "triggers": []
+        },
+        {
+            "changed": [],
+            "description": "Horizontal grid coordinate starting from 1. If the roll hits a blocked-off area then roll again.\r\n\r\nAlso roll for <a href=\"/play/event/10\">Grid Y</a>.",
+            "determining": [],
+            "id": 9,
+            "name": "Grid X",
+            "numeric_range": [1, 5],
+            "outcome_type": "numeric",
+            "selection_strings": "",
+            "toplevel": true,
+            "trigger_chance": 0.0,
+            "triggers": []
+        },
+        {
+            "changed": [],
+            "description": "Roll after <a href=\"/play/event/8\">Number of Enemies</a>.",
+            "determining": [],
+            "id": 7,
+            "name": "Populate Room -- Which Enemy",
+            "numeric_range": [1, 20],
+            "outcome_type": "selection",
+            "selection_strings": "None\r\nRat",
             "toplevel": true,
             "trigger_chance": 0.0,
             "triggers": []
@@ -316,9 +483,9 @@
             "destinations": [
                 {
                     "bidirectional": true,
-                    "duration": 3,
                     "door1": [3,1],
                     "door2": [1,6],
+                    "duration": 3,
                     "loc2_id": 2
                 }
             ],
@@ -338,7 +505,7 @@
             "toplevel": false
         },
         {
-            "description": "North of Entry Cavern.",
+            "description": "North of Entry Cavern. There is a skittering noise in the shadows.",
             "destinations": [],
             "dimensions": [3,6],
             "excluded": [3,3,3,5],

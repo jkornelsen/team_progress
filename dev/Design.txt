@@ -26,8 +26,9 @@ example: new calf
 
 travel and item progress restarts instead of pausing when stopped
 if that is what we decide then the action bar should go immediately to 0
-
 ignoring an event causes travel progress timer to restart
+
+set character's grid coordinates to exit door
 
 ---- issues ----
 
@@ -37,6 +38,12 @@ dollars for lemonade stand suddenly lost its recipe, yet progress continued
 I think this was during item play, not configure
 
 blank setup is still starting ID numbers at 4 or 15
+
+game_routes.py line 558, in item_progress
+    item = Item.data_for_play(
+recipe.py line 234, in load_complete_data
+    recipes_data = item_recipes[recipe_row.item_id]
+KeyError: 11
 
 ---- system setup ----
 
@@ -174,24 +181,15 @@ multiply by distance so far that we haven't counted yet?
 don't allow production if byproducts would exceed limit
 or maybe allow but don't go past limit, and prefer no limit
 
+events may depend on multiple attrs of the same type,
+such as dexterity for accuracy and enemy dexterity for evasion
+also weapon accuracy and armour evasion
+maybe we could add a label for each
+also specify whether to add or subtract
+for example str subtracts damage, which is negative hp change
+specify operation [+-*/] for each event_entities rather than attrib
+
 ---- scenario changes ----
-
-scenario: Bacon
-the current way the farm is set up makes it so
-pig breeding is easier to see first,
-so there's less reason to carelessly butcher
-
-scenario: Dungeon Crawl
-animal class, rat
-stamina for physical actions
-perception
-randomly populate room with items to pick up
-by running events
-chance based on item rarity
-or other attrs, for example, some items more likely in fire caves
-and others more likely in ice
-also randomly populate with monsters
-allow only one of each type of item pile at a loc
 
 scenario: Fission Plant
 win condition includes no more than a certain amount of pollution
