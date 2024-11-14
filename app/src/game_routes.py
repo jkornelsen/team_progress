@@ -15,7 +15,7 @@ from .attrib import Attrib
 from .db_serializable import DeletionError
 from .character import Character, OwnedItem
 from .item import Item
-from .event import Event
+from .event import Event, OPERATIONS
 from .location import Location, ItemAt
 from .overall import Overall
 from .progress import Progress
@@ -295,6 +295,7 @@ def set_routes(app):
                 from_entity=from_entity,
                 game_data=g.game_data,
                 message=message,
+                operations=OPERATIONS,
                 link_letters=LinkLetters('ademor')
                 )
         Event.change_by_form()

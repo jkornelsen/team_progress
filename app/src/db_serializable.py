@@ -167,10 +167,14 @@ class DbSerializable(Serializable):
         return results[0]
 
     @classmethod
-    def execute_change(cls, query_without_table, values=None, fetch=False):
+    def execute_change(
+            cls, query_without_table, values=None, qhelper=None, fetch=False):
         """Returning a value is useful when inserting
         auto-generated IDs.
         """
+        if qhelper:
+            query_without_tables = qhelper.query
+            values = qhelper.values
         if values is None:
             values = []
         query = query_without_table.format(table=cls.tablename())

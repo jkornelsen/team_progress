@@ -46,9 +46,58 @@ OUTCOMES = [
 RELATION_TYPES = ['determining', 'changed', 'triggers']
 ENTITY_TYPES = [Attrib, Item, Location]
 ENTITY_TYPENAMES = [entity.typename() for entity in ENTITY_TYPES]
+OPERATIONS = {
+    '+': 'Add',
+    '-': 'Subtract',
+    '*': 'Multiply',
+    '/': 'Divide',
+    '^': 'Exponent',
+    'log': 'Log (base 10)'
+    }
+
+def get_entity_tuple(row):
+    """Returns (typename, id).
+    Useful when, for example, either attrib_id or item_id may be non-null.
+    """
+    entity_cls = next(
+        (e_cls for e_cls in ENTITY_TYPES
+            if getattr(row, e_cls.id_field(), None)), 
+        None)
+    if entity_cls:
+        return (
+            entity_cls.typename(),
+            getattr(row, entity_cls.id_field())
+            )
+    return None
 
 def roll_dice(sides):
     return random.randint(1, sides)
+
+class Determinant
+    def __init__(self, entity=None):
+        self.entity = entity
+        self.operation = '+'
+        self.label = ""
+
+    def dict_for_json(self):
+        return {
+            'entity_data': [
+                self.entity.typename(),
+                self.entity.id
+                ],
+            'operation': self.operation,
+            'label': self.label,
+            }
+
+    @classmethod
+    def from_data(cls, data):
+        data = cls.prepare_dict(data)
+        instance = cls()
+        typename, entity_id = data.get('entity_data', []):
+        if typename in ENTITY_TYPENAMES:
+            instance.entity = create_entity(typename, entity_id, ENTITY_TYPES)
+        instance.operation = data.get('operation', '+')
+        instance.label = data.get('label', "")
 
 class Event(CompleteIdentifiable):
     def __init__(self, new_id=""):
@@ -59,7 +108,7 @@ class Event(CompleteIdentifiable):
         self.outcome_type = OUTCOME_FOURWAY
         self.numeric_range = NumTup((1, 20))  # (min, max)
         self.selection_strings = ""  # newline-separated possible outcomes
-        self.determining_entities = []  # these determine the outcome
+        self.determining_entities = []  # Determinant objects
         self.changed_entities = []  # changed by the outcome
         self.triggers_entities = []  # can trigger the event
         self.trigger_chance = 0.0
@@ -80,8 +129,11 @@ class Event(CompleteIdentifiable):
         data = self._base_export_data()
         data.update({
             'numeric_range': self.numeric_range.as_list(),
+            'determining': [
+                det.dict_for_json()
+                for det in self.determining_entities]
             })
-        for reltype in RELATION_TYPES:
+        for reltype in ('changed', 'triggers'):
             entities = getattr(self, f'{reltype}_entities')
             data.update({
                 reltype: [
@@ -105,7 +157,11 @@ class Event(CompleteIdentifiable):
         instance.outcome_type = data.get('outcome_type', OUTCOME_FOURWAY)
         instance.numeric_range = NumTup(data.get('numeric_range') or (0, 10))
         instance.selection_strings = data.get('selection_strings', "")
-        for reltype in RELATION_TYPES:
+        instance.determining = [
+            Determinant.from_data(det_data)
+            for det_data in data.get('determining', [])
+            ]
+        for reltype in ('changed', 'triggers'):
             setattr(
                 instance, f'{reltype}_entities', [
                     create_entity(typename, entity_id, ENTITY_TYPES)
@@ -119,23 +175,36 @@ class Event(CompleteIdentifiable):
     def to_db(self):
         logger.debug("to_db()")
         super().to_db()
-        self.execute_change("""
-            DELETE FROM event_entities
-            WHERE event_id = %s AND game_token = %s
-                AND char_id IS NULL
-            """, (self.id, g.game_token))
-        entity_values = {}  # keyed by entity typename
         for reltype in RELATION_TYPES:
-            entities = getattr(self, f'{reltype}_entities')
-            for entity in entities:
-                entity_values.setdefault(entity.typename(), []).append((
-                    g.game_token, self.id, entity.id, reltype
-                    ))
+            qhelper = QueryHelper(f"""
+                DELETE FROM event_{reltype}
+                WHERE event_id = %s AND game_token = %s
+                """, [self.id, g.game_token])
+            if reltype == 'triggers':
+                qhelper.add_limit_expr("AND char_id IS NULL")
+            self.execute_change(qhelper=qhelper)
+        entity_values = {}  # keyed by entity typename
+        for det in self.determining_entities:
+            entity = det.entity
+            entity_values.setdefault(entity.typename(), []).append((
+                g.game_token, self.id, entity.id, det.operation, det.label
+                ))
         for typename, values in entity_values.items():
             self.insert_multiple(
-                "event_entities",
-                f"game_token, event_id, {typename}_id, reltype",
+                "event_determining",
+                f"game_token, event_id, {typename}_id, operation, label",
                 values)
+        for reltype in ('changed', 'triggers'):
+            entity_values = {}  # keyed by entity typename
+            for entity in getattr(self, f'{reltype}_entities'):
+                entity_values.setdefault(entity.typename(), []).append((
+                    g.game_token, self.id, entity.id
+                    ))
+            for typename, values in entity_values.items():
+                self.insert_multiple(
+                    f"event_{reltype}",
+                    f"game_token, event_id, {typename}_id",
+                    values)
 
     @classmethod
     def load_complete_objects(cls, ids=None):
@@ -144,28 +213,53 @@ class Event(CompleteIdentifiable):
             return [cls()]
         qhelper = QueryHelper("""
             SELECT *
-            FROM {tables[0]}
-            LEFT JOIN {tables[1]}
-                ON {tables[1]}.game_token = {tables[0]}.game_token
-                AND {tables[1]}.event_id = {tables[0]}.id
-            WHERE {tables[0]}.game_token = %s
+            FROM {table}
+            WHERE game_token = %s
             """, [g.game_token])
-        qhelper.add_limit_in("{tables[0]}.id", ids)
-        rows = cls.select_tables(
-            qhelper=qhelper, tables=['events', 'event_entities'])
+        qhelper.add_limit_in("id", ids)
+        rows = cls.execute_select(qhelper=qhelper)
         events = {}  # data (not objects) keyed by ID
-        for base_row, entities_row in rows:
-            evt = events.setdefault(base_row.id, base_row)
-            entity_cls = next(
-                (e_cls for e_cls in ENTITY_TYPES
-                if getattr(entities_row, e_cls.id_field())), None
-                )
-            if entity_cls:
-                entity_tup = (
-                    entity_cls.typename(),
-                    getattr(entities_row, entity_cls.id_field())
-                    )
-                evt.setdefault(entities_row.reltype, []).append(entity_tup)
+        for data in rows:
+            events[data.id] = data
+        # Get triggers and changed entities
+        qhelper_changed = QueryHelper("""
+            SELECT *, 'changed' AS reltype
+            FROM event_changed
+            WHERE game_token = %s
+            """, [g.game_token])
+        qhelper_changed.add_limit_in("AND event_id", ids)
+        qhelper_triggers = QueryHelper("""
+            SELECT *, 'triggers' AS reltype
+            FROM event_triggers
+            WHERE game_token = %s
+            """, [g.game_token])
+        qhelper_triggers.add_limit_in("AND event_id", ids)
+        combined_query = f"""
+            ({qhelper_changed.query})
+            UNION ALL
+            ({qhelper_triggers.query})
+            """
+        combined_values = qhelper_changed.values + qhelper_triggers.values
+        rows = self.execute_select(combined_query, combined_values)
+        for row in rows:
+            evt = events[data.event_id]
+            entity_tup = get_entity_tuple(row)
+            if entity_tup:
+                evt.setdefault(row.reltype, []).append(entity_tup)
+        # Get determinant data
+        qhelper = QueryHelper("""
+            SELECT *
+            FROM event_determining
+            WHERE game_token = %s
+            """, [g.game_token])
+        qhelper.add_limit_in("AND event_id", ids)
+        rows = cls.execute_select(qhelper=qhelper)
+        for row in rows:
+            evt = events[data.event_id]
+            entity_tup = get_entity_tuple(row)
+            if entity_tup:
+                row.entity_data = entity_tup
+            evt.setdefault('determining', []).append(row)
         # Set list of objects
         instances = {}
         for data in events.values():
@@ -185,7 +279,10 @@ class Event(CompleteIdentifiable):
         # Get all basic data
         g.game_data.from_db_flat([Attrib, Event, Item, Location])
         # Replace partial objects with fully populated objects
-        for reltype in RELATION_TYPES:
+        for det in self.determining_entities:
+            partial = det.entity
+            det.entity = partial.__class__.get_by_id(partial.id)
+        for reltype in ('changed', 'triggers'):
             listname = f'{reltype}_entities'
             setattr(
                 current_obj, listname, [
@@ -227,7 +324,19 @@ class Event(CompleteIdentifiable):
                 req.get_int('numeric_min', 1),
                 req.get_int('numeric_max', 20)))
             self.selection_strings = req.get_str('selection_strings', "")
-            for reltype in RELATION_TYPES:
+            self.determining_entities = []
+            for typename, entity_id, operation, label in zip(
+                    req.get_list(f'determining_type[]'),
+                    req.get_list(f'determining_id[]'),
+                    req.get_list(f'determining_operation[]'),
+                    req.get_list(f'determining_label[]')):
+                self.determining_entities.append(
+                    Determinant.from_data({
+                        'entity_data': (typename, entity_id),
+                        'operation': operation,
+                        'label': label
+                    }))
+            for reltype in ('changed', 'triggers'):
                 setattr(
                     self, f'{reltype}_entities', [
                         create_entity(typename, entity_id, ENTITY_TYPES)
@@ -252,28 +361,30 @@ class Event(CompleteIdentifiable):
             logger.debug("Neither button was clicked.")
 
     def roll_for_outcome(self, die_min, die_max):
+        die_higher = max(die_min, die_max)  # for example -2 > -10
+        die_lower = min(die_min, die_max)
         if self.outcome_type == OUTCOME_SELECTION:
             strings_list = self.selection_strings.split('\n')
             outcome = random.choice(strings_list)
             display = f"Outcome: {outcome}"
             MessageLog.add(f"{self.name} — {display}")
             return outcome, display
-        sides = die_max - die_min + 1
+        sides = die_higher - die_lower + 1
         roll = roll_dice(sides)
-        outcome_num = die_min + roll
+        outcome_num = die_lower + roll
         if self.outcome_type == OUTCOME_NUMERIC:
             outcome = outcome_num
             display = (
                 "{} + {} (1d{})<br>"
                 "Outcome = {}"
                 ).format(
-                    format_num(die_min),
+                    format_num(die_lower),
                     format_num(roll),
                     format_num(sides),
                     format_num(outcome_num),
                     )
         elif self.outcome_type == OUTCOME_FOURWAY:
-            major_threshold = round((die_max - die_min + 1) * 0.45);
+            major_threshold = round((die_higher - die_lower + 1) * 0.45);
             if outcome_num <= -major_threshold:
                 outcome = OUTCOME_CRITICAL_FAILURE
                 threshold_display = f"<= {-major_threshold}"
@@ -290,7 +401,7 @@ class Event(CompleteIdentifiable):
                 "{} + {} (1d{}) = {}<br>"
                 "{} {} so Outcome is a {}."
             ).format(
-                format_num(die_min),
+                format_num(die_lower),
                 format_num(roll),
                 format_num(sides),
                 format_num(outcome_num),

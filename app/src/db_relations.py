@@ -136,21 +136,58 @@ tables_to_create = {
             DEFERRABLE initially deferred
         """,
     # Event
-    'event_entities': f"""
+    'event_determining': f"""
+        -- values that are used to determine the event outcome
         {coldef('game_token')},
         event_id integer not null,
         attrib_id integer,
-        char_id integer,
         item_id integer,
-        loc_id integer,
-        reltype varchar(20) CHECK (reltype IN ('determining', 'changed', 'triggers')),
-        UNIQUE (game_token, event_id, attrib_id, char_id, item_id, loc_id, reltype),
+        operation char(3) not null
+            CHECK (operation IN ('+', '-', '*', '/', '^', 'log')),
+        label varchar(50),  -- for example "Evasion" from Dexterity
         FOREIGN KEY (game_token, event_id)
             REFERENCES events (game_token, id)
             ON DELETE cascade
             DEFERRABLE initially deferred,
         FOREIGN KEY (game_token, attrib_id)
             REFERENCES attribs (game_token, id)
+            ON DELETE cascade
+            DEFERRABLE initially deferred,
+        FOREIGN KEY (game_token, item_id)
+            REFERENCES items (game_token, id)
+            ON DELETE cascade
+            DEFERRABLE initially deferred
+        """,
+    'event_changed': f"""
+        -- values that can be changed by event outcome
+        {coldef('game_token')},
+        event_id integer not null,
+        attrib_id integer,
+        item_id integer,
+        UNIQUE (game_token, event_id, attrib_id, item_id),
+        FOREIGN KEY (game_token, event_id)
+            REFERENCES events (game_token, id)
+            ON DELETE cascade
+            DEFERRABLE initially deferred,
+        FOREIGN KEY (game_token, attrib_id)
+            REFERENCES attribs (game_token, id)
+            ON DELETE cascade
+            DEFERRABLE initially deferred,
+        FOREIGN KEY (game_token, item_id)
+            REFERENCES items (game_token, id)
+            ON DELETE cascade
+            DEFERRABLE initially deferred
+        """,
+    'event_triggers': f"""
+        -- entities that link to events or call them by trigger
+        {coldef('game_token')},
+        event_id integer not null,
+        char_id integer,
+        item_id integer,
+        loc_id integer,
+        UNIQUE (game_token, event_id, char_id, item_id, loc_id),
+        FOREIGN KEY (game_token, event_id)
+            REFERENCES events (game_token, id)
             ON DELETE cascade
             DEFERRABLE initially deferred,
         FOREIGN KEY (game_token, char_id)

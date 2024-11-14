@@ -317,17 +317,14 @@
             "changed": [
                 ["attrib", 6]
             ],
-            "description": "Dex increases both die min and max, while Str increases die min only.\r\n\r\nFirst roll <a href=\"/play/event/5\">Shoot -- Success</a> to determine if the attack hits.",
+            "description": "Dex increases both die min and max, while Str increases die max only.\r\n\r\nFirst roll <a href=\"/play/event/5\">Shoot -- Success</a> to determine if the attack hits.",
             "determining": [
                 ["attrib", 3],
                 ["attrib", 2]
             ],
             "id": 6,
             "name": "Shoot -- Dmg",
-            "numeric_range": [
-                -2,
-                -1
-            ],
+            "numeric_range": [-1, -2],
             "outcome_type": "numeric",
             "selection_strings": "",
             "toplevel": false,

@@ -68,6 +68,7 @@
                             <option value="0.75">Hard (-75%)</option>
                             <option value="1">Very Hard (-100%)</option>
                         </select>
+                        <span class="label-like">Resets Die</span>
                         <br>
                         <label for="threshold" style="padding-left: 10px;">Major/Minor Threshold:</label>
                         <span id="threshold">{{ (current.numeric_range[1] * 0.45) | formatNum }}</span>
@@ -107,29 +108,31 @@
                                    size="5">
                             <br>
                             {% for det in current.determining_entities %}
-                                {% set det_ref = "_" ~ det.typename() ~ "_" ~ det.id %}
+                                {% set entity = det.entity %}
+                                {% set det_ref = "_" ~ entity.typename() ~ "_" ~ entity.id %}
                                 <li style="margin-top: 5px">
-                                    {{ det.name }}
+                                    {{ det.label ~ " from " if det.label }}
+                                    {{ entity.name }}
                                     <select class="container-for-det"
                                             id="det{{ det_ref }}"
                                             data-purpose="determining"
-                                            data-id="{{ det.id }}"
-                                            data-type="{{ det.typename() }}"
-                                            data-mult="{{ det.mult | lower }}">
+                                            data-id="{{ entity.id }}"
+                                            data-type="{{ entity.typename() }}"
+                                            data-operation="{{ det.operation }}">
                                         <option value="" selected>(Select to adjust roll)</option>
                                         {% for char in game_data.characters %}
                                             {% set adjust_factor = None %}
-                                            {% if det.typename() == 'attrib' and det.id in char.attribs %}
-                                                {% set adjust_factor = char.attribs[det.id].val %}
-                                            {% elif det.typename() == 'item' and det.id in char.items %}
-                                                {% set adjust_factor = char.items[det.id].quantity %}
+                                            {% if entity.typename() == 'attrib' and entity.id in char.attribs %}
+                                                {% set adjust_factor = char.attribs[entity.id].val %}
+                                            {% elif entity.typename() == 'item' and entity.id in char.items %}
+                                                {% set adjust_factor = char.items[entity.id].quantity %}
                                             {% endif %}
                                             {% if adjust_factor is not none %}
                                                 <option value="{{ adjust_factor }}"
                                                         data-container-id="{{ char.id }}"
                                                         data-container-type="{{ char.typename() }}">
                                                     {{ char.name }}
-                                                    {% if det.typename() == 'attrib' %}
+                                                    {% if entity.typename() == 'attrib' %}
                                                     {% else %}
                                                         has
                                                     {% endif %}
@@ -139,9 +142,9 @@
                                         {% endfor %}
                                         {% for item in game_data.items %}
                                             {% set adjust_factor = None %}
-                                            {% if det.typename() == 'attrib' and det.id in item.attribs %}
-                                                {% set adjust_factor = item.attribs[det.id].val %}
-                                            {% elif det.typename() == 'item' and det.id == item.id %}
+                                            {% if entity.typename() == 'attrib' and entity.id in item.attribs %}
+                                                {% set adjust_factor = item.attribs[entity.id].val %}
+                                            {% elif entity.typename() == 'item' and entity.id == item.id %}
                                                 {% set adjust_factor = item.pile.quantity %}
                                             {% endif %}
                                             {% if adjust_factor is not none %}
@@ -149,7 +152,7 @@
                                                         data-container-id="{{ item.id }}"
                                                         data-container-type="{{ item.typename() }}">
                                                     {{ item.name }}
-                                                    {% if det.typename() == 'attrib' %}
+                                                    {% if entity.typename() == 'attrib' %}
                                                     {% else %}
                                                         general
                                                     {% endif %}
@@ -159,8 +162,8 @@
                                         {% endfor %}
                                         {% for loc in game_data.locations %}
                                             {% set adjust_factor = None %}
-                                            {% if det.typename() == 'item' and det.id in loc.items %}
-                                                {% set adjust_factor = loc.items[det.id].quantity %}
+                                            {% if entity.typename() == 'item' and entity.id in loc.items %}
+                                                {% set adjust_factor = loc.items[entity.id].quantity %}
                                             {% endif %}
                                             {% if adjust_factor is not none %}
                                                 <option value="{{ adjust_factor }}"
@@ -175,14 +178,10 @@
                                     <button type="button"
                                             class="fill-det-btn"
                                             id="fill-det-btn_{{ det_ref }}"
-                                            data-id="{{ det.id }}"
-                                            data-type="{{ det.typename() }}">
+                                            data-id="{{ entity.id }}"
+                                            data-type="{{ entity.typename() }}">
                                         [{{ letter }}]
-                                        {% if det.mult %}
-                                            Multiply
-                                        {% else %}
-                                            Add
-                                        {% endif %}
+                                        {{ operations[det.operation] }}
                                     </button>
                                     <script>
                                     funcForKey['{{ letter }}'] = () => {
@@ -439,7 +438,7 @@
                 const entityId = $(event.currentTarget).data('id');
                 const entityType = $(event.currentTarget).data('type');
                 const containerSelect = $(`#det_${entityType}_${entityId}`)
-                const keyMult = $(containerSelect).data('mult');
+                const operation = $(containerSelect).data('operation');
                 const selectedIndex = $(containerSelect).prop('selectedIndex');
                 const selectedOption = $(containerSelect).find(':selected');
                 const containerVal = parseFloat(selectedOption.val()) || 0;
@@ -449,19 +448,38 @@
                 } else if ($('#adjust-die-max').is(':checked')) {
                     targetFields.shift();
                 }
-                targetFields.forEach(targetField => {
+                for (let i = 0; i < targetFields.length; i++) {
+                    const targetField = targetFields[i];
                     const currentSetting = parseFloat(targetField.val()) || 0;
                     if (selectedIndex !== 0) {
                         let newValue;
-                        if (keyMult) {
-                            newValue = currentSetting * containerVal;
-                        } else {
-                            newValue = currentSetting + containerVal;
+                        switch (operation) {
+                            case '+':
+                                newValue = currentSetting + containerVal;
+                                break;
+                            case '-':
+                                newValue = currentSetting - containerVal;
+                                break;
+                            case '*':
+                                newValue = currentSetting * containerVal;
+                                break;
+                            case '/':
+                                newValue = currentSetting / containerVal;
+                                break;
+                            case '^':
+                                newValue = Math.pow(currentSetting, containerVal);
+                                break;
+                            case 'log':
+                                newValue = Math.log10(currentSetting);
+                                break;
+                            default:
+                                console.error("Unsupported operation:", operation);
+                                return; // next iteration
                         }
                         newValue = Math.round(newValue);
-                            targetField.val(newValue);
+                        targetField.val(newValue);
                     }
-                });
+                }
             });
 
             function fill_container(selectBox) {

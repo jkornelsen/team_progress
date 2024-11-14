@@ -16,7 +16,6 @@ tables_to_create = {
         {coldef('name')},
         toplevel boolean not null,
         masked boolean not null,
-        mult boolean not null,
         storage_type varchar(20) not null,
         q_limit real not null,
         quantity real not null,
@@ -53,7 +52,6 @@ class Item(CompleteIdentifiable):
         self.storage_type = Storage.CARRIED  # usually matches pile type
         self.toplevel = False
         self.masked = False
-        self.mult = False
         self.attribs = {}  # AttribFor objects keyed by attrib id
         self.recipes = []  # list of Recipe objects
         self.q_limit = 0.0  # limit the quantity if not 0
@@ -82,7 +80,6 @@ class Item(CompleteIdentifiable):
             'storage_type': self.storage_type,
             'toplevel': self.toplevel,
             'masked': self.masked,
-            'mult': self.mult,
             'q_limit': self.q_limit,
             'quantity': self.pile.quantity,
         }
@@ -114,7 +111,6 @@ class Item(CompleteIdentifiable):
         instance.storage_type = data.get('storage_type', Storage.UNIVERSAL)
         instance.toplevel = data.get('toplevel', False)
         instance.masked = data.get('masked', False)
-        instance.mult = data.get('mult', False)
         instance.attribs = {
             attrib_id: AttribFor(attrib_id, val)
             for attrib_id, val in data.get('attribs', [])}
@@ -270,7 +266,6 @@ class Item(CompleteIdentifiable):
             session['default_storage_type'] = self.storage_type
             self.toplevel = req.get_bool('top_level')
             self.masked = req.get_bool('masked')
-            self.mult = req.get_bool('mult')
             old = Item.load_complete_object(self.id)
             self.q_limit = req.set_num_if_changed(
                 req.get_str('item_limit'), old.q_limit)

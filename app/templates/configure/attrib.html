@@ -43,21 +43,6 @@
         <label for="enum">Enumerated Values:</label>
         <textarea id="enum" name="enum" rows="5" cols="15">{{ '\n'.join(current.enum) }}</textarea>
         <br>
-        <label>
-            <input type="radio"
-                   name="mult"
-                   value="add"
-                   {% if not current.mult %}checked{% endif %}>
-            Adds
-        </label>
-        <label>
-            <input type="radio"
-                   name="mult"
-                   value="mult"
-                   {% if current.mult %}checked{% endif %}>
-            Multiplies
-        </label>
-        <br>
         <div class="footer-buttons">
             <button type="submit" id="btn-save" name="save_changes">Save and Close</button>
             <button type="submit" id="btn-duplicate" name="make_duplicate">Save and Duplicate</button>

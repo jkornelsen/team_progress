@@ -198,7 +198,7 @@ def flatten_tuples(json_output):
         return f'[{contents}]'
 
     json_output = re.sub(
-        r'\[\s*([\d.]+|".*?")\s*,\s*([\d.]+|".*?")\s*\]',
+        r'\[\s*(-?[\d.]+|".*?")\s*,\s*(-?[\d.]+|".*?")\s*\]',
         format_two_element_lists, json_output)
     def format_tuple(match):
         contents = match.group(2).replace("\n", "").replace(" ", "")

@@ -12,8 +12,7 @@ tables_to_create = {
     'attribs': f"""
         {coldef('name')},
         enum_list TEXT[],
-        is_binary boolean NOT NULL,
-        mult boolean NOT NULL
+        is_binary boolean NOT NULL
         """
     }
 
@@ -51,7 +50,6 @@ class Attrib(CompleteIdentifiable):
         self.description = ""
         self.binary = False  # true/false or number
         self.enum = []  # list of strings to set numerical attrib value
-        self.mult = False  # multiplicative or additive
 
     def _base_export_data(self):
         return {
@@ -60,7 +58,6 @@ class Attrib(CompleteIdentifiable):
             'description': self.description,
             'is_binary': self.binary,
             'enum_list': self.enum,
-            'mult': self.mult,
             }
 
     @classmethod
@@ -69,7 +66,6 @@ class Attrib(CompleteIdentifiable):
         instance = super().from_data(data)
         instance.binary = data.get('is_binary', False)
         instance.enum = list(data.get('enum_list') or [])
-        instance.mult = data.get('mult', False)
         return instance
 
     @classmethod
@@ -108,7 +104,6 @@ class Attrib(CompleteIdentifiable):
                 if line.strip()]
             self.binary = (
                 req.get_str('value_type') == 'binary' and not self.enum)
-            self.mult = req.get_str('mult') == 'mult'
             self.to_db()
         elif req.has_key('delete_attrib'):
             try:

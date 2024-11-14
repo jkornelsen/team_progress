@@ -1,4 +1,39 @@
----- current focus ----
+---- changes to consider (generally by newest first) ----
+
+a common need is to choose a random available coordinate from a grid
+should we make an event type (add another radio button like four-way) to do this
+it would have a location to read from
+we could add two determining attribs
+well, four i guess: x1, x2, y1, y2
+would be easier to do two different events but not for the user
+although the user could perhaps roll twice
+but that would require changing values each time
+at a minimum, we need to be able to add grid coords as determining attribs
+still that wouldn't account for blocked off areas
+might be better to write more code specifically for this case
+it would load a location object and then work with the grid somehow
+to get a random loc
+one solution would be to enumerate every open cell and then randomly
+select an index
+play event screen
+    select location
+    roll for random coordinates
+configure event screen
+    (o) coordinates
+    "Randomly choose grid coordinates at the following location:"
+    select location
+    additional grid area(s) to block off?
+store as a determining loc_id in the database
+
+events may depend on multiple attrs of the same type,
+such as dexterity for accuracy and enemy dexterity for evasion
+also weapon accuracy and armour evasion
+maybe we could add a label for each
+also specify whether to add or subtract
+for example str subtracts damage, which is negative hp change
+specify operation [+-*/] for each event_entities rather than attrib
+event_determinants table
+won't require attrib_ids to be unique, unlike event_entities
 
 can a numeric attrib requirement be 0 or negative?
 -1 was accepted because none was found, which is 0
@@ -30,42 +65,30 @@ ignoring an event causes travel progress timer to restart
 
 set character's grid coordinates to exit door
 
----- issues ----
-
 shouldn't be able to have both a two-way dest and an arrival one-way dest
 
-dollars for lemonade stand suddenly lost its recipe, yet progress continued
-I think this was during item play, not configure
+implement checking triggers for item progress
+maybe in item_progress, similar to call in char_progress
+event.check_trigger_for_duration(time_spent)
+pop up event in play/item.html like in play/character.html
+we'll also want it for overview eventually
 
-blank setup is still starting ID numbers at 4 or 15
+are item triggers only for general qty?
 
-game_routes.py line 558, in item_progress
-    item = Item.data_for_play(
-recipe.py line 234, in load_complete_data
-    recipes_data = item_recipes[recipe_row.item_id]
-KeyError: 11
+check for triggered events in overview
 
----- system setup ----
+don't allow production if byproducts would exceed limit
+or maybe allow but don't go past limit, and prefer no limit
 
-hosting possibilities:
-Pythonanywhere should be able to host postgres and flask web app.
-https://www.reddit.com/r/flask/comments/12beskr/free_hosting_sites_compatible_with_flask/
-render.com is an alternative.
+scenario: Fission Plant
+win condition includes no more than a certain amount of pollution
+events trigger during production of some recipes
+use waste as a determining attr for increased
+likelihood of bigger problem
+chance could improve with upgrades
 
-prompt each player to save to their PC occasionally
-only if no one recently saved from that session
-warn that loading will erase any scenario currently being played, so save first
-
-limit upload file size
-for example 10 Mb
-at 90% warn to remove content to avoid going over limit
-
-try selenium to test client side
-
-consider sharing community scenarios
-perhaps submit to reddit, or github via enhancement requests
-
----- general gameplay ----
+scenario: Furniture
+People: old man, young husband, young wife, elementary schooler, baby, dog, cat
 
 gain all instant could be more convenient than entering e.g. 9999 batches
 maybe a button or 0 for number of batches, or "(A)ll"
@@ -160,43 +183,35 @@ the player could control this by playing the source item first
 although that wouldn't be obvious at all
 going to overview would also take away that choice for top-level items
 
-check for triggered events in overview
+prompt each player to save to their PC occasionally
+only if no one recently saved from that session
+warn that loading will erase any scenario currently being played, so save first
 
-implement checking triggers for item progress
-maybe in item_progress, similar to call in char_progress
-event.check_trigger_for_duration(time_spent)
-pop up event in play/item.html like in play/character.html
-we'll also want it for overview eventually
+limit upload file size
+for example 10 Mb
+at 90% warn to remove content to avoid going over limit
 
-are item triggers only for general qty?
+---- planning ----
 
-automatic trigger chance seems to work well for travel when
-checking for every unit of distance
-it's unintuitive though
-seems like chance should be based on 100% for a full trip or 1 batch
-could we set the chance that way but somehow still check each step?
-divide chance by distance, then what,
-multiply by distance so far that we haven't counted yet?
+hosting possibilities:
+Pythonanywhere should be able to host postgres and flask web app.
+https://www.reddit.com/r/flask/comments/12beskr/free_hosting_sites_compatible_with_flask/
+render.com is an alternative.
 
-don't allow production if byproducts would exceed limit
-or maybe allow but don't go past limit, and prefer no limit
+try selenium to test client side
 
-events may depend on multiple attrs of the same type,
-such as dexterity for accuracy and enemy dexterity for evasion
-also weapon accuracy and armour evasion
-maybe we could add a label for each
-also specify whether to add or subtract
-for example str subtracts damage, which is negative hp change
-specify operation [+-*/] for each event_entities rather than attrib
+consider sharing community scenarios
+perhaps submit to reddit, or github via enhancement requests
 
----- scenario changes ----
+---- issues ----
 
-scenario: Fission Plant
-win condition includes no more than a certain amount of pollution
-events trigger during production of some recipes
-use waste as a determining attr for increased
-likelihood of bigger problem
-chance could improve with upgrades
+dollars for lemonade stand suddenly lost its recipe, yet progress continued
+I think this was during item play, not configure
 
-scenario: Furniture
-People: old man, young husband, young wife, elementary schooler, baby, dog, cat
+blank setup is still starting ID numbers at 4 or 15
+
+game_routes.py line 558, in item_progress
+    item = Item.data_for_play(
+recipe.py line 234, in load_complete_data
+    recipes_data = item_recipes[recipe_row.item_id]
+KeyError: 11
