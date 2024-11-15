@@ -101,6 +101,7 @@ def set_routes(app):
             return render_template(
                 'configure/event.html',
                 current=event,
+                operations=OPERATIONS,
                 game_data=g.game_data
                 )
         try:
@@ -403,7 +404,7 @@ def set_routes(app):
                 'message': "Character not found."
                 })
         current_loc_id = char.location.id if char.location else 0
-        if not char.location or not char.destination:
+        if not char.location or not char.dest_loc:
             return jsonify({
                 'status': 'error',
                 'message': 'No travel destination.',
@@ -439,9 +440,16 @@ def set_routes(app):
         if batches_done:
             # arrived at the destination
             main_char = char
+            dest_char_pos = NumTup((0, 0))
+            dest = main_char.destination
+            if dest:
+                door_pos = dest.other_door()
+                if dest.other_loc.grid.in_grid(door_pos):
+                    dest_char_pos = door_pos
             for char in get_travel_chars(req, char_id):
-                char.location = char.destination
-                char.destination = None
+                char.location = char.dest_loc
+                char.position = dest_char_pos
+                char.dest_loc = None
                 char.progress.stop()
             loc = Location.from_db_flat(char.location.id)
             MessageLog.add(f"{main_char.name} arrived at {loc.name}.")
@@ -449,12 +457,12 @@ def set_routes(app):
                 'status': 'arrived',
                 'current_loc_id': main_char.location.id
                 })
-        logger.debug("dest_id: %d", char.destination.id)
+        logger.debug("dest_id: %d", char.dest_loc.id)
         return jsonify({
             'status': 'ongoing',
             'is_ongoing': char.progress.is_ongoing,
             'current_loc_id': current_loc_id,
-            'dest_id': char.destination.id,
+            'dest_id': char.dest_loc.id,
             'progress_fraction': fractional_batches,
             'elapsed_time': elapsed_time
             })
@@ -473,8 +481,8 @@ def set_routes(app):
         session['default_travel_with'] = req.get_str('travel_with')
         for char in get_travel_chars(req, char_id):
             logger.debug("char %d", char.id)
-            if not char.destination or char.destination.id != dest_id:
-                char.destination = Location(dest_id)
+            if not char.dest_loc or char.dest_loc.id != dest_id:
+                char.dest_loc = Location(dest_id)
                 char.to_db()
             if not char.progress.start():
                 return jsonify({
@@ -514,10 +522,24 @@ def set_routes(app):
         session['default_travel_with'] = req.get_str('travel_with')
         main_char = None
         loc = Location.from_db_flat(dest_id)
-        for char in get_travel_chars(req, char_id):
-            if char.id == char_id:
-                main_char = char
+        travel_chars = get_travel_chars(req, char_id)
+        main_char = next(
+            (char for char in travel_chars
+            if char.id == char_id), None)
+        #TODO: set destination to dest_id, as simply calling
+        # get_destinations() probably won't do anything without
+        # specifying the new destination.
+        # Maybe that would work for char_progress() though.
+        main_char.get_destinations()
+        dest_char_pos = NumTup((0, 0))
+        dest = main_char.destination
+        if dest:
+            door_pos = dest.other_door()
+            if dest.other_loc.grid.in_grid(door_pos):
+                dest_char_pos = door_pos
+        for char in travel_chars:
             char.location = loc
+            char.position = dest_char_pos
             char.to_db()
         if main_char is None:
             raise ValueError(f"Could not find character {char_id} to travel.")

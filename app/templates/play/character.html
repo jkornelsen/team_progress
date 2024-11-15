@@ -72,7 +72,7 @@
                             {% for dest in current.location.destinations %}
                                 <option value="{{ dest.other_loc.id }}"
                                         data-duration="{{ dest.duration }}"
-                                        {% if current.destination and current.destination.id == dest.other_loc.id %}selected{% endif %}>
+                                        {% if current.dest_loc and current.dest_loc.id == dest.other_loc.id %}selected{% endif %}>
                                     {% if dest.other_loc.masked %}
                                         a location not yet visited
                                     {% else %}
@@ -115,13 +115,13 @@
             </ul>
         {% endif %}
         {% set has = namespace(chars=False) %}
-        {% for owned in current.items.values() if owned.quantity > 0 and owned.slot %}
+        {% for owned in current.items.values() if owned.quantity != 0 and owned.slot %}
             {% set has.equipped_items = True %}
         {% endfor %}
         {% if has.equipped_items %}
             <h2>Equipped Items</h2>
             <ul>
-                {% for owned in current.items.values() if owned.quantity > 0 and owned.slot %}
+                {% for owned in current.items.values() if owned.quantity != 0 and owned.slot %}
                     {% set item = owned.item %}
                     {% set link = url_for('play_item', item_id=item.id, char_id=current.id, main='carried') | safe %}
                     {% set letter = link_letters.next(link) %}
@@ -135,13 +135,13 @@
                 {% endfor %}
             </ul>
         {% endif %}
-        {% for owned in current.items.values() if owned.quantity > 0 and not owned.slot %}
+        {% for owned in current.items.values() if owned.quantity != 0 and not owned.slot %}
             {% set has.owned_items = True %}
         {% endfor %}
         {% if has.owned_items %}
             <h2>Inventory Items</h2>
             <ul>
-                {% for owned in current.items.values() if owned.quantity > 0 and not owned.slot %}
+                {% for owned in current.items.values() if owned.quantity != 0 and not owned.slot %}
                     {% set item = owned.item %}
                     {% set link = url_for('play_item', item_id=item.id, char_id=current.id, main='carried') | safe %}
                     {% set letter = link_letters.next(link) %}

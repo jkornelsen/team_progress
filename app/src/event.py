@@ -6,7 +6,8 @@ from flask import g, session, url_for
 from .attrib import Attrib, AttribFor
 from .character import Character, OwnedItem
 from .db_serializable import (
-    DbError, DeletionError, CompleteIdentifiable, QueryHelper, coldef)
+    DbError, DeletionError, CompleteIdentifiable, QueryHelper, Serializable,
+    coldef)
 from .item import Item
 from .location import ItemAt, Location
 from .user_interaction import MessageLog
@@ -73,7 +74,7 @@ def get_entity_tuple(row):
 def roll_dice(sides):
     return random.randint(1, sides)
 
-class Determinant
+class Determinant(Serializable):
     def __init__(self, entity=None):
         self.entity = entity
         self.operation = '+'
@@ -93,11 +94,12 @@ class Determinant
     def from_data(cls, data):
         data = cls.prepare_dict(data)
         instance = cls()
-        typename, entity_id = data.get('entity_data', []):
+        typename, entity_id = data.get('entity_data', [])
         if typename in ENTITY_TYPENAMES:
             instance.entity = create_entity(typename, entity_id, ENTITY_TYPES)
         instance.operation = data.get('operation', '+')
         instance.label = data.get('label', "")
+        return instance
 
 class Event(CompleteIdentifiable):
     def __init__(self, new_id=""):
@@ -157,7 +159,7 @@ class Event(CompleteIdentifiable):
         instance.outcome_type = data.get('outcome_type', OUTCOME_FOURWAY)
         instance.numeric_range = NumTup(data.get('numeric_range') or (0, 10))
         instance.selection_strings = data.get('selection_strings', "")
-        instance.determining = [
+        instance.determining_entities = [
             Determinant.from_data(det_data)
             for det_data in data.get('determining', [])
             ]
@@ -181,7 +183,7 @@ class Event(CompleteIdentifiable):
                 WHERE event_id = %s AND game_token = %s
                 """, [self.id, g.game_token])
             if reltype == 'triggers':
-                qhelper.add_limit_expr("AND char_id IS NULL")
+                qhelper.add_limit_expr("char_id IS NULL")
             self.execute_change(qhelper=qhelper)
         entity_values = {}  # keyed by entity typename
         for det in self.determining_entities:
@@ -219,43 +221,38 @@ class Event(CompleteIdentifiable):
         qhelper.add_limit_in("id", ids)
         rows = cls.execute_select(qhelper=qhelper)
         events = {}  # data (not objects) keyed by ID
-        for data in rows:
-            events[data.id] = data
+        for row in rows:
+            events[row.id] = row
         # Get triggers and changed entities
         qhelper_changed = QueryHelper("""
             SELECT *, 'changed' AS reltype
             FROM event_changed
             WHERE game_token = %s
             """, [g.game_token])
-        qhelper_changed.add_limit_in("AND event_id", ids)
+        qhelper_changed.add_limit_in("event_id", ids)
         qhelper_triggers = QueryHelper("""
             SELECT *, 'triggers' AS reltype
             FROM event_triggers
             WHERE game_token = %s
             """, [g.game_token])
-        qhelper_triggers.add_limit_in("AND event_id", ids)
-        combined_query = f"""
-            ({qhelper_changed.query})
-            UNION ALL
-            ({qhelper_triggers.query})
-            """
-        combined_values = qhelper_changed.values + qhelper_triggers.values
-        rows = self.execute_select(combined_query, combined_values)
-        for row in rows:
-            evt = events[data.event_id]
-            entity_tup = get_entity_tuple(row)
-            if entity_tup:
-                evt.setdefault(row.reltype, []).append(entity_tup)
+        qhelper_triggers.add_limit_in("event_id", ids)
+        for qhelper in (qhelper_changed, qhelper_triggers):
+            rows = cls.execute_select(qhelper=qhelper)
+            for row in rows:
+                evt = events[row.event_id]
+                entity_tup = get_entity_tuple(row)
+                if entity_tup:
+                    evt.setdefault(row.reltype, []).append(entity_tup)
         # Get determinant data
         qhelper = QueryHelper("""
             SELECT *
             FROM event_determining
             WHERE game_token = %s
             """, [g.game_token])
-        qhelper.add_limit_in("AND event_id", ids)
+        qhelper.add_limit_in("event_id", ids)
         rows = cls.execute_select(qhelper=qhelper)
         for row in rows:
-            evt = events[data.event_id]
+            evt = events[row.event_id]
             entity_tup = get_entity_tuple(row)
             if entity_tup:
                 row.entity_data = entity_tup
@@ -279,7 +276,7 @@ class Event(CompleteIdentifiable):
         # Get all basic data
         g.game_data.from_db_flat([Attrib, Event, Item, Location])
         # Replace partial objects with fully populated objects
-        for det in self.determining_entities:
+        for det in current_obj.determining_entities:
             partial = det.entity
             det.entity = partial.__class__.get_by_id(partial.id)
         for reltype in ('changed', 'triggers'):
@@ -305,7 +302,7 @@ class Event(CompleteIdentifiable):
             """, [g.game_token])
         qhelper.add_limit(f"{{tables[1]}}.{typename}_id", id_to_get)
         rows = cls.execute_select(
-            qhelper=qhelper, tables=['events', 'event_entities'])
+            qhelper=qhelper, tables=['events', 'event_triggers'])
         g.game_data.events = []
         for row in rows:
             g.game_data.events.append(Event.from_data(row))
@@ -326,10 +323,10 @@ class Event(CompleteIdentifiable):
             self.selection_strings = req.get_str('selection_strings', "")
             self.determining_entities = []
             for typename, entity_id, operation, label in zip(
-                    req.get_list(f'determining_type[]'),
-                    req.get_list(f'determining_id[]'),
-                    req.get_list(f'determining_operation[]'),
-                    req.get_list(f'determining_label[]')):
+                    req.get_list(f'determinant_type[]'),
+                    req.get_list(f'determinant_id[]'),
+                    req.get_list(f'determinant_operation[]'),
+                    req.get_list(f'determinant_label[]')):
                 self.determining_entities.append(
                     Determinant.from_data({
                         'entity_data': (typename, entity_id),

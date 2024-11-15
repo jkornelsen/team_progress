@@ -71,7 +71,8 @@ class Character(CompleteIdentifiable):
         self.items = {}  # OwnedItem objects keyed by item id
         self.location = None  # Location object where char is
         self.position = NumTup((0, 0))
-        self.destination = None  # Location object to travel to
+        self.dest_loc = None  # Location object to travel to
+        self.destination = None  # Destination object
         self.progress = Progress(pholder=self)  # travel or producing items
 
     @classmethod
@@ -87,7 +88,7 @@ class Character(CompleteIdentifiable):
             'masked': self.masked,
             'travel_group': self.travel_group,
             'location_id': self.location.id if self.location else None,
-            'dest_id': self.destination.id if self.destination else None
+            'dest_id': self.dest_loc.id if self.dest_loc else None
             }
 
     def dict_for_json(self):
@@ -138,7 +139,7 @@ class Character(CompleteIdentifiable):
         instance.position = NumTup.from_list(data.get('position', [0, 0]))
         instance.progress = Progress.from_data(
             data.get('progress', {}), instance)
-        instance.destination = Location(
+        instance.dest_loc = Location(
             int(data['dest_id'])) if data.get('dest_id', 0) else None
         return instance
 
@@ -146,7 +147,7 @@ class Character(CompleteIdentifiable):
         logger.debug("to_db()")
         self.progress.to_db()
         super().to_db()
-        for rel_table in ('char_attribs', 'char_items', 'event_entities'):
+        for rel_table in ('char_attribs', 'char_items', 'event_triggers'):
             self.execute_change(f"""
                 DELETE FROM {rel_table}
                 WHERE char_id = %s AND game_token = %s
@@ -169,7 +170,8 @@ class Character(CompleteIdentifiable):
                 for event_id in self.events
                 ]
             self.insert_multiple(
-                "event_entities", "game_token, char_id, event_id", values)
+                "event_triggers",
+                "game_token, char_id, event_id", values)
         if self.items:
             logger.debug("items: %s", self.items)
             values = []
@@ -204,6 +206,15 @@ class Character(CompleteIdentifiable):
         if load:
             g.game_data.set_list(Character, chars)
         return chars
+
+    def get_destinations(self):
+        cur_loc = self.location
+        cur_dest_loc = self.dest_loc
+        if cur_loc:
+            dests, self.destination = Location.get_destinations_from(
+                cur_loc.id,
+                cur_dest_loc.id if cur_dest_loc else 0)
+            self.location.destinations = dests
 
     @classmethod
     def load_travel_groups(cls, loc_id, char_id = 0):
@@ -248,10 +259,10 @@ class Character(CompleteIdentifiable):
             char = chars[row.char_id]
             char.setdefault(
                 'attribs', []).append((row.attrib_id, row.value))
-        # Get event relation data
+        # Get data for event links
         qhelper = QueryHelper("""
             SELECT *
-            FROM event_entities
+            FROM event_triggers
             WHERE game_token = %s
                 AND char_id IS NOT NULL
             """, [g.game_token])
@@ -297,9 +308,9 @@ class Character(CompleteIdentifiable):
         if current_obj.location:
             current_obj.location = Location.get_by_id(
                 current_obj.location.id)
-        if current_obj.destination:
-            current_obj.destination = Location.get_by_id(
-                current_obj.destination.id)
+        if current_obj.dest_loc:
+            current_obj.dest_loc = Location.get_by_id(
+                current_obj.dest_loc.id)
         # Print debugging info
         logger.debug("found %d owned items", len(current_obj.items))
         if len(current_obj.items):
@@ -314,16 +325,12 @@ class Character(CompleteIdentifiable):
         logger.debug("data_for_play()")
         current_obj = cls.data_for_configure(id_to_get)
         cur_loc = current_obj.location
-        cur_dest_loc = current_obj.destination
         if cur_loc:
             cur_loc.unmask()
-            dests, current_dest = Location.get_destinations_from(
-                cur_loc.id,
-                cur_dest_loc.id if cur_dest_loc else 0)
-            current_obj.location.destinations = dests
-            if current_dest:
+            current_obj.get_destinations()
+            if current_obj.destination:
                 current_obj.progress.recipe.rate_duration = (
-                    current_dest.duration)
+                    destination.duration)
             cls.load_characters_at_loc(cur_loc.id)
         # Abilities
         from .event import Event

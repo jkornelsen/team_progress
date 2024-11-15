@@ -28,7 +28,8 @@ class AttribFor(Serializable):
     @classmethod
     def from_data(cls, data):
         """Can read data from item_attribs, char_attribs, or recipe_attribs.
-        Not event_entities because it doesn't have a value.
+        Not event_determining or event_changed because, while they do have
+        an attrib_id, they don't have a value.
         """
         data = cls.prepare_dict(data)
         return cls(

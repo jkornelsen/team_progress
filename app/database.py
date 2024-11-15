@@ -79,7 +79,8 @@ def create_all():
     db.commit()
 
 def column_counts(table_name):
-    """Generate the values with:
+    """Required for select_tables() to store fields in the correct table obj.
+    This query generates updated values when tables are modified:
         SELECT '''' || table_name || ''': ' || COUNT(column_name) || ','
         FROM information_schema.columns
         WHERE table_schema = 'public'
@@ -87,16 +88,18 @@ def column_counts(table_name):
         ORDER BY table_name;
     """
     lookup = {
-        'attribs': 7,
+        'attribs': 6,
         'char_attribs': 4,
         'char_items': 5,
         'characters': 11,
-        'event_entities': 7,
-        'events': 10,
+        'event_changed': 4,
+        'event_determining': 6,
+        'event_triggers': 5,
+        'events': 9,
         'game_messages': 4,
         'item_attribs': 4,
-        'items': 11,
-        'loc_destinations': 6,
+        'items': 10,
+        'loc_destinations': 7,
         'loc_items': 6,
         'locations': 8,
         'overall': 7,

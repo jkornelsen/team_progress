@@ -109,15 +109,17 @@
             const file = event.target.files[0];
             if (file) {
                 fileLabel.textContent = file.name;
+                fileElem.form.submit();
             }
         });
         dropArea.addEventListener('dragover', (event) => event.preventDefault());
         dropArea.addEventListener('drop', (event) => {
             event.preventDefault();
             const file = event.dataTransfer.files[0];
-            fileElem.files = event.dataTransfer.files; // Set dropped file to input
+            fileElem.files = event.dataTransfer.files;
             if (file) {
                 fileLabel.textContent = file.name;
+                fileElem.form.submit();
             }
         });
 

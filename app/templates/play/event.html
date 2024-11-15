@@ -60,7 +60,7 @@
                       action="{{ url_for('play_event', event_id=current.id) }}"
                       class="">
                     {% if current.outcome_type == 'fourway' %}
-                        <label for="difficulty-select" style="padding-left: 10px;">Difficulty:</label>
+                        <label for="difficulty-select" style="padding-left: 10px;">Difficulty (resets the die):</label>
                         <select id="difficulty-select" name="difficulty">
                             <option value="0.0">None</option>
                             <option value="0.25">Easy (-25%)</option>
@@ -68,7 +68,6 @@
                             <option value="0.75">Hard (-75%)</option>
                             <option value="1">Very Hard (-100%)</option>
                         </select>
-                        <span class="label-like">Resets Die</span>
                         <br>
                         <label for="threshold" style="padding-left: 10px;">Major/Minor Threshold:</label>
                         <span id="threshold">{{ (current.numeric_range[1] * 0.45) | formatNum }}</span>
@@ -109,7 +108,7 @@
                             <br>
                             {% for det in current.determining_entities %}
                                 {% set entity = det.entity %}
-                                {% set det_ref = "_" ~ entity.typename() ~ "_" ~ entity.id %}
+                                {% set det_ref = "_" ~ loop.index %}
                                 <li style="margin-top: 5px">
                                     {{ det.label ~ " from " if det.label }}
                                     {{ entity.name }}
@@ -130,7 +129,8 @@
                                             {% if adjust_factor is not none %}
                                                 <option value="{{ adjust_factor }}"
                                                         data-container-id="{{ char.id }}"
-                                                        data-container-type="{{ char.typename() }}">
+                                                        data-container-type="{{ char.typename() }}"
+                                                        data-label="{{ det.label }}">
                                                     {{ char.name }}
                                                     {% if entity.typename() == 'attrib' %}
                                                     {% else %}
@@ -150,7 +150,8 @@
                                             {% if adjust_factor is not none %}
                                                 <option value="{{ adjust_factor }}"
                                                         data-container-id="{{ item.id }}"
-                                                        data-container-type="{{ item.typename() }}">
+                                                        data-container-type="{{ item.typename() }}"
+                                                        data-label="{{ det.label }}">
                                                     {{ item.name }}
                                                     {% if entity.typename() == 'attrib' %}
                                                     {% else %}
@@ -168,7 +169,8 @@
                                             {% if adjust_factor is not none %}
                                                 <option value="{{ adjust_factor }}"
                                                         data-container-id="{{ loc.id }}"
-                                                        data-container-type="{{ loc.typename() }}">
+                                                        data-container-type="{{ loc.typename() }}"
+                                                        data-label="{{ det.label }}">
                                                     at {{ loc.name }}: {{ adjust_factor | formatNum }}
                                                 </option>
                                             {% endif %}
@@ -177,7 +179,7 @@
                                     {% set letter = link_letters.next() %}
                                     <button type="button"
                                             class="fill-det-btn"
-                                            id="fill-det-btn_{{ det_ref }}"
+                                            id="fill-det-btn{{ det_ref }}"
                                             data-id="{{ entity.id }}"
                                             data-type="{{ entity.typename() }}">
                                         [{{ letter }}]
@@ -185,7 +187,7 @@
                                     </button>
                                     <script>
                                     funcForKey['{{ letter }}'] = () => {
-                                        document.querySelector('#fill-det-btn_{{ det_ref }}').click();
+                                        document.querySelector('#fill-det-btn{{ det_ref }}').click();
                                     };
                                     </script>
                                 {% endfor %}
@@ -347,6 +349,7 @@
                     eventDefaults[selectId] = {
                         id: $selectedOption.data('container-id'),
                         type: $selectedOption.data('container-type'),
+                        label: $selectedOption.data('label'),
                         value: selectedValue
                     };
                 });
@@ -382,7 +385,9 @@
                         $select.find('option').each((index, option) => {
                             const $option = $(option);
                             if ($option.data('container-type') === storedObj.type &&
-                                $option.data('container-id') === storedObj.id) {
+                                $option.data('container-id') === storedObj.id &&
+                                (!storedObj.label || $option.data('label') === storedObj.label))
+                            {
                                 console.log("selecting this option");
                                 $option.prop('selected', true);
                                 return false;
@@ -437,7 +442,7 @@
             $('.fill-det-btn').on('click', (event) => {
                 const entityId = $(event.currentTarget).data('id');
                 const entityType = $(event.currentTarget).data('type');
-                const containerSelect = $(`#det_${entityType}_${entityId}`)
+                const containerSelect = $(event.currentTarget).closest('button').prev('select');
                 const operation = $(containerSelect).data('operation');
                 const selectedIndex = $(containerSelect).prop('selectedIndex');
                 const selectedOption = $(containerSelect).find(':selected');

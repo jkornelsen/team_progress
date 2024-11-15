@@ -43,7 +43,7 @@ def set_routes(app):
         g.game_data.load_for_file()
         data_to_save = g.game_data.dict_for_json()
         json_output = json.dumps(data_to_save, indent=4, default=str)
-        json_output = flatten_tuples(json_output)
+        json_output = condense_json(json_output)
         filename = generate_filename(g.game_data.overall.title)
         with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
             filepath = temp_file.name
@@ -132,7 +132,6 @@ def set_routes(app):
                 'error.html',
                 message=f"Could not load \"{scenario_title}\".",
                 details=str(ex))
-        session['file_message'] = 'Loaded scenario "{}"'.format(scenario_title)
         return redirect(url_for('overview'))
 
     @app.route('/blank_scenario')
@@ -155,7 +154,6 @@ def load_file_into_db(filepath):
         DbSerializable.execute_change("SET CONSTRAINTS ALL DEFERRED")
         g.game_data.to_db()
         g.db.commit()
-        session['file_message'] = 'Loaded from file.'
     except Exception as ex:
         g.db.rollback()
         raise ex
@@ -189,7 +187,7 @@ def generate_filename(title):
     filename = "{}.json".format(filename)
     return filename
 
-def flatten_tuples(json_output):
+def condense_json(json_output):
     """Condense json output a bit. For example, change [0,0] to be on a single
     line instead of four lines.
     """
@@ -200,6 +198,7 @@ def flatten_tuples(json_output):
     json_output = re.sub(
         r'\[\s*(-?[\d.]+|".*?")\s*,\s*(-?[\d.]+|".*?")\s*\]',
         format_two_element_lists, json_output)
+
     def format_tuple(match):
         contents = match.group(2).replace("\n", "").replace(" ", "")
         formatted_contents = ",".join(contents.split(","))

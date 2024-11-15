@@ -1,3 +1,7 @@
+---- recent ----
+
+set character's grid coordinates to exit door
+
 ---- changes to consider (generally by newest first) ----
 
 a common need is to choose a random available coordinate from a grid
@@ -24,16 +28,6 @@ configure event screen
     select location
     additional grid area(s) to block off?
 store as a determining loc_id in the database
-
-events may depend on multiple attrs of the same type,
-such as dexterity for accuracy and enemy dexterity for evasion
-also weapon accuracy and armour evasion
-maybe we could add a label for each
-also specify whether to add or subtract
-for example str subtracts damage, which is negative hp change
-specify operation [+-*/] for each event_entities rather than attrib
-event_determinants table
-won't require attrib_ids to be unique, unlike event_entities
 
 can a numeric attrib requirement be 0 or negative?
 -1 was accepted because none was found, which is 0
@@ -62,8 +56,6 @@ example: new calf
 travel and item progress restarts instead of pausing when stopped
 if that is what we decide then the action bar should go immediately to 0
 ignoring an event causes travel progress timer to restart
-
-set character's grid coordinates to exit door
 
 shouldn't be able to have both a two-way dest and an arrival one-way dest
 
@@ -207,8 +199,6 @@ perhaps submit to reddit, or github via enhancement requests
 
 dollars for lemonade stand suddenly lost its recipe, yet progress continued
 I think this was during item play, not configure
-
-blank setup is still starting ID numbers at 4 or 15
 
 game_routes.py line 558, in item_progress
     item = Item.data_for_play(

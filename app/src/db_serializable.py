@@ -129,6 +129,8 @@ class DbSerializable(Serializable):
         results by table.
         Returns a list of rows arranged by table, for example:
             [item_data, progress_data]
+        The columns will not be grouped correctly by table if column_counts()
+        is out of date.
         """
         if qhelper:
             query_without_tables = qhelper.query
@@ -168,12 +170,13 @@ class DbSerializable(Serializable):
 
     @classmethod
     def execute_change(
-            cls, query_without_table, values=None, qhelper=None, fetch=False):
+            cls, query_without_table="", values=None, qhelper=None,
+            fetch=False):
         """Returning a value is useful when inserting
         auto-generated IDs.
         """
         if qhelper:
-            query_without_tables = qhelper.query
+            query_without_table = qhelper.query
             values = qhelper.values
         if values is None:
             values = []
@@ -351,9 +354,11 @@ class Identifiable(DbSerializable):
         if not data.get('id'):
             # Generate new id after max instead of specifying value
             id_index = list(fields).index('id')
-            placeholders[id_index] = (
-                "COALESCE((SELECT MAX(id) + 1 FROM {table}), 1)")
-            values.pop(id_index)
+            placeholders[id_index] = """
+                COALESCE((SELECT MAX(id) + 1
+                FROM {table} WHERE game_token = %s), 1)
+                """
+            values[id_index] = g.game_token
         placeholders = ','.join(placeholders)
         update_fields = [
             field for field in fields
@@ -450,7 +455,7 @@ class QueryHelper:
                 self.query += f" AND ({fields_condition})"
                 self.values.extend(values * len(fields))
 
-    def add_limit_expr(self, expr, values):
+    def add_limit_expr(self, expr, values=None):
         """Add a freeform limiting expression."""
         if values and values[0]:
             self.query += f" AND {expr}"

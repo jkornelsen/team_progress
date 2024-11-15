@@ -89,56 +89,55 @@
              id="determinant-entities-container">
             <h3 class="label-like">Determining Values</h3>
             <p class="info label-like">
-            Stats such as strength, or item quantity, can help
-            determine the outcome by adjusting the die min and max.
+            Stats, such as strength, or item quantity
+            can determine the parameters of the roll
+            by adjusting the die's minimum and maximum values.
             </p>
             <!-- Placeholder for appending new entities -->
-            <div class="outer-border">
-                <table id="determinant-table" style="display: none;">
-                    <thead>
-                        <tr>
-                            <th title="The attribute or item whose value is being used">Name</th>
-                            <th title="For example, set to 'Accuracy' when the 'Dex' attribute increases hit chance. Optional.">Label</th>
-                            <th title="For example, 'Add' means the value can be added to the die roll">Operation</th>
-                            <th class="transparent-col"></th>
-                        </tr>
-                    </thead>
-                    <tbody id="determinant-rows">
-                    </tbody>
-                </table>
-                <div class="select-box-container">
-                    {% if game_data.attribs %}
-                        <div class="select-box"
-                             title="On the event play screen, you choose an entity to use that has this attribute.">
-                            <select class="add-entity-select">
-                                <option value="" selected>(Select attribute)</option>
-                                {% for attrib in game_data.attribs %}
-                                    <option value="{{ attrib.id }}"">{{ attrib.name }}</option>
-                                {% endfor %}
-                            </select>
-                            <button type="button"
-                                    class="add-entity-btn lesser-button"
-                                    data-relType="determinant"
-                                    data-entityType="attrib">Add</button>
-                        </div>
-                    {% endif %}
-                    {% if game_data.items %}
-                        <div class="select-box"
-                             title="Uses the quantity of this item, such as how many held in a selected character's inventory.">
-                            <select class="add-entity-select">
-                                <option value="" selected>(Select item)</option>
-                                {% for item in game_data.items %}
-                                    <option value="{{ item.id }}">{{ item.name }}</option>
-                                {% endfor %}
-                            </select>
-                            <button type="button"
-                                    class="add-entity-btn lesser-button"
-                                    data-relType="determinant"
-                                    data-entityType="item">Add</button>
-                        </div>
-                    {% endif %}
-                    {% if not game_data.attribs and not game_data.items %}<p class="no-entities">(No attributes or items)</p>{% endif %}
-                </div>
+            <table id="determinant-table" style="display: none;">
+                <thead>
+                    <tr>
+                        <th title="For example, set to 'Accuracy' when the 'Dex' attribute increases hit chance. Optional.">Label</th>
+                        <th title="The attribute or item whose value is being used">Name</th>
+                        <th title="For example, 'Add' means the value can be added to the die roll">Operation</th>
+                        <th class="transparent-col"></th>
+                    </tr>
+                </thead>
+                <tbody id="determinant-rows">
+                </tbody>
+            </table>
+            <div class="select-box-container">
+                {% if game_data.attribs %}
+                    <div class="select-box"
+                         title="On the event play screen, you choose an entity to use that has this attribute.">
+                        <select class="add-entity-select">
+                            <option value="" selected>(Select attribute)</option>
+                            {% for attrib in game_data.attribs %}
+                                <option value="{{ attrib.id }}"">{{ attrib.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="button"
+                                class="add-entity-btn lesser-button"
+                                data-relType="determinant"
+                                data-entityType="attrib">Add</button>
+                    </div>
+                {% endif %}
+                {% if game_data.items %}
+                    <div class="select-box"
+                         title="Uses the quantity of this item, such as how many held in a selected character's inventory.">
+                        <select class="add-entity-select">
+                            <option value="" selected>(Select item)</option>
+                            {% for item in game_data.items %}
+                                <option value="{{ item.id }}">{{ item.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="button"
+                                class="add-entity-btn lesser-button"
+                                data-relType="determinant"
+                                data-entityType="item">Add</button>
+                    </div>
+                {% endif %}
+                {% if not game_data.attribs and not game_data.items %}<p class="no-entities">(No attributes or items)</p>{% endif %}
             </div>
         </div>
         <div class="entity-list-container outer-border"
@@ -292,17 +291,16 @@
             function addDeterminant(entityType, entityId, entityName, detLabel="", operation="+") {
                 const entityHtml = `
                     <tr>
-                        <td>${entityName}
+                        <td>
+                            <input type="text" name="determinant_label[]" value="${detLabel}" size="8">
+                        </td><td>${entityName}
                             <input type="hidden" name="determinant_type[]" value="${entityType}">
                             <input type="hidden" name="determinant_id[]" value="${entityId}">
-                        </td><td>
-                            <input type="text" name="determinant_label[]" value="${detLabel}" size="8">
                         </td><td>
                             <!-- causes determinant_operation[] key (as well as determinant_operation key) to be included in form submission even when no value -->
                             <input type="hidden" name="determinant_operation" value="">
                             <select name="determinant_operation[]">
-                                <option value="">–</option>
-                                {% for op_value, op_name in OPERATIONS %}
+                                {% for op_value, op_name in operations.items() %}
                                     <option value="{{ op_value }}">{{ op_name }}</option>
                                 {% endfor %}
                             </select>
@@ -313,6 +311,7 @@
                 `;
                 $('#determinant-rows').prepend(entityHtml);
                 $('#determinant-table').show();
+                $('#determinant-rows').find('tr:first select[name="determinant_operation[]"]').val(operation);
             }
             function addEntity(relType, entityType, entityId, entityName, mult = false) {
                 // Check for duplicates: entityType + entityId must be unique within relType
@@ -335,14 +334,15 @@
 
             // load data initially
             {% set list = current.determining_entities %}
-            console.log("determinant[{{ list | length }}]");
-            {% for entity in list %}
+            console.log("determinants[{{ list | length }}]");
+            {% for det in list %}
+                {% set entity = det.entity %}
                 addDeterminant(
                     "{{ entity.typename() }}",
                     "{{ entity.id }}",
                     "{{ entity.name }}",
-                    "{{ entity.label }}",
-                    "{{ entity.operation }}",
+                    "{{ det.label }}",
+                    "{{ det.operation }}",
                 );
             {% endfor %}
             {% for relType in ['changed', 'triggers'] %}
