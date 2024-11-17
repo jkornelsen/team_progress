@@ -6,7 +6,7 @@ from .attrib import Attrib, AttribFor
 from .db_serializable import (
     DbError, DeletionError, CompleteIdentifiable, QueryHelper, coldef)
 from .item import Item
-from .location import Destination, Location
+from .location import Location
 from .pile import Pile
 from .progress import Progress
 from .utils import NumTup, RequestHelper
@@ -207,14 +207,16 @@ class Character(CompleteIdentifiable):
             g.game_data.set_list(Character, chars)
         return chars
 
-    def get_destinations(self):
-        cur_loc = self.location
-        cur_dest_loc = self.dest_loc
-        if cur_loc:
-            dests, self.destination = Location.get_destinations_from(
-                cur_loc.id,
-                cur_dest_loc.id if cur_dest_loc else 0)
-            self.location.destinations = dests
+    def get_destinations(self, dest_id=None):
+        if not self.location:
+            return
+        cur_dest_loc_id = (
+            dest_id if dest_id else (
+                self.dest_loc.id if self.dest_loc and self.dest_loc.id else 0)
+            )
+        dests, self.destination = Location.get_destinations_from(
+            self.location.id, self.position.as_tuple(), cur_dest_loc_id)
+        self.location.destinations = dests
 
     @classmethod
     def load_travel_groups(cls, loc_id, char_id = 0):
@@ -330,7 +332,7 @@ class Character(CompleteIdentifiable):
             current_obj.get_destinations()
             if current_obj.destination:
                 current_obj.progress.recipe.rate_duration = (
-                    destination.duration)
+                    current_obj.destination.duration)
             cls.load_characters_at_loc(cur_loc.id)
         # Abilities
         from .event import Event

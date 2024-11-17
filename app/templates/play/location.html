@@ -142,6 +142,9 @@
                                     <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
                                     <span class="hotkey-indicator">[{{ letter }}]</span>
                                     <a href="{{ link }}">{{ dest.other_loc.name }}</a>
+                                    {% if max(dest.door_here) %}
+                                        <span class="label-like">[{{ dest.door_here }}]</span>
+                                    {% endif %}
                                 {% endif %}
                                 {% if dest.duration >= 2 %}
                                     — {{ dest.duration }}s
@@ -331,20 +334,6 @@
                     } else {
                         console.error('Failed to move character');
                     }
-/*
-                    if (data.position) {
-                        console.log(`Character moved to ${data.position}`);
-                        const moveWithIds = moveWith.split(",")
-                            .filter(_id => _id)
-                            .map(_id => parseInt(_id, 10));
-                        moveWithIds.push(charId);
-                        for (const id of moveWithIds) {
-                            characters[id].x = data.position[0];
-                            characters[id].y = data.position[1];
-                            updateCharacterDisplay(id, data.position);
-                        }
-                        fillGrid();
-*/
                 },
                 error: (error) => {
                     console.error('Error:', error);

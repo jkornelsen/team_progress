@@ -5,7 +5,6 @@
             "enum_list": [],
             "id": 1,
             "is_binary": false,
-            "mult": false,
             "name": "Pathfinding"
         },
         {
@@ -13,7 +12,6 @@
             "enum_list": [],
             "id": 3,
             "is_binary": true,
-            "mult": false,
             "name": "Pays for Odd Jobs"
         },
         {
@@ -21,7 +19,6 @@
             "enum_list": [],
             "id": 2,
             "is_binary": true,
-            "mult": false,
             "name": "Willing to do Odd Jobs"
         }
     ],
@@ -95,7 +92,11 @@
             "changed": [],
             "description": "Chance of something happening during a trip, such as getting lost in the woods. Add Suzy's or her mother's Pathfinding skill to both die min and max.",
             "determining": [
-                ["attrib", 1]
+                {
+                    "entity_data": ["attrib", 1],
+                    "operation": "+",
+                    "label": ""
+                }
             ],
             "id": 1,
             "name": "Travel Danger",
@@ -130,7 +131,6 @@
             "description": "Where chores are done.",
             "id": 13,
             "masked": true,
-            "mult": false,
             "name": "Barn",
             "progress": {},
             "q_limit": 1.0,
@@ -144,7 +144,6 @@
             "description": "Get paid for chores. Useful for purchasing pigs at the market in case breeding doesn't work out.",
             "id": 12,
             "masked": false,
-            "mult": false,
             "name": "Cash",
             "progress": {},
             "q_limit": 100.0,
@@ -177,7 +176,6 @@
             "description": "Pitchforking hay to feed animals. Mucking manure. Milking cows. When enough chores are done, find Uncle to get paid for them.",
             "id": 11,
             "masked": false,
-            "mult": false,
             "name": "Chores",
             "progress": {},
             "q_limit": 10.0,
@@ -210,7 +208,6 @@
             "description": "Cooked on the wood stove in a cast iron skillet at home.",
             "id": 6,
             "masked": false,
-            "mult": false,
             "name": "Cooked Bacon",
             "progress": {},
             "q_limit": 30.0,
@@ -246,7 +243,6 @@
             "description": "For butchering.",
             "id": 9,
             "masked": false,
-            "mult": false,
             "name": "Knife",
             "progress": {},
             "q_limit": 1.0,
@@ -260,7 +256,6 @@
             "description": "Suzy's mother is the first number on the contacts list.",
             "id": 10,
             "masked": false,
-            "mult": false,
             "name": "Phone",
             "progress": {},
             "q_limit": 1.0,
@@ -274,7 +269,6 @@
             "description": "Can be raised or else bought from the market. Being near them makes your clothes smell for hours afterwards.\r\n<pre><c=\"pink\">\r\n   (\\____/)\r\n   / P  P \\\r\n  (  (oo)  )\r\n   `-.__.-'\r\n</c></pre>",
             "id": 8,
             "masked": false,
-            "mult": false,
             "name": "Pigs",
             "progress": {},
             "q_limit": 4.0,
@@ -321,7 +315,6 @@
             "description": "Straight from the pig.",
             "id": 7,
             "masked": false,
-            "mult": false,
             "name": "Raw Bacon",
             "progress": {},
             "q_limit": 30.0,
@@ -357,7 +350,6 @@
             "description": "For cooking in the kitchen.",
             "id": 14,
             "masked": false,
-            "mult": false,
             "name": "Wood Stove",
             "progress": {},
             "q_limit": 1.0,

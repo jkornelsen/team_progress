@@ -1,33 +1,6 @@
 ---- recent ----
 
-set character's grid coordinates to exit door
-
----- changes to consider (generally by newest first) ----
-
-a common need is to choose a random available coordinate from a grid
-should we make an event type (add another radio button like four-way) to do this
-it would have a location to read from
-we could add two determining attribs
-well, four i guess: x1, x2, y1, y2
-would be easier to do two different events but not for the user
-although the user could perhaps roll twice
-but that would require changing values each time
-at a minimum, we need to be able to add grid coords as determining attribs
-still that wouldn't account for blocked off areas
-might be better to write more code specifically for this case
-it would load a location object and then work with the grid somehow
-to get a random loc
-one solution would be to enumerate every open cell and then randomly
-select an index
-play event screen
-    select location
-    roll for random coordinates
-configure event screen
-    (o) coordinates
-    "Randomly choose grid coordinates at the following location:"
-    select location
-    additional grid area(s) to block off?
-store as a determining loc_id in the database
+---- changes to consider ----
 
 can a numeric attrib requirement be 0 or negative?
 -1 was accepted because none was found, which is 0
@@ -85,30 +58,52 @@ People: old man, young husband, young wife, elementary schooler, baby, dog, cat
 gain all instant could be more convenient than entering e.g. 9999 batches
 maybe a button or 0 for number of batches, or "(A)ll"
 
-first check if source item is carried,
-then if on floor,
-and finally, if in general storage
-deduct whichever is found first
-if say 5 are required, two are held and three are on floor,
-then require the character to either pick up three or drop two
-
-checkbox to mask items until gained or while none
-replace all non-spaces with "*" or "?"
-description "(hidden -- produce or find to reveal)"
-conversation dialog via masked item sources
-yes or no choice would consume a source
-
-mask characters we haven't met yet
-those not marked as maskable are the starting set
-go to location to unmask all characters there
-
-if a grid is defined then char must either be at same or adjacent pos
-to pick up pile, use local item sources, or travel through door
-
 travel could take a resource such as food for each distance step
 the character object would have this resource
 or use an instant item to do this manually
 that would make it easier to take 1 ticket or Rs.5 per x distance
+
+an attribute could be the season
+so an event based on the season would have a worse chance or lower average
+distance if season is winter
+winter would be explained in the attr description,
+and the implementation would be an input box showing * 0.9
+
+prompt each player to save to their PC occasionally
+only if no one recently saved from that session
+warn that loading will erase any scenario currently being played, so save first
+
+limit upload file size
+for example 10 Mb
+at 90% warn to remove content to avoid going over limit
+
+---- issues ----
+
+dollars for lemonade stand suddenly lost its recipe, yet progress continued
+I think this was during item play, not configure
+
+game_routes.py line 558, in item_progress
+    item = Item.data_for_play(
+recipe.py line 234, in load_complete_data
+    recipes_data = item_recipes[recipe_row.item_id]
+KeyError: 11
+
+---- planning ----
+
+hosting possibilities:
+Pythonanywhere should be able to host postgres and flask web app.
+https://www.reddit.com/r/flask/comments/12beskr/free_hosting_sites_compatible_with_flask/
+render.com is an alternative.
+
+try selenium to test client side
+
+consider sharing community scenarios
+perhaps submit to reddit, or github via enhancement requests
+
+---- doesn't seem necessary currently ----
+
+prompt before overwriting another action in progress
+such as if a character is already doing something else
 
 to travel from one location to another, selecting from a dropdown may
 be a bit tedious
@@ -137,12 +132,6 @@ or 3 / 5 chance to hit
 also min and max result,
 for example, 70% chance to do between 30 and 60 damage.
 
-an attribute could be the season
-so an event based on the season would have a worse chance or lower average
-distance if season is winter
-winter would be explained in the attr description,
-and the implementation would be an input box showing * 0.9
-
 events should automatically select last character viewed?
 seems better to have select box to select from all lists
 wouldn't change selection if a particular box doesn't have it
@@ -161,9 +150,6 @@ reload play item every 10 seconds until it can be?
 although that might not be why we're viewing the page,
 and if not, it could be annoying
 
-prompt before overwriting another action in progress
-such as if a character is already doing something else
-
 will it be difficult if several elapsed-time actions depend on each other?
 pen requires lid requires plastic, and each is incremented regularly
 when querying an item, first recursively query
@@ -174,34 +160,3 @@ the set would need to be a local variable passed as a parameter
 the player could control this by playing the source item first
 although that wouldn't be obvious at all
 going to overview would also take away that choice for top-level items
-
-prompt each player to save to their PC occasionally
-only if no one recently saved from that session
-warn that loading will erase any scenario currently being played, so save first
-
-limit upload file size
-for example 10 Mb
-at 90% warn to remove content to avoid going over limit
-
----- planning ----
-
-hosting possibilities:
-Pythonanywhere should be able to host postgres and flask web app.
-https://www.reddit.com/r/flask/comments/12beskr/free_hosting_sites_compatible_with_flask/
-render.com is an alternative.
-
-try selenium to test client side
-
-consider sharing community scenarios
-perhaps submit to reddit, or github via enhancement requests
-
----- issues ----
-
-dollars for lemonade stand suddenly lost its recipe, yet progress continued
-I think this was during item play, not configure
-
-game_routes.py line 558, in item_progress
-    item = Item.data_for_play(
-recipe.py line 234, in load_complete_data
-    recipes_data = item_recipes[recipe_row.item_id]
-KeyError: 11

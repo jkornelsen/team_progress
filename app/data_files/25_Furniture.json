@@ -5,7 +5,6 @@
             "enum_list": [],
             "id": 20,
             "is_binary": false,
-            "mult": false,
             "name": "Wear Level"
         },
         {
@@ -13,7 +12,6 @@
             "enum_list": [],
             "id": 21,
             "is_binary": false,
-            "mult": false,
             "name": "Clean"
         },
         {
@@ -21,7 +19,6 @@
             "enum_list": [],
             "id": 22,
             "is_binary": false,
-            "mult": false,
             "name": "Softness"
         },
         {
@@ -29,7 +26,6 @@
             "enum_list": [],
             "id": 23,
             "is_binary": false,
-            "mult": false,
             "name": "Favor"
         },
         {
@@ -62,7 +58,6 @@
             ],
             "id": 19,
             "is_binary": false,
-            "mult": false,
             "name": "Hour"
         },
         {
@@ -70,7 +65,6 @@
             "enum_list": [],
             "id": 26,
             "is_binary": false,
-            "mult": true,
             "name": "Proximity"
         },
         {
@@ -103,7 +97,6 @@
             ],
             "id": 25,
             "is_binary": false,
-            "mult": false,
             "name": "Arrival 2nd"
         },
         {
@@ -136,7 +129,6 @@
             ],
             "id": 24,
             "is_binary": false,
-            "mult": false,
             "name": "Arrival 1st"
         }
     ],
@@ -166,11 +158,31 @@
             "changed": [],
             "description": "Maybe they walk on through, or maybe they sit somewhere. Hopefully on you.",
             "determining": [
-                ["attrib", 23],
-                ["attrib", 21],
-                ["attrib", 22],
-                ["attrib", 20],
-                ["attrib", 19]
+                {
+                    "entity_data": ["attrib", 23],
+                    "operation": "+",
+                    "label": ""
+                },
+                {
+                    "entity_data": ["attrib", 21],
+                    "operation": "+",
+                    "label": ""
+                },
+                {
+                    "entity_data": ["attrib", 22],
+                    "operation": "+",
+                    "label": ""
+                },
+                {
+                    "entity_data": ["attrib", 20],
+                    "operation": "+",
+                    "label": ""
+                },
+                {
+                    "entity_data": ["attrib", 19],
+                    "operation": "+",
+                    "label": ""
+                }
             ],
             "id": 3,
             "name": "Chance to Sit",
@@ -187,9 +199,21 @@
             "changed": [],
             "description": "Automatic trigger chance. Try running for what counts as an hour at a time, over 20 seconds. It can potentially run for multiple hours, until something happens. If successful, check schedules to see if we know who comes, and if no one is scheduled, roll from a list to see who it is.",
             "determining": [
-                ["attrib", 19],
-                ["attrib", 24],
-                ["attrib", 25]
+                {
+                    "entity_data": ["attrib", 19],
+                    "operation": "+",
+                    "label": ""
+                },
+                {
+                    "entity_data": ["attrib", 24],
+                    "operation": "+",
+                    "label": ""
+                },
+                {
+                    "entity_data": ["attrib", 25],
+                    "operation": "+",
+                    "label": ""
+                }
             ],
             "id": 4,
             "name": "Chance of Arrival",
@@ -213,7 +237,6 @@
             "description": "Yes, this is your player character. 😊\r\n\r\nPet hair and spilled food are not something this sofa appreciates.",
             "id": 44,
             "masked": false,
-            "mult": false,
             "name": "Beige Sofa",
             "progress": {},
             "q_limit": 1.0,
@@ -231,7 +254,6 @@
             "description": "All black leather, seems suspicious.\r\n\r\nThis looks like potential competition, intent on getting people to sit on it instead, perhaps for some insidious purpose such as giving them a backache.",
             "id": 46,
             "masked": false,
-            "mult": false,
             "name": "Brand New Lounge Chair",
             "progress": {},
             "q_limit": 1.0,
@@ -247,7 +269,6 @@
             "description": "Tells time, although it must constantly be wound by hand.",
             "id": 45,
             "masked": false,
-            "mult": false,
             "name": "Grandfather Clock",
             "progress": {},
             "q_limit": 1.0,

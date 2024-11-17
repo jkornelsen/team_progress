@@ -99,7 +99,13 @@ class NumTup:
     integers in python, and integer arrays in db.
     """
     def __init__(self, tup=None):
-        self.tup = tup if tup else ()
+        if tup is None:
+            self.tup = ()
+        elif isinstance(tup, (list, tuple)):
+            self.tup = tuple(tup)
+        else:
+            raise TypeError(
+                f"Expected a list or tuple, got {type(tup).__name__}")
 
     @classmethod
     def from_str(cls, str_val, default=None, delim=","):

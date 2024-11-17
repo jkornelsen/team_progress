@@ -30,6 +30,59 @@
         <label for="event-description">Description:</label>
         <textarea id="event-description" name="event_description" rows="6" cols="50">{{ current.description }}</textarea>
         <br>
+        <div class="entity-list-container outer-border"
+             id="triggers-entities-container">
+            <h3 class="label-like">Links and Triggers</h3>
+            <p class="info label-like">
+                Show a link to the event from these items and locations, or the Overview.
+                If trigger chance is greater than 0%,
+                then the items can automatically trigger
+                the event during production, and the locations during travel.
+                A link can also be shown from characters by going to Character settings.
+            </p>
+            <!-- Placeholder for appending new entities -->
+            <div id="triggers-list-end" class="unobtrusive"></div>
+            <div class="select-box-container">
+                {% if game_data.items %}
+                    <div class="select-box" title="Triggered by production of this item.">
+                        <select class="add-entity-select">
+                            <option value="" selected>(Select item)</option>
+                            {% for item in game_data.items %}<option value="{{ item.id }}">{{ item.name }}</option>{% endfor %}
+                        </select>
+                        <button type="button"
+                                class="add-entity-btn lesser-button"
+                                data-relType="triggers"
+                                data-entityType="item">Add</button>
+                    </div>
+                {% endif %}
+                {% if game_data.locations %}
+                    <div class="select-box" title="Triggered by travel from this location.">
+                        <select class="add-entity-select">
+                            <option value="" selected>(Select location)</option>
+                            {% for loc in game_data.locations %}<option value="{{ loc.id }}">{{ loc.name }}</option>{% endfor %}
+                        </select>
+                        <button type="button"
+                                class="add-entity-btn lesser-button"
+                                data-relType="triggers"
+                                data-entityType="loc">Add</button>
+                    </div>
+                {% endif %}
+                {% if not game_data.items and not game_data.locations %}<p class="no-entities">(No items or locations)</p>{% endif %}
+            </div>
+            <label>Trigger Chance:</label>
+            <input type="text"
+                   id="trigger-chance"
+                   name="trigger_chance"
+                   value="{{ (current.trigger_chance * 100) | formatNum }}%"
+                   size="5">
+            <span style="position: absolute; right: 5px; top: 0; font-size: 0.9em;">%</span>
+            <br>
+            <input type="checkbox"
+                   id="top_level"
+                   name="top_level"
+                   {% if current.toplevel %}checked{% endif %}>
+            <label for="top_level">Show in Overview</label>
+        </div>
         <style>
             .entity-list-container label,
             .entity-list-container div {
@@ -41,6 +94,7 @@
                 gap: 10px;
             }
         </style>
+        <br>
         <div id="outcome-type-container">
             <label>Outcome Type:</label>
             <label>
@@ -55,7 +109,7 @@
                        name="outcome_type"
                        value="numeric"
                        {% if current.outcome_type == 'numeric' %}checked{% endif %}>
-                Only the Number
+                Number
             </label>
             <label>
                 <input type="radio"
@@ -63,6 +117,13 @@
                        value="selection"
                        {% if current.outcome_type == 'selection' %}checked{% endif %}>
                 Selection
+            </label>
+            <label>
+                <input type="radio"
+                       name="outcome_type"
+                       value="coordinates"
+                       {% if current.outcome_type == 'coordinates' %}checked{% endif %}>
+                Coordinates
             </label>
             <br>
         </div>
@@ -183,66 +244,8 @@
                 {% if not game_data.attribs and not game_data.items %}<p class="no-entities">(No attributes or items)</p>{% endif %}
             </div>
         </div>
-        <div class="entity-list-container outer-border"
-             id="triggers-entities-container">
-            <h3 class="label-like">Triggers and Other Links</h3>
-            <p class="info label-like">
-                These items and locations show a link to the event.
-                With a trigger chance greater than 0,
-                items can automatically trigger
-                during production, and locations during travel;
-                otherwise, run events directly.
-                Events can also be shown in Overview,
-                and they can be linked in a Character's settings.
-            </p>
-            <!-- Placeholder for appending new entities -->
-            <div id="triggers-list-end" class="unobtrusive"></div>
-            <div class="select-box-container">
-                {% if game_data.items %}
-                    <div class="select-box" title="Triggered by production of this item.">
-                        <select class="add-entity-select">
-                            <option value="" selected>(Select item)</option>
-                            {% for item in game_data.items %}<option value="{{ item.id }}">{{ item.name }}</option>{% endfor %}
-                        </select>
-                        <button type="button"
-                                class="add-entity-btn lesser-button"
-                                data-relType="triggers"
-                                data-entityType="item">Add</button>
-                    </div>
-                {% endif %}
-                {% if game_data.locations %}
-                    <div class="select-box" title="Triggered by travel from this location.">
-                        <select class="add-entity-select">
-                            <option value="" selected>(Select location)</option>
-                            {% for loc in game_data.locations %}<option value="{{ loc.id }}">{{ loc.name }}</option>{% endfor %}
-                        </select>
-                        <button type="button"
-                                class="add-entity-btn lesser-button"
-                                data-relType="triggers"
-                                data-entityType="loc">Add</button>
-                    </div>
-                {% endif %}
-                {% if not game_data.items and not game_data.locations %}<p class="no-entities">(No items or locations)</p>{% endif %}
-            </div>
-            <label>Trigger Chance:</label>
-            <input type="text"
-                   id="trigger-chance"
-                   name="trigger_chance"
-                   value="{{ (current.trigger_chance * 100) | formatNum }}%"
-                   size="5">
-            <span style="position: absolute; right: 5px; top: 0; font-size: 0.9em;">%</span>
-            <br>
-            <input type="checkbox"
-                   id="top_level"
-                   name="top_level"
-                   {% if current.toplevel %}checked{% endif %}>
-            <label for="top_level">Show in Overview</label>
-        </div>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
+        <!-- so that switching radio buttons doesn't require scrolling down --->
+        <div style="height: 24em;"></div>
         <div class="footer-buttons">
             <button type="submit" id="btn-save" name="save_changes">Save and Close</button>
             <button type="submit" id="btn-duplicate" name="make_duplicate">Save and Duplicate</button>
@@ -270,7 +273,12 @@
                 const selectionStringsDiv = $('#selection-container');
                 const determinantAttribsDiv = $('#determinant-entities-container');
                 const changedAttribsDiv = $('#changed-entities-container');
-                if (outcomeType === "selection") {
+                if (outcomeType === "coordinates") {
+                    numericFactorsDiv.css('display', 'none');
+                    selectionStringsDiv.css('display', 'none');
+                    determinantAttribsDiv.css('display', 'none');
+                    changedAttribsDiv.css('display', 'none');
+                } else if (outcomeType === "selection") {
                     numericFactorsDiv.css('display', 'none');
                     selectionStringsDiv.css('display', 'block');
                     determinantAttribsDiv.css('display', 'none');

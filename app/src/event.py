@@ -15,35 +15,32 @@ from .utils import (
     NumTup, RequestHelper, create_entity, entity_class, format_num)
 
 logger = logging.getLogger(__name__)
+
+OUTCOME_TYPES = [
+    'fourway',  # critical/minor failure or success
+    'numeric',  # such as a damage number
+    'selection',  # random selection from a list
+    'coordinates',  # random coordinates from a location's grid
+    ]
+(OUTCOME_FOURWAY,
+    OUTCOME_NUMERIC,
+    OUTCOME_SELECTION,
+    OUTCOME_COORDS) = OUTCOME_TYPES
+outcome_check = "outcome_type IN ({})".format(
+    ', '.join(f"'{outcome}'" for outcome in OUTCOME_TYPES))
+
 tables_to_create = {
     'events': f"""
         {coldef('name')},
         toplevel boolean NOT NULL,
-        outcome_type varchar(20) not null,
+        outcome_type varchar(20) not null
+            CHECK ({outcome_check}),
         trigger_chance real,
         numeric_range integer[2],
         selection_strings text
         """
     }
 
-OUTCOME_TYPES = [
-    'fourway',  # critical/minor failure or success
-    'numeric',  # such as a damage number
-    'selection'  # random selection from a list
-    ]
-(OUTCOME_FOURWAY,
-    OUTCOME_NUMERIC,
-    OUTCOME_SELECTION) = OUTCOME_TYPES
-OUTCOMES = [
-    "Critical Failure",
-    "Minor Failure",
-    "Minor Success",
-    "Major Success"
-    ]
-(OUTCOME_CRITICAL_FAILURE,
-    OUTCOME_MINOR_FAILURE,
-    OUTCOME_MINOR_SUCCESS,
-    OUTCOME_MAJOR_SUCCESS) = range(len(OUTCOMES))
 RELATION_TYPES = ['determining', 'changed', 'triggers']
 ENTITY_TYPES = [Attrib, Item, Location]
 ENTITY_TYPENAMES = [entity.typename() for entity in ENTITY_TYPES]
@@ -357,9 +354,11 @@ class Event(CompleteIdentifiable):
         else:
             logger.debug("Neither button was clicked.")
 
-    def roll_for_outcome(self, die_min, die_max):
+    def roll_for_outcome(self, die_min, die_max, loc_id):
         die_higher = max(die_min, die_max)  # for example -2 > -10
         die_lower = min(die_min, die_max)
+        if self.outcome_type == OUTCOME_COORDS:
+            return self.roll_coords(loc_id)
         if self.outcome_type == OUTCOME_SELECTION:
             strings_list = self.selection_strings.split('\n')
             outcome = random.choice(strings_list)
@@ -383,16 +382,16 @@ class Event(CompleteIdentifiable):
         elif self.outcome_type == OUTCOME_FOURWAY:
             major_threshold = round((die_higher - die_lower + 1) * 0.45);
             if outcome_num <= -major_threshold:
-                outcome = OUTCOME_CRITICAL_FAILURE
+                outcome = "Critical Failure"
                 threshold_display = f"<= {-major_threshold}"
             elif outcome_num <= 0:
-                outcome = OUTCOME_MINOR_FAILURE
+                outcome = "Minor Failure"
                 threshold_display = f"> {-major_threshold}"
             elif outcome_num < major_threshold:
-                outcome = OUTCOME_MINOR_SUCCESS
+                outcome = "Minor Success"
                 threshold_display = f"< {major_threshold}"
             else:
-                outcome = OUTCOME_MAJOR_SUCCESS
+                outcome = "Major Success"
                 threshold_display = f">= {major_threshold}"
             display = (
                 "{} + {} (1d{}) = {}<br>"
@@ -404,12 +403,31 @@ class Event(CompleteIdentifiable):
                 format_num(outcome_num),
                 format_num(outcome_num),
                 threshold_display,
-                OUTCOMES[outcome],
+                outcome,
             )
         else:
             raise ValueError(f"Unexpected outcome_type {self.outcome_type}")
         MessageLog.add(f"{self.name} — {display}")
         return outcome, display
+
+    def roll_coords(self, loc_id):
+        loc = Location.data_for_play(loc_id)
+        occupied_coords = set()
+        for char in g.game_data.characters:
+            if char.location.id == loc.id:
+                occupied_coords.add(char.position.as_tuple())
+        for item_at in loc.items.values():
+            occupied_coords.add(item_at.position.as_tuple())
+        for dest in loc.destinations:
+            occupied_coords.add(dest.door_here.as_tuple())
+        available_coords = [
+            pos for pos in loc.grid if pos not in occupied_coords]
+        if available_coords:
+            outcome = random.choice(available_coords)
+            display = f"Outcome: {outcome}"
+            MessageLog.add(f"{self.name} — {display}")
+            return outcome, display
+        return None, "No available grid locations."
 
     @classmethod
     def change_by_form(cls):

@@ -33,11 +33,13 @@
                     $('#start-travel-btn').click();
                 } else if (key === 't') {
                     const $selectBox = $('#destination-select');
-                    $selectBox.focus();
-                    const selectBox = $selectBox[0];
-                    if (selectBox.selectedIndex === 0) {
-                        selectBox.selectedIndex = 1;
-                        $selectBox.trigger('change');
+                    if ($selectBox.length > 0) {
+                        $selectBox.focus();
+                        const selectBox = $selectBox[0];
+                        if (selectBox.selectedIndex === 0) {
+                            selectBox.selectedIndex = 1;
+                            $selectBox.trigger('change');
+                        }
                     }
                 } else if (key === 'w') {
                     const $selectBox = $('#travel-with-select');
@@ -64,9 +66,12 @@
                 <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
                 <span class="hotkey-indicator">[{{ letter }}]</span>
                 <a href="{{ link }}">{{ current.location.name }}</a>
+                {% if max(current.position) %}
+                    <span class="label-like">[{{ current.position }}]</span>
+                {% endif %}
                 {% if current.location.destinations %}
                     <div class="flexdiv">
-                        <label for="destination-select">Go [T]o:</label>
+                        <label for="destination-select">Travel [T]o:</label>
                         <select id="destination-select" class="select-box">
                             <option value="" data-duration="-1">(Select destination)</option>
                             {% for dest in current.location.destinations %}
@@ -83,15 +88,15 @@
                             {% endfor %}
                         </select>
                         <button type="button" id="do-travel-btn" style="display: none">[G]o</button>
-                    </div>
-                    <div id="destination-progress" class="flexdiv" style="display: none">
-                        <div class="progress-container">
-                            <progress class="progress-bar" max="100" value="0"></progress>
-                            <span class="progress-label">0 / 0</span>
+                        <div id="destination-progress" class="flexdiv expand" style="display: none">
+                            <button type="button"
+                                    class="go-button"
+                                    id="start-travel-btn">[S]tart</button>
+                            <div class="progress-container">
+                                <progress class="progress-bar" max="100" value="0"></progress>
+                                <span class="progress-label">0 / 0</span>
+                            </div>
                         </div>
-                        <button type="button"
-                                class="go-button"
-                                id="start-travel-btn">[S]tart</button>
                     </div>
                     <div id="travel-with-container" class="flexdiv">
                         <label for="travel-with-select">Travel [W]ith:</label>
@@ -391,6 +396,13 @@
                 localStorage.removeItem('ignore_event_id');
                 await fetchProgressData();
                 startFetchingProgress();
+                const $selectBox = $('#destination-select');
+                if ($selectBox.length > 0) {
+                    const selectBox = $selectBox[0];
+                    if (selectBox.selectedIndex === 0) {
+                        selectBox.selectedIndex = 1;
+                    }
+                }
                 showhide_dest();
                 showContent();
             }

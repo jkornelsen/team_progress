@@ -5,7 +5,6 @@
             "enum_list": [],
             "id": 1,
             "is_binary": false,
-            "mult": false,
             "name": "Pathfinding"
         },
         {
@@ -13,7 +12,6 @@
             "enum_list": [],
             "id": 2,
             "is_binary": true,
-            "mult": false,
             "name": "Willing to do Odd Jobs"
         },
         {
@@ -21,7 +19,6 @@
             "enum_list": [],
             "id": 3,
             "is_binary": true,
-            "mult": false,
             "name": "Pays for Odd Jobs"
         }
     ],
@@ -95,7 +92,11 @@
             "changed": [],
             "description": "Set difficulty to Moderate, meaning the chance of getting lost or eaten by wolves in this particular forest is decent but not overwhelming. If Suzy is alone in the forest, select her name with stat 2 and press <i>Add</i>. Otherwise, use her Mother's stat. Then press <i>Roll</i>.\r\n\r\nBecause she's tired after all those chores, play at a disadvantage, which means we take the worst of two rolls. So, remember the first result and then press Roll again.\r\n\r\nActually, in this case, we need it to be a <i>Minor Failure</i>, so keep rolling until that happens. We'll take that to mean she's lost but there are no wolves or twisted ankles.\r\n\r\nTo get out of this pickle, press <b>O</b> to return to the overview and go to the <i>Connect to Service</i> event.",
             "determining": [
-                ["attrib", 1]
+                {
+                    "entity_data": ["attrib", 1],
+                    "operation": "+",
+                    "label": ""
+                }
             ],
             "id": 1,
             "name": "Travel Danger",
@@ -130,7 +131,6 @@
             "description": "For butchering.",
             "id": 9,
             "masked": false,
-            "mult": false,
             "name": "Knife",
             "progress": {},
             "q_limit": 1.0,
@@ -144,7 +144,6 @@
             "description": "Suzy's mother is the first number on the contacts list.",
             "id": 10,
             "masked": false,
-            "mult": false,
             "name": "Phone",
             "progress": {},
             "q_limit": 1.0,
@@ -158,7 +157,6 @@
             "description": "This item functions as a crafting station, fixed at the <i>Home</i> location. Useful for producing items from recipes, namely, <i>Cooked Bacon</i> \u2014 go ahead and click on it.",
             "id": 14,
             "masked": false,
-            "mult": false,
             "name": "Wood Stove",
             "progress": {},
             "q_limit": 1.0,
@@ -172,7 +170,6 @@
             "description": "\"0 / 30\" means that although there are none yet, we can have up to 30 at a time.\r\n\r\nLooks like crafting requires <i>Raw Bacon</i>, but we do not start with any in stock. Where could that be found? Keep an eye out for possible sources as you investigate and travel.\r\n\r\nWe'll also need the <i>Wood Stove</i> to cook the bacon, which means Suzy will need to be at home to do so. Notice that the <i>Where</i> column for the wood stove shows <i>Home</i>, indicating that it's currently available.",
             "id": 6,
             "masked": false,
-            "mult": false,
             "name": "Cooked Bacon",
             "progress": {},
             "q_limit": 30.0,
@@ -208,7 +205,6 @@
             "description": "A crafting station, similar to the <i>Wood Stove</i>.",
             "id": 13,
             "masked": true,
-            "mult": false,
             "name": "Barn",
             "progress": {},
             "q_limit": 1.0,
@@ -222,7 +218,6 @@
             "description": "The most efficient plan would be to raise more pigs <i>before</i> butchering them, by pressing <i>Start</i> on the row where pigs are the <i>Source</i> (as well as the result). However, let's do it the hard way this time. Go to <i>Raw Bacon</i> and start slaughtering!\r\n\r\nAfter you've dispensed of the original pair, it's time to get some cash to buy more. Click on <i>Cash</i> and then <i>Chores</i> to continue.\r\n\r\nWhen you've bought a new pair of pigs, reload the page to be able to raise more. It's not strictly necessary for the scenario—one is enough to finish the stack of <i>Raw Bacon</i>. Still, <i>Uncle</i> would probably want you to leave a pair for the future.",
             "id": 8,
             "masked": false,
-            "mult": false,
             "name": "Pigs",
             "progress": {},
             "q_limit": 4.0,
@@ -269,7 +264,6 @@
             "description": "In this scenario, Chores and Cash are <i>general storage</i> items (or <i>universal</i>), meaning that they can be used anywhere and don't have to be carried by a specific person.\r\n\r\nPress <i>Start</i> to do some chores. There's no limit to the chores that can be done, but you can only get paid for 10 at a time. Go to <i>Cash</i> to get your earnings.",
             "id": 11,
             "masked": false,
-            "mult": false,
             "name": "Chores",
             "progress": {},
             "q_limit": 10.0,
@@ -302,7 +296,6 @@
             "description": "Getting paid doesn't take any particular amount of time, so there's a <i>Gain</i> button instead of <i>Start</i>, but otherwise, it works the same. To get paid all at once, enter a higher number such as 11 \u2014 it won't do more than what you have available. \r\n\r\nIf you don't have enough cash to buy a pig yet, go back to <i>Chores</i> and repeat this process. Also, of course, you'll need more than one pig in order to get baby pigs.",
             "id": 12,
             "masked": false,
-            "mult": false,
             "name": "Cash",
             "progress": {},
             "q_limit": 100.0,
@@ -335,7 +328,6 @@
             "description": "Now we can make use of that <i>Knife</i> Suzy has been carrying. There are 2 pigs currently at the farm. Press <i>Start</i> and wait while she turns both of them into neatly sized pieces of meat.\r\n\r\nIf Suzy is not shown under <i>Where</i> as carrying the knife, you may need to go back to her screen and click on the knife to get to this raw bacon screen. Similarly, if the pigs are at the farm but not shown, navigate back to the farm and then click through the pigs to get here.\r\n\r\nLooks like we ran out. Go back to <i>Pigs</i> and see how to get more.\r\n\r\nOnce you have a full load of raw bacon (30), it's time for Suzy to start the perilous trip back home. Navigate to her page to do so.",
             "id": 7,
             "masked": false,
-            "mult": false,
             "name": "Raw Bacon",
             "progress": {},
             "q_limit": 30.0,

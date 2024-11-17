@@ -5,7 +5,6 @@
             "enum_list": [],
             "id": 1,
             "is_binary": false,
-            "mult": false,
             "name": "Depth"
         },
         {
@@ -13,7 +12,6 @@
             "enum_list": [],
             "id": 6,
             "is_binary": false,
-            "mult": false,
             "name": "HP"
         },
         {
@@ -21,7 +19,6 @@
             "enum_list": [],
             "id": 8,
             "is_binary": false,
-            "mult": false,
             "name": "Max MP"
         },
         {
@@ -29,7 +26,6 @@
             "enum_list": [],
             "id": 9,
             "is_binary": false,
-            "mult": false,
             "name": "Poisoned"
         },
         {
@@ -37,7 +33,6 @@
             "enum_list": [],
             "id": 10,
             "is_binary": false,
-            "mult": false,
             "name": "Burning"
         },
         {
@@ -45,7 +40,6 @@
             "enum_list": [],
             "id": 12,
             "is_binary": false,
-            "mult": false,
             "name": "XP"
         },
         {
@@ -53,7 +47,6 @@
             "enum_list": [],
             "id": 11,
             "is_binary": false,
-            "mult": false,
             "name": "XP Level"
         },
         {
@@ -61,7 +54,6 @@
             "enum_list": [],
             "id": 2,
             "is_binary": false,
-            "mult": false,
             "name": "Str"
         },
         {
@@ -69,7 +61,6 @@
             "enum_list": [],
             "id": 4,
             "is_binary": false,
-            "mult": false,
             "name": "Int"
         },
         {
@@ -77,7 +68,6 @@
             "enum_list": [],
             "id": 7,
             "is_binary": false,
-            "mult": false,
             "name": "Max HP"
         },
         {
@@ -85,7 +75,6 @@
             "enum_list": [],
             "id": 13,
             "is_binary": false,
-            "mult": false,
             "name": "Density"
         },
         {
@@ -93,7 +82,6 @@
             "enum_list": [],
             "id": 5,
             "is_binary": false,
-            "mult": false,
             "name": "MP"
         },
         {
@@ -101,7 +89,6 @@
             "enum_list": [],
             "id": 14,
             "is_binary": false,
-            "mult": false,
             "name": "Stamina"
         },
         {
@@ -109,7 +96,6 @@
             "enum_list": [],
             "id": 3,
             "is_binary": false,
-            "mult": false,
             "name": "Dex"
         },
         {
@@ -117,7 +103,6 @@
             "enum_list": [],
             "id": 15,
             "is_binary": false,
-            "mult": false,
             "name": "Evasion"
         },
         {
@@ -125,7 +110,6 @@
             "enum_list": [],
             "id": 16,
             "is_binary": false,
-            "mult": false,
             "name": "Accuracy"
         }
     ],
@@ -301,8 +285,16 @@
             "changed": [],
             "description": "Chance to detect items or stealthy characters, or avoid detection.\r\n\r\n\u2022 Int and Dex increase detection.\r\n\u2022 Dex increases stealth.",
             "determining": [
-                ["attrib", 3],
-                ["attrib", 4]
+                {
+                    "entity_data": ["attrib", 3],
+                    "operation": "+",
+                    "label": ""
+                },
+                {
+                    "entity_data": ["attrib", 4],
+                    "operation": "+",
+                    "label": ""
+                }
             ],
             "id": 3,
             "name": "Perception",
@@ -319,8 +311,16 @@
             ],
             "description": "Dex increases both die min and max, while Str increases die max only.\r\n\r\nFirst roll <a href=\"/play/event/5\">Shoot -- Success</a> to determine if the attack hits.",
             "determining": [
-                ["attrib", 3],
-                ["attrib", 2]
+                {
+                    "entity_data": ["attrib", 3],
+                    "operation": "+",
+                    "label": ""
+                },
+                {
+                    "entity_data": ["attrib", 2],
+                    "operation": "+",
+                    "label": ""
+                }
             ],
             "id": 6,
             "name": "Shoot -- Dmg",
@@ -335,7 +335,11 @@
             "changed": [],
             "description": "Determines whether a ranged attack hits. Dexterity increases accuracy, while evasion decreases it.\r\n\r\nIf successful, also roll <a href=\"/play/event/6\">Shoot -- Dmg</a> to determine how much damage is done and apply to a target.",
             "determining": [
-                ["attrib", 3]
+                {
+                    "entity_data": ["attrib", 3],
+                    "operation": "+",
+                    "label": ""
+                }
             ],
             "id": 5,
             "name": "Shoot -- Success",
@@ -350,7 +354,11 @@
             "changed": [],
             "description": "Higher XP level means that more enemies may spawn. Also roll for:\r\n\u2022 <a href=\"/play/event/7\">Which Enemy</a>\r\n\u2022 <a href=\"/play/event/9\">Grid X</a>\r\n\u2022 <a href=\"/play/event/10\">Grid Y</a>",
             "determining": [
-                ["attrib", 11]
+                {
+                    "entity_data": ["attrib", 11],
+                    "operation": "+",
+                    "label": ""
+                }
             ],
             "id": 8,
             "name": "Populate Room -- Number of Enemies",
@@ -365,7 +373,11 @@
             "changed": [],
             "description": "Higher XP level means that more enemies may spawn. Also roll for:\r\n\u2022 <a href=\"/play/event/12\">Which Item</a>\r\n\u2022 <a href=\"/play/event/9\">Grid X</a>\r\n\u2022 <a href=\"/play/event/10\">Grid Y</a>",
             "determining": [
-                ["attrib", 11]
+                {
+                    "entity_data": ["attrib", 11],
+                    "operation": "+",
+                    "label": ""
+                }
             ],
             "id": 11,
             "name": "Populate Room -- Number of Items",
@@ -450,7 +462,6 @@
             "description": "Can be carved into weapons or torches or burned for fuel.",
             "id": 2,
             "masked": false,
-            "mult": false,
             "name": "Pine Wood",
             "progress": {},
             "q_limit": 0.0,
@@ -464,7 +475,6 @@
             "description": "For carving. Includes shelves to hold a selection of different kinds of wood.",
             "id": 1,
             "masked": false,
-            "mult": false,
             "name": "Woodworking Table",
             "progress": {},
             "q_limit": 1.0,

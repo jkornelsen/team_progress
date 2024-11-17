@@ -5,7 +5,6 @@
             "enum_list": [],
             "id": 6,
             "is_binary": false,
-            "mult": false,
             "name": "HP"
         },
         {
@@ -13,7 +12,6 @@
             "enum_list": [],
             "id": 7,
             "is_binary": false,
-            "mult": true,
             "name": "Strength"
         },
         {
@@ -21,7 +19,6 @@
             "enum_list": [],
             "id": 8,
             "is_binary": false,
-            "mult": true,
             "name": "Accuracy"
         },
         {
@@ -29,7 +26,6 @@
             "enum_list": [],
             "id": 9,
             "is_binary": false,
-            "mult": false,
             "name": "Base Power"
         }
     ],
@@ -52,7 +48,6 @@
             "name": "Truck",
             "position": [4,2],
             "progress": {},
-            "quantity": 0.0,
             "toplevel": true,
             "travel_group": ""
         },
@@ -73,7 +68,6 @@
             "name": "Owner",
             "position": [14,3],
             "progress": {},
-            "quantity": 0.0,
             "toplevel": true,
             "travel_group": ""
         }
@@ -113,46 +107,26 @@
             ]
         },
         {
-            "changed": [],
-            "description": "Choose the horizontal grid coordinate of the next tree to be actively harvested on a plot.",
-            "determining": [],
-            "id": 3,
-            "name": "Mark a Tree\u2014Horizontal",
-            "numeric_range": [1, 20],
-            "outcome_type": "numeric",
-            "selection_strings": "",
-            "toplevel": false,
-            "trigger_chance": 0.1,
-            "triggers": [
-                ["item", 17],
-                ["loc", 4]
-            ]
-        },
-        {
-            "changed": [],
-            "description": "Choose the horizontal grid coordinate of the next tree to be actively harvested on a plot.",
-            "determining": [],
-            "id": 4,
-            "name": "Mark a Tree\u2014Vertical",
-            "numeric_range": [1, 10],
-            "outcome_type": "numeric",
-            "selection_strings": "",
-            "toplevel": false,
-            "trigger_chance": 0.1,
-            "triggers": [
-                ["item", 17],
-                ["loc", 4]
-            ]
-        },
-        {
             "changed": [
                 ["attrib", 6]
             ],
             "description": "",
             "determining": [
-                ["attrib", 7],
-                ["attrib", 8],
-                ["attrib", 9]
+                {
+                    "entity_data": ["attrib", 7],
+                    "label": "",
+                    "operation": "+"
+                },
+                {
+                    "entity_data": ["attrib", 8],
+                    "label": "",
+                    "operation": "+"
+                },
+                {
+                    "entity_data": ["attrib", 9],
+                    "label": "",
+                    "operation": "+"
+                }
             ],
             "id": 5,
             "name": "Swing to Chop",
@@ -161,7 +135,27 @@
             "selection_strings": "",
             "toplevel": false,
             "trigger_chance": 0.1,
-            "triggers": []
+            "triggers": [
+                ["item", 19],
+                ["item", 15],
+                ["loc", 4]
+            ]
+        },
+        {
+            "changed": [],
+            "description": "Choose the grid coordinates of the next tree to be actively harvested on a plot.",
+            "determining": [],
+            "id": 3,
+            "name": "Mark a Tree",
+            "numeric_range": [1, 20],
+            "outcome_type": "coordinates",
+            "selection_strings": "",
+            "toplevel": false,
+            "trigger_chance": 0.0,
+            "triggers": [
+                ["item", 17],
+                ["loc", 4]
+            ]
         }
     ],
     "items": [
@@ -170,7 +164,6 @@
             "description": "Purchase new equipment, and eventually, a new plot of land.",
             "id": 25,
             "masked": false,
-            "mult": false,
             "name": "Cash",
             "progress": {},
             "q_limit": 0.0,
@@ -203,7 +196,6 @@
             "description": "Plots generally have many trees, but only some are marked for harvesting.\r\n\r\n<b><c=\"saddlebrown\">To mark a new tree</c></b>:\r\n1. Run the events for the plot to assign a vertical and horizontal coordinate.\r\n2. Set the marked tree position to the new coordinates by configuring <i>Starting Plot</i>.\r\n3. Produce a <i>Marked Tree</i> from <i>Plot 1 Trees</i> so that the quantity goes from 0 to 1.\r\n4. Set HP to 100.\r\n\r\nNow the tree is ready for a character to <i>Swing to Chop</i>.",
             "id": 15,
             "masked": false,
-            "mult": false,
             "name": "Marked Tree",
             "progress": {},
             "q_limit": 1.0,
@@ -233,15 +225,11 @@
             "attribs": [
                 [8, 2.0],
                 [7, 2.0],
-                [
-                    9,
-                    -5.0
-                ]
+                [9, -5.0]
             ],
             "description": "Handle has been reattached many times in the past.",
             "id": 18,
             "masked": false,
-            "mult": false,
             "name": "Old Axe",
             "progress": {},
             "q_limit": 1.0,
@@ -255,7 +243,6 @@
             "description": "Landscape feature that can get in the way of a lumber operation.",
             "id": 16,
             "masked": false,
-            "mult": false,
             "name": "Rock",
             "progress": {},
             "q_limit": 0.0,
@@ -269,7 +256,6 @@
             "description": "How many trees are available on a plot.",
             "id": 17,
             "masked": false,
-            "mult": false,
             "name": "Plot 1 Trees",
             "progress": {},
             "q_limit": 0.0,
@@ -283,7 +269,6 @@
             "description": "",
             "id": 27,
             "masked": false,
-            "mult": false,
             "name": "Circular Saw",
             "progress": {},
             "q_limit": 1.0,
@@ -297,7 +282,6 @@
             "description": "Cut from logs.",
             "id": 26,
             "masked": false,
-            "mult": false,
             "name": "Boards",
             "progress": {},
             "q_limit": 0.0,
@@ -333,7 +317,6 @@
             "description": "Looks tempting. Smoke may help drive the bees away.",
             "id": 28,
             "masked": false,
-            "mult": false,
             "name": "Honeycomb",
             "progress": {},
             "q_limit": 1.0,
@@ -347,7 +330,6 @@
             "description": "Idle chopping is for when no characters are actively chopping, either because they are doing something else, or while offline.",
             "id": 19,
             "masked": false,
-            "mult": false,
             "name": "Logs",
             "progress": {},
             "q_limit": 0.0,
@@ -355,10 +337,7 @@
             "recipes": [
                 {
                     "attribs": [
-                        [
-                            6,
-                            -1.0
-                        ]
+                        [6, -1.0]
                     ],
                     "byproducts": [],
                     "id": 8,
@@ -430,15 +409,16 @@
             "destinations": [
                 {
                     "bidirectional": true,
-                    "duration": 1,
                     "door1": [7,2],
                     "door2": [1,2],
+                    "duration": 1,
                     "loc2_id": 4
                 }
             ],
             "dimensions": [7,3],
             "excluded": [0,0,0,0],
             "id": 10,
+            "item_refs": [],
             "items": [
                 {
                     "item_id": 27,
@@ -448,8 +428,6 @@
             ],
             "masked": false,
             "name": "Lumber Yard",
-            "progress": {},
-            "quantity": 0.0,
             "toplevel": false
         },
         {
@@ -457,15 +435,16 @@
             "destinations": [
                 {
                     "bidirectional": true,
-                    "duration": 1,
                     "door1": [3,20],
                     "door2": [4,9],
+                    "duration": 1,
                     "loc2_id": 4
                 }
             ],
             "dimensions": [4,20],
             "excluded": [1,3,2,20],
             "id": 9,
+            "item_refs": [],
             "items": [
                 {
                     "item_id": 28,
@@ -475,8 +454,6 @@
             ],
             "masked": false,
             "name": "Tree \u2014 Climbing",
-            "progress": {},
-            "quantity": 0.0,
             "toplevel": false
         }
     ],

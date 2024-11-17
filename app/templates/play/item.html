@@ -67,6 +67,9 @@
                         <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
                         At
                         <a href="{{ link }}">{{ container.name }}</a>
+                        {% if max(current.pile.position) %}
+                            <span class="label-like">[{{ current.pile.position }}]</span>
+                        {% endif %}
                         <span class="hotkey-indicator">[{{ letter }}]</span>
                         <br>
                     {% else %}
@@ -159,15 +162,12 @@
                                 <input type="text" id="quantity_to_drop" size="10" value="1">
                             </div>
                         {% endif %}
-                        {% set has = namespace(chars=False) %}
-                        {% for char in game_data.characters if char.location.id == loc_id %}
-                            {% set has.chars = True %}
-                        {% endfor %}
-                        {% if current.pile.container_type() == 'loc' and loc_id and has.chars %}
+                        {% if current.pile.container_type() == 'loc' and loc_id and characters_at_loc %}
+
                             <div class="button-column" id="pickup-container">
                                 <button id="pickup-btn" class="go-button">[P]ick Up</button>
                                 <select id="char-picking-up">
-                                    {% for char in game_data.characters if char.location.id == loc_id %}
+                                    {% for char in characters_at_loc %}
                                         <option value="{{ char.id }}"
                                                 {% if char.id == defaults.pickup_char %}selected{% endif %}>
                                             {{ char.name }}

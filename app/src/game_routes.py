@@ -16,7 +16,7 @@ from .db_serializable import DeletionError
 from .character import Character, OwnedItem
 from .item import Item
 from .event import Event, OPERATIONS
-from .location import Location, ItemAt
+from .location import Grid, Location, ItemAt
 from .overall import Overall
 from .progress import Progress
 from .user_interaction import MessageLog
@@ -334,6 +334,10 @@ def set_routes(app):
         session['referrer_link'] = {
             'url': request.url,
             'name': item.name}
+        characters_at_loc = []
+        if isinstance(item.pile, ItemAt):
+            characters_at_loc = Location.chars_at_pos(
+                loc_id, item.pile.position)
         return render_template(
             'play/item.html',
             current=item,
@@ -342,6 +346,7 @@ def set_routes(app):
             loc_id=loc_id,
             main_pile_type=main_pile_type,
             defaults=defaults,
+            characters_at_loc=characters_at_loc,
             game_data=g.game_data,
             link_letters=LinkLetters('cdelmopq')
             )
@@ -443,7 +448,7 @@ def set_routes(app):
             dest_char_pos = NumTup((0, 0))
             dest = main_char.destination
             if dest:
-                door_pos = dest.other_door()
+                door_pos = dest.other_door
                 if dest.other_loc.grid.in_grid(door_pos):
                     dest_char_pos = door_pos
             for char in get_travel_chars(req, char_id):
@@ -526,15 +531,11 @@ def set_routes(app):
         main_char = next(
             (char for char in travel_chars
             if char.id == char_id), None)
-        #TODO: set destination to dest_id, as simply calling
-        # get_destinations() probably won't do anything without
-        # specifying the new destination.
-        # Maybe that would work for char_progress() though.
-        main_char.get_destinations()
+        main_char.get_destinations(dest_id)
         dest_char_pos = NumTup((0, 0))
         dest = main_char.destination
         if dest:
-            door_pos = dest.other_door()
+            door_pos = dest.other_door
             if dest.other_loc.grid.in_grid(door_pos):
                 dest_char_pos = door_pos
         for char in travel_chars:
@@ -559,7 +560,8 @@ def set_routes(app):
         req.debug()
         outcome, display = instance.roll_for_outcome(
             req.get_int('die_min'),
-            req.get_int('die_max')
+            req.get_int('die_max'),
+            req.get_int('location')
             )
         return jsonify({
             'outcome': outcome,

@@ -5,7 +5,6 @@
             "enum_list": [],
             "id": 12,
             "is_binary": false,
-            "mult": false,
             "name": "life expectancy"
         },
         {
@@ -13,7 +12,6 @@
             "enum_list": ["male", "female"],
             "id": 10,
             "is_binary": false,
-            "mult": false,
             "name": "sex"
         },
         {
@@ -21,7 +19,6 @@
             "enum_list": [],
             "id": 11,
             "is_binary": false,
-            "mult": false,
             "name": "age (male)"
         },
         {
@@ -29,7 +26,6 @@
             "enum_list": [],
             "id": 14,
             "is_binary": false,
-            "mult": false,
             "name": "age (female)"
         },
         {
@@ -42,7 +38,6 @@
             ],
             "id": 13,
             "is_binary": false,
-            "mult": false,
             "name": "species (male)"
         },
         {
@@ -55,7 +50,6 @@
             ],
             "id": 15,
             "is_binary": false,
-            "mult": false,
             "name": "species (female)"
         },
         {
@@ -69,7 +63,6 @@
             ],
             "id": 16,
             "is_binary": false,
-            "mult": false,
             "name": "bovine color"
         },
         {
@@ -77,7 +70,6 @@
             "enum_list": [],
             "id": 17,
             "is_binary": false,
-            "mult": false,
             "name": "birth year"
         },
         {
@@ -85,7 +77,6 @@
             "enum_list": [],
             "id": 18,
             "is_binary": false,
-            "mult": false,
             "name": "year"
         }
     ],
@@ -118,7 +109,11 @@
             "changed": [],
             "description": "Whether to inherit a trait such as color from mother or father. Small chance of developing a new color that's not inherited directly from either one, based on some combination of genetics from ancestors.",
             "determining": [
-                ["attrib", 16]
+                {
+                    "entity_data": ["attrib", 16],
+                    "operation": "+",
+                    "label": ""
+                }
             ],
             "id": 10,
             "name": "inherit parent trait",
@@ -160,7 +155,6 @@
             "description": "A bull.",
             "id": 31,
             "masked": false,
-            "mult": false,
             "name": "bovine 2 \u2642",
             "progress": {},
             "q_limit": 1.0,
@@ -174,7 +168,6 @@
             "description": "1. Bring parents to the <i>Breeding Pen</i> and use <i>newborn calf</i> for birth.\r\n2. After birth is finished, <i>Save and Duplicate</i> one of the parents, creating a carried item. This is now the new offspring, so name accordingly.\r\n3. Set the quantity of <i>newborn calf</i> in the <i>Breeding Pen</i> back to 0.\r\n4. Bring all three carried item bovines (parents plus the new offspring) back to the <i>Cow Pen</i>.",
             "id": 34,
             "masked": false,
-            "mult": false,
             "name": "newborn calf",
             "progress": {},
             "q_limit": 1.0,
@@ -211,7 +204,6 @@
             "description": "A cow. To breed, see <a href=\"/play/item/34\">newborn calf</a>.",
             "id": 30,
             "masked": false,
-            "mult": false,
             "name": "bovine 1 \u2640",
             "progress": {},
             "q_limit": 1.0,
@@ -225,7 +217,6 @@
             "description": "The tip emits an unpleasant electric shock.",
             "id": 32,
             "masked": false,
-            "mult": false,
             "name": "prod",
             "progress": {},
             "q_limit": 1.0,
@@ -241,7 +232,6 @@
             "description": "Keep track of year and perhaps season.",
             "id": 35,
             "masked": false,
-            "mult": false,
             "name": "calendar",
             "progress": {},
             "q_limit": 1.0,
@@ -262,7 +252,6 @@
             "description": "A bull, offspring of bovine 1 & 2.",
             "id": 33,
             "masked": false,
-            "mult": false,
             "name": "bovine 3 \u2642",
             "progress": {},
             "q_limit": 1.0,

@@ -4,8 +4,8 @@ from typing import Tuple, Union
 from flask import g, session, url_for
 
 from .db_serializable import (
-    DbError, DeletionError, CompleteIdentifiable, QueryHelper, Serializable,
-    coldef)
+    DbError, DeletionError, CompleteIdentifiable, MutableNamespace,
+    QueryHelper, Serializable, coldef)
 from .item import Item
 from .pile import Pile
 from .utils import NumTup, RequestHelper, Storage
@@ -305,7 +305,8 @@ class Location(CompleteIdentifiable):
                 """, (self.id,))
 
     @classmethod
-    def get_destinations_from(cls, departure_id, current_dest_id):
+    def get_destinations_from(
+            cls, departure_id, departure_pos, current_dest_id):
         """Get all the destinations you can travel to from the given
         departure_id.
         Also, returns the destination matching current_dest_id, if any.
@@ -337,6 +338,8 @@ class Location(CompleteIdentifiable):
                 dest.loc2 = dest_loc
             else:
                 dest.loc1 = dest_loc
+            if not Grid.adjacent(departure_pos, dest.door_here):
+                continue
             destinations.append(dest)
         current_dest = None
         if current_dest_id:
@@ -349,6 +352,19 @@ class Location(CompleteIdentifiable):
                     break
         logger.debug("Destinations: %s", len(destinations))
         return destinations, current_dest
+
+    @classmethod
+    def chars_at_pos(cls, loc_id, position):
+        """Returns characters at the given loc, and at the position if
+        non-zero.
+        """
+        chars = []
+        for char in g.game_data.characters:
+            if char.location.id == loc_id:
+                if not Grid.adjacent(char.position, position):
+                    continue
+                chars.append(char)
+        return chars
 
     @classmethod
     def load_complete_objects(cls, ids=None):
@@ -521,18 +537,21 @@ class Grid:
         self.excluded = NumTup((0, 0, 0, 0))  # left, top, right, bottom
         self.default_pos = NumTup((0, 0))  # legal position in grid if any
 
-    def set_default_pos(self):
-        """Returns None if there are no legal positions.
-        Call this method whenever changing dimensions or excluded.
-        """
+    def __iter__(self):
         width, height = self.dimensions.as_tuple()
         left, top, right, bottom = self.excluded.as_tuple()
         for y in range(1, height + 1):
             for x in range(1, width + 1):
                 if not (left <= x <= right and top <= y <= bottom):
-                    self.default_pos = NumTup((x, y))
-                    return
-        self.default_pos = NumTup((0, 0))
+                    yield x, y
+
+    def set_default_pos(self):
+        """Call this method whenever changing dimensions or exclusions."""
+        coords = next(iter(self), None)
+        if coords:
+            self.default_pos = NumTup(coords)
+        else:
+            self.default_pos = NumTup((0, 0))
 
     def in_grid(self, pos):
         """Returns True if position is legally in the grid."""
@@ -548,3 +567,15 @@ class Grid:
         if left <= x <= right and top <= y <= bottom:
             return False
         return True
+
+    @staticmethod
+    def adjacent(pos1, pos2):
+        """@return true if pos1 is within 1 square of pos2."""
+        if not any(pos2):
+            # no requirement
+            return True
+        if not any(pos1):
+            return False
+        x1, y1 = pos1
+        x2, y2 = pos2
+        return abs(x1 - x2) <= 1 and abs(y1 - y2) <= 1

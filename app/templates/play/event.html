@@ -194,12 +194,32 @@
                             </li>
                         </div>
                     {% endif %}
-                    <div style="margin-top: 20px; text-align: center">
-                        <button type="button" id="roll-btn">[R]oll</button>
-                        <i><span id="roll-counter" class="label-like">
-                            <span style="opacity: 0">Count: 0</span>
-                        </span></i>
-                    </div>
+                    {% if current.outcome_type == 'coordinates' %}
+                        {% set outerscope = namespace(locs_with_grids=[]) %}
+                        {% for loc in game_data.locations if max(loc.grid.dimensions) %}
+                            {% set _ = outerscope.locs_with_grids.append(loc) %}
+                        {% endfor %}
+                        {% if outerscope.locs_with_grids %}
+                            <div class="select-box">
+                                <label for="location-select">Choose grid coordinates for:</label>
+                                <select id="location-select">
+                                    {% for loc in outerscope.locs_with_grids|sort(attribute='name') %}
+                                        <option value="{{ loc.id }}">{{ loc.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        {% else %}
+                            <h3 style="color: tan">No locations have grids yet.</h3>
+                        {% endif %}
+                    {% endif %}
+                    {% if current.outcome_type != 'coordinates' or outerscope.locs_with_grids %}
+                        <div style="margin-top: 20px; text-align: center">
+                            <button type="button" id="roll-btn">[R]oll</button>
+                            <i><span id="roll-counter" class="label-like">
+                                <span style="opacity: 0">Count: 0</span>
+                            </span></i>
+                        </div>
+                    {% endif %}
                 </form>
             </td>
         </tr>
@@ -336,7 +356,7 @@
     <script>
         $(document).ready(() => {
             // remember defaults for select boxes in client side storage
-            const $selectBoxes = $('.container-for-changed, .container-for-det, #difficulty-select');
+            const $selectBoxes = $('.container-for-changed, .container-for-det, #difficulty-select, #location-select');
             const $dieFields = $('#die-min, #die-max');
             window.saveSelections = function() {
                 console.log("Saving default form selections.");
@@ -369,15 +389,16 @@
                     const $select = $(select);
                     const selectId = $select.attr('id');
                     const is_difficulty = selectId === 'difficulty-select';
+                    const is_simple_val = (selectId === 'difficulty-select' || selectId === 'location-select');
                     let storedObj = eventDefaults[selectId];
                     if (storedObj === undefined) {
-                        if (is_difficulty) {
+                        if (is_simple_val) {
                             $select.find('option').eq(2).prop('selected', true);
                         }
                         return;
                     }
                     console.log(`${selectId} default ${storedObj.type} ${storedObj.id}`);
-                    if (is_difficulty) {
+                    if (is_simple_val) {
                         if ($select.length) {
                             $select.val(storedObj.value);
                         }
@@ -528,7 +549,8 @@
                 const url = `/event/roll/${eventId}`;
                 const postData = {
                     die_min: $('#die-min').val(),
-                    die_max: $('#die-max').val()
+                    die_max: $('#die-max').val(),
+                    location: $('#location-select').val()
                 };
                 $.ajax({
                     url: url,
