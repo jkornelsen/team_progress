@@ -371,7 +371,7 @@ class Event(CompleteIdentifiable):
         if self.outcome_type == OUTCOME_NUMERIC:
             outcome = outcome_num
             display = (
-                "{} + {} (1d{})<br>"
+                "{} + {} (d{})<br>"
                 "Outcome = {}"
                 ).format(
                     format_num(die_lower),
@@ -394,7 +394,7 @@ class Event(CompleteIdentifiable):
                 outcome = "Major Success"
                 threshold_display = f">= {major_threshold}"
             display = (
-                "{} + {} (1d{}) = {}<br>"
+                "{} + {} (d{}) = {}<br>"
                 "{} {} so Outcome is a {}."
             ).format(
                 format_num(die_lower),

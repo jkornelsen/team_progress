@@ -106,11 +106,11 @@
                                    value="{{ 20 if current.outcome_type == 'fourway' else current.numeric_range[1] }}"
                                    size="5">
                             <br>
-                            {% for det in current.determining_entities %}
+                            {% for det in current.determining_entities|sort(attribute='entity.name') %}
                                 {% set entity = det.entity %}
                                 {% set det_ref = "_" ~ loop.index %}
                                 <li style="margin-top: 5px">
-                                    {{ det.label ~ " from " if det.label }}
+                                    {{ det.label ~ ": " if det.label }}
                                     {{ entity.name }}
                                     <select class="container-for-det"
                                             id="det{{ det_ref }}"

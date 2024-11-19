@@ -27,14 +27,25 @@
             "id": 9,
             "is_binary": false,
             "name": "Base Power"
+        },
+        {
+            "description": "What shape a vehicle is in.",
+            "enum_list": [],
+            "id": 10,
+            "is_binary": false,
+            "name": "Repair"
         }
     ],
     "characters": [
         {
-            "attribs": [],
-            "description": "Carry logs. A driver travels with the truck.",
+            "attribs": [
+                [10, 2.0]
+            ],
+            "description": "A run-down workhorse with a little left to give. \r\n\r\nCarries logs. A driver must travel with (drive) the truck.",
             "dest_id": null,
-            "events": [],
+            "events": [
+                8
+            ],
             "id": 5,
             "items": [
                 {
@@ -72,7 +83,7 @@
             "location_id": 4,
             "masked": false,
             "name": "Owner",
-            "position": [14,3],
+            "position": [4,3],
             "progress": {},
             "toplevel": true,
             "travel_group": ""
@@ -97,21 +108,6 @@
         },
         {
             "changed": [],
-            "description": "Chance of something bad, or possibly good, happening. Run <a href=\"/play/event/7\">Chopping Mishap Type</a> for further details.",
-            "determining": [],
-            "id": 6,
-            "name": "Chopping Mishap",
-            "numeric_range": [1, 20],
-            "outcome_type": "fourway",
-            "selection_strings": "",
-            "toplevel": false,
-            "trigger_chance": 0.1,
-            "triggers": [
-                ["item", 19]
-            ]
-        },
-        {
-            "changed": [],
             "description": "Run to get details on what happened after a <a href=\"/play/event/6\">Chopping Mishap</a> occurs.",
             "determining": [],
             "id": 7,
@@ -127,22 +123,17 @@
             "changed": [
                 ["attrib", 6]
             ],
-            "description": "Also, run <a href=\"/play/event/6\">Chopping Mishap</a>.",
+            "description": "Adjust die max (not min) by axe power and wielder strength, giving -1 to -16 initially.\r\n\r\nAlso, run <a href=\"/play/event/6\">Chopping Mishap</a> when appropriate, such as after a poor damage roll, or for the final blow.",
             "determining": [
                 {
-                    "entity_data": ["attrib", 7],
-                    "label": "",
-                    "operation": "+"
-                },
-                {
-                    "entity_data": ["attrib", 8],
-                    "label": "",
-                    "operation": "+"
-                },
-                {
                     "entity_data": ["attrib", 9],
-                    "label": "",
-                    "operation": "+"
+                    "label": "Item",
+                    "operation": "-"
+                },
+                {
+                    "entity_data": ["attrib", 7],
+                    "label": "Wielder",
+                    "operation": "*"
                 }
             ],
             "id": 5,
@@ -156,29 +147,115 @@
                 ["item", 19],
                 ["item", 15]
             ]
+        },
+        {
+            "changed": [],
+            "description": "Not always a guarantee with old vehicles.\r\n\r\nUse Easy difficulty under normal circumstances, since it's somewhat routine. Also, add repair value to both min and max.",
+            "determining": [
+                {
+                    "entity_data": ["attrib", 10],
+                    "label": "",
+                    "operation": "+"
+                }
+            ],
+            "id": 8,
+            "name": "Start engine",
+            "numeric_range": [1, 20],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": false,
+            "trigger_chance": 0.0,
+            "triggers": []
+        },
+        {
+            "changed": [],
+            "description": "Chance of success. Roll to determine how well a batch of logs turns into boards, or if something perhaps goes wrong.\r\n\r\nUse Easy difficulty. If there is a large number of logs to be processed, lower the die min a little, making success a bit less likely.",
+            "determining": [
+                {
+                    "entity_data": ["item", 19],
+                    "label": "",
+                    "operation": "-"
+                }
+            ],
+            "id": 9,
+            "name": "Operate saw",
+            "numeric_range": [1, 20],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": false,
+            "trigger_chance": 0.0,
+            "triggers": [
+                ["item", 27],
+                ["loc", 10]
+            ]
+        },
+        {
+            "changed": [],
+            "description": "Chance of something bad, or possibly good, happening.  Use accuracy to modify both min and max if relevant for the situation, such as when attempting to land a blow.\r\n\r\nRun <a href=\"/play/event/7\">Chopping Mishap Type</a> for further details.",
+            "determining": [
+                {
+                    "entity_data": ["attrib", 8],
+                    "label": "Item",
+                    "operation": "+"
+                },
+                {
+                    "entity_data": ["attrib", 8],
+                    "label": "Wielder \u2014 Die Max",
+                    "operation": "*"
+                },
+                {
+                    "entity_data": ["attrib", 8],
+                    "label": "Wielder \u2014 Die Min",
+                    "operation": "/"
+                }
+            ],
+            "id": 6,
+            "name": "Chopping Mishap",
+            "numeric_range": [1, 20],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": false,
+            "trigger_chance": 0.1,
+            "triggers": []
         }
     ],
     "items": [
         {
-            "attribs": [
-                [6, 67.0]
-            ],
-            "description": "Plots are full of trees, but mark only one at a time for harvesting.\r\n\r\n<b><c=\"saddlebrown\">When Marked Tree quantity is 0</c></b>:\r\n1. Run <a href=\"/play/event/3\">Mark a Tree</a>, select <i>Starting Plot</i> and roll for coordinates.\r\n2. In <a href=\"/configure/location/4\">Starting Plot setup</a>, set the marked tree position to the new coordinates.\r\n3. Produce (below) a <i>Marked Tree</i> from <i>Plot 1 Trees</i> so quantity goes from 0 to 1.\r\n4. Set HP to 100.\r\n\r\nNow the tree is ready for a character such as the <i>Owner</i> to <i>Swing to Chop</i>.",
-            "id": 15,
+            "attribs": [],
+            "description": "Idle chopping is for when no characters are actively chopping, either because they are doing something else, or while offline.",
+            "id": 19,
             "masked": false,
-            "name": "Marked Tree",
+            "name": "Logs",
             "progress": {},
-            "q_limit": 1.0,
+            "q_limit": 0.0,
             "quantity": 0.0,
             "recipes": [
                 {
+                    "attribs": [
+                        [6, -1.0]
+                    ],
+                    "byproducts": [],
+                    "id": 8,
+                    "instant": false,
+                    "item_id": 19,
+                    "rate_amount": 10.0,
+                    "rate_duration": 15.0,
+                    "sources": [
+                        {
+                            "item_id": 15,
+                            "preserve": false,
+                            "q_required": 1.0
+                        }
+                    ]
+                },
+                {
                     "attribs": [],
                     "byproducts": [],
-                    "id": 7,
-                    "instant": true,
-                    "item_id": 15,
-                    "rate_amount": 1.0,
-                    "rate_duration": 3.0,
+                    "id": 21,
+                    "instant": false,
+                    "item_id": 19,
+                    "rate_amount": 10.0,
+                    "rate_duration": 1200.0,
                     "sources": [
                         {
                             "item_id": 17,
@@ -188,7 +265,7 @@
                     ]
                 }
             ],
-            "storage_type": "local",
+            "storage_type": "carried",
             "toplevel": false
         },
         {
@@ -211,32 +288,15 @@
                     "rate_duration": 3.0,
                     "sources": [
                         {
-                            "item_id": 19,
+                            "item_id": 26,
                             "preserve": false,
-                            "q_required": 10.0
+                            "q_required": 4.0
                         }
                     ]
                 }
             ],
             "storage_type": "universal",
             "toplevel": true
-        },
-        {
-            "attribs": [
-                [8, 2.0],
-                [7, 2.0],
-                [9, -5.0]
-            ],
-            "description": "Handle has been reattached many times in the past.",
-            "id": 18,
-            "masked": false,
-            "name": "Old Axe",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [],
-            "storage_type": "carried",
-            "toplevel": false
         },
         {
             "attribs": [],
@@ -326,41 +386,41 @@
             "toplevel": false
         },
         {
-            "attribs": [],
-            "description": "Idle chopping is for when no characters are actively chopping, either because they are doing something else, or while offline.",
-            "id": 19,
+            "attribs": [
+                [9, 5.0],
+                [8, 2.0]
+            ],
+            "description": "Handle has been reattached many times in the past.",
+            "id": 18,
             "masked": false,
-            "name": "Logs",
+            "name": "Old Axe",
             "progress": {},
-            "q_limit": 0.0,
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [],
+            "storage_type": "carried",
+            "toplevel": false
+        },
+        {
+            "attribs": [
+                [6, 67.0]
+            ],
+            "description": "Plots are full of trees, but mark only one at a time for harvesting.\r\n\r\n<b><c=\"saddlebrown\">When Marked Tree quantity is 0</c></b>:\r\n1. Run <a href=\"/play/event/3\">Mark a Tree</a>, select <i>Starting Plot</i> and roll for coordinates.\r\n2. In <a href=\"/configure/location/4\">Starting Plot setup</a>, set the marked tree position to the new coordinates.\r\n3. Produce (below) a <i>Marked Tree</i> from <i>Plot 1 Trees</i> so quantity goes from 0 to 1.\r\n4. Set HP to 100.\r\n\r\nNow the tree is ready for a character such as the <i>Owner</i> to <i>Swing to Chop</i>.",
+            "id": 15,
+            "masked": false,
+            "name": "Marked Tree",
+            "progress": {},
+            "q_limit": 1.0,
             "quantity": 0.0,
             "recipes": [
                 {
-                    "attribs": [
-                        [6, -1.0]
-                    ],
-                    "byproducts": [],
-                    "id": 8,
-                    "instant": false,
-                    "item_id": 19,
-                    "rate_amount": 10.0,
-                    "rate_duration": 8.0,
-                    "sources": [
-                        {
-                            "item_id": 15,
-                            "preserve": false,
-                            "q_required": 1.0
-                        }
-                    ]
-                },
-                {
                     "attribs": [],
                     "byproducts": [],
-                    "id": 21,
-                    "instant": false,
-                    "item_id": 19,
-                    "rate_amount": 10.0,
-                    "rate_duration": 1200.0,
+                    "id": 7,
+                    "instant": true,
+                    "item_id": 15,
+                    "rate_amount": 1.0,
+                    "rate_duration": 3.0,
                     "sources": [
                         {
                             "item_id": 17,
@@ -370,7 +430,7 @@
                     ]
                 }
             ],
-            "storage_type": "carried",
+            "storage_type": "local",
             "toplevel": false
         }
     ],

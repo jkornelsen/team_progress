@@ -1,8 +1,19 @@
 ---- recent ----
 
+required trip to the lumber yard after every tree felled makes it not as fun
+fix it so it can be done in batches
+
 ---- changes to consider ----
 
+logs requirement says requires 1 marked tree
+marked tree shows 1 in stock but no where
+even when coming directly from starting plot
+the issue is that there's already a logs pile elsewhere at that loc
+
+default to dropping all in inventory
+
 can a numeric attrib requirement be 0 or negative?
+example: -1 hp required to chop into logs
 -1 was accepted because none was found, which is 0
 but that doesn't make sense
 should be able to require both checked and unchecked?
@@ -67,6 +78,9 @@ for example 10 Mb
 at 90% warn to remove content to avoid going over limit
 
 ---- issues ----
+
+boards showed 0 logs in stock even though sawed correctly
+producing general (boards), source carried (logs) + preserved local (saw)
 
 dollars for lemonade stand suddenly lost its recipe, yet progress continued
 I think this was during item play, not configure
