@@ -17,13 +17,13 @@ tables_to_create = {
     }
 
 class AttribFor(Serializable):
-    """Value for attribute of a particular entity,
+    """Value for attribute of a particular entity (the subject),
     or required value of an attribute."""
     def __init__(self, attrib_id=0, val=0):
         self.attrib_id = attrib_id
         self.attrib = None
         self.val = val
-        self.entity = None
+        self.subject = None
 
     @classmethod
     def from_data(cls, data):

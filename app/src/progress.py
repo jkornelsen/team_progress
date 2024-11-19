@@ -277,7 +277,7 @@ class Progress(DependentIdentifiable):
                     f"Requires {format_num(f'{req_qty}')} {source.item.name}.")
                 return False
         for req in self.recipe.attribs.values():
-            if (req.val > 0 and req.entity is None):
+            if (req.val > 0 and req.subject is None):
                 self.report_failure(
                     f"Requires attribute {req.attrib.name} {req.val:.1f}")
                 return False

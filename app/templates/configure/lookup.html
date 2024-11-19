@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% block upper_left %}
+    <div class="nav-container">
+        <a class="upper-left" href="{{ url_for("overview") }}">[O]verview</a>
+        <span class="separator">|</span>
+        <a href="{{ url_for("configure_index") }}">[M]ain Setup</a>
+    </div>
+{% endblock %}
+{% block content %}
+    <script>
+        const linkForKey = {
+            'o': '{{ url_for('overview') }}',
+            'm': '{{ url_for('configure_index') }}',
+        };
+        document.addEventListener('DOMContentLoaded', () => {
+            if (isMobile) {
+                return;
+            }
+            document.addEventListener('keypress', (event) => {
+                const key = event.key.toLowerCase();
+                if (linkForKey[key]) {
+                    window.location.href = linkForKey[key];
+                }
+            });
+        });
+    </script>
+    <h1>Lookup
+    {% if current.typename() == 'item' %}
+        Item
+    {% elif current.typename() == 'char' %}
+        Character
+    {% elif current.typename() == 'attrib' %}
+        Attribute
+    {% elif current.typename() == 'event' %}
+        Event
+    {% endif %}
+    : {{ current.name }}</h1>
+    <p class="info">
+    Find where items are located, where attributes are used, or where events are linked.
+    </p>
+    <ul>
+        {% for use in uses %} {# 'use': noun as in "the use of" #}
+            {% set use_container_type = getattr(use, 'container_type', dict)() %}
+            {% set use_typename = getattr(use, 'typename', dict)() %}
+            {% if current.typename() == 'item' %}
+                {% set container = use.container %}
+                {% if use_container_type == 'general' %}
+                    {% set link = url_for('play_item', item_id=use.item.id, main_pile_type='universal') %}
+                    {% set letter = link_letters.next(link) %}
+                    <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                    <span class="hotkey-indicator">[{{ letter }}]</span>
+                    In
+                    <a href="{{ link }}">General Storage</a>
+                    : {{ use.quantity | formatNum }}
+                {% elif use_container_type == 'char' %}
+                    {% set link = url_for('play_char', char_id=container.id) %}
+                    {% set letter = link_letters.next(link) %}
+                    <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                    <span class="hotkey-indicator">[{{ letter }}]</span>
+                    Carried by
+                    <a href="{{ link }}">{{ container.name }}</a>
+                    : {{ use.quantity | formatNum }}
+                {% elif use_container_type == 'loc' %}
+                    {% set link = url_for('play_location', loc_id=container.id) %}
+                    {% set letter = link_letters.next(link) %}
+                    <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                    <span class="hotkey-indicator">[{{ letter }}]</span>
+                    At
+                    <a href="{{ link }}">{{ container.name }}</a>
+                    {% if max(use.position) %}
+                        <span class="label-like">[{{ use.position }}]</span>
+                    {% endif %}
+                    : {{ use.quantity | formatNum }}
+                {% elif use_typename == 'event' %}
+                    {% set entity = use %}
+                    {% set link = url_for('play_event', event_id=entity.id) %}
+                    {% set letter = link_letters.next(link) %}
+                    <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                    <span class="hotkey-indicator">[{{ letter }}]</span>
+                    Involved in
+                    <a href="{{ link }}">{{ entity.name }}</a>
+                {% else %}
+                    <h3>Unexpected use type '{{ use_container_type }}'</h3>
+                {% endif %}
+                <br>
+            {% elif current.typename() == 'attrib' %}
+                {% set subject = use.subject %}
+                {% set subject_typename = getattr(subject, 'typename', dict)() %}
+                {% if subject_typename == 'item' %}
+                    {% set link = url_for('play_item', item_id=subject.id) %}
+                    {% set letter = link_letters.next(link) %}
+                    <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                    <span class="hotkey-indicator">[{{ letter }}]</span>
+                    <a href="{{ link }}">{{ subject.name }}</a>
+                {% elif subject_typename == 'char' %}
+                    {% set link = url_for('play_char', char_id=subject.id) %}
+                    {% set letter = link_letters.next(link) %}
+                    <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                    <span class="hotkey-indicator">[{{ letter }}]</span>
+                    <a href="{{ link }}">{{ subject.name }}</a>
+                {% else %}
+                    <h3>Unexpected subject type '{{ subject_typename }}'</h3>
+                {% endif %}
+                : {{ use.val | formatNum }}<br>
+            {% elif current.typename() == 'event' %}
+                {% set entity = use %}
+                {% if use_typename == 'char' %}
+                    {% set link = url_for('play_char', char_id=entity.id) %}
+                    {% set letter = link_letters.next(link) %}
+                    <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                    <span class="hotkey-indicator">[{{ letter }}]</span>
+                    <a href="{{ link }}">{{ entity.name }}</a>
+                {% elif use_typename == 'attrib' %}
+                    {% set link = url_for('configure_attrib', attrib_id=entity.id) %}
+                    {% set letter = link_letters.next(link) %}
+                    <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                    <span class="hotkey-indicator">[{{ letter }}]</span>
+                    <a href="{{ link }}">{{ entity.name }}</a> (configure)
+                {% else %}
+                    {% set param_name = entity.typename() ~ '_id' %}
+                    {% set link = url_for('play_' ~ entity.basename(), **{param_name: entity.id}) %}
+                    {% set letter = link_letters.next(link) %}
+                    <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                    <span class="hotkey-indicator">[{{ letter }}]</span>
+                    <a href="{{ link }}">{{ entity.name }}</a>
+                {% endif %}
+                <br>
+            {% elif current.typename() == 'loc' %}
+                {% set entity = use %}
+                {% set link = url_for('play_location', loc_id=entity.id) %}
+                {% set letter = link_letters.next(link) %}
+                <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                <span class="hotkey-indicator">[{{ letter }}]</span>
+                <a href="{{ link }}">{{ entity.name }}</a>
+                <br>
+            {% elif current.typename() == 'char' %}
+                {% set entity = use %}
+                {% set param_name = entity.typename() ~ '_id' %}
+                {% set link = url_for('play_' ~ entity.basename(), **{param_name: entity.id}) %}
+                {% set letter = link_letters.next(link) %}
+                <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                <span class="hotkey-indicator">[{{ letter }}]</span>
+                <a href="{{ link }}">{{ entity.name }}</a>
+            {% else %}
+                <h3>Unexpected type '{{ current.typename() }}'</h3>
+            {% endif %}
+        {% else %}
+            <h3>None found.</h3>
+        {% endfor %}
+    </ul>
+{% endblock %}

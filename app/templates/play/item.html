@@ -367,10 +367,10 @@
                                                         ({{ req.val | formatNum }})
                                                     {% endif %}
                                                 </td>
-                                                {% if req.entity %}
-                                                    {% set entity = req.entity %}
+                                                {% if req.subject %}
+                                                    {% set subject = req.subject %}
                                                     <td>
-                                                        {% set attrib_val = entity.attribs[req.attrib.id].val %}
+                                                        {% set attrib_val = subject.attribs[req.attrib.id].val %}
                                                         {% if req.attrib.enum %}
                                                             {{ req.attrib.enum[attrib_val | int] }}
                                                         {% elif req.attrib.binary %}
@@ -379,18 +379,18 @@
                                                             {{ attrib_val | formatNum }}
                                                         {% endif %}
                                                     </td>
-                                                    {% if entity.__class__.__name__ == 'Character' %}
-                                                        {% set link = url_for('play_char', char_id=entity.id) %}
-                                                    {% elif entity.__class__.__name__ == 'Item' %}
-                                                        {% set link = url_for('play_item', item_id=entity.id) %}
+                                                    {% if subject.__class__.__name__ == 'Character' %}
+                                                        {% set link = url_for('play_char', char_id=subject.id) %}
+                                                    {% elif subject.__class__.__name__ == 'Item' %}
+                                                        {% set link = url_for('play_item', item_id=subject.id) %}
                                                     {% else %}
-                                                        {% set link = "/unexpected-entity-type" %}
+                                                        {% set link = "/unexpected-subject-type" %}
                                                     {% endif %}
                                                     {% set letter = link_letters.next(link) %}
                                                     <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
                                                     <td>
                                                         <span class="hotkey-indicator">[{{ letter }}]</span>
-                                                        <a href="{{ link }}">{{ entity.name }}</a>
+                                                        <a href="{{ link }}">{{ subject.name }}</a>
                                                     </td>
                                                 {% else %}
                                                     <td>(0)</td>

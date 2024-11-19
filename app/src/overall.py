@@ -8,6 +8,7 @@ from .character import Character
 from .cache import cache
 from .db_serializable import (
     DbSerializable, DependentIdentifiable, QueryHelper, coldef)
+from .event import Event
 from .item import Item
 from .location import Location
 from .utils import RequestHelper
@@ -395,3 +396,95 @@ class Overall(DbSerializable):
             win_req = req_by_id.get(row.id)
             win_req.fulfilled = True
         return g.active
+
+    @classmethod
+    def data_for_lookup(cls, **params):
+        current = None
+        uses = []
+        g.game_data.load_for_file()
+        if 'item_id' in params:
+            item = Item.get_by_id(params['item_id'])
+            current = item
+            if item.pile.quantity:
+                uses.append(item.pile) 
+            for char in g.game_data.characters:
+                if item.id in char.items:
+                    owned_item = char.items[item.id]
+                    owned_item.item = Item.get_by_id(item.id)
+                    uses.append(owned_item)
+            for loc in g.game_data.locations:
+                if item.id in loc.items:
+                    item_at = loc.items[item.id]
+                    item_at.item = Item.get_by_id(item.id)
+                    uses.append(item_at)
+            for event in g.game_data.events:
+                for entity in (
+                        [det.entity for det in event.determining_entities] +
+                        event.changed_entities +
+                        event.triggers_entities
+                    ):
+                    if (entity.typename() == Item.typename()
+                            and entity.id == item.id):
+                        uses.append(event)
+                        break
+        elif 'attrib_id' in params:
+            attrib = Attrib.get_by_id(params['attrib_id'])
+            current = attrib
+            for item in g.game_data.items:
+                if attrib.id in item.attribs:
+                    attrib_for = item.attribs[attrib.id]
+                    attrib_for.subject = item
+                    uses.append(attrib_for)
+                for recipe in item.recipes:
+                    if attrib.id in recipe.attribs:
+                        attrib_for = recipe.attribs[attrib.id]
+                        attrib_for.subject = item
+                        uses.append(attrib_for)
+            for char in g.game_data.characters:
+                if attrib.id in char.attribs:
+                    attrib_for = char.attribs[attrib.id]
+                    attrib_for.subject = char
+                    uses.append(attrib_for)
+        elif 'event_id' in params:
+            event = Event.get_by_id(params['event_id'])
+            current = event
+            for char in g.game_data.characters:
+                if event.id in char.events:
+                    uses.append(char)
+            for entity in (
+                    [det.entity for det in event.determining_entities] +
+                    event.changed_entities +
+                    event.triggers_entities
+                ):
+                    uses.append(entity.get_by_id(entity.id))
+        elif 'char_id' in params:
+            char = Character.get_by_id(params['char_id'])
+            current = char
+            if char.location:
+                uses.append(Location.get_by_id(char.location.id))
+        elif 'loc_id' in params:
+            loc = Location.get_by_id(params['loc_id'])
+            current = loc
+            for other_loc in g.game_data.locations:
+                for dest in other_loc.destinations:
+                    if loc.id in (dest.loc1.id, dest.loc2.id):
+                        dest.current_loc_id = loc.id
+                        uses.append(Location.get_by_id(dest.other_loc.id))
+            for event in g.game_data.events:
+                for entity in event.triggers_entities:
+                    if (entity.typename() == Location.typename()
+                            and entity.id == loc.id):
+                        uses.append(event)
+                        break
+        # See if entity is linked in descriptions.
+        basename = current.basename()
+        for entity_cls in g.game_data.ENTITIES + (Overall,):
+            if entity_cls is Overall:
+                entities = [g.game_data.overall]
+            else:
+                entities = g.game_data.get_list(entity_cls)
+            for entity in entities:
+                for area in ('configure', 'play'):
+                    if f"/{area}/{basename}/{current.id}\"" in entity.description:
+                        uses.append(entity)
+        return current, uses

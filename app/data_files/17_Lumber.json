@@ -62,7 +62,13 @@
                 5
             ],
             "id": 4,
-            "items": [],
+            "items": [
+                {
+                    "item_id": 18,
+                    "quantity": 1.0,
+                    "slot": "Held"
+                }
+            ],
             "location_id": 4,
             "masked": false,
             "name": "Owner",
@@ -75,23 +81,23 @@
     "events": [
         {
             "changed": [],
-            "description": "Run to get details on what happened.",
+            "description": "Choose the grid coordinates of the next tree to be actively harvested on a plot. See <a href=\"/play/item/15\">Marked Tree</a> for instructions.",
             "determining": [],
-            "id": 7,
-            "name": "Chopping Mishap Type",
-            "numeric_range": [0, 10],
-            "outcome_type": "selection",
-            "selection_strings": "Tool damaged\r\nTool broken\r\nTool destroyed\r\nFewer resources gained\r\nResources lost\r\nNo progress\r\nMinor injury\r\nSevere injury",
+            "id": 3,
+            "name": "Mark a Tree",
+            "numeric_range": [1, 20],
+            "outcome_type": "coordinates",
+            "selection_strings": "",
             "toplevel": false,
-            "trigger_chance": 0.1,
+            "trigger_chance": 0.0,
             "triggers": [
-                ["loc", 4],
-                ["item", 15]
+                ["item", 17],
+                ["loc", 4]
             ]
         },
         {
             "changed": [],
-            "description": "Chance of something bad, or possibly good, happening.",
+            "description": "Chance of something bad, or possibly good, happening. Run <a href=\"/play/event/7\">Chopping Mishap Type</a> for further details.",
             "determining": [],
             "id": 6,
             "name": "Chopping Mishap",
@@ -101,16 +107,27 @@
             "toplevel": false,
             "trigger_chance": 0.1,
             "triggers": [
-                ["item", 19],
-                ["item", 15],
-                ["loc", 4]
+                ["item", 19]
             ]
+        },
+        {
+            "changed": [],
+            "description": "Run to get details on what happened after a <a href=\"/play/event/6\">Chopping Mishap</a> occurs.",
+            "determining": [],
+            "id": 7,
+            "name": "Chopping Mishap Type",
+            "numeric_range": [0, 10],
+            "outcome_type": "selection",
+            "selection_strings": "Tool damaged\r\nTool broken\r\nTool destroyed\r\nFewer resources gained\r\nResources lost\r\nNo progress\r\nMinor injury\r\nSevere injury",
+            "toplevel": false,
+            "trigger_chance": 0.0,
+            "triggers": []
         },
         {
             "changed": [
                 ["attrib", 6]
             ],
-            "description": "",
+            "description": "Also, run <a href=\"/play/event/6\">Chopping Mishap</a>.",
             "determining": [
                 {
                     "entity_data": ["attrib", 7],
@@ -134,31 +151,46 @@
             "outcome_type": "numeric",
             "selection_strings": "",
             "toplevel": false,
-            "trigger_chance": 0.1,
-            "triggers": [
-                ["item", 19],
-                ["item", 15],
-                ["loc", 4]
-            ]
-        },
-        {
-            "changed": [],
-            "description": "Choose the grid coordinates of the next tree to be actively harvested on a plot.",
-            "determining": [],
-            "id": 3,
-            "name": "Mark a Tree",
-            "numeric_range": [1, 20],
-            "outcome_type": "coordinates",
-            "selection_strings": "",
-            "toplevel": false,
             "trigger_chance": 0.0,
             "triggers": [
-                ["item", 17],
-                ["loc", 4]
+                ["item", 19],
+                ["item", 15]
             ]
         }
     ],
     "items": [
+        {
+            "attribs": [
+                [6, 67.0]
+            ],
+            "description": "Plots are full of trees, but mark only one at a time for harvesting.\r\n\r\n<b><c=\"saddlebrown\">When Marked Tree quantity is 0</c></b>:\r\n1. Run <a href=\"/play/event/3\">Mark a Tree</a>, select <i>Starting Plot</i> and roll for coordinates.\r\n2. In <a href=\"/configure/location/4\">Starting Plot setup</a>, set the marked tree position to the new coordinates.\r\n3. Produce (below) a <i>Marked Tree</i> from <i>Plot 1 Trees</i> so quantity goes from 0 to 1.\r\n4. Set HP to 100.\r\n\r\nNow the tree is ready for a character such as the <i>Owner</i> to <i>Swing to Chop</i>.",
+            "id": 15,
+            "masked": false,
+            "name": "Marked Tree",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "attribs": [],
+                    "byproducts": [],
+                    "id": 7,
+                    "instant": true,
+                    "item_id": 15,
+                    "rate_amount": 1.0,
+                    "rate_duration": 3.0,
+                    "sources": [
+                        {
+                            "item_id": 17,
+                            "preserve": false,
+                            "q_required": 1.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "local",
+            "toplevel": false
+        },
         {
             "attribs": [],
             "description": "Purchase new equipment, and eventually, a new plot of land.",
@@ -188,38 +220,6 @@
             ],
             "storage_type": "universal",
             "toplevel": true
-        },
-        {
-            "attribs": [
-                [6, 67.0]
-            ],
-            "description": "Plots generally have many trees, but only some are marked for harvesting.\r\n\r\n<b><c=\"saddlebrown\">To mark a new tree</c></b>:\r\n1. Run the events for the plot to assign a vertical and horizontal coordinate.\r\n2. Set the marked tree position to the new coordinates by configuring <i>Starting Plot</i>.\r\n3. Produce a <i>Marked Tree</i> from <i>Plot 1 Trees</i> so that the quantity goes from 0 to 1.\r\n4. Set HP to 100.\r\n\r\nNow the tree is ready for a character to <i>Swing to Chop</i>.",
-            "id": 15,
-            "masked": false,
-            "name": "Marked Tree",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attribs": [],
-                    "byproducts": [],
-                    "id": 7,
-                    "instant": true,
-                    "item_id": 15,
-                    "rate_amount": 1.0,
-                    "rate_duration": 3.0,
-                    "sources": [
-                        {
-                            "item_id": 17,
-                            "preserve": false,
-                            "q_required": 1.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "local",
-            "toplevel": false
         },
         {
             "attribs": [
@@ -376,35 +376,6 @@
     ],
     "locations": [
         {
-            "description": "This plot of land is your family inheritance and the basis for setting up the company. There is a pond in the southeast.",
-            "destinations": [],
-            "dimensions": [20,20],
-            "excluded": [8,12,18,17],
-            "id": 4,
-            "items": [
-                {
-                    "item_id": 19,
-                    "position": [3,2],
-                    "quantity": 4.0
-                },
-                {
-                    "item_id": 15,
-                    "position": [15,4],
-                    "quantity": 1.0
-                },
-                {
-                    "item_id": 16,
-                    "position": [14,5],
-                    "quantity": 1.0
-                }
-            ],
-            "masked": false,
-            "name": "Starting Plot",
-            "progress": {},
-            "quantity": 0.0,
-            "toplevel": false
-        },
-        {
             "description": "",
             "destinations": [
                 {
@@ -454,6 +425,34 @@
             ],
             "masked": false,
             "name": "Tree \u2014 Climbing",
+            "toplevel": false
+        },
+        {
+            "description": "This plot of land is your family inheritance and the basis for setting up the company. There is a pond in the southeast.",
+            "destinations": [],
+            "dimensions": [20,20],
+            "excluded": [8,12,18,17],
+            "id": 4,
+            "item_refs": [],
+            "items": [
+                {
+                    "item_id": 19,
+                    "position": [3,2],
+                    "quantity": 4.0
+                },
+                {
+                    "item_id": 15,
+                    "position": [15,4],
+                    "quantity": 1.0
+                },
+                {
+                    "item_id": 16,
+                    "position": [14,5],
+                    "quantity": 1.0
+                }
+            ],
+            "masked": false,
+            "name": "Starting Plot",
             "toplevel": false
         }
     ],

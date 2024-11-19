@@ -35,6 +35,7 @@ class GameData:
     """Store complete sets of data such as for file export,
     the configure index, or select boxes on forms.
     """
+    ENTITIES = ENTITIES  # easier to reference from outside this class
     def __init__(self):
         g.game_data = self
         ActiveData()

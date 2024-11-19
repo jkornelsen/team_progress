@@ -66,7 +66,7 @@
                     <div class="popup-frame">
                         <div class="popup-list">
                             {% for entity in entity_list %}
-                                <a href="/configure/{{ entity_type }}/{{ entity.id }}">{{ entity.name }}</a>
+                                <a href="/configure/{{ entity_type }}/{{ entity.id }}" class="entity-link">{{ entity.name }}</a>
                             {% endfor %}
                         </div>
                     </div>
@@ -79,4 +79,38 @@
             </div>
         </div>
     {% endfor %}
+    <div class="flexdiv">
+        <label>When clicked:</label>
+        <label>
+            <input type="radio" name="mode" value="configure" id="configure" onchange="updateLinks()" checked>
+            Configure
+        </label>
+        <label>
+            <input type="radio" name="mode" value="lookup" id="lookup" onchange="updateLinks()">
+            Lookup
+        </label>
+    </div>
+    <script>
+        window.addEventListener('load', () => {
+            const savedMode = localStorage.getItem('linkmode');
+            if (savedMode) {
+                document.querySelector(`input[name="mode"][value="${savedMode}"]`).checked = true;
+            }
+            updateLinks();
+        });
+        function updateLinks() {
+            const mode = document.querySelector('input[name="mode"]:checked').value;
+            localStorage.setItem('linkmode', mode);
+            const links = document.querySelectorAll('.entity-link');
+            links.forEach(link => {
+                let url = link.getAttribute('href');
+                if (mode === "lookup") {
+                    link.setAttribute('href', url.replace('/configure/', '/lookup/'));
+                } else {
+                    link.setAttribute('href', url.replace('/lookup/', '/configure/'));
+                }
+            });
+        }
+        //document.addEventListener('DOMContentLoaded', updateLinks);
+    </script>
 {% endblock %}

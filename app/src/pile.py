@@ -126,7 +126,7 @@ def load_piles(current_item, char_id, loc_id, main_pile_type):
                         test_eq)
                     if (test_eq and attrib_for.val == req.val) or (
                             not test_eq and attrib_for.val >= req.val):
-                        req.entity = item
+                        req.subject = item
                         logger.debug("attrib %s req %.1f met by item %s %.1f",
                             attrib_for.attrib_id, req.val,
                             item.name, attrib_for.val)
@@ -137,7 +137,7 @@ def load_piles(current_item, char_id, loc_id, main_pile_type):
             for char in chars:
                 attrib_for = char.attribs.get(attrib_id)
                 if attrib_for and attrib_for.val >= req.val:
-                    req.entity = char
+                    req.subject = char
                     logger.debug("attrib %s req %.1f met by char %s %.1f",
                         attrib_for.attrib_id, req.val,
                         char.name, attrib_for.val)

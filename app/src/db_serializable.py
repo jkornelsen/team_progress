@@ -460,6 +460,8 @@ class QueryHelper:
         if values and values[0]:
             self.query += f" AND {expr}"
             self.values.extend(values)
+        elif not values:
+            self.query += f" AND {expr}"
 
     def sort_by(self, field):
         self.query += f"\nORDER BY {field}"

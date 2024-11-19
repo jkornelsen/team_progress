@@ -202,6 +202,25 @@ def set_routes(app):
         g.game_data.overall.configure_by_form()
         return redirect(url_for('configure_index'))
 
+    @app.route('/lookup/attrib/<attrib_id>', methods=['GET'])
+    @app.route('/lookup/character/<char_id>', methods=['GET'])
+    @app.route('/lookup/event/<event_id>', methods=['GET'])
+    @app.route('/lookup/item/<item_id>', methods=['GET'])
+    @app.route('/lookup/location/<loc_id>',methods=['GET'])
+    def lookup(**params):
+        logger.debug(
+            "%s\nlookup(%s)", 
+            "-" * 80, 
+            ', '.join(f"{key}={value}" for key, value in params.items()))
+        current, uses = Overall.data_for_lookup(**params)
+        return render_template(
+            'configure/lookup.html',
+            current=current,
+            uses=uses,
+            game_data=g.game_data,
+            link_letters=LinkLetters('mo')
+            )
+
     @app.route(
         '/play/attrib/<int:attrib_id>/<subject_type>/<int:subject_id>',
         methods=['GET', 'POST'])
