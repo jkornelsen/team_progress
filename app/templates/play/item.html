@@ -541,47 +541,6 @@
         </table>
         <script>
         $(document).ready(() => {
-            let hasMainQuantity = false;
-
-            function updateQuantity(data) {
-                console.log('updateQuantity()');
-                // Main item quantity
-                const quantityText = data.quantity_str;
-                const qLimit = {{ current.q_limit }};
-                $('#quantity-{{ current.id }}').text(
-                    qLimit !== 0 ? `${quantityText} / ${qLimit}` : quantityText
-                );
-                updateStorageProgress({
-                    quantity: data.quantity,
-                    max_quantity: {{ current.q_limit or 0 }}
-                });
-                hasMainQuantity = data.quantity !== 0;
-                // Source item quantities required
-                let url; // eslint-disable-line no-unused-vars
-                {% for recipe in current.recipes %}
-                    {% for source in recipe.sources %}
-                        url = getItemProgressUrl({{ source.item.id }})
-                        $.get(url, (data) => {
-                            $('#recipe-{{ recipe.id }}-source-{{ source.item.id }}-quantity').text(data.quantity_str);
-                        });
-                    {% endfor %}
-                {% endfor %}
-            }
-            function updateStorageProgress(data) {
-                const progressBar = $('#storage-progress-bar');
-                const progressLabel = $('#storage-progress-label');
-
-                const quantity = data.quantity || 0;
-                const maxQuantity = data.max_quantity || 0;
-                if (maxQuantity === 0) {
-                    // There shouldn't be any bar
-                    return;
-                }
-                const progressPercent = (quantity / maxQuantity) * 100;
-                progressBar.attr('max', 100);
-                progressBar.attr('value', progressPercent);
-                progressLabel.text(`${quantity} / ${maxQuantity}`);
-            }
             function getItemProgressUrl(itemId, mainPileType='') {
                 const queryParams = [];
                 const charId = "{{ params.char_id }}";
@@ -604,6 +563,49 @@
                     url += `?${queryParams.join('&')}`;
                 }
                 return url;
+            }
+
+            // Fetch progress data and update all relevant information
+            async function fetchProgressData() {
+                const url = getItemProgressUrl({{ current.id }}, "{{ params.main_pile_type }}")
+                const data = await new Promise((resolve, reject) => {
+                    $.get(url, (response) => {
+                        resolve(response);
+                    }).fail((jqXHR, textStatus, error) => {
+                        reject(error);
+                    });
+                });
+                updateQuantities(data);
+                in_progress = data.main.is_ongoing;
+                reconcileElapsedTime(data);
+                updateStartButtonLabel(data, data.main.recipe_id);
+                updateProgressVisibility();
+                updateVisibility(data.main.quantity);
+            }
+            function updateQuantities(data) {
+                console.log('updateQuantities()');
+                const quantityText = data.main.quantity_str;
+                const qLimit = {{ current.q_limit }};
+                $('#quantity-{{ current.id }}').text(
+                    qLimit !== 0 ? `${quantityText} / ${qLimit}` : quantityText
+                );
+                updateStorageProgress(data.main.quantity, qLimit);
+                data.sources.forEach((source) => {
+                    $(`#recipe-${data.main.recipe_id}-source-${source.id}-quantity`).text(source.quantity);
+                });
+            }
+
+            function updateStorageProgress(quantity, maxQuantity) {
+                if (maxQuantity === 0) {
+                    // There shouldn't be any bar
+                    return;
+                }
+                const progressBar = $('#storage-progress-bar');
+                const progressLabel = $('#storage-progress-label');
+                const progressPercent = (quantity / maxQuantity) * 100;
+                progressBar.attr('max', 100);
+                progressBar.attr('value', progressPercent);
+                progressLabel.text(`${quantity} / ${maxQuantity}`);
             }
 
             // Global variable to store the elapsed time.
@@ -670,23 +672,6 @@
                 }
             }
 
-            // Fetch progress data and update all relevant information
-            async function fetchProgressData() {
-                const url = getItemProgressUrl({{ current.id }}, "{{ params.main_pile_type }}")
-                const data = await new Promise((resolve, reject) => {
-                    $.get(url, (response) => {
-                        resolve(response);
-                    }).fail((jqXHR, textStatus, error) => {
-                        reject(error);
-                    });
-                });
-                updateQuantity(data);
-                in_progress = data.is_ongoing;
-                reconcileElapsedTime(data);
-                updateStartButtonLabel(data, data.recipe_id);
-                updateProgressVisibility();
-                updateVisibility();
-            }
             function showContent() {
                 $('#content').css('display', 'block');
             }
@@ -695,7 +680,6 @@
                 startFetchingProgress();
                 updateElapsedTime();
                 setInterval(updateElapsedTime, 1900);
-                await updateVisibility();
                 showContent();
             }
             initializePage();
@@ -870,8 +854,8 @@
                 });
             });
 
-            async function updateVisibility() {
-                const notEmpty = hasMainQuantity;
+            async function updateVisibility(mainQuantity) {
+                const notEmpty = mainQuantity !== 0;
                 const storage_carried = '{{ current.storage_type }}' === 'carried';
                 const storage_local = '{{ current.storage_type }}' === 'local';
                 const atLoc = '{{ current.pile.container_type() }}' === 'loc';

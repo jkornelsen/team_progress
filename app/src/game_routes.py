@@ -620,11 +620,21 @@ def set_routes(app):
         if progress.recipe.id and progress.is_ongoing:
             progress.batches_for_elapsed_time()
         return jsonify({
-            'is_ongoing': progress.is_ongoing,
-            'recipe_id': progress.recipe.id,
-            'quantity': pile.quantity,
-            'quantity_str': format_num(pile.quantity),
-            'elapsed_time': progress.calculate_elapsed_time()
+            'main': {
+                'is_ongoing': progress.is_ongoing,
+                'recipe_id': progress.recipe.id,
+                'quantity': pile.quantity,
+                'quantity_str': format_num(pile.quantity),
+                'elapsed_time': progress.calculate_elapsed_time()
+                },
+            'sources': [
+                {
+                    'id': source.item.id,
+                    'quantity': format_num(source.pile.quantity)
+                }
+                for recipe in item.recipes
+                for source in recipe.sources
+                ]
             })
 
     @app.route('/item/start/<int:item_id>/<int:recipe_id>')

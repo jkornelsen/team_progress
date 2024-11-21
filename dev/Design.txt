@@ -1,21 +1,5 @@
 ---- recent ----
 
-char must be at, not next to felled tree
-because during item_progress() it is treated as main even though source
-consider where exact_pos param should come from
-maybe game_routes, like main_pile_type
-    def play_item(item_id):
-        item = Item.data_for_play(
-            item_id, char_id, loc_id, pos, complete_sources=False,
-            main_pile_type=main_pile_type)
-    def item_progress(item_id):
-        item = Item.data_for_play(
-            item_id, char_id, loc_id, pos, complete_sources=True,
-            main_pile_type=main_pile_type)
-seems surprising that in item_progress() the source can be the main pile
-do we need to pass a param to item_progress to indicate whether it's a main
-item?
-
 ---- changes to consider ----
 
 can a numeric attrib requirement be 0 or negative?
@@ -85,17 +69,8 @@ at 90% warn to remove content to avoid going over limit
 
 ---- issues ----
 
-boards showed 0 logs in stock even though sawed correctly
-producing general (boards), source carried (logs) + preserved local (saw)
-
 dollars for lemonade stand suddenly lost its recipe, yet progress continued
 I think this was during item play, not configure
-
-game_routes.py line 558, in item_progress
-    item = Item.data_for_play(
-recipe.py line 234, in load_complete_data
-    recipes_data = item_recipes[recipe_row.item_id]
-KeyError: 11
 
 ---- planning ----
 
