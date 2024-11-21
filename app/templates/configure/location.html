@@ -10,7 +10,8 @@
     <h1>Location Setup</h1>
     <form method="post">
         <p class="info">
-            Room, area, or container where items and characters can be. May be subdivided into a grid.
+            Room, area, or container where items and characters can be.
+            May be subdivided into a grid, with position 1,1 as the upper-left corner.
         </p>
         <label for="location-name">Name:</label>
         <input type="text"
@@ -100,26 +101,25 @@
                 </tbody>
             </table>
             <div>
-                {% set outerscope = namespace(other_items=[]) %}
+                {% set outerscope = namespace(locatable_items=[]) %}
                 {% for other_item in game_data.items
-                    if (other_item.storage_type == 'local'
-                        or other_item.storage_type == 'carried')
-                    and other_item.id not in current.items %}
-                    {% set _ = outerscope.other_items.append(other_item) %}
+                    if other_item.storage_type == 'local'
+                    or other_item.storage_type == 'carried' %}
+                    {% set _ = outerscope.locatable_items.append(other_item) %}
                 {% endfor %}
-                {% if outerscope.other_items %}
+                {% if outerscope.locatable_items %}
                     <!-- Select box for adding another source -->
                     <div class="select-box">
                         <select id="item-select">
                             <option value="" selected>(Select item)</option>
-                            {% for item in outerscope.other_items %}
+                            {% for item in outerscope.locatable_items %}
                                 <option value="{{ item.id }}">{{ item.name }}</option>
                             {% endfor %}
                         </select>
                         <button type="button" class="add-item-btn lesser-button">Add Item Here</button>
                     </div>
                 {% else %}
-                    <p class="no-entities">(No other locatable items)</p>
+                    <p class="no-entities">(No locatable items)</p>
                 {% endif %}
             </div>
         </div>
@@ -183,7 +183,7 @@
                 $('#btn-delete').attr('disabled', 'disabled');
             {% endif %}
 
-            function addDestination(other_loc_id, other_loc_name, duration = "1", door_here = "0,0", other_door = "0,0", bidirectional = true, is_loc1 = true) {
+            function addDestination(other_loc_id, other_loc_name, duration = "1", door_here = "", other_door = "", bidirectional = true, is_loc1 = true) {
                 const destHtml = `
                     <table class="destination"><tr>
                         <td class="align-top" style="padding: 5px;">
@@ -260,24 +260,12 @@
                 }
                 addDestination(destId, destName);
             });
-            {% for dest in current.destinations %}
-                addDestination(
-                    {{ dest.other_loc.id }},
-                    "{{ dest.other_loc.name }}",
-                    "{{ dest.duration }}",
-                    "{{ dest.door_here }}",
-                    "{{ dest.other_door }}",
-                    {{ dest.bidirectional | lower }},
-                    {{ (dest.loc1.id == current.id) | lower }}
-                    );
-            {% endfor %}
-
             $('#destinations-container').on('click', '.remove-dest-btn', (event) => {
                 const destContainer = $(event.currentTarget).closest('.destination');
                 destContainer.remove();
             });
 
-            function addItem(itemId, itemName, itemQty = "1", itemPos = "0,0") {
+            function addItem(itemId, itemName, itemQty = "1", itemPos = "") {
                 const itemHtml = `
                     <tr>
                         <td>${itemName}
@@ -315,11 +303,6 @@
                 if (itemId === '') {
                     return; // don't add if the selected option is the placeholder
                 }
-                const existingItem = $(`#items-rows input[name="item_id[]"][value="${itemId}"]`).closest('tr');
-                if (existingItem.length > 0) {
-                    alert('Item already exists.');
-                    return;
-                }
                 addItem(itemId, itemName);
             });
             $('.add-itemref-btn').click((event) => {
@@ -337,19 +320,33 @@
                 }
                 addItemRef(itemId, itemName);
             });
-            console.log("number of items={{ current.items | length }}");
-            {% for item_at in current.items.values() %}
-                addItem(
-                    {{ item_at.item.id }},
-                    "{{ item_at.item.name }}",
-                    "{{ item_at.quantity | formatNum }}",
-                    "{{ item_at.position[0] }},{{ item_at.position[1] }}");
+
+            {% for dest in current.destinations %}
+                addDestination(
+                    {{ dest.other_loc.id }},
+                    "{{ dest.other_loc.name }}",
+                    "{{ dest.duration }}",
+                    "{{ dest.door_here }}",
+                    "{{ dest.other_door }}",
+                    {{ dest.bidirectional | lower }},
+                    {{ (dest.loc1.id == current.id) | lower }}
+                    );
+            {% endfor %}
+            {% for items_at in current.items_at.values() %}
+                {% for item_at in items_at %}
+                    addItem(
+                        {{ item_at.item.id }},
+                        "{{ item_at.item.name }}",
+                        "{{ item_at.quantity | formatNum }}",
+                        "{{ item_at.position }}");
+                {% endfor %}
             {% endfor %}
             {% for item in current.item_refs %}
                 addItemRef(
                     {{ item.id }},
                     "{{ item.name }}");
             {% endfor %}
+
             $('#items-rows, #itemrefs-rows').on('click', '.remove-item-btn', (event) => {
                 const itemContainer = $(event.currentTarget).closest('tr');
                 itemContainer.remove();

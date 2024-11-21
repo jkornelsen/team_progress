@@ -336,12 +336,13 @@ def set_routes(app):
             char_id = session.get('last_char_id', '')
         if not loc_id:
             loc_id = session.get('last_loc_id', '')
+        pos = req.get_numtup('pos')
         logger.debug(
-            "%s\nplay_item(item_id=%d, char_id=%s, loc_id=%s)",
-            "-" * 80, item_id, char_id, loc_id)
+            "%s\nplay_item(item_id=%d, char_id=%s, loc_id=%s, pos=(%s))",
+            "-" * 80, item_id, char_id, loc_id, pos)
         g.game_data.overall = Overall.load_complete_object()
         item = Item.data_for_play(
-            item_id, char_id, loc_id, complete_sources=False,
+            item_id, char_id, loc_id, pos, complete_sources=False,
             main_pile_type=main_pile_type)
         if not item:
             return "Item not found"
@@ -349,6 +350,12 @@ def set_routes(app):
             'pickup_char': session.get('default_pickup_char', ''),
             'movingto_char': session.get('default_movingto_char', ''),
             'slot': session.get('default_slot', '')
+            }
+        params = {
+            'char_id': char_id,
+            'loc_id': loc_id,
+            'pos': pos,
+            'main_pile_type': main_pile_type
             }
         session['referrer_link'] = {
             'url': request.url,
@@ -361,9 +368,7 @@ def set_routes(app):
             'play/item.html',
             current=item,
             container=item.pile.container,
-            char_id=char_id,
-            loc_id=loc_id,
-            main_pile_type=main_pile_type,
+            params=params,
             defaults=defaults,
             characters_at_loc=characters_at_loc,
             game_data=g.game_data,
@@ -596,11 +601,12 @@ def set_routes(app):
             char_id = session.get('last_char_id', '')
             loc_id = session.get('last_loc_id', '')
         main_pile_type = req.get_str('main', '')
+        pos = req.get_numtup('pos')
         logger.debug(
-            "%s\nitem_progress(item_id=%d, char_id=%s, loc_id=%s)",
-            "-" * 80, item_id, char_id, loc_id)
+            "%s\nitem_progress(item_id=%d, char_id=%s, loc_id=%s, pos=(%s))",
+            "-" * 80, item_id, char_id, loc_id, pos)
         item = Item.data_for_play(
-            item_id, char_id, loc_id, complete_sources=True,
+            item_id, char_id, loc_id, pos, complete_sources=True,
             main_pile_type=main_pile_type)
         if not item:
             return jsonify({'error': "Item not found"})
@@ -736,7 +742,7 @@ def set_routes(app):
                 })
         item = Item.load_complete_object(item_id)
         char = Character.load_complete_object(char_id)
-        owned_item = char.items.get(item_id)
+        owned_item = char.owned_items.get(item_id)
         if not owned_item:
             return jsonify({
                 'status': 'error',
@@ -744,21 +750,24 @@ def set_routes(app):
                 })
         new_qty = min(qty_to_drop, owned_item.quantity)
         loc = Location.load_complete_object(char.location.id)
-        if item_id in loc.items:
-            item_at = loc.items[item_id]
-            new_qty += item_at.quantity
+        changed_item_at = None
+        for item_at in loc.items_at.get(item_id, []):
+            if item_at.position == char.position:
+                changed_item_at = item_at
+        if changed_item_at:
+            new_qty += changed_item_at.quantity
         else:
-            item_at = ItemAt(owned_item.item, loc)
-            item_at.position = char.position
+            changed_item_at = ItemAt(owned_item.item, loc)
+            changed_item_at.position = char.position
+            loc.items_at.setdefault(item_id, []).append(changed_item_at)
         if item.exceeds_limit(new_qty):
             return jsonify({
                 'status': 'error',
                 'message': f'Limit of {item.name} is {item.q_limit}.'
                 })
-        item_at.quantity = new_qty
-        loc.items[item_id] = item_at
+        changed_item_at.quantity = new_qty
         if qty_to_drop >= owned_item.quantity:
-            del char.items[item_id]
+            del char.owned_items[item_id]
         else:
             owned_item.quantity -= qty_to_drop
         loc.to_db()
@@ -769,36 +778,42 @@ def set_routes(app):
             })
 
     @app.route(
-        '/item/pickup/<int:item_id>/loc/<int:loc_id>/char/<int:char_id>',
+        '/item/pickup/<int:item_id>/loc/<int:loc_id>/pos/<string:pos_str>'
+        '/char/<int:char_id>',
         methods=['POST'])
-    def pickup_item(item_id, loc_id, char_id):
+    def pickup_item(item_id, loc_id, pos_str, char_id):
         logger.debug(
-            "%s\npickup_item(item_id=%d, loc_id=%d, char_id=%d)",
-            "-" * 80, item_id, loc_id, char_id)
+            "%s\npickup_item(item_id=%d, loc_id=%d, pos=(%s), char_id=%d)",
+            "-" * 80, item_id, loc_id, pos_str, char_id)
         session['default_pickup_char'] = char_id
         item = Item.load_complete_object(item_id)
         loc = Location.load_complete_object(loc_id)
-        item_at = loc.items.get(item_id)
-        if not item_at:
+        pos = NumTup.from_str(pos_str)
+        changed_item_at = None
+        for index, item_at in enumerate(loc.items_at.get(item_id, [])):
+            if item_at.position == pos:
+                changed_item_at = item_at
+                index_changed_item_at = index
+        if not changed_item_at:
             return jsonify({
                 'status': 'error',
-                'message': f'No item {item.name} at {loc.name}.'
+                'message': f'No item {item.name} at {loc.name} pos {pos_str}.'
                 })
-        new_qty = item_at.quantity
+        new_qty = changed_item_at.quantity
         char = Character.load_complete_object(char_id)
-        if item_id in char.items:
-            owned_item = char.items[item_id]
+        if item_id in char.owned_items:
+            owned_item = char.owned_items[item_id]
             new_qty += owned_item.quantity
         else:
-            owned_item = OwnedItem(item_at.item, char)
+            owned_item = OwnedItem(changed_item_at.item, char)
         if item.exceeds_limit(new_qty):
             return jsonify({
                 'status': 'error',
                 'message': f'Limit of {item.name} is {item.q_limit}.'
                 })
         owned_item.quantity = new_qty
-        char.items[item_id] = owned_item
-        del loc.items[item_id]
+        char.owned_items[item_id] = owned_item
+        del loc.items_at[item_id][index_changed_item_at]
         char.to_db()
         loc.to_db()
         return jsonify({
@@ -816,7 +831,7 @@ def set_routes(app):
         session['default_slot'] = slot
         item = Item.load_complete_object(item_id)
         char = Character.load_complete_object(char_id)
-        owned_item = char.items.get(item_id)
+        owned_item = char.owned_items.get(item_id)
         if not owned_item:
             return jsonify({
                 'status': 'error',
@@ -838,7 +853,7 @@ def set_routes(app):
             "-" * 80, item_id, char_id)
         item = Item.load_complete_object(item_id)
         char = Character.load_complete_object(char_id)
-        owned_item = char.items.get(item_id)
+        owned_item = char.owned_items.get(item_id)
         if not owned_item:
             return jsonify({
                 'status': 'error',

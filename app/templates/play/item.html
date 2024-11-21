@@ -159,11 +159,10 @@
                             {% endif %}
                             <div class="button-column" id="drop-container">
                                 <button id="drop-btn" class="go-button">[D]rop</button>
-                                <input type="text" id="quantity_to_drop" size="10" value="1">
+                                <input type="text" id="quantity_to_drop" size="10" value="{{ current.pile.quantity | formatNum }}">
                             </div>
                         {% endif %}
-                        {% if current.pile.container_type() == 'loc' and loc_id and characters_at_loc %}
-
+                        {% if current.pile.container_type() == 'loc' and params.loc_id and characters_at_loc %}
                             <div class="button-column" id="pickup-container">
                                 <button id="pickup-btn" class="go-button">[P]ick Up</button>
                                 <select id="char-picking-up">
@@ -277,7 +276,8 @@
                                             {% set byproduct = recipe.byproducts[byproduct_index] %}
                                             {% set item = byproduct.item %}
                                             <tr>
-                                                {% set link = url_for('play_item', item_id=item.id, char_id=char_id, loc_id=loc_id) %}
+                                                {% set pos = current.pile.position if current.pile else "" %}
+                                                {% set link = url_for('play_item', item_id=item.id, char_id=params.char_id, loc_id=params.loc_id, pos=pos) %}
                                                 {% set letter = link_letters.next(link) %}
                                                 <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
                                                 <td>
@@ -304,12 +304,13 @@
                                                 {% if row < recipe.sources|length %}
                                                     {% set source = recipe.sources[row] %}
                                                     {% set item = source.item %}
-                                                    {% if item.id == current.id or (item.storage_type == 'local' and not loc_id) %}
+                                                    {% if item.id == current.id or (item.storage_type == 'local' and not params.loc_id) %}
                                                         <td>
                                                             <strong>{{ item.name }}</strong>
                                                         </td>
                                                     {% else %}
-                                                        {% set link = url_for('play_item', item_id=item.id, char_id=char_id, loc_id=loc_id) %}
+                                                        {% set pos = source.pile.position if source.pile else "" %}
+                                                        {% set link = url_for('play_item', item_id=item.id, char_id=params.char_id, loc_id=params.loc_id, pos=pos) %}
                                                         {% set letter = link_letters.next(link) %}
                                                         <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
                                                         <td>
@@ -434,7 +435,7 @@
                                 <th>Required</th>
                             </tr>
                             {% for used_for in outerscope.used_as_source %}
-                                {% if used_for.item.storage_type == 'local' and not loc_id %}
+                                {% if used_for.item.storage_type == 'local' and not params.loc_id %}
                                     <tr>
                                         <td>
                                             <strong>{{ used_for.item.name }}</strong>
@@ -442,7 +443,7 @@
                                         <td>{{ used_for.q_required | formatNum }}</td>
                                     </tr>
                                 {% else %}
-                                    {% set link = url_for('play_item', item_id=used_for.item.id, char_id=char_id, loc_id=loc_id) %}
+                                    {% set link = url_for('play_item', item_id=used_for.item.id, char_id=params.char_id, loc_id=params.loc_id) %}
                                     {% set letter = link_letters.next(link) %}
                                     <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
                                     <tr>
@@ -466,7 +467,7 @@
                                 <th>Byproduct of a Recipe for</th>
                             </tr>
                             {% for byproduct_of in outerscope.produced_as_byproduct %}
-                                {% set link = url_for('play_item', item_id=byproduct_of.item.id, char_id=char_id, loc_id=loc_id) %}
+                                {% set link = url_for('play_item', item_id=byproduct_of.item.id, char_id=params.char_id, loc_id=params.loc_id) %}
                                 {% set letter = link_letters.next(link) %}
                                 <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
                                 <tr>
@@ -583,13 +584,17 @@
             }
             function getItemProgressUrl(itemId, mainPileType='') {
                 const queryParams = [];
-                const charId = "{{ char_id }}";
+                const charId = "{{ params.char_id }}";
                 if (charId) {
                     queryParams.push(`char_id=${encodeURIComponent(charId)}`);
                 }
-                const locId = "{{ loc_id }}";
+                const locId = "{{ params.loc_id }}";
                 if (locId) {
                     queryParams.push(`loc_id=${encodeURIComponent(locId)}`);
+                }
+                const pos = "{{ container.position if container.typename() == 'char' else current.pile.position }}";
+                if (pos) {
+                    queryParams.push(`pos=${encodeURIComponent(pos)}`);
                 }
                 if (mainPileType) {
                     queryParams.push(`main=${encodeURIComponent(mainPileType)}`);
@@ -667,7 +672,7 @@
 
             // Fetch progress data and update all relevant information
             async function fetchProgressData() {
-                const url = getItemProgressUrl({{ current.id }}, "{{ main_pile_type }}")
+                const url = getItemProgressUrl({{ current.id }}, "{{ params.main_pile_type }}")
                 const data = await new Promise((resolve, reject) => {
                     $.get(url, (response) => {
                         resolve(response);
@@ -794,13 +799,14 @@
             $('#pickup-btn').click(() => {
                 const itemId = "{{ current.id }}";
                 const locId = "{{ container.id }}";
+                const pos = "{{ current.pile.position }}";
                 const charId = $('#char-picking-up').val();
                 if (!charId) {
                     alert('Please select a character to pick up the item.');
                     return;
                 }
                 $.ajax({
-                    url: `/item/pickup/${itemId}/loc/${locId}/char/${charId}`,
+                    url: `/item/pickup/${itemId}/loc/${locId}/pos/${pos}/char/${charId}`,
                     method: 'post',
                     success: (response) => {
                         if (response.status === 'success') {

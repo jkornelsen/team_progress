@@ -80,21 +80,23 @@
                             {% endfor %}
                         </ul>
                     {% endif %}
-                    {% if current.items %}
+                    {% if current.items_at %}
                         <h2>Items Here</h2>
                         <ul class="item-list">
-                            {% for item_at in current.items.values() | sort(attribute='item.name') %}
-                                {% set item = item_at.item %}
-                                {% set link = url_for('play_item', item_id=item.id, loc_id=current.id, main='local') %}
-                                {% set letter = link_letters.next(link) %}
-                                <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
-                                <span class="hotkey-indicator">[{{ letter }}]</span>
-                                <a href="{{ link }}">{{ item.name }}</a>
-                                {% if not (item_at.item.q_limit == 1 and item_at.quantity == 1) %}{{ item_at.quantity | formatNum }}{% endif %}
-                                {% if has_grid %}
-                                    <span class="label-like">&nbsp;[{{ item_at.position[0] }},{{ item_at.position[1] }}]</span>
-                                {% endif %}
-                                <br>
+                            {% for items_at in current.items_at.values() %}
+                                {% for item_at in items_at %}
+                                    {% set item = item_at.item %}
+                                    {% set link = url_for('play_item', item_id=item.id, loc_id=current.id, pos=item_at.position, main='local') %}
+                                    {% set letter = link_letters.next(link) %}
+                                    <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
+                                    <span class="hotkey-indicator">[{{ letter }}]</span>
+                                    <a href="{{ link }}">{{ item.name }}</a>
+                                    {% if not (item_at.item.q_limit == 1 and item_at.quantity == 1) %}{{ item_at.quantity | formatNum }}{% endif %}
+                                    {% if has_grid %}
+                                        <span class="label-like">&nbsp;[{{ item_at.position[0] }},{{ item_at.position[1] }}]</span>
+                                    {% endif %}
+                                    <br>
+                                {% endfor %}
                             {% endfor %}
                         </ul>
                     {% endif %}
@@ -273,29 +275,34 @@
                     title: '{{ char.name }}',
                     link: "{{ url_for('play_char', char_id=char.id) }}",
                     x: "{{ char.position[0] }}",
-                    y: "{{ char.position[1] }}" },
+                    y: "{{ char.position[1] }}"
+                },
             {% endfor %}
         };
-        const items = {
-            {% for item_at in current.items.values() %}
-                "{{ item_at.item.id }}": {
-                    letter: '{{ item_at.item.name[0] }}',
-                    title: '{{ item_at.item.name }}',
-                    link: "{{ url_for('play_item', item_id=item_at.item.id, loc_id=current.id, main='local') }}",
-                    x: "{{ item_at.position[0] }}",
-                    y: "{{ item_at.position[1] }}" },
+        const items = [
+            {% for items_at in current.items_at.values() %}
+                {% for item_at in items_at %}
+                    {
+                        letter: '{{ item_at.item.name[0] }}',
+                        title: '{{ item_at.item.name }}',
+                        link: "{{ url_for('play_item', item_id=item_at.item.id, loc_id=current.id, main='local') }}",
+                        x: "{{ item_at.position[0] }}",
+                        y: "{{ item_at.position[1] }}"
+                    },
+                {% endfor %}
             {% endfor %}
-        };
-        const doors = {
+        ];
+        const doors = [
             {% for dest in current.destinations %}
-                "{{ dest.other_loc.id }}": {
+                {
                     letter: door_letter,
                     title: "{{ dest.other_loc.name }}",
                     link: "{{ url_for('play_location', loc_id=dest.other_loc.id) }}",
                     x: "{{ dest.door_here[0] }}",
-                    y: "{{ dest.door_here[1] }}" },
+                    y: "{{ dest.door_here[1] }}"
+                },
             {% endfor %}
-        };
+        ];
         function updateCharacterDisplay(charId, position) {
             const coordElement = $(`span.char-position[data-char-id='${charId}']`);
             if (coordElement.length) {
@@ -347,8 +354,8 @@
             }
             for (const entity of [
                     ...Object.values(characters),
-                    ...Object.values(items),
-                    ...Object.values(doors)]) {
+                    ...items,
+                    ...doors]) {
                 setCellContents(entity);
             }
         }

@@ -408,13 +408,12 @@ class Overall(DbSerializable):
             if item.pile.quantity:
                 uses.append(item.pile) 
             for char in g.game_data.characters:
-                if item.id in char.items:
-                    owned_item = char.items[item.id]
+                if item.id in char.owned_items:
+                    owned_item = char.owned_items[item.id]
                     owned_item.item = Item.get_by_id(item.id)
                     uses.append(owned_item)
             for loc in g.game_data.locations:
-                if item.id in loc.items:
-                    item_at = loc.items[item.id]
+                for item_at in loc.items_at.get(item.id, []):
                     item_at.item = Item.get_by_id(item.id)
                     uses.append(item_at)
             for event in g.game_data.events:

@@ -416,8 +416,9 @@ class Event(CompleteIdentifiable):
         for char in g.game_data.characters:
             if char.location.id == loc.id:
                 occupied_coords.add(char.position.as_tuple())
-        for item_at in loc.items.values():
-            occupied_coords.add(item_at.position.as_tuple())
+        for items_at in loc.items_at.values():
+            for item_at in items_at:
+                occupied_coords.add(item_at.position.as_tuple())
         for dest in loc.destinations:
             occupied_coords.add(dest.door_here.as_tuple())
         available_coords = [
@@ -437,6 +438,7 @@ class Event(CompleteIdentifiable):
             raise ValueError("Unrecognized form submission.")
         rel_id = req.get_int('key_id', 0)
         rel_type = req.get_str('key_type', '')
+        grid_pos = req.get_numtup('key_position')
         container_id = req.get_int('container_id', 0)
         container_type = req.get_str('container_type', '')
         newval = req.get_str('newval', "0")
@@ -449,13 +451,22 @@ class Event(CompleteIdentifiable):
         if rel_type == 'attrib':
             rel_dict = container.attribs
             rel_attr = 'val'
-        elif container_type in ('char', 'loc'):
-            rel_dict = container.items
+        elif container_type == 'char':
+            rel_dict = container.owned_items
+            rel_attr = 'quantity'
+        elif container_type == 'loc':
+            rel_dict = container.items_at
             rel_attr = 'quantity'
         else:
             rel_dict = {}
         if rel_id in rel_dict:
             rel_obj = rel_dict[rel_id]
+            if container_type == 'loc':
+                items_at = rel_obj
+                rel_obj = None
+                for item_at in items_at:
+                    if item_at.position == grid_pos:
+                        rel_obj = item_at
             oldval = "from {}".format(format_num(getattr(rel_obj, rel_attr)))
             setattr(rel_obj, rel_attr, newval)
         else:

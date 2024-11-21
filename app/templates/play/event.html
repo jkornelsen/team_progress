@@ -123,8 +123,8 @@
                                             {% set adjust_factor = None %}
                                             {% if entity.typename() == 'attrib' and entity.id in char.attribs %}
                                                 {% set adjust_factor = char.attribs[entity.id].val %}
-                                            {% elif entity.typename() == 'item' and entity.id in char.items %}
-                                                {% set adjust_factor = char.items[entity.id].quantity %}
+                                            {% elif entity.typename() == 'item' and entity.id in char.owned_items %}
+                                                {% set adjust_factor = char.owned_items[entity.id].quantity %}
                                             {% endif %}
                                             {% if adjust_factor is not none %}
                                                 <option value="{{ adjust_factor }}"
@@ -161,20 +161,19 @@
                                                 </option>
                                             {% endif %}
                                         {% endfor %}
-                                        {% for loc in game_data.locations %}
-                                            {% set adjust_factor = None %}
-                                            {% if entity.typename() == 'item' and entity.id in loc.items %}
-                                                {% set adjust_factor = loc.items[entity.id].quantity %}
-                                            {% endif %}
-                                            {% if adjust_factor is not none %}
-                                                <option value="{{ adjust_factor }}"
-                                                        data-container-id="{{ loc.id }}"
-                                                        data-container-type="{{ loc.typename() }}"
-                                                        data-label="{{ det.label }}">
-                                                    at {{ loc.name }}: {{ adjust_factor | formatNum }}
-                                                </option>
-                                            {% endif %}
-                                        {% endfor %}
+                                        {% if entity.typename() == 'item' %}
+                                            {% for loc in game_data.locations %}
+                                                {% for item_at in loc.items_at.get(entity.id, []) %}
+                                                    {% set adjust_factor = item_at.quantity %}
+                                                    <option value="{{ adjust_factor }}"
+                                                            data-container-id="{{ loc.id }}"
+                                                            data-container-type="{{ loc.typename() }}"
+                                                            data-label="{{ det.label }}">
+                                                        at {{ loc.name }}: {{ adjust_factor | formatNum }}
+                                                    </option>
+                                                {% endfor %}
+                                            {% endfor %}
+                                        {% endif %}
                                     </select>
                                     {% set letter = link_letters.next() %}
                                     <button type="button"
@@ -263,8 +262,8 @@
                                             {% set oldval = None %}
                                             {% if chg.typename() == 'attrib' and chg.id in char.attribs %}
                                                 {% set oldval = char.attribs[chg.id].val %}
-                                            {% elif chg.typename() == 'item' and chg.id in char.items %}
-                                                {% set oldval = char.items[chg.id].quantity %}
+                                            {% elif chg.typename() == 'item' and chg.id in char.owned_items %}
+                                                {% set oldval = char.owned_items[chg.id].quantity %}
                                             {% endif %}
                                             {% if oldval is not none %}
                                                 <option value="{{ oldval }}"
@@ -301,19 +300,18 @@
                                                 </option>
                                             {% endif %}
                                         {% endfor %}
-                                        {% for loc in game_data.locations %}
-                                            {% set oldval = None %}
-                                            {% if chg.typename() == 'item' and chg.id in loc.items %}
-                                                {% set oldval = loc.items[chg.id].quantity %}
-                                            {% endif %}
-                                            {% if oldval is not none %}
-                                                <option value="{{ oldval }}"
-                                                        data-container-id="{{ loc.id }}"
-                                                        data-container-type="{{ loc.typename() }}">
-                                                    at {{ loc.name }}: {{ oldval | formatNum }}
-                                                </option>
-                                            {% endif %}
-                                        {% endfor %}
+                                        {% if chg.typename() == 'item' %}
+                                            {% for loc in game_data.locations %}
+                                                {% for item_at in loc.items_at.get(chg.id, []) %}
+                                                    {% set oldval = item_at.quantity %}
+                                                    <option value="{{ oldval }}"
+                                                            data-container-id="{{ loc.id }}"
+                                                            data-container-type="{{ loc.typename() }}">
+                                                        at {{ loc.name }}: {{ oldval | formatNum }}
+                                                    </option>
+                                                {% endfor %}
+                                            {% endfor %}
+                                        {% endif %}
                                     </select>
                                     {% set letter = link_letters.next() %}
                                     <button type="button"

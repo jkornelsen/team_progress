@@ -215,14 +215,14 @@ class Item(CompleteIdentifiable):
     @classmethod
     def data_for_play(
             cls, id_to_get, owner_char_id=0, at_loc_id=0,
-            complete_sources=True, main_pile_type=''):
+            pos=None, complete_sources=True, main_pile_type=''):
         """
         :param complete_sources: needed to safely call source.to_db() after
             potentially modifying source quantities
         """
         logger.debug(
-            "data_for_play(%s, %s, %s, %s)",
-            id_to_get, owner_char_id, at_loc_id, main_pile_type)
+            "data_for_play(%s, %s, %s, (%s), %s)",
+            id_to_get, owner_char_id, at_loc_id, pos, main_pile_type)
         current_obj = cls.data_for_configure(id_to_get)
         for recipe in current_obj.recipes:
             for related_list in (recipe.sources, recipe.byproducts):
@@ -240,7 +240,7 @@ class Item(CompleteIdentifiable):
         Item.load_complete_objects()
         # Get item data for the specific container,
         # and get piles at this loc or char that can be used for sources
-        load_piles(current_obj, owner_char_id, at_loc_id, main_pile_type)
+        load_piles(current_obj, owner_char_id, at_loc_id, pos, main_pile_type)
         # Get relation data for items that use this item as a source
         item_recipes_data = Recipe.load_data_by_source(id_to_get)
         for item_id, recipes_data in item_recipes_data.items():
@@ -268,10 +268,10 @@ class Item(CompleteIdentifiable):
             self.masked = req.get_bool('masked')
             old = Item.load_complete_object(self.id)
             self.q_limit = req.set_num_if_changed(
-                req.get_str('item_limit'), old.q_limit)
+                req.get_str('item_limit'), [old.q_limit])
             self.pile = GeneralPile(
                 self, req.set_num_if_changed(
-                req.get_str('item_quantity'), old.pile.quantity))
+                req.get_str('item_quantity'), [old.pile.quantity]))
             self.recipes = []
             for recipe_id, recipe_id_from in zip(
                     req.get_list('recipe_id'),

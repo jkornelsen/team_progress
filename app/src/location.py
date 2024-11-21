@@ -164,7 +164,7 @@ class Location(CompleteIdentifiable):
         self.toplevel = False
         self.masked = False
         self.destinations = []  # Destination objects
-        self.items = {}  # ItemAt objects keyed by item id
+        self.items_at = {}  # lists of ItemAt objects keyed by item id
         self.item_refs = []  # general items clickable from this loc
         self.grid = Grid()
 
@@ -191,7 +191,8 @@ class Location(CompleteIdentifiable):
                 if dest.loc1.id == self.id],
             'items': [
                 item_at.dict_for_json()
-                for item_at in self.items.values()],
+                for items_at in self.items_at.values()
+                for item_at in items_at],
             'item_refs': [item.id for item in self.item_refs],
             'dimensions': self.grid.dimensions.as_list(),
             'excluded': self.grid.excluded.as_list()
@@ -230,7 +231,8 @@ class Location(CompleteIdentifiable):
             if not isinstance(item_data, dict):
                 item_data = vars(item_data)
             item_at = ItemAt.from_data(item_data, instance)
-            instance.items[item_data.get('item_id', 0)] = item_at
+            instance.items_at.setdefault(
+                item_at.item_id, []).append(item_at)
         instance.item_refs = [
             Item(item_id)
             for item_id in data.get('item_refs', [])]
@@ -278,13 +280,14 @@ class Location(CompleteIdentifiable):
                 " door1, door2, bidirectional",
                 values_to_insert)
         values_to_insert = []
-        for item_id, item_at in self.items.items():
-            values_to_insert.append((
-                g.game_token, self.id,
-                item_id, False,
-                item_at.quantity,
-                item_at.position.as_pg_array(),
-                ))
+        for item_id, items_at in self.items_at.items():
+            for item_at in items_at:
+                values_to_insert.append((
+                    g.game_token, self.id,
+                    item_id, False,
+                    item_at.quantity,
+                    item_at.position.as_pg_array(),
+                    ))
         for item in self.item_refs:
             values_to_insert.append((
                 g.game_token, self.id,
@@ -435,10 +438,11 @@ class Location(CompleteIdentifiable):
             else:
                 dest.loc2 = current_obj
                 dest.loc1 = Location.get_by_id(dest.loc1.id)
-        for item_at in current_obj.items.values():
-            item_at.item = Item.get_by_id(item_at.item.id)
-            if not current_obj.grid.in_grid(item_at.position):
-                item_at.position = current_obj.grid.default_pos
+        for items_at in current_obj.items_at.values():
+            for item_at in items_at:
+                item_at.item = Item.get_by_id(item_at.item.id)
+                if not current_obj.grid.in_grid(item_at.position):
+                    item_at.position = current_obj.grid.default_pos
         current_obj.item_refs = [
             Item.get_by_id(item.id)
             for item in current_obj.item_refs]
@@ -474,11 +478,10 @@ class Location(CompleteIdentifiable):
             self.toplevel = req.get_bool('top_level')
             req = RequestHelper('form')
             self.masked = req.get_bool('masked')
-            self.grid.dimensions = req.get_numtup(
-                'dimensions', (0, 0), delim='x')
+            self.grid.dimensions = req.get_numtup('dimensions', delim='x')
             self.grid.excluded = (
-                req.get_numtup('excluded_left_top', (0, 0)) +
-                req.get_numtup('excluded_right_bottom', (0, 0))
+                req.get_numtup('excluded_left_top') +
+                req.get_numtup('excluded_right_bottom')
                 )
             self.grid.set_default_pos()
             self.destinations = []
@@ -496,12 +499,12 @@ class Location(CompleteIdentifiable):
                     locs.reverse()
                     doors.reverse()
                 dest = Destination(Location(locs[0]), Location(locs[1]))
-                dest.door1 = NumTup.from_str(doors[0], (0, 0))
-                dest.door2 = NumTup.from_str(doors[1], (0, 0))
+                dest.door1 = NumTup.from_str(doors[0])
+                dest.door2 = NumTup.from_str(doors[1])
                 dest.duration = int(dist)
                 dest.bidirectional = not int(oneway)
                 self.destinations.append(dest)
-            self.items = {}
+            self.items_at = {}
             old = Location.load_complete_object(self.id)
             for item_id, item_qty, item_pos in zip(
                     req.get_list('item_id[]'),
@@ -509,11 +512,12 @@ class Location(CompleteIdentifiable):
                     req.get_list('item_pos[]')
                     ):
                 item_at = ItemAt(Item(int(item_id)), self)
-                item_at.position = NumTup.from_str(item_pos, (0, 0))
-                old_item = old.items.get(item_id, None)
-                old_qty = old_item.quantity if old_item else 0
-                item_at.quantity = req.set_num_if_changed(item_qty, old_qty)
-                self.items[item_id] = item_at
+                item_at.position = NumTup.from_str(item_pos)
+                old_items_at = old.items_at.get(item_id, [])
+                item_at.quantity = req.set_num_if_changed(
+                    item_qty,
+                    [old_item_at.quantity for old_item_at in old_items_at])
+                self.items_at.setdefault(item_id, []).append(item_at)
             self.item_refs = [
                 Item(item_id)
                 for item_id in req.get_list('ref_item_id[]')]

@@ -68,7 +68,7 @@ class Character(CompleteIdentifiable):
         self.travel_group = ""
         self.attribs = {}  # AttribFor objects keyed by attr id
         self.events = []  # Event IDs -- abilities
-        self.items = {}  # OwnedItem objects keyed by item id
+        self.owned_items = {}  # OwnedItem objects keyed by item id
         self.location = None  # Location object where char is
         self.position = NumTup((0, 0))
         self.dest_loc = None  # Location object to travel to
@@ -99,7 +99,7 @@ class Character(CompleteIdentifiable):
                 for attrib_for in self.attribs.values()],
             'events': self.events,
             'items': [
-                owned.dict_for_json() for owned in self.items.values()],
+                owned.dict_for_json() for owned in self.owned_items.values()],
             'progress': self.progress.dict_for_json(),
             'position': self.position.as_list(),
             })
@@ -125,7 +125,7 @@ class Character(CompleteIdentifiable):
                 if not isinstance(owned_data, dict):
                     owned_data = vars(owned_data)
                 item_id = owned_data.get('item_id', 0)
-                instance.items[item_id] = OwnedItem.from_data(
+                instance.owned_items[item_id] = OwnedItem.from_data(
                     owned_data, instance)
             except TypeError:
                 logger.exception('')
@@ -172,10 +172,10 @@ class Character(CompleteIdentifiable):
             self.insert_multiple(
                 "event_triggers",
                 "game_token, char_id, event_id", values)
-        if self.items:
-            logger.debug("items: %s", self.items)
+        if self.owned_items:
+            logger.debug("items: %s", self.owned_items)
             values = []
-            for item_id, owned_item in self.items.items():
+            for item_id, owned_item in self.owned_items.items():
                 values.append((
                     g.game_token, self.id,
                     item_id,
@@ -305,7 +305,7 @@ class Character(CompleteIdentifiable):
         g.game_data.from_db_flat([Attrib, Event, Location, Item])
         for attrib_id, attrib_for in current_obj.attribs.items():
             attrib_for.attrib = Attrib.get_by_id(attrib_id)
-        for item_id, owned_item in current_obj.items.items():
+        for item_id, owned_item in current_obj.owned_items.items():
             owned_item.item = Item.get_by_id(item_id)
         if current_obj.location:
             current_obj.location = Location.get_by_id(
@@ -314,9 +314,9 @@ class Character(CompleteIdentifiable):
             current_obj.dest_loc = Location.get_by_id(
                 current_obj.dest_loc.id)
         # Print debugging info
-        logger.debug("found %d owned items", len(current_obj.items))
-        if len(current_obj.items):
-            owned_item = next(iter(current_obj.items.values()))
+        logger.debug("found %d owned items", len(current_obj.owned_items))
+        if len(current_obj.owned_items):
+            owned_item = next(iter(current_obj.owned_items.values()))
             logger.debug("item_id=%d, name=%s, quantity=%.1f, slot=%s",
                 owned_item.item.id, owned_item.item.name, owned_item.quantity,
                 owned_item.slot)
@@ -349,7 +349,7 @@ class Character(CompleteIdentifiable):
             self.toplevel = req.get_bool('top_level')
             self.masked = req.get_bool('masked')
             self.travel_group = req.get_str('travel_group')
-            self.items = {}
+            self.owned_items = {}
             old = Character.load_complete_object(self.id)
             for item_id, item_qty, item_slot in zip(
                     req.get_list('item_id[]'),
@@ -358,13 +358,14 @@ class Character(CompleteIdentifiable):
                     ):
                 ownedItem = OwnedItem(Item(int(item_id)), self)
                 ownedItem.slot = item_slot
-                old_item = old.items.get(item_id, None)
+                old_item = old.owned_items.get(item_id, None)
                 old_qty = old_item.quantity if old_item else 0
-                ownedItem.quantity = req.set_num_if_changed(item_qty, old_qty)
-                self.items[item_id] = ownedItem
+                ownedItem.quantity = req.set_num_if_changed(
+                    item_qty, [old_qty])
+                self.owned_items[item_id] = ownedItem
             location_id = req.get_int('char_location')
             self.location = Location(location_id) if location_id else None
-            self.position = req.get_numtup('position', (0, 0))
+            self.position = req.get_numtup('position')
             attrib_ids = req.get_list('attrib_id[]')
             logger.debug("Attrib IDs: %s", attrib_ids)
             self.attribs = {}

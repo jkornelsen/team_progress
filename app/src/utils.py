@@ -83,15 +83,15 @@ class RequestHelper:
         except ValueError:
             return default
 
-    def get_numtup(self, key, default=None, delim=","):
-        return NumTup.from_str(
-            self._get_from_request(key), default, delim)
+    def get_numtup(self, key, delim=","):
+        return NumTup.from_str(self._get_from_request(key), delim)
 
     @staticmethod
-    def set_num_if_changed(new_formatted, old_unformatted):
-        old_formatted = format_num(old_unformatted)
-        if new_formatted == old_formatted:
-            return old_unformatted  # preserve precision
+    def set_num_if_changed(new_formatted, old_unformatted_list):
+        for old_unformatted in old_unformatted_list:
+            old_formatted = format_num(old_unformatted)
+            if new_formatted == old_formatted:
+                return old_unformatted  # preserve precision
         return unformat_num(new_formatted)
 
 class NumTup:
@@ -100,7 +100,7 @@ class NumTup:
     """
     def __init__(self, tup=None):
         if tup is None:
-            self.tup = ()
+            self.tup = (0, 0)
         elif isinstance(tup, (list, tuple)):
             self.tup = tuple(tup)
         else:
@@ -108,10 +108,8 @@ class NumTup:
                 f"Expected a list or tuple, got {type(tup).__name__}")
 
     @classmethod
-    def from_str(cls, str_val, default=None, delim=","):
+    def from_str(cls, str_val, delim=","):
         instance = cls()
-        if isinstance(default, tuple):
-            instance.tup = default
         if str_val:
             try:
                 instance.tup = tuple(
@@ -125,7 +123,14 @@ class NumTup:
         return cls(tuple(the_list))
 
     def __str__(self):
+        if all(x == 0 for x in self.tup):
+            return ""
         return ",".join(map(str, self.tup))
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.tup == other.tup
+        return False
 
     def as_tuple(self):
         return self.tup

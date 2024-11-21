@@ -47,7 +47,7 @@
         <input type="text"
                id="position"
                name="position"
-               value="{{ current.position[0] }},{{ current.position[1] }}"
+               value="{{ current.position }}"
                size="5">
         <span class="label-like">left, top</span>
         <br>
@@ -107,7 +107,7 @@
                 {% set outerscope = namespace(other_items=[]) %}
                 {% for other_item in game_data.items
                     if other_item.storage_type == 'carried'
-                    and other_item.id not in current.items %}
+                    and other_item.id not in current.owned_items %}
                     {% set _ = outerscope.other_items.append(other_item) %}
                 {% endfor %}
                 {% if outerscope.other_items %}
@@ -220,17 +220,6 @@
                 }
                 addItem(itemId, itemName);
             });
-            console.log("number of items={{ current.items | length }}");
-            {% for owned_item in current.items.values() %}
-                console.log("name={{owned_item.item.name}}");
-                console.log("slot={{owned_item.slot}}");
-                addItem(
-                    {{ owned_item.item.id }},
-                    "{{ owned_item.item.name }}",
-                    "{{ owned_item.quantity | formatNum }}",
-                    "{{ owned_item.slot }}"
-                    );
-            {% endfor %}
             $('#items-rows').on('click', '.remove-item-btn', (event) => {
                 const itemContainer = $(event.currentTarget).closest('tr');
                 itemContainer.remove();
@@ -263,12 +252,6 @@
                 }
                 addEvent(eventId, eventName);
             });
-            console.log("number of events={{ current.events | length }}");
-            {% for event in current.events %}
-                addEvent(
-                    {{ event.id }},
-                    "{{ event.name }}");
-            {% endfor %}
             $('#event-container').on('click', '.remove-event-btn', (event) => {
                 const eventRow = $(event.currentTarget).closest('tr');
                 eventRow.remove();
@@ -322,6 +305,31 @@
                 }
                 addAttrib(attribId, attribName, isBinary, enumValues);
             });
+            $('#attrib-container').on('click', '.remove-attrib-btn', (event) => {
+                const attribRow = $(event.currentTarget).closest('tr');
+                attribRow.remove();
+                if ($('#attrib-rows').children().length === 0) {
+                    $('#attrib-table').hide();
+                }
+            });
+
+            console.log("number of items={{ current.owned_items | length }}");
+            {% for owned_item in current.owned_items.values() %}
+                console.log("name={{owned_item.item.name}}");
+                console.log("slot={{owned_item.slot}}");
+                addItem(
+                    {{ owned_item.item.id }},
+                    "{{ owned_item.item.name }}",
+                    "{{ owned_item.quantity | formatNum }}",
+                    "{{ owned_item.slot }}"
+                    );
+            {% endfor %}
+            console.log("number of events={{ current.events | length }}");
+            {% for event in current.events %}
+                addEvent(
+                    {{ event.id }},
+                    "{{ event.name }}");
+            {% endfor %}
             console.log("number of attribs={{ current.attribs.keys() | length }}");
             {% for attrib_id, attrib_of in current.attribs.items() %}
                 addAttrib(
@@ -332,13 +340,6 @@
                     "{{ attrib_of.val | formatNum }}"
                     );
             {% endfor %}
-            $('#attrib-container').on('click', '.remove-attrib-btn', (event) => {
-                const attribRow = $(event.currentTarget).closest('tr');
-                attribRow.remove();
-                if ($('#attrib-rows').children().length === 0) {
-                    $('#attrib-table').hide();
-                }
-            });
         });
     </script>
 {% endblock %}

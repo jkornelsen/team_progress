@@ -1,36 +1,27 @@
 # Installing
-## I. Overview
 
-The basic steps are to download, install and configure python
+The basic steps are to install and configure python
 and a postgres database. Then start the app.
-
-I'm not sure if this will be too hard for most people or not.
-It should be fine for those who have worked in programming
-or system administration.
-But even people who just regularly play computer games may have developed
-enough skills to install, run commands, and edit configuration files.
 
 Commands are given using powershell syntax on windows,
 but the software should run on other systems such as Linux
 with only minimal adjustments,
 such as paths and not needing `&` to run something.
 
-## II. Python Virtual Environment Setup
+## I. Python Virtual Environment setup
 
-### 1. Install Python
+### 1. Create and activate a Virtual Environment
 If your system doesn't have it yet, download and install Python.
-
-### 2. Create and Activate a Virtual Environment
-Now, open a command line.
+Then, open a command line.
 Navigate to the project directory and create a new venv:
 ```
 chdir team_progress/app
 rm -Path ./venv -Recurse -Force[^1]
 python -m venv venv
-./venv/Scripts/activate
+venv/Scripts/activate
 ```
 
-### 3. Upgrade Pip and Install Dependencies
+### 2. Upgrade Pip and install dependencies
 Upgrade pip and install the required packages into this venv:
 ```
 python.exe -m pip install --upgrade pip
@@ -41,39 +32,32 @@ pip install bleach
 pip install tinycss2
 ```
 
-## III. Database Installation and Setup
+## II. Database installation and setup
 
-### 1. Download PostgreSQL
-Download and run the PostgreSQL EDB installer.
-
-### 2. Initialize Database
-Navigate to the project directory and initialize the PostgreSQL database:
+### 1. Download PostgreSQL and initialize database
+Download and run a PostgreSQL installer, such as EDB. Then, navigate to the project directory and initialize the database:
 ```
 chdir team_progress/app
 & "C:/Program Files/PostgreSQL/16/bin/pg_ctl" initdb -U postgres -D postgres_data
 & "C:/Program Files/PostgreSQL/16/bin/createuser" --superuser postgres
 ```
 
-### 3. Start PostgreSQL server
+### 2. Start PostgreSQL server
 The server needs to be running whenever the app runs,
 so either enter this command each time, or set to run automatically as a service.
 ```
 & "C:/Program Files/PostgreSQL/16/bin/pg_ctl" start -D postgres_data
 ```
 
-### 4. Set up database
+### 3. Set up tables
 ```
 & "C:/Program Files/PostgreSQL/16/bin/psql" -U postgres -d app
 create database app with encoding 'UTF8' template template0;
-```
-
-### 5. Create tables
-```
 drop schema public cascade; create schema public;[^2]
 python database.py
 ```
 
-## IV. Run the app
+## III. Run the app
 
 ```
 chdir team_progress/app
@@ -83,22 +67,22 @@ python app.py
 Open a web browser to http://localhost:5000. 
 If it works, you're ready to play!
 
-## V. Grant LAN access
+## IV. Other players on LAN
 
-Allow Python access to the network.
-For example, Windows Defender Firewall.
-Check box for Python and Private (home LAN) but not Public
-Set network settings to Private.
-Disconnect and perhaps forget connection, then reconnect.
+### 1. Allow network access
 
-Then connect from another device.
-```
-ipconfig
-http://<your-computer-ip>:5000/
-```
-Pass to phone with https://www.qr-code-generator.com/
+Grant Python access. For example, Windows Defender Firewall:
+- Check box for Python and Private (home LAN) but not Public
+- Set network settings to Private.
+- Disconnect and perhaps forget connection, then reconnect.
 
-## VI. Database password
+### 2. Connect from another device
+
+- Use `ipconfig` to determine your computer's IP address.
+- The url is `http://<ip-address>:5000/`
+- Pass this url to a phone with https://www.qr-code-generator.com/
+
+## V. Database password
 
 For running on a LAN, trust authentication is fine.
 Otherwise, set a password as follows.

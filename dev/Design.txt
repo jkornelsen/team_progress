@@ -1,16 +1,22 @@
 ---- recent ----
 
-required trip to the lumber yard after every tree felled makes it not as fun
-fix it so it can be done in batches
+char must be at, not next to felled tree
+because during item_progress() it is treated as main even though source
+consider where exact_pos param should come from
+maybe game_routes, like main_pile_type
+    def play_item(item_id):
+        item = Item.data_for_play(
+            item_id, char_id, loc_id, pos, complete_sources=False,
+            main_pile_type=main_pile_type)
+    def item_progress(item_id):
+        item = Item.data_for_play(
+            item_id, char_id, loc_id, pos, complete_sources=True,
+            main_pile_type=main_pile_type)
+seems surprising that in item_progress() the source can be the main pile
+do we need to pass a param to item_progress to indicate whether it's a main
+item?
 
 ---- changes to consider ----
-
-logs requirement says requires 1 marked tree
-marked tree shows 1 in stock but no where
-even when coming directly from starting plot
-the issue is that there's already a logs pile elsewhere at that loc
-
-default to dropping all in inventory
 
 can a numeric attrib requirement be 0 or negative?
 example: -1 hp required to chop into logs

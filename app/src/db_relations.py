@@ -125,7 +125,7 @@ tables_to_create = {
         is_ref boolean not null,
         quantity real not null,
         position integer[2],
-        PRIMARY KEY (game_token, loc_id, item_id),
+        PRIMARY KEY (game_token, loc_id, item_id, position),
         FOREIGN KEY (game_token, loc_id)
             REFERENCES locations (game_token, id)
             ON DELETE cascade
