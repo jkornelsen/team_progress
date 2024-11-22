@@ -281,10 +281,18 @@
                 console.log("added sourceHtml before sourcelist_end");
                 toggleAddRecipeButtonVisibility();
             }
-            function addRecipeAttrib(recipeId, attribId, attribName, isBinary, enumVals, attribVal = '1') {
+            function enumSelect(enumVals, uniqueName, attribVal, show=true) {
+                return `
+                    <select name="${uniqueName}"
+                        style="${show ? '' : 'display:none;'}">
+                        ${enumVals.map((val, index) => `
+                            <option value="${index}" ${attribVal == index ? 'selected' : ''}>${val}</option>
+                        `).join('')}
+                    </select>
+                `;
+            }
+            function addRecipeAttrib(recipeId, attribId, attribName, isBinary, enumVals, valMin = '1', valMax = '', showMax = true) {
                 console.log(`addRecipeAttrib() ${attribId}`);
-                console.log(`attribName: ${attribName}`);
-                console.log(`debugging`);
                 const recipeContainer = $('.recipe-container').last();
                 const existingAttrib = recipeContainer.find(`.recipeattrib[data-attrib-id="${attribId}"]`);
                 if (existingAttrib.length > 0) {
@@ -294,26 +302,48 @@
                 const idArray = [`recipe${recipeId}`, `attrib${attribId}`];
                 const uniqueId = idArray.join('-');
                 const uniqueName = idArray.join('_');
+                if (valMin && valMin === valMax) {
+                    showMax = false;
+                }
                 const attribHtml = `
                     <div class="recipeattrib" data-attrib-id="${attribId}">
                         <input type="hidden" name="recipe${recipeId}_attrib_id" value="${attribId}">
                         <label>Requires Attribute:</label>
                         ${attribName}
-                        ${enumVals.length > 0 
-                            ? `<select name="${uniqueName}_val">
-                                ${enumVals.map((val, index) => `
-                                    <option value="${index}" ${attribVal == index ? 'selected' : ''}>${val}</option>
-                                `).join('')}
-                               </select>`
-                        : isBinary 
-                            ? `<input type="checkbox"
-                                      name="${uniqueName}_val"
-                                      value="1" ${attribVal === '1' ? 'checked' : ''}>` 
-                            : `<input type="text"
-                                      name="${uniqueName}_val"
-                                      id="${uniqueId}_value"
-                                      value="${attribVal}"
-                                      size="8">`}
+                        ${isBinary
+                            ? `<input type="hidden" name="${uniqueName}_min" value="0">
+                               <input type="checkbox"
+                                      name="${uniqueName}-min"
+                                      value="1" ${valMin === '1' ? 'checked' : ''}>`
+                            : `<label for="${uniqueId}-min"
+                                        title="leave blank for negative infinity">${showMax ? 'Min:' : ''}</label>
+                                ${enumVals.length > 0 
+                                    ? enumSelect(enumVals, "${uniqueName}_min", valMin)
+                                    : `<input type="text"
+                                        name="${uniqueName}_min"
+                                        id="${uniqueId}-min"
+                                        value="${valMin}"
+                                        size="8">`}
+                                    <label for="${uniqueId}-max"
+                                        title="leave blank for positive infinity"
+                                        style="${showMax ? '' : 'display:none;'}">Max:</label>
+                                ${enumVals.length > 0 
+                                    ? enumSelect(enumVals, "${uniqueName}_max", valMax, showMax)
+                                    : `<input type="text"
+                                        name="${uniqueName}_max"
+                                        id="${uniqueId}-max"
+                                        value="${valMax}"
+                                        size="8"
+                                        style="${showMax ? '' : 'display:none;'}">`}
+                                    <label>
+                                        <input type="checkbox"
+                                            name="${uniqueName}_showMax"
+                                            id="${uniqueId}-showMax"
+                                            class="toggle-max"
+                                            data-unique-id="${uniqueId}"
+                                            ${showMax ? 'checked' : ''}>
+                                        Range
+                                    </label>`}
                         <button type="button" class="remove-recipeattrib-btn lesser-button" id="remove-${uniqueId}">Remove</button>
                     </div>
                 `;
@@ -441,44 +471,23 @@
                     $(recipeContainer).remove();
                 }
             });
-
-            console.log("number of recipes={{ current.recipes | length }}");
-            {% for recipe in current.recipes %}
-                addRecipe(
-                    {{ recipe.id }},
-                    'from_db',
-                    "{{ recipe.rate_amount | formatNum }}",
-                    "{{ recipe.rate_duration | formatNum }}",
-                    {{ recipe.instant | lower }}
-                    );
-                {% for source in recipe.sources %}
-                    addSource(
-                        {{ recipe.id }},
-                        {{ source.item.id }},
-                        "{{ source.item.name }}",
-                        "{{ source.q_required | formatNum }}",
-                        {{ source.preserve | lower }}
-                        );
-                {% endfor %}
-                {% for byproduct in recipe.byproducts %}
-                    addByproduct(
-                        {{ recipe.id }},
-                        {{ byproduct.item.id }},
-                        "{{ byproduct.item.name }}",
-                        "{{ byproduct.rate_amount | formatNum }}"
-                        );
-                {% endfor %}
-                {% for attrib_id, req in recipe.attribs.items() %}
-                    addRecipeAttrib(
-                        {{ recipe.id }},
-                        {{ attrib_id }},
-                        "{{ req.attrib.name }}",
-                        {{ req.attrib.binary | lower }},
-                        {{ req.attrib.enum | tojson }},
-                        "{{ req.val | formatNum }}"
-                        );
-                {% endfor %}
-            {% endfor %}
+            $('#sources-container').on('change', '.toggle-max', function() {
+                const uniqueId = $(this).data('unique-id');
+                const showMax = $(this).is(':checked');
+                const $minField = $(`#${uniqueId}-min`);
+                const $maxField = $(`#${uniqueId}-max`);
+                const $minLabel = $(`label[for="${uniqueId}-min"]`);
+                const $maxLabel = $(`label[for="${uniqueId}-max"]`);
+                if (showMax) {
+                    $minLabel.text('Min:');
+                    $maxLabel.show();
+                    $maxField.show();
+                } else {
+                    $minLabel.text('');
+                    $maxLabel.hide();
+                    $maxField.hide();
+                }
+            });
 
             $('#sources-container').on('click', '.remove-source-btn', (event) => {
                 const recipeContainer = $(event.currentTarget).closest('.recipe-container');
@@ -527,11 +536,7 @@
                             <input type="hidden" name="attrib_id[]" value="${attribId}">
                         </td><td>
                             ${enumVals.length > 0 
-                                ? `<select name="${uniqueId}_val">
-                                    ${enumVals.map((val, index) => `
-                                        <option value="${index}" ${attribVal == index ? 'selected' : ''}>${val}</option>
-                                    `).join('')}
-                                   </select>`
+                            ? enumSelect(enumVals, "${uniqueId}_val", attribVal)
                             : isBinary 
                                 ? `<input type="checkbox"
                                           name="${uniqueId}_val"
@@ -565,15 +570,6 @@
                 }
                 addAttrib(attribId, attribName, isBinary, enumValues);
             });
-            console.log("number of attribs={{ current.attribs.keys() | length }}");
-            {% for attrib_id, attrib_of in current.attribs.items() %}
-                addAttrib(
-                    {{ attrib_id }},
-                    "{{ attrib_of.attrib.name }}",
-                    {{ attrib_of.attrib.binary | lower }},
-                    {{ attrib_of.attrib.enum | tojson }},
-                    {{ attrib_of.val | formatNum }});
-            {% endfor %}
 
             $('#attrib-container').on('click', '.remove-attrib-btn', (event) => {
                 const attribRow = $(event.currentTarget).closest('tr');
@@ -602,6 +598,55 @@
             $('input[name="storage_type"]').on('change', () => {
                 updateTopLevelCheckbox();
             });
+
+            console.log("number of recipes={{ current.recipes | length }}");
+            {% for recipe in current.recipes %}
+                addRecipe(
+                    {{ recipe.id }},
+                    'from_db',
+                    "{{ recipe.rate_amount | formatNum }}",
+                    "{{ recipe.rate_duration | formatNum }}",
+                    {{ recipe.instant | lower }}
+                    );
+                {% for source in recipe.sources %}
+                    addSource(
+                        {{ recipe.id }},
+                        {{ source.item.id }},
+                        "{{ source.item.name }}",
+                        "{{ source.q_required | formatNum }}",
+                        {{ source.preserve | lower }}
+                        );
+                {% endfor %}
+                {% for byproduct in recipe.byproducts %}
+                    addByproduct(
+                        {{ recipe.id }},
+                        {{ byproduct.item.id }},
+                        "{{ byproduct.item.name }}",
+                        "{{ byproduct.rate_amount | formatNum }}"
+                        );
+                {% endfor %}
+                {% for attrib_id, req in recipe.attrib_reqs.items() %}
+                    addRecipeAttrib(
+                        {{ recipe.id }},
+                        {{ attrib_id }},
+                        "{{ req.attrib.name }}",
+                        {{ req.attrib.binary | lower }},
+                        {{ req.attrib.enum | tojson }},
+                        "{{ req.min_str() | formatNum }}",
+                        "{{ req.max_str() | formatNum }}",
+                        {{ req.show_max | lower }}
+                        );
+                {% endfor %}
+            {% endfor %}
+            console.log("number of attribs={{ current.attribs.keys() | length }}");
+            {% for attrib_id, attrib_of in current.attribs.items() %}
+                addAttrib(
+                    {{ attrib_id }},
+                    "{{ attrib_of.attrib.name }}",
+                    {{ attrib_of.attrib.binary | lower }},
+                    {{ attrib_of.attrib.enum | tojson }},
+                    {{ attrib_of.val | formatNum }});
+            {% endfor %}
         });
     </script>
 {% endblock %}

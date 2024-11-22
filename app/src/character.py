@@ -147,7 +147,7 @@ class Character(CompleteIdentifiable):
         logger.debug("to_db()")
         self.progress.to_db()
         super().to_db()
-        for rel_table in ('char_attribs', 'char_items', 'event_triggers'):
+        for rel_table in ('char_items', 'attribs_of', 'event_triggers'):
             self.execute_change(f"""
                 DELETE FROM {rel_table}
                 WHERE char_id = %s AND game_token = %s
@@ -161,7 +161,7 @@ class Character(CompleteIdentifiable):
                     attrib_for.val
                     ))
             self.insert_multiple(
-                "char_attribs",
+                "attribs_of",
                 "game_token, char_id, attrib_id, value",
                 values)
         if self.events:
@@ -252,8 +252,9 @@ class Character(CompleteIdentifiable):
         # Get attrib relation data
         qhelper = QueryHelper("""
             SELECT *
-            FROM char_attribs
+            FROM attribs_of
             WHERE game_token = %s
+                AND char_id IS NOT NULL
             """, [g.game_token])
         qhelper.add_limit_in("char_id", ids)
         attrib_rows = cls.execute_select(qhelper=qhelper)

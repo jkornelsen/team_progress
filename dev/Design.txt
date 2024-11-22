@@ -2,30 +2,13 @@
 
 ---- changes to consider ----
 
-can a numeric attrib requirement be 0 or negative?
+numeric attrib requirement of 0 or negative
 example: -1 hp required to chop into logs
 -1 was accepted because none was found, which is 0
 but that doesn't make sense
-should be able to require both checked and unchecked?
-maybe recipe_attribs should have min_val and max_val
-    currently has "value real not null"
-that would make it possible to specify an exact val
-might want an AttribReq class derived from AttribFor
-we currently have this which seems pretty good:
-    def exceeds_limit(self, quantity):
-        return (
-            (self.q_limit > 0.0 and quantity > self.q_limit) or
-            (self.q_limit < 0.0 and quantity < self.q_limit)
-            )
-attribs maybe should use the same rules as items
-no, that's a limit, which is not the same as a requirement
-maybe recipe_attribs could have one of: '>=', '<=', '='
-no, min and max give more capability
-maybe if max is empty then treat as infinity like q_limit
-that shouldn't be too annoying for the user if it defaults to '>='
-also, add code to only count for 0 if the attr exists
-maybe hasattr, or .get('attrname', None) instead of ,0 as default
+should be able to require both checked and unchecked
 example: new calf
+items and characters have attributes; recipes have attrib reqs
 
 travel and item progress restarts instead of pausing when stopped
 if that is what we decide then the action bar should go immediately to 0

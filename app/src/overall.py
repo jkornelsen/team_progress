@@ -316,7 +316,7 @@ class Overall(DbSerializable):
                 AND {tables[0]}.toplevel
                 AND ({tables[1]}.item_id IS NULL OR {tables[2]}.id IS NOT NULL)
             ORDER BY {tables[0]}.name
-            """, (g.game_token,), ['items', 'item_attribs', 'attribs'])
+            """, (g.game_token,), ['items', 'attribs_of', 'attribs'])
         items_data = {}
         for item_data, item_attrib_data, attrib_data in tables_rows:
             item_data.is_ongoing = item_data.id in ongoing_item_ids
@@ -383,7 +383,7 @@ class Overall(DbSerializable):
                 AND B.location_id = A.loc_id
             UNION
             SELECT A.id  -- character with attribute
-            FROM win_requirements A, char_attribs B
+            FROM win_requirements A, attribs_of B
             WHERE A.game_token = %s
                 AND A.item_id IS NULL
                 AND A.attrib_id IS NOT NULL
@@ -435,10 +435,10 @@ class Overall(DbSerializable):
                     attrib_for.subject = item
                     uses.append(attrib_for)
                 for recipe in item.recipes:
-                    if attrib.id in recipe.attribs:
-                        attrib_for = recipe.attribs[attrib.id]
-                        attrib_for.subject = item
-                        uses.append(attrib_for)
+                    if attrib.id in recipe.attrib_reqs:
+                        attrib_req = recipe.attrib_reqs[attrib.id]
+                        attrib_req.subject = item
+                        uses.append(attrib_req)
             for char in g.game_data.characters:
                 if attrib.id in char.attribs:
                     attrib_for = char.attribs[attrib.id]

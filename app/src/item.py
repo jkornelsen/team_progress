@@ -7,7 +7,7 @@ from .db_serializable import (
     DbError, DeletionError, CompleteIdentifiable, QueryHelper, coldef)
 from .pile import Pile, load_piles
 from .progress import Progress
-from .recipe import Byproduct, Recipe, Source
+from .recipe import AttribReq, Byproduct, Recipe, Source
 from .utils import RequestHelper, Storage
 
 logger = logging.getLogger(__name__)
@@ -134,7 +134,7 @@ class Item(CompleteIdentifiable):
         logger.debug("to_db() for id=%d", self.id)
         self.progress.to_db()
         super().to_db()
-        for rel_table in ('item_attribs', 'recipes'):
+        for rel_table in ('attribs_of', 'recipes'):
             self.execute_change(f"""
                 DELETE FROM {rel_table}
                 WHERE item_id = %s AND game_token = %s
@@ -144,7 +144,7 @@ class Item(CompleteIdentifiable):
                 (g.game_token, self.id, attrib_id, attrib_for.val)
                 for attrib_id, attrib_for in self.attribs.items()]
             self.insert_multiple(
-                "item_attribs",
+                "attribs_of",
                 "game_token, item_id, attrib_id, value",
                 values)
         for recipe in self.recipes:
@@ -168,8 +168,9 @@ class Item(CompleteIdentifiable):
         # Get attrib relation data
         qhelper = QueryHelper("""
             SELECT *
-            FROM item_attribs
+            FROM attribs_of
             WHERE game_token = %s
+                AND item_id IS NOT NULL
             """, [g.game_token])
         qhelper.add_limit_in("item_id", ids)
         attrib_rows = cls.execute_select(qhelper=qhelper)
@@ -208,7 +209,7 @@ class Item(CompleteIdentifiable):
                 source.item = Item.get_by_id(source.item_id)
             for byproduct in recipe.byproducts:
                 byproduct.item = Item.get_by_id(byproduct.item_id)
-            for attrib_id, req in recipe.attribs.items():
+            for attrib_id, req in recipe.attrib_reqs.items():
                 req.attrib = Attrib.get_by_id(attrib_id)
         return current_obj
 
@@ -312,10 +313,14 @@ class Item(CompleteIdentifiable):
                     recipe.byproducts.append(byproduct)
                 recipe_attrib_ids = req.get_list(f'{prefix}attrib_id')
                 for attrib_id in recipe_attrib_ids:
-                    attrib_prefix = f'{prefix}attrib{attrib_id}_'
-                    attrib_value = req.get_float(f'{attrib_prefix}val', 1.0)
-                    recipe.attribs[attrib_id] = AttribFor(
-                        attrib_id, attrib_value)
+                    req_prefix = f'{prefix}attrib{attrib_id}_'
+                    req_min = req.get_float(f'{req_prefix}min', None)
+                    req_max = req.get_float(f'{req_prefix}max', None)
+                    show_max = req.get_bool(f'{req_prefix}showMax')
+                    if not show_max:
+                        req_max = req_min
+                    recipe.attrib_reqs[attrib_id] = AttribReq(
+                        attrib_id, [req_min, req_max], show_max)
                 self.recipes.append(recipe)
             attrib_ids = req.get_list('attrib_id[]')
             logger.debug("Attrib IDs: %s", attrib_ids)

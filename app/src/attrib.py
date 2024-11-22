@@ -17,20 +17,15 @@ tables_to_create = {
     }
 
 class AttribFor(Serializable):
-    """Value for attribute of a particular entity (the subject),
-    or required value of an attribute."""
+    """Value of attribute for a particular entity (the subject)."""
     def __init__(self, attrib_id=0, val=0):
         self.attrib_id = attrib_id
         self.attrib = None
         self.val = val
-        self.subject = None
+        self.subject = None  # Item or Character that the value is for
 
     @classmethod
     def from_data(cls, data):
-        """Can read data from item_attribs, char_attribs, or recipe_attribs.
-        Not event_determining or event_changed because, while they do have
-        an attrib_id, they don't have a value.
-        """
         data = cls.prepare_dict(data)
         return cls(
             attrib_id=data.get('attrib_id', 0),

@@ -214,7 +214,7 @@
                             </tr>
                             {% for recipe in current.recipes %}
                                 {% if not loop.first %}<tr style="border-top: 1px solid #888;"></tr>{% endif %}
-                                {% set attribs_list = recipe.attribs.values() | list %}
+                                {% set attribs_list = recipe.attrib_reqs.values() | list %}
                                 {% set max_rows = max(recipe.byproducts|length + 1, recipe.sources|length + attribs_list|length) %}
                                 {% for row in range(0, max_rows) %}
                                     {% set byproduct_index = row - 1 %}{# subtract 1 for gain button row #}

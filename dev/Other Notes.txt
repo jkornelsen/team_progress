@@ -7,3 +7,5 @@ SET client_encoding TO 'UTF8';
 
 djlint templates/ --configuration ../dev/djlintrc
 djlint templates/configure/event.html --reformat --quiet --configuration ../dev/djlintrc
+
+(gci *.py) + (gci src/*.py) + (gci templates/*.html -recurse) | sls -patt "recipe_attrib_reqs" -ca

@@ -117,23 +117,19 @@ def load_piles(current_item, char_id, loc_id, pos, main_pile_type):
                 byproduct.item, chars, loc, char_id, loc_id, position,
                 main_pile_type, exact_pos=True)
         # Look for entities to meet attrib requirements
-        for attrib_id, req in recipe.attribs.items():
-            logger.debug("attrib %s req %.1f", attrib_id, req.val);
+        for attrib_id, req in recipe.attrib_reqs.items():
+            logger.debug("attrib %s req %s", attrib_id, req.range_str)
             for pile in item_piles_at_loc:
                 item = pile.item
                 attrib_for = item.attribs.get(attrib_id)
                 if attrib_for:
-                    test_eq = bool(req.attrib.enum)
-                    logger.debug(
-                        "item %s container %s val %.1f test_eq %s",
-                        item.name, pile.container.name, attrib_for.val,
-                        test_eq)
-                    if (test_eq and attrib_for.val == req.val) or (
-                            not test_eq and attrib_for.val >= req.val):
+                    logger.debug("item %s container %s %.1f",
+                        item.name, pile.container.name, attrib_for.val)
+                    if req.in_range(attrib_for.val):
                         req.subject = item
-                        logger.debug("attrib %s req %.1f met by item %s %.1f",
-                            attrib_for.attrib_id, req.val,
-                            item.name, attrib_for.val)
+                        logger.debug("meets req")
+                    else:
+                        logger.debug("does not meet req")
                 else:
                     logger.debug(
                         "item %s container %s only has attribs %s",

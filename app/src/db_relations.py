@@ -6,21 +6,6 @@ from .db_serializable import coldef
 
 tables_to_create = {
     # Item
-    'item_attribs': f"""
-        {coldef('game_token')},
-        item_id integer not null,
-        attrib_id integer not null,
-        value real not null,
-        PRIMARY KEY (game_token, item_id, attrib_id),
-        FOREIGN KEY (game_token, item_id)
-            REFERENCES items (game_token, id)
-            ON DELETE cascade
-            DEFERRABLE initially deferred,
-        FOREIGN KEY (game_token, attrib_id)
-            REFERENCES attribs (game_token, id)
-            ON DELETE cascade
-            DEFERRABLE initially deferred
-        """,
     'recipe_sources': f"""
         {coldef('game_token')},
         recipe_id integer not null,
@@ -52,11 +37,12 @@ tables_to_create = {
             ON DELETE cascade
             DEFERRABLE initially deferred
         """,
-    'recipe_attribs': f"""
+    'recipe_attrib_reqs': f"""
         {coldef('game_token')},
         recipe_id integer not null,
         attrib_id integer not null,
-        value real not null,
+        value_range numrange not null,
+        show_max boolean,
         PRIMARY KEY (game_token, recipe_id, attrib_id),
         FOREIGN KEY (game_token, recipe_id)
             REFERENCES recipes (game_token, id)
@@ -68,21 +54,6 @@ tables_to_create = {
             DEFERRABLE initially deferred
         """,
     # Character
-    'char_attribs': f"""
-        {coldef('game_token')},
-        char_id integer not null,
-        attrib_id integer not null,
-        value real not null,
-        PRIMARY KEY (game_token, char_id, attrib_id),
-        FOREIGN KEY (game_token, char_id)
-            REFERENCES characters (game_token, id)
-            ON DELETE cascade
-            DEFERRABLE initially deferred,
-        FOREIGN KEY (game_token, attrib_id)
-            REFERENCES attribs (game_token, id)
-            ON DELETE cascade
-            DEFERRABLE initially deferred
-        """,
     'char_items': f"""
         {coldef('game_token')},
         char_id integer not null,
@@ -200,6 +171,27 @@ tables_to_create = {
             DEFERRABLE initially deferred,
         FOREIGN KEY (game_token, loc_id)
             REFERENCES locations (game_token, id)
+            ON DELETE cascade
+            DEFERRABLE initially deferred
+        """,
+    # Attrib
+    'attribs_of': f"""
+        {coldef('game_token')},
+        attrib_id integer not null,
+        char_id integer,
+        item_id integer,
+        value real not null,
+        UNIQUE (game_token, attrib_id, char_id, item_id),
+        FOREIGN KEY (game_token, attrib_id)
+            REFERENCES attribs (game_token, id)
+            ON DELETE cascade
+            DEFERRABLE initially deferred,
+        FOREIGN KEY (game_token, char_id)
+            REFERENCES characters (game_token, id)
+            ON DELETE cascade
+            DEFERRABLE initially deferred,
+        FOREIGN KEY (game_token, item_id)
+            REFERENCES items (game_token, id)
             ON DELETE cascade
             DEFERRABLE initially deferred
         """,

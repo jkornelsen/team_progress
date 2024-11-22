@@ -1,6 +1,7 @@
 import logging
 
 from flask import g
+from psycopg2.extras import NumericRange
 
 from .attrib import AttribFor
 from .db_serializable import (
@@ -64,6 +65,86 @@ class Byproduct(Serializable):
         instance.rate_amount = data.get('rate_amount', 1.0)
         return instance
 
+class AttribReq(AttribFor):
+    """Required value of an attribute."""
+    def __init__(self, attrib_id=0, value_range=None, show_max=True):
+        super().__init__(attrib_id)
+        if isinstance(value_range, NumericRange):
+            low = value_range.lower
+            high = value_range.upper
+            low = None if low == float('-inf') else low
+            high = None if high == float('inf') else high
+        else:
+            low, high = (
+                value_range if value_range is not None
+                else [1, None])
+        if low is not None and high is not None and low > high:
+            low, high = high, low
+        self.value_range = [low, high]
+        self.show_max = show_max  # true to show range on form to be within
+
+    def _base_export_data(self):
+        return {
+            'attrib_id': self.attrib_id,
+            'value_range': self.value_range,
+            'show_max': self.show_max,
+            }
+
+    @classmethod
+    def from_data(cls, data):
+        data = cls.prepare_dict(data)
+        instance = cls(
+            data.get('attrib_id', 0),
+            data.get('value_range', None)
+            )
+        instance.show_max = data.get('show_max', False)
+        return instance
+
+    def in_range(self, val):
+        low, high = self.value_range
+        if low is not None and val < low:
+            return False
+        if high is not None and val > high:
+            return False
+        return True
+
+    def bounded(self):
+        low, high = self.value_range
+        return not (low is None and high is None)
+
+    def pg_range_str(self):
+        low, high = self.value_range
+        if low is None:
+            low = '-infinity'
+        if high is None:
+            high = '+infinity'
+        return f'[{low},{high}]'
+
+    def range_str(self):
+        """Display in error messages and logs."""
+        low, high = self.value_range
+        def format_value(val):
+            return f"{val:.1f}" if val is not None else None
+        if not self.bounded():
+            return "any value"
+        if low is not None and high is None:
+            return f"{format_value(low)} or higher"
+        if low is None and high is not None:
+            return f"up to {format_value(high)}"
+        if low is not None and high is not None:
+            if low == high:
+                return f"exactly {format_value(low)}"
+            return f"between {format_value(low)} and {format_value(high)}"
+        return "unknown"
+
+    def min_str(self):
+        low, _ = self.value_range
+        return low if low is not None else ''
+
+    def max_str(self):
+        _, high = self.value_range
+        return high if high is not None else ''
+
 class Recipe(DependentIdentifiable):
     def __init__(self, new_id=0, item=None):
         super().__init__(new_id)
@@ -73,7 +154,7 @@ class Recipe(DependentIdentifiable):
         self.instant = False
         self.sources = []  # Source objects
         self.byproducts = []  # Byproduct objects
-        self.attribs = {}  # AttribFor objects keyed by attr id
+        self.attrib_reqs = {}  # AttribReq objects keyed by attr id
 
     def _base_export_data(self):
         """Prepare the base dictionary for JSON and DB."""
@@ -90,9 +171,7 @@ class Recipe(DependentIdentifiable):
         data.update({
             'sources': [source.dict_for_json() for source in self.sources],
             'byproducts': [byp.dict_for_json() for byp in self.byproducts],
-            'attribs': [
-                attrib_for.as_tuple()
-                for attrib_for in self.attribs.values()],
+            'attrib_reqs': [req.dict_for_json() for req in self.attrib_reqs.values()],
             })
         return data
 
@@ -114,9 +193,9 @@ class Recipe(DependentIdentifiable):
         instance.byproducts = [
             Byproduct.from_data(byp_data)
             for byp_data in data.get('byproducts', [])]
-        instance.attribs = {
-            attrib_id: AttribFor(attrib_id, val)
-            for attrib_id, val in data.get('attribs', [])}
+        instance.attrib_reqs = {
+            req_data.get('attrib_id'): AttribReq.from_data(req_data)
+            for req_data in data.get('attrib_reqs', [])}
         return instance
 
     def to_db(self):
@@ -149,17 +228,19 @@ class Recipe(DependentIdentifiable):
                 "recipe_byproducts",
                 "game_token, recipe_id, item_id, rate_amount",
                 values)
-        if self.attribs:
-            logger.debug("attribs: %s", self.attribs)
+        if self.attrib_reqs:
+            logger.debug("attrib_reqs: %s", self.attrib_reqs)
             values = []
-            for attrib_id, req in self.attribs.items():
+            for attrib_id, req in self.attrib_reqs.items():
                 values.append((
                     g.game_token, self.id,
-                    attrib_id, req.val
+                    attrib_id,
+                    req.pg_range_str(),
+                    req.show_max,
                     ))
             self.insert_multiple(
-                "recipe_attribs",
-                "game_token, recipe_id, attrib_id, value",
+                "recipe_attrib_reqs",
+                "game_token, recipe_id, attrib_id, value_range, show_max",
                 values)
 
     @classmethod
@@ -228,15 +309,13 @@ class Recipe(DependentIdentifiable):
             WHERE {tables[0]}.game_token = %s
             """, [g.game_token])
         qhelper.add_limit("{tables[0]}.item_id", id_to_get)
-        attrib_rows = cls.select_tables(
-            qhelper=qhelper, tables=['recipes', 'recipe_attribs'])
-        for recipe_row, attrib_row in attrib_rows:
+        attribreq_rows = cls.select_tables(
+            qhelper=qhelper, tables=['recipes', 'recipe_attrib_reqs'])
+        for recipe_row, req_row in attribreq_rows:
             recipes_data = item_recipes[recipe_row.item_id]
             recipe_data = recipes_data[recipe_row.id]
-            if attrib_row.attrib_id:
-                recipe_data.setdefault(
-                    'attribs', []).append(
-                    (attrib_row.attrib_id, attrib_row.value))
+            if req_row.attrib_id:
+                recipe_data.setdefault('attrib_reqs', []).append(req_row)
         return item_recipes
 
     @classmethod
