@@ -46,14 +46,14 @@
             "description": "1 if true, otherwise 0",
             "enum_list": [],
             "id": 12,
-            "is_binary": false,
+            "is_binary": true,
             "name": "Can Listen to Lecture"
         },
         {
             "description": "1 if true, otherwise 0",
             "enum_list": [],
             "id": 13,
-            "is_binary": false,
+            "is_binary": true,
             "name": "Can Lecture"
         },
         {
@@ -445,7 +445,7 @@
             "quantity": 0.0,
             "recipes": [
                 {
-                    "attribs": [],
+                    "attrib_reqs": [],
                     "byproducts": [],
                     "id": 11,
                     "instant": true,
@@ -503,9 +503,17 @@
             "quantity": 0.0,
             "recipes": [
                 {
-                    "attribs": [
-                        [12, 1.0],
-                        [13, 1.0]
+                    "attrib_reqs": [
+                        {
+                            "attrib_id": 12,
+                            "show_max": false,
+                            "value_range": [1.0, 1.0]
+                        },
+                        {
+                            "attrib_id": 13,
+                            "show_max": false,
+                            "value_range": [1.0, 1.0]
+                        }
                     ],
                     "byproducts": [],
                     "id": 12,
@@ -536,7 +544,7 @@
             "quantity": 0.0,
             "recipes": [
                 {
-                    "attribs": [],
+                    "attrib_reqs": [],
                     "byproducts": [],
                     "id": 9,
                     "instant": true,
@@ -566,7 +574,7 @@
             "quantity": 0.0,
             "recipes": [
                 {
-                    "attribs": [],
+                    "attrib_reqs": [],
                     "byproducts": [],
                     "id": 6,
                     "instant": true,
@@ -596,7 +604,7 @@
             "quantity": 0.0,
             "recipes": [
                 {
-                    "attribs": [],
+                    "attrib_reqs": [],
                     "byproducts": [],
                     "id": 8,
                     "instant": true,
@@ -617,7 +625,7 @@
         },
         {
             "attribs": [],
-            "description": "I've always tried to paid attention to reading Devanagiri since I know how important it is to you, but would you mind if we use roman letters instead?",
+            "description": "I've always tried to pay attention to Devanagiri, but would you mind if we use roman letters this time?",
             "id": 26,
             "masked": false,
             "name": "Kindly use roman letters.",
@@ -626,7 +634,7 @@
             "quantity": 0.0,
             "recipes": [
                 {
-                    "attribs": [],
+                    "attrib_reqs": [],
                     "byproducts": [],
                     "id": 7,
                     "instant": true,
@@ -656,7 +664,7 @@
             "quantity": 0.0,
             "recipes": [
                 {
-                    "attribs": [],
+                    "attrib_reqs": [],
                     "byproducts": [],
                     "id": 10,
                     "instant": true,
@@ -1252,7 +1260,7 @@
         }
     ],
     "overall": {
-        "description": "Your Indian mother has decided it's time. She's fine with you having a \u2764\ufe0f love marriage, but if you don't find someone soon, she has in mind a match with a well-off family. The problem is that they're ugly!\r\n\r\nFirst, <a href=\"/play/item/24/\">talk things over with your Maa</a>, then make a visit to either <c=\"violet\">the church or the bar</c> to start meeting people.\r\n\r\nThe initial setup aims for generally acceptable standards. It's up to you whether to keep things decent or go more explicit.\r\n\r\nCompared to the <i>Making a Living</i> scenario, this one focuses on relationship drama, charisma, and gear, and downplays managing money.",
+        "description": "Your Indian mother has decided it's time. She's fine with you having a \u2764\ufe0f love marriage, but if you don't find someone soon, she has in mind a match with a well-off family. The problem is that they're ugly!\r\n\r\nFirst, <a href=\"/play/item/24/?loc_id=20&char_id=5\">talk things over with your Maa</a>, then make a visit to either <c=\"violet\">the church or the bar</c> to start meeting people.\r\n\r\nThe initial setup aims for generally acceptable standards. It's up to you whether to keep things decent or go more explicit.\r\n\r\nCompared to the <i>Making a Living</i> scenario, this one focuses on relationship drama, charisma, and gear, and downplays managing money.",
         "progress_type": "RPG",
         "multiplayer": false,
         "number_format": "en_US",

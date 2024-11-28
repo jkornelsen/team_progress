@@ -188,6 +188,11 @@
                 overTimeContainer.show();
             }
         }
+        function updateHiddenInput(checkbox, hiddenInputId) {
+            const hiddenInput = $(`#${hiddenInputId}`);
+            hiddenInput.val(checkbox.checked ? "1" : "0");
+            console.log(`Hidden input value: ${hiddenInput.val()}`);
+        }
 
         $(document).ready(() => {
             {% if current.id > 0 %}
@@ -311,10 +316,14 @@
                         <label>Requires Attribute:</label>
                         ${attribName}
                         ${isBinary
-                            ? `<input type="hidden" name="${uniqueName}_min" value="0">
-                               <input type="checkbox"
-                                      name="${uniqueName}-min"
-                                      value="1" ${valMin === '1' ? 'checked' : ''}>`
+                            ? `<input type="checkbox" 
+                                    id="${uniqueName}-min" 
+                                    value="1" ${valMin === '1' ? 'checked' : ''}
+                                    onchange="updateHiddenInput(this, '${uniqueName}-hidden')">
+                               <input type="hidden" 
+                                    id="${uniqueName}-min-hidden" 
+                                    name="${uniqueName}_min" 
+                                    value="${valMin === '1' ? '1' : '0'}">`
                             : `<label for="${uniqueId}-min"
                                         title="leave blank for negative infinity">${showMax ? 'Min:' : ''}</label>
                                 ${enumVals.length > 0 

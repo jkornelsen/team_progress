@@ -788,8 +788,8 @@ def set_routes(app):
             })
 
     @app.route(
-        '/item/pickup/<int:item_id>/loc/<int:loc_id>/pos/<string:pos_str>'
-        '/char/<int:char_id>',
+        '/item/pickup/<int:item_id>/loc/<int:loc_id>'
+        '/pos/<string:pos_str>/char/<int:char_id>',
         methods=['POST'])
     def pickup_item(item_id, loc_id, pos_str, char_id):
         logger.debug(

@@ -37,7 +37,7 @@ def load_piles(current_item, char_id, loc_id, pos, main_pile_type):
     Also find chars or items that meet recipe attrib requirements.
     """
     logger.debug(
-        "_load_piles(%d, %s, %s, (%s))",
+        "_load_piles(item.id=%d, char_id=%s, loc_id=%s, pos=(%s))",
         current_item.id, char_id, loc_id, pos)
     from .character import Character, OwnedItem
     from .location import Grid, ItemAt, Location
@@ -48,13 +48,13 @@ def load_piles(current_item, char_id, loc_id, pos, main_pile_type):
         if char:
             chars = [char]
             char_loc_id = char.location.id if char.location else 0
-            if (char_loc_id != loc_id and
-                    current_item.storage_type == Storage.CARRIED):
-                # Use character's location instead of passed loc_id
-                if char_loc_id:
+            logger.debug("char_loc_id=%s", char_loc_id)
+            if current_item.storage_type == Storage.CARRIED:
+                if char_loc_id != loc_id:
+                    # Use character's location instead of passed loc_id
                     loc_id = char_loc_id
-                else:
-                    loc_id = 0
+            elif not loc_id: 
+                loc_id = char_loc_id
     if loc_id:
         # Get items at this loc
         loc = Location.load_complete_object(loc_id)
@@ -76,23 +76,29 @@ def load_piles(current_item, char_id, loc_id, pos, main_pile_type):
         if item.pile.quantity != 0:  # general storage
             pile = item.pile
             if not pile.item:
-                pile.item = Item.get_by_id(item.id)
+                item_from_list = Item.get_by_id(item.id)
+                pile.item = item_from_list
             item_piles_at_loc.append(pile)
-    if loc_id:
+    if loc_id and loc:
         for items_at in loc.items_at.values():
             for item_at in items_at:
                 if item_at.quantity != 0 and Grid.adjacent(
                         item_at.position, position):
-                    if not item_at.item:
-                        item_at.item = Item.get_by_id(item_at.item.id)
+                    item_from_list = Item.get_by_id(item_at.item.id)
+                    if (item_from_list is not None and 
+                            item_from_list.name and not item_at.item.name):
+                        item_at.item = item_from_list
                     item_piles_at_loc.append(item_at)
         # Get items for all chars at this loc
         chars = Location.chars_at_pos(loc_id, position)
+        logger.debug(
+            "chars at loc %s: %s", loc_id, [char.name for char in chars])
         for char in chars:
             for owned_item_id, owned_item in char.owned_items.items():
                 if owned_item.quantity != 0:
                     if not owned_item.item:
-                        owned_item.item = Item.get_by_id(owned_item.item.id)
+                        item_from_list = Item.get_by_id(owned_item.item.id)
+                        owned_item.item = item_from_list
                     item_piles_at_loc.append(owned_item)
     # This container item id was set by container.progress.from_data(),
     # loaded from the progress table.
@@ -118,7 +124,7 @@ def load_piles(current_item, char_id, loc_id, pos, main_pile_type):
                 main_pile_type, exact_pos=True)
         # Look for entities to meet attrib requirements
         for attrib_id, req in recipe.attrib_reqs.items():
-            logger.debug("attrib %s req %s", attrib_id, req.range_str)
+            logger.debug("attrib %s req %s", attrib_id, req.range_str())
             for pile in item_piles_at_loc:
                 item = pile.item
                 attrib_for = item.attribs.get(attrib_id)
@@ -126,28 +132,26 @@ def load_piles(current_item, char_id, loc_id, pos, main_pile_type):
                     logger.debug("item %s container %s %.1f",
                         item.name, pile.container.name, attrib_for.val)
                     if req.in_range(attrib_for.val):
-                        req.subject = item
                         logger.debug("meets req")
+                        req.subject = item
                     else:
                         logger.debug("does not meet req")
-                else:
-                    logger.debug(
-                        "item %s container %s only has attribs %s",
-                        item.id, pile.container.name, item.attribs.keys())
             for char in chars:
                 attrib_for = char.attribs.get(attrib_id)
-                if attrib_for and attrib_for.val >= req.val:
-                    req.subject = char
-                    logger.debug("attrib %s req %.1f met by char %s %.1f",
-                        attrib_for.attrib_id, req.val,
-                        char.name, attrib_for.val)
+                if attrib_for:
+                    logger.debug("char %s %.1f", char.name, attrib_for.val)
+                    if req.in_range(attrib_for.val):
+                        logger.debug("meets req")
+                        req.subject = char
+                    else:
+                        logger.debug("does not meet req")
 
 def _assign_pile(
         pile_item, chars, loc, char_id=0, loc_id=0, position=(),
         forced_pile_type='', exact_pos=False):
     logger.debug(
         "_assign_pile(item.id=%d, item.type=%s, chars=[%d],"
-        " loc.id=%d, char_id=%s, loc_id=%s, position=(%s), type=%s)",
+        " loc.id=%s, char_id=%s, loc_id=%s, position=(%s), forced_type=%s)",
         pile_item.id, pile_item.storage_type, len(chars),
         loc.id if loc else "_", char_id, loc_id, position, forced_pile_type)
     from .character import Character, OwnedItem
@@ -190,27 +194,28 @@ def _assign_pile(
                 "assigned empty ownedItem from %s", pile.container.name)
     elif pile_type == Storage.LOCAL:
         # Select an itemAt for this loc
-        for item_at in loc.items_at.get(pile_item.id, []):
-            same_pos = (
-                item_at.position == position or
-                (not exact_pos and Grid.adjacent(item_at.position, position))
-                )
-            if same_pos and (not pile or item_at.quantity != 0):
-                pile = item_at
-                pile.container = loc
+        if loc:
+            for item_at in loc.items_at.get(pile_item.id, []):
+                same_pos = (
+                    item_at.position == position or
+                    (not exact_pos and Grid.adjacent(item_at.position, position))
+                    )
+                if same_pos and (not pile or item_at.quantity != 0):
+                    pile = item_at
+                    pile.container = loc
+                    logger.debug(
+                        "assigned itemAt from %s qty %.1f pos (%s)",
+                        item_at.container.name, pile.quantity, item_at.position)
+                    break
+            if loc_id and not pile:
+                if loc.id != loc_id:
+                    loc = Location.data_for_configure(loc_id)
+                pile = ItemAt(pile_item, loc)
+                pile.position = position
+                loc.items_at.setdefault(pile_item.id, []).append(pile)
                 logger.debug(
-                    "assigned itemAt from %s qty %.1f pos (%s)",
-                    item_at.container.name, pile.quantity, item_at.position)
-                break
-        if loc_id and not pile:
-            if loc.id != loc_id:
-                loc = Location.data_for_configure(loc_id)
-            pile = ItemAt(pile_item, loc)
-            pile.position = position
-            loc.items_at.setdefault(pile_item.id, []).append(pile)
-            logger.debug(
-                "assigned empty itemAt from %s pos (%s)",
-                pile.container.name, pile.position)
+                    "assigned empty itemAt from %s pos (%s)",
+                    pile.container.name, pile.position)
     if not pile:
         pile = GeneralPile(pile_item)
         pile_item.pile = pile

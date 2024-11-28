@@ -174,11 +174,27 @@
             "quantity": 0.0,
             "recipes": [
                 {
-                    "attribs": [
-                        [11, 3.0],
-                        [13, 0.0],
-                        [14, 3.0],
-                        [15, 0.0]
+                    "attrib_reqs": [
+                        {
+                            "attrib_id": 11,
+                            "show_max": true,
+                            "value_range": [3.0, 10.0]
+                        },
+                        {
+                            "attrib_id": 13,
+                            "show_max": false,
+                            "value_range": [0.0, 0.0]
+                        },
+                        {
+                            "attrib_id": 14,
+                            "show_max": true,
+                            "value_range": [3.0, 10.0]
+                        },
+                        {
+                            "attrib_id": 15,
+                            "show_max": false,
+                            "value_range": [0.0, 0.0]
+                        }
                     ],
                     "byproducts": [],
                     "id": 24,

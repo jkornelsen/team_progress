@@ -361,11 +361,11 @@
                                                 <td>{{ req.attrib.name }}</td>
                                                 <td>
                                                     {% if req.attrib.enum %}
-                                                        ({{ req.attrib.enum[req.val | int] }})
+                                                        {{ req.enum_range_str() }}
                                                     {% elif req.attrib.binary %}
-                                                        {{ ('&check;' if req.val else 'X') | safe }}
+                                                        {{ ('&check;' if (req.min_str() | int) == 1 else 'X') | safe }}
                                                     {% else %}
-                                                        ({{ req.val | formatNum }})
+                                                        {{ req.range_str() }}
                                                     {% endif %}
                                                 </td>
                                                 {% if req.subject %}
@@ -394,8 +394,8 @@
                                                         <a href="{{ link }}">{{ subject.name }}</a>
                                                     </td>
                                                 {% else %}
-                                                    <td>(0)</td>
-                                                    <td>(None)</td>
+                                                    <td>&mdash;</td>
+                                                    <td>(Not Found)</td>
                                                 {% endif %}
                                             </tr>
                                         {% else %}
@@ -783,7 +783,10 @@
             $('#pickup-btn').click(() => {
                 const itemId = "{{ current.id }}";
                 const locId = "{{ container.id }}";
-                const pos = "{{ current.pile.position }}";
+                let pos = "{{ current.pile.position }}";
+                if (pos === "") {
+                    pos = encodeURIComponent(" ");
+                }
                 const charId = $('#char-picking-up').val();
                 if (!charId) {
                     alert('Please select a character to pick up the item.');

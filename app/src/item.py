@@ -189,7 +189,7 @@ class Item(CompleteIdentifiable):
             instances[data.id] = cls.from_data(data)
         if ids and any(ids):
             if not instances:
-                raise ValueError(f"Could not load items {ids}.")
+                logger.warn(f"Could not load items {ids}.")
             setattr(g.active, cls.listname(), instances)
         else:
             g.game_data.set_list(cls, instances.values())

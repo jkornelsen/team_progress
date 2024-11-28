@@ -6,6 +6,7 @@ from psycopg2.extras import NumericRange
 from .attrib import AttribFor
 from .db_serializable import (
     DependentIdentifiable, QueryHelper, Serializable, coldef)
+from .utils import format_num
 
 logger = logging.getLogger(__name__)
 tables_to_create = {
@@ -70,10 +71,12 @@ class AttribReq(AttribFor):
     def __init__(self, attrib_id=0, value_range=None, show_max=True):
         super().__init__(attrib_id)
         if isinstance(value_range, NumericRange):
-            low = value_range.lower
-            high = value_range.upper
-            low = None if low == float('-inf') else low
-            high = None if high == float('inf') else high
+            low = float(value_range.lower)
+            high = float(value_range.upper)
+            if low == float('-inf'):
+                low = None
+            if high == float('inf'):
+                high = None
         else:
             low, high = (
                 value_range if value_range is not None
@@ -112,6 +115,14 @@ class AttribReq(AttribFor):
         low, high = self.value_range
         return not (low is None and high is None)
 
+    def min_str(self):
+        low, _ = self.value_range
+        return low if low is not None else ''
+
+    def max_str(self):
+        _, high = self.value_range
+        return high if high is not None else ''
+
     def pg_range_str(self):
         low, high = self.value_range
         if low is None:
@@ -124,26 +135,40 @@ class AttribReq(AttribFor):
         """Display in error messages and logs."""
         low, high = self.value_range
         def format_value(val):
-            return f"{val:.1f}" if val is not None else None
+            #return f"{val:.1f}" if val is not None else None
+            return format_num(val) if val is not None else None
         if not self.bounded():
-            return "any value"
+            return "any"
         if low is not None and high is None:
-            return f"{format_value(low)} or higher"
+            return f"≥ {format_value(low)}"
         if low is None and high is not None:
-            return f"up to {format_value(high)}"
+            return f"≤ {format_value(high)}"
         if low is not None and high is not None:
             if low == high:
-                return f"exactly {format_value(low)}"
-            return f"between {format_value(low)} and {format_value(high)}"
+                return f"{format_value(low)}"
+            return f"{format_value(low)} - {format_value(high)}"
         return "unknown"
 
-    def min_str(self):
-        low, _ = self.value_range
-        return low if low is not None else ''
-
-    def max_str(self):
-        _, high = self.value_range
-        return high if high is not None else ''
+    def enum_range_str(self):
+        """Display range for enum values, for example, 'Mon - Fri'."""
+        if not self.attrib or not self.attrib.enum:
+            return self.range_str()
+        low, high = self.value_range
+        if low is not None:
+            low = int(low)
+        if high is not None:
+            high = int(high)
+        enum = self.attrib.enum
+        if low is not None and high is not None:
+            if low == high:
+                return enum[low]
+            else:
+                return f"{enum[low]} - {enum[high]}"
+        if low is not None:
+            return f"≥ {enum[low]}"
+        if high is not None:
+            return f"≤ {enum[high]}"
+        return "unknown"
 
 class Recipe(DependentIdentifiable):
     def __init__(self, new_id=0, item=None):
@@ -171,7 +196,8 @@ class Recipe(DependentIdentifiable):
         data.update({
             'sources': [source.dict_for_json() for source in self.sources],
             'byproducts': [byp.dict_for_json() for byp in self.byproducts],
-            'attrib_reqs': [req.dict_for_json() for req in self.attrib_reqs.values()],
+            'attrib_reqs': [
+                req.dict_for_json() for req in self.attrib_reqs.values()],
             })
         return data
 

@@ -25,26 +25,24 @@ from flask import (
     )
 from markupsafe import Markup
 
-from database import get_db, close_db
-from src.cache import init_cache
-from src.game_data import GameData
-from src.user_interaction import UserInteraction
-from src.file import set_routes as _set_file_routes
-from src.game_routes import set_routes as _set_game_routes, back_to_referrer
-from src.utils import format_num
-
-app = Flask(__name__)
-app.config['TITLE'] = 'Team Progress'
-app.config['SECRET_KEY'] = 'team-progress'
-app.config['DATA_DIR'] = 'data_files'
-app.config['UPLOAD_DIR'] = os.path.join(app.config['DATA_DIR'], 'uploads')
-app.config['TEMPLATES_AUTO_RELOAD'] = True  # set to False for production
-
 def set_up_logging():
     class FlushFileHandler(logging.FileHandler):
         def emit(self, record):
-            super().emit(record)
-            self.flush()
+            try:
+                self.format(record)
+                super().emit(record)
+                self.flush()
+            except Exception as e:
+                fallback_msg = (
+                    f"Logging error. {str(e)}.\n"
+                    f"    Msg: {str(record.msg)}\n"
+                    f"    Args: {repr(record.args)}"
+                    )
+                fallback_record = logging.LogRecord(
+                    record.name, logging.ERROR, record.pathname, record.lineno,
+                    fallback_msg, (), record.exc_info
+                    )
+                super().emit(fallback_record)
     file_handler = FlushFileHandler('app.log', encoding='utf-8')
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(
@@ -59,6 +57,21 @@ def set_up_logging():
 
 set_up_logging()
 logger = logging.getLogger(__name__)
+
+from database import get_db, close_db
+from src.cache import init_cache
+from src.game_data import GameData
+from src.user_interaction import UserInteraction
+from src.file import set_routes as _set_file_routes
+from src.game_routes import set_routes as _set_game_routes, back_to_referrer
+from src.utils import format_num
+
+app = Flask(__name__)
+app.config['TITLE'] = 'Team Progress'
+app.config['SECRET_KEY'] = 'team-progress'
+app.config['DATA_DIR'] = 'data_files'
+app.config['UPLOAD_DIR'] = os.path.join(app.config['DATA_DIR'], 'uploads')
+app.config['TEMPLATES_AUTO_RELOAD'] = True  # set to False for production
 
 with app.app_context():
     logger.debug("starting app")
@@ -189,7 +202,8 @@ def _set_filters():
         def sanitize_href(match):
             """Limit URLs to within the app."""
             href = match.group(2).strip()
-            if not re.match(r'^/[a-zA-Z0-9/=?]*["\']?$', href):
+            href = href.replace("&amp;", "&")
+            if not re.match(r'^/[a-zA-Z0-9/=?&_]*["\']?$', href):
                 return 'href="#"'
             return match.group(0)
 
