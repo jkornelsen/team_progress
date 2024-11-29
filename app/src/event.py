@@ -367,18 +367,22 @@ class Event(CompleteIdentifiable):
             return outcome, display
         sides = die_higher - die_lower + 1
         roll = roll_dice(sides)
-        outcome_num = die_lower + roll
+        die_base = die_lower - 1
+        outcome_num = die_base + roll
+        roll_str = "{} (d{})".format(
+            format_num(roll), format_num(sides))
+        if die_base < 0:
+            total_roll_str = "{} - {}".format(
+                roll_str, format_num(abs(die_base)))
+        else:
+            total_roll_str = "{} + {}".format(
+                format_num(die_base), roll_str)
         if self.outcome_type == OUTCOME_NUMERIC:
             outcome = outcome_num
             display = (
-                "{} + {} (d{})<br>"
+                "{}<br>"
                 "Outcome = {}"
-                ).format(
-                    format_num(die_lower),
-                    format_num(roll),
-                    format_num(sides),
-                    format_num(outcome_num),
-                    )
+                ).format(total_roll_str, format_num(outcome_num))
         elif self.outcome_type == OUTCOME_FOURWAY:
             major_threshold = round((die_higher - die_lower + 1) * 0.45);
             if outcome_num <= -major_threshold:
@@ -394,17 +398,15 @@ class Event(CompleteIdentifiable):
                 outcome = "Major Success"
                 threshold_display = f">= {major_threshold}"
             display = (
-                "{} + {} (d{}) = {}<br>"
+                "{} = {}<br>"
                 "{} {} so Outcome is a {}."
-            ).format(
-                format_num(die_lower),
-                format_num(roll),
-                format_num(sides),
-                format_num(outcome_num),
-                format_num(outcome_num),
-                threshold_display,
-                outcome,
-            )
+                ).format(
+                    total_roll_str,
+                    format_num(outcome_num),
+                    format_num(outcome_num),
+                    threshold_display,
+                    outcome,
+                    )
         else:
             raise ValueError(f"Unexpected outcome_type {self.outcome_type}")
         MessageLog.add(f"{self.name} — {display}")
