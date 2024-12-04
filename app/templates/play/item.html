@@ -269,7 +269,10 @@
                                                 </span>
                                                 {% if not recipe.instant %}
                                                     {% if recipe.rate_amount %}per{% endif %}
-                                                    <span class="rate-duration" id="rate-duration_{{ recipe.id }}">{{ recipe.rate_duration | formatNum }}</span>s
+                                                    <span class="rate-duration"
+                                                            id="rate-duration_{{ recipe.id }}"
+                                                            data-duration="{{ recipe.rate_duration }}"
+                                                            >{{ recipe.rate_duration | formatNum }}</span>s
                                                 {% endif %}
                                             </td>
                                         {% elif byproduct_index < recipe.byproducts|length %}
@@ -565,33 +568,41 @@
                 return url;
             }
 
+            // Global variable to store the elapsed time.
+            let elapsedTime = 0;
+            let rateDuration = 1;
+            let in_progress = false;
+
             // Fetch progress data and update all relevant information
             async function fetchProgressData() {
                 const url = getItemProgressUrl({{ current.id }}, "{{ params.main_pile_type }}")
-                const data = await new Promise((resolve, reject) => {
+                const combined_data = await new Promise((resolve, reject) => {
                     $.get(url, (response) => {
                         resolve(response);
                     }).fail((jqXHR, textStatus, error) => {
                         reject(error);
                     });
                 });
-                updateQuantities(data);
-                in_progress = data.main.is_ongoing;
-                reconcileElapsedTime(data);
-                updateStartButtonLabel(data, data.main.recipe_id);
+                data = combined_data.main
+                elapsedTime = data.elapsed_time || 0;  // reconcile with data from server
+                rateDuration = parseFloat($(`#rate-duration_${data.recipe_id}`).data('duration')) || 1;
+                in_progress = data.is_ongoing;
+                updateQuantities(combined_data);
+                updateStartButtonLabel(data, data.recipe_id);
                 updateProgressVisibility();
-                updateVisibility(data.main.quantity);
+                updateVisibility(data.quantity);
             }
-            function updateQuantities(data) {
-                console.log('updateQuantities()');
-                const quantityText = data.main.quantity_str;
+            function updateQuantities(combined_data) {
+                const main = combined_data.main
+                const sources = combined_data.sources
+                const quantityText = main.quantity_str;
                 const qLimit = {{ current.q_limit }};
                 $('#quantity-{{ current.id }}').text(
                     qLimit !== 0 ? `${quantityText} / ${qLimit}` : quantityText
                 );
-                updateStorageProgress(data.main.quantity, qLimit);
-                data.sources.forEach((source) => {
-                    $(`#recipe-${data.main.recipe_id}-source-${source.id}-quantity`).text(source.quantity);
+                updateStorageProgress(main.quantity, qLimit);
+                sources.forEach((source) => {
+                    $(`#recipe-${main.recipe_id}-source-${source.id}-quantity`).text(source.quantity);
                 });
             }
 
@@ -607,11 +618,6 @@
                 progressBar.attr('value', progressPercent);
                 progressLabel.text(`${quantity} / ${maxQuantity}`);
             }
-
-            // Global variable to store the elapsed time.
-            let elapsedTime = 0;
-            let rateDuration = 1;
-            let in_progress = false;
 
             function updateActionProgress() {
                 //console.log('Updating progress bar:', { elapsedTime, rateDuration });
@@ -631,15 +637,6 @@
                 updateActionProgress();
             }
 
-            // Reconcile the elapsed time with the server-side progress time.
-            function reconcileElapsedTime(data) {
-                if (data.elapsed_time) {
-                    elapsedTime = data.elapsed_time;
-                } else {
-                    elapsedTime = 0;
-                }
-            }
-
             // the Start button can change to "Stop"
             function updateStartButtonLabel(data, recipe_id) {
                 $(".start-stop-btn").each(function() {
@@ -649,8 +646,6 @@
                             $(this).html("Stop")
                                    .addClass("dangerous-button")
                                    .removeClass("go-button");
-                            const row = $(this).closest('tr');
-                            rateDuration = parseFloat(row.find('.rate-duration').text()) || 1;
                         } else {
                             $(this).html("Start")
                                    .addClass("go-button")
@@ -730,8 +725,6 @@
                 const current_id = {{ current.id }};
                 const startBtn = event.currentTarget;
                 const recipe_id = $(event.currentTarget).data('recipe-id');
-                const row = $(event.currentTarget).closest('tr');
-                rateDuration = parseFloat(row.find('.rate-duration').text()) || 1;
                 console.log(`start/stop button clicked for recipe ${recipe_id}`);
                 const urlParts = ['/item/stop', current_id];
                 if (startBtn.innerHTML === "Start") {

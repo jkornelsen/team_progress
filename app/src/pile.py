@@ -217,10 +217,11 @@ def _assign_pile(
                     "assigned empty itemAt from %s pos (%s)",
                     pile.container.name, pile.position)
     if not pile:
-        pile = GeneralPile(pile_item)
-        pile_item.pile = pile
+        # Use general pile from Item.init()
+        pile = pile_item.pile
         logger.debug(
-            "assigned general storage qty %.1f", pile.quantity)
+            "using %s qty %.1f",
+            pile.container_type(), pile.quantity)
     return pile
 
 def get_position(pile, oldval):

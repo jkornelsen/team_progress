@@ -107,9 +107,8 @@ class Progress(DependentIdentifiable):
         return entities_data
 
     def pholder_to_db(self):
-        """Calling pholder.to_db should include storing this class to db."""
         logger.debug("self.pholder[%s].to_db()", self.pholder.name)
-        self.pholder.to_db()
+        self.pholder.to_db()  # should include writing progress obj to db
         if self.pile and (self.pholder != self.pile.container or
                 self.pholder.typename() != self.pile.container.typename() or
                 self.pholder.id != self.pile.container.id):

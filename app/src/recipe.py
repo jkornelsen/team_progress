@@ -280,8 +280,7 @@ class Recipe(DependentIdentifiable):
         qhelper = QueryHelper("""
             SELECT *
             FROM {tables[0]}
-            """ + join_type + """
-            JOIN {tables[1]}
+            """ + join_type + """ JOIN {tables[1]}
                 ON {tables[1]}.game_token = {tables[0]}.game_token
                 AND {tables[1]}.recipe_id = {tables[0]}.id
             WHERE {tables[0]}.game_token = %s
