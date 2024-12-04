@@ -502,6 +502,7 @@ class Event(CompleteIdentifiable):
             f" of {container.name} from {oldval} to {newval}")
         session['message'] = message
         MessageLog.add(message)
+        session['changed_by_form'] = True
 
     def check_trigger(self, trials):
         """Returns True if the event triggers at least once."""

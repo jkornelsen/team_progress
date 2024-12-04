@@ -316,30 +316,28 @@
                                     {% set letter = link_letters.next() %}
                                     <button type="button"
                                             class="fill-changed-btn"
-                                            id="fill-changed-btn_{{ chg_ref }}"
-                                            data-id="{{ chg.id }}"
-                                            data-type="{{ chg.typename() }}">[{{ letter }}] Fill</button>
+                                            id="fill-changed-btn{{ chg_ref }}"
+                                            data-chg-ref="{{ chg_ref }}">[{{ letter }}] Fill</button>
                                     <script>
-                    funcForKey['{{ letter }}'] = () => {
-                        document.querySelector('#fill-changed-btn_{{ chg_ref }}').click();
-                    };
+                                        funcForKey['{{ letter }}'] = () => {
+                                            document.querySelector('#fill-changed-btn{{ chg_ref }}').click();
+                                        };
                                     </script>
-                                    <span id="oldval_{{ chg_ref }}"
+                                    <span id="oldval{{ chg_ref }}"
                                           style="min-width: 5ch;
                                                  display: inline-block;
                                                  text-align: right">0</span> →
-                                    <input type="text" name="newval" id="newval_{{ chg_ref }}" size="8">
+                                    <input type="text" name="newval" id="newval{{ chg_ref }}" size="8">
                                     {% set letter = link_letters.next() %}
                                     <button type="submit"
                                             name="change_entity"
                                             class="change-entity-btn"
-                                            id="apply_{{ chg.id }}"
-                                            onclick="saveSelections(); validateChanged('{{ chg_ref }}', this)"
-                                            >[{{ letter }}] Apply</button>
+                                            id="apply{{ chg_ref }}"
+                                            data-chg-ref="{{ chg_ref }}">[{{ letter }}] Apply</button>
                                     <script>
-                    funcForKey['{{ letter }}'] = () => {
-                        document.querySelector('#apply_{{ chg.id }}').click();
-                    };
+                                        funcForKey['{{ letter }}'] = () => {
+                                            document.querySelector(`#apply{{ chg_ref }}`).click();
+                                        };
                                     </script>
                                 </li>
                                 <br>
@@ -356,7 +354,7 @@
             // remember defaults for select boxes in client side storage
             const $selectBoxes = $('.container-for-changed, .container-for-det, #difficulty-select, #location-select');
             const $dieFields = $('#die-min, #die-max');
-            window.saveSelections = function() {
+            function saveSelections() {
                 console.log("Saving default form selections.");
                 const eventDefaults = {};
                 $selectBoxes.each((index, select) => {
@@ -425,14 +423,6 @@
                 });
             }
             loadSelections();
-            window.validateChanged = function(chgRef, button) {
-                if ($(`#container_type${chgRef}`).val() !== "") { 
-                    button.click();
-                } else {
-                    event.preventDefault();
-                    alert('Please fill or select from the list before applying changes.');
-                }
-            };
 
             function calculateThreshold() {
                 const dieMin = parseFloat($('#die-min').val());
@@ -523,24 +513,44 @@
                 const containerId = selectedOption.data('container-id');
                 const containerType = selectedOption.data('container-type');
                 const outcomeFromRoll = parseFloat($('#outcome-display').data('outcome')) || 0;
-                const oldValText = $(`#oldval_${keyRef}`);
-                const newValInput = $(`#newval_${keyRef}`);
+                const oldValText = $(`#oldval${keyRef}`);
+                const newValInput = $(`#newval${keyRef}`);
                 const newValue = containerVal + outcomeFromRoll;
                 oldValText.text(containerVal);
                 newValInput.val(newValue);
-                $(`#container_id${keyRef}`).val(containerId);
-                $(`#container_type${keyRef}`).val(containerType);
             }
             $('.container-for-changed').change((event) => {
                 fill_container(event.currentTarget);
             });
             $('.fill-changed-btn').on('click', (event) => {
-                const entityId = $(event.currentTarget).data('id');
-                const entityType = $(event.currentTarget).data('type');
-                $(`#changed_${entityType}_${entityId}`).change();
+                const button = $(event.currentTarget);
+                const keyRef = button.data('chg-ref');
+                const selectBox = $(`#changed${keyRef}`);
+                selectBox.change();
+            });
+            $('.change-entity-btn').on('click', function (event) {
+                saveSelections();
+                const button = $(event.currentTarget);
+                const keyRef = button.data('chg-ref');
+                const selectBox = $(`#changed${keyRef}`);
+                console.log('button id: %s, selector: "#changed%s"', button.attr('id'), keyRef);
+                const selectedOption = $(selectBox).find(':selected');
+                const containerId = selectedOption.data('container-id');
+                const containerType = selectedOption.data('container-type');
+                const newValInput = parseFloat($(`#newval${keyRef}`).val());
+                console.log('container id %d, type %s', containerId, containerType);
+                console.log('newValInput:', newValInput);
+                if (containerType && !isNaN(newValInput)) {
+                    $(`#container_id${keyRef}`).val(containerId);
+                    $(`#container_type${keyRef}`).val(containerType);
+                    button.closest('form').submit();
+                } else {
+                    event.preventDefault();
+                    alert('Before applying changes, select or fill from the list, and ensure the new number is valid.');
+                }
             });
 
-            let rollCounter = 1;
+            let rollCounter = 0;
             $('#roll-btn').click(() => {
                 saveSelections();
                 const eventId = {{ current.id }};
@@ -548,7 +558,8 @@
                 const postData = {
                     die_min: $('#die-min').val(),
                     die_max: $('#die-max').val(),
-                    location: $('#location-select').val()
+                    location: $('#location-select').val(),
+                    roll_counter: rollCounter
                 };
                 $.ajax({
                     url: url,
@@ -559,7 +570,8 @@
                         if (data.error) {
                             alert(data.error);
                         } else {
-                            $('#roll-counter').text(`Count: ${rollCounter++}`);
+                            rollCounter = data.roll_counter;
+                            $('#roll-counter').text(`Count: ${rollCounter}`);
                             $('#outcome-display').html(data.outcome_display);
                             $('#outcome-display').data('outcome', data.outcome);
                             $('#changed-row').css('opacity', 1);
@@ -570,6 +582,15 @@
                     }
                 });
             });
+            if ({{ changed_by_form|tojson }}) {
+                $('#changed-row').css('opacity', 1);
+                rollCounter = {{ roll_counter or 0 }};
+                if (rollCounter > 0) {
+                    $('#roll-counter').text(`Count: {{ roll_counter }}`);
+                    $('#outcome-display').html(`{{ outcome_display|safe }}`);
+                    $('#outcome-display').data('outcome', `{{ outcome }}`);
+                }
+            }
             $('#reset-die-btn').click(() => {
                 $('#die-min').val({{ current.numeric_range[0] }});
                 $('#die-max').val({{ current.numeric_range[1] }});

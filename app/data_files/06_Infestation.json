@@ -147,10 +147,10 @@
         },
         {
             "changed": [
-                ["attrib", 1],
-                ["item", 1]
+                ["item", 1],
+                ["attrib", 1]
             ],
-            "description": "After each fight, subtract 1 Energy.\r\n\r\nAlso, if the fight ended in victory, then add the enemy's XL to the main character's XP. To do this, reset the die and add to both die min and max (so outcome won't vary), then roll and add to XP. \r\n\r\nMajor success doubles the XP, while a critical failure decreases 2 Energy.\r\n\r\nThis event keeps all needed values together. Alternatively, change <a href=\"/play/item/1/?char_id=1\">Energy</a> and <a href=\"/play/attrib/1/char/1\">XP</a> individually.",
+            "description": "After each fight, subtract 1 Energy.\r\n\r\nAlso, if the fight ended in victory, then add the enemy's XL to the main character's XP. To do this, reset the die and add to both die min and max (so outcome won't vary), then roll and add to XP. \r\n\r\nMajor success doubles the XP, while a critical failure decreases 2 Energy.",
             "determining": [
                 {
                     "entity_data": ["attrib", 2],
@@ -264,13 +264,6 @@
         {
             "description": "",
             "destinations": [
-                {
-                    "bidirectional": true,
-                    "door1": [0,0],
-                    "door2": [0,0],
-                    "duration": 1,
-                    "loc2_id": 2
-                },
                 {
                     "bidirectional": true,
                     "door1": [0,0],

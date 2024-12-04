@@ -170,7 +170,7 @@ class MessageLog(DbSerializable):
             FROM {table}
             WHERE game_token = %s AND message = %s
             ORDER BY timestamp DESC
-            LIMIT 5
+            LIMIT 4
             """, (g.game_token, message),
             fetch_all=False)
         if result:

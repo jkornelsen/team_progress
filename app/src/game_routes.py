@@ -308,13 +308,16 @@ def set_routes(app):
                 from_cls = entity_class(
                     from_typename, [Character, Item, Location])
                 from_entity = from_cls.get_by_id(from_id)
-            message = session.pop('message', '')
             return render_template(
                 'play/event.html',
                 current=instance,
                 from_entity=from_entity,
                 game_data=g.game_data,
-                message=message,
+                message=session.pop('message', ''),
+                changed_by_form=session.pop('changed_by_form', False),
+                roll_counter = session.get('roll_counter', 0),
+                outcome_display=session.get('outcome_display', ''),
+                outcome=session.get('outcome', ''),
                 operations=OPERATIONS,
                 link_letters=LinkLetters('ademor')
                 )
@@ -587,10 +590,14 @@ def set_routes(app):
             req.get_int('die_max'),
             req.get_int('location')
             )
-        return jsonify({
+        roll_counter = req.get_int('roll_counter', 0)
+        outcome_data = {
             'outcome': outcome,
-            'outcome_display': display
-            })
+            'outcome_display': display,
+            'roll_counter': roll_counter + 1
+            }
+        session.update(outcome_data)
+        return jsonify(outcome_data)
 
     @app.route('/item/progress/<int:item_id>/')
     def item_progress(item_id):
