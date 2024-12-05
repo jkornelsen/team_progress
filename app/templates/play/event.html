@@ -25,7 +25,7 @@
                 const key = event.key.toLowerCase();
                 if (key === 'r') {
                     $('#roll-btn').click();
-                {% if current.outcome_type == 'numeric' %}
+                {% if current.outcome_type in ['fourway', 'numeric'] %}
                 } else if (key === 'd') {
                     $('#reset-die-btn').click();
                 {% endif %}
@@ -72,7 +72,7 @@
                         <label for="threshold" style="padding-left: 10px;">Major/Minor Threshold:</label>
                         <span id="threshold">{{ (current.numeric_range[1] * 0.45) | formatNum }}</span>
                     {% endif %}
-                    {% if current.outcome_type == 'fourway' or current.outcome_type == 'numeric' %}
+                    {% if current.outcome_type in ['fourway', 'numeric'] %}
                         <div style="background-color: black; margin: 3px; padding: 10px">
                             <label>[A]djust / Focus:</label>
                             <label for="adjust-die-max">
@@ -93,17 +93,15 @@
                                    id="die-min"
                                    value="{{ current.numeric_range[0] }}"
                                    size="5">
-                            {% if current.outcome_type == 'numeric' %}
-                                <button type="button"
-                                        id="reset-die-btn">
-                                        Reset [D]ie
-                                </button>
-                            {% endif %}
+                            <button type="button"
+                                    id="reset-die-btn">
+                                    Reset [D]ie
+                            </button>
                             <br>
                             <label for="die-max">Die Max:</label>
                             <input type="text"
                                    id="die-max"
-                                   value="{{ 20 if current.outcome_type == 'fourway' else current.numeric_range[1] }}"
+                                   value="{{ current.numeric_range[1] }}"
                                    size="5">
                             <br>
                             {% for det in current.determining_entities|sort(attribute='entity.name') %}
@@ -144,7 +142,7 @@
                                             {% set adjust_factor = None %}
                                             {% if entity.typename() == 'attrib' and entity.id in item.attribs %}
                                                 {% set adjust_factor = item.attribs[entity.id].val %}
-                                            {% elif entity.typename() == 'item' and entity.id == item.id %}
+                                            {% elif entity.typename() == 'item' and entity.id == item.id and item.storage_type == 'universal' %}
                                                 {% set adjust_factor = item.pile.quantity %}
                                             {% endif %}
                                             {% if adjust_factor is not none %}
@@ -211,6 +209,7 @@
                             <h3 style="color: tan">No locations have grids yet.</h3>
                         {% endif %}
                     {% endif %}
+                    <!-- Coordinates requires locs_with_grids. -->
                     {% if current.outcome_type != 'coordinates' or outerscope.locs_with_grids %}
                         <div style="margin-top: 20px; text-align: center">
                             <button type="button" id="roll-btn">[R]oll</button>
@@ -227,11 +226,11 @@
                 <div id="outcome-display" style="height: 3em;"></div>
             </td>
         </tr>
-        {% if current.outcome_type == 'numeric' and (current.changed_entities or current.determining_entities) %}
+        {% if current.changed_entities %}
             <tr id="changed-row" style="opacity: 0.1;">
                 <td>
                     <div style="background-color: black; margin: 3px; padding: 10px">
-                        <label>Affected Stats:</label>
+                        <label>Affected Values:</label>
                         {% for chg in current.changed_entities %}
                             <form method="post"
                                   action="{{ url_for('play_event', event_id=current.id) }}"
@@ -283,7 +282,7 @@
                                             {% set oldval = None %}
                                             {% if chg.typename() == 'attrib' and chg.id in item.attribs %}
                                                 {% set oldval = item.attribs[chg.id].val %}
-                                            {% elif chg.typename() == 'item' and chg.id == item.id %}
+                                            {% elif chg.typename() == 'item' and chg.id == item.id and item.storage_type == 'universal' %}
                                                 {% set oldval = item.pile.quantity %}
                                             {% endif %}
                                             {% if oldval is not none %}
@@ -592,10 +591,14 @@
                 }
             }
             $('#reset-die-btn').click(() => {
-                $('#die-min').val({{ current.numeric_range[0] }});
-                $('#die-max').val({{ current.numeric_range[1] }});
+                {% if current.outcome_type == 'numeric' %}
+                    $('#die-min').val({{ current.numeric_range[0] }});
+                    $('#die-max').val({{ current.numeric_range[1] }});
+                {% elif current.outcome_type == 'fourway' %}
+                    $('#difficulty-select').trigger('change');
+                {% endif %}
             });
-            {% if current.outcome_type == 'fourway' or current.outcome_type == 'numeric' %}
+            {% if current.outcome_type in ['fourway', 'numeric'] %}
                 $(document).keypress(function(event) {
                     if (event.key === 'a') {
                         event.stopPropagation();

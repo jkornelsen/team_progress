@@ -49,7 +49,7 @@ class Item(CompleteIdentifiable):
         super().__init__(new_id)
         self.name = ""
         self.description = ""
-        self.storage_type = Storage.CARRIED  # usually matches pile type
+        self.storage_type = Storage.CARRIED  # typically matches pile type
         self.toplevel = False
         self.masked = False
         self.attribs = {}  # AttribFor objects keyed by attrib id
@@ -81,7 +81,12 @@ class Item(CompleteIdentifiable):
             'toplevel': self.toplevel,
             'masked': self.masked,
             'q_limit': self.q_limit,
-            'quantity': self.pile.quantity,
+            'quantity': (
+                self.pile.quantity
+                if self.storage_type == Storage.UNIVERSAL
+                and self.pile.container_type() == 'general'
+                else 0
+                )
         }
 
     def dict_for_json(self):
@@ -115,8 +120,12 @@ class Item(CompleteIdentifiable):
             attrib_id: AttribFor(attrib_id, val)
             for attrib_id, val in data.get('attribs', [])}
         instance.q_limit = data.get('q_limit', 0.0)
-        instance.pile = GeneralPile(
-            instance, data.get('quantity', 0.0))
+        quantity = (
+            data.get('quantity', 0.0)
+            if instance.storage_type == Storage.UNIVERSAL
+            else 0.0
+            )
+        instance.pile = GeneralPile(instance, quantity)
         instance._progress = Progress.from_data(
             data.get('progress', {}), instance)
         instance.recipes = [

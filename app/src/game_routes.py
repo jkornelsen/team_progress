@@ -315,7 +315,7 @@ def set_routes(app):
                 game_data=g.game_data,
                 message=session.pop('message', ''),
                 changed_by_form=session.pop('changed_by_form', False),
-                roll_counter = session.get('roll_counter', 0),
+                roll_counter=session.get('roll_counter', 0),
                 outcome_display=session.get('outcome_display', ''),
                 outcome=session.get('outcome', ''),
                 operations=OPERATIONS,

@@ -19,97 +19,45 @@
         Since 15 - 5 is greater than the major/minor threshold of 9,
         the outcome is a major success.
     </p>
+    <style>
+        .entity-list-container label,
+        .entity-list-container div {
+            padding: 4px;
+        }
+        .select-box-container {
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+        }
+    </style>
     <form method="post">
-        <label for="event-name">Name:</label>
-        <input type="text"
-               id="event-name"
-               name="event_name"
-               value="{{ current.name }}"
-               required>
-        <br>
-        <label for="event-description">Description:</label>
-        <textarea id="event-description" name="event_description" rows="6" cols="50">{{ current.description }}</textarea>
-        <br>
-        <div class="entity-list-container outer-border"
-             id="triggers-entities-container">
-            <h3 class="label-like">Links and Triggers</h3>
-            <p class="info label-like">
-                Show a link to the event from these items and locations, or the Overview.
-                If trigger chance is greater than 0%,
-                then the items can automatically trigger
-                the event during production, and the locations during travel.
-                A link can also be shown from characters by going to Character settings.
-            </p>
-            <!-- Placeholder for appending new entities -->
-            <div id="triggers-list-end" class="unobtrusive"></div>
-            <div class="select-box-container">
-                {% if game_data.items %}
-                    <div class="select-box" title="Triggered by production of this item.">
-                        <select class="add-entity-select">
-                            <option value="" selected>(Select item)</option>
-                            {% for item in game_data.items %}<option value="{{ item.id }}">{{ item.name }}</option>{% endfor %}
-                        </select>
-                        <button type="button"
-                                class="add-entity-btn lesser-button"
-                                data-relType="triggers"
-                                data-entityType="item">Add</button>
-                    </div>
-                {% endif %}
-                {% if game_data.locations %}
-                    <div class="select-box" title="Triggered by travel from this location.">
-                        <select class="add-entity-select">
-                            <option value="" selected>(Select location)</option>
-                            {% for loc in game_data.locations %}<option value="{{ loc.id }}">{{ loc.name }}</option>{% endfor %}
-                        </select>
-                        <button type="button"
-                                class="add-entity-btn lesser-button"
-                                data-relType="triggers"
-                                data-entityType="loc">Add</button>
-                    </div>
-                {% endif %}
-                {% if not game_data.items and not game_data.locations %}<p class="no-entities">(No items or locations)</p>{% endif %}
-            </div>
-            <label>Trigger Chance:</label>
+        <label>Name:
             <input type="text"
-                   id="trigger-chance"
-                   name="trigger_chance"
-                   value="{{ (current.trigger_chance * 100) | formatNum }}%"
-                   size="5">
-            <span style="position: absolute; right: 5px; top: 0; font-size: 0.9em;">%</span>
-            <br>
-            <input type="checkbox"
-                   id="top_level"
-                   name="top_level"
-                   {% if current.toplevel %}checked{% endif %}>
-            <label for="top_level">Show in Overview</label>
-        </div>
-        <style>
-            .entity-list-container label,
-            .entity-list-container div {
-                padding: 4px;
-            }
-            .select-box-container {
-                display: flex;
-                flex-direction: row;
-                gap: 10px;
-            }
-        </style>
+                   id="event-name"
+                   name="event_name"
+                   value="{{ current.name }}"
+                   required>
+        </label>
         <br>
-        <div id="outcome-type-container">
+        <label>
+            Description:
+            <textarea id="event-description" name="event_description" rows="6" cols="50">{{ current.description }}</textarea>
+        </label>
+        <div id="outcome-type-container" class="spacious">
             <label>Outcome Type:</label>
-            <label>
-                <input type="radio"
-                       name="outcome_type"
-                       value="fourway"
-                       {% if current.outcome_type == 'fourway' %}checked{% endif %}>
-                Four-Way
-            </label>
             <label>
                 <input type="radio"
                        name="outcome_type"
                        value="numeric"
                        {% if current.outcome_type == 'numeric' %}checked{% endif %}>
                 Number
+            </label>
+            <label>
+                <input type="radio"
+                       name="outcome_type"
+                       value="fourway"
+                       {% if current.outcome_type == 'fourway' %}checked{% endif %}>
+                Four-Way
             </label>
             <label>
                 <input type="radio"
@@ -244,8 +192,66 @@
                 {% if not game_data.attribs and not game_data.items %}<p class="no-entities">(No attributes or items)</p>{% endif %}
             </div>
         </div>
-        <!-- so that switching radio buttons doesn't require scrolling down --->
-        <div style="height: 24em;"></div>
+        <div class="entity-list-container outer-border"
+             id="triggers-entities-container">
+            <h3 class="label-like">Links and Triggers</h3>
+            <p class="info label-like">
+                Show a link to this event from the Overview (if checked)
+                and from these items and locations.
+                To show the link from a character, go to Character settings.
+            </p>
+            <label class="spacious" style="display: block;">
+                <input type="checkbox"
+                       id="top_level"
+                       name="top_level"
+                       {% if current.toplevel %}checked{% endif %}>
+                Show in Overview
+            </label>
+            <!-- Placeholder for appending new entities -->
+            <div id="triggers-list-end" class="unobtrusive"></div>
+            <div class="select-box-container">
+                {% if game_data.items %}
+                    <div class="select-box" title="Triggered by production of this item.">
+                        <select class="add-entity-select">
+                            <option value="" selected>(Select item)</option>
+                            {% for item in game_data.items %}<option value="{{ item.id }}">{{ item.name }}</option>{% endfor %}
+                        </select>
+                        <button type="button"
+                                class="add-entity-btn lesser-button"
+                                data-relType="triggers"
+                                data-entityType="item">Add</button>
+                    </div>
+                {% endif %}
+                {% if game_data.locations %}
+                    <div class="select-box" title="Triggered by travel from this location.">
+                        <select class="add-entity-select">
+                            <option value="" selected>(Select location)</option>
+                            {% for loc in game_data.locations %}<option value="{{ loc.id }}">{{ loc.name }}</option>{% endfor %}
+                        </select>
+                        <button type="button"
+                                class="add-entity-btn lesser-button"
+                                data-relType="triggers"
+                                data-entityType="loc">Add</button>
+                    </div>
+                {% endif %}
+                {% if not game_data.items and not game_data.locations %}<p class="no-entities">(No items or locations)</p>{% endif %}
+            </div>
+            <p class="info label-like">
+                If trigger chance is greater than 0%,
+                then the items automatically trigger
+                the event during production, and the locations during travel.
+            </p>
+            <label>
+                Trigger Chance:
+                <input type="text"
+                       id="trigger-chance"
+                       name="trigger_chance"
+                       value="{{ (current.trigger_chance * 100) | formatNum }}%"
+                       size="5">
+                <span style="position: absolute; right: 5px; top: 0; font-size: 0.9em;">%</span>
+            </label>
+        </div>
+        <div style="height: 10em;"></div>
         <div class="footer-buttons">
             <button type="submit" id="btn-save" name="save_changes">Save and Close</button>
             <button type="submit" id="btn-duplicate" name="make_duplicate">Save and Duplicate</button>
@@ -272,22 +278,18 @@
                 const numericFactorsDiv = $('#numeric-factors');
                 const selectionStringsDiv = $('#selection-container');
                 const determinantAttribsDiv = $('#determinant-entities-container');
-                const changedAttribsDiv = $('#changed-entities-container');
                 if (outcomeType === "coordinates") {
                     numericFactorsDiv.css('display', 'none');
                     selectionStringsDiv.css('display', 'none');
                     determinantAttribsDiv.css('display', 'none');
-                    changedAttribsDiv.css('display', 'none');
                 } else if (outcomeType === "selection") {
                     numericFactorsDiv.css('display', 'none');
                     selectionStringsDiv.css('display', 'block');
                     determinantAttribsDiv.css('display', 'none');
-                    changedAttribsDiv.css('display', 'none');
                 } else {
                     numericFactorsDiv.css('display', 'block');
                     selectionStringsDiv.css('display', 'none');
                     determinantAttribsDiv.css('display', 'block');
-                    changedAttribsDiv.css('display', 'block');
                 }
             }
             outcomeTypeContainer.find('input[name="outcome_type"]').each(function() {
