@@ -2,14 +2,8 @@ import logging
 import re
 
 from flask import (
-    g,
-    jsonify,
-    redirect,
-    render_template,
-    request,
-    session,
-    url_for
-)
+    g, jsonify, make_response, redirect, render_template, request, session,
+    url_for)
 
 from .attrib import Attrib
 from .db_serializable import DeletionError
@@ -418,13 +412,16 @@ def set_routes(app):
         active = Overall.data_for_overview()
         if active.overall.have_won():
             MessageLog.add("✅ You won the scenario!")
-        return render_template(
-            'play/overview.html',
-            current=active.overall,
-            active=active,
-            log_messages=MessageLog.get_recent(),
-            link_letters=LinkLetters('m')
-            )
+        response = make_response(
+            render_template(
+                'play/overview.html',
+                current=active.overall,
+                active=active,
+                log_messages=MessageLog.get_recent(),
+                link_letters=LinkLetters('m')
+                ))
+        session.pop('clear_local_storage', None)
+        return response
 
     @app.route('/char/progress/<int:char_id>', methods=['POST'])
     def char_progress(char_id):

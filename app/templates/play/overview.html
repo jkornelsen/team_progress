@@ -183,6 +183,11 @@
             }
             scrollLogToBottom();
 
+            {% if session.get('clear_local_storage') %}
+                localStorage.clear();
+                console.log("Local storage cleared.");
+            {% endif %}
+
             let reloadInterval;
             function initializeReloadSettings() {
                 const $reloadToggle = $('#reload-toggle');

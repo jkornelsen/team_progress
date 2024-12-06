@@ -117,5 +117,10 @@
             });
         }
         //document.addEventListener('DOMContentLoaded', updateLinks);
+
+        {% if session.get('clear_local_storage') %}
+            localStorage.clear();
+            console.log("Local storage cleared.");
+        {% endif %}
     </script>
 {% endblock %}

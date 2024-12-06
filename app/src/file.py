@@ -6,7 +6,7 @@ import re
 import tempfile
 
 from flask import (
-    g, json, redirect, render_template, request, send_file,
+    g, json, make_response, redirect, render_template, request, send_file,
     session, url_for)
 from werkzeug.utils import secure_filename
 
@@ -31,11 +31,14 @@ def set_routes(app):
         logger.debug("%s\nconfigure_index()", "-" * 80)
         file_message = session.pop('file_message', False)
         g.game_data.entity_names_from_db()
-        return render_template(
-            'configure/index.html',
-            game_data=g.game_data,
-            file_message=file_message
-            )
+        response = make_response(
+            render_template(
+                'configure/index.html',
+                game_data=g.game_data,
+                file_message=file_message
+                ))
+        session.pop('clear_local_storage', None)
+        return response
 
     @app.route('/save_to_file')
     def save_to_file():
@@ -223,3 +226,4 @@ def clear_session():
             'log_trim_count',
         ):
         session.pop(session_key, None)
+        session['clear_local_storage'] = True

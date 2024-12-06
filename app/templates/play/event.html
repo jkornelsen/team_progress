@@ -112,9 +112,10 @@
                                     {{ entity.name }}
                                     <select class="container-for-det"
                                             id="det{{ det_ref }}"
-                                            data-purpose="determining"
-                                            data-id="{{ entity.id }}"
+                                            data-role="determining"
+                                            data-det-label="{{ det.label }}"
                                             data-type="{{ entity.typename() }}"
+                                            data-id="{{ entity.id }}"
                                             data-operation="{{ det.operation }}">
                                         <option value="" selected>(Select to adjust roll)</option>
                                         {% for char in game_data.characters %}
@@ -127,8 +128,7 @@
                                             {% if adjust_factor is not none %}
                                                 <option value="{{ adjust_factor }}"
                                                         data-container-id="{{ char.id }}"
-                                                        data-container-type="{{ char.typename() }}"
-                                                        data-label="{{ det.label }}">
+                                                        data-container-type="{{ char.typename() }}">
                                                     {{ char.name }}
                                                     {% if entity.typename() == 'attrib' %}
                                                     {% else %}
@@ -148,8 +148,7 @@
                                             {% if adjust_factor is not none %}
                                                 <option value="{{ adjust_factor }}"
                                                         data-container-id="{{ item.id }}"
-                                                        data-container-type="{{ item.typename() }}"
-                                                        data-label="{{ det.label }}">
+                                                        data-container-type="{{ item.typename() }}">
                                                     {{ item.name }}
                                                     {% if entity.typename() == 'attrib' %}
                                                     {% else %}
@@ -165,8 +164,7 @@
                                                     {% set adjust_factor = item_at.quantity %}
                                                     <option value="{{ adjust_factor }}"
                                                             data-container-id="{{ loc.id }}"
-                                                            data-container-type="{{ loc.typename() }}"
-                                                            data-label="{{ det.label }}">
+                                                            data-container-type="{{ loc.typename() }}">
                                                         at {{ loc.name }}: {{ adjust_factor | formatNum }}
                                                     </option>
                                                 {% endfor %}
@@ -253,7 +251,7 @@
                                     {{ chg.name }}
                                     <select class="container-for-changed"
                                             id="changed{{ chg_ref }}"
-                                            data-purpose="changed"
+                                            data-role="changed"
                                             data-id="{{ chg.id }}"
                                             data-type="{{ chg.typename() }}">
                                         <option value="">(Select for changing value)</option>
@@ -322,11 +320,7 @@
                                             document.querySelector('#fill-changed-btn{{ chg_ref }}').click();
                                         };
                                     </script>
-                                    <span id="oldval{{ chg_ref }}"
-                                          style="min-width: 5ch;
-                                                 display: inline-block;
-                                                 text-align: right">0</span> →
-                                    <input type="text" name="newval" id="newval{{ chg_ref }}" size="8">
+                                    → <input type="text" name="newval" id="newval{{ chg_ref }}" size="8">
                                     {% set letter = link_letters.next() %}
                                     <button type="submit"
                                             name="change_entity"
@@ -350,21 +344,37 @@
     {% if message %}<p>{{ message }}</p>{% endif %}
     <script>
         $(document).ready(() => {
-            // remember defaults for select boxes in client side storage
+            function makeStorageKey(role, detLabel, fieldType, fieldId) {
+                const labelStr = detLabel || "";
+                const matchResult = labelStr.match(/[a-zA-Z0-9]+/g);  // only the alphanumeric parts
+                const sanitizedLabel = matchResult ? matchResult.join('') : '';
+                return `${role}_${sanitizedLabel}_${fieldType}_${fieldId}`;
+            }
+
+            // Remember defaults for select boxes in client side storage.
             const $selectBoxes = $('.container-for-changed, .container-for-det, #difficulty-select, #location-select');
             const $dieFields = $('#die-min, #die-max');
             function saveSelections() {
                 console.log("Saving default form selections.");
-                const eventDefaults = {};
+                const eventDefaults = JSON.parse(localStorage.getItem('event_selection_defaults') || '{}');
                 $selectBoxes.each((index, select) => {
                     const $select = $(select);
+                    const role = $select.data('role');
+                    const is_container = (role !== undefined);
+                    let storageKey;
+                    if (is_container) {
+                        const detLabel = $select.data('det-label');
+                        const fieldType = $select.data('type');
+                        const fieldId = $select.data('id');
+                        storageKey = makeStorageKey(role, detLabel, fieldType, fieldId);
+                    } else {
+                        storageKey = $select.attr('id');
+                    }
                     const selectedValue = $select.val();
-                    const selectId = $select.attr('id');
                     const $selectedOption = $select.find('option:selected');
-                    eventDefaults[selectId] = {
-                        id: $selectedOption.data('container-id'),
-                        type: $selectedOption.data('container-type'),
-                        label: $selectedOption.data('label'),
+                    eventDefaults[storageKey] = {
+                        id: $selectedOption.data('container-id') || null,
+                        type: $selectedOption.data('container-type') || null,
                         value: selectedValue
                     };
                 });
@@ -376,40 +386,44 @@
                     localStorage.setItem(inputId, specifiedValue);
                 });
             }
-            // Load selections from local storage
+
+            // Load selections from local storage.
             function loadSelections() {
                 console.log("Loading default form selections.");
                 const eventDefaults = JSON.parse(localStorage.getItem('event_selection_defaults') || '{}');
                 $selectBoxes.each((index, select) => {
                     const $select = $(select);
-                    const selectId = $select.attr('id');
-                    const is_difficulty = selectId === 'difficulty-select';
-                    const is_simple_val = (selectId === 'difficulty-select' || selectId === 'location-select');
-                    let storedObj = eventDefaults[selectId];
+                    const role = $select.data('role');
+                    const is_container = (role !== undefined);
+                    let storageKey;
+                    if (is_container) {
+                        const detLabel = $select.data('det-label');
+                        const fieldType = $select.data('type');
+                        const fieldId = $select.data('id');
+                        storageKey = makeStorageKey(role, detLabel, fieldType, fieldId);
+                    } else {
+                        storageKey = $select.attr('id');
+                    }
+                    const storedObj = eventDefaults[storageKey];
                     if (storedObj === undefined) {
-                        if (is_simple_val) {
-                            $select.find('option').eq(2).prop('selected', true);
-                        }
+                        const $firstNonEmptyOption = $(select.options[1]);
+                        $firstNonEmptyOption.prop('selected', true);
                         return;
                     }
-                    console.log(`${selectId} default ${storedObj.type} ${storedObj.id}`);
-                    if (is_simple_val) {
-                        if ($select.length) {
-                            $select.val(storedObj.value);
-                        }
-                    } else {
+                    //if (process.env.NODE_ENV !== 'production')
+                    console.log(`${storageKey} default ${storedObj.type} ${storedObj.id}`);
+                    if (is_container) {
                         $select.find('option').each((index, option) => {
                             const $option = $(option);
                             if ($option.data('container-type') === storedObj.type &&
-                                $option.data('container-id') === storedObj.id &&
-                                (!storedObj.label || $option.data('label') === storedObj.label))
-                            {
-                                console.log("selecting this option");
+                                    $option.data('container-id') === storedObj.id) {
                                 $option.prop('selected', true);
-                                return false;
+                                return false;  // exit loop
                             }
                             return true;
                         });
+                    } else {
+                        $select.val(storedObj.value);
                     }
                 });
                 $dieFields.each((index, input) => {
@@ -512,10 +526,8 @@
                 const containerId = selectedOption.data('container-id');
                 const containerType = selectedOption.data('container-type');
                 const outcomeFromRoll = parseFloat($('#outcome-display').data('outcome')) || 0;
-                const oldValText = $(`#oldval${keyRef}`);
                 const newValInput = $(`#newval${keyRef}`);
                 const newValue = containerVal + outcomeFromRoll;
-                oldValText.text(containerVal);
                 newValInput.val(newValue);
             }
             $('.container-for-changed').change((event) => {
