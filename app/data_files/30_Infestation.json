@@ -1,25 +1,32 @@
 {
     "attribs": [
         {
-            "description": "Gaining a new level increases <a href=\"/configure/item/1\">energy limit</a> and sets <a href=\"/configure/character/1\">current energy</a> to full.\r\n\r\n<pre>\r\nLevel  Total XP Required\r\n~~~~~  ~~~~~~~~~~~~~~~~~\r\n1      (0)\r\n2      10\r\n3      30\r\n4      70\r\n5      120\r\n6      200\r\n7      300\r\n8      450\r\n9      650\r\n10     900\r\n11     1200\r\n12     1600\r\n13     2100\r\n14     2700\r\n15     3400\r\n16     4200\r\n17     5100\r\n18     6100\r\n19     7200\r\n20     8500\r\n21     10000\r\n</pre>",
-            "enum_list": [],
-            "id": 2,
-            "is_binary": false,
-            "name": "XL"
-        },
-        {
             "description": "Dispatch rodents to gain experience \u2014 bigger ones yield more.\r\n\r\nAlso, check whether it's time to increase <a href=\"/play/attrib/2/char/1\">XL</a>.",
             "enum_list": [],
             "id": 1,
             "is_binary": false,
             "name": "XP"
+        },
+        {
+            "description": "An enemy with this attribute is unique, so after victory, set to true.",
+            "enum_list": [],
+            "id": 3,
+            "is_binary": true,
+            "name": "Defeated"
+        },
+        {
+            "description": "Gaining a new level increases <a href=\"/configure/item/1\">energy limit</a> and sets <a href=\"/configure/character/1\">current energy</a> to full.\r\n\r\nOn reaching level 3, see <a href=\"/play/event/4\">Upgrade Bonus</a>.\r\n\r\n<pre>\r\nLevel  Total XP Required\r\n~~~~~  ~~~~~~~~~~~~~~~~~\r\n1      (0)\r\n2      10\r\n3      30\r\n4      70\r\n5      120\r\n6      200\r\n7      300\r\n8      450\r\n9      650\r\n10     900\r\n11     1200\r\n12     1600\r\n13     2100\r\n14     2700\r\n15     3400\r\n16     4200\r\n17     5100\r\n18     6100\r\n19     7200\r\n20     8500\r\n21     10000\r\n</pre>",
+            "enum_list": [],
+            "id": 2,
+            "is_binary": false,
+            "name": "XL"
         }
     ],
     "characters": [
         {
             "attribs": [
-                [1, 0.0],
-                [2, 1.0]
+                [2, 1.0],
+                [1, 0.0]
             ],
             "description": "Remotely controlled machine \u2014 the player character.\r\n\r\nDoes not get diseases from being bitten, but has a limited amount of power. Battle testing allows the engineers to improve the technology incrementally.",
             "dest_id": null,
@@ -38,23 +45,6 @@
             "position": [0,0],
             "progress": {},
             "toplevel": true,
-            "travel_group": ""
-        },
-        {
-            "attribs": [
-                [2, 2.0]
-            ],
-            "description": "Mutant, rabid and green-eyed, burning from within due to toxic waste.",
-            "dest_id": null,
-            "events": [],
-            "id": 2,
-            "items": [],
-            "location_id": 2,
-            "masked": false,
-            "name": "Baby Mouse",
-            "position": [0,0],
-            "progress": {},
-            "toplevel": false,
             "travel_group": ""
         },
         {
@@ -90,22 +80,105 @@
             "progress": {},
             "toplevel": false,
             "travel_group": ""
+        },
+        {
+            "attribs": [
+                [2, 2.0]
+            ],
+            "description": "Mutant, rabid and green-eyed, burning from within due to toxic waste.",
+            "dest_id": null,
+            "events": [],
+            "id": 2,
+            "items": [],
+            "location_id": 2,
+            "masked": false,
+            "name": "Baby Mouse",
+            "position": [0,0],
+            "progress": {},
+            "toplevel": false,
+            "travel_group": ""
+        },
+        {
+            "attribs": [
+                [3, 1.0],
+                [2, 13.0]
+            ],
+            "description": "Red-eyed monster that never stops hopping up and down, up and down.",
+            "dest_id": null,
+            "events": [],
+            "id": 5,
+            "items": [],
+            "location_id": 6,
+            "masked": false,
+            "name": "Bad Hare Day",
+            "position": [0,0],
+            "progress": {},
+            "toplevel": false,
+            "travel_group": ""
         }
     ],
     "events": [
         {
-            "changed": [],
-            "description": "If you're massively outleveled, in this case level 1 or 2 to the enemy's 5, then set difficulty to <i>Hard</i>. If you're level 8 already, then set difficulty to <i>Easy</i>, although that may be a good time to move on to the next location.\r\n\r\nRun like <a href=\"/play/event/1\">the first event</a>.",
+            "changed": [
+                ["attrib", 1],
+                ["item", 1]
+            ],
+            "description": "After each fight, subtract 1 Energy, either below or <a href=\"/play/item/1/?char_id=1\">directly</a>.\r\n\r\nAlso, if the fight ended in victory, then add the enemy's XL to <a href=\"/play/attrib/1/char/1\">XP</a>. To set the outcome to enemy XL, reset the die and add to both die min and max, then roll. Once the outcome is set, fill for XP and apply.\r\n\r\nMajor success doubles the XP, while a critical failure decreases 2 Energy.",
             "determining": [
+                {
+                    "entity_data": ["attrib", 2],
+                    "label": "Enemy",
+                    "operation": "+"
+                }
+            ],
+            "id": 2,
+            "name": "Finish Fight",
+            "numeric_range": [0, 0],
+            "outcome_type": "numeric",
+            "selection_strings": "",
+            "toplevel": true,
+            "trigger_chance": 0.0,
+            "triggers": []
+        },
+        {
+            "changed": [],
+            "description": "Set difficulty to Hard. At level 9, the range will be -18 to 1, small chance of success and significant chance of a critical failure that consumes more energy.\r\n\r\nOn victory, mark the boss as <a href=\"/play/attrib/3/char/5\">Defeated</a> and add 250 XP.",
+            "determining": [
+                {
+                    "entity_data": ["attrib", 2],
+                    "label": "Bad Hare",
+                    "operation": "-"
+                },
                 {
                     "entity_data": ["attrib", 2],
                     "label": "Player",
                     "operation": "+"
-                },
+                }
+            ],
+            "id": 6,
+            "name": "Fight Bad Hare",
+            "numeric_range": [1, 20],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": false,
+            "trigger_chance": 0.0,
+            "triggers": [
+                ["loc", 6]
+            ]
+        },
+        {
+            "changed": [],
+            "description": "If you're massively outleveled, in this case level 1 or 2 to the enemy's 5, then set difficulty to <i>Hard</i>. If you're level 8 already, then set difficulty to <i>Easy</i>, although that is probably a good time to move on to the next location.\r\n\r\nRun like <a href=\"/play/event/1\">the first event</a>.",
+            "determining": [
                 {
                     "entity_data": ["attrib", 2],
                     "label": "Enemy",
                     "operation": "-"
+                },
+                {
+                    "entity_data": ["attrib", 2],
+                    "label": "Player",
+                    "operation": "+"
                 }
             ],
             "id": 3,
@@ -151,13 +224,13 @@
             "determining": [
                 {
                     "entity_data": ["attrib", 2],
-                    "label": "Enemy",
-                    "operation": "-"
+                    "label": "Player",
+                    "operation": "+"
                 },
                 {
                     "entity_data": ["attrib", 2],
-                    "label": "Player",
-                    "operation": "+"
+                    "label": "Enemy",
+                    "operation": "-"
                 }
             ],
             "id": 5,
@@ -172,37 +245,15 @@
             ]
         },
         {
-            "changed": [
-                ["item", 1],
-                ["attrib", 1]
-            ],
-            "description": "After each fight, subtract 1 Energy.\r\n\r\nAlso, if the fight ended in victory, then add the enemy's XL to <a href=\"/play/attrib/1/char/1\">XP</a>. To set the outcome to enemy XL, reset the die and add to both die min and max, then roll. Once the outcome is set, fill for XP and apply.\r\n\r\nMajor success doubles the XP, while a critical failure decreases 2 Energy.",
-            "determining": [
-                {
-                    "entity_data": ["attrib", 2],
-                    "label": "Enemy",
-                    "operation": "+"
-                }
-            ],
-            "id": 2,
-            "name": "Finish Fight",
-            "numeric_range": [0, 0],
-            "outcome_type": "numeric",
-            "selection_strings": "",
-            "toplevel": true,
-            "trigger_chance": 0.0,
-            "triggers": []
-        },
-        {
             "changed": [],
-            "description": "Run after reaching <a href=\"/play/attrib/2/char/1\">XL</a> 3, 6, 9, and so on.",
+            "description": "Run after every 3 experience levels.",
             "determining": [],
             "id": 4,
             "name": "Upgrade Bonus",
             "numeric_range": [1, 20],
             "outcome_type": "selection",
-            "selection_strings": "Triple XP for the next fight if won\r\nGain 50% of XP towards the next level\r\nIncrease Energy limit by 1\r\nThe next fight does not decrease Energy\r\nNo Bonus",
-            "toplevel": true,
+            "selection_strings": "Triple XP for the next three fights.\r\nGain 50% of XP towards the next level.\r\nIncrease Energy limit by 1.\r\nFor three fights, do not decrease Energy unless critical.\r\nNo Bonus.",
+            "toplevel": false,
             "trigger_chance": 0.0,
             "triggers": []
         }
@@ -270,64 +321,6 @@
     ],
     "locations": [
         {
-            "description": "An outpost in northern Florida set up to contain the infestation. Engineers perform upgrades and repairs as well as charging. This is also where robots are controlled from, and where intel is assessed.",
-            "destinations": [],
-            "dimensions": [0,0],
-            "excluded": [0,0,0,0],
-            "id": 1,
-            "item_refs": [],
-            "items": [
-                {
-                    "item_id": 2,
-                    "position": [0,0],
-                    "quantity": 1.0
-                }
-            ],
-            "masked": false,
-            "name": "Maintenance Building",
-            "toplevel": false
-        },
-        {
-            "description": "",
-            "destinations": [
-                {
-                    "bidirectional": true,
-                    "door1": [0,0],
-                    "door2": [0,0],
-                    "duration": 1,
-                    "loc2_id": 4
-                }
-            ],
-            "dimensions": [0,0],
-            "excluded": [0,0,0,0],
-            "id": 5,
-            "item_refs": [],
-            "items": [],
-            "masked": true,
-            "name": "Tainted Bunny Area",
-            "toplevel": false
-        },
-        {
-            "description": "The weakest of the rodents, but alarmingly close to the base. Populations must be controlled so they don't spread further.",
-            "destinations": [
-                {
-                    "bidirectional": true,
-                    "door1": [0,0],
-                    "door2": [0,0],
-                    "duration": 1,
-                    "loc2_id": 1
-                }
-            ],
-            "dimensions": [0,0],
-            "excluded": [0,0,0,0],
-            "id": 2,
-            "item_refs": [],
-            "items": [],
-            "masked": true,
-            "name": "Baby Mice Area",
-            "toplevel": false
-        },
-        {
             "description": "",
             "destinations": [
                 {
@@ -354,7 +347,7 @@
                     "bidirectional": true,
                     "door1": [0,0],
                     "door2": [0,0],
-                    "duration": 2,
+                    "duration": 3,
                     "loc2_id": 1
                 }
             ],
@@ -365,6 +358,84 @@
             "items": [],
             "masked": true,
             "name": "Highway",
+            "toplevel": false
+        },
+        {
+            "description": "",
+            "destinations": [
+                {
+                    "bidirectional": true,
+                    "door1": [0,0],
+                    "door2": [0,0],
+                    "duration": 1,
+                    "loc2_id": 4
+                }
+            ],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
+            "id": 6,
+            "item_refs": [],
+            "items": [],
+            "masked": true,
+            "name": "Bad Hare Area",
+            "toplevel": false
+        },
+        {
+            "description": "The weakest of the rodents, but alarmingly close to the base. Populations must be controlled so they don't spread further.",
+            "destinations": [
+                {
+                    "bidirectional": true,
+                    "door1": [0,0],
+                    "door2": [0,0],
+                    "duration": 1,
+                    "loc2_id": 1
+                }
+            ],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
+            "id": 2,
+            "item_refs": [],
+            "items": [],
+            "masked": false,
+            "name": "Baby Mice Area",
+            "toplevel": false
+        },
+        {
+            "description": "",
+            "destinations": [
+                {
+                    "bidirectional": true,
+                    "door1": [0,0],
+                    "door2": [0,0],
+                    "duration": 1,
+                    "loc2_id": 4
+                }
+            ],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
+            "id": 5,
+            "item_refs": [],
+            "items": [],
+            "masked": true,
+            "name": "Tainted Bunny Area",
+            "toplevel": false
+        },
+        {
+            "description": "An outpost in northern Florida set up to contain the infestation. Engineers perform upgrades and repairs as well as charging. This is also where robots are controlled from, and where intel is assessed.",
+            "destinations": [],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
+            "id": 1,
+            "item_refs": [],
+            "items": [
+                {
+                    "item_id": 2,
+                    "position": [0,0],
+                    "quantity": 1.0
+                }
+            ],
+            "masked": false,
+            "name": "Maintenance Building",
             "toplevel": false
         }
     ],
