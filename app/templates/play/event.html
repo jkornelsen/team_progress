@@ -406,8 +406,13 @@
                     }
                     const storedObj = eventDefaults[storageKey];
                     if (storedObj === undefined) {
-                        const $firstNonEmptyOption = $(select.options[1]);
-                        $firstNonEmptyOption.prop('selected', true);
+                        const indexToSelect = (select.id === 'difficulty-select')
+                            ? 2 // Moderate difficulty
+                            : 1; // First non-empty option
+                        const $optionToSelect = $(select.options[indexToSelect]);
+                        if ($optionToSelect.length > 0) {
+                            $optionToSelect.prop('selected', true);
+                        }
                         return;
                     }
                     //if (process.env.NODE_ENV !== 'production')
@@ -529,6 +534,7 @@
                 const newValInput = $(`#newval${keyRef}`);
                 const newValue = containerVal + outcomeFromRoll;
                 newValInput.val(newValue);
+                newValInput.focus();
             }
             $('.container-for-changed').change((event) => {
                 fill_container(event.currentTarget);
@@ -586,6 +592,12 @@
                             $('#outcome-display').html(data.outcome_display);
                             $('#outcome-display').data('outcome', data.outcome);
                             $('#changed-row').css('opacity', 1);
+                            const outcomeData = {
+                                roll_counter: data.roll_counter,
+                                outcome_display: data.outcome_display,
+                                outcome: data.outcome
+                            };
+                            sessionStorage.setItem('outcome_data', JSON.stringify(outcomeData));
                         }
                     },
                     error: () => {
@@ -595,11 +607,12 @@
             });
             if ({{ changed_by_form|tojson }}) {
                 $('#changed-row').css('opacity', 1);
-                rollCounter = {{ roll_counter or 0 }};
-                if (rollCounter > 0) {
-                    $('#roll-counter').text(`Count: {{ roll_counter }}`);
-                    $('#outcome-display').html(`{{ outcome_display|safe }}`);
-                    $('#outcome-display').data('outcome', `{{ outcome }}`);
+                const storedData = sessionStorage.getItem('outcome_data');
+                if (storedData) {
+                    const outcomeData = JSON.parse(storedData);
+                    $('#roll-counter').text(`Count: ${outcomeData.roll_counter}`);
+                    $('#outcome-display').html(outcomeData.outcome_display);
+                    $('#outcome-display').data('outcome', outcomeData.outcome);
                 }
             }
             $('#reset-die-btn').click(() => {

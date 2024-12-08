@@ -1,7 +1,7 @@
 {
     "attribs": [
         {
-            "description": "Gaining a new level increases <a href=\"/configure/item/1\">energy limit</a> and sets <a href=\"/configure/character/1\">current energy</a> to full.\r\n\r\n<pre>\r\nLevel  XP Required\r\n~~~~~  ~~~~~~~~~~~\r\n1      10\r\n2      30\r\n3      70\r\n4      120\r\n5      200\r\n6      300\r\n7      450\r\n8      650\r\n9      900\r\n10     1200\r\n11     1600\r\n12     2100\r\n13     2700\r\n14     3400\r\n15     4200\r\n16     5100\r\n17     6100\r\n18     7200\r\n19     8500\r\n20     10000\r\n</pre>",
+            "description": "Gaining a new level increases <a href=\"/configure/item/1\">energy limit</a> and sets <a href=\"/configure/character/1\">current energy</a> to full.\r\n\r\n<pre>\r\nLevel  Total XP Required\r\n~~~~~  ~~~~~~~~~~~~~~~~~\r\n1      (0)\r\n2      10\r\n3      30\r\n4      70\r\n5      120\r\n6      200\r\n7      300\r\n8      450\r\n9      650\r\n10     900\r\n11     1200\r\n12     1600\r\n13     2100\r\n14     2700\r\n15     3400\r\n16     4200\r\n17     5100\r\n18     6100\r\n19     7200\r\n20     8500\r\n21     10000\r\n</pre>",
             "enum_list": [],
             "id": 2,
             "is_binary": false,
@@ -21,7 +21,7 @@
                 [1, 0.0],
                 [2, 1.0]
             ],
-            "description": "Remotely controlled machine — the player character.\r\n\r\nDoes not get diseases from being bitten, but has a limited amount of power. Battle testing allows the engineers to improve the technology incrementally.",
+            "description": "Remotely controlled machine \u2014 the player character.\r\n\r\nDoes not get diseases from being bitten, but has a limited amount of power. Battle testing allows the engineers to improve the technology incrementally.",
             "dest_id": null,
             "events": [],
             "id": 1,
@@ -34,7 +34,7 @@
             ],
             "location_id": 1,
             "masked": false,
-            "name": "Herbert 73B",
+            "name": "Herbert 2100B",
             "position": [0,0],
             "progress": {},
             "toplevel": true,
@@ -95,7 +95,7 @@
     "events": [
         {
             "changed": [],
-            "description": "If you're massively outleveled, in this case level 1 or 2 to the enemy's 5, then set difficulty to <i>Hard</i>. If you're level 8 already, then set difficulty to <i>Easy</i>, although that is probably a good time to move on to the next location.\r\n\r\nRun like <a href=\"/play/event/1\">the first event</a>.",
+            "description": "If you're massively outleveled, in this case level 1 or 2 to the enemy's 5, then set difficulty to <i>Hard</i>. If you're level 8 already, then set difficulty to <i>Easy</i>, although that may be a good time to move on to the next location.\r\n\r\nRun like <a href=\"/play/event/1\">the first event</a>.",
             "determining": [
                 {
                     "entity_data": ["attrib", 2],
@@ -121,17 +121,17 @@
         },
         {
             "changed": [],
-            "description": "Determine the outcome of a fight.\r\n\r\nSelect Moderate difficulty to begin with. Adjust both min and max by player and enemy level. Enemies in this area are limited to <i>Baby Mouse</i> \u2014 go to a different area to fight other enemies. Make sure the robot has at least 1 Energy to start.\r\n\r\nThen, see <a href=\"/play/event/2\">Finish Fight</a>.",
+            "description": "Determine the outcome of a fight.\r\n\r\nSelect <i>Moderate</i> difficulty, and adjust both min and max by player and enemy level, for an initial range -2 to 1. Enemies in this area are limited to <i>Baby Mouse</i> \u2014 go to a different area to fight other enemies. Make sure the robot has at least 1 Energy to start.\r\n\r\nThen, see <a href=\"/play/event/2\">Finish Fight</a>.",
             "determining": [
-                {
-                    "entity_data": ["attrib", 2],
-                    "label": "Enemy",
-                    "operation": "-"
-                },
                 {
                     "entity_data": ["attrib", 2],
                     "label": "Player",
                     "operation": "+"
+                },
+                {
+                    "entity_data": ["attrib", 2],
+                    "label": "Enemy",
+                    "operation": "-"
                 }
             ],
             "id": 1,
@@ -146,11 +146,37 @@
             ]
         },
         {
+            "changed": [],
+            "description": "Run like <a href=\"/play/event/3\">Grown Mice</a> with upgraded stats.",
+            "determining": [
+                {
+                    "entity_data": ["attrib", 2],
+                    "label": "Enemy",
+                    "operation": "-"
+                },
+                {
+                    "entity_data": ["attrib", 2],
+                    "label": "Player",
+                    "operation": "+"
+                }
+            ],
+            "id": 5,
+            "name": "Fight Bunnies",
+            "numeric_range": [1, 20],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": false,
+            "trigger_chance": 0.0,
+            "triggers": [
+                ["loc", 5]
+            ]
+        },
+        {
             "changed": [
                 ["item", 1],
                 ["attrib", 1]
             ],
-            "description": "After each fight, subtract 1 Energy.\r\n\r\nAlso, if the fight ended in victory, then add the enemy's XL to the main character's XP. To do this, reset the die and add to both die min and max (so outcome won't vary), then roll and add to XP. \r\n\r\nMajor success doubles the XP, while a critical failure decreases 2 Energy.",
+            "description": "After each fight, subtract 1 Energy.\r\n\r\nAlso, if the fight ended in victory, then add the enemy's XL to <a href=\"/play/attrib/1/char/1\">XP</a>. To set the outcome to enemy XL, reset the die and add to both die min and max, then roll. Once the outcome is set, fill for XP and apply.\r\n\r\nMajor success doubles the XP, while a critical failure decreases 2 Energy.",
             "determining": [
                 {
                     "entity_data": ["attrib", 2],
@@ -190,7 +216,7 @@
             "name": "Energy",
             "progress": {},
             "q_limit": 3.0,
-            "quantity": 0.0,
+            "quantity": 0,
             "recipes": [
                 {
                     "attrib_reqs": [],
@@ -236,7 +262,7 @@
             "name": "Recharging Station",
             "progress": {},
             "q_limit": 0.0,
-            "quantity": 0.0,
+            "quantity": 0,
             "recipes": [],
             "storage_type": "local",
             "toplevel": false
@@ -328,7 +354,7 @@
                     "bidirectional": true,
                     "door1": [0,0],
                     "door2": [0,0],
-                    "duration": 1,
+                    "duration": 2,
                     "loc2_id": 1
                 }
             ],
