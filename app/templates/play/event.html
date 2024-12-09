@@ -383,7 +383,7 @@
                     const $input = $(input);
                     const inputId = $input.attr('id');
                     const specifiedValue = $input.val();
-                    localStorage.setItem(inputId, specifiedValue);
+                    sessionStorage.setItem(inputId, specifiedValue);
                 });
             }
 
@@ -434,7 +434,7 @@
                 $dieFields.each((index, input) => {
                     const $input = $(input);
                     const inputId = $input.attr('id');
-                    const storedValue = localStorage.getItem(inputId);
+                    const storedValue = sessionStorage.getItem(inputId);
                     if (storedValue !== null) {
                         $input.val(storedValue);
                     }

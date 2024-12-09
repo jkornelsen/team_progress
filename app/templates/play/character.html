@@ -28,9 +28,15 @@
                 }
                 const key = event.key.toLowerCase();
                 if (key === 'g') {
-                    $('#do-travel-btn').click();
+                    const btn = $('#do-travel-btn');
+                    if (btn.is(':visible')) {
+                        btn.click();
+                    }
                 } else if (key === 's') {
-                    $('#start-travel-btn').click();
+                    const btn = $('#start-travel-btn');
+                    if (btn.is(':visible')) {
+                        btn.click();
+                    }
                 } else if (key === 't') {
                     const $selectBox = $('#destination-select');
                     if ($selectBox.length > 0) {
@@ -255,12 +261,10 @@
                     const baseEventUrl = "{{ url_for('play_event', event_id=MAX_INT_32, char_id=current.id, from_id=current.id, from_typename=current.typename()) | safe }}"
                     const url = baseEventUrl.replace('{{ MAX_INT_32 }}', data.event_id);
                     console.log("Confirmed to go to ", url);
-                    stopTravel();
                     window.location.href = url;
                 } else {
                     localStorage.setItem('ignore_event_id', data.event_id);
                     startTravel();
-                    startFetchingProgress();
                 }
             }
             function showhide_dest(setProgressLabel=true) {
@@ -290,16 +294,28 @@
                     goBtn.hide();
                 }
             }
+
             let exitNow = false;
-            function updateTravelProgress(data) {
-                if ('status' in data && data.status === 'interrupt') {
+            let travelProgressData = null;
+            let clientElapsedTime = 0;
+
+            function updateTravelProgress(new_data = null) {
+                if (new_data) {
+                    travelProgressData = new_data;
+                }
+                const data = travelProgressData;
+                if (!data) {
+                    return;
+                }
+                if (data && 'status' in data && data.status === 'interrupt') {
                     handleInterrupt(data);
                     return;
                 }
                 const current_loc_id = {{ current.location.id if current.location else 0 }};
-                if (current_loc_id !== data.current_loc_id) {
-                    console.log('Reloading to go to updated location.');
+                if (data && current_loc_id !== data.current_loc_id) {
+                    console.log('Reloading to go to updated location:', current_loc_id, data.current_loc_id);
                     location.reload();
+                    stopFetchingProgress();
                     exitNow = true;
                     return;
                 }
@@ -316,16 +332,22 @@
                 const progressBar = $('.progress-bar');
                 const progressLabel = $('.progress-label');
                 if (selectedDestId || ongoing) {
-                    if ('status' in data && data.status === 'arrived') {
+                    if (data && 'status' in data && data.status === 'arrived') {
                         console.log('Arrived; reloading.');
                         location.reload();
+                        stopFetchingProgress();
                         exitNow = true;
                         return;
                     } else if (duration >= 2) {
-                        const progressFraction = 'progress_fraction' in data ? data.progress_fraction : 0.0;
-                        const elapsedTime = 'elapsed_time' in data ? Math.floor(data.elapsed_time) : 0;
+                        let elapsedTime = data && 'elapsed_time' in data ? Math.floor(data.elapsed_time) : 0;
+                        elapsedTime += clientElapsedTime;
+                        if (elapsedTime > duration) {
+                            elapsedTime = duration;
+                        }
+                        const progressFraction = elapsedTime / duration;
                         progressBar.attr('value', progressFraction * 100);
-                        progressLabel.text(`${elapsedTime} / ${duration}`);
+                        progressLabel.text(`${Math.floor(elapsedTime)} / ${duration}`);
+                        clientElapsedTime += 0.02;
                     }
                 }
                 showhide_dest(false);
@@ -378,15 +400,22 @@
                 });
                 console.log('Received data:', data);
                 if (data) {
+                    clientElapsedTime = 0;
                     updateTravelProgress(data);
                 }
             }
-            let intervalId;
+            let intervalIds = [];
             function startFetchingProgress() {
-                intervalId = setInterval(fetchProgressData, 2000);
+                if (intervalIds.length === 0) {
+                    intervalIds = [
+                        setInterval(fetchProgressData, 1000), 
+                        setInterval(updateTravelProgress, 20)
+                    ];
+                }
             }
             function stopFetchingProgress() {
-                clearInterval(intervalId);
+                intervalIds.forEach(clearInterval);
+                intervalIds = [];
             }
 
             function showContent() {
@@ -395,7 +424,9 @@
             async function initializePage() {
                 localStorage.removeItem('ignore_event_id');
                 await fetchProgressData();
-                startFetchingProgress();
+                if (travelProgressData) {
+                    startFetchingProgress();
+                }
                 const $selectBox = $('#destination-select');
                 if ($selectBox.length > 0) {
                     const selectBox = $selectBox[0];
@@ -461,6 +492,7 @@
                             alert(response.message);
                         }
                         updateStartButtonLabel(response);
+                        startFetchingProgress();
                     },
                     error: function(error) {
                         console.error('Error:', error);
@@ -480,6 +512,10 @@
                         if (response.status === 'error') {
                             alert(response.message);
                         }
+                        stopFetchingProgress();
+                        clientElapsedTime = 0;
+                        travelProgressData = null;
+                        updateTravelProgress();
                         updateStartButtonLabel();
                     },
                     error: function(error) {

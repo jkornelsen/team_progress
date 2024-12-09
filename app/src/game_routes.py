@@ -445,7 +445,7 @@ def set_routes(app):
                 'current_loc_id': char.location.id
                 })
         elapsed_time = char.progress.calculate_elapsed_time()
-        batches_done, fractional_batches = (
+        batches_done, _ = (
             char.progress.batches_for_elapsed_time(elapsed_time))
         events = Event.load_triggers_for_type(
             char.location.id, Location.typename())
@@ -489,7 +489,6 @@ def set_routes(app):
             'is_ongoing': char.progress.is_ongoing,
             'current_loc_id': current_loc_id,
             'dest_id': char.dest_loc.id,
-            'progress_fraction': fractional_batches,
             'elapsed_time': elapsed_time
             })
 

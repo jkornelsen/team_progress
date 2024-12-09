@@ -327,6 +327,9 @@ class Overall(DbSerializable):
                 attrib_for = AttribFor(attrib_data.id, item_attrib_data.value)
                 attrib_for.attrib = Attrib.from_data(attrib_data)
                 item_row.attribs.append(attrib_for)
+        for item in items_data.values():
+            if hasattr(item, 'attribs'):
+                item.attribs.sort(key=lambda x: x.attrib.name)
         g.active.items = list(items_data.values())
         # Events
         event_rows = cls.execute_select("""

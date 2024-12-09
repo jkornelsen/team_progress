@@ -53,56 +53,73 @@
                 <th>New Value</th>
             </tr>
             <tr>
-                <td>{{ subject_attrib_val | formatNum }}</td>
                 <td>
-                    {% set operators = [["add", "+"], ["sub", "-"], ["mult", "*"], ["div", "/"], ["pow", "Power"], ["log", "Log"]] %}
-                    <select name="operator" id="operator">
-                        {% for operator in operators %}
-                            <option value="{{ operator[0] }}"
-                                    {% if session.get('last_operator') == operator[0] %}selected{% endif %}>
-                                {{ operator[1] }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                    <input type="text"
-                           name="operand"
-                           id="operand"
-                           size="8"
-                           value="{{ session.get('last_operand', 1) }}">
-                </td>
-                <td>
-                    =
-                    <input type="text"
-                           name="result"
-                           id="result"
-                           size="8"
-                           value="{{ subject_attrib_val | formatNum }}">
-                </td>
-                <td>
-                    <button type="submit" name="change" id="change-btn">[C]hange</button>
-                </td>
-            </tr>
-            {% if current.enum %}
-                {% set index_from_val = subject_attrib_val | int %}
-                <tr>
-                    <td>
+                    {% if current.enum %}
+                        {% set index_from_val = subject_attrib_val | int %}
                         {% if index_from_val in range(current.enum | length) %}
-                            {{ current.enum[index_from_val] }}
+                            <span title="{{ index_from_val }}">{{ current.enum[index_from_val] }}</span>
                         {% else %}
                             ?
                         {% endif %}
-                    </td>
-                    <td></td>
-                    <td>
-                        <select id="enum_list">
+                    {% elif current.binary %}
+                        <span title="{{ subject_attrib_val }}">
+                        {{ ('&check;' if subject_attrib_val == 1 else 'X') | safe }}
+                        </span>
+                    {% else %}
+                        {{ subject_attrib_val | formatNum }}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if current.binary %}
+                        toggle
+                    {% else %}
+                        {% set operators = [["add", "+"], ["sub", "-"], ["mult", "*"], ["div", "/"], ["pow", "Power"], ["log", "Log"]] %}
+                        <select name="operator" id="operator">
+                            {% for operator in operators %}
+                                <option value="{{ operator[0] }}"
+                                        {% if session.get('last_operator') == operator[0] %}selected{% endif %}>
+                                    {{ operator[1] }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <input type="text"
+                               name="operand"
+                               id="operand"
+                               size="8"
+                               value="{{ session.get('last_operand') or 1 }}">
+                    {% endif %}
+                </td>
+                <td>
+                    =
+                    {% if current.enum %}
+                        {% set index_from_val = subject_attrib_val | int %}
+                        <select name="result"
+                                id="result">
                             {% for index in range(current.enum | length) %}
                                 {% set identifier = current.enum[index] %}
                                 <option value="{{ index }}" {% if index == index_from_val %}selected{% endif %}>{{ identifier }}</option>
                             {% endfor %}
                         </select>
-                    </td>
-                </tr>
-            {% endif %}
+                    {% elif current.binary %}
+                        <input type="hidden"
+                               name="result"
+                               id="result"
+                               value="{{ 1 - subject_attrib_val }}">
+                        <span title="{{ 1 - subject_attrib_val }}">
+                        {{ ('X' if subject_attrib_val == 1 else '&check;') | safe }}
+                        </span>
+                    {% else %}
+                        <input type="text"
+                               name="result"
+                               id="result"
+                               size="8"
+                               value="{{ subject_attrib_val | formatNum }}">
+                    {% endif %}
+                </td>
+                <td>
+                    <button type="submit" name="change" id="change-btn">[C]hange</button>
+                </td>
+            </tr>
         </table>
     </form>
     <script>
@@ -116,16 +133,13 @@
                     case 'add':
                         result += operand;
                         {% if current.enum %}
-                            //result = result % {{ current.enum | length }};
                             result = (result + {{ current.enum | length }}) % {{ current.enum | length }};
                         {% endif %}
                         break;
                     case 'sub':
                         result -= operand;
                         {% if current.enum %}
-                            //if (result < 0) {
-                                result = (result + {{ current.enum | length }}) % {{ current.enum | length }};
-                            //}
+                            result = (result + {{ current.enum | length }}) % {{ current.enum | length }};
                         {% endif %}
                         break;
                     case 'mult':
@@ -153,20 +167,17 @@
                     default:
                         result = subjectAttribVal;
                 }
-                //$('#result').val(result.toFixed(2));
-                $('#result').val(result);
+                console.log(`Operator: ${operator}, Operand: ${operand}, Result: ${result}`);
                 {% if current.enum %}
-                    $('#enum_list').prop('selectedIndex', result);
+                    $('#result').prop('selectedIndex', result);
+                {% else %}
+                    $('#result').val(result);
                 {% endif %}
             }
             $('#operator, #operand').on('change', calculate);
-            calculate(); // on page load
-
-            $('#enum_list').change((event) => {
-                const selectedOption = $(event.currentTarget).find(':selected');
-                const enumVal = parseFloat(selectedOption.val()) || 0;
-                $('#result').val(enumVal);
-            });
+            {% if not current.binary %}
+                calculate(); // on page load
+            {% endif %}
         });
     </script>
 {% endblock %}

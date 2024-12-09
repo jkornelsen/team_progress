@@ -569,7 +569,8 @@
             }
 
             // Global variable to store the elapsed time.
-            let elapsedTime = 0;
+            let serverElapsedTime = 0;
+            let clientElapsedTime = 0;
             let rateDuration = 1;
             let in_progress = false;
 
@@ -584,7 +585,8 @@
                     });
                 });
                 data = combined_data.main
-                elapsedTime = data.elapsed_time || 0;  // reconcile with data from server
+                clientElapsedTime = 0;
+                serverElapsedTime = data.elapsed_time || 0;
                 rateDuration = parseFloat($(`#rate-duration_${data.recipe_id}`).data('duration')) || 1;
                 in_progress = data.is_ongoing;
                 updateQuantities(combined_data);
@@ -619,22 +621,27 @@
                 progressLabel.text(`${quantity} / ${maxQuantity}`);
             }
 
+            function effectiveElapsedTime() {
+                if (serverElapsedTime % rateDuration + clientElapsedTime > rateDuration) {
+                    return rateDuration;
+                } else {
+                    const elapsedTime = serverElapsedTime + clientElapsedTime;
+                    return elapsedTime % rateDuration;
+                }
+            }
             function updateActionProgress() {
-                //console.log('Updating progress bar:', { elapsedTime, rateDuration });
                 const progressBar = $('#action-progress-bar');
                 const progressLabel = $('#action-progress-label');
-                const effectiveElapsedTime = Math.ceil(elapsedTime) % rateDuration;
-                const progressPercent = (effectiveElapsedTime / rateDuration) * 100;
+                const elapsedTime = effectiveElapsedTime();
+                const progressPercent = (elapsedTime / rateDuration) * 100;
                 progressBar.val(progressPercent);
-                progressLabel.text(`${Math.floor(effectiveElapsedTime)} / ${rateDuration} sec`);
+                progressLabel.text(`${Math.floor(elapsedTime)} / ${rateDuration} sec`);
             }
-
-            // Update the elapsed time on the client.
             function updateElapsedTime() {
-                if (in_progress) {
-                    elapsedTime += 1;
-                }
                 updateActionProgress();
+                if (in_progress) {
+                    clientElapsedTime += 0.02;
+                }
             }
 
             // the Start button can change to "Stop"
@@ -660,7 +667,7 @@
                     $('#action-progress-container').addClass('hidden');
                     return;
                 }
-                if (rateDuration < 5) {
+                if (rateDuration < 3) {
                     $('#action-progress-container').addClass('hidden');
                 } else {
                     $('#action-progress-container').removeClass('hidden');
@@ -674,7 +681,7 @@
                 await fetchProgressData();
                 startFetchingProgress();
                 updateElapsedTime();
-                setInterval(updateElapsedTime, 1900);
+                setInterval(updateElapsedTime, 20);
                 showContent();
             }
             initializePage();
@@ -684,7 +691,7 @@
                 if (fetchProgressInterval) {
                     stopFetchingProgress();
                 }
-                fetchProgressInterval = setInterval(fetchProgressData, 2000);
+                fetchProgressInterval = setInterval(fetchProgressData, 1000);
             }
             function stopFetchingProgress() {
                 clearInterval(fetchProgressInterval);
