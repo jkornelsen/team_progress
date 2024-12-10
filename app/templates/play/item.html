@@ -542,6 +542,7 @@
                 </tr>
             {% endif %}
         </table>
+        {% include 'play/custom_confirm.html' %}
         <script>
         $(document).ready(() => {
             function getItemProgressUrl(itemId, mainPileType='') {
@@ -560,6 +561,10 @@
                 }
                 if (mainPileType) {
                     queryParams.push(`main=${encodeURIComponent(mainPileType)}`);
+                }
+                const ignoreEventId = localStorage.getItem('ignore_event_id') || '';
+                if (ignoreEventId) {
+                    queryParams.push(`ignore_event=${encodeURIComponent(ignoreEventId)}`);
                 }
                 let url = `/item/progress/${itemId}`;
                 if (queryParams.length > 0) {
@@ -584,7 +589,12 @@
                         reject(error);
                     });
                 });
-                data = combined_data.main
+                data = combined_data;
+                if (data && 'status' in data && data.status === 'interrupt') {
+                    handleInterrupt(data);
+                    return;
+                }
+                data = combined_data.main;
                 clientElapsedTime = 0;
                 serverElapsedTime = data.elapsed_time || 0;
                 rateDuration = parseFloat($(`#rate-duration_${data.recipe_id}`).data('duration')) || 1;
@@ -662,6 +672,22 @@
                 });
             }
 
+            let button_to_restart = null;
+            function stopAny() {
+                $(".start-stop-btn").each(function() {
+                    if ($(this).html() === "Stop") {
+                        button_to_restart = $(this);
+                        $(this).click();
+                    }
+                });
+            }
+            function restartButton() {
+                if (button_to_restart) {
+                    button_to_restart.click();
+                    button_to_restart = null;
+                }
+            }
+
             function updateProgressVisibility() {
                 if (!in_progress) {
                     $('#action-progress-container').addClass('hidden');
@@ -674,6 +700,21 @@
                 }
             }
 
+            let intervalIds = [];
+            function startFetchingProgress() {
+                if (intervalIds.length !== 0) {
+                    stopFetchingProgress();
+                }
+                intervalIds = [
+                    setInterval(fetchProgressData, 1000), 
+                    setInterval(updateElapsedTime, 20)
+                ];
+            }
+            function stopFetchingProgress() {
+                intervalIds.forEach(clearInterval);
+                intervalIds = [];
+            }
+
             function showContent() {
                 $('#content').css('display', 'block');
             }
@@ -681,22 +722,9 @@
                 await fetchProgressData();
                 startFetchingProgress();
                 updateElapsedTime();
-                setInterval(updateElapsedTime, 20);
                 showContent();
             }
             initializePage();
-
-            let fetchProgressInterval;
-            function startFetchingProgress() {
-                if (fetchProgressInterval) {
-                    stopFetchingProgress();
-                }
-                fetchProgressInterval = setInterval(fetchProgressData, 1000);
-            }
-            function stopFetchingProgress() {
-                clearInterval(fetchProgressInterval);
-                fetchProgressInterval = null;
-            }
 
             $('.gain-btn').click((event) => {
                 const quantityInput = $(event.currentTarget).prev('.quantity_to_gain');
@@ -878,6 +906,23 @@
                         $(`#${id}`).hide();
                     }
                 });
+            }
+
+            async function handleInterrupt(data) {
+                console.log("handleInterrupt()");
+                stopFetchingProgress();
+                stopAny();
+                const confirmed = await showCustomConfirm(data.message);
+                if (confirmed) {
+                    const baseEventUrl = "{{ url_for('play_event', event_id=MAX_INT_32, from_id=current.id, from_typename=current.typename()) | safe }}"
+                    const url = baseEventUrl.replace('{{ MAX_INT_32 }}', data.event_id);
+                    console.log("Confirmed to go to ", url);
+                    window.location.href = url;
+                } else {
+                    localStorage.setItem('ignore_event_id', data.event_id);
+                    restartButton();
+                    startFetchingProgress();
+                }
             }
         });
         </script>

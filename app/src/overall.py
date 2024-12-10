@@ -301,7 +301,12 @@ class Overall(DbSerializable):
         ongoing_item_ids = [item_row.id for item_row in item_rows]
         for id_ in ongoing_item_ids:
             item = Item.data_for_play(id_)
-            item.progress.batches_for_elapsed_time()
+            progress = item.progress
+            if progress.recipe.id and progress.is_ongoing:
+                batches_done = progress.batches_for_elapsed_time()
+                req = RequestHelper('args')
+                Event.check_triggers(
+                    item.id, Item.typename(), item.name, batches_done, req)
         # All top-level Items and their Attribs
         tables_rows = cls.select_tables("""
             SELECT *

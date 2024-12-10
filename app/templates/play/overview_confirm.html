@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block upper_left %}
+    <div class="nav-container">
+        <a class="upper-left" href="{{ url_for("overview") }}">Overview</a>
+        <span class="separator">|</span>
+        <a class="upper-left" href="{{ url_for("configure_index") }}">Main Setup</a>
+    </div>
+{% endblock %}
+{% block content %}
+    <h1>Overall Settings</h1>
+    {% include 'play/custom_confirm.html' %}
+    <script>
+        async function callModal() {
+            const confirmed = await showCustomConfirm("{{ interrupt.message | safe }}");
+            if (confirmed) {
+                const url = "{{ url_for('play_event', event_id=interrupt.event_id) }}"
+                console.log("Confirmed to go to ", url);
+                window.location.href = url;
+            } else {
+                localStorage.setItem('ignore_event_id', {{ interrupt.event_id }});
+                console.log("To overview");
+                window.location.href = "{{ url_for('overview', ignore_event=interrupt.event_id) }}";
+            }
+        }
+        callModal();
+    </script>
+{% endblock %}

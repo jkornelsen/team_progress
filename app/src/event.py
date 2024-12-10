@@ -98,6 +98,15 @@ class Determinant(Serializable):
         instance.label = data.get('label', "")
         return instance
 
+class TriggerException(Exception):
+    def __init__(self, message, event_id):
+        super().__init__(message)
+        self.json_data = {
+            'status': 'interrupt',
+            'message': f"<h2>{message}!</h2>",
+            'event_id': event_id
+            }
+
 class Event(CompleteIdentifiable):
     def __init__(self, new_id=""):
         super().__init__(new_id)
@@ -304,6 +313,18 @@ class Event(CompleteIdentifiable):
         for row in rows:
             g.game_data.events.append(Event.from_data(row))
         return g.game_data.events
+
+    @classmethod
+    def check_triggers(
+            cls, id_to_get, typename, entity_name, batches_done, req):
+        events = cls.load_triggers_for_type(id_to_get, typename)
+        ignore_event_id = req.get_int('ignore_event', '')
+        for event in events:
+            if event.id != ignore_event_id:
+                if event.check_trigger(batches_done):
+                    message = f"{entity_name} triggered {event.name}"
+                    MessageLog.add(f"{message}.")
+                    raise TriggerException(message, event.id)
 
     def configure_by_form(self):
         req = RequestHelper('form')

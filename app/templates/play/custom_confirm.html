@@ -1,0 +1,62 @@
+    <style>
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; 
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto;
+        }
+        .modal-content {
+            background-color: #2a2a2a;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .modal-buttons {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-around;
+        }
+        .modal-buttons button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+    <div id="custom-confirm-modal" class="modal">
+        <div class="modal-content">
+            <p id="custom-confirm-message"></p>
+            <div class="modal-buttons">
+                <button type="button" id="custom-confirm-yes">Go to Event</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        function showCustomConfirm(message) {
+            return new Promise((resolve) => {
+                const modal = $('#custom-confirm-modal');
+                const messageElement = $('#custom-confirm-message');
+                const yesButton = $('#custom-confirm-yes');
+                messageElement.html(message);
+                modal.css('display', 'block');
+                isModalOpen = true;
+                function handleKeydown(event) {
+                    const key = event.key.toLowerCase();
+                    yesButton.click();
+                }
+                $(document).on('keydown', handleKeydown);
+                yesButton.on('click', () => {
+                    modal.css('display', 'none');
+                    $(document).off('keydown', handleKeydown);
+                    isModalOpen = false;
+                    resolve(true);  // confirm
+                });
+            });
+        }
+    </script>

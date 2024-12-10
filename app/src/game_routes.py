@@ -9,7 +9,7 @@ from .attrib import Attrib
 from .db_serializable import DeletionError
 from .character import Character, OwnedItem
 from .item import Item
-from .event import Event, OPERATIONS
+from .event import Event, TriggerException, OPERATIONS
 from .location import Grid, Location, ItemAt
 from .overall import Overall
 from .progress import Progress
@@ -406,7 +406,12 @@ def set_routes(app):
         session['referrer_link'] = {
             'url': request.url,
             'name': 'Overview'}
-        active = Overall.data_for_overview()
+        try:
+            active = Overall.data_for_overview()
+        except TriggerException as ex:
+            return render_template(
+                'play/overview_confirm.html',
+                interrupt=ex.json_data)
         if active.overall.have_won():
             MessageLog.add("✅ You won the scenario!")
         response = make_response(
@@ -445,24 +450,13 @@ def set_routes(app):
                 'current_loc_id': char.location.id
                 })
         elapsed_time = char.progress.calculate_elapsed_time()
-        batches_done, _ = (
-            char.progress.batches_for_elapsed_time(elapsed_time))
-        events = Event.load_triggers_for_type(
-            char.location.id, Location.typename())
-        ignore_event_id = req.get_int('ignore_event', '')
-        for event in events:
-            if event.id != ignore_event_id:
-                if event.check_trigger(batches_done):
-                    MessageLog.add(
-                        f"{char.name} triggered {event.name}.")
-                    return jsonify({
-                        'status': 'interrupt',
-                        'message': f"<h2>{char.name} triggered "
-                                   f"{event.name}!</h2> "
-                                   "Run the event now?",
-                        'event_id': event.id
-                        })
-        char.to_db()
+        batches_done = char.progress.batches_for_elapsed_time(elapsed_time)
+        try:
+            Event.check_triggers(
+                char.location.id, Location.typename(), char.name, batches_done,
+                req)
+        except TriggerException as ex:
+            return jsonify(ex.json_data)
         if batches_done:
             # arrived at the destination
             main_char = char
@@ -616,7 +610,12 @@ def set_routes(app):
             item.id, len(item.recipes), progress.recipe.id,
             pile.container_type(), pile.container.name)
         if progress.recipe.id and progress.is_ongoing:
-            progress.batches_for_elapsed_time()
+            batches_done = progress.batches_for_elapsed_time()
+            try:
+                Event.check_triggers(
+                    item.id, Item.typename(), item.name, batches_done, req)
+            except TriggerException as ex:
+                return jsonify(ex.json_data)
         return jsonify({
             'main': {
                 'is_ongoing': progress.is_ongoing,

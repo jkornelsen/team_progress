@@ -209,64 +209,9 @@
                 {% endfor %}
             </ul>
         {% endif %}
-        <div id="custom-confirm-modal" class="modal">
-            <div class="modal-content">
-                <p id="custom-confirm-message"></p>
-                <div class="modal-buttons">
-                    <button type="button" id="custom-confirm-yes">[Y]es</button>
-                    <button type="button" id="custom-confirm-no">Ig[n]ore</button>
-                </div>
-            </div>
-        </div>
+        {% include 'play/custom_confirm.html' %}
         <script>
         $(document).ready(() => {
-            function showCustomConfirm(message) {
-                return new Promise((resolve) => {
-                    const modal = $('#custom-confirm-modal');
-                    const messageElement = $('#custom-confirm-message');
-                    const yesButton = $('#custom-confirm-yes');
-                    const noButton = $('#custom-confirm-no');
-                    messageElement.html(message);
-                    modal.css('display', 'block');
-                    isModalOpen = true;
-                    function handleKeydown(event) {
-                        const key = event.key.toLowerCase();
-                        if (key === 'y') {
-                            yesButton.click();
-                        } else if (key === 'n') {
-                            noButton.click();
-                        }
-                    }
-                    $(document).on('keydown', handleKeydown);
-                    yesButton.on('click', () => {
-                        modal.css('display', 'none');
-                        $(document).off('keydown', handleKeydown);
-                        isModalOpen = false;
-                        resolve(true);  // confirm
-                    });
-                    noButton.on('click', () => {
-                        modal.css('display', 'none');
-                        $(document).off('keydown', handleKeydown);
-                        isModalOpen = false;
-                        resolve(false);  // cancel
-                    });
-                });
-            }
-
-            async function handleInterrupt(data) {
-                stopFetchingProgress();
-                stopTravel();
-                const confirmed = await showCustomConfirm(data.message);
-                if (confirmed) {
-                    const baseEventUrl = "{{ url_for('play_event', event_id=MAX_INT_32, char_id=current.id, from_id=current.id, from_typename=current.typename()) | safe }}"
-                    const url = baseEventUrl.replace('{{ MAX_INT_32 }}', data.event_id);
-                    console.log("Confirmed to go to ", url);
-                    window.location.href = url;
-                } else {
-                    localStorage.setItem('ignore_event_id', data.event_id);
-                    startTravel();
-                }
-            }
             function showhide_dest(setProgressLabel=true) {
                 const destSel = $('#destination-select');
                 if (!destSel.length) {
@@ -522,6 +467,21 @@
                         console.error('Error:', error);
                     }
                 });
+            }
+
+            async function handleInterrupt(data) {
+                stopFetchingProgress();
+                stopTravel();
+                const confirmed = await showCustomConfirm(data.message);
+                if (confirmed) {
+                    const baseEventUrl = "{{ url_for('play_event', event_id=MAX_INT_32, from_id=current.id, from_typename=current.typename()) | safe }}"
+                    const url = baseEventUrl.replace('{{ MAX_INT_32 }}', data.event_id);
+                    console.log("Confirmed to go to ", url);
+                    window.location.href = url;
+                } else {
+                    localStorage.setItem('ignore_event_id', data.event_id);
+                    startTravel();
+                }
             }
         });
         </script>

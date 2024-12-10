@@ -38,7 +38,7 @@ class Progress(DependentIdentifiable):
         self.batches_processed = 0
         self.is_ongoing = False
         self.lock = threading.Lock()
-        self.failure_reason = ""  # error message for caller to read
+        self.failure_reason = ""  # for caller to read
 
     @property
     def q_limit(self):
@@ -232,8 +232,8 @@ class Progress(DependentIdentifiable):
             self.batches_processed, fractional_batches)
         if batches_to_do and self.pile:
             if not self.change_quantity(batches_to_do):
-                return 0, 0
-        return batches_to_do, fractional_batches
+                return 0
+        return batches_to_do
 
     def set_recipe_by_id(self, recipe_id=0):
         if not self.pile:
