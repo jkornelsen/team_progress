@@ -199,13 +199,13 @@ class Character(CompleteIdentifiable):
             query += " AND location_id = %s"
             values.append(loc_id)
         query += "\nORDER BY name"
-        chars = []
-        characters_rows = cls.execute_select(query, values)
-        for char_row in characters_rows:
-            chars.append(Character.from_data(char_row))
+        instances = {}
+        rows = cls.execute_select(query, values)
+        for row in rows:
+            instances[row.id] = cls.from_data(row)
         if load:
-            g.game_data.set_list(Character, chars)
-        return chars
+            cls.get_coll().fallback.update(instances)
+        return instances.values()
 
     def get_destinations(self, dest_id=None):
         if not self.location:
@@ -289,12 +289,9 @@ class Character(CompleteIdentifiable):
         instances = {}
         for data in chars.values():
             instances[data.id] = cls.from_data(data)
-        if ids and any(ids):
-            if not instances:
-                logger.warn(f"Could not load characters {ids}.")
-            setattr(g.active, cls.listname(), instances)
-        else:
-            g.game_data.set_list(cls, instances.values())
+        if ids and any(ids) and not instances:
+            logger.warn(f"Could not load characters {ids}.")
+        cls.get_coll().primary.update(instances)
         return instances.values()
 
     @classmethod

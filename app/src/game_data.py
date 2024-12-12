@@ -22,14 +22,36 @@ ENTITIES = (
     Event
     )
 
-class ActiveData:
-    """Use instead of GameData when the need is to store a set of
-    objects loaded or partly loaded for the current task.
+#def priority_str(priority):
+#    return "primary" if priority else "fallback"
+
+class PriorityDict:
+    """A collection that consists of two dictionaries: primary and fallback.
+    Store more complete data in the primary dict.
     """
     def __init__(self):
-        g.active = self
-        for entity_cls in ENTITIES:
-            setattr(self, entity_cls.listname(), {})
+        self.primary = {}
+        self.fallback = {}
+
+    def __iter__(self):
+        for value in self.primary.values():
+            yield value
+        for key, value in self.fallback.items():
+            if key not in self.primary:
+                yield value
+
+    def __getitem__(self, key):
+        return self.primary.get(
+            key, self.fallback.get(key))
+
+    def __delitem__(self, key):
+        for data in [self.primary, self.fallback]:
+            if key in data:
+                del data[key]
+
+    def __len__(self):
+        # Not completely accurate but good enough for boolean testing.
+        return len(self.primary) + len(self.fallback)
 
 class GameData:
     """Store complete sets of data such as for file export,
@@ -38,10 +60,9 @@ class GameData:
     ENTITIES = ENTITIES  # easier to reference from outside this class
     def __init__(self):
         g.game_data = self
-        ActiveData()
         self.overall = Overall()
         for entity_cls in ENTITIES:
-            self.set_list(entity_cls, [])
+            self.clear_coll(entity_cls)
 
     def __getitem__(self, key):
         """Allow attributes to be read with square bracket notation,
@@ -49,17 +70,36 @@ class GameData:
         return getattr(self, key)
 
     @classmethod
-    def entity_for(cls, listname):
+    def entity_for(cls, collname):
         for entity_cls in ENTITIES:
-            if entity_cls.listname() == listname:
+            if entity_cls.collname() == collname:
                 return entity_cls
         return None
 
-    def get_list(self, entity_cls):
-        return getattr(self, entity_cls.listname())
+    def set_coll(self, entity_cls, newval):
+        setattr(self, entity_cls.collname(), newval)
 
-    def set_list(self, entity_cls, newval):
-        setattr(self, entity_cls.listname(), newval)
+    def clear_coll(entity_cls):
+        self.set_coll(entity_cls, PriorityDict())
+
+    def get_coll(self, entity_cls):
+        return getattr(self, entity_cls.collname())
+
+    def set_primary_dict(self, entity_cls, newval):
+        data = self.get_coll(entity_cls)
+        data.primary = newval
+
+    def set_fallback_dict(self, entity_cls, newval):
+        data = self.get_coll(entity_cls)
+        data.fallback = newval
+
+    def get_primary_dict(self, entity_cls):
+        coll = self.get_coll(entity_cls)
+        return coll.primary
+
+    def get_fallback_dict(self, entity_cls):
+        coll = self.get_coll(entity_cls)
+        return coll.fallback
 
     def dict_for_json(self):
         logger.debug("dict_for_json()")
@@ -67,8 +107,8 @@ class GameData:
         for entity_cls in ENTITIES:
             entity_data = [
                 entity_obj.dict_for_json()
-                for entity_obj in self.get_list(entity_cls)]
-            data[entity_cls.listname()] = entity_data
+                for entity_obj in self.get_coll(entity_cls)]
+            data[entity_cls.collname()] = entity_data
         return data
 
     def from_json(self, all_data):
@@ -76,11 +116,12 @@ class GameData:
         logger.debug("from_json()")
         self.overall = Overall.from_data(all_data['overall'])
         for entity_cls in ENTITIES:
-            self.set_list(entity_cls, [])
-            entities_data = all_data[entity_cls.listname()]
+            self.clear_coll(entity_cls)
+            entities_data = all_data[entity_cls.collname()]
             for entity_data in entities_data:
                 instance = entity_cls.from_data(entity_data)
-                self.get_list(entity_cls).append(instance)
+                coll = self.get_coll(entity_cls)
+                coll.primary[instance.id] = instance
 
     def load_for_file(self, entities=None):
         logger.debug("load_complete()")
@@ -88,8 +129,7 @@ class GameData:
         if entities is None:
             entities = ENTITIES
         for entity_cls in entities:
-            self.set_list(
-                entity_cls, entity_cls.load_complete_objects())
+            entity_cls.load_complete_objects())
 
     def from_db_flat(self, entities=None):
         """Don't include entity relation data, just the base tables."""
@@ -97,7 +137,8 @@ class GameData:
         if entities is None:
             entities = ENTITIES
         for entity_cls in entities:
-            self.set_list(entity_cls, [])
+            coll = self.get_coll(entity_cls)
+            coll.fallback = {}
             rows = entity_cls.execute_select("""
                 SELECT *
                 FROM {table}
@@ -105,8 +146,7 @@ class GameData:
                 ORDER BY name
                 """, (g.game_token,))
             for row in rows:
-                entity = entity_cls.from_data(row)
-                self.get_list(entity_cls).append(entity)
+                coll.fallback[row.id] = entity_cls.from_data(row)
 
     def entity_names_from_db(self, entities=None):
         logger.debug("entity_names_from_db()")
@@ -114,7 +154,8 @@ class GameData:
             entities = ENTITIES
         query_parts = []
         for entity_cls in entities:
-            self.set_list(entity_cls, [])
+            coll = self.get_coll(entity_cls)
+            coll.fallback = {}
             query_parts.append(f"""
                 SELECT id, name, '{entity_cls.tablename()}' AS tablename
                 FROM {entity_cls.tablename()}
@@ -124,15 +165,15 @@ class GameData:
             " UNION ".join(query_parts) + " ORDER BY name")
         for row in rows:
             entity_cls = self.entity_for(row.tablename)
-            entity = entity_cls.from_data(row)
-            self.get_list(entity_cls).append(entity)
+            coll = self.get_coll(entity_cls)
+            coll.fallback[row.id] = entity_cls.from_data(row)
 
     def to_db(self):
         logger.debug("to_db()")
         self.overall.to_db()
         for entity_cls in ENTITIES:
-            logger.debug("entity %s", entity_cls.listname())
-            for entity in self.get_list(entity_cls):
+            logger.debug("entity %s", entity_cls.collname())
+            for entity in self.get_coll(entity_cls):
                 entity.to_db()
 
     @staticmethod

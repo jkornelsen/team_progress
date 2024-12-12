@@ -79,12 +79,9 @@ class Attrib(CompleteIdentifiable):
         instances = {}
         for data in rows:
             instances[data.id] = cls.from_data(data)
-        if ids and any(ids):
-            if not instances:
-                logger.warn(f"Could not load attributes {ids}.")
-            setattr(g.active, cls.listname(), instances)
-        else:
-            g.game_data.set_list(cls, instances.values())
+        if ids and any(ids) and not instances:
+            logger.warn(f"Could not load attributes {ids}.")
+        cls.get_coll().primary.update(instances)
         return instances.values()
 
     def configure_by_form(self):

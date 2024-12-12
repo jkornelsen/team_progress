@@ -95,7 +95,7 @@
                                              font-weight: bold">...</span>
                             </div>
                         {% else %}
-                            <span id="quantity-{{ current.id }}">...</span>
+                            <span id="main-quantity">...</span>
                         {% endif %}
                     </h2>
                 </td>
@@ -216,6 +216,12 @@
                                 {% if not loop.first %}<tr style="border-top: 1px solid #888;"></tr>{% endif %}
                                 {% set attribs_list = recipe.attrib_reqs.values() | list %}
                                 {% set max_rows = max(recipe.byproducts|length + 1, recipe.sources|length + attribs_list|length) %}
+                                {% set recipescope = namespace(main_items_consumed=0) %}
+                                {% for source in recipe.sources %}
+                                    {% if source.item.id == current.id %}
+                                        {% set recipescope.main_items_consumed = source.q_required %}
+                                    {% endif %}
+                                {% endfor %}
                                 {% for row in range(0, max_rows) %}
                                     {% set byproduct_index = row - 1 %}{# subtract 1 for gain button row #}
                                     {% set attrib_index = row - recipe.sources|length %}
@@ -260,11 +266,13 @@
                                             </td>
                                             <td>
                                                 <span class="rate-amount" id="rate-amount_{{ recipe.id }}">
-                                                    {% if recipe.rate_amount %}
-                                                        {{ recipe.rate_amount | formatNum }}
-                                                    {% else %}
+                                                    {% if recipescope.main_items_consumed > 0
+                                                            and recipe.rate_amount >= 0
+                                                            and recipe.rate_amount <= recipescope.main_items_consumed %}
                                                         <span style="font-size: 2em"
                                                               title="(trash can icon) does not produce the current item">🗑</span>
+                                                    {% else %}
+                                                        {{ recipe.rate_amount | formatNum }}
                                                     {% endif %}
                                                 </span>
                                                 {% if not recipe.instant %}
@@ -609,16 +617,18 @@
                 const sources = combined_data.sources
                 const quantityText = main.quantity_str;
                 const qLimit = {{ current.q_limit }};
-                $('#quantity-{{ current.id }}').text(
-                    qLimit !== 0 ? `${quantityText} / ${qLimit}` : quantityText
-                );
-                updateStorageProgress(main.quantity, qLimit);
+                const qLimitText = "{{ current.q_limit | formatNum }}";
+                {% if current.q_limit %}
+                    updateStorageProgress(main.quantity, quantityText, qLimit, qLimitText);
+                {% else %}
+                    $('#main-quantity').text(quantityText);
+                {% endif %}
                 sources.forEach((source) => {
                     $(`#recipe-${main.recipe_id}-source-${source.id}-quantity`).text(source.quantity);
                 });
             }
 
-            function updateStorageProgress(quantity, maxQuantity) {
+            function updateStorageProgress(quantity, qtyText, maxQuantity, maxQtyText) {
                 if (maxQuantity === 0) {
                     // There shouldn't be any bar
                     return;
@@ -628,7 +638,7 @@
                 const progressPercent = (quantity / maxQuantity) * 100;
                 progressBar.attr('max', 100);
                 progressBar.attr('value', progressPercent);
-                progressLabel.text(`${quantity} / ${maxQuantity}`);
+                progressLabel.text(`${qtyText} / ${maxQtyText}`);
             }
 
             function effectiveElapsedTime() {

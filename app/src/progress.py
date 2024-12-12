@@ -177,7 +177,8 @@ class Progress(DependentIdentifiable):
                             source.pile.item.id)
                         source.pile.quantity -= eff_source_qty
                         logger.debug(
-                            "change_quantity(): source.pile.container[%s].to_db()",
+                            "change_quantity(): "
+                            "source.pile.container[%s].to_db()",
                             source.pile.container.name)
                         source.pile.container.to_db()
                 # Add quantity produced
@@ -203,6 +204,9 @@ class Progress(DependentIdentifiable):
                         byproduct.pile.quantity, eff_byproduct_qty,
                         byproduct.pile.item.id)
                     byproduct.pile.quantity += eff_byproduct_qty
+                    b_item = byproduct.item
+                    if b_item.exceeds_limit(byproduct.pile.quantity):
+                        byproduct.pile.quantity = b_item.q_limit
                     logger.debug(
                         "change_quantity(): byproduct.pile.container[%s].to_db()",
                         byproduct.pile.container.name)

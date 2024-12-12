@@ -417,12 +417,9 @@ class Location(CompleteIdentifiable):
         instances = {}
         for data in locs.values():
             instances[data.id] = cls.from_data(data)
-        if ids and any(ids):
-            if not instances:
-                logger.warn(f"Could not load locations {ids}.")
-            setattr(g.active, cls.listname(), instances)
-        else:
-            g.game_data.set_list(cls, instances.values())
+        if ids and any(ids) and not instances:
+            logger.warn(f"Could not load locations {ids}.")
+        cls.get_coll().primary.update(instances)
         return instances.values()
 
     @classmethod

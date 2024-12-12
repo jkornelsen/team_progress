@@ -407,18 +407,17 @@ def set_routes(app):
             'url': request.url,
             'name': 'Overview'}
         try:
-            active = Overall.data_for_overview()
+            overview_data = Overall.data_for_overview()
         except TriggerException as ex:
             return render_template(
                 'play/overview_confirm.html',
                 interrupt=ex.json_data)
-        if active.overall.have_won():
+        if overview_data.overall.have_won():
             MessageLog.add("✅ You won the scenario!")
         response = make_response(
             render_template(
                 'play/overview.html',
-                current=active.overall,
-                active=active,
+                current_data=overview_data,
                 log_messages=MessageLog.get_recent(),
                 link_letters=LinkLetters('m')
                 ))

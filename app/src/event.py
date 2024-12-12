@@ -267,12 +267,9 @@ class Event(CompleteIdentifiable):
         instances = {}
         for data in events.values():
             instances[data.id] = cls.from_data(data)
-        if ids and any(ids):
-            if not instances:
-                logger.warn(f"Could not load events {ids}.")
-            setattr(g.active, cls.listname(), instances)
-        else:
-            g.game_data.set_list(cls, instances.values())
+        if ids and any(ids) and not instances:
+            logger.warn(f"Could not load events {ids}.")
+        cls.get_coll().primary.update(instances)
         return instances.values()
 
     @classmethod
@@ -309,10 +306,10 @@ class Event(CompleteIdentifiable):
         qhelper.add_limit(f"{{tables[1]}}.{typename}_id", id_to_get)
         rows = cls.execute_select(
             qhelper=qhelper, tables=['events', 'event_triggers'])
-        g.game_data.events = []
+        coll = cls.get_coll()
         for row in rows:
-            g.game_data.events.append(Event.from_data(row))
-        return g.game_data.events
+            coll.primary[row.id] = cls.from_data(row)
+        return coll
 
     @classmethod
     def check_triggers(

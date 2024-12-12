@@ -5,7 +5,7 @@ from flask import g
 
 from .attrib import Attrib, AttribFor
 from .character import Character
-from .cache import cache
+from .cache import cache, set_memoized_value
 from .db_serializable import (
     DbSerializable, DependentIdentifiable, QueryHelper, coldef)
 from .event import Event
@@ -114,11 +114,20 @@ class Overall(DbSerializable):
         return True
 
     def load_cached(self):
+        if not self.number_format:
+            logger.debug("Invalidating cache because number_format is empty.")
+            self.invalidate_cached()
         self.number_format = self._cached_number_format()
+        logger.debug(f"Loaded number_format: {self.number_format}")
 
     @classmethod
     def invalidate_cached(cls):
         cache.delete_memoized(cls._cached_number_format)
+
+    @classmethod
+    def set_cached(cls, value):
+        logger.debug(f"Set number_format: {value}")
+        set_memoized_value(cls._cached_number_format, value, cls)
 
     @classmethod
     @cache.memoize(timeout=600)
@@ -188,6 +197,7 @@ class Overall(DbSerializable):
         for overall_data, winreq_data in tables_rows:
             if not instance:
                 instance = cls.from_data(vars(overall_data))
+                cls.set_cached(instance.number_format)
             if winreq_data.item_id or winreq_data.char_id:
                 instance.win_reqs.append(
                     WinRequirement.from_data(winreq_data))
@@ -256,7 +266,14 @@ class Overall(DbSerializable):
     @classmethod
     def data_for_overview(cls):
         logger.debug("data_for_overview()")
-        g.active.overall = cls.load_complete_object()
+        class OverviewData():
+            overall = None
+            characters = None
+            locations = None
+            items = None
+            events = None
+        overview_data = OverviewData()
+        overview_data.overall = cls.load_complete_object()
         # Characters
         tables_rows = cls.select_tables("""
             SELECT *
@@ -270,14 +287,14 @@ class Overall(DbSerializable):
             """, (g.game_token,), ['characters', 'locations'])
         CharacterRow = namedtuple(
             'CharacterRow', ['char_id', 'char_name', 'loc_id', 'loc_name'])
-        g.active.characters = []
+        overview_data.characters = []
         for char_data, loc_data in tables_rows:
             row = CharacterRow(
                 char_id=char_data.id,
                 char_name=char_data.name,
                 loc_id=loc_data.id,
                 loc_name=loc_data.name)
-            g.active.characters.append(row)
+            overview_data.characters.append(row)
         # Locations
         loc_rows = cls.execute_select("""
             SELECT id, name
@@ -286,7 +303,7 @@ class Overall(DbSerializable):
                 AND toplevel
             ORDER BY name
             """, (g.game_token,))
-        g.active.locations = loc_rows
+        overview_data.locations = loc_rows
         # Update Progress for General Items
         item_rows = cls.execute_select("""
             SELECT {tables[0]}.id
@@ -335,7 +352,7 @@ class Overall(DbSerializable):
         for item in items_data.values():
             if hasattr(item, 'attribs'):
                 item.attribs.sort(key=lambda x: x.attrib.name)
-        g.active.items = list(items_data.values())
+        overview_data.items = list(items_data.values())
         # Events
         event_rows = cls.execute_select("""
             SELECT id, name
@@ -344,10 +361,10 @@ class Overall(DbSerializable):
                 AND toplevel
             ORDER BY name
             """, (g.game_token,))
-        g.active.events = event_rows
+        overview_data.events = event_rows
         # Win requirement results
         req_by_id = {}
-        for win_req in g.active.overall.win_reqs:
+        for win_req in overview_data.overall.win_reqs:
             win_req.id_to_refs_from_game_data()
             req_by_id[win_req.id] = win_req
         NUM_QUERIES = 5
@@ -403,7 +420,7 @@ class Overall(DbSerializable):
         for row in rows:
             win_req = req_by_id.get(row.id)
             win_req.fulfilled = True
-        return g.active
+        return overview_data
 
     @classmethod
     def data_for_lookup(cls, **params):
@@ -489,7 +506,7 @@ class Overall(DbSerializable):
             if entity_cls is Overall:
                 entities = [g.game_data.overall]
             else:
-                entities = g.game_data.get_list(entity_cls)
+                entities = g.game_data.get_coll(entity_cls)
             for entity in entities:
                 for area in ('configure', 'play'):
                     if f"/{area}/{basename}/{current.id}\"" in entity.description:

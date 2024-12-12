@@ -166,13 +166,14 @@ class Item(CompleteIdentifiable):
             if cls.empty_values(ids):
                 return [cls()]
             # Check if all IDs are already loaded
-            loaded_items = [
-                g.active.items[id_]
+            loaded_items = cls.get_coll().primary
+            selected_items = [
+                loaded_items[id_]
                 for id_ in ids
-                if id_ in g.active.items]
-            if len(loaded_items) == len(ids):
+                if id_ in loaded_items]
+            if len(selected_items) == len(ids):
                 logger.debug("already loaded")
-                return loaded_items
+                return selected_items
         items = Progress.load_base_data_dict(cls, ids)
         # Get attrib relation data
         qhelper = QueryHelper("""
@@ -196,12 +197,9 @@ class Item(CompleteIdentifiable):
         instances = {}
         for data in items.values():
             instances[data.id] = cls.from_data(data)
-        if ids and any(ids):
-            if not instances:
-                logger.warn(f"Could not load items {ids}.")
-            setattr(g.active, cls.listname(), instances)
-        else:
-            g.game_data.set_list(cls, instances.values())
+        if ids and any(ids) and not instances:
+            logger.warn(f"Could not load items {ids}.")
+        cls.get_coll().primary.update(instances)
         return instances.values()
 
     @classmethod
@@ -233,6 +231,7 @@ class Item(CompleteIdentifiable):
         logger.debug(
             "data_for_play(%s, %s, %s, (%s), %s)",
             id_to_get, owner_char_id, at_loc_id, pos, main_pile_type)
+        cls.load_complete_objects()
         current_obj = cls.data_for_configure(id_to_get)
         for recipe in current_obj.recipes:
             for related_list in (recipe.sources, recipe.byproducts):
@@ -247,7 +246,6 @@ class Item(CompleteIdentifiable):
         from .character import Character
         g.game_data.entity_names_from_db([Location])
         Character.load_complete_objects()
-        Item.load_complete_objects()
         # Get item data for the specific container,
         # and get piles at this loc or char that can be used for sources
         load_piles(current_obj, owner_char_id, at_loc_id, pos, main_pile_type)

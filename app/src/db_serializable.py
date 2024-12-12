@@ -280,16 +280,7 @@ class Identifiable(DbSerializable):
 
     @classmethod
     def get_by_id(cls, id_to_get):
-        """Get from g.game_data list.
-        To use g.active instead, do a basic dict lookup.
-        """
-        if not id_to_get:
-            return None
-        id_to_get = int(id_to_get)
-        entity_list = g.game_data.get_list(cls)
-        return next(
-            (instance for instance in entity_list
-            if instance.id == id_to_get), None)
+        return cls.get_coll().get(id_to_get)
 
     @classmethod
     def from_db_flat(cls, id_to_get):
@@ -304,8 +295,8 @@ class Identifiable(DbSerializable):
         return cls.from_data(row)
 
     @classmethod
-    def listname(cls):
-        """Attributes of GameData and ActiveData for each entity.
+    def collname(cls):
+        """Attribute of GameData for the collection of an entity.
         Same as table name.
         """
         return cls.tablename()
@@ -326,10 +317,8 @@ class Identifiable(DbSerializable):
         return cls.tablename().capitalize()
 
     @classmethod
-    def get_list(cls):
-        if 'game_data' in g:
-            return g.game_data.get_list(cls)
-        return []
+    def get_coll(cls):
+        return g.game_data.get_coll(cls)
 
     #pylint: disable=attribute-defined-outside-init
     @classmethod
@@ -383,9 +372,9 @@ class Identifiable(DbSerializable):
             DELETE FROM {table}
             WHERE game_token = %s AND id = %s
             """, (g.game_token, self.id))
-        entity_list = self.get_list()
-        if self in entity_list:
-            entity_list.remove(self)
+        coll = self.get_coll()
+        if coll.get(self.id):
+            del coll[self]
 
 class CompleteIdentifiable(Identifiable):
     """Classes such as Item that can write to DB alone.

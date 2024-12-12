@@ -296,6 +296,8 @@
                     </select>
                 `;
             }
+
+            // see addAttrib() for attribs of this item
             function addRecipeAttrib(recipeId, attribId, attribName, isBinary, enumVals, valMin = '1', valMax = '', showMax = true) {
                 console.log(`addRecipeAttrib() ${attribId}`);
                 const recipeContainer = $('.recipe-container').last();
@@ -537,6 +539,7 @@
                 addRecipe();
             });
 
+            // attrib of the item (not recipe requirement -- see addRecipeAttrib() for that)
             function addAttrib(attribId, attribName, isBinary, enumVals, attribVal = 1) {
                 const uniqueId = `attrib${attribId}`;
                 const attribHtml = `

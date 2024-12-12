@@ -104,8 +104,8 @@
         </div>
         <br>
         <br>
-        <label for="number_format">Number Format:</label>
-        <select id="number_format" name="number_format">
+        <label for="number-format">Number Format:</label>
+        <select id="number-format" name="number_format">
             <option value="sci">Scientific 1.23e6</option>
             <option value="abbr">Abbreviated 1.23m</option>
             <option value="en_US">International 1,230,000</option>
@@ -126,7 +126,7 @@
             // default for select box
             const defaultNumberFormat = '{{ current.number_format }}';
             if (defaultNumberFormat) {
-                $('#number_format').val(defaultNumberFormat);
+                $('#number-format').val(defaultNumberFormat);
             }
 
             $('#add-char-req-button').on('click', () => {
