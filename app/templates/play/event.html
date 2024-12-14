@@ -484,35 +484,39 @@
                     const targetField = targetFields[i];
                     const currentSetting = parseFloat(targetField.val()) || 0;
                     if (selectedIndex !== 0) {
+                        const baseOp = operation[0];
+                        const operand = operation.endsWith('log') ? scaledLog(containerVal) : containerVal;
                         let newValue;
-                        switch (operation) {
+                        switch (baseOp) {
                             case '+':
-                                newValue = currentSetting + containerVal;
+                                newValue = currentSetting + operand;
                                 break;
                             case '-':
-                                newValue = currentSetting - containerVal;
+                                newValue = currentSetting - operand;
                                 break;
                             case '*':
-                                newValue = currentSetting * containerVal;
+                                newValue = currentSetting * operand;
                                 break;
                             case '/':
-                                newValue = currentSetting / containerVal;
-                                break;
-                            case '^':
-                                newValue = Math.pow(currentSetting, containerVal);
-                                break;
-                            case 'log':
-                                newValue = Math.log10(currentSetting);
+                                newValue = currentSetting / operand;
                                 break;
                             default:
                                 console.error("Unsupported operation:", operation);
-                                return; // next iteration
+                                continue;
                         }
                         newValue = Math.round(newValue);
                         targetField.val(newValue);
                     }
                 }
             });
+
+            // Make large numbers have a reduced impact on the dice.
+            function scaledLog(value, scaleFactor = 5, base = 10) {
+                if (value === 0) return 0;
+                const sign = Math.sign(value);
+                const magnitude = Math.abs(value);
+                return sign * scaleFactor * (Math.log(magnitude + 1) / Math.log(base));
+            }
 
             function fill_container(selectBox) {
                 const keyId = $(selectBox).data('id');

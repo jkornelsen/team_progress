@@ -45,12 +45,14 @@ RELATION_TYPES = ['determining', 'changed', 'triggers']
 ENTITY_TYPES = [Attrib, Item, Location]
 ENTITY_TYPENAMES = [entity.typename() for entity in ENTITY_TYPES]
 OPERATIONS = {
-    '+': 'Add',
-    '-': 'Subtract',
-    '*': 'Multiply',
-    '/': 'Divide',
-    '^': 'Exponent',
-    'log': 'Log (base 10)'
+    '+':    'Add',
+    '+log': 'Add (Scaled)',
+    '-':    'Subtract',
+    '-log': 'Subtract (Scaled)',
+    '*':    'Multiply',
+    '*log': 'Multiply (Scaled)',
+    '/':    'Divide',
+    '/log': 'Divide (Scaled)',
     }
 
 def get_entity_tuple(row):
@@ -113,7 +115,7 @@ class Event(CompleteIdentifiable):
         self.name = ""
         self.description = ""
         self.toplevel = False
-        self.outcome_type = OUTCOME_NUMERIC
+        self.outcome_type = OUTCOME_FOURWAY
         self.numeric_range = NumTup((1, 20))  # (min, max)
         self.selection_strings = ""  # newline-separated possible outcomes
         self.determining_entities = []  # Determinant objects
@@ -162,7 +164,7 @@ class Event(CompleteIdentifiable):
         data = cls.prepare_dict(data)
         instance = super().from_data(data)
         instance.toplevel = data.get('toplevel', True)
-        instance.outcome_type = data.get('outcome_type', OUTCOME_NUMERIC)
+        instance.outcome_type = data.get('outcome_type', OUTCOME_FOURWAY)
         instance.numeric_range = NumTup(data.get('numeric_range') or (0, 10))
         instance.selection_strings = data.get('selection_strings', "")
         instance.determining_entities = [

@@ -11,20 +11,31 @@
             "numeric_range": [0, 10],
             "outcome_type": "selection",
             "selection_strings": "Radioactive Waste Leak\r\nWaste Bacteria Inert\r\nCooling System Leak\r\nMechanical Failure\r\nElectricity Down\r\nUnusable Amenities\r\nEnergy Not Gained\r\nExcess Energy\r\nCore Meltdown",
-            "toplevel": true,
+            "toplevel": false,
             "trigger_chance": 0.0,
             "triggers": []
         },
         {
             "changed": [],
-            "description": "Minor problems, such as waste leaks, up to the worst case, core meltdown.\r\n\r\nWaste buildup increases the chance of something going wrong, so take that into account when troubleshooting. Or, run <a href=\"/play/event/2\">Fission Problem Type</a> afterwards to help determine which problem occurred.",
-            "determining": [],
+            "description": "Minor problems, such as waste leaks, up to the worst case, core meltdown. Waste buildup increases the chance of something going wrong.\r\n\r\nTo determine which problem occurred, especially for critical failures, run <a href=\"/play/event/2\">Fission Problem Type</a>.",
+            "determining": [
+                {
+                    "entity_data": ["item", 18],
+                    "label": "",
+                    "operation": "-log"
+                },
+                {
+                    "entity_data": ["item", 17],
+                    "label": "",
+                    "operation": "-log"
+                }
+            ],
             "id": 1,
             "name": "Fission Problem",
-            "numeric_range": [1, 20],
+            "numeric_range": [1, 1000],
             "outcome_type": "fourway",
             "selection_strings": "",
-            "toplevel": true,
+            "toplevel": false,
             "trigger_chance": 0.05,
             "triggers": [
                 ["item", 20]
@@ -39,7 +50,7 @@
             "masked": false,
             "name": "Production Speed II",
             "progress": {},
-            "q_limit": 1.0,
+            "q_limit": 5.0,
             "quantity": 0.0,
             "recipes": [
                 {
@@ -74,7 +85,7 @@
             "masked": false,
             "name": "Production Speed I",
             "progress": {},
-            "q_limit": 1.0,
+            "q_limit": 10.0,
             "quantity": 0.0,
             "recipes": [
                 {
@@ -99,7 +110,7 @@
         },
         {
             "attribs": [],
-            "description": "Valuable nuclear material used in a reactor to generate high energy levels.",
+            "description": "Valuable nuclear material used in a reactor to generate high energy levels.\r\n\r\nMeasured in units of 100 \u03bcg (0.0001 g). This amount causes 1e17 fission reactions, generating 1 kWh of energy.",
             "id": 15,
             "masked": false,
             "name": "Plutonium",
@@ -185,7 +196,7 @@
         },
         {
             "attribs": [],
-            "description": "Generated heat could turn nearby rivers into hot springs, an unwelcome turn of events for fish.\r\n",
+            "description": "Generated heat could turn nearby rivers into hot springs, upsetting \ud83d\udc1f fish.",
             "id": 18,
             "masked": true,
             "name": "Thermal Waste",
@@ -220,12 +231,12 @@
         },
         {
             "attribs": [],
-            "description": "Stored in high-capacity battery.",
+            "description": "Stored in a high-capacity battery. Quantity is measured in kilowatt-hours (kWh).\r\n\r\nA fully charged battery is enough to provide backup power for a city while the main supply is repaired. (Note: Present-day batteries cannot hold such amounts.)",
             "id": 20,
             "masked": false,
             "name": "Energy",
             "progress": {},
-            "q_limit": 0.0,
+            "q_limit": 10000000.0,
             "quantity": 0.0,
             "recipes": [
                 {
@@ -253,6 +264,11 @@
                         {
                             "item_id": 15,
                             "preserve": false,
+                            "q_required": 1.0
+                        },
+                        {
+                            "item_id": 21,
+                            "preserve": true,
                             "q_required": 1.0
                         }
                     ]

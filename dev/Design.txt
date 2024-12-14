@@ -1,5 +1,12 @@
 ---- recent ----
 
+cooling tower in stock is 0 even though where is shown
+starts out as 1 though, like when scenario is first loaded
+changes to 0 when start is pressed
+    and then never goes back to 1
+    maybe because in_progress?
+    well, it's not showing up as in_progress in json
+
 thermal waste isn't getting consumed
 the problem is that piles are different
 it only works when:
@@ -18,6 +25,9 @@ load_complete_objects() gets called 4 times:
         Item.load_complete_objects()
 
 ---- changes to consider ----
+
+yellow bar progress isn't working on green bar boost 1
+maybe because of all the sources needed
 
 win condition quantity min and max, like attribs for recipes
 

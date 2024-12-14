@@ -608,13 +608,21 @@ def set_routes(app):
             "Pile container: %s %s",
             item.id, len(item.recipes), progress.recipe.id,
             pile.container_type(), pile.container.name)
-        if progress.recipe.id and progress.is_ongoing:
-            batches_done = progress.batches_for_elapsed_time()
-            try:
-                Event.check_triggers(
-                    item.id, Item.typename(), item.name, batches_done, req)
-            except TriggerException as ex:
-                return jsonify(ex.json_data)
+        all_items = [item]
+        for recipe in item.recipes:
+            for source in recipe.sources:
+                source.item.load_for_progress()
+                all_items.append(source.item)
+        for item_ in all_items:
+            progress_ = item_.progress
+            if progress_.recipe.id and progress_.is_ongoing:
+                batches_done = progress_.batches_for_elapsed_time()
+                try:
+                    Event.check_triggers(
+                        item_.id, Item.typename(), item_.name, batches_done,
+                        req)
+                except TriggerException as ex:
+                    return jsonify(ex.json_data)
         return jsonify({
             'main': {
                 'is_ongoing': progress.is_ongoing,

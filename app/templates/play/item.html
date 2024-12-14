@@ -269,7 +269,7 @@
                                                     {% if recipescope.main_items_consumed > 0
                                                             and recipe.rate_amount >= 0
                                                             and recipe.rate_amount <= recipescope.main_items_consumed %}
-                                                        <span style="font-size: 2em"
+                                                        <span style="vertical-align: middle; font-size: 2em"
                                                               title="(trash can icon) does not produce the current item">🗑</span>
                                                     {% else %}
                                                         {{ recipe.rate_amount | formatNum }}

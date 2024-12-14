@@ -22,9 +22,6 @@ ENTITIES = (
     Event
     )
 
-#def priority_str(priority):
-#    return "primary" if priority else "fallback"
-
 class PriorityDict:
     """A collection that consists of two dictionaries: primary and fallback.
     Store more complete data in the primary dict.
@@ -41,8 +38,15 @@ class PriorityDict:
                 yield value
 
     def __getitem__(self, key):
-        return self.primary.get(
-            key, self.fallback.get(key))
+        if key in self.primary:
+            return self.primary[key]
+        elif key in self.fallback:
+            return self.fallback[key]
+        else:
+            raise KeyError(key)
+
+    def get(self, key, default=None):
+        return self.primary.get(key, self.fallback.get(key, default))
 
     def __delitem__(self, key):
         for data in [self.primary, self.fallback]:
@@ -79,7 +83,7 @@ class GameData:
     def set_coll(self, entity_cls, newval):
         setattr(self, entity_cls.collname(), newval)
 
-    def clear_coll(entity_cls):
+    def clear_coll(self, entity_cls):
         self.set_coll(entity_cls, PriorityDict())
 
     def get_coll(self, entity_cls):
@@ -129,7 +133,7 @@ class GameData:
         if entities is None:
             entities = ENTITIES
         for entity_cls in entities:
-            entity_cls.load_complete_objects())
+            entity_cls.load_complete_objects()
 
     def from_db_flat(self, entities=None):
         """Don't include entity relation data, just the base tables."""

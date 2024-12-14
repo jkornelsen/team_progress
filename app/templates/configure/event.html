@@ -48,16 +48,16 @@
             <label>
                 <input type="radio"
                        name="outcome_type"
-                       value="numeric"
-                       {% if current.outcome_type == 'numeric' %}checked{% endif %}>
-                Number
+                       value="fourway"
+                       {% if current.outcome_type == 'fourway' %}checked{% endif %}>
+                Four-Way
             </label>
             <label>
                 <input type="radio"
                        name="outcome_type"
-                       value="fourway"
-                       {% if current.outcome_type == 'fourway' %}checked{% endif %}>
-                Four-Way
+                       value="numeric"
+                       {% if current.outcome_type == 'numeric' %}checked{% endif %}>
+                Number
             </label>
             <label>
                 <input type="radio"
@@ -101,6 +101,7 @@
             Stats, such as strength, or item quantity
             can determine the parameters of the roll
             by adjusting the die's minimum and maximum values.
+            Scaled (logarithmic) makes it so larger values have a reduced impact.
             </p>
             <!-- Placeholder for appending new entities -->
             <table id="determinant-table" style="display: none;">

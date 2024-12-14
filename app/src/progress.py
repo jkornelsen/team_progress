@@ -121,7 +121,7 @@ class Progress(DependentIdentifiable):
     # returns true if able to change quantity
     def change_quantity(self, batches_requested):
         with self.lock:
-            logger.debug("change_quantity() for progress %d: batches_requested=%d",
+            logger.debug("progress[%d].change_quantity(%d)",
                 self.id, batches_requested)
             stop_when_done = False
             if batches_requested == 0:
@@ -137,7 +137,7 @@ class Progress(DependentIdentifiable):
                     // self.recipe.rate_amount)
                 stop_when_done = True  # can't process the full amount
                 logger.debug(
-                    "change_quantity(): num_batches=%d due to limit %d",
+                    "num_batches=%d due to limit %d",
                     num_batches, self.q_limit)
                 if num_batches == 0:
                     self.report_failure(f"Limit {self.q_limit} reached.")
@@ -145,7 +145,7 @@ class Progress(DependentIdentifiable):
                 eff_source_qty = num_batches * source.q_required
                 if eff_source_qty > 0:
                     logger.debug(
-                        "change_quantity(): source %d, source.q_required=%d, "
+                        "source %d, source.q_required=%d, "
                         "eff_source_qty=%.1f, source.pile.quantity=%.1f",
                         source.item.id, source.q_required, eff_source_qty,
                         source.pile.quantity)
@@ -165,26 +165,25 @@ class Progress(DependentIdentifiable):
                         self.report_failure(
                             f"Requires {format_num(f'{source.q_required}')} "
                             f"{source.item.name}.")
-            logger.debug("change_quantity(): num_batches=%d", num_batches)
+            logger.debug("num_batches=%d", num_batches)
             if num_batches > 0:
                 # Deduct source quantity used
                 for source in self.recipe.sources:
                     if not source.preserve:
                         eff_source_qty = num_batches * source.q_required
                         logger.debug(
-                            "change_quantity(): %s -= %s for id %s",
+                            "%s -= %s for id %s",
                             source.pile.quantity, eff_source_qty,
                             source.pile.item.id)
                         source.pile.quantity -= eff_source_qty
                         logger.debug(
-                            "change_quantity(): "
                             "source.pile.container[%s].to_db()",
                             source.pile.container.name)
                         source.pile.container.to_db()
                 # Add quantity produced
                 eff_result_qty = num_batches * self.recipe.rate_amount
                 logger.debug(
-                    "change_quantity(): %s += %s for id %s",
+                    "%s += %s for id %s",
                     self.pile.quantity, eff_result_qty, self.pile.item.id)
                 self.pile.quantity += eff_result_qty
                 self.batches_processed += num_batches
@@ -200,7 +199,7 @@ class Progress(DependentIdentifiable):
                 for byproduct in self.recipe.byproducts:
                     eff_byproduct_qty = num_batches * byproduct.rate_amount
                     logger.debug(
-                        "change_quantity(): %s += %s for id %s",
+                        "%s += %s for id %s",
                         byproduct.pile.quantity, eff_byproduct_qty,
                         byproduct.pile.item.id)
                     byproduct.pile.quantity += eff_byproduct_qty
@@ -208,7 +207,7 @@ class Progress(DependentIdentifiable):
                     if b_item.exceeds_limit(byproduct.pile.quantity):
                         byproduct.pile.quantity = b_item.q_limit
                     logger.debug(
-                        "change_quantity(): byproduct.pile.container[%s].to_db()",
+                        "byproduct.pile.container[%s].to_db()",
                         byproduct.pile.container.name)
                     byproduct.pile.container.to_db()
             if not self.can_produce():

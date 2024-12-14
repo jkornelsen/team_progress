@@ -316,8 +316,11 @@ class Overall(DbSerializable):
                 AND {tables[0]}.toplevel
             """, [g.game_token,], ['items', 'progress'])
         ongoing_item_ids = [item_row.id for item_row in item_rows]
+        if ongoing_item_ids:
+            Item.load_collections()
         for id_ in ongoing_item_ids:
-            item = Item.data_for_play(id_)
+            item = Item.load_complete_object(id_)
+            item.load_for_progress()
             progress = item.progress
             if progress.recipe.id and progress.is_ongoing:
                 batches_done = progress.batches_for_elapsed_time()

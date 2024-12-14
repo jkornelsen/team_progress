@@ -361,7 +361,8 @@ class Recipe(DependentIdentifiable):
         logger.debug("load_data_by_source(%s)", id_to_get)
         if cls.empty_values([id_to_get]):
             return {}
-        source_rows, byproduct_rows = cls.item_relation_data(id_to_get, True)
+        source_rows, byproduct_rows = cls.item_relation_data(
+            id_to_get, by_source=True)
         item_recipes = {}  # recipe data keyed by item ID
         for recipe_row, source_row in source_rows:
             recipes_data = item_recipes.setdefault(recipe_row.item_id, {})

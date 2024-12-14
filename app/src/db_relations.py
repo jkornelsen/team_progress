@@ -113,8 +113,9 @@ tables_to_create = {
         event_id integer not null,
         attrib_id integer,
         item_id integer,
-        operation varchar(3) not null
-            CHECK (operation IN ('+', '-', '*', '/', '^', 'log')),
+        operation varchar(4) not null
+            CHECK (operation IN (
+            '+', '+log', '-', '-log', '*', '*log', '/', '/log')),
         label varchar(50),  -- for example "Evasion" from Dexterity
         FOREIGN KEY (game_token, event_id)
             REFERENCES events (game_token, id)

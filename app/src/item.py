@@ -202,22 +202,50 @@ class Item(CompleteIdentifiable):
         cls.get_coll().primary.update(instances)
         return instances.values()
 
+    def _resolve_partial_sources(self, complete=True):
+        for recipe in self.recipes:
+            for related_list in (recipe.sources, recipe.byproducts):
+                for related in related_list:
+                    if complete:
+                        related.item = self.load_complete_object(
+                            related.item_id)
+                    else:
+                        related.item = Item.get_by_id(related.item_id)
+
+    def _resolve_partial_attribs(self):
+        for attrib_id, attrib_for in self.attribs.items():
+            attrib_for.attrib = Attrib.get_by_id(attrib_id)
+        for recipe in self.recipes:
+            for attrib_id, req in recipe.attrib_reqs.items():
+                req.attrib = Attrib.get_by_id(attrib_id)
+
+    def load_for_progress(
+            self, owner_char_id=0, at_loc_id=0, pos=None, main_pile_type=''):
+        """Load everything needed for updating progress.
+        Specifically, load complete sources so their values can be updated.
+        Call load_collections() beforehand.
+        """
+        self._resolve_partial_sources()
+        self._resolve_partial_attribs()
+        load_piles(self, owner_char_id, at_loc_id, pos, main_pile_type)
+
+    @classmethod
+    def load_collections(cls, for_piles=True):
+        """Load collections needed to fully load items."""
+        g.game_data.from_db_flat([Attrib, Item])
+        if for_piles:
+            from .location import Location
+            from .character import Character
+            g.game_data.entity_names_from_db([Location])
+            Character.load_complete_objects()
+
     @classmethod
     def data_for_configure(cls, id_to_get):
         logger.debug("data_for_configure(%s)", id_to_get)
         current_obj = cls.load_complete_object(id_to_get)
-        # Get all basic attrib and item data
-        g.game_data.from_db_flat([Attrib, Item])
-        # Replace partial objects with fully populated objects
-        for attrib_id, attrib_for in current_obj.attribs.items():
-            attrib_for.attrib = Attrib.get_by_id(attrib_id)
-        for recipe in current_obj.recipes:
-            for source in recipe.sources:
-                source.item = Item.get_by_id(source.item_id)
-            for byproduct in recipe.byproducts:
-                byproduct.item = Item.get_by_id(byproduct.item_id)
-            for attrib_id, req in recipe.attrib_reqs.items():
-                req.attrib = Attrib.get_by_id(attrib_id)
+        cls.load_collections(for_piles=False)
+        current_obj._resolve_partial_sources()
+        current_obj._resolve_partial_attribs()
         return current_obj
 
     @classmethod
@@ -232,34 +260,22 @@ class Item(CompleteIdentifiable):
             "data_for_play(%s, %s, %s, (%s), %s)",
             id_to_get, owner_char_id, at_loc_id, pos, main_pile_type)
         cls.load_complete_objects()
-        current_obj = cls.data_for_configure(id_to_get)
-        for recipe in current_obj.recipes:
-            for related_list in (recipe.sources, recipe.byproducts):
-                for related in related_list:
-                    if complete_sources:
-                        related.item = cls.load_complete_object(
-                            related.item_id)
-                    else:
-                        related.item = Item.get_by_id(related.item_id)
-        # Get all needed location and character data
-        from .location import Location
-        from .character import Character
-        g.game_data.entity_names_from_db([Location])
-        Character.load_complete_objects()
+        current_obj = cls.load_complete_object(id_to_get)
+        cls.load_collections()
+        current_obj._resolve_partial_sources(complete_sources)
+        current_obj._resolve_partial_attribs()
         # Get item data for the specific container,
         # and get piles at this loc or char that can be used for sources
         load_piles(current_obj, owner_char_id, at_loc_id, pos, main_pile_type)
         # Get relation data for items that use this item as a source
         item_recipes_data = Recipe.load_data_by_source(id_to_get)
         for item_id, recipes_data in item_recipes_data.items():
-            item = Item.get_by_id(item_id)
-            item.recipes = [
-                Recipe.from_data(recipe_data, item)
-                for recipe_id, recipe_data in recipes_data.items()]
-            for recipe in item.recipes:
-                for related_list in (recipe.sources, recipe.byproducts):
-                    for related in related_list:
-                        related.item = Item.get_by_id(related.item_id)
+            if item_id != id_to_get:
+                item = Item.get_by_id(item_id)
+                item.recipes = [
+                    Recipe.from_data(recipe_data, item)
+                    for recipe_id, recipe_data in recipes_data.items()]
+                item._resolve_partial_sources(complete=False)
         from .event import Event
         Event.load_triggers_for_type(id_to_get, cls.typename())
         return current_obj
