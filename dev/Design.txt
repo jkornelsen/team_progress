@@ -1,41 +1,9 @@
 ---- recent ----
 
-cooling tower in stock is 0 even though where is shown
-starts out as 1 though, like when scenario is first loaded
-changes to 0 when start is pressed
-    and then never goes back to 1
-    maybe because in_progress?
-    well, it's not showing up as in_progress in json
-
-thermal waste isn't getting consumed
-the problem is that piles are different
-it only works when:
-    if len(loaded_items) == len(ids):
-        logger.debug("already loaded")
-        return loaded_items
-load_complete_objects() gets called 4 times:
-    item_progress(item_id=18, char_id=, loc_id=6, pos=())
-        item.py:164  load_complete_objects([18])
-        item.py:164  load_complete_objects([19])
-        item.py:164  load_complete_objects([18])
-        item.py:164  load_complete_objects(None)
-    from the following code:
-        current_obj = cls.load_complete_object(id_to_get)
-        related.item = cls.load_complete_object(related.item_id)
-        Item.load_complete_objects()
-
----- changes to consider ----
-
-yellow bar progress isn't working on green bar boost 1
-maybe because of all the sources needed
+---- issues and changes to consider ----
 
 win condition quantity min and max, like attribs for recipes
-
-scenario: Fission Plant
-win condition includes no more than a certain amount of pollution
-events trigger during production of some recipes
-use waste as a determining attr for increased likelihood of bigger problem
-chance could improve with upgrades
+Fission Plant: no more than a certain amount of pollution
 
 shouldn't be able to have both a two-way dest and an arrival one-way dest
 
@@ -44,11 +12,6 @@ People: old man, young husband, young wife, elementary schooler, baby, dog, cat
 
 gain all instant could be more convenient than entering e.g. 9999 batches
 maybe a button or 0 for number of batches, or "(A)ll"
-
----- issues ----
-
-dollars for lemonade stand suddenly lost its recipe, yet progress continued
-I think this was during item play, not configure
 
 ---- planning ----
 

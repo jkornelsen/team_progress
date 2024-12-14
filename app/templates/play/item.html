@@ -336,7 +336,7 @@
                                                             {{ source.q_required | formatNum }}
                                                         {% endif %}
                                                     </td>
-                                                    <td id="recipe-{{ recipe.id }}-source-{{ item.id }}-quantity">
+                                                    <td class="source-{{ item.id }}-quantity">
                                                         {% if source.pile %}
                                                             {{ source.pile.quantity | formatNum }}
                                                         {% else %}
@@ -615,6 +615,7 @@
             function updateQuantities(combined_data) {
                 const main = combined_data.main
                 const sources = combined_data.sources
+                console.log('updateQuantities()', main.quantity_str);
                 const quantityText = main.quantity_str;
                 const qLimit = {{ current.q_limit }};
                 const qLimitText = "{{ current.q_limit | formatNum }}";
@@ -624,7 +625,7 @@
                     $('#main-quantity').text(quantityText);
                 {% endif %}
                 sources.forEach((source) => {
-                    $(`#recipe-${main.recipe_id}-source-${source.id}-quantity`).text(source.quantity);
+                    $(`.source-${source.id}-quantity`).text(source.quantity);
                 });
             }
 

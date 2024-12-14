@@ -109,6 +109,7 @@
                                 <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
                                 <span class="hotkey-indicator">[{{ letter }}]</span>
                                 <a href="{{ link }}">{{ item.name }}</a>
+                                {% if item.pile.quantity %}&nbsp;{{ item.pile.quantity | formatNum }}{% endif %}
                                 <br>
                             {% endfor %}
                         </ul>
