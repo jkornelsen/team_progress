@@ -4,7 +4,7 @@ from flask import g
 
 from .db_serializable import DbSerializable
 from .progress import Progress
-from .utils import Storage
+from .utils import NumTup, Storage
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ def load_piles(current_item, char_id, loc_id, pos, main_pile_type):
         loc = Location.load_complete_object(loc_id)
     # Assign the most appropriate pile
     logger.debug("main pile")
-    DEFAULT_POS = ()
+    DEFAULT_POS = NumTup()
     if not pos:
         pos = DEFAULT_POS
     current_item.pile = _assign_pile(
@@ -147,8 +147,10 @@ def load_piles(current_item, char_id, loc_id, pos, main_pile_type):
                         logger.debug("does not meet req")
 
 def _assign_pile(
-        pile_item, chars, loc, char_id=0, loc_id=0, position=(),
+        pile_item, chars, loc, char_id=0, loc_id=0, position=None,
         forced_pile_type='', exact_pos=False):
+    if position is None:
+        position = NumTup()
     logger.debug(
         "_assign_pile(item.id=%d, item.type=%s, chars=[%d],"
         " loc.id=%s, char_id=%s, loc_id=%s, position=(%s), forced_type=%s)",

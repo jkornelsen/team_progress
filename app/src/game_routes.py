@@ -611,7 +611,8 @@ def set_routes(app):
         all_items = [item]
         for recipe in item.recipes:
             for source in recipe.sources:
-                source.item.load_for_progress(char_id, loc_id, pos)
+                source.item.load_for_progress(
+                    char_id, loc_id, pos, main_pile_type)
                 all_items.append(source.item)
         for item_ in all_items:
             progress_ = item_.progress

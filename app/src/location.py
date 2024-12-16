@@ -467,9 +467,6 @@ class Location(CompleteIdentifiable):
         req = RequestHelper('form')
         if req.has_key('save_changes') or req.has_key('make_duplicate'):
             req.debug()
-            entity_list = self.get_list()
-            if self not in entity_list:
-                entity_list.append(self)
             self.name = req.get_str('location_name')
             self.description = req.get_str('location_description')
             self.toplevel = req.get_bool('top_level')

@@ -218,7 +218,7 @@
                                 {% set max_rows = max(recipe.byproducts|length + 1, recipe.sources|length + attribs_list|length) %}
                                 {% set recipescope = namespace(main_items_consumed=0) %}
                                 {% for source in recipe.sources %}
-                                    {% if source.item.id == current.id %}
+                                    {% if source.item.id == current.id and not source.preserve %}
                                         {% set recipescope.main_items_consumed = source.q_required %}
                                     {% endif %}
                                 {% endfor %}

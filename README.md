@@ -1,18 +1,14 @@
 # Team Progress: incremental + TTRPG
 
-Produce, interact, and explore&mdash;modelling a wide variety of ideas.
-Like in tabletop RPGs, the driving forces are storytelling and chance.
-For those who like to create their own characters
-or figure out how idler values impact progress.
+Produce, interact, and explore, driven by storytelling and chance.
+Model a wide variety of ideas, like with Lego bricks except using text.
 
 A good place to start is the pre-built scenario "Bacon for Dinner."
 
-The setup section is often considered part of playing.
-If you know what a value ought to be but there isn't
-any clear way to do it, go to settings and force the change,
-then describe what happened.
 For solo campaigns, it helps to track the narrative in a
-document.
+document. If you know what a value ought to be but there isn't
+any clear way to do it, go to settings and force the change,
+then describe what happened in a way that fits.
 
 ## Server
 
