@@ -23,7 +23,15 @@
             });
         });
     </script>
-    <h1>{{ current_data.overall.title }}</h1>
+    <h1>
+        {{ current_data.overall.title }}
+        {% if current_data.overall.have_won() %}
+            <span title="You won the scenario!">✅</span>
+        {% elif current_data.overall.win_reqs %}
+            <span style="color: gray;"
+            title="There are unfulfilled win conditions &mdash; see Overall Settings.">☐</span>
+        {% endif %}
+    </h1>
     <p>{{ current_data.overall.description|htmlify }}</p>
     <div class="column-container">
         <div><!-- lefthand column -->
@@ -169,7 +177,7 @@
             <br>
             <label>
                 <input type="checkbox" id="reload-toggle">
-                Reload every
+                Reload this page every
             </label>
             <input type="text" id="reload-every" style="width: 20px;">
             <span class="label-like">seconds</span>

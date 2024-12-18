@@ -185,7 +185,6 @@ class Recipe(DependentIdentifiable):
         """Prepare the base dictionary for JSON and DB."""
         return {
             'id': self.id,
-            'item_id': self.item_produced.id if self.item_produced else 0,
             'rate_amount': self.rate_amount,
             'rate_duration': self.rate_duration,
             'instant': self.instant,
@@ -201,15 +200,20 @@ class Recipe(DependentIdentifiable):
             })
         return data
 
+    def dict_for_main_table(self):
+        data = self._base_export_data()
+        data.update({
+            'item_id': self.item_produced.id if self.item_produced else 0
+            })
+        return data
+
     @classmethod
     def from_data(cls, data, item_produced=None):
         data = cls.prepare_dict(data)
         instance = cls()
         instance.id = data.get('id', 0)
         from .item import Item
-        instance.item_produced = (
-            item_produced if item_produced
-            else Item(int(data.get('item_id', 0))))
+        instance.item_produced = item_produced
         instance.rate_amount = data.get('rate_amount', 1.0)
         instance.rate_duration = data.get('rate_duration', 3.0)
         instance.instant = data.get('instant', False)

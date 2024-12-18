@@ -422,6 +422,7 @@ def set_routes(app):
                 link_letters=LinkLetters('m')
                 ))
         session.pop('clear_local_storage', None)
+        session.pop('ignore_event', None)
         return response
 
     @app.route('/char/progress/<int:char_id>', methods=['POST'])
@@ -594,36 +595,37 @@ def set_routes(app):
         main_pile_type = req.get_str('main', '')
         pos = req.get_numtup('pos')
         logger.debug(
-            "%s\nitem_progress(item_id=%d, char_id=%s, loc_id=%s, pos=(%s))",
-            "-" * 80, item_id, char_id, loc_id, pos)
-        item = Item.data_for_play(
+            "%s\nitem_progress(item_id=%d, char_id=%s, loc_id=%s, pos=(%s),"
+            "main_pile_type=%s)",
+            "-" * 80, item_id, char_id, loc_id, pos, main_pile_type)
+        main_item = Item.data_for_play(
             item_id, char_id, loc_id, pos, complete_sources=True,
             main_pile_type=main_pile_type)
-        if not item:
+        if not main_item:
             return jsonify({'error': "Item not found"})
-        pile = item.pile
-        progress = item.progress
-        logger.debug(
-            "Retrieved item %d from DB: %d recipes, recipe id %d\n"
-            "Pile container: %s %s",
-            item.id, len(item.recipes), progress.recipe.id,
-            pile.container_type(), pile.container.name)
-        all_items = [item]
-        for recipe in item.recipes:
+        all_items = [main_item]
+        for recipe in main_item.recipes:
             for source in recipe.sources:
                 source.item.load_for_progress(
                     char_id, loc_id, pos, main_pile_type)
                 all_items.append(source.item)
-        for item_ in all_items:
-            progress_ = item_.progress
-            if progress_.recipe.id and progress_.is_ongoing:
-                batches_done = progress_.batches_for_elapsed_time()
+        for item in all_items:
+            progress = item.progress
+            if progress.recipe.id and progress.is_ongoing:
+                batches_done = progress.batches_for_elapsed_time()
                 try:
                     Event.check_triggers(
-                        item_.id, Item.typename(), item_.name, batches_done,
+                        item.id, Item.typename(), item.name, batches_done,
                         req)
                 except TriggerException as ex:
                     return jsonify(ex.json_data)
+        progress = main_item.progress
+        pile = main_item.pile
+        logger.debug(
+            "Retrieved item %d from DB: %d recipes, recipe id %d\n"
+            "Pile container: %s %s",
+            main_item.id, len(main_item.recipes), progress.recipe.id,
+            pile.container_type(), pile.container.name)
         return jsonify({
             'main': {
                 'is_ongoing': progress.is_ongoing,
@@ -637,7 +639,7 @@ def set_routes(app):
                     'id': source.item.id,
                     'quantity': format_num(source.pile.quantity)
                 }
-                for recipe in item.recipes
+                for recipe in main_item.recipes
                 for source in recipe.sources
                 ]
             })

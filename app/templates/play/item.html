@@ -606,6 +606,9 @@
                 clientElapsedTime = 0;
                 serverElapsedTime = data.elapsed_time || 0;
                 rateDuration = parseFloat($(`#rate-duration_${data.recipe_id}`).data('duration')) || 1;
+                if (in_progress && !data.is_ongoing) {
+                    localStorage.removeItem('ignore_event_id');
+                }
                 in_progress = data.is_ongoing;
                 updateQuantities(combined_data);
                 updateStartButtonLabel(data, data.recipe_id);
@@ -642,6 +645,7 @@
                 progressLabel.text(`${qtyText} / ${maxQtyText}`);
             }
 
+            let maxEffective = 0;
             function effectiveElapsedTime() {
                 if (serverElapsedTime % rateDuration + clientElapsedTime > rateDuration) {
                     return rateDuration;
@@ -654,6 +658,10 @@
                 const progressBar = $('#action-progress-bar');
                 const progressLabel = $('#action-progress-label');
                 const elapsedTime = effectiveElapsedTime();
+                if (elapsedTime + 1 < maxEffective) {
+                    localStorage.removeItem('ignore_event_id');
+                }
+                maxEffective = elapsedTime;
                 const progressPercent = (elapsedTime / rateDuration) * 100;
                 progressBar.val(progressPercent);
                 progressLabel.text(`${Math.floor(elapsedTime)} / ${rateDuration} sec`);
@@ -681,22 +689,6 @@
                         }
                     }
                 });
-            }
-
-            let button_to_restart = null;
-            function stopAny() {
-                $(".start-stop-btn").each(function() {
-                    if ($(this).html() === "Stop") {
-                        button_to_restart = $(this);
-                        $(this).click();
-                    }
-                });
-            }
-            function restartButton() {
-                if (button_to_restart) {
-                    button_to_restart.click();
-                    button_to_restart = null;
-                }
             }
 
             function updateProgressVisibility() {
@@ -922,18 +914,17 @@
             async function handleInterrupt(data) {
                 console.log("handleInterrupt()");
                 stopFetchingProgress();
-                stopAny();
-                const confirmed = await showCustomConfirm(data.message);
-                if (confirmed) {
-                    const baseEventUrl = "{{ url_for('play_event', event_id=MAX_INT_32, from_id=current.id, from_typename=current.typename()) | safe }}"
-                    const url = baseEventUrl.replace('{{ MAX_INT_32 }}', data.event_id);
-                    console.log("Confirmed to go to ", url);
-                    window.location.href = url;
-                } else {
-                    localStorage.setItem('ignore_event_id', data.event_id);
-                    restartButton();
-                    startFetchingProgress();
-                }
+                $(".start-stop-btn").each(function() {
+                    if ($(this).html() === "Stop") {
+                        $(this).click();
+                    }
+                });
+                await showCustomConfirm(data.message);
+                localStorage.setItem('ignore_event_id', data.event_id);
+                const baseEventUrl = "{{ url_for('play_event', event_id=MAX_INT_32, from_id=current.id, from_typename=current.typename()) | safe }}"
+                const url = baseEventUrl.replace('{{ MAX_INT_32 }}', data.event_id);
+                console.log("Confirmed to go to ", url);
+                window.location.href = url;
             }
         });
         </script>

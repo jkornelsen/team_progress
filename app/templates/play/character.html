@@ -259,6 +259,7 @@
                 const current_loc_id = {{ current.location.id if current.location else 0 }};
                 if (data && current_loc_id !== data.current_loc_id) {
                     console.log('Reloading to go to updated location:', current_loc_id, data.current_loc_id);
+                    localStorage.removeItem('ignore_event_id');
                     location.reload();
                     stopFetchingProgress();
                     exitNow = true;
@@ -279,6 +280,7 @@
                 if (selectedDestId || ongoing) {
                     if (data && 'status' in data && data.status === 'arrived') {
                         console.log('Arrived; reloading.');
+                        localStorage.removeItem('ignore_event_id');
                         location.reload();
                         stopFetchingProgress();
                         exitNow = true;
@@ -367,7 +369,6 @@
                 $('#content').css('display', 'block');
             }
             async function initializePage() {
-                localStorage.removeItem('ignore_event_id');
                 await fetchProgressData();
                 if (travelProgressData) {
                     startFetchingProgress();
@@ -405,6 +406,7 @@
                             console.error(response.message);
                             alert(response.message);
                         }
+                        localStorage.removeItem('ignore_event_id');
                         location.reload();
                     },
                     error: (error) => {
@@ -472,16 +474,12 @@
             async function handleInterrupt(data) {
                 stopFetchingProgress();
                 stopTravel();
-                const confirmed = await showCustomConfirm(data.message);
-                if (confirmed) {
-                    const baseEventUrl = "{{ url_for('play_event', event_id=MAX_INT_32, from_id=current.id, from_typename=current.typename()) | safe }}"
-                    const url = baseEventUrl.replace('{{ MAX_INT_32 }}', data.event_id);
-                    console.log("Confirmed to go to ", url);
-                    window.location.href = url;
-                } else {
-                    localStorage.setItem('ignore_event_id', data.event_id);
-                    startTravel();
-                }
+                await showCustomConfirm(data.message);
+                localStorage.setItem('ignore_event_id', data.event_id);
+                const baseEventUrl = "{{ url_for('play_event', event_id=MAX_INT_32, from_id=current.id, from_typename=current.typename()) | safe }}"
+                const url = baseEventUrl.replace('{{ MAX_INT_32 }}', data.event_id);
+                console.log("Confirmed to go to ", url);
+                window.location.href = url;
             }
         });
         </script>

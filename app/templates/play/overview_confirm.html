@@ -17,7 +17,6 @@
                 console.log("Confirmed to go to ", url);
                 window.location.href = url;
             } else {
-                localStorage.setItem('ignore_event_id', {{ interrupt.event_id }});
                 console.log("To overview");
                 window.location.href = "{{ url_for('overview', ignore_event=interrupt.event_id) }}";
             }
