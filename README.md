@@ -1,7 +1,7 @@
 # Team Progress: incremental + TTRPG
 
 Produce, interact, and explore, driven by storytelling and chance.
-Model a wide variety of ideas, like with Lego bricks except using text.
+Model a wide variety of ideas using descriptive text as building blocks.
 
 A good place to start is the pre-built scenario "Bacon for Dinner."
 

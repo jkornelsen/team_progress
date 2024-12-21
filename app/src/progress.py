@@ -168,6 +168,7 @@ class Progress(DependentIdentifiable):
             logger.debug("num_batches=%d", num_batches)
             if num_batches > 0:
                 # Deduct source quantity used
+                main_as_source_qty = 0
                 for source in self.recipe.sources:
                     if not source.preserve:
                         eff_source_qty = num_batches * source.q_required
@@ -179,6 +180,8 @@ class Progress(DependentIdentifiable):
                         logger.debug(
                             "source.pile.container[%s].to_db()",
                             source.pile.container.name)
+                        if source.pile.item.id == self.pile.item.id:
+                            main_as_source_qty = eff_source_qty
                         source.pile.container.to_db()
                 # Add quantity produced
                 eff_result_qty = num_batches * self.recipe.rate_amount
@@ -189,9 +192,18 @@ class Progress(DependentIdentifiable):
                 self.batches_processed += num_batches
                 self.pholder_to_db()
                 if self.pile.item.name:
-                    message = (
-                        f"{self.pile.item.name} increased"
-                        f" by {format_num(eff_result_qty)}")
+                    net_qty = eff_result_qty - main_as_source_qty
+                    if net_qty == 0:
+                        message = f"{self.pile.item.name} produced."
+                    else:
+                        if net_qty > 0:
+                            changed_str = "increased"
+                        else:
+                            changed_str = "decreased"
+                            net_qty *= -1
+                        message = (
+                            f"{self.pile.item.name} {changed_str}"
+                            f" by {format_num(net_qty)}")
                     if self.pile.container.name != self.pile.item.name:
                         message = f"{self.pile.container.name}'s " + message
                     MessageLog.add(message);

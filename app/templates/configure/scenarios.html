@@ -41,8 +41,7 @@
     </form>
     <table class="align-top spacious">
             <tr>
-                <th></th>
-                <th>Title</th>
+                <th colspan="2">Title</th>
                 <th>Description</th>
                 <th title="whether predominantly idle or character driven">Progress</th>
                 <th title="intended for multiplayer">MP?</th>
@@ -56,7 +55,6 @@
                         {% set letter = link_letters.next() %}
                         <button type="submit"
                                 id="submit_load_scenario_{{ scenario_id }}">
-                            Load Scenario
                             <span class="hotkey-indicator">[{{ letter }}]</span>
                         </button>
                         <script>

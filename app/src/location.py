@@ -280,14 +280,28 @@ class Location(CompleteIdentifiable):
                 " door1, door2, bidirectional",
                 values_to_insert)
         values_to_insert = []
+        merged_records = {}  # merge any duplicates
         for item_id, items_at in self.items_at.items():
             for item_at in items_at:
-                values_to_insert.append((
-                    g.game_token, self.id,
-                    item_id, False,
-                    item_at.quantity,
-                    item_at.position.as_pg_array(),
-                    ))
+                record_key = (
+                    g.game_token, self.id, item_id,
+                    item_at.position.as_pg_array()
+                    )
+                if record_key in merged_records:
+                    existing_quantity = merged_records[record_key]
+                    new_quantity = existing_quantity + item_at.quantity
+                    item = item_at.item
+                    if (item and item.q_limit
+                            and item.exceeds_limit(new_quantity)):
+                        new_quantity = item.q_limit
+                    merged_records[record_key] = new_quantity
+                else:
+                    merged_records[record_key] = item_at.quantity
+        for ((game_token, loc_id, item_id, position_array),
+                quantity) in merged_records.items():
+            values_to_insert.append((
+                g.game_token, self.id,
+                item_id, False, quantity, position_array))
         for item in self.item_refs:
             values_to_insert.append((
                 g.game_token, self.id,
