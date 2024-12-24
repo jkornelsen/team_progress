@@ -18,10 +18,10 @@
         },
         {
             "attribs": [],
-            "description": "It seems like you shouldn't be able to see a black bar in space. Doesn't black absorb all light?<pre>\r\n  <c=\"black\">_____________\r\n<c=\"gray\">/</c>/____________/<c=\"gray\">/</c>\r\n</c></pre>\r\nRequires reset:\r\n1. Stop all source progress\r\n2. Produce as many black bars as possible\r\n3. Set all source quantities to 0",
+            "description": "It seems like you shouldn't be able to see a black bar in space. Doesn't black absorb all light?<pre>\r\n  <c=\"black\">_____________\r\n<c=\"gray\">/</c>/____________/<c=\"gray\">/</c>\r\n</c></pre>\r\nRequires reset:\r\n1. Stop progress for these sources (<c=\"red\">#</c>, <c=\"green\">#</c>, <c=\"yellow\">#</c>).\r\n2. Produce as many black bars as possible.\r\n3. Set quantities of these sources to 0.\r\n4. Reset rates and boosts of <c=\"red\">#</c> (1/8s) and <c=\"green\">#</c> (0.5/8s).",
             "id": 22,
             "masked": false,
-            "name": "Black Bar",
+            "name": "⬛Black Bar",
             "progress": {},
             "q_limit": 0.0,
             "quantity": 0.0,
@@ -38,7 +38,7 @@
                         {
                             "item_id": 20,
                             "preserve": false,
-                            "q_required": 1000.0
+                            "q_required": 100.0
                         },
                         {
                             "item_id": 15,
@@ -61,7 +61,7 @@
             "description": "Unlock with an upgrade.\r\n<pre><c=\"green\"> _____________\r\n/____________/\r\n</c></pre>",
             "id": 17,
             "masked": false,
-            "name": "Green Bar",
+            "name": "🟩Green Bar",
             "progress": {},
             "q_limit": 0.0,
             "quantity": 0.0,
@@ -117,7 +117,7 @@
             "description": "Combine light to produce this secondary color.\r\n<pre><c=\"yellow\"> _____________\r\n/____________/\r\n</c></pre>",
             "id": 20,
             "masked": false,
-            "name": "Yellow Bar",
+            "name": "🟨Yellow Bar",
             "progress": {},
             "q_limit": 0.0,
             "quantity": 0.0,
@@ -152,7 +152,7 @@
             "description": "Gather red wavelengths of light together into one place. Quantity describes the length from one end to the other.<pre><c=\"red\">\r\n _____________\r\n/____________/\r\n</c></pre>",
             "id": 15,
             "masked": false,
-            "name": "Red Bar",
+            "name": "🟥Red Bar",
             "progress": {},
             "q_limit": 0.0,
             "quantity": 0.0,
@@ -198,7 +198,7 @@
             "description": "Gather blue wavelengths of light.<pre><c=\"blue\">\r\n _____________\r\n/____________/\r\n</c></pre>",
             "id": 46,
             "masked": false,
-            "name": "Blue Bar",
+            "name": "🟦Blue Bar",
             "progress": {},
             "q_limit": 0.0,
             "quantity": 0.0,
@@ -270,7 +270,7 @@
                     "instant": false,
                     "item_id": 19,
                     "rate_amount": 1.0,
-                    "rate_duration": 15.0,
+                    "rate_duration": 9.0,
                     "sources": [
                         {
                             "item_id": 20,
@@ -300,7 +300,7 @@
                     "instant": false,
                     "item_id": 18,
                     "rate_amount": 1.0,
-                    "rate_duration": 12.0,
+                    "rate_duration": 9.0,
                     "sources": [
                         {
                             "item_id": 17,
@@ -327,10 +327,10 @@
                     "attrib_reqs": [],
                     "byproducts": [],
                     "id": 4,
-                    "instant": true,
+                    "instant": false,
                     "item_id": 21,
                     "rate_amount": 1.0,
-                    "rate_duration": 3.0,
+                    "rate_duration": 9.0,
                     "sources": [
                         {
                             "item_id": 15,
@@ -370,7 +370,7 @@
                     "instant": false,
                     "item_id": 47,
                     "rate_amount": 1.0,
-                    "rate_duration": 8.0,
+                    "rate_duration": 15.0,
                     "sources": [
                         {
                             "item_id": 22,
@@ -412,6 +412,74 @@
             ],
             "storage_type": "universal",
             "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "Rate amount + 1.",
+            "id": 49,
+            "masked": false,
+            "name": "Yellow Bar Boost I",
+            "progress": {},
+            "q_limit": 9.0,
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "attrib_reqs": [],
+                    "byproducts": [],
+                    "id": 37,
+                    "instant": false,
+                    "rate_amount": 1.0,
+                    "rate_duration": 9.0,
+                    "sources": [
+                        {
+                            "item_id": 22,
+                            "preserve": false,
+                            "q_required": 1.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "universal",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "Rate amount x1.5",
+            "id": 50,
+            "masked": false,
+            "name": "Green Bar Boost II",
+            "progress": {},
+            "q_limit": 4.0,
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "attrib_reqs": [],
+                    "byproducts": [],
+                    "id": 38,
+                    "instant": false,
+                    "rate_amount": 1.0,
+                    "rate_duration": 9.0,
+                    "sources": [
+                        {
+                            "item_id": 17,
+                            "preserve": false,
+                            "q_required": 1000.0
+                        },
+                        {
+                            "item_id": 19,
+                            "preserve": true,
+                            "q_required": 1.0
+                        },
+                        {
+                            "item_id": 46,
+                            "preserve": false,
+                            "q_required": 25.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "universal",
+            "toplevel": false
         }
     ],
     "locations": [
@@ -423,10 +491,12 @@
             "id": 1,
             "item_refs": [
                 21,
-                47,
                 45,
                 19,
-                18
+                18,
+                49,
+                47,
+                38
             ],
             "items": [],
             "masked": false,
