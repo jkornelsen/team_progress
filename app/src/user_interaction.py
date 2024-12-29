@@ -165,14 +165,17 @@ class MessageLog(DbSerializable):
 
     @classmethod
     def add(cls, message):
-        result = cls.execute_select("""
+        result = cls.execute_select(""" 
             SELECT count
             FROM {table}
             WHERE game_token = %s AND message = %s
-            ORDER BY timestamp DESC
-            LIMIT 4
-            """, (g.game_token, message),
-            fetch_all=False)
+            AND timestamp IN (
+                SELECT timestamp
+                FROM {table}
+                WHERE game_token = %s
+                ORDER BY timestamp DESC
+                LIMIT 7)
+            """, (g.game_token, message, g.game_token), fetch_all=False)
         if result:
             # Combine with other recent identical messages
             count = result.count + 1

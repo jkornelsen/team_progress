@@ -185,6 +185,8 @@ def _set_filters():
             r'\1 style="white-space: pre-wrap; word-wrap: break-word;'
             r' overflow-wrap: break-word;">', 
             html)
+        # remove newline immediately following </pre>, if any
+        html = re.sub(r'(?<=</pre>)\r?\n', '', html)
         # handle styles safely
         css_sanitizer = CSSSanitizer(
                 allowed_css_properties=[

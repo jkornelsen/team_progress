@@ -426,7 +426,7 @@
                     {% for source in recipe.sources %}
                         {% if current.id == source.item.id %}
                             {% set _ = outerscope.used_as_source.append(
-                                {'item': other_item, 'q_required': source.q_required}) %}
+                                {'item': other_item, 'source': source}) %}
                         {% endif %}
                     {% endfor %}
                     {% for byproduct in recipe.byproducts %}
@@ -446,12 +446,19 @@
                                 <th>Required</th>
                             </tr>
                             {% for used_for in outerscope.used_as_source %}
+                                {% set source = used_for.source %}
                                 {% if used_for.item.storage_type == 'local' and not params.loc_id %}
                                     <tr>
                                         <td>
                                             <strong>{{ used_for.item.name }}</strong>
                                         </td>
-                                        <td>{{ used_for.q_required | formatNum }}</td>
+                                        <td>
+                                            {% if source.preserve %}
+                                                ({{ source.q_required | formatNum }})
+                                            {% else %}
+                                                {{ source.q_required | formatNum }}
+                                            {% endif %}
+                                        </td>
                                     </tr>
                                 {% else %}
                                     {% set link = url_for('play_item', item_id=used_for.item.id, char_id=params.char_id, loc_id=params.loc_id) %}
@@ -462,7 +469,13 @@
                                             <span class="hotkey-indicator">[{{ letter }}]</span>
                                             <a href="{{ link }}">{{ used_for.item.name }}</a>
                                         </td>
-                                        <td>{{ used_for.q_required | formatNum }}</td>
+                                        <td>
+                                            {% if source.preserve %}
+                                                ({{ source.q_required | formatNum }})
+                                            {% else %}
+                                                {{ source.q_required | formatNum }}
+                                            {% endif %}
+                                        </td>
                                     </tr>
                                 {% endif %}
                             {% endfor %}
