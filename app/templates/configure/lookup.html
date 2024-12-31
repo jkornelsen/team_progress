@@ -40,11 +40,14 @@
     </p>
     <ul>
         {% for use in uses %} {# 'use': noun as in "the use of" #}
-            {% set use_container_type = getattr(use, 'container_type', dict)() %}
-            {% set use_typename = getattr(use, 'typename', dict)() %}
+            {% set use_typename = getattr(use, 'typename', str)() %}
             {% if current.typename() == 'item' %}
                 {% set container = use.container %}
+                {% set use_container_type = getattr(use, 'container_type', str)() %}
                 {% if use_container_type == 'general' %}
+                    {% if use_container_type == '' %}
+                        {% set use = use.pile %}
+                    {% endif %} 
                     {% set link = url_for('play_item', item_id=use.item.id, main_pile_type='universal') %}
                     {% set letter = link_letters.next(link) %}
                     <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
@@ -52,6 +55,13 @@
                     In
                     <a href="{{ link }}">General Storage</a>
                     : {{ use.quantity | formatNum }}
+                {% elif use_container_type == '' %}
+                    {% set link = url_for('play_item', item_id=use.id, main_pile_type='universal') %}
+                    {% set letter = link_letters.next(link) %}
+                    <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                    <span class="hotkey-indicator">[{{ letter }}]</span>
+                    Mentioned By
+                    <a href="{{ link }}">{{ use.name }}</a>
                 {% elif use_container_type == 'char' %}
                     {% set link = url_for('play_char', char_id=container.id) %}
                     {% set letter = link_letters.next(link) %}

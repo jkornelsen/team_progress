@@ -220,6 +220,7 @@ def _set_filters():
         return html
 
     app.jinja_env.globals['getattr'] = getattr
+    app.jinja_env.globals['str'] = str
     app.jinja_env.globals['max'] = max
     app.jinja_env.globals['MAX_INT_32'] = 2**31 - 1
 

@@ -2,13 +2,6 @@
 ---- issues and changes to consider ----
 
 scenario: Rays
-boosts for white bars to get enough for star
-producing laws (forces) is currently a bit underwhelming
-number of black bars required is fine but they need something else
-order fabric to create a law such as time or gravity
-combine force and fabric to make / define gravity
-force can be gathered from ambient energy
-also use fabric to define fire / energy production using colors
 use sticky force for elements such as water
 put earth (land / soil) and water into a single location, a planet
 water can aid in making air
@@ -16,6 +9,20 @@ plants, or a plant, from life force
 tree, perhaps symbolically related to yggdrasil or tree of knowledge
 thematically connected to Lumber scenario
 full-grown or start with a seed?
+
+viewing star is again removing recipes of red bar
+keeps only one recipe
+problem occurs even if red bar not in progress
+recipe kept is the one for the star
+    maybe because it's the highest id
+    would replace previous rows when looping through them
+    something like: recipe = Recipe(row.id)
+A couple of attempts at reproducing the problem from scratch failed,
+including when main is local and sources are all general.
+Need to expand the test to get the problematic results.
+Also, consider writing an actual test,
+maybe with the actual db as backend but in test schema.
+Like, the test adds example items and then verifies them.
 
 win condition quantity min and max, like attribs for recipes
 Fission Plant: no more than a certain amount of pollution

@@ -28,6 +28,9 @@
         };
         if (!isMobile) {
             document.addEventListener('keydown', (event) => {
+                if (event.altKey || event.ctrlKey || event.shiftKey) {
+                    return;
+                }
                 const movement = keyToMovement[event.code];
                 if (movement) {
                     moveCharacter(movement.xChange, movement.yChange);
@@ -46,6 +49,9 @@
                 return;
             }
             document.addEventListener('keypress', (event) => {
+                if (event.altKey || event.ctrlKey) {
+                    return;
+                }
                 const key = event.key.toLowerCase();
                 if (linkForKey[key]) {
                     window.location.href = linkForKey[key];

@@ -196,11 +196,11 @@ def set_routes(app):
         g.game_data.overall.configure_by_form()
         return redirect(url_for('configure_index'))
 
-    @app.route('/lookup/attrib/<attrib_id>', methods=['GET'])
-    @app.route('/lookup/character/<char_id>', methods=['GET'])
-    @app.route('/lookup/event/<event_id>', methods=['GET'])
-    @app.route('/lookup/item/<item_id>', methods=['GET'])
-    @app.route('/lookup/location/<loc_id>',methods=['GET'])
+    @app.route('/lookup/attrib/<int:attrib_id>', methods=['GET'])
+    @app.route('/lookup/character/<int:char_id>', methods=['GET'])
+    @app.route('/lookup/event/<int:event_id>', methods=['GET'])
+    @app.route('/lookup/item/<int:item_id>', methods=['GET'])
+    @app.route('/lookup/location/<int:loc_id>',methods=['GET'])
     def lookup(**params):
         logger.debug(
             "%s\nlookup(%s)", 
@@ -607,7 +607,7 @@ def set_routes(app):
         for recipe in main_item.recipes:
             for source in recipe.sources:
                 source.item.load_for_progress(
-                    char_id, loc_id, pos, main_pile_type)
+                    char_id, loc_id, pos)
                 all_items.append(source.item)
         for item in all_items:
             progress = item.progress
