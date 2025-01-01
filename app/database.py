@@ -1,3 +1,4 @@
+import argparse
 import logging
 import psycopg2
 
@@ -52,6 +53,14 @@ def pretty(text, values=None):
         indented_text += f"\n{indent}values={values}"
     return indented_text
 
+def set_default_schema(schema):
+    db = get_db()
+    with db.cursor() as cursor:
+        cursor.execute(f"CREATE SCHEMA IF NOT EXISTS {schema};")
+        cursor.execute(f"SET search_path TO {schema};")
+    db.commit()
+    logger.debug("Search path set to '%s'", schema)
+
 def create_all():
     import importlib
     module_names = [
@@ -69,14 +78,15 @@ def create_all():
     db = get_db()
     for module_name in module_names:
         module = importlib.import_module(f'src.{module_name}')
-        for table, schema in module.tables_to_create.items():
+        for table, table_def in module.tables_to_create.items():
             command = pretty(
                 "CREATE TABLE {} (\n{})".format(
-                table, pretty(schema)))
+                table, pretty(table_def)))
             logger.debug(command)
             with db.cursor() as cursor:
                 cursor.execute(command)
     db.commit()
+    logger.debug("All tables created.")
 
 def column_counts(table_name):
     """Required for select_tables() to store fields in the correct table obj.
@@ -113,6 +123,14 @@ def column_counts(table_name):
     return lookup[table_name]
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--schema', 
+        type=str, 
+        default='public',
+        )
+    args = parser.parse_args()
     app = Flask(__name__)
     with app.app_context():
+        set_default_schema(args.schema)
         create_all()

@@ -432,7 +432,7 @@ class Location(CompleteIdentifiable):
         for data in locs.values():
             instances[data.id] = cls.from_data(data)
         if ids and any(ids) and not instances:
-            logger.warn(f"Could not load locations {ids}.")
+            logger.warning(f"Could not load locations {ids}.")
         cls.get_coll().primary.update(instances)
         return instances.values()
 

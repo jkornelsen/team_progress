@@ -270,7 +270,7 @@ class Event(CompleteIdentifiable):
         for data in events.values():
             instances[data.id] = cls.from_data(data)
         if ids and any(ids) and not instances:
-            logger.warn(f"Could not load events {ids}.")
+            logger.warning(f"Could not load events {ids}.")
         cls.get_coll().primary.update(instances)
         return instances.values()
 

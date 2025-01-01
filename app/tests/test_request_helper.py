@@ -1,45 +1,53 @@
-"""
-To run:
-$env:PYTHONPATH="."
-pytest -v -s --tb=line tests/test_request_helper.py
-"""
-from flask import g
-import pytest
+import unittest
 from unittest.mock import patch, MagicMock
-import locale
-import re
-
+from flask import g
 from app import app
 from src.utils import RequestHelper
 
-@pytest.fixture
-def app_context():
-    app.config['TESTING'] = True
-    with app.app_context():
+class TestRequestHelper(unittest.TestCase):
+    
+    def setUp(self):
+        """Set up app context and mock request."""
+        app.config['TESTING'] = True
+        self.app_context = app.app_context()
+        self.app_context.push()
         g.game_token = 'test1234'
-        yield
+        
+        # Mock request
+        self.mock_request = MagicMock()
+        self.mock_request.form = {}
+        patch('src.utils.request', self.mock_request).start()
+        
+    def tearDown(self):
+        """Tear down the app context."""
+        self.app_context.pop()
+        
+    def test_get_int_and_float(self):
+        req = RequestHelper('form')
+        
+        # Test integer retrieval
+        self.mock_request.form['arg1'] = '1'
+        self.assertEqual(req.get_int('arg1', 2), 1)
+        
+        self.mock_request.form['arg1'] = '1.1'
+        self.assertEqual(req.get_int('arg1', 2), 1)
+        
+        # Test float retrieval
+        self.assertEqual(req.get_float('arg1', 2.0), 1.1)
+        
+        # Test zero value retrieval
+        self.mock_request.form['arg1'] = '0'
+        self.assertEqual(req.get_int('arg1', 2), 0)
+        self.assertEqual(req.get_float('arg1', 2.0), 0.0)
+        
+        self.mock_request.form['arg1'] = '0.0'
+        self.assertEqual(req.get_int('arg1', 2), 0)
+        self.assertEqual(req.get_float('arg1', 2.0), 0.0)
+        
+        # Test default value when no argument
+        self.mock_request.form['arg1'] = ''
+        self.assertEqual(req.get_int('arg1', 2), 2)
+        self.assertEqual(req.get_float('arg1', 2.1), 2.1)
 
-@pytest.fixture
-def mock_request():
-    """Fixture to mock Flask's request object."""
-    mock_request_instance = MagicMock()
-    mock_request_instance.form = {}
-    patch('src.utils.request', mock_request_instance).start()
-    yield mock_request_instance
-
-def test1(app_context, mock_request):
-    req = RequestHelper('form')
-    mock_request.form['arg1'] = '1'
-    assert req.get_int('arg1', 2) == 1
-    mock_request.form['arg1'] = '1.1'
-    assert req.get_int('arg1', 2) == 1
-    assert req.get_float('arg1', 2.0) == 1.1
-    mock_request.form['arg1'] = '0'
-    assert req.get_int('arg1', 2) == 0
-    assert req.get_float('arg1', 2.0) == 0.0
-    mock_request.form['arg1'] = '0.0'
-    assert req.get_int('arg1', 2) == 0
-    assert req.get_float('arg1', 2.0) == 0.0
-    mock_request.form['arg1'] = ''
-    assert req.get_int('arg1', 2) == 2
-    assert req.get_float('arg1', 2.1) == 2.1
+if __name__ == '__main__':
+    unittest.main()

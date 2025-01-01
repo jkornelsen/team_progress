@@ -234,7 +234,7 @@ class Progress(DependentIdentifiable):
         """
         self.set_recipe_by_id()
         if self.recipe.id == 0:
-            logger.warn("no recipe")
+            logger.warning("no recipe")
             return 0
         elapsed_time = elapsed_time or self.calculate_elapsed_time()
         batch_ratio = elapsed_time / self.recipe.rate_duration

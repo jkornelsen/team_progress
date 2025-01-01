@@ -53,7 +53,7 @@ so either enter this command each time, or set to run automatically as a service
 ```
 & "C:/Program Files/PostgreSQL/16/bin/psql" -U postgres -d app
 create database app with encoding 'UTF8' template template0;
-drop schema public cascade; create schema public;[^2]
+drop schema public cascade;[^2]
 python database.py
 ```
 

@@ -53,7 +53,8 @@ def set_up_logging():
     stdout_handler.setLevel(logging.ERROR)
     logging.basicConfig(
         level=logging.DEBUG,
-        handlers=[file_handler, stdout_handler])
+        handlers=[file_handler, stdout_handler],
+        )
 
 set_up_logging()
 logger = logging.getLogger(__name__)
@@ -96,8 +97,8 @@ def before_request():
 
 def _set_app_routes():
     @app.route('/')  # route name
-    def index():  # endpoint name
-        logger.debug("index()")
+    def app_root():  # endpoint name
+        logger.debug("app_root()")
         return redirect(url_for('overview'))  # endpoint name
 
     @app.route('/join-game', methods=['GET', 'POST'])

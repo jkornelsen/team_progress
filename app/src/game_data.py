@@ -2,6 +2,7 @@ import logging
 
 from flask import g
 
+from database import set_autocommit
 from .attrib import Attrib
 from .character import Character
 from .db_serializable import DbSerializable
@@ -36,6 +37,9 @@ class PriorityDict:
         for key, value in self.fallback.items():
             if key not in self.primary:
                 yield value
+
+    def __contains__(self, key):
+        return key in self.primary or key in self.fallback
 
     def __getitem__(self, key):
         if key in self.primary:
@@ -174,11 +178,22 @@ class GameData:
 
     def to_db(self):
         logger.debug("to_db()")
-        self.overall.to_db()
-        for entity_cls in ENTITIES:
-            logger.debug("entity %s", entity_cls.collname())
-            for entity in self.get_coll(entity_cls):
-                entity.to_db()
+        self.clear_db_for_token()
+        set_autocommit(False)
+        try:
+            DbSerializable.execute_change("BEGIN")
+            DbSerializable.execute_change("SET CONSTRAINTS ALL DEFERRED")
+            self.overall.to_db()
+            for entity_cls in ENTITIES:
+                logger.debug("entity %s", entity_cls.collname())
+                for entity in self.get_coll(entity_cls):
+                    entity.to_db()
+            g.db.commit()
+        except Exception as ex:
+            g.db.rollback()
+            raise ex
+        finally:
+            set_autocommit(True)
 
     @staticmethod
     def clear_db_for_token():

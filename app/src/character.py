@@ -290,7 +290,7 @@ class Character(CompleteIdentifiable):
         for data in chars.values():
             instances[data.id] = cls.from_data(data)
         if ids and any(ids) and not instances:
-            logger.warn(f"Could not load characters {ids}.")
+            logger.warning(f"Could not load characters {ids}.")
         cls.get_coll().primary.update(instances)
         return instances.values()
 

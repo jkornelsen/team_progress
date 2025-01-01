@@ -198,7 +198,7 @@ class Item(CompleteIdentifiable):
         for data in items.values():
             instances[data.id] = cls.from_data(data)
         if ids and any(ids) and not instances:
-            logger.warn(f"Could not load items {ids}.")
+            logger.warning(f"Could not load items {ids}.")
         cls.get_coll().primary.update(instances)
         return instances.values()
 
@@ -225,6 +225,9 @@ class Item(CompleteIdentifiable):
         Specifically, load complete sources so their values can be updated.
         Call load_collections() beforehand.
         """
+        logger.debug(
+            "load_for_progress(%s, %s, %s, (%s), %s)",
+            self.id, owner_char_id, at_loc_id, pos, main_pile_type)
         self._resolve_partial_sources()
         self._resolve_partial_attribs()
         load_piles(self, owner_char_id, at_loc_id, pos, main_pile_type)

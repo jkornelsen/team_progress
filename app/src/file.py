@@ -10,7 +10,6 @@ from flask import (
     session, url_for)
 from werkzeug.utils import secure_filename
 
-from database import set_autocommit
 from .game_data import GameData
 from .db_serializable import DbSerializable
 from .overall import Overall
@@ -150,18 +149,7 @@ def default_scenario():
 def load_file_into_db(filepath):
     """Load game data from file and store into db."""
     load_file(filepath)
-    GameData.clear_db_for_token()
-    set_autocommit(False)
-    try:
-        DbSerializable.execute_change("BEGIN")
-        DbSerializable.execute_change("SET CONSTRAINTS ALL DEFERRED")
-        g.game_data.to_db()
-        g.db.commit()
-    except Exception as ex:
-        g.db.rollback()
-        raise ex
-    finally:
-        set_autocommit(True)
+    g.game_data.to_db()
     MessageLog.clear()
     clear_session()
 
