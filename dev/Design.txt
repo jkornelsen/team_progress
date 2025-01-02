@@ -1,33 +1,7 @@
 ---- recent ----
 ---- issues and changes to consider ----
 
-scenario: Rays
-use sticky force for elements such as water
-put earth (land / soil) and water into a single location, a planet
-water can aid in making air
-plants, or a plant, from life force
-tree, perhaps symbolically related to yggdrasil or tree of knowledge
-thematically connected to Lumber scenario
-full-grown or start with a seed?
-
-viewing star is again removing recipes of red bar
-keeps only one recipe
-problem occurs even if red bar not in progress
-actually only one source of one recipe, the star
-maybe it's a recursive problem
-A couple of attempts at reproducing the problem from scratch failed,
-including when main is local and sources are all general.
-Need to expand the test to get the problematic results.
-Also, consider writing an actual test,
-maybe with the actual db as backend but in test schema.
-Like, the test adds example items and then verifies them.
-Maybe make an actual test first and include lots of different things
-to see if anything produces the problem.
-
-in the test scenario, recipes aren't getting removed,
-but qty isn't updating on play item page even when reloaded
-it only gets updated by going to the source item play screen
-maybe this way will be easier to solve because it's easy to repeat
+black bar is showing progress icon on overview but only has an instant recipe
 
 win condition quantity min and max, like attribs for recipes
 Fission Plant: no more than a certain amount of pollution

@@ -80,6 +80,7 @@ def load_piles(current_item, char_id, loc_id, pos, main_pile_type):
                 pile.item = item_from_list
             item_piles_at_loc.append(pile)
     if loc_id and loc:
+        # Get all piles at this loc
         for items_at in loc.items_at.values():
             for item_at in items_at:
                 if item_at.quantity != 0 and Grid.adjacent(

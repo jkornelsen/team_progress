@@ -223,7 +223,7 @@ class Item(CompleteIdentifiable):
             self, owner_char_id=0, at_loc_id=0, pos=None, main_pile_type=''):
         """Load everything needed for updating progress.
         Specifically, load complete sources so their values can be updated.
-        Call load_collections() beforehand.
+        Call load_complete_object() and load_collections() beforehand.
         """
         logger.debug(
             "load_for_progress(%s, %s, %s, (%s), %s)",
@@ -275,10 +275,13 @@ class Item(CompleteIdentifiable):
         for item_id, recipes_data in item_recipes_data.items():
             if item_id != id_to_get:
                 item = Item.get_by_id(item_id)
-                item.recipes = [
-                    Recipe.from_data(recipe_data, item)
-                    for recipe_id, recipe_data in recipes_data.items()]
+                if not len(item.recipes):
+                    item.recipes = [
+                        Recipe.from_data(recipe_data, item)
+                        for recipe_id, recipe_data in recipes_data.items()
+                        ]
                 item._resolve_partial_sources(complete=False)
+
         from .event import Event
         Event.load_triggers_for_type(id_to_get, cls.typename())
         return current_obj
