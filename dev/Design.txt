@@ -3,6 +3,13 @@
 
 black bar is showing progress icon on overview but only has an instant recipe
 
+in item_progress(), some sources in g.game_data.items don't have .item set,
+even though we use similar code in the play item template.
+    item.py", line 432, in get_used
+        if current.id == source.item.id:
+                         ^^^^^^^^^^^^^^
+    AttributeError: 'NoneType' object has no attribute 'id'
+
 win condition quantity min and max, like attribs for recipes
 Fission Plant: no more than a certain amount of pollution
 

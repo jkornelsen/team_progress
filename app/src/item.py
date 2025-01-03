@@ -16,6 +16,8 @@ tables_to_create = {
         {coldef('name')},
         toplevel boolean not null,
         masked boolean not null,
+        -- for other masked items that use this item as a source
+        counted_for_unmasking boolean not null,
         storage_type varchar(20) not null,
         q_limit real not null,
         quantity real not null,
@@ -52,6 +54,7 @@ class Item(CompleteIdentifiable):
         self.storage_type = Storage.CARRIED  # typically matches pile type
         self.toplevel = False
         self.masked = False
+        self.counted_for_unmasking = False
         self.attribs = {}  # AttribFor objects keyed by attrib id
         self.recipes = []  # list of Recipe objects
         self.q_limit = 0.0  # limit the quantity if not 0
@@ -105,7 +108,8 @@ class Item(CompleteIdentifiable):
     def dict_for_main_table(self):
         data = self._base_export_data()
         data.update({
-            'progress_id': self.progress.id or None
+            'progress_id': self.progress.id or None,
+            'counted_for_unmasking': self.counted_for_unmasking,
             })
         return data
 
@@ -116,6 +120,8 @@ class Item(CompleteIdentifiable):
         instance.storage_type = data.get('storage_type', Storage.UNIVERSAL)
         instance.toplevel = data.get('toplevel', False)
         instance.masked = data.get('masked', False)
+        instance.counted_for_unmasking = data.get(
+            'counted_for_unmasking', False)
         instance.attribs = {
             attrib_id: AttribFor(attrib_id, val)
             for attrib_id, val in data.get('attribs', [])}
@@ -202,15 +208,28 @@ class Item(CompleteIdentifiable):
         cls.get_coll().primary.update(instances)
         return instances.values()
 
+    def _recipe_item_rels(self):
+        """List of unique items used in recipes of this item.
+        This could include the main item if also used as a source.
+        Does not include recipe attrib req subjects.
+        """
+        return [
+            rel
+            for recipe in self.recipes
+            for related_list in (recipe.sources, recipe.byproducts)
+            for rel in related_list
+            ]
+
     def _resolve_partial_sources(self, complete=True):
-        for recipe in self.recipes:
-            for related_list in (recipe.sources, recipe.byproducts):
-                for related in related_list:
-                    if complete:
-                        related.item = self.load_complete_object(
-                            related.item_id)
-                    else:
-                        related.item = Item.get_by_id(related.item_id)
+        """
+        :param complete: whether to load complete or get from g.game_data
+        """
+        for related in self._recipe_item_rels():
+            if complete:
+                related.item = self.load_complete_object(
+                    related.item_id)
+            else:
+                related.item = Item.get_by_id(related.item_id)
 
     def _resolve_partial_attribs(self):
         for attrib_id, attrib_for in self.attribs.items():
@@ -231,6 +250,7 @@ class Item(CompleteIdentifiable):
         self._resolve_partial_sources()
         self._resolve_partial_attribs()
         load_piles(self, owner_char_id, at_loc_id, pos, main_pile_type)
+        self._unmask_if_reqs()
 
     @classmethod
     def load_collections(cls, for_piles=True):
@@ -265,11 +285,12 @@ class Item(CompleteIdentifiable):
         cls.load_complete_objects()
         current_obj = cls.load_complete_object(id_to_get)
         cls.load_collections()
-        current_obj._resolve_partial_sources(complete_sources)
+        current_obj._resolve_partial_sources(complete=complete_sources)
         current_obj._resolve_partial_attribs()
         # Get item data for the specific container,
         # and get piles at this loc or char that can be used for sources
         load_piles(current_obj, owner_char_id, at_loc_id, pos, main_pile_type)
+        current_obj._unmask_if_reqs()
         # Get relation data for items that use this item as a source
         item_recipes_data = Recipe.load_data_by_source(id_to_get)
         for item_id, recipes_data in item_recipes_data.items():
@@ -281,7 +302,6 @@ class Item(CompleteIdentifiable):
                         for recipe_id, recipe_data in recipes_data.items()
                         ]
                 item._resolve_partial_sources(complete=False)
-
         from .event import Event
         Event.load_triggers_for_type(id_to_get, cls.typename())
         return current_obj
@@ -378,3 +398,55 @@ class Item(CompleteIdentifiable):
             (self.q_limit > 0.0 and quantity > self.q_limit) or
             (self.q_limit < 0.0 and quantity < self.q_limit)
             )
+
+    def _unmask_if_reqs(self):
+        if not self.masked:
+            return
+        for recipe in self.recipes:
+            if recipe.masking_reqs_met():
+                logger.debug("Unmasking %s.", self.name)
+                self.masked = False
+                self.to_db()
+                return
+        logger.debug("Not ready to unmask %s.", self.name)
+
+    def count_for_unmasking(self, *progress_args):
+        """If this item has a quantity in any pile,
+        then unmask any items that use this item as a source,
+        as done by Recipe.masking_reqs_met().
+        Also, unmask any byproducts.
+        Before calling this method, call Recipe.load_data_by_source().
+        :param progress_args: to pass to load_for_progress()
+        """
+        if (self.counted_for_unmasking
+                or not self.pile or not self.pile.quantity):
+            return
+        def get_used(current, other):
+            if other.id != current.id:
+                for recipe in other.recipes:
+                    for source in recipe.sources:
+                        if current.id == source.item.id:
+                            return True
+            return False
+        for other in [
+                other for other in g.game_data.items
+                if get_used(self, other)
+            ] + [
+                byp.item
+                for recipe in self.recipes
+                for byp in recipe.byproducts
+                if byp.item.id != self.id
+            ]:
+            if other.masked:
+                # Load data for checking unmasking and then do the check.
+                other.load_for_progress(*progress_args)
+        self.counted_for_unmasking = True
+        self.to_db()
+
+    def maskable_name(self):
+        """Returns dots instead of name if masked."""
+        logger.debug("%s masked: %s", self.name, self.masked)
+        if not self.masked:
+            return self.name
+        return ''.join(
+            '•' if ch != ' ' else ' ' for ch in self.name)

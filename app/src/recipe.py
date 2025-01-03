@@ -378,3 +378,31 @@ class Recipe(DependentIdentifiable):
                 recipe_data = recipes_data.setdefault(recipe_row.id, recipe_row)
                 recipe_data.setdefault('byproducts', []).append(byproduct_row)
         return item_recipes
+
+    def reqs_met(self):
+        for source in self.sources:
+            req_qty = source.q_required
+            if (req_qty > 0 and
+                    (not source.pile or source.pile.quantity < req_qty)):
+                return (
+                    False,
+                    f"Requires {format_num(f'{req_qty}')} {source.item.name}."
+                    )
+        for req in self.attrib_reqs.values():
+            if (req.bounded() and req.subject is None):
+                return (
+                    False,
+                    f"Requires {req.attrib.name} {req.range_str()}"
+                    )
+        return True, ""
+
+    def masking_reqs_met(self):
+        """If source quantity is not 0, it's good enough to unmask,
+        even if the quantity isn't enough to produce the item.
+        """
+        for source in self.sources:
+            if source.q_required and (
+                    not source.pile or not source.pile.quantity):
+                logger.debug("Requires %s.", source.item_id)
+                return False
+        return True

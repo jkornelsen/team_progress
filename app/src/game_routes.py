@@ -619,6 +619,7 @@ def set_routes(app):
                         req)
                 except TriggerException as ex:
                     return jsonify(ex.json_data)
+        main_item.count_for_unmasking(char_id, loc_id, pos)
         progress = main_item.progress
         pile = main_item.pile
         logger.debug(

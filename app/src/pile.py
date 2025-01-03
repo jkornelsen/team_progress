@@ -113,13 +113,13 @@ def load_piles(current_item, char_id, loc_id, pos, main_pile_type):
         container.pile = current_item.pile
     for recipe in current_item.recipes:
         for source in recipe.sources:
-            logger.debug("source pile")
+            logger.debug("source pile %s", source.item_id)
             source.pile = _assign_pile(
                 source.item, chars, loc, char_id, loc_id, position)
             if not any(position):
                 position = get_position(source.pile, position)
         for byproduct in recipe.byproducts:
-            logger.debug("byproduct pile")
+            logger.debug("byproduct pile %s", byproduct.item_id)
             byproduct.pile = _assign_pile(
                 byproduct.item, chars, loc, char_id, loc_id, position,
                 main_pile_type, exact_pos=True)

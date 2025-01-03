@@ -287,18 +287,10 @@ class Progress(DependentIdentifiable):
         if limit_positive or limit_negative:
             self.report_failure(f"Limit {self.q_limit} reached.")
             return False
-        for source in self.recipe.sources:
-            req_qty = source.q_required
-            if (req_qty > 0 and
-                    (not source.pile or source.pile.quantity < req_qty)):
-                self.report_failure(
-                    f"Requires {format_num(f'{req_qty}')} {source.item.name}.")
-                return False
-        for req in self.recipe.attrib_reqs.values():
-            if (req.bounded() and req.subject is None):
-                self.report_failure(
-                    f"Requires {req.attrib.name} {req.range_str()}")
-                return False
+        met, msg = self.recipe.reqs_met()
+        if not met:
+            self.report_failure(msg)
+            return False
         logger.debug("can produce")
         return True
 

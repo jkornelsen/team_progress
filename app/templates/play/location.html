@@ -114,7 +114,7 @@
                                 {% set letter = link_letters.next(link) %}
                                 <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
                                 <span class="hotkey-indicator">[{{ letter }}]</span>
-                                <a href="{{ link }}">{{ item.name }}</a>
+                                <a href="{{ link }}">{{ item.maskable_name() }}</a>
                                 {% if item.pile.quantity %}&nbsp;{{ item.pile.quantity | formatNum }}{% endif %}
                                 <br>
                             {% endfor %}

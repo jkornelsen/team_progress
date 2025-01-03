@@ -1,4 +1,4 @@
-# Team Progress: incremental + TTRPG
+# Team Progress Kit: incremental + TTRPG
 
 Produce, interact, and explore, driven by storytelling and chance.
 Model a wide variety of ideas using descriptive text as building blocks.
@@ -12,7 +12,7 @@ then describe what happened in a way that fits.
 
 ## Server
 
-The multiplayer design requires more on the server side
+The flexible, multiplayer design requires more on the server side
 than normal idlers.
 Websites such as pythonAnywhere can host this type of project.
 To download and run on a home network, see [Installing](Installation.md).

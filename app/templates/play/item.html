@@ -80,7 +80,7 @@
                                display: flex;
                                align-items: center;
                                flex-wrap: nowrap">
-                        {{ current.name }}{% if not current.name.endswith(('.', '!', '?', ',', ';', ':')) %}:{% endif %}&nbsp;
+                        {{ current.maskable_name() }}{% if not current.maskable_name().endswith(('.', '•', '!', '?', ',', ';', ':')) %}:{% endif %}&nbsp;
                         {% if current.q_limit %}
                             <div id="storage-progress-container"
                                  class="progress-container"
@@ -178,7 +178,13 @@
                     </div>
                 </td>
             </tr>
-            {% if current.description %}
+            {% if current.masked %}
+                <tr>
+                    <td>
+                        <p><b>This item is currently masked. To reveal, produce some of the sources, or uncheck "<i>Masked</i>" in item setup.</b></p>
+                    </td>
+                </tr>
+            {% elif current.description %}
                 <tr>
                     <td>
                         <p>{{ current.description|htmlify }}</p>
@@ -294,7 +300,7 @@
                                                 <td>
                                                     <strong title="byproduct">&amp;</strong>
                                                     <span class="hotkey-indicator">[{{ letter }}]</span>
-                                                    <a href="{{ link }}">{{ item.name }}</a>
+                                                    <a href="{{ link }}">{{ item.maskable_name() }}</a>
                                                 </td>
                                                 <td>{{ byproduct.rate_amount | formatNum }}</td>
                                             {% else %}
@@ -317,7 +323,7 @@
                                                     {% set item = source.item %}
                                                     {% if item.id == current.id or (item.storage_type == 'local' and not params.loc_id) %}
                                                         <td>
-                                                            <strong>{{ item.name }}</strong>
+                                                            <strong>{{ item.maskable_name() }}</strong>
                                                         </td>
                                                     {% else %}
                                                         {% set pos = source.pile.position if source.pile else "" %}
@@ -326,7 +332,7 @@
                                                         <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
                                                         <td>
                                                             <span class="hotkey-indicator">[{{ letter }}]</span>
-                                                            <a href="{{ link }}">{{ item.name }}</a>
+                                                            <a href="{{ link }}">{{ item.maskable_name() }}</a>
                                                         </td>
                                                     {% endif %}
                                                     <td>
@@ -450,7 +456,7 @@
                                 {% if used_for.item.storage_type == 'local' and not params.loc_id %}
                                     <tr>
                                         <td>
-                                            <strong>{{ used_for.item.name }}</strong>
+                                            <strong>{{ used_for.item.maskable_name() }}</strong>
                                         </td>
                                         <td>
                                             {% if source.preserve %}
@@ -467,7 +473,7 @@
                                     <tr>
                                         <td>
                                             <span class="hotkey-indicator">[{{ letter }}]</span>
-                                            <a href="{{ link }}">{{ used_for.item.name }}</a>
+                                            <a href="{{ link }}">{{ used_for.item.maskable_name() }}</a>
                                         </td>
                                         <td>
                                             {% if source.preserve %}
@@ -497,7 +503,7 @@
                                 <tr>
                                     <td>
                                         <span class="hotkey-indicator">[{{ letter }}]</span>
-                                        <a href="{{ link }}">{{ byproduct_of.item.name }}</a>
+                                        <a href="{{ link }}">{{ byproduct_of.item.maskable_name() }}</a>
                                     </td>
                                 </tr>
                             {% endfor %}
