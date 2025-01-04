@@ -29,7 +29,7 @@
             <span title="You won the scenario!">✅</span>
         {% elif current_data.overall.win_reqs %}
             <span style="color: gray;"
-            title="There are unfulfilled win conditions &mdash; see Overall Settings.">☐</span>
+            title="There are win conditions &mdash; see Overall Settings.">☐</span>
         {% endif %}
     </h1>
     <p>{{ current_data.overall.description|htmlify }}</p>
@@ -101,12 +101,15 @@
                 </table>
             {% endif %}
             <!-- Items in General Storage -->
+            {% set has_item_attribs = current_data.items | selectattr('attribs') | list | length > 0 %}
             {% if current_data.items %}
                 <table class="spacious">
                     <tr>
                         <th>General Storage</th>
                         <th>Quantity</th>
+                        {% if has_item_attribs %}
                         <th>Attributes</th>
+                        {% endif %}
                     </tr>
                     {% for item in current_data.items %}
                         {% set link = url_for('play_item', item_id=item.id, main='universal') %}
@@ -121,6 +124,7 @@
                                 {{ item.quantity | formatNum }}
                                 {% if item.is_ongoing %}<span title="currently in production">🔄</span>{% endif %}
                             </td>
+                            {% if has_item_attribs %}
                             <td>
                                 {% if item.attribs %}
                                     {% for attrib_of in item.attribs[:2] %}
@@ -145,26 +149,27 @@
                                     {% endfor %}
                                 {% endif %}
                             </td>
+                            {% endif %}
                         </tr>
                     {% endfor %}
                 </table>
             {% endif %}
         </div>
-        <style>
-            .scrollable {
-                height: 300px;
-                max-width: 400px;
-                overflow-y: auto;
-                padding: 10px;
-                background-color: #1a1a1a;
-                border: 1px solid #333;
-                border-left: 2px solid #555;
-                border-top: 2px solid #555;
-                border-radius: 4px;
-                box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
-            }
-        </style>
         <div class="expand"><!-- righthand column -->
+            <style>
+                .scrollable {
+                    height: 300px;
+                    max-width: 400px;
+                    overflow-y: auto;
+                    padding: 10px;
+                    background-color: #1a1a1a;
+                    border: 1px solid #333;
+                    border-left: 2px solid #555;
+                    border-top: 2px solid #555;
+                    border-radius: 4px;
+                    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+                }
+            </style>
             <div class="scrollable">
                 {% for entry in log_messages %}
                     <p style="color: tan;">{{ entry.message | safe }}

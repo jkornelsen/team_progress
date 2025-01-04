@@ -642,7 +642,8 @@ def set_routes(app):
                 }
                 for recipe in main_item.recipes
                 for source in recipe.sources
-                ]
+                ],
+            'unmasked_items': session.pop('unmasked_items', False),
             })
 
     @app.route('/item/start/<int:item_id>/<int:recipe_id>')

@@ -220,6 +220,7 @@ class Recipe(DependentIdentifiable):
         instance.sources = [
             Source.from_data(src_data)
             for src_data in data.get('sources', [])]
+        instance.sources.sort(key=lambda src: src.item_id)
         instance.byproducts = [
             Byproduct.from_data(byp_data)
             for byp_data in data.get('byproducts', [])]
@@ -402,7 +403,10 @@ class Recipe(DependentIdentifiable):
         """
         for source in self.sources:
             if source.q_required and (
-                    not source.pile or not source.pile.quantity):
+                    not source.item or not source.item.counted_for_unmasking
+                    ) and (
+                    not source.pile or not source.pile.quantity
+                ):
                 logger.debug("Requires %s.", source.item_id)
                 return False
         return True

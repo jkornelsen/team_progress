@@ -9,15 +9,15 @@
 {% block content %}
     <h1>Item Setup</h1>
     <p class="info">
-        In addition to resources or equipment,
+        In addition to resources and equipment,
         they can also represent an upgrade in production speed,
         or conversation dialog.
         They could even be people if they don't take actions.
     </p>
     <p class="info">
         Storage type is important to consider. General (accessible anywhere) is
-        good for idle progress, while carried is for RPGs.
-        Crafting stations are tied to a location.
+        good for idle progress, while carried is typically for RPGs.
+        Crafting stations reside at a location.
         To store more than one way, create an additional item
         and convert with a recipe.
         For example:
@@ -63,7 +63,7 @@
                        name="storage_type"
                        value="carried"
                        {% if current.storage_type == 'carried' %}checked{% endif %}>
-                <label for="carried">Can be carried by characters</label>
+                <label for="carried">Can be carried</label>
                 <br>
                 <input type="radio"
                        id="local"
@@ -96,39 +96,6 @@
                {% if current.masked %}checked{% endif %}>
         <label for="masked">Masked</label>
         <br>
-        <div id="attrib-container" class="outer-border">
-            <table id="attrib-table" style="display: none;">
-                <thead>
-                    <tr>
-                        <th>Attribute</th>
-                        <th>Value</th>
-                        <th class="transparent-col"></th>
-                    </tr>
-                </thead>
-                <tbody id="attrib-rows">
-                </tbody>
-            </table>
-            <div>
-                {% if game_data.attribs %}
-                    <!-- Select box for adding another attribute -->
-                    <div class="select-box">
-                        <select id="add-attrib-select">
-                            <option value="" selected>(Select attribute)</option>
-                            {% for attrib in game_data.attribs %}
-                                <option value="{{ attrib.id }}"
-                                    data-binary="{{ attrib.binary | lower }}"
-                                    data-enum='{{ attrib.enum | tojson }}'>
-                                    {{ attrib.name }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                        <button type="button" id="add-attrib-btn" class="lesser-button">Add Attribute</button>
-                    </div>
-                {% else %}
-                    <p class="no-entities">(No attributes)</p>
-                {% endif %}
-            </div>
-        </div>
         <div id="sources-container" class="outer-border">
             <!-- Placeholder for appending new recipes -->
             <div id="recipelist_end" class="unobtrusive"></div>
@@ -166,6 +133,39 @@
                     {% if current.recipes | length == 0 %}style="display: none;"{% endif %}>
                 Add Alternative Recipe
             </button>
+        </div>
+        <div id="attrib-container" class="outer-border">
+            <table id="attrib-table" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Attribute</th>
+                        <th>Value</th>
+                        <th class="transparent-col"></th>
+                    </tr>
+                </thead>
+                <tbody id="attrib-rows">
+                </tbody>
+            </table>
+            <div>
+                {% if game_data.attribs %}
+                    <!-- Select box for adding another attribute -->
+                    <div class="select-box">
+                        <select id="add-attrib-select">
+                            <option value="" selected>(Select attribute)</option>
+                            {% for attrib in game_data.attribs %}
+                                <option value="{{ attrib.id }}"
+                                    data-binary="{{ attrib.binary | lower }}"
+                                    data-enum='{{ attrib.enum | tojson }}'>
+                                    {{ attrib.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <button type="button" id="add-attrib-btn" class="lesser-button">Add Attribute</button>
+                    </div>
+                {% else %}
+                    <p class="no-entities">(No attributes)</p>
+                {% endif %}
+            </div>
         </div>
         <div class="footer-buttons">
             <button type="submit" id="btn-save" name="save_changes">Save and Close</button>
@@ -612,7 +612,7 @@
             });
 
             console.log("number of recipes={{ current.recipes | length }}");
-            {% for recipe in current.recipes %}
+            {% for recipe in current.recipes|sort(attribute="id") %}
                 addRecipe(
                     {{ recipe.id }},
                     'from_db',

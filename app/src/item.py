@@ -229,7 +229,7 @@ class Item(CompleteIdentifiable):
                 related.item = self.load_complete_object(
                     related.item_id)
             else:
-                related.item = Item.get_by_id(related.item_id)
+                related.item = self.__class__.get_by_id(related.item_id)
 
     def _resolve_partial_attribs(self):
         for attrib_id, attrib_for in self.attribs.items():
@@ -253,9 +253,11 @@ class Item(CompleteIdentifiable):
         self._unmask_if_reqs()
 
     @classmethod
-    def load_collections(cls, for_piles=True):
+    def load_collections(cls, for_piles=True, flat_items=True):
         """Load collections needed to fully load items."""
-        g.game_data.from_db_flat([Attrib, Item])
+        g.game_data.from_db_flat([Attrib])
+        if flat_items:
+            g.game_data.from_db_flat([Item])
         if for_piles:
             from .location import Location
             from .character import Character
@@ -284,7 +286,7 @@ class Item(CompleteIdentifiable):
             id_to_get, owner_char_id, at_loc_id, pos, main_pile_type)
         cls.load_complete_objects()
         current_obj = cls.load_complete_object(id_to_get)
-        cls.load_collections()
+        cls.load_collections(flat_items=False)
         current_obj._resolve_partial_sources(complete=complete_sources)
         current_obj._resolve_partial_attribs()
         # Get item data for the specific container,
@@ -295,7 +297,7 @@ class Item(CompleteIdentifiable):
         item_recipes_data = Recipe.load_data_by_source(id_to_get)
         for item_id, recipes_data in item_recipes_data.items():
             if item_id != id_to_get:
-                item = Item.get_by_id(item_id)
+                item = cls.get_by_id(item_id)
                 if not len(item.recipes):
                     item.recipes = [
                         Recipe.from_data(recipe_data, item)
@@ -316,7 +318,7 @@ class Item(CompleteIdentifiable):
             session['default_storage_type'] = self.storage_type
             self.toplevel = req.get_bool('top_level')
             self.masked = req.get_bool('masked')
-            old = Item.load_complete_object(self.id)
+            old = self.__class__.load_complete_object(self.id)
             self.q_limit = req.set_num_if_changed(
                 req.get_str('item_limit'), [old.q_limit])
             self.pile = GeneralPile(
@@ -407,6 +409,7 @@ class Item(CompleteIdentifiable):
                 logger.debug("Unmasking %s.", self.name)
                 self.masked = False
                 self.to_db()
+                session['unmasked_items'] = True
                 return
         logger.debug("Not ready to unmask %s.", self.name)
 
@@ -421,15 +424,18 @@ class Item(CompleteIdentifiable):
         if (self.counted_for_unmasking
                 or not self.pile or not self.pile.quantity):
             return
+        logger.debug("counted_for_unmasking(): checking")
+
         def get_used(current, other):
             if other.id != current.id:
                 for recipe in other.recipes:
                     for source in recipe.sources:
-                        if current.id == source.item.id:
+                        if current.id == source.item_id:
                             return True
             return False
+
         for other in [
-                other for other in g.game_data.items
+                other for other in self.get_coll()
                 if get_used(self, other)
             ] + [
                 byp.item
@@ -442,11 +448,17 @@ class Item(CompleteIdentifiable):
                 other.load_for_progress(*progress_args)
         self.counted_for_unmasking = True
         self.to_db()
+        logger.debug("counted_for_unmasking(): checked")
+
+    @staticmethod
+    def mask_name(item_name):
+        """Returns dots instead of name."""
+        return ''.join(
+            '•' if ch != ' ' else ' ' for ch in item_name)
 
     def maskable_name(self):
-        """Returns dots instead of name if masked."""
+        """Returns masked name if item is masked."""
         logger.debug("%s masked: %s", self.name, self.masked)
         if not self.masked:
             return self.name
-        return ''.join(
-            '•' if ch != ' ' else ' ' for ch in self.name)
+        return self.mask_name(self.name)

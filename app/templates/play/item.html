@@ -218,7 +218,7 @@
                                 <th>In Stock</th>
                                 <th title="If there is a page that should be shown in this column, first navigate to that page.">Where</th>
                             </tr>
-                            {% for recipe in current.recipes %}
+                            {% for recipe in current.recipes|sort(attribute='id') %}
                                 {% if not loop.first %}<tr style="border-top: 1px solid #888;"></tr>{% endif %}
                                 {% set attribs_list = recipe.attrib_reqs.values() | list %}
                                 {% set max_rows = max(recipe.byproducts|length + 1, recipe.sources|length + attribs_list|length) %}
@@ -617,8 +617,12 @@
                     });
                 });
                 data = combined_data;
-                if (data && 'status' in data && data.status === 'interrupt') {
+                if ('status' in data && data.status === 'interrupt') {
                     handleInterrupt(data);
+                    return;
+                }
+                if (data.unmasked_items) {
+                    location.reload();
                     return;
                 }
                 data = combined_data.main;

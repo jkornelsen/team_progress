@@ -355,6 +355,8 @@ class Overall(DbSerializable):
         for item in items_data.values():
             if hasattr(item, 'attribs'):
                 item.attribs.sort(key=lambda x: x.attrib.name)
+            if item.masked:
+                item.name = Item.mask_name(item.name)
         overview_data.items = list(items_data.values())
         # Events
         event_rows = cls.execute_select("""

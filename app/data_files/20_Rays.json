@@ -5,7 +5,7 @@
     "items": [
         {
             "attribs": [],
-            "description": "It seems like you shouldn't be able to see a black bar in space. Doesn't black absorb all light?<pre>\r\n  <c=\"black\">_____________\r\n<c=\"gray\">/</c>/____________/<c=\"gray\">/</c>\r\n</c></pre>\r\nRequires a reset:\r\n1. Stop progress for these sources (<c=\"red\">#</c>, <c=\"green\">#</c>, <c=\"yellow\">#</c>).\r\n2. Produce as many black bars as possible.\r\n3. Set quantities of these sources to 0.\r\n4. Reset rates and boosts of <c=\"red\">#</c> (1/8s) and <c=\"green\">#</c> (0.5/8s).",
+            "description": "It seems like you shouldn't be able to see a black bar in space. Doesn't black absorb all light?<pre>\r\n  <c=\"black\">_____________\r\n<c=\"gray\">/</c>/____________/<c=\"gray\">/</c>\r\n</c></pre>\r\nRequires a reset:\r\n1. Stop progress for these sources (<c=\"red\">#</c>, <c=\"green\">#</c>, <c=\"yellow\">#</c>).\r\n2. Produce as many black bars as possible.\r\n3. Set quantities of these sources to 0.\r\n4. Reset rates and boosts of <c=\"red\">#</c> (1/8s, <a href=\"/configure/item/18\">I</a>, <a href=\"/configure/item/21\">II</a>) and <c=\"green\">#</c> (0.5/8s, <a href=\"/configure/item/19\">I</a>, <a href=\"/configure/item/50\">II</a>).",
             "id": 22,
             "masked": true,
             "name": "\u2b1bBlack Bar",
@@ -40,7 +40,7 @@
                 }
             ],
             "storage_type": "universal",
-            "toplevel": false
+            "toplevel": true
         },
         {
             "attribs": [],
@@ -73,7 +73,7 @@
         },
         {
             "attribs": [],
-            "description": "When this item is completed:\r\n\r\n\u2022 Go to <a href=\"/configure/item/17\">Green Bar setup</a> and check <i>Show in Overview</i>.\r\n\r\n\u2022 Uncheck <i>Masked</i>, or wait for it to be unmasked when you first view it.",
+            "description": "",
             "id": 45,
             "masked": false,
             "name": "Green Bar Unlocked",
@@ -107,7 +107,7 @@
         },
         {
             "attribs": [],
-            "description": "When this item is completed:\r\n\u2022 Go to <a href=\"/configure/item/57\">White Bar setup</a> and check <i>Show in Overview</i>.",
+            "description": "",
             "id": 62,
             "masked": true,
             "name": "White Bar Unlocked",
@@ -132,7 +132,7 @@
                 }
             ],
             "storage_type": "universal",
-            "toplevel": false
+            "toplevel": true
         },
         {
             "attribs": [],
@@ -190,7 +190,7 @@
         },
         {
             "attribs": [],
-            "description": "When this item is completed:\r\n\u2022 Go to <a href=\"/configure/item/55\">Violet Bar setup</a> and check <i>Show in Overview</i>.\r\n\u2022 For each of (<a href=\"/configure/item/62\">1</a>), uncheck <i>Masked</i>.",
+            "description": "",
             "id": 63,
             "masked": true,
             "name": "Violet Bar Unlocked",
@@ -251,7 +251,7 @@
                         {
                             "item_id": 22,
                             "preserve": false,
-                            "q_required": 1.0
+                            "q_required": 2.0
                         }
                     ]
                 }
@@ -339,7 +339,7 @@
         },
         {
             "attribs": [],
-            "description": "When this item is completed:\r\n\u2022 Go to <a href=\"/configure/item/56\">Orange Bar setup</a> and check <i>Show in Overview</i>.\r\n\u2022 For each of (<a href=\"/configure/item/61\">1</a>), uncheck <i>Masked</i>.",
+            "description": "",
             "id": 58,
             "masked": true,
             "name": "Orange Bar Unlocked",
@@ -364,7 +364,7 @@
                 }
             ],
             "storage_type": "universal",
-            "toplevel": false
+            "toplevel": true
         },
         {
             "attribs": [],
@@ -465,7 +465,7 @@
         },
         {
             "attribs": [],
-            "description": "When this item is completed:\r\n\u2022 Go to <a href=\"/configure/item/17\">Blue Bar setup</a> and check <i>Show in Overview</i>.\r\n\u2022 For each of (<a href=\"/configure/item/50\">1</a>, <a href=\"/configure/item/59\">2</a>, <a href=\"/configure/item/58\">3</a>), uncheck <i>Masked</i>.",
+            "description": "",
             "id": 47,
             "masked": true,
             "name": "Blue Bar Unlocked",
@@ -484,7 +484,7 @@
                         {
                             "item_id": 22,
                             "preserve": false,
-                            "q_required": 10.0
+                            "q_required": 1.0
                         }
                     ]
                 }
@@ -749,7 +749,7 @@
                 }
             ],
             "storage_type": "universal",
-            "toplevel": false
+            "toplevel": true
         },
         {
             "attribs": [],
@@ -821,7 +821,7 @@
         },
         {
             "attribs": [],
-            "description": "Rate amount +1 each, making a total of 20 (not including other boosts).\r\n\r\nPerform the upgrade by going to <a href=\"/play/item/15\">Red Bar</a> setup and setting <i>Gain per Batch</i> from <i>Ambient Energy</i>.",
+            "description": "Rate amount +1 each, making a total of 20.\r\n\r\nPerform the upgrade by going to <a href=\"/play/item/15\">Red Bar</a> setup and setting <i>Gain per Batch</i> from <i>Ambient Energy</i>.",
             "id": 18,
             "masked": true,
             "name": "Red Bar Boost I",
@@ -889,7 +889,7 @@
         },
         {
             "attribs": [],
-            "description": "Rate amount +0.5. Upgrade <a href=\"/play/item/17\">Green Bars</a> with steps similar to <a href=\"/play/item/18\">Red Bar Boost I</a>.",
+            "description": "Rate amount +0.5. Upgrade <a href=\"/play/item/17\">Green Bars</a> similarly to <a href=\"/play/item/18\">Red Bar Boost I</a>.",
             "id": 19,
             "masked": true,
             "name": "Green Bar Boost I",
@@ -1161,6 +1161,26 @@
                 {
                     "attrib_reqs": [],
                     "byproducts": [],
+                    "id": 3,
+                    "instant": false,
+                    "rate_amount": 0.5,
+                    "rate_duration": 8.0,
+                    "sources": [
+                        {
+                            "item_id": 16,
+                            "preserve": true,
+                            "q_required": 1.0
+                        },
+                        {
+                            "item_id": 45,
+                            "preserve": true,
+                            "q_required": 1.0
+                        }
+                    ]
+                },
+                {
+                    "attrib_reqs": [],
+                    "byproducts": [],
                     "id": 36,
                     "instant": true,
                     "rate_amount": 0.5,
@@ -1193,26 +1213,6 @@
                         },
                         {
                             "item_id": 54,
-                            "preserve": true,
-                            "q_required": 1.0
-                        }
-                    ]
-                },
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 3,
-                    "instant": false,
-                    "rate_amount": 0.5,
-                    "rate_duration": 8.0,
-                    "sources": [
-                        {
-                            "item_id": 16,
-                            "preserve": true,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 45,
                             "preserve": true,
                             "q_required": 1.0
                         }
