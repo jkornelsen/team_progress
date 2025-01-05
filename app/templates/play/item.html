@@ -233,7 +233,7 @@
                                     {% set attrib_index = row - recipe.sources|length %}
                                     {% if loop.first %}
                                         <tr>
-                                            <td>
+                                            <td style="vertical-align: top;">
                                                 {% if current.progress.can_produce(recipe.id) %}
                                                 {% set letter = link_letters.next() %}
                                                 {% if recipe.instant %}
@@ -241,13 +241,15 @@
                                                            class="quantity_to_gain"
                                                            id="quantity_to_gain_{{ recipe.id }}"
                                                            size="3"
-                                                           value="{{ session['quantity_to_gain'] if session['quantity_to_gain'] else 1 }}">
-                                                    [{{ letter }}]
-                                                    <button type="button"
-                                                            data-recipe-id="{{ recipe.id }}"
-                                                            data-rate-amount="{{ recipe.rate_amount }}"
-                                                            class="gain-btn go-button"
-                                                            id="gain-btn_{{ recipe.id }}">Gain</button>
+                                                           value="{{ max_batches.get(recipe.id, 1) }}">
+                                                    <div style="white-space: nowrap;">
+                                                        [{{ letter }}]
+                                                        <button type="button"
+                                                                data-recipe-id="{{ recipe.id }}"
+                                                                data-rate-amount="{{ recipe.rate_amount }}"
+                                                                class="gain-btn go-button"
+                                                                id="gain-btn_{{ recipe.id }}">Gain</button>
+                                                    </div>
                                                     <script>
                                                     funcForKey['{{ letter }}'] = () => {
                                                         document.querySelector('#gain-btn_{{ recipe.id }}').click();
@@ -270,7 +272,7 @@
                                                           title=" {{ current.progress.failure_reason }}">🚫</span>
                                                 {% endif %}
                                             </td>
-                                            <td>
+                                            <td style="vertical-align: top; padding-top: 12px;">
                                                 <span class="rate-amount" id="rate-amount_{{ recipe.id }}">
                                                     {% if recipescope.main_items_consumed > 0
                                                             and recipe.rate_amount >= 0

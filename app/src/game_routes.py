@@ -1,5 +1,6 @@
 import logging
 import re
+from sys import maxsize
 
 from flask import (
     g, jsonify, make_response, redirect, render_template, request, session,
@@ -340,6 +341,11 @@ def set_routes(app):
             main_pile_type=main_pile_type)
         if not item:
             return "Item not found"
+        progress = item.progress
+        max_batches = {}
+        for recipe in item.recipes:
+            num_batches, _ = progress.determine_batches(maxsize)
+            max_batches[recipe.id] = num_batches
         defaults = {
             'pickup_char': session.get('default_pickup_char', ''),
             'movingto_char': session.get('default_movingto_char', ''),
@@ -364,6 +370,7 @@ def set_routes(app):
             container=item.pile.container,
             params=params,
             defaults=defaults,
+            max_batches=max_batches,
             characters_at_loc=characters_at_loc,
             game_data=g.game_data,
             link_letters=LinkLetters('cdelmopq')

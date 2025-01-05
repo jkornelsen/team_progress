@@ -184,8 +184,12 @@
                 <input type="checkbox" id="reload-toggle">
                 Reload this page every
             </label>
-            <input type="text" id="reload-every" style="width: 20px;">
-            <span class="label-like">seconds</span>
+            <select id="reload-every">
+                <option value="4">4 sec</option>
+                <option value="10" selected>10 sec</option>
+                <option value="30">30 sec</option>
+                <option value="300">5 min</option>
+            </select>
         </div>
     </div>
     <script>
@@ -207,7 +211,7 @@
                 const $reloadEvery = $('#reload-every');
                 const toggleState = localStorage.getItem($reloadToggle.attr('id'));
                 $reloadToggle.prop('checked', toggleState === 'true');
-                $reloadEvery.prop('disabled', !toggleState === 'true');
+                $reloadEvery.prop('disabled', toggleState !== 'true');
                 const valEvery = localStorage.getItem($reloadEvery.attr('id'));
                 if (valEvery) {
                     $reloadEvery.val(valEvery);
@@ -217,23 +221,8 @@
             initializeReloadSettings();
 
             function setReloadInterval($field) {
-                if ($field === undefined) {
-                    console.error('$field is undefined');
-                    return;
-                }
                 let seconds = parseInt($field.val(), 10);
-                if (reloadInterval) {
-                    clearInterval(reloadInterval);
-                }
-                if (isNaN(seconds) || seconds <= 0) {
-                    $field.val('');
-                    localStorage.setItem($field.attr('id'), 0);
-                    return;
-                }
-                if (seconds < 4) {  // minimum
-                    seconds = 4;
-                    $field.val(seconds);
-                }
+                clearInterval(reloadInterval);
                 localStorage.setItem($field.attr('id'), seconds);
                 const $toggle = $('#reload-toggle');
                 if (!$toggle.is(':checked')) {
@@ -244,13 +233,9 @@
                 }, seconds * 1000);
                 console.log(`set reload interval to ${seconds} seconds`);
             }
-            let debounceTimer;  // wait a short time for the user to finish typing
-            $('#reload-every').on('input', function() {
-                const $input = $(this);
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(() => {
-                    setReloadInterval($input);
-                }, 800);
+            $('#reload-every').on('change', function() {
+                setReloadInterval($(this));
+                location.reload();
             });
             $('#reload-toggle').on('change', function() {
                 const $reloadEvery = $('#reload-every');
@@ -260,6 +245,7 @@
                 if (isChecked) {
                     $reloadEvery.prop('disabled', false);
                     setReloadInterval($reloadEvery);
+                    location.reload();
                 } else {
                     $reloadEvery.prop('disabled', true);
                     clearInterval(reloadInterval);

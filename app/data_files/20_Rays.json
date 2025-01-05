@@ -181,6 +181,11 @@
                             "item_id": 15,
                             "preserve": false,
                             "q_required": 10.0
+                        },
+                        {
+                            "item_id": 62,
+                            "preserve": true,
+                            "q_required": 1.0
                         }
                     ]
                 }
@@ -300,7 +305,7 @@
         },
         {
             "attribs": [],
-            "description": "Rate amount x1.5",
+            "description": "Rate amount x1.5\r\n<pre>Total: 10 * 1.5 ^ 6 = 114</pre>",
             "id": 61,
             "masked": true,
             "name": "Yellow Bar Boost II",
@@ -782,7 +787,7 @@
         },
         {
             "attribs": [],
-            "description": "Rate amount x1.5",
+            "description": "Rate amount x1.5\r\n\r\nThis means increasing by 50% each, exponentially. So, the green bar rate with all boosts I and II is:\r\n<pre>5 * 1.5 ^ 6 = 57 per 8 seconds</pre>",
             "id": 50,
             "masked": true,
             "name": "Green Bar Boost II",
@@ -850,7 +855,7 @@
         },
         {
             "attribs": [],
-            "description": "Rate amount x1.5\r\n\r\nMultiplying for each upgrade means the total benefit is exponential, so with a base rate amount of 20 from all <i>Red Bar Boost I upgrades</i>, the rate amount becomes: <pre>round(20 * 1.5 ^ 6) = 228</pre>",
+            "description": "Rate amount x1.5\r\n\r\nMultiplying for each upgrade means the total benefit is exponential, so with a base rate amount of 20 from all <i>Red Bar Boost I</i> upgrades, the rate amount becomes:\r\n<pre>20 * 1.5 ^ 6 = 228</pre>",
             "id": 21,
             "masked": true,
             "name": "Red Bar Boost II",

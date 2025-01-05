@@ -118,54 +118,59 @@ class Progress(DependentIdentifiable):
                 "self.pile.container[%s].to_db()", self.pile.container.name)
             self.pile.container.to_db()
 
-    # returns true if able to change quantity
-    def change_quantity(self, batches_requested):
-        with self.lock:
-            logger.debug("progress[%d].change_quantity(%d)",
-                self.id, batches_requested)
-            stop_when_done = False
-            if batches_requested == 0:
-                raise ValueError("Expected non-zero number of batches.")
-            num_batches = batches_requested
-            if not self.can_produce():
-                num_batches = 0
-                stop_when_done = True
-            eff_result_qty = num_batches * self.recipe.rate_amount
-            new_quantity = self.pile.quantity + eff_result_qty
-            if self.pile.item.exceeds_limit(new_quantity):
-                num_batches = ((self.q_limit - self.pile.quantity)
-                    // self.recipe.rate_amount)
-                stop_when_done = True  # can't process the full amount
+    def determine_batches(self, batches_requested):
+        """:param batches_requested: if not specified then get max"""
+        logger.debug(
+            "progress[%d].determine_batches(%d)", self.id, batches_requested)
+        stop_when_done = False
+        if batches_requested == 0:
+            raise ValueError("Expected non-zero number of batches.")
+        num_batches = batches_requested
+        if not self.can_produce():
+            num_batches = 0
+            stop_when_done = True
+        eff_result_qty = num_batches * self.recipe.rate_amount
+        new_quantity = self.pile.quantity + eff_result_qty
+        if self.pile.item.exceeds_limit(new_quantity):
+            num_batches = ((self.q_limit - self.pile.quantity)
+                // self.recipe.rate_amount)
+            stop_when_done = True  # can't process the full amount
+            logger.debug(
+                "num_batches=%d due to limit %d",
+                num_batches, self.q_limit)
+            if num_batches == 0:
+                self.report_failure(f"Limit {self.q_limit} reached.")
+        for source in self.recipe.sources:
+            eff_source_qty = num_batches * source.q_required
+            if eff_source_qty > 0:
                 logger.debug(
-                    "num_batches=%d due to limit %d",
-                    num_batches, self.q_limit)
-                if num_batches == 0:
-                    self.report_failure(f"Limit {self.q_limit} reached.")
-            for source in self.recipe.sources:
-                eff_source_qty = num_batches * source.q_required
-                if eff_source_qty > 0:
-                    logger.debug(
-                        "source %d, source.q_required=%d, "
-                        "eff_source_qty=%.1f, source.pile.quantity=%.1f",
-                        source.item.id, source.q_required, eff_source_qty,
-                        source.pile.quantity)
-                    if (source.pile.quantity < eff_source_qty
-                            and not source.preserve):
-                        stop_when_done = True  # can't process the full amount
-                        num_batches = min(
-                            num_batches,
-                            math.floor(source.pile.quantity / source.q_required))
-                        if num_batches == 0:
-                            self.report_failure(
-                                f"Requires {format_num(f'{source.q_required}')} "
-                                f"{source.item.name}.")
-                    elif source.pile.quantity < source.q_required:
-                        stop_when_done = True
-                        num_batches = 0
+                    "source %d, source.q_required=%d, "
+                    "eff_source_qty=%.1f, source.pile.quantity=%.1f",
+                    source.item.id, source.q_required, eff_source_qty,
+                    source.pile.quantity)
+                if (source.pile.quantity < eff_source_qty
+                        and not source.preserve):
+                    stop_when_done = True  # can't process the full amount
+                    num_batches = min(
+                        num_batches,
+                        math.floor(source.pile.quantity / source.q_required))
+                    if num_batches == 0:
                         self.report_failure(
                             f"Requires {format_num(f'{source.q_required}')} "
                             f"{source.item.name}.")
-            logger.debug("num_batches=%d", num_batches)
+                elif source.pile.quantity < source.q_required:
+                    stop_when_done = True
+                    num_batches = 0
+                    self.report_failure(
+                        f"Requires {format_num(f'{source.q_required}')} "
+                        f"{source.item.name}.")
+        logger.debug("num_batches=%d", num_batches)
+        return num_batches, stop_when_done
+
+    # returns true if able to change quantity
+    def change_quantity(self, batches_requested):
+        with self.lock:
+            num_batches, stop_when_done = self.determine_batches(batches_requested)
             if num_batches > 0:
                 # Deduct source quantity used
                 main_as_source_qty = 0
