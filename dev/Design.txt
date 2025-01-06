@@ -9,6 +9,33 @@ shouldn't be able to have both a two-way dest and an arrival one-way dest
 scenario: Furniture
 People: old man, young husband, young wife, elementary schooler, baby, dog, cat
 
+sometimes for overview there's a problem re-inserting recipe data
+in this case, we were coming from viewing black bar
+maybe the old data failed to cascade delete before inserting?
+reloading overview fixes the problem
+    overview_data = Overall.data_for_overview()
+    batches_done = progress.batches_for_elapsed_time()
+    if not self.change_quantity(batches_to_do):
+    self.pholder.to_db()  # should include writing progress obj to db
+    recipe.to_db()
+    psycopg2.errors.UniqueViolation: duplicate key value violates unique constraint "recipe_sources_pkey"
+    Key (game_token, recipe_id, item_id)=(f1c8df80-d78a-43d0-bef1-180a5a0f88f3, 36, 45) already exists.
+    45 is Green Bar Unlocked
+    for source in self.sources:
+        values.append((
+            g.game_token, self.id,
+            source.item_id,
+            source.q_required,
+            source.preserve,
+            ))
+    self.insert_multiple(
+        "recipe_sources",
+        "game_token, recipe_id, item_id, q_required, preserve",
+        values)
+Another example is coming from play Star to overview.
+    Key (game_token, recipe_id, item_id)=(f1c8df80-d78a-43d0-bef1-180a5a0f88f3, 3, 16) already exists.
+    16 is Ambient Energy, so, source of source maybe
+
 ---- planning ----
 
 hosting possibilities:
@@ -30,6 +57,12 @@ warn that loading will erase any scenario currently being played, so save first
 limit upload file size
 for example 10 Mb
 at 90% warn to remove content to avoid going over limit
+
+disconnect after 30 minutes without user interaction
+reloading overview doesn't count
+disconnect means go to a static page so it doesn't keep requesting updates
+session['disconnected'] = True
+button on page to reconnect
 
 travel could take a resource such as food for each distance step
 the character object would have this resource

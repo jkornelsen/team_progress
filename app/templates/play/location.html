@@ -96,7 +96,7 @@
                                     {% set letter = link_letters.next(link) %}
                                     <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
                                     <span class="hotkey-indicator">[{{ letter }}]</span>
-                                    <a href="{{ link }}">{{ item.name }}</a>
+                                    <a href="{{ link }}">{{ item.maskable_name() }}</a>
                                     {% if not (item_at.item.q_limit == 1 and item_at.quantity == 1) %}{{ item_at.quantity | formatNum }}{% endif %}
                                     {% if has_grid %}
                                         <span class="label-like">&nbsp;[{{ item_at.position[0] }},{{ item_at.position[1] }}]</span>

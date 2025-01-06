@@ -239,7 +239,7 @@
                                                 {% if recipe.instant %}
                                                     <input type="text"
                                                            class="quantity_to_gain"
-                                                           id="quantity_to_gain_{{ recipe.id }}"
+                                                           id="quantity-to-gain_{{ recipe.id }}"
                                                            size="3"
                                                            value="{{ max_batches.get(recipe.id, 1) }}">
                                                     <div style="white-space: nowrap;">
@@ -759,9 +759,9 @@
             initializePage();
 
             $('.gain-btn').click((event) => {
-                const quantityInput = $(event.currentTarget).prev('.quantity_to_gain');
-                const quantity = parseInt(quantityInput.val(), 10);
                 const recipe_id = $(event.currentTarget).data('recipe-id');
+                const quantityInput = $(`#quantity-to-gain_${recipe_id}`);
+                const quantity = parseInt(quantityInput.val(), 10);
                 if (isNaN(quantity) || Number(quantity) === 0) {
                     alert('Please enter a valid number for the quantity.');
                     return;

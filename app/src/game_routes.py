@@ -344,6 +344,7 @@ def set_routes(app):
         progress = item.progress
         max_batches = {}
         for recipe in item.recipes:
+            progress.set_recipe_by_id(recipe.id)
             num_batches, _ = progress.determine_batches(maxsize)
             max_batches[recipe.id] = num_batches
         defaults = {

@@ -10,9 +10,9 @@
     <h1>Item Setup</h1>
     <p class="info">
         In addition to resources and equipment,
-        they can also represent an upgrade in production speed,
+        they can also represent an upgrade
         or conversation dialog.
-        They could even be people if they don't take actions.
+        Often produced according to recipes.
     </p>
     <p class="info">
         Storage type is important to consider. General (accessible anywhere) is
@@ -20,10 +20,8 @@
         Crafting stations reside at a location.
         To store more than one way, create an additional item
         and convert with a recipe.
-        For example:
-        <i>funds</i> in the bank (general) &rarr; <i>cash</i> on hand (carried),
-        or <i>cow</i> in pen (location) &rarr; <i>cow (transport)</i> (carried)
-        so it can be picked up by a truck.
+        For example,
+        <i>funds</i> in the bank (general) &rarr; <i>cash</i> on hand (carried).
     </p>
     <form method="post" style="padding-bottom: 60px">
         <label for="item-name">Name:</label>
@@ -94,8 +92,8 @@
                id="masked"
                name="masked"
                {% if current.masked %}checked{% endif %}>
-        <label for="masked">Masked</label>
-        <br>
+        <label for="masked">Masked &mdash; reveal when all sources have any value</label>
+        <div style="height: 5px;"></div>
         <div id="sources-container" class="outer-border">
             <!-- Placeholder for appending new recipes -->
             <div id="recipelist_end" class="unobtrusive"></div>

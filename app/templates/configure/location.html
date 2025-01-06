@@ -27,17 +27,16 @@
                   cols="50">{{ current.description }}</textarea>
         <br>
         <input type="checkbox"
-               id="masked"
-               name="masked"
-               {% if current.masked %}checked{% endif %}>
-        <label for="mask">Don't reveal until visited</label>
-        <br>
-        <input type="checkbox"
                id="top_level"
                name="top_level"
                {% if current.toplevel %}checked{% endif %}>
         <label for="top_level">Show in Overview</label>
-        <span class="label-like">– useful if characters do not go here</span>
+        <br>
+        <input type="checkbox"
+               id="masked"
+               name="masked"
+               {% if current.masked %}checked{% endif %}>
+        <label for="mask">Masked &mdash; reveal when a character travels here</label>
         <br>
         <label for="dimensions">Grid Dimensions:</label>
         <input type="text"
