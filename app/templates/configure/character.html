@@ -198,7 +198,7 @@
                         </td>
                     </tr>
                 `;
-                $('#items-rows').prepend(itemHtml);
+                $('#items-rows').append(itemHtml);
                 $('#items-table').show();
                 $('#items-rows').find('tr:first select[name="item_slot[]"]').val(itemSlot);
             }
@@ -233,7 +233,7 @@
                         </td>
                     </tr>
                 `;
-                $('#event-rows').prepend(eventHtml);
+                $('#event-rows').append(eventHtml);
                 $('#event-table').show();
             }
             $('#add-event-btn').click(() => {

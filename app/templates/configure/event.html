@@ -321,7 +321,7 @@
                         </td>
                     </tr>
                 `;
-                $('#determinant-rows').prepend(entityHtml);
+                $('#determinant-rows').append(entityHtml);
                 $('#determinant-table').show();
                 $('#determinant-rows').find('tr:first select[name="determinant_operation[]"]').val(operation);
             }

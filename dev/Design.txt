@@ -1,8 +1,4 @@
----- recent ----
----- issues and changes to consider ----
-
-Dungeon Crawl: room with up and down staircases (doors),
-in opposite parts of the room not by walls.
+---- issues and proposed changes ----
 
 win condition quantity min and max, like attribs for recipes
 Fission Plant: no more than a certain amount of pollution
@@ -39,6 +35,8 @@ Another example is coming from play Star to overview.
     Key (game_token, recipe_id, item_id)=(..., 57, 54 [Life Force]) already exists.
     source of source maybe
 
+limit upload file size to 20 Mb
+
 ---- planning ----
 
 hosting possibilities:
@@ -57,62 +55,14 @@ prompt each player to save to their PC occasionally
 only if no one recently saved from that session
 warn that loading will erase any scenario currently being played, so save first
 
-limit upload file size
-for example 10 Mb
-at 90% warn to remove content to avoid going over limit
-
 disconnect after 30 minutes without user interaction
 reloading overview doesn't count
 disconnect means go to a static page so it doesn't keep requesting updates
 session['disconnected'] = True
 button on page to reconnect
 
-travel could take a resource such as food for each distance step
-the character object would have this resource
-or use an instant item to do this manually
-that would make it easier to take 1 ticket or Rs.5 per x distance
-
-an attribute could be the season
-so an event based on the season would have a worse chance or lower average
-distance if season is winter
-winter would be explained in the attr description,
-and the implementation would be an input box showing * 0.9
-
 prompt before overwriting another action in progress
 such as if a character is already doing something else
-
-to travel from one location to another, selecting from a dropdown may
-be a bit tedious
-could have buttons instead to start travelling to a location
-perhaps we could use those instead of a single start button
-would still have a single stop button
-only a single distance display as well
-maybe display would include destination name: "Distance to Home: 3 of 10"
-since button would simply show "Travelling."
-other buttons would be greyed out if travelling.
-
-would attributes be useful for locations?
-for example, how dark a room is,
-or deep water would require swimming or limit evasion
-perhaps it would be better to simply mention such things in location description
-however, this could replace crafting stations
-
-for locations, have speed as well as distance
-characters would have travel speed for a particular location?
-for example, a swimming speed and a walking speed
-speed for a particular type of terrain, and a location would have a type of terrain
-or we could manually change the character's speed when entering a new location
-
-base chances could be displayed in the form of 1 / 10000 ticks
-or 3 / 5 chance to hit
-also min and max result,
-for example, 70% chance to do between 30 and 60 damage.
-
-events should automatically select last character viewed?
-seems better to have select box to select from all lists
-wouldn't change selection if a particular box doesn't have it
-could only show for three or more -- "Select all"
-seems good as long as we can find an intuitive place to put it on the page
 
 if item play gets too cluttered we could make a recipe play screen
 it wouldn't have the upper button actions such as pickup
@@ -132,7 +82,6 @@ when querying an item, first recursively query
 all of its sources that are in progress
 avoid recursion loops by maintaining a set of items to query
 the set would need to be a local variable passed as a parameter
-
 the player could control this by playing the source item first
 although that wouldn't be obvious at all
 going to overview would also take away that choice for top-level items
