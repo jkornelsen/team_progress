@@ -1,6 +1,9 @@
 ---- recent ----
 ---- issues and changes to consider ----
 
+Dungeon Crawl: room with up and down staircases (doors),
+in opposite parts of the room not by walls.
+
 win condition quantity min and max, like attribs for recipes
 Fission Plant: no more than a certain amount of pollution
 
@@ -19,8 +22,7 @@ reloading overview fixes the problem
     self.pholder.to_db()  # should include writing progress obj to db
     recipe.to_db()
     psycopg2.errors.UniqueViolation: duplicate key value violates unique constraint "recipe_sources_pkey"
-    Key (game_token, recipe_id, item_id)=(f1c8df80-d78a-43d0-bef1-180a5a0f88f3, 36, 45) already exists.
-    45 is Green Bar Unlocked
+    Key (game_token, recipe_id, item_id)=(..., 36, 45 [Green Bar Unlocked]) already exists.
     for source in self.sources:
         values.append((
             g.game_token, self.id,
@@ -33,8 +35,9 @@ reloading overview fixes the problem
         "game_token, recipe_id, item_id, q_required, preserve",
         values)
 Another example is coming from play Star to overview.
-    Key (game_token, recipe_id, item_id)=(f1c8df80-d78a-43d0-bef1-180a5a0f88f3, 3, 16) already exists.
-    16 is Ambient Energy, so, source of source maybe
+    Key (game_token, recipe_id, item_id)=(..., 3, 16 [Ambient Energy]) already exists.
+    Key (game_token, recipe_id, item_id)=(..., 57, 54 [Life Force]) already exists.
+    source of source maybe
 
 ---- planning ----
 

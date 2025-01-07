@@ -377,7 +377,7 @@ class Location(CompleteIdentifiable):
         """
         chars = []
         for char in g.game_data.characters:
-            if char.location.id == loc_id:
+            if char.location and char.location.id == loc_id:
                 if not Grid.adjacent(char.position, position):
                     continue
                 chars.append(char)

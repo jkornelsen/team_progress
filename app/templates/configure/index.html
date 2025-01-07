@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 {% block upper_left %}
     <div class="nav-container">
-        <a class="upper-left" href="{{ url_for("overview") }}">[O]verview</a>
+        <a class="upper-left" href="{{ url_for("overview") }}">[o]verview</a>
         <span class="separator">|</span>
-        <span class="upper-left">Main Setup</span>
+        <span class="upper-left">main setup</span>
         <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for("save_to_file") }}">[S]ave to File</a>
+        <a class="upper-left" href="{{ url_for("save_to_file") }}">[s]ave to file</a>
         <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for("load_from_file") }}">[L]oad from File</a>
+        <a class="upper-left" href="{{ url_for("load_from_file") }}">[l]oad from file</a>
     </div>
     {% if file_message %}<p>{{ file_message }}</p>{% endif %}
 {% endblock %}
@@ -16,6 +16,7 @@
         const linkForKey = {
             'o': '{{ url_for('overview') }}',
             'p': '{{ url_for('browse_scenarios') }}',
+            'P': '{{ url_for('browse_scenarios') }}',
             's': '{{ url_for('save_to_file') }}',
             'l': '{{ url_for('load_from_file') }}',
         };
@@ -24,7 +25,7 @@
                 return;
             }
             document.addEventListener('keypress', (event) => {
-                const key = event.key.toLowerCase();
+                const key = event.key;
                 if (linkForKey[key]) {
                     window.location.href = linkForKey[key];
                 }

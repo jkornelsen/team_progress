@@ -161,7 +161,10 @@ class LinkLetters:
         self.letter_index = 0
         self.letters = [
             chr(c) for c in range(ord('a'), ord('z') + 1)
-            if chr(c) not in excluded]
+            if chr(c) not in excluded
+            ] + [
+            chr(c) for c in range(ord('A'), ord('Z') + 1)
+            ]
         self.links = {}
 
     def next(self, link=None):

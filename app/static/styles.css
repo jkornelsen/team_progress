@@ -53,13 +53,29 @@ a:hover {
         gap: 0px;
     }
 }
-.expand {
-    flex: 1;
+
+.hotkey-indicator::before {
+    content: "[";
+    font-family: sans-serif;
+    font-size: 0.8em;
+}
+.hotkey-indicator::after {
+    content: "]";
+    font-family: sans-serif;
+    font-size: 0.8em;
+}
+.hotkey-indicator {
+    white-space: pre-wrap;
+    font-size: 1.1em;
+    font-family: monospace;
 }
 @media (max-width: 768px) {
     .hotkey-indicator {
         display: none;
     }
+}
+.expand {
+    flex: 1;
 }
 
 .flexdiv {

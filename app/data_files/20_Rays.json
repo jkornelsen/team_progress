@@ -5,7 +5,7 @@
     "items": [
         {
             "attribs": [],
-            "description": "It seems like you shouldn't be able to see a black bar in space. Doesn't black absorb all light?<pre>\r\n  <c=\"black\">_____________\r\n<c=\"gray\">/</c>/____________/<c=\"gray\">/</c>\r\n</c></pre>\r\nRequires a reset:\r\n1. Stop progress for these sources (<c=\"red\">#</c>, <c=\"green\">#</c>, <c=\"yellow\">#</c>).\r\n2. Produce as many black bars as possible.\r\n3. Set quantities of these sources to 0.\r\n4. Reset rates and boosts of <c=\"red\">#</c> (1/8s, <a href=\"/configure/item/18\">I</a>, <a href=\"/configure/item/21\">II</a>) and <c=\"green\">#</c> (0.5/8s, <a href=\"/configure/item/19\">I</a>, <a href=\"/configure/item/50\">II</a>).",
+            "description": "It seems like you shouldn't be able to see a black bar in space. Doesn't black absorb all light?<pre>\r\n  <c=\"black\">_____________\r\n<c=\"gray\">/</c>/____________/<c=\"gray\">/</c>\r\n</c></pre>\r\nRequires a reset:\r\n1. Stop progress for these sources (<c=\"red\">#</c>, <c=\"green\">#</c>, <c=\"yellow\">#</c>).\r\n2. Produce as many black bars as possible.\r\n3. Set quantities of these sources to 0.\r\n4. Reset rates and boosts of <c=\"red\">#</c> (1/8s, <a href=\"/configure/item/18\">I</a>, <a href=\"/configure/item/21\">II</a>) and <c=\"green\">#</c> (0.5/8s, <a href=\"/configure/item/19\">I</a>, <a href=\"/configure/item/50\">II</a>).\r\n\r\n<c=\"lemonchiffon\">Common browser hotkeys</c>: <i>Alt+LeftArrow</i> to go back, <i>Ctrl+Click</i> to open multiple tabs.",
             "id": 22,
             "masked": true,
             "name": "\u2b1bBlack Bar",
@@ -237,7 +237,7 @@
         },
         {
             "attribs": [],
-            "description": "Rate amount +1.",
+            "description": "Rate amount +1",
             "id": 49,
             "masked": true,
             "name": "Yellow Bar Boost I",
@@ -606,7 +606,7 @@
         },
         {
             "attribs": [],
-            "description": "Required for living beings such as plants to operate. Creating this force will consume all remaining ambient energy.",
+            "description": "Required for living beings such as plants. Creating this force will consume all remaining ambient energy.",
             "id": 54,
             "masked": true,
             "name": "Life Force",
@@ -1055,11 +1055,6 @@
                     "rate_duration": 9.0,
                     "sources": [
                         {
-                            "item_id": 62,
-                            "preserve": true,
-                            "q_required": 1.0
-                        },
-                        {
                             "item_id": 57,
                             "preserve": false,
                             "q_required": 10.0
@@ -1427,6 +1422,35 @@
             ],
             "storage_type": "local",
             "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "Rate amount +1",
+            "id": 75,
+            "masked": true,
+            "name": "Black Bar Boost I",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0.0,
+            "recipes": [
+                {
+                    "attrib_reqs": [],
+                    "byproducts": [],
+                    "id": 65,
+                    "instant": false,
+                    "rate_amount": 1.0,
+                    "rate_duration": 9.0,
+                    "sources": [
+                        {
+                            "item_id": 57,
+                            "preserve": false,
+                            "q_required": 1000.0
+                        }
+                    ]
+                }
+            ],
+            "storage_type": "universal",
+            "toplevel": false
         }
     ],
     "locations": [
@@ -1437,20 +1461,21 @@
             "excluded": [0,0,0,0],
             "id": 1,
             "item_refs": [
-                69,
-                63,
-                61,
-                58,
-                49,
                 18,
                 19,
+                21,
                 45,
                 47,
-                21,
+                49,
                 50,
+                58,
                 59,
+                61,
                 62,
-                64
+                63,
+                64,
+                69,
+                75
             ],
             "items": [],
             "masked": false,

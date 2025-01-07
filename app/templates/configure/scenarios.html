@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 {% block upper_left %}
     <div class="nav-container">
-        <a class="upper-left" href="{{ url_for("overview") }}">[O]verview</a>
+        <a class="upper-left" href="{{ url_for("overview") }}">[o]verview</a>
         <span class="separator">|</span>
-        <a href="{{ url_for("configure_index") }}">[M]ain Setup</a>
+        <a href="{{ url_for("configure_index") }}">[m]ain setup</a>
     </div>
 {% endblock %}
 {% block content %}
@@ -18,7 +18,7 @@
                 return;
             }
             document.addEventListener('keypress', (event) => {
-                const key = event.key.toLowerCase();
+                const key = event.key;
                 if (linkForKey[key]) {
                     window.location.href = linkForKey[key];
                 } else if (funcForKey[key]) {
@@ -55,7 +55,7 @@
                         {% set letter = link_letters.next() %}
                         <button type="submit"
                                 id="submit_load_scenario_{{ scenario_id }}">
-                            <span class="hotkey-indicator">[{{ letter }}]</span>
+                            <span class="hotkey-indicator">{{ letter }}</span>
                         </button>
                         <script>
                         funcForKey['{{ letter }}'] = () => {

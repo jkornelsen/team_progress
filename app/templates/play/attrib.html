@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 {% block upper_left %}
     <div class="nav-container">
-        <a class="upper-left" href="{{ url_for("overview") }}">[O]verview</a>
+        <a class="upper-left" href="{{ url_for("overview") }}">[o]verview</a>
         <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for("configure_index") }}">[M]ain Setup</a>
+        <a class="upper-left" href="{{ url_for("configure_index") }}">[m]ain setup</a>
         <span class="separator">|</span>
         <a class="upper-left"
-           href="{{ url_for('configure_attrib', attrib_id=current.id) }}">Attribute S[e]tup</a>
+           href="{{ url_for('configure_attrib', attrib_id=current.id) }}">attribute s[e]tup</a>
     </div>
 {% endblock %}
 {% block content %}
@@ -21,7 +21,7 @@
                 return;
             }
             document.addEventListener('keypress', (event) => {
-                const key = event.key.toLowerCase();
+                const key = event.key;
                 if (key === 'c') {
                     document.getElementById('change-btn').click();
                 } else if (linkForKey[key]) {
@@ -37,7 +37,7 @@
         <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
         &larr; back to
         <a href="{{ link }}">{{ referrer_link.get('name', 'Previous') }}</a>
-        <span class="hotkey-indicator">[{{ letter }}]</span>
+        <span class="hotkey-indicator">{{ letter }}</span>
         <br>
     {% endif %}
     <h1>{{ current.name }} of {{ subject.name }}</h1>

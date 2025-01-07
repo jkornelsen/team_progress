@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 {% block upper_left %}
     <div class="nav-container">
-        <a class="upper-left" href="{{ url_for('overview') }}">[O]verview</a>
+        <a class="upper-left" href="{{ url_for('overview') }}">[o]verview</a>
         <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for('configure_index') }}">[M]ain Setup</a>
+        <a class="upper-left" href="{{ url_for('configure_index') }}">[m]ain setup</a>
         <span class="separator">|</span>
         <a class="upper-left"
-           href="{{ url_for('configure_char', char_id=current.id) }}">Character S[e]tup</a>
+           href="{{ url_for('configure_char', char_id=current.id) }}">character s[e]tup</a>
     </div>
 {% endblock %}
 {% block content %}
@@ -26,7 +26,7 @@
                 if (isModalOpen) {
                     return;
                 }
-                const key = event.key.toLowerCase();
+                const key = event.key;
                 if (key === 'g') {
                     const btn = $('#do-travel-btn');
                     if (btn.is(':visible')) {
@@ -70,7 +70,7 @@
                 {% set link = url_for('play_location', loc_id=current.location.id, char_id=current.id) | safe %}
                 {% set letter = link_letters.next(link) %}
                 <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
-                <span class="hotkey-indicator">[{{ letter }}]</span>
+                <span class="hotkey-indicator">{{ letter }}</span>
                 <a href="{{ link }}">{{ current.location.name }}</a>
                 {% if max(current.position) %}
                     <span class="label-like">[{{ current.position }}]</span>
@@ -138,10 +138,13 @@
                     {% set letter = link_letters.next(link) %}
                     <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
                     <span class="item-name">
-                        <span class="hotkey-indicator">[{{ letter }}]</span>
+                        <span class="hotkey-indicator">{{ letter }}</span>
                         <a href="{{ link }}">{{ item.name }}</a>
                     </span>
-                    <span class="item-slot" id="item-{{ item.id }}-slot">— {{ owned.slot }}</span>
+                    <span class="item-quantity" id="item-{{ item.id }}-quantity">
+                        {% if not (owned.item.q_limit == 1 and owned.quantity == 1) %}{{ owned.quantity | formatNum }}{% endif %}
+                    </span>
+                    <span class="item-slot" id="item-{{ item.id }}-slot">&mdash; {{ owned.slot }}</span>
                     <br>
                 {% endfor %}
             </ul>
@@ -158,7 +161,7 @@
                     {% set letter = link_letters.next(link) %}
                     <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
                     <span class="item-name">
-                        <span class="hotkey-indicator">[{{ letter }}]</span>
+                        <span class="hotkey-indicator">{{ letter }}</span>
                         <a href="{{ link }}">{{ item.name }}</a>
                     </span>
                     <span class="item-quantity" id="item-{{ item.id }}-quantity">
@@ -171,11 +174,12 @@
         {% if game_data.events %}
             <h2>Abilities</h2>
             <ul>
-                {% for evt in game_data.events %}
+                {% for evt_id in current.events %}
+                    {% set evt = game_data.events[evt_id] %}
                     {% set link = url_for('play_event', event_id=evt.id, from_id=current.id, from_typename=current.typename()) | safe %}
                     {% set letter = link_letters.next(link) %}
                     <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
-                    <span class="hotkey-indicator">[{{ letter }}]</span>
+                    <span class="hotkey-indicator">{{ letter }}</span>
                     <a href="{{ link }}">{{ evt.name }}</a>
                     <br>
                 {% else %}
@@ -190,22 +194,21 @@
                     {% set link = url_for('play_attrib', attrib_id=attrib_of.attrib_id, subject_type='char', subject_id=current.id) | safe %}
                     {% set letter = link_letters.next(link) %}
                     <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
-                    <li>
-                        <span class="hotkey-indicator">[{{ letter }}]</span>
-                        <a href="{{ link }}">{{ attrib_of.attrib.name }}</a>
-                        {% if attrib_of.attrib.enum %}
-                            {% set index = attrib_of.val | int %}
-                            {% if index in range(attrib_of.attrib.enum | length) %}
-                                {{ attrib_of.attrib.enum[index] }}
-                            {% else %}
-                                ?
-                            {% endif %}
-                        {% elif attrib_of.attrib.binary %}
-                            {{ ('&check;' if attrib_of.val else 'X') | safe }}
+                    <span class="hotkey-indicator">{{ letter }}</span>
+                    <a href="{{ link }}">{{ attrib_of.attrib.name }}</a>
+                    {% if attrib_of.attrib.enum %}
+                        {% set index = attrib_of.val | int %}
+                        {% if index in range(attrib_of.attrib.enum | length) %}
+                            {{ attrib_of.attrib.enum[index] }}
                         {% else %}
-                            {{ attrib_of.val | formatNum }}
+                            ?
                         {% endif %}
-                    </li>
+                    {% elif attrib_of.attrib.binary %}
+                        {{ ('&check;' if attrib_of.val else 'X') | safe }}
+                    {% else %}
+                        {{ attrib_of.val | formatNum }}
+                    {% endif %}
+                    <br>
                 {% endfor %}
             </ul>
         {% endif %}

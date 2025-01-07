@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 {% block upper_left %}
     <div class="nav-container">
-        <a class="upper-left" href="{{ url_for("overview") }}">[O]verview</a>
+        <a class="upper-left" href="{{ url_for("overview") }}">[o]verview</a>
         <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for("configure_index") }}">[M]ain Setup</a>
+        <a class="upper-left" href="{{ url_for("configure_index") }}">[m]ain setup</a>
         <span class="separator">|</span>
         <a class="upper-left"
-           href="{{ url_for('configure_location', loc_id=current.id) }}">Location S[e]tup</a>
+           href="{{ url_for('configure_location', loc_id=current.id) }}">location s[e]tup</a>
     </div>
 {% endblock %}
 {% block content %}
@@ -52,7 +52,7 @@
                 if (event.altKey || event.ctrlKey) {
                     return;
                 }
-                const key = event.key.toLowerCase();
+                const key = event.key;
                 if (linkForKey[key]) {
                     window.location.href = linkForKey[key];
                 }
@@ -75,7 +75,7 @@
                                 {% set link = url_for('play_char', char_id=char.id) %}
                                 {% set letter = link_letters.next(link) %}
                                 <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
-                                <span class="hotkey-indicator">[{{ letter }}]</span>
+                                <span class="hotkey-indicator">{{ letter }}</span>
                                 <a href="{{ link }}">{{ char.name }}</a>
                                 {% if has_grid %}
                                     <span class="label-like char-position" data-char-id="{{ char.id }}">&nbsp;[{{ char.position[0] }},{{ char.position[1] }}]</span>
@@ -95,7 +95,7 @@
                                     {% set link = url_for('play_item', item_id=item.id, loc_id=current.id, pos=item_at.position, main='local') %}
                                     {% set letter = link_letters.next(link) %}
                                     <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
-                                    <span class="hotkey-indicator">[{{ letter }}]</span>
+                                    <span class="hotkey-indicator">{{ letter }}</span>
                                     <a href="{{ link }}">{{ item.maskable_name() }}</a>
                                     {% if not (item_at.item.q_limit == 1 and item_at.quantity == 1) %}{{ item_at.quantity | formatNum }}{% endif %}
                                     {% if has_grid %}
@@ -113,7 +113,7 @@
                                 {% set link = url_for('play_item', item_id=item.id, loc_id=current.id, main='universal') %}
                                 {% set letter = link_letters.next(link) %}
                                 <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
-                                <span class="hotkey-indicator">[{{ letter }}]</span>
+                                <span class="hotkey-indicator">{{ letter }}</span>
                                 <a href="{{ link }}">{{ item.maskable_name() }}</a>
                                 {% if item.pile.quantity %}&nbsp;{{ item.pile.quantity | formatNum }}{% endif %}
                                 <br>
@@ -127,7 +127,7 @@
                                 {% set link = url_for('play_event', event_id=evt.id, from_id=current.id, from_typename=current.typename()) | safe %}
                                 {% set letter = link_letters.next(link) %}
                                 <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
-                                <span class="hotkey-indicator">[{{ letter }}]</span>
+                                <span class="hotkey-indicator">{{ letter }}</span>
                                 <a href="{{ link }}">{{ evt.name }}</a>
                                 {% if evt.trigger_chance > 0 %}
                                     <span class="label-like">&nbsp;(chance to trigger)</span>
@@ -143,13 +143,13 @@
                         <ul>
                             {% for dest in current.destinations %}
                                 {% if dest.other_loc.masked %}
-                                    <span class="hotkey-indicator">[&nbsp;&nbsp;]</span>
+                                    <span class="hotkey-indicator">&nbsp;&nbsp;</span>
                                     Somewhere not yet visited
                                 {% else %}
                                     {% set link = url_for('play_location', loc_id=dest.other_loc.id) %}
                                     {% set letter = link_letters.next(link) %}
                                     <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
-                                    <span class="hotkey-indicator">[{{ letter }}]</span>
+                                    <span class="hotkey-indicator">{{ letter }}</span>
                                     <a href="{{ link }}">{{ dest.other_loc.name }}</a>
                                     {% if max(dest.door_here) %}
                                         <span class="label-like">[{{ dest.door_here }}]</span>

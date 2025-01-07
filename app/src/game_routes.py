@@ -420,8 +420,6 @@ def set_routes(app):
             return render_template(
                 'play/overview_confirm.html',
                 interrupt=ex.json_data)
-        if overview_data.overall.have_won():
-            MessageLog.add("✅ You won the scenario!")
         response = make_response(
             render_template(
                 'play/overview.html',
@@ -786,6 +784,7 @@ def set_routes(app):
         else:
             changed_item_at = ItemAt(owned_item.item, loc)
             changed_item_at.position = char.position
+            changed_item_at.slot = ''
             loc.items_at.setdefault(item_id, []).append(changed_item_at)
         if item.exceeds_limit(new_qty):
             return jsonify({
