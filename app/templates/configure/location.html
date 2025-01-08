@@ -246,7 +246,7 @@
                 }
                 let destExists = false;
                 $('.destination').each((index, element) => {
-                    const existingId = $(element).find('input[name="dest_id[]"]').val();
+                    const existingId = $(element).find('input[name="other_loc_id[]"]').val();
                     if (existingId === destId) {
                         destExists = true;
                         return false; // exit the each loop

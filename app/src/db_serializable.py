@@ -314,7 +314,7 @@ class Identifiable(DbSerializable):
     @classmethod
     def readable_type(cls):
         """Used to display error messages."""
-        return cls.tablename().capitalize()
+        return cls.tablename().capitalize().rstrip('s')
 
     @classmethod
     def get_coll(cls):

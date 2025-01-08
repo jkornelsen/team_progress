@@ -3,8 +3,6 @@
 win condition quantity min and max, like attribs for recipes
 Fission Plant: no more than a certain amount of pollution
 
-shouldn't be able to have both a two-way dest and an arrival one-way dest
-
 scenario: Furniture
 People: old man, young husband, young wife, elementary schooler, baby, dog, cat
 
@@ -17,25 +15,20 @@ reloading overview fixes the problem
     if not self.change_quantity(batches_to_do):
     self.pholder.to_db()  # should include writing progress obj to db
     recipe.to_db()
-    psycopg2.errors.UniqueViolation: duplicate key value violates unique constraint "recipe_sources_pkey"
-    Key (game_token, recipe_id, item_id)=(..., 36, 45 [Green Bar Unlocked]) already exists.
+    psycopg2.errors.UniqueViolation: duplicate key value violates "recipe_sources_pkey"
+    PRIMARY KEY (game_token, recipe_id, item_id)
+    Key (..., 36, 45 [Green Bar Unlocked]) already exists.
     for source in self.sources:
         values.append((
-            g.game_token, self.id,
-            source.item_id,
-            source.q_required,
-            source.preserve,
-            ))
-    self.insert_multiple(
-        "recipe_sources",
-        "game_token, recipe_id, item_id, q_required, preserve",
-        values)
+            g.game_token, self.id, source.item_id, source.q_required, source.preserve,))
+    self.insert_multiple("recipe_sources", values)
+source of source maybe -- yellow and black in overview both use green bar
 Another example is coming from play Star to overview.
     Key (game_token, recipe_id, item_id)=(..., 3, 16 [Ambient Energy]) already exists.
     Key (game_token, recipe_id, item_id)=(..., 57, 54 [Life Force]) already exists.
-    source of source maybe
-
-limit upload file size to 20 Mb
+recipe_sources records should be deleted by cascading when recipe deleted in Item.to_db()
+    FOREIGN KEY (game_token, recipe_id) REFERENCES recipes (game_token, id) ON DELETE cascade
+verify in log that recipe deleted in Item.to_db() is the same id
 
 ---- planning ----
 

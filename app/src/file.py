@@ -8,6 +8,7 @@ import tempfile
 from flask import (
     g, json, make_response, redirect, render_template, request, send_file,
     session, url_for)
+from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
 
 from .game_data import GameData
@@ -91,6 +92,11 @@ def set_routes(app):
                 os.remove(file_path)
                 logger.info("Deleted %s (age: %s)", filename, file_age)
         return redirect(url_for('overview'))
+
+    @app.errorhandler(RequestEntityTooLarge)
+    def handle_file_too_large(e):
+        session['file_message'] = "The file is too large (max 20 MB)."
+        return redirect(url_for('load_from_file'))
 
     @app.route('/browse_scenarios', methods=['GET', 'POST'])
     def browse_scenarios():

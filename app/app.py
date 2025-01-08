@@ -73,6 +73,7 @@ app.config['SECRET_KEY'] = 'team-progress'
 app.config['DATA_DIR'] = 'data_files'
 app.config['UPLOAD_DIR'] = os.path.join(app.config['DATA_DIR'], 'uploads')
 app.config['TEMPLATES_AUTO_RELOAD'] = True  # set to False for production
+app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024  # limit uploads to 20 MB
 
 with app.app_context():
     logger.debug("starting app")

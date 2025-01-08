@@ -107,11 +107,19 @@
         dropArea.addEventListener('click', () => fileElem.click());
         fileElem.addEventListener('change', (event) => {
             const file = event.target.files[0];
-            if (file) {
+            if (file && validFileSize(file)) {
                 fileLabel.textContent = file.name;
                 fileElem.form.submit();
             }
         });
+        function validFileSize(file) {
+            if (file.size > 20 * 1024 * 1024) {  // 20 MB
+                alert("The file is too large (max 20 MB).");
+                fileElem.value = '';
+                return false;
+            }
+            return true;
+        }
         dropArea.addEventListener('dragover', (event) => event.preventDefault());
         dropArea.addEventListener('drop', (event) => {
             event.preventDefault();
