@@ -235,20 +235,22 @@ def set_routes(app):
         subject = func_load_subject(subject_id)
         attrib_for = subject.attribs.get(attrib_id, 0)
         if request.method == 'POST':
-            oldval = attrib_for.val
             req = RequestHelper('form')
             req.debug()
             session['last_operand'] = req.get_str('operand')
             session['last_operator'] = req.get_str('operator')
             result = req.get_int('result')
+            oldval = attrib_for.val
             attrib_for.val = result
             subject.to_db()
             # Reload from database
             subject = func_load_subject(subject_id)
             attrib_for = subject.attribs.get(attrib_id, 0)
+            difference = attrib_for.val - oldval
+            changeword = 'increased' if difference > 0 else 'changed'
             MessageLog.add(
-                f"Changed {subject.name} {attrib.name}"
-                f" from {format_num(oldval)} to {format_num(attrib_for.val)}")
+                f"{subject.name} {attrib.name}"
+                f" {changeword} by {format_num(difference)}")
         return render_template(
             'play/attrib.html',
             current=attrib,

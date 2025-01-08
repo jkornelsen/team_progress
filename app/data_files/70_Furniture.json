@@ -8,25 +8,11 @@
             "name": "Wear Level"
         },
         {
-            "description": "10 is clean, 0 is very dirty.",
-            "enum_list": [],
-            "id": 21,
-            "is_binary": false,
-            "name": "Clean"
-        },
-        {
             "description": "Soft is cozy \u2014 is that what people want in furniture?",
             "enum_list": [],
             "id": 22,
             "is_binary": false,
             "name": "Softness"
-        },
-        {
-            "description": "How someone feels about you, up to 100.",
-            "enum_list": [],
-            "id": 23,
-            "is_binary": false,
-            "name": "Favor"
         },
         {
             "description": "What time it is",
@@ -61,11 +47,50 @@
             "name": "Hour"
         },
         {
-            "description": "How many tiles between two places on the grid, such as how far away a person is from you. It often depends on the path they take, where they're coming from and going to.\r\n\r\nCloser proximity increases likelihood of interaction. Typically, divide likelihood by proximity.",
-            "enum_list": [],
-            "id": 26,
+            "description": "Time first seen entering the room each day.",
+            "enum_list": [
+                "12am",
+                "1am",
+                "2am",
+                "3am",
+                "4am",
+                "5am",
+                "6am",
+                "7am",
+                "8am",
+                "9am",
+                "10am",
+                "11am",
+                "12pm",
+                "1pm",
+                "2pm",
+                "3pm",
+                "4pm",
+                "5pm",
+                "6pm",
+                "7pm",
+                "8pm",
+                "9pm",
+                "10pm",
+                "11pm"
+            ],
+            "id": 24,
             "is_binary": false,
-            "name": "Proximity"
+            "name": "Arrival 1st"
+        },
+        {
+            "description": "How someone feels about you (the sofa), up to 100.",
+            "enum_list": [],
+            "id": 23,
+            "is_binary": false,
+            "name": "Favor"
+        },
+        {
+            "description": "10 is clean, 0 is very dirty.",
+            "enum_list": [],
+            "id": 21,
+            "is_binary": false,
+            "name": "Clean"
         },
         {
             "description": "Second time seen entering the room each day.",
@@ -100,7 +125,7 @@
             "name": "Arrival 2nd"
         },
         {
-            "description": "Time first seen entering the room each day.",
+            "description": "Third time seen entering the room each day.",
             "enum_list": [
                 "12am",
                 "1am",
@@ -127,66 +152,275 @@
                 "10pm",
                 "11pm"
             ],
-            "id": 24,
+            "id": 28,
             "is_binary": false,
-            "name": "Arrival 1st"
+            "name": "Arrival 3rd"
+        },
+        {
+            "description": "How many tiles to get from one place on the grid to another, not including the starting tile. It often depends on the path, where they're coming from and going to.\r\n\r\nCloser proximity increases likelihood of interaction. Typically, divide likelihood by proximity.",
+            "enum_list": [],
+            "id": 26,
+            "is_binary": false,
+            "name": "Proximity"
+        },
+        {
+            "description": "10 is exhausted, 1 is wide awake and eager to move.",
+            "enum_list": [],
+            "id": 30,
+            "is_binary": false,
+            "name": "Sleepy"
+        },
+        {
+            "description": "10 is ecstatic, 0 is misery.",
+            "enum_list": [],
+            "id": 27,
+            "is_binary": false,
+            "name": "Happy"
+        },
+        {
+            "description": "Whether a fire is going.",
+            "enum_list": [],
+            "id": 29,
+            "is_binary": true,
+            "name": "Lit"
         }
     ],
     "characters": [
         {
             "attribs": [
+                [30, 5.0],
+                [26, 6.0],
+                [23, 20.0]
+            ],
+            "description": "Shorthair cat with a dense coat, white fur on the paws, stocky and well-built. Good mouser.",
+            "dest_id": null,
+            "events": [],
+            "id": 17,
+            "items": [],
+            "location_id": 24,
+            "masked": false,
+            "name": "\ud83d\udc08Mittens",
+            "position": [0,0],
+            "progress": {},
+            "toplevel": false,
+            "travel_group": ""
+        },
+        {
+            "attribs": [
+                [30, 5.0],
                 [26, 6.0],
                 [23, 10.0],
-                [24, 7.0]
+                [24, 11.0]
             ],
-            "description": "Punctual, doesn't sleep late. Maybe a nice soft sofa is just what he needs to rest those weary bones.\r\n\r\nSchedule\r\n~~~~~~~~\r\nEarly morning: Comes from northwest room.",
+            "description": "The husband, not yet middle aged. Pleasant although a bit lazy and entitled. Has an actual title, although people don't normally use it when addressing him.\r\n\r\nSchedule\r\n~~~~~~~~\r\nMorning: Comes from northeast room.",
+            "dest_id": null,
+            "events": [],
+            "id": 12,
+            "items": [],
+            "location_id": 26,
+            "masked": false,
+            "name": "\ud83d\udc68\ud83c\udffcCharles",
+            "position": [0,0],
+            "progress": {},
+            "toplevel": false,
+            "travel_group": ""
+        },
+        {
+            "attribs": [
+                [30, 5.0],
+                [24, 9.0],
+                [23, 10.0],
+                [26, 6.0]
+            ],
+            "description": "The wife. Pretty and intelligent, with a strong sense of self-worth \u2014 sometimes critical of her husband, the staff, and even the furniture.\r\n\r\nSchedule\r\n~~~~~~~~\r\nMorning: Comes from northeast room.",
+            "dest_id": null,
+            "events": [],
+            "id": 13,
+            "items": [],
+            "location_id": 26,
+            "masked": false,
+            "name": "\ud83d\udc69\ud83c\udfffMargaret",
+            "position": [0,0],
+            "progress": {},
+            "toplevel": false,
+            "travel_group": ""
+        },
+        {
+            "attribs": [
+                [30, 5.0],
+                [26, 2.0],
+                [23, 10.0],
+                [24, 6.0]
+            ],
+            "description": "The senior servant, and old man, practically part of the family, now primarily manages and has some freedom for leisure. Punctual; doesn't sleep late. Maybe a nice soft sofa is just what he needs to rest those weary bones.\r\n\r\nSchedule\r\n~~~~~~~~\r\nEarly morning: Comes from northwest room.",
             "dest_id": null,
             "events": [],
             "id": 11,
             "items": [],
             "location_id": 24,
             "masked": false,
-            "name": "Old Man",
+            "name": "\ud83d\udc74\ud83c\udffeReginald",
             "position": [0,0],
             "progress": {},
-            "quantity": 0.0,
-            "toplevel": false
+            "toplevel": false,
+            "travel_group": ""
+        },
+        {
+            "attribs": [
+                [30, 5.0],
+                [26, 6.0],
+                [23, 15.0]
+            ],
+            "description": "Irish wolfhound, fast and strong enough to encircle deer during a hunt.",
+            "dest_id": null,
+            "events": [],
+            "id": 16,
+            "items": [],
+            "location_id": 23,
+            "masked": false,
+            "name": "\ud83d\udc15Dash",
+            "position": [6,7],
+            "progress": {},
+            "toplevel": false,
+            "travel_group": ""
+        },
+        {
+            "attribs": [
+                [30, 5.0],
+                [24, 8.0],
+                [23, 10.0],
+                [26, 6.0]
+            ],
+            "description": "School-age boy, expected to study hard but often overlooked, leaving plenty of opportunities for playing outside and getting into mischief.\r\n\r\nSchedule\r\n~~~~~~~~\r\nMorning: Comes from northwest room.",
+            "dest_id": null,
+            "events": [],
+            "id": 14,
+            "items": [],
+            "location_id": 27,
+            "masked": false,
+            "name": "\ud83d\udc66\ud83c\udffdFrancis",
+            "position": [0,0],
+            "progress": {},
+            "toplevel": false,
+            "travel_group": ""
+        },
+        {
+            "attribs": [
+                [30, 5.0],
+                [28, 19.0],
+                [26, 6.0],
+                [23, 10.0],
+                [24, 8.0],
+                [25, 13.0]
+            ],
+            "description": "Cute young maidservant that comes to the house for work every day. Cooks and cleans, finishing up in the kitchen early afternoon before moving on to the rest of the house. Might be exhausted enough to sit on the sofa when the master, or more importantly, the missus, isn't around.\r\n\r\nSchedule\r\n~~~~~~~~\r\nMorning: Comes inside and goes to dining room.\r\nEarly Afternoon: Comes from dining room.\r\nEvening: Leaves the house.",
+            "dest_id": null,
+            "events": [],
+            "id": 18,
+            "items": [],
+            "location_id": 28,
+            "masked": false,
+            "name": "\ud83d\udc69\ud83c\udffdEliza",
+            "position": [0,0],
+            "progress": {},
+            "toplevel": false,
+            "travel_group": ""
+        },
+        {
+            "attribs": [
+                [30, 5.0],
+                [23, 10.0],
+                [26, 6.0]
+            ],
+            "description": "Baby girl, toddler. Gets grumpy if not put to bed early enough. Doesn't see the point of having rules, and has the intention of breaking them whenever possible, although not nearly clever enough to avoid getting caught.\r\n\r\nSchedule\r\n~~~~~~~~\r\nUnpredictable.",
+            "dest_id": null,
+            "events": [],
+            "id": 15,
+            "items": [],
+            "location_id": 27,
+            "masked": false,
+            "name": "\ud83d\udc76Lucy",
+            "position": [0,0],
+            "progress": {},
+            "toplevel": false,
+            "travel_group": ""
         }
     ],
     "events": [
         {
             "changed": [],
-            "description": "Maybe they walk on through, or maybe they sit somewhere. Hopefully on you.",
+            "description": "After a successful arrival roll, if it's not clear from the schedule who might be arriving, roll from this list to get a better picture.",
+            "determining": [],
+            "id": 5,
+            "name": "Who Arrives",
+            "numeric_range": [1, 20],
+            "outcome_type": "selection",
+            "selection_strings": "(Nobody)\r\nReginald\r\nCharles\r\nAnne\r\nFrancis\r\nLucy\r\nDash\r\nMittens",
+            "toplevel": false,
+            "trigger_chance": 0.0,
+            "triggers": [
+                ["loc", 23]
+            ]
+        },
+        {
+            "changed": [],
+            "description": "Adjust difficulty based on likelihood such as how many people would be awake. The determining values are relevant information only, not to directly adjust dice.\r\n\r\nIf successful, check schedules to see if we know who comes, and if no one is scheduled, <a href=\"/play/event/5\">roll to see who it might be</a>.",
+            "determining": [
+                {
+                    "entity_data": ["attrib", 19],
+                    "label": "",
+                    "operation": "+"
+                },
+                {
+                    "entity_data": ["attrib", 24],
+                    "label": "",
+                    "operation": "+"
+                },
+                {
+                    "entity_data": ["attrib", 25],
+                    "label": "",
+                    "operation": "+"
+                }
+            ],
+            "id": 4,
+            "name": "Chance of Arrival",
+            "numeric_range": [1, 20],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": false,
+            "trigger_chance": 0.4,
+            "triggers": [
+                ["item", 45]
+            ]
+        },
+        {
+            "changed": [],
+            "description": "Determine whether the outcome is pleasant, and a brief sit or perhaps a full-fledged nap. The result will affect the subject's favor towards you.\r\n\r\nAdd all factors to both dice.",
             "determining": [
                 {
                     "entity_data": ["attrib", 23],
-                    "operation": "+",
-                    "label": ""
+                    "label": "",
+                    "operation": "+log"
                 },
                 {
                     "entity_data": ["attrib", 21],
-                    "operation": "+",
-                    "label": ""
+                    "label": "",
+                    "operation": "+"
                 },
                 {
                     "entity_data": ["attrib", 22],
-                    "operation": "+",
-                    "label": ""
+                    "label": "",
+                    "operation": "+"
                 },
                 {
                     "entity_data": ["attrib", 20],
-                    "operation": "+",
-                    "label": ""
-                },
-                {
-                    "entity_data": ["attrib", 19],
-                    "operation": "+",
-                    "label": ""
+                    "label": "",
+                    "operation": "+"
                 }
             ],
-            "id": 3,
-            "name": "Chance to Sit",
-            "numeric_range": [1, 20],
+            "id": 6,
+            "name": "Encounter Outcome",
+            "numeric_range": [-20, 10],
             "outcome_type": "fourway",
             "selection_strings": "",
             "toplevel": false,
@@ -197,54 +431,47 @@
         },
         {
             "changed": [],
-            "description": "Automatic trigger chance. Try running for what counts as an hour at a time, over 20 seconds. It can potentially run for multiple hours, until something happens. If successful, check schedules to see if we know who comes, and if no one is scheduled, roll from a list to see who it is.",
+            "description": "Maybe they walk on through, or maybe they sit somewhere. Hopefully on you.\r\n\r\nAdd all factors to max die, then divide by proximity, which you should set to roughly the number of tiles away.",
             "determining": [
                 {
-                    "entity_data": ["attrib", 19],
-                    "operation": "+",
-                    "label": ""
+                    "entity_data": ["attrib", 23],
+                    "label": "",
+                    "operation": "/"
                 },
                 {
-                    "entity_data": ["attrib", 24],
-                    "operation": "+",
-                    "label": ""
+                    "entity_data": ["attrib", 21],
+                    "label": "",
+                    "operation": "+"
                 },
                 {
-                    "entity_data": ["attrib", 25],
-                    "operation": "+",
-                    "label": ""
+                    "entity_data": ["attrib", 22],
+                    "label": "",
+                    "operation": "+"
+                },
+                {
+                    "entity_data": ["attrib", 20],
+                    "label": "",
+                    "operation": "+"
+                },
+                {
+                    "entity_data": ["attrib", 26],
+                    "label": "",
+                    "operation": "+"
                 }
             ],
-            "id": 4,
-            "name": "Chance of Arrival",
-            "numeric_range": [1, 20],
+            "id": 3,
+            "name": "Chance to Sit",
+            "numeric_range": [-10, 50],
             "outcome_type": "fourway",
             "selection_strings": "",
             "toplevel": false,
-            "trigger_chance": 0.5,
+            "trigger_chance": 0.0,
             "triggers": [
-                ["item", 45]
+                ["loc", 23]
             ]
         }
     ],
     "items": [
-        {
-            "attribs": [
-                [22, 4.0],
-                [21, 10.0],
-                [20, 10.0]
-            ],
-            "description": "Yes, this is your player character. 😊\r\n\r\nPet hair and spilled food are not something this sofa appreciates.",
-            "id": 44,
-            "masked": false,
-            "name": "Beige Sofa",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [],
-            "storage_type": "local",
-            "toplevel": false
-        },
         {
             "attribs": [
                 [20, 0.0],
@@ -257,31 +484,63 @@
             "name": "Brand New Lounge Chair",
             "progress": {},
             "q_limit": 1.0,
-            "quantity": 0.0,
+            "quantity": 0,
             "recipes": [],
             "storage_type": "local",
             "toplevel": false
         },
         {
             "attribs": [
-                [19, 5.0]
+                [29, 1.0]
             ],
-            "description": "Tells time, although it must constantly be wound by hand.",
-            "id": 45,
+            "description": "You're not a fan of the dangerous sparks, although if it makes people happy, then being close might be worth the risk.",
+            "id": 48,
             "masked": false,
-            "name": "Grandfather Clock",
+            "name": "\ud83d\udd25Fireplace",
             "progress": {},
             "q_limit": 1.0,
-            "quantity": 0.0,
+            "quantity": 0,
+            "recipes": [],
+            "storage_type": "local",
+            "toplevel": false
+        },
+        {
+            "attribs": [
+                [27, 5.0],
+                [20, 10.0],
+                [21, 10.0],
+                [22, 4.0]
+            ],
+            "description": "Yes, this is your player character. \ud83d\ude0a Its role is mostly passive, observing and planning.\r\n\r\nPet hair and spilled food are not something this sofa appreciates.",
+            "id": 44,
+            "masked": false,
+            "name": "@Beige Sofa",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0,
+            "recipes": [],
+            "storage_type": "local",
+            "toplevel": false
+        },
+        {
+            "attribs": [
+                [19, 0.0]
+            ],
+            "description": "Drives everyday affairs in this scenario. Tells time, although it must constantly be wound by hand. \r\n\r\nDuring the day or other likely times, try running for what counts as an hour (real time 8s). It can potentially run for multiple hours, until something happens.",
+            "id": 45,
+            "masked": false,
+            "name": "\ud83d\udd70\ufe0fGrandfather Clock",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0,
             "recipes": [
                 {
                     "attrib_reqs": [],
                     "byproducts": [],
                     "id": 13,
                     "instant": false,
-                    "item_id": 45,
                     "rate_amount": 0.0,
-                    "rate_duration": 20.0,
+                    "rate_duration": 8.0,
                     "sources": [
                         {
                             "item_id": 45,
@@ -293,33 +552,124 @@
             ],
             "storage_type": "local",
             "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "Low glass table with flowers in the middle. Saucers to hold teacups.",
+            "id": 47,
+            "masked": false,
+            "name": "\ud83c\udf37Coffee Table",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0,
+            "recipes": [],
+            "storage_type": "local",
+            "toplevel": false
         }
     ],
     "locations": [
-        {
-            "description": "Not much is currently known about this room except the direction. Perhaps listening and observing would yield some information.",
-            "destinations": [],
-            "dimensions": [0,0],
-            "excluded": [0,0,0,0],
-            "id": 24,
-            "items": [],
-            "masked": false,
-            "name": "Northwest Room",
-            "progress": {},
-            "quantity": 0.0,
-            "toplevel": false
-        },
         {
             "description": "You don't know everything about it yet (you were initially wrapped on arrival and couldn't see), but it seems to be rather large, with several people living in it.",
             "destinations": [],
             "dimensions": [0,0],
             "excluded": [0,0,0,0],
             "id": 25,
+            "item_refs": [],
             "items": [],
             "masked": false,
             "name": "House",
-            "progress": {},
-            "quantity": 0.0,
+            "toplevel": false
+        },
+        {
+            "description": "Since there is another room to the side of this one, this room must be open enough to make it easy to walk through. Reginald sleeps here.",
+            "destinations": [],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
+            "id": 24,
+            "item_refs": [],
+            "items": [],
+            "masked": false,
+            "name": "Northeast Room",
+            "toplevel": false
+        },
+        {
+            "description": "Shelves filled with books. The desk is a bit dusty as Charles doesn't always keep up with paperwork. Others in the family (but not Dash or Mittens) may use it for reading.",
+            "destinations": [
+                {
+                    "bidirectional": true,
+                    "door1": [0,0],
+                    "door2": [8,7],
+                    "duration": 1,
+                    "loc2_id": 23
+                }
+            ],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
+            "id": 29,
+            "item_refs": [],
+            "items": [],
+            "masked": false,
+            "name": "Study",
+            "toplevel": false
+        },
+        {
+            "description": "A popular destination, as humans require food every day for sustenance. Servants are often in this area to prepare meals.",
+            "destinations": [
+                {
+                    "bidirectional": true,
+                    "door1": [0,0],
+                    "door2": [1,4],
+                    "duration": 1,
+                    "loc2_id": 23
+                }
+            ],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
+            "id": 30,
+            "item_refs": [],
+            "items": [],
+            "masked": false,
+            "name": "Dining Room",
+            "toplevel": false
+        },
+        {
+            "description": "There's another room back there, because you often hear Francis stomp into the northwest room, then a door closes and the footsteps become much quieter. It's where Lucy sleeps too.",
+            "destinations": [
+                {
+                    "bidirectional": true,
+                    "door1": [0,0],
+                    "door2": [0,0],
+                    "duration": 1,
+                    "loc2_id": 24
+                }
+            ],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
+            "id": 27,
+            "item_refs": [],
+            "items": [],
+            "masked": false,
+            "name": "Nursery",
+            "toplevel": false
+        },
+        {
+            "description": "The creaky bed is a good indication of how long the master and missus are sleeping.",
+            "destinations": [
+                {
+                    "bidirectional": true,
+                    "door1": [0,0],
+                    "door2": [2,1],
+                    "duration": 1,
+                    "loc2_id": 23
+                }
+            ],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
+            "id": 26,
+            "item_refs": [],
+            "items": [],
+            "masked": false,
+            "name": "Master Bedroom",
             "toplevel": false
         },
         {
@@ -327,47 +677,67 @@
             "destinations": [
                 {
                     "bidirectional": true,
+                    "door1": [4,8],
+                    "door2": [0,0],
                     "duration": 1,
+                    "loc2_id": 28
+                },
+                {
+                    "bidirectional": true,
                     "door1": [7,1],
                     "door2": [0,0],
+                    "duration": 1,
                     "loc2_id": 24
                 }
             ],
             "dimensions": [8,8],
             "excluded": [3,1,6,2],
             "id": 23,
+            "item_refs": [],
             "items": [
                 {
-                    "item_id": 44,
-                    "position": [3,4],
+                    "item_id": 45,
+                    "position": [8,3],
                     "quantity": 1.0
                 },
                 {
-                    "item_id": 45,
-                    "position": [8,2],
+                    "item_id": 44,
+                    "position": [8,5],
+                    "quantity": 1.0
+                },
+                {
+                    "item_id": 47,
+                    "position": [6,5],
+                    "quantity": 1.0
+                },
+                {
+                    "item_id": 48,
+                    "position": [4,3],
                     "quantity": 1.0
                 }
             ],
             "masked": false,
             "name": "Central Hall",
-            "progress": {
-                "batches_processed": 1,
-                "id": 108,
-                "is_ongoing": false,
-                "item_id": 45,
-                "recipe_id": 13,
-                "start_time": "2024-10-01 23:00:50",
-                "stop_time": "2024-10-01 23:01:12"
-            },
-            "quantity": 1.0,
             "toplevel": true
+        },
+        {
+            "description": "Nearby are gardens and a forest for hunting.",
+            "destinations": [],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
+            "id": 28,
+            "item_refs": [],
+            "items": [],
+            "masked": false,
+            "name": "Outside",
+            "toplevel": false
         }
     ],
     "overall": {
         "description": "Play as a sofa in the central hall. Upgrades such as softer cushions <c=\"lemonchiffon\">encourage potential sitters</c>. Relocation may make a difference, if you can manage it somehow, whether that be to a different spot in the room or somewhere else entirely.",
-        "progress_type": "Hybrid",
         "multiplayer": false,
         "number_format": "en_US",
+        "progress_type": "Hybrid",
         "slots": [],
         "title": "Furniture",
         "win_reqs": []

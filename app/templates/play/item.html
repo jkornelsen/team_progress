@@ -279,7 +279,7 @@
                                                             and recipe.rate_amount <= recipescope.main_items_consumed %}
                                                         <span style="vertical-align: middle; font-size: 2em"
                                                               title="(trash can icon) does not produce the current item">🗑</span>
-                                                    {% else %}
+                                                    {% elif recipe.rate_amount %}
                                                         {{ recipe.rate_amount | formatNum }}
                                                     {% endif %}
                                                 </span>
@@ -559,7 +559,7 @@
                                 <span class="hotkey-indicator">{{ letter }}</span>
                                 <a href="{{ link }}">{{ evt.name }}</a>
                                 {% if evt.trigger_chance > 0 %}
-                                    <span class="label-like">&nbsp;(chance to trigger)</span>
+                                    <span class="label-like">&mdash; {{ (evt.trigger_chance * 100) | int }}% chance to trigger</span>
                                 {% endif %}
                                 <br>
                             {% else %}
