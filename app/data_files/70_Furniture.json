@@ -207,10 +207,10 @@
         },
         {
             "attribs": [
+                [24, 11.0],
                 [30, 5.0],
                 [26, 6.0],
-                [23, 10.0],
-                [24, 11.0]
+                [23, 10.0]
             ],
             "description": "The husband, not yet middle aged. Pleasant although a bit lazy and entitled. Has an actual title, although people don't normally use it when addressing him.\r\n\r\nSchedule\r\n~~~~~~~~\r\nMorning: Comes from northeast room.",
             "dest_id": null,
@@ -395,48 +395,12 @@
         },
         {
             "changed": [],
-            "description": "Determine whether the outcome is pleasant, and a brief sit or perhaps a full-fledged nap. The result will affect the subject's favor towards you.\r\n\r\nAdd all factors to both dice.",
-            "determining": [
-                {
-                    "entity_data": ["attrib", 23],
-                    "label": "",
-                    "operation": "+log"
-                },
-                {
-                    "entity_data": ["attrib", 21],
-                    "label": "",
-                    "operation": "+"
-                },
-                {
-                    "entity_data": ["attrib", 22],
-                    "label": "",
-                    "operation": "+"
-                },
-                {
-                    "entity_data": ["attrib", 20],
-                    "label": "",
-                    "operation": "+"
-                }
-            ],
-            "id": 6,
-            "name": "Encounter Outcome",
-            "numeric_range": [-20, 10],
-            "outcome_type": "fourway",
-            "selection_strings": "",
-            "toplevel": false,
-            "trigger_chance": 0.0,
-            "triggers": [
-                ["loc", 23]
-            ]
-        },
-        {
-            "changed": [],
             "description": "Maybe they walk on through, or maybe they sit somewhere. Hopefully on you.\r\n\r\nAdd all factors to max die, then divide by proximity, which you should set to roughly the number of tiles away.",
             "determining": [
                 {
                     "entity_data": ["attrib", 23],
                     "label": "",
-                    "operation": "/"
+                    "operation": "+"
                 },
                 {
                     "entity_data": ["attrib", 21],
@@ -469,6 +433,78 @@
             "triggers": [
                 ["loc", 23]
             ]
+        },
+        {
+            "changed": [],
+            "description": "Determine whether the outcome is pleasant, and a brief sit or perhaps a full-fledged nap. The result will affect the subject's favor towards you.\r\n\r\nAdd all factors to both dice.",
+            "determining": [
+                {
+                    "entity_data": ["attrib", 23],
+                    "label": "",
+                    "operation": "+log"
+                },
+                {
+                    "entity_data": ["attrib", 21],
+                    "label": "",
+                    "operation": "+"
+                },
+                {
+                    "entity_data": ["attrib", 22],
+                    "label": "",
+                    "operation": "+"
+                },
+                {
+                    "entity_data": ["attrib", 20],
+                    "label": "",
+                    "operation": "+"
+                },
+                {
+                    "entity_data": ["attrib", 27],
+                    "label": "",
+                    "operation": "+log"
+                }
+            ],
+            "id": 6,
+            "name": "Encounter Outcome",
+            "numeric_range": [-20, 10],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": false,
+            "trigger_chance": 0.0,
+            "triggers": [
+                ["loc", 23]
+            ]
+        },
+        {
+            "changed": [],
+            "description": "Chance of an upgrade, minor such as softer pillows, or major such as converting to a larger sofa. Wear and tear typically makes it more likely to get a repair or upgrade.",
+            "determining": [
+                {
+                    "entity_data": ["attrib", 23],
+                    "label": "Person 2",
+                    "operation": "+"
+                },
+                {
+                    "entity_data": ["attrib", 20],
+                    "label": "",
+                    "operation": "+"
+                },
+                {
+                    "entity_data": ["attrib", 23],
+                    "label": "Person 1",
+                    "operation": "+"
+                }
+            ],
+            "id": 7,
+            "name": "Upgrade",
+            "numeric_range": [-10, 50],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": false,
+            "trigger_chance": 0.0,
+            "triggers": [
+                ["item", 44]
+            ]
         }
     ],
     "items": [
@@ -482,39 +518,6 @@
             "id": 46,
             "masked": false,
             "name": "Brand New Lounge Chair",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0,
-            "recipes": [],
-            "storage_type": "local",
-            "toplevel": false
-        },
-        {
-            "attribs": [
-                [29, 1.0]
-            ],
-            "description": "You're not a fan of the dangerous sparks, although if it makes people happy, then being close might be worth the risk.",
-            "id": 48,
-            "masked": false,
-            "name": "\ud83d\udd25Fireplace",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0,
-            "recipes": [],
-            "storage_type": "local",
-            "toplevel": false
-        },
-        {
-            "attribs": [
-                [27, 5.0],
-                [20, 10.0],
-                [21, 10.0],
-                [22, 4.0]
-            ],
-            "description": "Yes, this is your player character. \ud83d\ude0a Its role is mostly passive, observing and planning.\r\n\r\nPet hair and spilled food are not something this sofa appreciates.",
-            "id": 44,
-            "masked": false,
-            "name": "@Beige Sofa",
             "progress": {},
             "q_limit": 1.0,
             "quantity": 0,
@@ -563,6 +566,94 @@
             "q_limit": 1.0,
             "quantity": 0,
             "recipes": [],
+            "storage_type": "local",
+            "toplevel": false
+        },
+        {
+            "attribs": [
+                [27, 5.0],
+                [20, 10.0],
+                [21, 10.0],
+                [22, 4.0]
+            ],
+            "description": "Yes, this is your player character. \ud83d\ude0a Its role is mostly passive, observing and planning.\r\n\r\nPet hair and spilled food are not something this sofa appreciates.",
+            "id": 44,
+            "masked": false,
+            "name": "@Beige Sofa",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0,
+            "recipes": [],
+            "storage_type": "local",
+            "toplevel": false
+        },
+        {
+            "attribs": [
+                [29, 1.0]
+            ],
+            "description": "You're not a fan of the dangerous sparks, although if it makes people happy, then being close might be worth the risk.",
+            "id": 48,
+            "masked": false,
+            "name": "\ud83d\udd25Fireplace",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0,
+            "recipes": [],
+            "storage_type": "local",
+            "toplevel": false
+        },
+        {
+            "attribs": [
+                [23, 1.0]
+            ],
+            "description": "Sum totals for all family members, possibly including pets and servants.",
+            "id": 50,
+            "masked": false,
+            "name": "Family",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 1.0,
+            "recipes": [],
+            "storage_type": "universal",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "Your family is so pleased with you that they hire a painter to memorialize you for future generations. This picture would look lovely on the wall in the Central Hall.",
+            "id": 49,
+            "masked": false,
+            "name": "\ud83c\udfa8Sofa Painting",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0,
+            "recipes": [
+                {
+                    "attrib_reqs": [
+                        {
+                            "attrib_id": 23,
+                            "show_max": false,
+                            "value_range": [200.0, 200.0]
+                        }
+                    ],
+                    "byproducts": [],
+                    "id": 14,
+                    "instant": false,
+                    "rate_amount": 1.0,
+                    "rate_duration": 15.0,
+                    "sources": [
+                        {
+                            "item_id": 44,
+                            "preserve": true,
+                            "q_required": 1.0
+                        },
+                        {
+                            "item_id": 50,
+                            "preserve": true,
+                            "q_required": 1.0
+                        }
+                    ]
+                }
+            ],
             "storage_type": "local",
             "toplevel": false
         }
@@ -740,6 +831,16 @@
         "progress_type": "Hybrid",
         "slots": [],
         "title": "Furniture",
-        "win_reqs": []
+        "win_reqs": [
+            {
+                "attrib_id": null,
+                "attrib_value": 0.0,
+                "char_id": null,
+                "id": 1,
+                "item_id": 49,
+                "loc_id": 23,
+                "quantity": 1.0
+            }
+        ]
     }
 }

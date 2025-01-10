@@ -307,7 +307,7 @@
                 const idArray = [`recipe${recipeId}`, `attrib${attribId}`];
                 const uniqueId = idArray.join('-');
                 const uniqueName = idArray.join('_');
-                if (valMin && valMin === valMax) {
+                if (!valMax || (valMin && valMin === valMax)) {
                     showMax = false;
                 }
                 const attribHtml = `
