@@ -9,9 +9,7 @@
 {% block content %}
     <h1>Item Setup</h1>
     <p class="info">
-        In addition to resources and equipment,
-        they can also represent an upgrade
-        or conversation dialog.
+        Resources and equipment, or concepts such as upgrades.
         Often produced according to recipes.
     </p>
     <p class="info">
@@ -95,6 +93,18 @@
         <label for="masked">Masked &mdash; reveal when all sources have any value</label>
         <div style="height: 5px;"></div>
         <div id="sources-container" class="outer-border">
+            <h3 class="label-like">Recipes</h3>
+            <p class="info label-like">
+                Produce items by consuming other items or based on requirements.
+                This is the main way to handle logic, such as conversations.
+            </p>
+            <p class="info label-like">
+                For idle recipes that depend on each other,
+                each will be produced in order as they are viewed,
+                but some idle time may be lost
+                if source item progress does not get updated first,
+                stopping production of the main item once source quantity runs out.
+            </p>
             <!-- Placeholder for appending new recipes -->
             <div id="recipelist_end" class="unobtrusive"></div>
             {% if game_data.items | length > 0 %}
