@@ -122,6 +122,8 @@
                             {% endfor %}
                         </select>
                     </div>
+                {% elif current.has_nonadjacent %}
+                    <div class="label-like">Destinations nearby; move to a door to travel.</div>
                 {% endif %}
             </ul>
         {% endif %}

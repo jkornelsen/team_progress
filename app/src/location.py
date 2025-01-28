@@ -327,6 +327,8 @@ class Location(CompleteIdentifiable):
         """Get all the destinations you can travel to from the given
         departure_id.
         Also, returns the destination matching current_dest_id, if any.
+        And returns whether there are nonadjacent destinations (which
+        do not get returned).
         """
         # Retrieve the destination loc (not the departure loc)
         # for paths between locations when the current location
@@ -348,6 +350,7 @@ class Location(CompleteIdentifiable):
             """, [departure_id, g.game_token, departure_id, departure_id],
             ['loc_destinations', 'locations'])
         destinations = []
+        non_adjacent_dests = False
         for dest_data, dest_loc_data in tables_rows:
             dest = Destination.from_data(dest_data, departure_id)
             dest_loc = Location.from_data(dest_loc_data)
@@ -356,6 +359,7 @@ class Location(CompleteIdentifiable):
             else:
                 dest.loc1 = dest_loc
             if not Grid.adjacent(departure_pos, dest.door_here):
+                non_adjacent_dests = True
                 continue
             destinations.append(dest)
         current_dest = None
@@ -368,7 +372,7 @@ class Location(CompleteIdentifiable):
                     current_dest = dest
                     break
         logger.debug("Destinations: %s", len(destinations))
-        return destinations, current_dest
+        return destinations, current_dest, non_adjacent_dests
 
     @classmethod
     def chars_at_pos(cls, loc_id, position):

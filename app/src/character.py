@@ -73,6 +73,7 @@ class Character(CompleteIdentifiable):
         self.position = NumTup((0, 0))
         self.dest_loc = None  # Location object to travel to
         self.destination = None  # Destination object
+        self.has_nonadjacent = False  # destinations through distant doors
         self.progress = Progress(pholder=self)  # travel or producing items
 
     @classmethod
@@ -214,8 +215,9 @@ class Character(CompleteIdentifiable):
             dest_id if dest_id else (
                 self.dest_loc.id if self.dest_loc and self.dest_loc.id else 0)
             )
-        dests, self.destination = Location.get_destinations_from(
-            self.location.id, self.position.as_tuple(), cur_dest_loc_id)
+        dests, self.destination, self.has_nonadjacent = (
+            Location.get_destinations_from(
+            self.location.id, self.position.as_tuple(), cur_dest_loc_id))
         self.location.destinations = dests
 
     @classmethod
