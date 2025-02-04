@@ -50,32 +50,70 @@
         <table style="width: 100%; max-width: 80%; margin: 0 auto;">
             <tr>
                 <td>
+                    <span class="entity-at">
                     {% if current.pile.container_type() == 'general' %}
                         General Storage
-                        <br>
+                        {% if params.char_id %}
+                            (with
+                            {% set link = url_for('play_char', char_id=params.char_id) %}
+                            {% set letter = link_letters.next(link) %}
+                            <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                            <span class="hotkey-indicator">{{ letter }}</span>
+                            <a href="{{ link }}">{{ game_data.characters[params.char_id].name }}</a>
+                            {% if params.loc_id %}
+                                {% set link = url_for('play_location', loc_id=params.loc_id) %}
+                                {% set letter = link_letters.next(link) %}
+                                <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                                at
+                                <span class="hotkey-indicator">{{ letter }}</span>
+                                <a href="{{ link }}">{{ game_data.locations[params.loc_id].name }}</a>)
+                            {% else %}
+                                here)
+                            {% endif %}
+                        {% endif %}
                     {% elif current.pile.container_type() == 'char' %}
                         {% set link = url_for('play_char', char_id=container.id) %}
                         {% set letter = link_letters.next(link) %}
                         <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
                         Carried by
-                        <a href="{{ link }}">{{ container.name }}</a>
                         <span class="hotkey-indicator">{{ letter }}</span>
-                        <br>
+                        <a href="{{ link }}">{{ container.name }}</a>
+                        {% if container.location is not none %}
+                            {% set loc = game_data.locations[container.location.id] %}
+                            {% set link = url_for('play_location', loc_id=loc.id) %}
+                            {% set letter = link_letters.next(link) %}
+                            <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                            at <span class="hotkey-indicator">{{ letter }}</span>
+                            <a href="{{ link }}">{{ loc.name }}</a>
+                            {% if max(container.position) %}
+                                <span class="label-like">[{{ container.position }}]</span>
+                            {% endif %}
+                        {% else %}
+                            (who is currently nowhere)
+                        {% endif %}
                     {% elif current.pile.container_type() == 'loc' %}
                         {% set link = url_for('play_location', loc_id=container.id) %}
                         {% set letter = link_letters.next(link) %}
                         <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
                         At
+                        <span class="hotkey-indicator">{{ letter }}</span>
                         <a href="{{ link }}">{{ container.name }}</a>
                         {% if max(current.pile.position) %}
                             <span class="label-like">[{{ current.pile.position }}]</span>
                         {% endif %}
-                        <span class="hotkey-indicator">{{ letter }}</span>
-                        <br>
+                        {% if params.char_id %}
+                            where
+                            {% set link = url_for('play_char', char_id=params.char_id) %}
+                            {% set letter = link_letters.next(link) %}
+                            <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                            <span class="hotkey-indicator">{{ letter }}</span>
+                            <a href="{{ link }}">{{ game_data.characters[params.char_id].name }}</a>
+                            is.
+                        {% endif %}
                     {% else %}
                         General Storage (by default)
-                        <br>
                     {% endif %}
+                    </span>
                     <h2 style="margin: 10px 10px;
                                display: flex;
                                align-items: center;
@@ -181,7 +219,7 @@
             {% if current.masked %}
                 <tr>
                     <td>
-                        <p><b>This item is currently masked. To reveal, produce some of the sources, or uncheck "<i>Masked</i>" in item setup.</b></p>
+                        <p><b>This item is currently masked. To reveal, produce some of the sources.</b></p>
                     </td>
                 </tr>
             {% elif current.description %}
@@ -194,17 +232,6 @@
             {% if current.recipes %}
                 <tr>
                     <td>
-                        <style>
-                    .nested-table {
-                        width: 100%;
-                        border-collapse: collapse;
-                    }
-                    .nested-table td {
-                        height: 25px;
-                        vertical-align: middle;
-                        /* border: 1px solid #888; */
-                    }
-                        </style>
                         <table class="inner-table spacious"
                                cellspacing="0"
                                cellpadding="5"
@@ -216,7 +243,8 @@
                                 <th>Source</th>
                                 <th>Required</th>
                                 <th>In Stock</th>
-                                <th title="If there is a page that should be shown in this column, first navigate to that page.">Where</th>
+                                <th>Where<span class="info-icon" title="If there is a character or location with the resource not shown, first navigate to that page. For grids, move next to the resource.">ℹ️</span></th>
+
                             </tr>
                             {% for recipe in current.recipes|sort(attribute='id') %}
                                 {% if not loop.first %}<tr style="border-top: 1px solid #888;"></tr>{% endif %}
@@ -268,7 +296,7 @@
                                                     </script>
                                                 {% endif %}
                                                 {% else %}
-                                                    <span style="font-size: 1em"
+                                                    <span class="info-icon"
                                                           title=" {{ current.progress.failure_reason }}">🚫</span>
                                                 {% endif %}
                                             </td>
