@@ -680,10 +680,7 @@ def set_routes(app):
                 'message': 'Progress started.',
                 'is_ongoing': progress.is_ongoing
                 })
-        message = "Could not start."
-        reason = progress.failure_reason
-        if reason:
-            message = f"{message} {reason}"
+        message = progress.failure_reason or "Could not start."
         return jsonify({
             'status': 'error',
             'message': message,

@@ -28,8 +28,8 @@
         {% if current_data.overall.have_won() %}
             <span title="You won the scenario!">✅</span>
         {% elif current_data.overall.win_reqs %}
-            <span style="color: gray;"
-            title="There are win conditions &mdash; see Overall Settings.">🚩</span>
+            <span style="color: gray; font-size: 0.4em; position: relative; top: -0.8em;"
+            title="This scenario has win conditions &mdash; see Overall Settings.">🚩</span>
         {% endif %}
     </h1>
     <p>{{ current_data.overall.description|htmlify }}</p>
