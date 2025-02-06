@@ -247,7 +247,8 @@
 
             let exitNow = false;
             let travelProgressData = null;
-            let clientElapsedTime = 0;
+            let progressLastFetchedAt = 0;
+            let smoothElapsed = 0;
 
             function updateTravelProgress(new_data = null) {
                 if (new_data) {
@@ -291,15 +292,17 @@
                         exitNow = true;
                         return;
                     } else if (duration >= 2) {
-                        let elapsedTime = data && 'elapsed_time' in data ? Math.floor(data.elapsed_time) : 0;
-                        elapsedTime += clientElapsedTime;
-                        if (elapsedTime > duration) {
-                            elapsedTime = duration;
+                        let serverElapsed = data && 'elapsed_time' in data ? Math.floor(data.elapsed_time) : 0;
+                        const clientElapsed = (performance.now() - progressLastFetchedAt) / 1000;
+                        let totalElapsed = serverElapsed + clientElapsed;
+                        if (totalElapsed > duration) {
+                            totalElapsed = duration;
                         }
-                        const progressFraction = elapsedTime / duration;
+                        const lerpFactor = 0.03;  // correction speed
+                        smoothElapsed = smoothElapsed + lerpFactor * (totalElapsed - smoothElapsed);
+                        const progressFraction = smoothElapsed / duration;
                         progressBar.attr('value', progressFraction * 100);
-                        progressLabel.text(`${Math.floor(elapsedTime)} / ${duration}`);
-                        clientElapsedTime += 0.02;
+                        progressLabel.text(`${Math.floor(smoothElapsed)} / ${duration}`);
                     }
                 }
                 showhide_dest(false);
@@ -352,7 +355,7 @@
                 });
                 console.log('Received data:', data);
                 if (data) {
-                    clientElapsedTime = 0;
+                    progressLastFetchedAt = performance.now();
                     updateTravelProgress(data);
                 }
             }
@@ -465,7 +468,6 @@
                             alert(response.message);
                         }
                         stopFetchingProgress();
-                        clientElapsedTime = 0;
                         travelProgressData = null;
                         updateTravelProgress();
                         updateStartButtonLabel();

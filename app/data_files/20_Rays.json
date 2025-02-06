@@ -5,7 +5,7 @@
     "items": [
         {
             "attribs": [],
-            "description": "It seems like you shouldn't be able to see a black bar in space. Doesn't black absorb all light?<pre>\r\n  <c=\"black\">_____________\r\n<c=\"gray\">/</c>/____________/<c=\"gray\">/</c>\r\n</c></pre>\r\nRequires a reset:\r\n1. Stop progress for these sources (<c=\"red\">#</c>, <c=\"green\">#</c>, <c=\"yellow\">#</c>).\r\n2. Produce as many black bars as possible.\r\n3. Set quantities of these sources to 0.\r\n4. Reset rates and boosts of <c=\"red\">#</c> (1/8s, <a href=\"/configure/item/18\">I</a>, <a href=\"/configure/item/21\">II</a>) and <c=\"green\">#</c> (0.5/8s, <a href=\"/configure/item/19\">I</a>, <a href=\"/configure/item/50\">II</a>).\r\n\r\n<c=\"lemonchiffon\">Common browser hotkeys</c>: <i>Alt+LeftArrow</i> to go back, <i>Ctrl+Click</i> to open multiple tabs.",
+            "description": "It seems like you shouldn't be able to see a black bar in space. Doesn't black absorb all light?<pre>\r\n  <c=\"black\">_____________\r\n<c=\"gray\">/</c>/____________/<c=\"gray\">/</c>\r\n</c></pre>\r\n<c=\"lemonchiffon\">Requires a reset:</c>\r\n1. Stop producing the sources of this item (<c=\"red\">#</c>, <c=\"green\">#</c>, <c=\"yellow\">#</c>).\r\n2. Produce as many black bars as possible.\r\n3. Set quantities of the sources to 0.\r\n4. Reset rates and boosts of <c=\"red\">#</c> (1/8s, <a href=\"/configure/item/18\">I</a>, <a href=\"/configure/item/21\">II</a>) and <c=\"green\">#</c> (0.5/8s, <a href=\"/configure/item/19\">I</a>, <a href=\"/configure/item/50\">II</a>).\r\n\r\n<c=\"lemonchiffon\">PC browser shortcuts</c>: <i>Ctrl+Click</i> to open multiple tabs, <i>Alt+LeftArrow</i> to go back.",
             "id": 22,
             "masked": true,
             "name": "\u2b1bBlack Bar",
@@ -132,7 +132,7 @@
                 }
             ],
             "storage_type": "universal",
-            "toplevel": true
+            "toplevel": false
         },
         {
             "attribs": [],
@@ -191,7 +191,7 @@
                 }
             ],
             "storage_type": "universal",
-            "toplevel": false
+            "toplevel": true
         },
         {
             "attribs": [],
@@ -224,7 +224,7 @@
         },
         {
             "attribs": [],
-            "description": "To make the game go faster, in each bar's setup, multiply the rate amounts by this number.\r\n<pre>\r\n0.5   : slow\r\n1     : normal; can uncheck <i>Show in Overview</i>\r\n2     : fast\r\n10    : extra fast\r\n100   : practically no idling; incremental only\r\n</pre>\r\nFor items such as upgrades, you could lower the rate duration, or check the <i>Instant</i> box to remove the duration entirely.",
+            "description": "Set this quantity (<c=\"lemonchiffon\">BSF</c>) to one of the following:\r\n<pre>\r\n0.5   : slow\r\n1     : normal; uncheck <i>Show in Overview</i>\r\n2     : somewhat faster\r\n10    : very fast\r\n100   : practically no idling; incremental only\r\n</pre>\r\nThen, to change game speed, in each bar's setup, multiply the rate amounts (including upgrade bonuses) by the <c=\"lemonchiffon\">BSF</c>.\r\n\r\n<i>Less important / optional:</i> For other items, change only the waiting time. To do this, multiply the rate duration according to the table below, generally 2 \u00f7 <c=\"lemonchiffon\">BSF</c>.\r\n<pre>\r\n<c=\"lemonchiffon\">BSF</c>    duration mult\r\n---    -------------\r\n0.5    2\r\n1      1 (no change)\r\n2      0.75\r\n3      0.67\r\n4      0.50\r\n5      0.40\r\n6      0.33\r\n8      0.25\r\n10     0.20\r\n</pre>\r\nMinimum duration 1 second.",
             "id": 65,
             "masked": false,
             "name": "\ud83c\udfc1Base Speed Factor",
@@ -369,7 +369,7 @@
                 }
             ],
             "storage_type": "universal",
-            "toplevel": true
+            "toplevel": false
         },
         {
             "attribs": [],
@@ -982,7 +982,7 @@
                 }
             ],
             "storage_type": "universal",
-            "toplevel": false
+            "toplevel": true
         },
         {
             "attribs": [],
@@ -1021,7 +1021,7 @@
                 }
             ],
             "storage_type": "universal",
-            "toplevel": false
+            "toplevel": true
         },
         {
             "attribs": [],
@@ -1107,7 +1107,7 @@
                 }
             ],
             "storage_type": "universal",
-            "toplevel": false
+            "toplevel": true
         },
         {
             "attribs": [],
@@ -1220,7 +1220,7 @@
                 }
             ],
             "storage_type": "universal",
-            "toplevel": false
+            "toplevel": true
         },
         {
             "attribs": [],

@@ -238,9 +238,6 @@ class Progress(DependentIdentifiable):
         the fractional part of the next batch, if any.
         """
         self.set_recipe_by_id()
-        if self.recipe.id == 0:
-            logger.warning("no recipe")
-            return 0
         elapsed_time = elapsed_time or self.calculate_elapsed_time()
         batch_ratio = elapsed_time / self.recipe.rate_duration
         total_batches_needed = math.floor(batch_ratio)
@@ -276,9 +273,6 @@ class Progress(DependentIdentifiable):
         logger.debug("can_produce(%s)", recipe_id)
         if recipe_id:
             self.set_recipe_by_id(recipe_id)
-        if self.recipe.id == 0:
-            self.report_failure("No recipe.")
-            return False
         limit_positive = (
             self.q_limit > 0.0
             and self.pile.quantity >= self.q_limit

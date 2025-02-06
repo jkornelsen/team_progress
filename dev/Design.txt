@@ -1,10 +1,10 @@
 ---- issues and proposed changes ----
 
-Suzy could not start travel home.
-looks like the change to require a recipe is applying to travel,
-when it was intended for item production only
-game_routes.py line 514
-    if not char.progress.start():
+play item page should keep checking and automatically show button 
+if recipe becomes possible, using dynamic html
+likewise it should hide the button if recipe becomes impossible
+
+lost green bar recipes, perhaps due to removing the recipe.id == 0 check
 
 win condition quantity min and max, like attribs for recipes
 Fission Plant: no more than a certain amount of pollution
@@ -12,10 +12,6 @@ Fission Plant: no more than a certain amount of pollution
 produced another grandfather clock pile of 0 qty instead of merging
 
 saving grandfather clock resets hour, an enumerated attrib, to 12am
-
-play item page should keep checking and automatically show button 
-if recipe becomes possible, using dynamic html
-likewise it should hide the button if recipe becomes impossible
 
 sometimes for overview there's a problem re-inserting recipe data
 in this case, we were coming from viewing black bar
