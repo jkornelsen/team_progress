@@ -328,12 +328,14 @@ def set_routes(app):
             session['last_char_id'] = char_id
         if loc_id:
             session['last_loc_id'] = loc_id
-        main_pile_type = req.get_str('main', '')
         if not char_id:
             char_id = session.get('last_char_id', '')
         if not loc_id:
             loc_id = session.get('last_loc_id', '')
         pos = req.get_numtup('pos')
+        if pos:
+            session['last_pos'] = pos.as_list()
+        main_pile_type = req.get_str('main', '')
         logger.debug(
             "%s\nplay_item(item_id=%d, char_id=%s, loc_id=%s, pos=(%s))",
             "-" * 80, item_id, char_id, loc_id, pos)
@@ -348,6 +350,7 @@ def set_routes(app):
         for recipe in item.recipes:
             progress.set_recipe_by_id(recipe.id)
             num_batches, _ = progress.determine_batches(maxsize)
+            num_batches = 1 if num_batches == maxsize else num_batches
             max_batches[recipe.id] = num_batches
         defaults = {
             'pickup_char': session.get('default_pickup_char', ''),
@@ -667,12 +670,15 @@ def set_routes(app):
         if not char_id and not loc_id:
             char_id = session.get('last_char_id', '')
             loc_id = session.get('last_loc_id', '')
+        pos = None
+        if loc_id and not char_id:
+            pos = NumTup.from_list(session.get('last_pos', None))
         logger.debug(
             "%s\nstart_item(item_id=%d, recipe_id=%d, char_id=%s,"
-            " loc_id=%s)",
-            "-" * 80, item_id, recipe_id, char_id, loc_id)
+            " loc_id=%s, pos=(%s))",
+            "-" * 80, item_id, recipe_id, char_id, loc_id, pos)
         item = Item.data_for_play(
-            item_id, char_id, loc_id, complete_sources=True)
+            item_id, char_id, loc_id, pos, complete_sources=True)
         progress = item.progress
         if progress.start(recipe_id):
             return jsonify({
@@ -695,9 +701,12 @@ def set_routes(app):
         if not char_id and not loc_id:
             char_id = session.get('last_char_id', '')
             loc_id = session.get('last_loc_id', '')
+        pos = None
+        if loc_id and not char_id:
+            pos = NumTup.from_list(session.get('last_pos', None))
         logger.debug("%s\nstop_item(%d)", "-" * 80, item_id)
         item = Item.data_for_play(
-            item_id, char_id, loc_id, complete_sources=True)
+            item_id, char_id, loc_id, pos, complete_sources=True)
         logger.debug("Retrieved item %d from DB: %d recipes",
             item.id, len(item.recipes))
         container = item.pile.container
@@ -727,12 +736,15 @@ def set_routes(app):
         if not char_id and not loc_id:
             char_id = session.get('last_char_id', '')
             loc_id = session.get('last_loc_id', '')
+        pos = None
+        if loc_id and not char_id:
+            pos = NumTup.from_list(session.get('last_pos', None))
         logger.debug(
             "%s\ngain_item(item_id=%d, recipe_id=%d, num_batches=%d, "
-            "char_id=%s, loc_id=%s)",
-            "-" * 80, item_id, recipe_id, num_batches, char_id, loc_id)
+            "char_id=%s, loc_id=%s, pos=(%s))",
+            "-" * 80, item_id, recipe_id, num_batches, char_id, loc_id, pos)
         item = Item.data_for_play(
-            item_id, char_id, loc_id, complete_sources=True)
+            item_id, char_id, loc_id, pos, complete_sources=True)
         progress = item.progress
         progress.set_recipe_by_id(recipe_id)
         changed = progress.change_quantity(num_batches)
