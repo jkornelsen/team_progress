@@ -68,102 +68,131 @@
         {% endif %}
         <div class="column-container">
             <div><!-- lefthand column -->
-                    {% if game_data.characters %}
-                        <h2>Characters Here</h2>
-                        <ul>
-                            {% for char in game_data.characters %}
-                                {% set link = url_for('play_char', char_id=char.id) %}
-                                {% set letter = link_letters.next(link) %}
-                                <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                {% if current.attribs %}
+                    <h2>Attributes</h2>
+                    <ul>
+                        {% for attrib_of in current.attribs.values() %}
+                            {% set link = url_for('play_attrib', attrib_id=attrib_of.attrib_id, subject_type='loc', subject_id=current.id) %}
+                            {% set letter = link_letters.next(link) %}
+                            <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
+                            <li>
                                 <span class="hotkey-indicator">{{ letter }}</span>
-                                <a href="{{ link }}">{{ char.name }}</a>
-                                {% if has_grid %}
-                                    <span class="label-like char-position" data-char-id="{{ char.id }}">&nbsp;[{{ char.position[0] }},{{ char.position[1] }}]</span>
-                                {% endif %}
-                                <br>
-                            {% else %}
-                                <p>(None)</p>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
-                    {% if current.items_at %}
-                        <h2>Items Here</h2>
-                        <ul class="item-list">
-                            {% for items_at in current.items_at.values() %}
-                                {% for item_at in items_at %}
-                                    {% set item = item_at.item %}
-                                    {% set link = url_for('play_item', item_id=item.id, loc_id=current.id, pos=item_at.position, main='local') %}
-                                    {% set letter = link_letters.next(link) %}
-                                    <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
-                                    <span class="hotkey-indicator">{{ letter }}</span>
-                                    <a href="{{ link }}">{{ item.maskable_name() }}</a>
-                                    {% if not (item_at.item.q_limit == 1 and item_at.quantity == 1) %}{{ item_at.quantity | formatNum }}{% endif %}
-                                    {% if has_grid %}
-                                        <span class="label-like">&nbsp;[{{ item_at.position[0] }},{{ item_at.position[1] }}]</span>
+                                <a href="{{ link }}">{{ attrib_of.attrib.name }}</a>
+                                {% if attrib_of.attrib.enum %}
+                                    {% set index = attrib_of.val | int %}
+                                    {% if index in range(attrib_of.attrib.enum | length) %}
+                                        {{ attrib_of.attrib.enum[index] }}
+                                    {% else %}
+                                        ?
                                     {% endif %}
-                                    <br>
-                                {% endfor %}
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
-                    {% if current.item_refs %}
-                        <h2>Referenced Items</h2>
-                        <ul>
-                            {% for item in current.item_refs | sort(attribute='name') %}
-                                {% set link = url_for('play_item', item_id=item.id, loc_id=current.id, main='universal') %}
+                                {% elif attrib_of.attrib.binary %}
+                                    {{ ('&check;' if attrib_of.val else 'X') | safe }}
+                                {% else %}
+                                    {{ attrib_of.val | formatNum }}
+                                {% endif %}
+                            </li>
+                        {% else %}
+                            (None)
+                            <br>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                {% if game_data.characters %}
+                    <h2>Characters Here</h2>
+                    <ul>
+                        {% for char in game_data.characters %}
+                            {% set link = url_for('play_char', char_id=char.id) %}
+                            {% set letter = link_letters.next(link) %}
+                            <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                            <span class="hotkey-indicator">{{ letter }}</span>
+                            <a href="{{ link }}">{{ char.name }}</a>
+                            {% if has_grid %}
+                                <span class="label-like char-position" data-char-id="{{ char.id }}">&nbsp;[{{ char.position[0] }},{{ char.position[1] }}]</span>
+                            {% endif %}
+                            <br>
+                        {% else %}
+                            <p>(None)</p>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                {% if current.items_at %}
+                    <h2>Items Here</h2>
+                    <ul class="item-list">
+                        {% for items_at in current.items_at.values() %}
+                            {% for item_at in items_at %}
+                                {% set item = item_at.item %}
+                                {% set link = url_for('play_item', item_id=item.id, loc_id=current.id, pos=item_at.position, main='local') %}
                                 {% set letter = link_letters.next(link) %}
                                 <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
                                 <span class="hotkey-indicator">{{ letter }}</span>
                                 <a href="{{ link }}">{{ item.maskable_name() }}</a>
-                                {% if item.pile.quantity %}&nbsp;{{ item.pile.quantity | formatNum }}{% endif %}
+                                {% if not (item_at.item.q_limit == 1 and item_at.quantity == 1) %}{{ item_at.quantity | formatNum }}{% endif %}
+                                {% if has_grid %}
+                                    <span class="label-like">&nbsp;[{{ item_at.position[0] }},{{ item_at.position[1] }}]</span>
+                                {% endif %}
                                 <br>
                             {% endfor %}
-                        </ul>
-                    {% endif %}
-                    {% if game_data.events %}
-                        <h2>Local Events</h2>
-                        <ul>
-                            {% for evt in game_data.events %}
-                                {% set link = url_for('play_event', event_id=evt.id, from_id=current.id, from_typename=current.typename()) | safe %}
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                {% if current.item_refs %}
+                    <h2>Referenced Items</h2>
+                    <ul>
+                        {% for item in current.item_refs | sort(attribute='name') %}
+                            {% set link = url_for('play_item', item_id=item.id, loc_id=current.id, main='universal') %}
+                            {% set letter = link_letters.next(link) %}
+                            <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
+                            <span class="hotkey-indicator">{{ letter }}</span>
+                            <a href="{{ link }}">{{ item.maskable_name() }}</a>
+                            {% if item.pile.quantity %}&nbsp;{{ item.pile.quantity | formatNum }}{% endif %}
+                            <br>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                {% if game_data.events %}
+                    <h2>Local Events</h2>
+                    <ul>
+                        {% for evt in game_data.events %}
+                            {% set link = url_for('play_event', event_id=evt.id, from_id=current.id, from_typename=current.typename()) | safe %}
+                            {% set letter = link_letters.next(link) %}
+                            <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                            <span class="hotkey-indicator">{{ letter }}</span>
+                            <a href="{{ link }}">{{ evt.name }}</a>
+                            {% if evt.trigger_chance > 0 %}
+                                <span class="label-like">&nbsp;(chance to trigger)</span>
+                            {% endif %}
+                            <br>
+                        {% else %}
+                            <p>(None)</p>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                {% if current.destinations %}
+                    <h2>Destinations</h2>
+                    <ul>
+                        {% for dest in current.destinations %}
+                            {% if dest.other_loc.masked %}
+                                <span class="hotkey-indicator">&nbsp;&nbsp;</span>
+                                Somewhere not yet visited
+                            {% else %}
+                                {% set link = url_for('play_location', loc_id=dest.other_loc.id) %}
                                 {% set letter = link_letters.next(link) %}
                                 <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
                                 <span class="hotkey-indicator">{{ letter }}</span>
-                                <a href="{{ link }}">{{ evt.name }}</a>
-                                {% if evt.trigger_chance > 0 %}
-                                    <span class="label-like">&nbsp;(chance to trigger)</span>
+                                <a href="{{ link }}">{{ dest.other_loc.name }}</a>
+                                {% if max(dest.door_here) %}
+                                    <span class="label-like">[{{ dest.door_here }}]</span>
                                 {% endif %}
-                                <br>
-                            {% else %}
-                                <p>(None)</p>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
-                    {% if current.destinations %}
-                        <h2>Destinations</h2>
-                        <ul>
-                            {% for dest in current.destinations %}
-                                {% if dest.other_loc.masked %}
-                                    <span class="hotkey-indicator">&nbsp;&nbsp;</span>
-                                    Somewhere not yet visited
-                                {% else %}
-                                    {% set link = url_for('play_location', loc_id=dest.other_loc.id) %}
-                                    {% set letter = link_letters.next(link) %}
-                                    <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
-                                    <span class="hotkey-indicator">{{ letter }}</span>
-                                    <a href="{{ link }}">{{ dest.other_loc.name }}</a>
-                                    {% if max(dest.door_here) %}
-                                        <span class="label-like">[{{ dest.door_here }}]</span>
-                                    {% endif %}
-                                {% endif %}
-                                {% if dest.duration >= 2 %}
-                                    — {{ dest.duration }}s
-                                {% endif %}
-                                <br>
-                            {% else %}
-                                <p>(None)</p>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
+                            {% endif %}
+                            {% if dest.duration >= 2 %}
+                                — {{ dest.duration }}s
+                            {% endif %}
+                            <br>
+                        {% else %}
+                            <p>(None)</p>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
             </div>
                 {% set left, top, right, bottom = current.grid.excluded %}
                 {% if has_grid %}

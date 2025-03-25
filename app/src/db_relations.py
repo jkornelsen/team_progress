@@ -181,8 +181,9 @@ tables_to_create = {
         attrib_id integer not null,
         char_id integer,
         item_id integer,
+        loc_id integer,
         value real not null,
-        UNIQUE (game_token, attrib_id, char_id, item_id),
+        UNIQUE (game_token, attrib_id, char_id, item_id, loc_id),
         FOREIGN KEY (game_token, attrib_id)
             REFERENCES attribs (game_token, id)
             ON DELETE cascade
@@ -193,6 +194,10 @@ tables_to_create = {
             DEFERRABLE initially deferred,
         FOREIGN KEY (game_token, item_id)
             REFERENCES items (game_token, id)
+            ON DELETE cascade
+            DEFERRABLE initially deferred,
+        FOREIGN KEY (game_token, loc_id)
+            REFERENCES locations (game_token, id)
             ON DELETE cascade
             DEFERRABLE initially deferred
         """,

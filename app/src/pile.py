@@ -34,7 +34,7 @@ class Pile(DbSerializable):
 def load_piles(current_item, char_id, loc_id, pos, main_pile_type):
     """Assign a pile from this location or char inventory
     for the current item and that can be used for each recipe source.
-    Also find chars or items that meet recipe attrib requirements.
+    Also find entities that meet recipe attrib requirements.
     """
     logger.debug(
         "_load_piles(item.id=%d, char_id=%s, loc_id=%s, pos=(%s))",
@@ -126,6 +126,15 @@ def load_piles(current_item, char_id, loc_id, pos, main_pile_type):
         # Look for entities to meet attrib requirements
         for attrib_id, req in recipe.attrib_reqs.items():
             logger.debug("attrib %s req %s", attrib_id, req.range_str())
+            if loc_id and loc:
+                attrib_for = loc.attribs.get(attrib_id)
+                if attrib_for:
+                    logger.debug("loc %s %.1f", loc.name, attrib_for.val)
+                    if req.in_range(attrib_for.val):
+                        logger.debug("meets req")
+                        req.subject = loc
+                    else:
+                        logger.debug("does not meet req")
             for pile in item_piles_at_loc:
                 item = pile.item
                 attrib_for = item.attribs.get(attrib_id)

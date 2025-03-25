@@ -60,6 +60,32 @@
                size="5">
         <span class="label-like">left,top to right,bottom</span>
         <br>
+        <div id="attrib-container" class="outer-border">
+            <table id="attrib-table" style="display: none;">
+                <tbody id="attrib-rows">
+                </tbody>
+            </table>
+            <div>
+                {% if game_data.attribs %}
+                    <!-- Select box for adding another attribute -->
+                    <div class="select-box">
+                        <select id="add-attrib-select">
+                            <option value="" selected>(Select attribute)</option>
+                            {% for attrib in game_data.attribs %}
+                                <option value="{{ attrib.id }}"
+                                    data-binary="{{ attrib.binary | lower }}"
+                                    data-enum='{{ attrib.enum | tojson }}'>
+                                    {{ attrib.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <button type="button" id="add-attrib-btn" class="lesser-button">Add Attribute</button>
+                    </div>
+                {% else %}
+                    <p class="no-entities">(No attributes)</p>
+                {% endif %}
+            </div>
+        </div>
         <div id="destinations-container" class="outer-border">
             <!-- Placeholder for appending new destinations -->
             <div id="destlist_end" class="unobtrusive"></div>
@@ -181,6 +207,57 @@
             {% else %}
                 $('#btn-delete').attr('disabled', 'disabled');
             {% endif %}
+
+            function addAttrib(attribId, attribName, isBinary, enumVals, attribVal = 1) {
+                const uniqueId = `attrib${attribId}`;
+                const attribHtml = `
+                    <tr>
+                        <td>${attribName}
+                            <input type="hidden" name="attrib_id[]" value="${attribId}">
+                        </td><td>
+                            ${enumVals.length > 0 
+                            ? enumSelect(enumVals, "${uniqueId}_val", attribVal)
+                            : isBinary 
+                                ? `<input type="checkbox"
+                                          name="${uniqueId}_val"
+                                          value="1" ${attribVal === 1 ? 'checked' : ''}>` 
+                                : `<input type="text"
+                                          name="${uniqueId}_val"
+                                          value="${attribVal}"
+                                          size="8">`}
+                        </td><td>
+                            <button type="button" class="remove-attrib-btn lesser-button" id="remove-${uniqueId}">Remove</button>
+                        </td>
+                    </tr>
+                `;
+                $('#attrib-rows').prepend(attribHtml);
+                $('#attrib-table').show();
+            }
+            $('#add-attrib-btn').click(() => {
+                const selectedOption = $('#add-attrib-select option:selected');
+                const attribId = selectedOption.val();
+                const attribName = selectedOption.text();
+                const isBinary = selectedOption.data('binary');
+                const enumValues = selectedOption.data('enum');
+                console.log("enumValues:", enumValues);
+                if (attribId === "") {
+                    return; // don't add if the selected option is the placeholder
+                }
+                const existingAttrib = $(`#attrib-rows input[name="attrib_id[]"][value="${attribId}"]`).closest('tr');
+                if (existingAttrib.length > 0) {
+                    alert('Attribute already exists.');
+                    return;
+                }
+                addAttrib(attribId, attribName, isBinary, enumValues);
+            });
+
+            $('#attrib-container').on('click', '.remove-attrib-btn', (event) => {
+                const attribRow = $(event.currentTarget).closest('tr');
+                attribRow.remove();
+                if ($('#attrib-rows').children().length === 0) {
+                    $('#attrib-table').hide();
+                }
+            });
 
             function addDestination(other_loc_id, other_loc_name, duration = "1", door_here = "", other_door = "", bidirectional = true, is_loc1 = true) {
                 const destHtml = `
@@ -320,6 +397,15 @@
                 addItemRef(itemId, itemName);
             });
 
+            console.log("number of attribs={{ current.attribs.keys() | length }}");
+            {% for attrib_id, attrib_of in current.attribs.items() %}
+                addAttrib(
+                    {{ attrib_id }},
+                    "{{ attrib_of.attrib.name }}",
+                    {{ attrib_of.attrib.binary | lower }},
+                    {{ attrib_of.attrib.enum | tojson }},
+                    {{ attrib_of.val | formatNum }});
+            {% endfor %}
             {% for dest in current.destinations %}
                 addDestination(
                     {{ dest.other_loc.id }},

@@ -230,6 +230,8 @@ def set_routes(app):
             func_load_subject = Character.load_complete_object
         elif subject_type == 'item':
             func_load_subject = Item.load_complete_object
+        elif subject_type == 'loc':
+            func_load_subject = Location.load_complete_object
         else:
             return f"Unexpected subject type '{subject_type}'"
         subject = func_load_subject(subject_id)
@@ -379,7 +381,7 @@ def set_routes(app):
             max_batches=max_batches,
             characters_at_loc=characters_at_loc,
             game_data=g.game_data,
-            link_letters=LinkLetters('cdelmopq')
+            link_letters=LinkLetters('delmopq')
             )
 
     @app.route('/play/location/<int:loc_id>')

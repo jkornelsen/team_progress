@@ -6,6 +6,7 @@ from flask import g, session, url_for
 from .db_serializable import (
     DbError, DeletionError, CompleteIdentifiable, MutableNamespace,
     QueryHelper, Serializable, coldef)
+from .attrib import Attrib, AttribFor
 from .item import Item
 from .pile import Pile
 from .utils import NumTup, RequestHelper, Storage
@@ -164,6 +165,7 @@ class Location(CompleteIdentifiable):
         self.toplevel = False
         self.masked = False
         self.destinations = []  # Destination objects
+        self.attribs = {}  # AttribFor objects keyed by attrib id
         self.items_at = {}  # lists of ItemAt objects keyed by item id
         self.item_refs = []  # general items clickable from this loc
         self.grid = Grid()
@@ -189,6 +191,9 @@ class Location(CompleteIdentifiable):
                 dest.dict_for_json()
                 for dest in self.destinations
                 if dest.loc1.id == self.id],
+            'attribs': [
+                attrib_for.as_tuple()
+                for attrib_for in self.attribs.values()],
             'items': [
                 item_at.dict_for_json()
                 for items_at in self.items_at.values()
@@ -213,6 +218,9 @@ class Location(CompleteIdentifiable):
         instance = super().from_data(data)
         instance.toplevel = data.get('toplevel', False)
         instance.masked = data.get('masked', False)
+        instance.attribs = {
+            attrib_id: AttribFor(attrib_id, val)
+            for attrib_id, val in data.get('attribs', [])}
         for dest_data in data.get('destinations', []):
             loc1_id = dest_data.get('loc1_id', 0)
             loc2_id = dest_data.get('loc2_id', 0)
@@ -250,10 +258,19 @@ class Location(CompleteIdentifiable):
                 DELETE FROM loc_destinations
                 WHERE game_token = %s AND loc1_id = %s
                 """, (g.game_token, self.id))
-            self.execute_change("""
-                DELETE FROM loc_items
-                WHERE game_token = %s AND loc_id = %s
-                """, (g.game_token, self.id))
+            for rel_table in ('attribs_of', 'loc_items'):
+                self.execute_change(f"""
+                    DELETE FROM {rel_table}
+                    WHERE game_token = %s AND loc_id = %s
+                    """, (g.game_token, self.id))
+        if self.attribs:
+            values = [
+                (g.game_token, self.id, attrib_id, attrib_for.val)
+                for attrib_id, attrib_for in self.attribs.items()]
+            self.insert_multiple(
+                "attribs_of",
+                "game_token, loc_id, attrib_id, value",
+                values)
         if self.destinations:
             values_to_insert = []
             for dest in self.destinations:
@@ -402,6 +419,19 @@ class Location(CompleteIdentifiable):
         locs = {}  # data (not objects) keyed by ID
         for data in rows:
             locs[data.id] = data
+        # Get attrib relation data
+        qhelper = QueryHelper("""
+            SELECT *
+            FROM attribs_of
+            WHERE game_token = %s
+                AND loc_id IS NOT NULL
+            """, [g.game_token])
+        qhelper.add_limit_in("loc_id", ids)
+        attrib_rows = cls.execute_select(qhelper=qhelper)
+        for row in attrib_rows:
+            loc = locs[row.loc_id]
+            loc.setdefault(
+                'attribs', []).append((row.attrib_id, row.value))
         # Get destination data
         qhelper = QueryHelper("""
             SELECT *
@@ -445,7 +475,9 @@ class Location(CompleteIdentifiable):
         logger.debug("data_for_configure(%s)", id_to_get)
         current_obj = cls.load_complete_object(id_to_get)
         # Replace partial objects with fully populated objects
-        g.game_data.from_db_flat([Location, Item])
+        g.game_data.from_db_flat([Location, Attrib, Item])
+        for attrib_id, attrib_for in current_obj.attribs.items():
+            attrib_for.attrib = Attrib.get_by_id(attrib_id)
         for dest in current_obj.destinations:
             if dest.loc1.id == int(id_to_get):
                 dest.loc1 = current_obj
@@ -533,6 +565,15 @@ class Location(CompleteIdentifiable):
             self.item_refs = [
                 Item(item_id)
                 for item_id in req.get_list('ref_item_id[]')]
+            attrib_ids = req.get_list('attrib_id[]')
+            logger.debug("Attrib IDs: %s", attrib_ids)
+            self.attribs = {}
+            for attrib_id in attrib_ids:
+                attrib_prefix = f'attrib{attrib_id}_'
+                attrib_val = req.get_float(f'{attrib_prefix}val', 0.0)
+                self.attribs[attrib_id] = AttribFor(attrib_id, attrib_val)
+            logger.debug("attribs: %s", {attrib_id: attrib_for.val
+                for attrib_id, attrib_for in self.attribs.items()})
             self.to_db()
         elif req.has_key('delete_location'):
             try:
