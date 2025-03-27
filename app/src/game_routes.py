@@ -226,6 +226,7 @@ def set_routes(app):
         attrib = Attrib.load_complete_object(attrib_id)
         if not attrib:
             return "Attribute not found"
+        produced_items = attrib.load_recipes_used_for()
         if subject_type == 'char':
             func_load_subject = Character.load_complete_object
         elif subject_type == 'item':
@@ -258,6 +259,7 @@ def set_routes(app):
             current=attrib,
             subject=subject,
             subject_attrib_val=attrib_for.val,
+            produced_items=produced_items,
             link_letters=LinkLetters('cemo')
             )
 

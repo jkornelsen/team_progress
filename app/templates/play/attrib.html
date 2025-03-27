@@ -140,6 +140,20 @@
             </tr>
         </table>
     </form>
+    <div style="height: 20px;"></div>
+    {% if produced_items %}
+        <h2>Required to Produce</h2>
+        <ul>
+            {% for item in produced_items | sort(attribute='name') %}
+                {% set link = url_for('play_item', item_id=item.id) %}
+                {% set letter = link_letters.next(link) %}
+                <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
+                <span class="hotkey-indicator">{{ letter }}</span>
+                <a href="{{ link }}">{{ item.maskable_name() }}</a>
+                <br>
+            {% endfor %}
+        </ul>
+    {% endif %}
     <script>
         $(document).ready(() => {
             function calculate() {

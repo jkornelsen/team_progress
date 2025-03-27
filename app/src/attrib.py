@@ -84,6 +84,21 @@ class Attrib(CompleteIdentifiable):
         cls.get_coll().primary.update(instances)
         return instances.values()
 
+    def load_recipes_used_for(self):
+        """@return list of items where a recipe requires this attrib"""
+        items = []
+        from .item import Item
+        from .recipe import Recipe
+        g.game_data.from_db_flat([Item])
+        all_recipes_data = Recipe.load_complete_data()
+        for item_id, recipes_data in all_recipes_data.items():
+            for recipe_data in recipes_data.values():
+                recipe = Recipe.from_data(recipe_data)
+                if self.id in recipe.attrib_reqs:
+                    items.append(Item.get_by_id(item_id))
+                    break
+        return items
+
     def configure_by_form(self):
         req = RequestHelper('form')
         if req.has_key('save_changes') or req.has_key('make_duplicate'):
