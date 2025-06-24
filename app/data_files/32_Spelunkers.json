@@ -1,0 +1,372 @@
+{
+    "attribs": [
+        {
+            "description": "",
+            "enum_list": [],
+            "id": 2,
+            "is_binary": false,
+            "name": "Strength"
+        },
+        {
+            "description": "",
+            "enum_list": [],
+            "id": 3,
+            "is_binary": false,
+            "name": "Battery"
+        },
+        {
+            "description": "Accuracy, balance, reflexes, precision tasks.\r\n\r\nFor characters:\r\n+1 (bulky)\r\n+2 (average, cautious)\r\n+3 (nimble, alert)\r\n+4 (experienced)\r\n\r\nModifier for roll success. +2 is pretty good for an item, could possibly go up to +5.",
+            "enum_list": [],
+            "id": 6,
+            "is_binary": false,
+            "name": "Dexterity"
+        },
+        {
+            "description": "Sharp-eyed, experienced: +2 to +4\r\nExceptionally perceptive: +5 to +6 (trained, naturally gifted)",
+            "enum_list": [],
+            "id": 4,
+            "is_binary": false,
+            "name": "Perceive"
+        }
+    ],
+    "characters": [
+        {
+            "attribs": [
+                [6, 4.0]
+            ],
+            "description": "Guide. Spelunking expert, brings equipment. With broadly Latin American features, wearing loose green shirt and khaki shorts.",
+            "dest_id": null,
+            "events": [],
+            "id": 2,
+            "items": [
+                {
+                    "item_id": 2,
+                    "quantity": 1.0,
+                    "slot": ""
+                }
+            ],
+            "location_id": 4,
+            "masked": false,
+            "name": "Tsayh",
+            "position": [0,0],
+            "progress": {},
+            "toplevel": true,
+            "travel_group": "Main Party"
+        },
+        {
+            "attribs": [
+                [6, 2.0]
+            ],
+            "description": "Middle aged caucasian, medium build. Can easily get tired, but may also be feeling unexpectedly energetic. Could be the player character for a solo campaign.",
+            "dest_id": null,
+            "events": [],
+            "id": 1,
+            "items": [
+                {
+                    "item_id": 2,
+                    "quantity": 1.0,
+                    "slot": "Head"
+                }
+            ],
+            "location_id": 4,
+            "masked": false,
+            "name": "Adam",
+            "position": [0,0],
+            "progress": {},
+            "toplevel": true,
+            "travel_group": "Main Party"
+        },
+        {
+            "attribs": [
+                [6, 1.0],
+                [2, 6.0]
+            ],
+            "description": "Volleyball coach. Strong, best for lifting. Apparently Eastern European ethnicity, noticeable accent but with no difficulties speaking English in most contexts.",
+            "dest_id": null,
+            "events": [],
+            "id": 3,
+            "items": [
+                {
+                    "item_id": 2,
+                    "quantity": 1.0,
+                    "slot": ""
+                },
+                {
+                    "item_id": 1,
+                    "quantity": 1.0,
+                    "slot": ""
+                }
+            ],
+            "location_id": 4,
+            "masked": false,
+            "name": "Karl",
+            "position": [0,0],
+            "progress": {},
+            "toplevel": true,
+            "travel_group": "Main Party"
+        },
+        {
+            "attribs": [
+                [6, 3.0],
+                [4, 4.0]
+            ],
+            "description": "Waitress, in charge of food. With African features, wearing red polo shirt and jean shorts.",
+            "dest_id": null,
+            "events": [],
+            "id": 4,
+            "items": [
+                {
+                    "item_id": 2,
+                    "quantity": 1.0,
+                    "slot": "Head"
+                }
+            ],
+            "location_id": 4,
+            "masked": false,
+            "name": "Melaka",
+            "position": [0,0],
+            "progress": {},
+            "toplevel": true,
+            "travel_group": "Main Party"
+        }
+    ],
+    "events": [
+        {
+            "changed": [],
+            "description": "Such as hoisting a rope.",
+            "determining": [
+                {
+                    "entity_data": ["attrib", 2],
+                    "label": "",
+                    "operation": "+"
+                }
+            ],
+            "id": 3,
+            "name": "Pull",
+            "numeric_range": [1, 20],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": true,
+            "trigger_chance": 0.0,
+            "triggers": []
+        },
+        {
+            "changed": [],
+            "description": "Success in making it past a certain point, or walking on a path.",
+            "determining": [
+                {
+                    "entity_data": ["attrib", 6],
+                    "label": "",
+                    "operation": "+"
+                }
+            ],
+            "id": 1,
+            "name": "Navigate",
+            "numeric_range": [1, 20],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": true,
+            "trigger_chance": 0.0,
+            "triggers": []
+        },
+        {
+            "changed": [],
+            "description": "Holding delicate, slippery, or awkward items.",
+            "determining": [
+                {
+                    "entity_data": ["attrib", 6],
+                    "label": "",
+                    "operation": "+"
+                }
+            ],
+            "id": 5,
+            "name": "Hold",
+            "numeric_range": [1, 20],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": true,
+            "trigger_chance": 0.0,
+            "triggers": []
+        },
+        {
+            "changed": [],
+            "description": "",
+            "determining": [
+                {
+                    "entity_data": ["attrib", 6],
+                    "label": "",
+                    "operation": "+"
+                }
+            ],
+            "id": 2,
+            "name": "Throw",
+            "numeric_range": [1, 20],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": true,
+            "trigger_chance": 0.0,
+            "triggers": []
+        },
+        {
+            "changed": [],
+            "description": "Catch, grab, or restrain elusive targets.",
+            "determining": [
+                {
+                    "entity_data": ["attrib", 6],
+                    "label": "",
+                    "operation": "+"
+                }
+            ],
+            "id": 6,
+            "name": "Seize",
+            "numeric_range": [1, 20],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": true,
+            "trigger_chance": 0.0,
+            "triggers": []
+        },
+        {
+            "changed": [],
+            "description": "For example, discover details about an object by viewing it.",
+            "determining": [
+                {
+                    "entity_data": ["attrib", 4],
+                    "label": "",
+                    "operation": "+"
+                }
+            ],
+            "id": 4,
+            "name": "Perceive",
+            "numeric_range": [1, 20],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": true,
+            "trigger_chance": 0.0,
+            "triggers": []
+        }
+    ],
+    "items": [
+        {
+            "attribs": [
+                [3, 100.0]
+            ],
+            "description": "",
+            "id": 2,
+            "masked": false,
+            "name": "Headlamp",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0,
+            "recipes": [],
+            "storage_type": "carried",
+            "toplevel": false
+        },
+        {
+            "attribs": [
+                [6, 2.0]
+            ],
+            "description": "",
+            "id": 1,
+            "masked": false,
+            "name": "Good Rope",
+            "progress": {},
+            "q_limit": 0.0,
+            "quantity": 0,
+            "recipes": [],
+            "storage_type": "carried",
+            "toplevel": false
+        }
+    ],
+    "locations": [
+        {
+            "attribs": [],
+            "description": "Covering the crystals are Spectrum-Winged Bats with iridescent fur.\r\n\r\nAt the far end, forks into two paths. The walls on the left path are dripping water. On the right, a faint breeze carries a metallic scent.",
+            "destinations": [
+                {
+                    "bidirectional": true,
+                    "door1": [0,0],
+                    "door2": [0,0],
+                    "duration": 1,
+                    "loc2_id": 3
+                }
+            ],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
+            "id": 4,
+            "item_refs": [],
+            "items": [],
+            "masked": false,
+            "name": "Room with Crystals on Ceiling",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "Slippery",
+            "destinations": [
+                {
+                    "bidirectional": true,
+                    "door1": [0,0],
+                    "door2": [0,0],
+                    "duration": 1,
+                    "loc2_id": 2
+                }
+            ],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
+            "id": 3,
+            "item_refs": [],
+            "items": [],
+            "masked": false,
+            "name": "Path around Pool",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "Tropical jungle, with a wide dirt path nearby. It looks like people visit the cave from time to time.",
+            "destinations": [],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
+            "id": 1,
+            "item_refs": [],
+            "items": [],
+            "masked": false,
+            "name": "Outside Cave Entrance",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "High ceiling, with a large underground pool at the far end. Some light comes in from the entrance, noticeable especially if there are no other lights on.",
+            "destinations": [
+                {
+                    "bidirectional": true,
+                    "door1": [0,0],
+                    "door2": [0,0],
+                    "duration": 1,
+                    "loc2_id": 1
+                }
+            ],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
+            "id": 2,
+            "item_refs": [],
+            "items": [],
+            "masked": false,
+            "name": "Big Room Inside Entrance",
+            "toplevel": false
+        }
+    ],
+    "overall": {
+        "description": "Story-driven <c=gold>exploration</c> with fixed stats for rolls.\r\n\r\nEasier to manage than the <i>Dungeon Crawl</i> scenario because XP is not tracked.",
+        "multiplayer": true,
+        "number_format": "en_US",
+        "progress_type": "RPG",
+        "slots": [
+            "Right Hand",
+            "Left Hand",
+            "Head"
+        ],
+        "title": "Spelunkers",
+        "win_reqs": []
+    }
+}

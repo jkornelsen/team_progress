@@ -64,9 +64,10 @@
                         <select id="difficulty-select" name="difficulty">
                             <option value="0.0">None</option>
                             <option value="0.25">Easy (-25%)</option>
-                            <option value="0.50" selected>Moderate (-50%)</option>
-                            <option value="0.75">Hard (-75%)</option>
-                            <option value="1">Very Hard (-100%)</option>
+                            <option value="0.40" selected>Moderate (-40%)</option>
+                            <option value="0.55">Challenging (-55%)</option>
+                            <option value="0.70">Very Hard (-70%)</option>
+                            <option value="0.85">Extreme (-85%)</option>
                         </select>
                         <br>
                         <label for="threshold" style="padding-left: 10px;">Major/Minor Threshold:</label>
@@ -405,7 +406,7 @@
                         storageKey = $select.attr('id');
                     }
                     const storedObj = eventDefaults[storageKey];
-                    if (storedObj === undefined) {
+                    if (!storedObj || !storedObj.value || $('#'+select.id+' option[value="' + storedObj.value + '"]').length === 0) {
                         const indexToSelect = (select.id === 'difficulty-select')
                             ? 2 // Moderate difficulty
                             : 1; // First non-empty option

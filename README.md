@@ -1,14 +1,16 @@
 # Team Progress Kit: incremental + TTRPG
 
 Produce, interact, and explore, driven by storytelling and chance.
-Model a wide variety of ideas using descriptive text as building blocks.
+Model ideas using descriptive text as building blocks.
 
 A good place to start is the pre-built scenario "Bacon for Dinner."
 
-For solo campaigns, it helps to track the narrative in a
-document. If you know what a value ought to be but there isn't
-any clear way to do it, go to settings and force the change,
-then describe what happened in a way that fits.
+For solo role-playing scenarios, it helps to track the narrative in a
+document, or use a story generator AI to write the narration
+based on what happens.
+
+If the story calls for a value that isn't handled automatically,
+you can change it in settings at any time.
 
 ## Server
 

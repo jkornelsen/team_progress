@@ -57,28 +57,32 @@
                         <th>Character</th>
                         <th>At</th>
                     </tr>
-                    {% for char in current_data.characters %}
-                        <tr>
-                            <td>
-                                {% if char.char_id %}
+                    <tr>
+                        <td>
+                            {% for char in current_data.characters %}
+                                <div>
                                     {% set link = url_for('play_char', char_id=char.char_id) %}
                                     {% set letter = link_letters.next(link) %}
                                     <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
                                     <span class="hotkey-indicator">{{ letter }}</span>
                                     <a href="{{ link }}">{{ char.char_name }}</a>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if char.loc_id %}
-                                    {% set link = url_for('play_location', loc_id=char.loc_id) %}
-                                    {% set letter = link_letters.next(link) %}
-                                    <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
-                                    <span class="hotkey-indicator">{{ letter }}</span>
-                                    <a href="{{ link }}">{{ char.loc_name }}</a>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    {% endfor %}
+                                </div>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% for char in current_data.characters %}
+                                <div>
+                                    {% if char.loc_id %}
+                                        {% set link = url_for('play_location', loc_id=char.loc_id) %}
+                                        {% set letter = link_letters.next(link) %}
+                                        <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                                        <span class="hotkey-indicator">{{ letter }}</span>
+                                        <a href="{{ link }}">{{ char.loc_name }}</a>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </td>
+                    </tr>
                 </table>
             {% endif %}
             <!-- Top-level Locations -->
