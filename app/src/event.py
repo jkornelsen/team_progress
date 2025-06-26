@@ -45,14 +45,27 @@ RELATION_TYPES = ['determining', 'changed', 'triggers']
 ENTITY_TYPES = [Attrib, Item, Location]
 ENTITY_TYPENAMES = [entity.typename() for entity in ENTITY_TYPES]
 OPERATIONS = {
-    '+':    'Add',
-    '+log': 'Add (Scaled)',
-    '-':    'Subtract',
-    '-log': 'Subtract (Scaled)',
-    '*':    'Multiply',
-    '*log': 'Multiply (Scaled)',
-    '/':    'Divide',
-    '/log': 'Divide (Scaled)',
+    '+': {
+        'symbol': '+',
+        'text': 'Add',
+        },
+    '-': {
+        'symbol': '−',
+        'text': 'Subtract',
+        },
+    '*': {
+        'symbol': '×',
+        'text': 'Multiply',
+        },
+    '/': {
+        'symbol': '÷',
+        'text': 'Divide',
+        },
+    }
+MODES = {
+    '':     'Full',
+    'log':  'Soft Capped',
+    'half': 'Reduced',
     }
 
 def get_entity_tuple(row):
@@ -74,9 +87,11 @@ def roll_dice(sides):
     return random.randint(1, sides)
 
 class Determinant(Serializable):
+    """For example, an attribute used as a modifier to the die roll."""
     def __init__(self, entity=None):
         self.entity = entity
         self.operation = '+'
+        self.mode = ''
         self.label = ""
 
     def dict_for_json(self):
@@ -86,6 +101,7 @@ class Determinant(Serializable):
                 self.entity.id
                 ],
             'operation': self.operation,
+            'mode': self.mode,
             'label': self.label,
             }
 
@@ -97,6 +113,7 @@ class Determinant(Serializable):
         if typename in ENTITY_TYPENAMES:
             instance.entity = create_entity(typename, entity_id, ENTITY_TYPES)
         instance.operation = data.get('operation', '+')
+        instance.mode = data.get('mode', '')
         instance.label = data.get('label', "")
         return instance
 
@@ -197,12 +214,13 @@ class Event(CompleteIdentifiable):
         for det in self.determining_entities:
             entity = det.entity
             entity_values.setdefault(entity.typename(), []).append((
-                g.game_token, self.id, entity.id, det.operation, det.label
+                g.game_token, self.id, entity.id,
+                det.operation, det.mode, det.label
                 ))
         for typename, values in entity_values.items():
             self.insert_multiple(
                 "event_determining",
-                f"game_token, event_id, {typename}_id, operation, label",
+                f"game_token, event_id, {typename}_id, operation, mode, label",
                 values)
         for reltype in ('changed', 'triggers'):
             entity_values = {}  # keyed by entity typename
@@ -339,17 +357,20 @@ class Event(CompleteIdentifiable):
                 req.get_int('numeric_max', 20)))
             self.selection_strings = req.get_str('selection_strings', "")
             self.determining_entities = []
-            for typename, entity_id, operation, label in zip(
+            for typename, entity_id, operation, mode, label in zip(
                     req.get_list(f'determinant_type[]'),
                     req.get_list(f'determinant_id[]'),
                     req.get_list(f'determinant_operation[]'),
+                    req.get_list(f'determinant_mode[]'),
                     req.get_list(f'determinant_label[]')):
                 self.determining_entities.append(
                     Determinant.from_data({
                         'entity_data': (typename, entity_id),
                         'operation': operation,
+                        'mode': mode,
                         'label': label
                     }))
+
             for reltype in ('changed', 'triggers'):
                 setattr(
                     self, f'{reltype}_entities', [

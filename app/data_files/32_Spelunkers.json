@@ -22,42 +22,29 @@
             "name": "Dexterity"
         },
         {
+            "description": "For example, figuring out how to work mechanisms.",
+            "enum_list": [],
+            "id": 7,
+            "is_binary": false,
+            "name": "Intelligence"
+        },
+        {
             "description": "Sharp-eyed, experienced: +2 to +4\r\nExceptionally perceptive: +5 to +6 (trained, naturally gifted)",
             "enum_list": [],
             "id": 4,
             "is_binary": false,
-            "name": "Perceive"
+            "name": "Perception"
         }
     ],
     "characters": [
         {
             "attribs": [
-                [6, 4.0]
-            ],
-            "description": "Guide. Spelunking expert, brings equipment. With broadly Latin American features, wearing loose green shirt and khaki shorts.",
-            "dest_id": null,
-            "events": [],
-            "id": 2,
-            "items": [
-                {
-                    "item_id": 2,
-                    "quantity": 1.0,
-                    "slot": ""
-                }
-            ],
-            "location_id": 4,
-            "masked": false,
-            "name": "Tsayh",
-            "position": [0,0],
-            "progress": {},
-            "toplevel": true,
-            "travel_group": "Main Party"
-        },
-        {
-            "attribs": [
+                [4, 2.0],
+                [7, 2.0],
+                [2, 2.0],
                 [6, 2.0]
             ],
-            "description": "Middle aged caucasian, medium build. Can easily get tired, but may also be feeling unexpectedly energetic. Could be the player character for a solo campaign.",
+            "description": "POV character. Middle aged caucasian, medium build. Can easily get tired, but may also be feeling unexpectedly energetic.",
             "dest_id": null,
             "events": [],
             "id": 1,
@@ -68,7 +55,7 @@
                     "slot": "Head"
                 }
             ],
-            "location_id": 4,
+            "location_id": 7,
             "masked": false,
             "name": "Adam",
             "position": [0,0],
@@ -78,8 +65,10 @@
         },
         {
             "attribs": [
+                [4, 2.0],
+                [7, 1.0],
                 [6, 1.0],
-                [2, 6.0]
+                [2, 4.0]
             ],
             "description": "Volleyball coach. Strong, best for lifting. Apparently Eastern European ethnicity, noticeable accent but with no difficulties speaking English in most contexts.",
             "dest_id": null,
@@ -87,17 +76,22 @@
             "id": 3,
             "items": [
                 {
-                    "item_id": 2,
+                    "item_id": 1,
                     "quantity": 1.0,
                     "slot": ""
                 },
                 {
-                    "item_id": 1,
+                    "item_id": 2,
                     "quantity": 1.0,
-                    "slot": ""
+                    "slot": "Head"
+                },
+                {
+                    "item_id": 3,
+                    "quantity": 1.0,
+                    "slot": "Right Hand"
                 }
             ],
-            "location_id": 4,
+            "location_id": 7,
             "masked": false,
             "name": "Karl",
             "position": [0,0],
@@ -107,6 +101,8 @@
         },
         {
             "attribs": [
+                [7, 4.0],
+                [2, 1.0],
                 [6, 3.0],
                 [4, 4.0]
             ],
@@ -121,9 +117,35 @@
                     "slot": "Head"
                 }
             ],
-            "location_id": 4,
+            "location_id": 7,
             "masked": false,
             "name": "Melaka",
+            "position": [0,0],
+            "progress": {},
+            "toplevel": true,
+            "travel_group": "Main Party"
+        },
+        {
+            "attribs": [
+                [4, 2.0],
+                [2, 1.0],
+                [7, 3.0],
+                [6, 4.0]
+            ],
+            "description": "Guide. Spelunking expert, brings equipment. With broadly Latin American features, wearing loose green shirt and khaki shorts.",
+            "dest_id": null,
+            "events": [],
+            "id": 2,
+            "items": [
+                {
+                    "item_id": 2,
+                    "quantity": 1.0,
+                    "slot": "Head"
+                }
+            ],
+            "location_id": 7,
+            "masked": false,
+            "name": "Tsayh",
             "position": [0,0],
             "progress": {},
             "toplevel": true,
@@ -133,30 +155,12 @@
     "events": [
         {
             "changed": [],
-            "description": "Such as hoisting a rope.",
-            "determining": [
-                {
-                    "entity_data": ["attrib", 2],
-                    "label": "",
-                    "operation": "+"
-                }
-            ],
-            "id": 3,
-            "name": "Pull",
-            "numeric_range": [1, 20],
-            "outcome_type": "fourway",
-            "selection_strings": "",
-            "toplevel": true,
-            "trigger_chance": 0.0,
-            "triggers": []
-        },
-        {
-            "changed": [],
             "description": "Success in making it past a certain point, or walking on a path.",
             "determining": [
                 {
                     "entity_data": ["attrib", 6],
                     "label": "",
+                    "mode": "",
                     "operation": "+"
                 }
             ],
@@ -176,6 +180,7 @@
                 {
                     "entity_data": ["attrib", 6],
                     "label": "",
+                    "mode": "",
                     "operation": "+"
                 }
             ],
@@ -195,6 +200,7 @@
                 {
                     "entity_data": ["attrib", 6],
                     "label": "",
+                    "mode": "",
                     "operation": "+"
                 }
             ],
@@ -214,6 +220,7 @@
                 {
                     "entity_data": ["attrib", 6],
                     "label": "",
+                    "mode": "",
                     "operation": "+"
                 }
             ],
@@ -233,6 +240,7 @@
                 {
                     "entity_data": ["attrib", 4],
                     "label": "",
+                    "mode": "",
                     "operation": "+"
                 }
             ],
@@ -244,6 +252,108 @@
             "toplevel": true,
             "trigger_chance": 0.0,
             "triggers": []
+        },
+        {
+            "changed": [],
+            "description": "Figure out how something works or what its purpose is.",
+            "determining": [
+                {
+                    "entity_data": ["attrib", 7],
+                    "label": "",
+                    "mode": "",
+                    "operation": "+"
+                }
+            ],
+            "id": 8,
+            "name": "Investigate",
+            "numeric_range": [1, 20],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": true,
+            "trigger_chance": 0.0,
+            "triggers": []
+        },
+        {
+            "changed": [],
+            "description": "Use or manipulate something to achieve an effect.",
+            "determining": [
+                {
+                    "entity_data": ["attrib", 7],
+                    "label": "",
+                    "mode": "",
+                    "operation": "+"
+                }
+            ],
+            "id": 9,
+            "name": "Operate",
+            "numeric_range": [1, 20],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": true,
+            "trigger_chance": 0.0,
+            "triggers": []
+        },
+        {
+            "changed": [],
+            "description": "With a shovel, pickaxe for rock, or even bare hands. Primarily strength-based, but could require dexterity for certain targeted efforts.",
+            "determining": [
+                {
+                    "entity_data": ["attrib", 2],
+                    "label": "Wielder",
+                    "mode": "",
+                    "operation": "+"
+                },
+                {
+                    "entity_data": ["attrib", 6],
+                    "label": "Wielder",
+                    "mode": "half",
+                    "operation": "+"
+                },
+                {
+                    "entity_data": ["attrib", 2],
+                    "label": "Tool",
+                    "mode": "",
+                    "operation": "+"
+                },
+                {
+                    "entity_data": ["attrib", 6],
+                    "label": "Tool",
+                    "mode": "half",
+                    "operation": "+"
+                }
+            ],
+            "id": 7,
+            "name": "Dig",
+            "numeric_range": [1, 20],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": true,
+            "trigger_chance": 0.0,
+            "triggers": [
+                ["item", 3]
+            ]
+        },
+        {
+            "changed": [],
+            "description": "Such as hoisting a rope.",
+            "determining": [
+                {
+                    "entity_data": ["attrib", 2],
+                    "label": "",
+                    "mode": "",
+                    "operation": "+"
+                }
+            ],
+            "id": 3,
+            "name": "Pull",
+            "numeric_range": [1, 20],
+            "outcome_type": "fourway",
+            "selection_strings": "",
+            "toplevel": true,
+            "trigger_chance": 0.0,
+            "triggers": [
+                ["item", 1]
+            ]
         }
     ],
     "items": [
@@ -264,6 +374,22 @@
         },
         {
             "attribs": [
+                [2, 2.0],
+                [6, 1.0]
+            ],
+            "description": "For digging into rock. Primarily about brute force, but certain jobs may require some delicate hits.",
+            "id": 3,
+            "masked": false,
+            "name": "Refined Steel Pickaxe",
+            "progress": {},
+            "q_limit": 1.0,
+            "quantity": 0,
+            "recipes": [],
+            "storage_type": "carried",
+            "toplevel": false
+        },
+        {
+            "attribs": [
                 [6, 2.0]
             ],
             "description": "",
@@ -271,7 +397,7 @@
             "masked": false,
             "name": "Good Rope",
             "progress": {},
-            "q_limit": 0.0,
+            "q_limit": 1.0,
             "quantity": 0,
             "recipes": [],
             "storage_type": "carried",
@@ -353,6 +479,69 @@
             "items": [],
             "masked": false,
             "name": "Big Room Inside Entrance",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "Slight breeze brings a faint metallic smell.",
+            "destinations": [
+                {
+                    "bidirectional": true,
+                    "door1": [0,0],
+                    "door2": [0,0],
+                    "duration": 1,
+                    "loc2_id": 4
+                }
+            ],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
+            "id": 5,
+            "item_refs": [],
+            "items": [],
+            "masked": false,
+            "name": "Right Passage",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "Water dribbling down walls.",
+            "destinations": [
+                {
+                    "bidirectional": true,
+                    "door1": [0,0],
+                    "door2": [0,0],
+                    "duration": 1,
+                    "loc2_id": 4
+                }
+            ],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
+            "id": 6,
+            "item_refs": [],
+            "items": [],
+            "masked": false,
+            "name": "Left Passage",
+            "toplevel": false
+        },
+        {
+            "attribs": [],
+            "description": "Walls shine with metal in the light of their headlamps. The clinking sound is coming from the center, a pillar formation from floor to ceiling that doesn't completely look natural, but not constructed either.",
+            "destinations": [
+                {
+                    "bidirectional": true,
+                    "door1": [0,0],
+                    "door2": [0,0],
+                    "duration": 1,
+                    "loc2_id": 5
+                }
+            ],
+            "dimensions": [0,0],
+            "excluded": [0,0,0,0],
+            "id": 7,
+            "item_refs": [],
+            "items": [],
+            "masked": false,
+            "name": "Chamber with Clinking Pillar",
             "toplevel": false
         }
     ],

@@ -61,7 +61,7 @@
                         <td>
                             {% for char in current_data.characters %}
                                 <div>
-                                    {% set link = url_for('play_char', char_id=char.char_id) %}
+                                    {% set link = url_for('play_character', char_id=char.char_id) %}
                                     {% set letter = link_letters.next(link) %}
                                     <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
                                     <span class="hotkey-indicator">{{ letter }}</span>

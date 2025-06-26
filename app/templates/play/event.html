@@ -117,7 +117,8 @@
                                             data-det-label="{{ det.label }}"
                                             data-type="{{ entity.typename() }}"
                                             data-id="{{ entity.id }}"
-                                            data-operation="{{ det.operation }}">
+                                            data-operation="{{ det.operation }}"
+                                            data-mode="{{ det.mode }}">
                                         <option value="" selected>(Select to adjust roll)</option>
                                         {% for char in game_data.characters %}
                                             {% set adjust_factor = None %}
@@ -179,7 +180,10 @@
                                             data-id="{{ entity.id }}"
                                             data-type="{{ entity.typename() }}">
                                         [{{ letter }}]
-                                        {{ operations[det.operation] }}
+                                        {{ operations[det.operation].text }}
+                                        {% if det.mode %}
+                                            ({{ modes[det.mode] }})
+                                        {% endif %}
                                     </button>
                                     <script>
                                     funcForKey['{{ letter }}'] = () => {
@@ -472,23 +476,27 @@
                 const entityType = $(event.currentTarget).data('type');
                 const containerSelect = $(event.currentTarget).closest('button').prev('select');
                 const operation = $(containerSelect).data('operation');
+                const mode = $(containerSelect).data('mode');
                 const selectedIndex = $(containerSelect).prop('selectedIndex');
                 const selectedOption = $(containerSelect).find(':selected');
                 const containerVal = parseFloat(selectedOption.val()) || 0;
+                let operand = containerVal;
+                if (mode === 'log') {
+                    operand = scaledLog(operand);
+                } else if (mode === 'half') {
+                    operand = operand / 2;
+                }
                 const targetFields = [$('#die-min'), $('#die-max')];
                 if ($('#adjust-die-min').is(':checked')) {
                     targetFields.pop();
                 } else if ($('#adjust-die-max').is(':checked')) {
                     targetFields.shift();
                 }
-                for (let i = 0; i < targetFields.length; i++) {
-                    const targetField = targetFields[i];
+                for (let targetField of targetFields) {
                     const currentSetting = parseFloat(targetField.val()) || 0;
                     if (selectedIndex !== 0) {
-                        const baseOp = operation[0];
-                        const operand = operation.endsWith('log') ? scaledLog(containerVal) : containerVal;
                         let newValue;
-                        switch (baseOp) {
+                        switch (operation) {
                             case '+':
                                 newValue = currentSetting + operand;
                                 break;
@@ -505,7 +513,7 @@
                                 console.error("Unsupported operation:", operation);
                                 continue;
                         }
-                        newValue = Math.round(newValue);
+                        newValue = Math.round(newValue * 10) / 10;
                         targetField.val(newValue);
                     }
                 }
@@ -576,6 +584,11 @@
             $('#roll-btn').click(() => {
                 saveSelections();
                 const eventId = {{ current.id }};
+                let dieMin = Math.round(parseFloat($('#die-min').val()));
+                let dieMax = Math.round(parseFloat($('#die-max').val()));
+                // show rounded integers
+                $('#die-min').val(dieMin);
+                $('#die-max').val(dieMax);
                 const url = `/event/roll/${eventId}`;
                 const postData = {
                     die_min: $('#die-min').val(),

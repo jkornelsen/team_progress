@@ -10,7 +10,7 @@ from .attrib import Attrib
 from .db_serializable import DeletionError
 from .character import Character, OwnedItem
 from .item import Item
-from .event import Event, TriggerException, OPERATIONS
+from .event import Event, TriggerException, OPERATIONS, MODES
 from .location import Grid, Location, ItemAt
 from .overall import Overall
 from .progress import Progress
@@ -51,8 +51,8 @@ def set_routes(app):
         return back_to_referrer()
 
     @app.route('/configure/character/<char_id>', methods=['GET', 'POST'])
-    def configure_char(char_id):
-        logger.debug("%s\nconfigure_char(%s)", "-" * 80, char_id)
+    def configure_character(char_id):
+        logger.debug("%s\nconfigure_character(%s)", "-" * 80, char_id)
         if request.method == 'GET':
             req = RequestHelper('args')
             if not req.has_key('duplicated'):
@@ -80,7 +80,7 @@ def set_routes(app):
             dup_char.progress = Progress(pholder=dup_char)
             dup_char.to_db()  # Changes the ID
             return redirect(
-                url_for('configure_char', char_id=dup_char.id,
+                url_for('configure_character', char_id=dup_char.id,
                 duplicated=True))
         return back_to_referrer()
 
@@ -97,6 +97,7 @@ def set_routes(app):
                 'configure/event.html',
                 current=event,
                 operations=OPERATIONS,
+                modes=MODES,
                 game_data=g.game_data
                 )
         try:
@@ -236,6 +237,8 @@ def set_routes(app):
         else:
             return f"Unexpected subject type '{subject_type}'"
         subject = func_load_subject(subject_id)
+        if not subject:
+            return f"{subject_type} id [{subject_id}] not found"
         attrib_for = subject.attribs.get(attrib_id, 0)
         if request.method == 'POST':
             req = RequestHelper('form')
@@ -264,8 +267,8 @@ def set_routes(app):
             )
 
     @app.route('/play/char/<int:char_id>')
-    def play_char(char_id):
-        logger.debug("%s\nplay_char(%d)", "-" * 80, char_id)
+    def play_character(char_id):
+        logger.debug("%s\nplay_character(%d)", "-" * 80, char_id)
         instance = Character.data_for_play(char_id)
         if not instance:
             return "Character not found"
@@ -317,6 +320,7 @@ def set_routes(app):
                 message=session.pop('message', ''),
                 changed_by_form=session.pop('changed_by_form', False),
                 operations=OPERATIONS,
+                modes=MODES,
                 link_letters=LinkLetters('ademor')
                 )
         Event.change_by_form()

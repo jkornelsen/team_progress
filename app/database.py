@@ -103,7 +103,7 @@ def column_counts(table_name):
         'char_items': 5,
         'characters': 11,
         'event_changed': 4,
-        'event_determining': 6,
+        'event_determining': 7,
         'event_triggers': 5,
         'events': 9,
         'game_messages': 4,

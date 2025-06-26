@@ -200,7 +200,7 @@
                 `;
                 $('#items-rows').append(itemHtml);
                 $('#items-table').show();
-                $('#items-rows').find('tr:first select[name="item_slot[]"]').val(itemSlot);
+                $('#items-rows').find('tr:last select[name="item_slot[]"]').val(itemSlot);
             }
             $('.add-item-btn').click((event) => {
                 const selectBox = $(event.currentTarget).prev('.item-select');

@@ -6,7 +6,7 @@
         <a class="upper-left" href="{{ url_for('configure_index') }}">[m]ain setup</a>
         <span class="separator">|</span>
         <a class="upper-left"
-           href="{{ url_for('configure_char', char_id=current.id) }}">character s[e]tup</a>
+           href="{{ url_for('configure_character', char_id=current.id) }}">character s[e]tup</a>
     </div>
 {% endblock %}
 {% block content %}
@@ -16,7 +16,7 @@
         const linkForKey = {
             'o': '{{ url_for('overview') }}',
             'm': '{{ url_for('configure_index') }}',
-            'e': '{{ url_for('configure_char', char_id=current.id) }}',
+            'e': '{{ url_for('configure_character', char_id=current.id) }}',
         };
         document.addEventListener('DOMContentLoaded', () => {
             if (isMobile) {

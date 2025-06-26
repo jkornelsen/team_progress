@@ -101,7 +101,6 @@
             Stats, such as strength, or item quantity
             can determine the parameters of the roll
             by adjusting the die's minimum and maximum values.
-            Scaled (logarithmic) makes it so larger values have a reduced impact.
             </p>
             <!-- Placeholder for appending new entities -->
             <table id="determinant-table" style="display: none;">
@@ -109,7 +108,8 @@
                     <tr>
                         <th title="For example, set to 'Accuracy' when the 'Dex' attribute increases hit chance. Optional.">Label</th>
                         <th title="The attribute or item whose value is being used">Name</th>
-                        <th title="For example, 'Add' means the value can be added to the die roll">Operation</th>
+                        <th title="For example, '+' means the value can be added to the die roll">Operation</th>
+                        <th title="'Soft capped' applies diminishing returns, while 'reduced' halves the effect.">Mode</th>
                         <th class="transparent-col"></th>
                     </tr>
                 </thead>
@@ -299,7 +299,7 @@
             outcomeTypeVisibility();
 
             // Add an entity next to a placeholder
-            function addDeterminant(entityType, entityId, entityName, detLabel="", operation="+") {
+            function addDeterminant(entityType, entityId, entityName, detLabel = "", operation = "+", mode = "") {
                 const entityHtml = `
                     <tr>
                         <td>
@@ -307,12 +307,21 @@
                         </td><td>${entityName}
                             <input type="hidden" name="determinant_type[]" value="${entityType}">
                             <input type="hidden" name="determinant_id[]" value="${entityId}">
-                        </td><td>
-                            <!-- causes determinant_operation[] key (as well as determinant_operation key) to be included in form submission even when no value -->
+                        </td><td style="text-align: center;">
+                            <!-- ensures determinant_operation[] key is submitted even if no value -->
+                            <!-- (also includes determinant_operation key) -->
                             <input type="hidden" name="determinant_operation" value="">
-                            <select name="determinant_operation[]">
-                                {% for op_value, op_name in operations.items() %}
-                                    <option value="{{ op_value }}">{{ op_name }}</option>
+                            <select name="determinant_operation[]" style="font-family: monospace; font-size: 1.2em;">
+                                {% for op_value, op_display in operations.items() %}
+                                    <option value="{{ op_value }}">{{ op_display.symbol }}&nbsp;</option>
+                                {% endfor %}
+                            </select>
+                        </td><td>
+                            <!-- ensures determinant_mode[] key is submitted even if no value -->
+                            <input type="hidden" name="determinant_mode" value="">
+                            <select name="determinant_mode[]">
+                                {% for mode_value, mode_display in modes.items() %}
+                                    <option value="{{ mode_value }}">{{ mode_display }}</option>
                                 {% endfor %}
                             </select>
                         </td><td>
@@ -322,7 +331,9 @@
                 `;
                 $('#determinant-rows').append(entityHtml);
                 $('#determinant-table').show();
-                $('#determinant-rows').find('tr:first select[name="determinant_operation[]"]').val(operation);
+                const $lastRow = $('#determinant-rows').find('tr:last');
+                $lastRow.find('select[name="determinant_operation[]"]').val(operation);
+                $lastRow.find('select[name="determinant_mode[]"]').val(mode);
             }
             function addEntity(relType, entityType, entityId, entityName, mult = false) {
                 // Check for duplicates: entityType + entityId must be unique within relType
@@ -354,6 +365,7 @@
                     "{{ entity.name }}",
                     "{{ det.label }}",
                     "{{ det.operation }}",
+                    "{{ det.mode }}",
                 );
             {% endfor %}
             {% for relType in ['changed', 'triggers'] %}

@@ -26,86 +26,113 @@
     </script>
     <h1>Lookup: {{ current.name }}</h1>
     <p class="info">
-    Find where items and characters are located, attributes are used, or events and locations are linked.
+        {% if current.typename() == 'char' %}
+            Where this character is located:
+        {% elif current.typename() == 'item' %}
+            Locations and carriers of this item, or linked events:
+        {% elif current.typename() == 'attrib' %}
+            Where this attribute is applied or required:
+        {% elif current.typename() == 'event' %}
+            Where this event is linked, and which attributes and items are involved:
+        {% elif current.typename() == 'loc' %}
+            Other locations or events that link to this location:
+        {% endif %}
     </p>
     <ul>
         {% for use in uses %} {# 'use': noun as in "the use of" #}
             {% set use_typename = getattr(use, 'typename', str)() %}
             {% if current.typename() == 'item' %}
-                {% set container = use.container %}
-                {% set use_container_type = getattr(use, 'container_type', str)() %}
-                {% if use_container_type == 'general' %}
-                    {% if use_container_type == '' %}
-                        {% set use = use.pile %}
-                    {% endif %} 
-                    {% set link = url_for('play_item', item_id=use.item.id, main_pile_type='universal') %}
-                    {% set letter = link_letters.next(link) %}
-                    <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
-                    <span class="hotkey-indicator">{{ letter }}</span>
-                    In
-                    <a href="{{ link }}">General Storage</a>
-                    : {{ use.quantity | formatNum }}
-                {% elif use_container_type == '' %}
-                    {% set link = url_for('play_item', item_id=use.id, main_pile_type='universal') %}
-                    {% set letter = link_letters.next(link) %}
-                    <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
-                    <span class="hotkey-indicator">{{ letter }}</span>
-                    Mentioned By
-                    <a href="{{ link }}">{{ use.name }}</a>
-                {% elif use_container_type == 'char' %}
-                    {% set link = url_for('play_char', char_id=container.id) %}
-                    {% set letter = link_letters.next(link) %}
-                    <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
-                    <span class="hotkey-indicator">{{ letter }}</span>
-                    Carried by
-                    <a href="{{ link }}">{{ container.name }}</a>
-                    : {{ use.quantity | formatNum }}
-                {% elif use_container_type == 'loc' %}
-                    {% set link = url_for('play_location', loc_id=container.id) %}
-                    {% set letter = link_letters.next(link) %}
-                    <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
-                    <span class="hotkey-indicator">{{ letter }}</span>
-                    At
-                    <a href="{{ link }}">{{ container.name }}</a>
-                    {% if max(use.position) %}
-                        <span class="label-like">[{{ use.position }}]</span>
-                    {% endif %}
-                    : {{ use.quantity | formatNum }}
-                {% elif use_typename == 'event' %}
+                {% if use_typename == 'event' %}
                     {% set entity = use %}
                     {% set link = url_for('play_event', event_id=entity.id) %}
                     {% set letter = link_letters.next(link) %}
                     <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
                     <span class="hotkey-indicator">{{ letter }}</span>
-                    Involved in
+                    Links to
                     <a href="{{ link }}">{{ entity.name }}</a>
                 {% else %}
-                    <h3>Unexpected use type '{{ use_container_type }}'</h3>
+                    {% set container = use.container %}
+                    {% set use_container_type = getattr(use, 'container_type', str)() %}
+                    {% if use_container_type == 'general' %}
+                        {% if use_container_type == '' %}
+                            {% set use = use.pile %}
+                        {% endif %} 
+                        {% set link = url_for('play_item', item_id=use.item.id, main_pile_type='universal') %}
+                        {% set letter = link_letters.next(link) %}
+                        <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                        <span class="hotkey-indicator">{{ letter }}</span>
+                        In
+                        <a href="{{ link }}">General Storage</a>
+                        : {{ use.quantity | formatNum }}
+                    {% elif use_container_type == '' %}
+                        {% set link = url_for('play_item', item_id=use.id, main_pile_type='universal') %}
+                        {% set letter = link_letters.next(link) %}
+                        <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                        <span class="hotkey-indicator">{{ letter }}</span>
+                        Mentioned By
+                        <a href="{{ link }}">{{ use.name }}</a>
+                    {% elif use_container_type == 'char' %}
+                        {% set link = url_for('play_character', char_id=container.id) %}
+                        {% set letter = link_letters.next(link) %}
+                        <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                        <span class="hotkey-indicator">{{ letter }}</span>
+                        Carried by
+                        <a href="{{ link }}">{{ container.name }}</a>
+                        : {{ use.quantity | formatNum }}
+                    {% elif use_container_type == 'loc' %}
+                        {% set link = url_for('play_location', loc_id=container.id) %}
+                        {% set letter = link_letters.next(link) %}
+                        <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                        <span class="hotkey-indicator">{{ letter }}</span>
+                        At
+                        <a href="{{ link }}">{{ container.name }}</a>
+                        {% if max(use.position) %}
+                            <span class="label-like">[{{ use.position }}]</span>
+                        {% endif %}
+                        : {{ use.quantity | formatNum }}
+                    {% else %}
+                        <h3>Unexpected use type '{{ use_container_type }}'</h3>
+                    {% endif %}
                 {% endif %}
                 <br>
             {% elif current.typename() == 'attrib' %}
-                {% set subject = use.subject %}
-                {% set subject_typename = getattr(subject, 'typename', dict)() %}
-                {% if subject_typename == 'item' %}
-                    {% set link = url_for('play_item', item_id=subject.id) %}
-                    {% set letter = link_letters.next(link) %}
-                    <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
-                    <span class="hotkey-indicator">{{ letter }}</span>
-                    <a href="{{ link }}">{{ subject.name }}</a>
-                {% elif subject_typename == 'char' %}
-                    {% set link = url_for('play_char', char_id=subject.id) %}
-                    {% set letter = link_letters.next(link) %}
-                    <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
-                    <span class="hotkey-indicator">{{ letter }}</span>
-                    <a href="{{ link }}">{{ subject.name }}</a>
+                {% if use.subject is defined %}
+                    {% set subject = use.subject %}
+                    {% set subject_typename = getattr(subject, 'typename', dict)() %}
+                    {% if subject_typename == 'item' %}
+                        {% set link = url_for('play_item', item_id=subject.id) %}
+                        {% set letter = link_letters.next(link) %}
+                        <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                        <span class="hotkey-indicator">{{ letter }}</span>
+                        <a href="{{ link }}">{{ subject.name }}</a>
+                    {% elif subject_typename == 'char' %}
+                        {% set link = url_for('play_character', char_id=subject.id) %}
+                        {% set letter = link_letters.next(link) %}
+                        <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                        <span class="hotkey-indicator">{{ letter }}</span>
+                        <a href="{{ link }}">{{ subject.name }}</a>
+                    {% else %}
+                        <h3>Unexpected subject type '{{ subject_typename }}'</h3>
+                    {% endif %}
+                    : {{ use.val | formatNum }}
                 {% else %}
-                    <h3>Unexpected subject type '{{ subject_typename }}'</h3>
+                    {% if use_typename == 'event' %}
+                        {% set entity = use %}
+                        {% set link = url_for('play_event', event_id=entity.id) %}
+                        {% set letter = link_letters.next(link) %}
+                        <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+                        <span class="hotkey-indicator">{{ letter }}</span>
+                        Involved in
+                        <a href="{{ link }}">{{ entity.name }}</a>
+                    {% else %}
+                        <h3>Unexpected type '{{ use_typename }}'</h3>
+                    {% endif %}
                 {% endif %}
-                : {{ use.val | formatNum }}<br>
+                <br>
             {% elif current.typename() == 'event' %}
                 {% set entity = use %}
                 {% if use_typename == 'char' %}
-                    {% set link = url_for('play_char', char_id=entity.id) %}
+                    {% set link = url_for('play_character', char_id=entity.id) %}
                     {% set letter = link_letters.next(link) %}
                     <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
                     <span class="hotkey-indicator">{{ letter }}</span>
@@ -115,7 +142,7 @@
                     {% set letter = link_letters.next(link) %}
                     <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
                     <span class="hotkey-indicator">{{ letter }}</span>
-                    <a href="{{ link }}">{{ entity.name }}</a> (configure)
+                    {{ entity.name }} &mdash; <a href="{{ link }}">go to settings</a>
                 {% else %}
                     {% set param_name = entity.typename() ~ '_id' %}
                     {% set link = url_for('play_' ~ entity.basename(), **{param_name: entity.id}) %}
@@ -147,10 +174,12 @@
             {% elif current.typename() == 'char' %}
                 {% set entity = use %}
                 {% set param_name = entity.typename() ~ '_id' %}
-                {% set link = url_for('play_' ~ entity.basename(), **{param_name: entity.id}) %}
+                {% set link = url_for('play_' ~ entity.basename(),
+                                     **{param_name: entity.id}) %}
                 {% set letter = link_letters.next(link) %}
                 <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
                 <span class="hotkey-indicator">{{ letter }}</span>
+                At
                 <a href="{{ link }}">{{ entity.name }}</a>
             {% else %}
                 <h3>Unexpected type '{{ current.typename() }}'</h3>
@@ -161,11 +190,14 @@
         <hr>
         <!-- Lookup does not show recipe info, while /play does. -->
         {% set param_name = current.typename() ~ '_id' %}
-        {% set link = url_for('play_' ~ current.basename(), **{param_name: current.id}) %}
-        {% set letter = link_letters.next(link) %}
-        <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
-        <span class="hotkey-indicator">{{ letter }}</span>
-        <a href="{{ link }}">Play {{ current.readable_type() }}</a><br>
+        {% if current.basename() != 'attrib' %}
+            {% set link = url_for('play_' ~ current.basename(),
+                                 **{param_name: current.id}) %}
+            {% set letter = link_letters.next(link) %}
+            <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+            <span class="hotkey-indicator">{{ letter }}</span>
+            <a href="{{ link }}">Play {{ current.readable_type() }}</a><br>
+        {% endif %}
         {% set link = url_for('configure_' ~ current.basename(), **{param_name: current.id}) %}
         {% set letter = link_letters.next(link) %}
         <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>

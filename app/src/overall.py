@@ -474,18 +474,31 @@ class Overall(DbSerializable):
                     attrib_for = char.attribs[attrib.id]
                     attrib_for.subject = char
                     uses.append(attrib_for)
+            for event in g.game_data.events:
+                for entity in (
+                        [det.entity for det in event.determining_entities] +
+                        event.changed_entities
+                    ):
+                    if (entity.typename() == Attrib.typename()
+                            and entity.id == attrib.id):
+                        uses.append(event)
+                        break
         elif 'event_id' in params:
             event = Event.get_by_id(params['event_id'])
             current = event
             for char in g.game_data.characters:
                 if event.id in char.events:
                     uses.append(char)
+            seen_ids = set()
             for entity in (
                     [det.entity for det in event.determining_entities] +
                     event.changed_entities +
                     event.triggers_entities
                 ):
-                    uses.append(entity.get_by_id(entity.id))
+                if entity.id in seen_ids:
+                    continue
+                uses.append(entity.get_by_id(entity.id))
+                seen_ids.add(entity.id)
         elif 'char_id' in params:
             char = Character.get_by_id(params['char_id'])
             current = char
