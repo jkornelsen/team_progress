@@ -68,8 +68,8 @@ from src.game_routes import set_routes as _set_game_routes, back_to_referrer
 from src.utils import format_num
 
 app = Flask(__name__)
-app.config['TITLE'] = 'Team Progress'
-app.config['SECRET_KEY'] = 'team-progress'
+app.config['TITLE'] = 'Team Progress Kit'
+app.config['SECRET_KEY'] = 'team-progress-kit'
 app.config['DATA_DIR'] = 'data_files'
 app.config['UPLOAD_DIR'] = os.path.join(app.config['DATA_DIR'], 'uploads')
 app.config['TEMPLATES_AUTO_RELOAD'] = True  # set to False for production

@@ -1,18 +1,21 @@
 ---- issues and proposed changes ----
 
-play item page should keep checking and automatically show button 
-if recipe becomes possible, using dynamic html
-likewise it should hide the button if recipe becomes impossible
-
-lost green bar recipes, perhaps due to removing the recipe.id == 0 check
+lost recipes -- observed with red, green, and blue bars
+likely when incompletely writing something that depends on those bars
+perhaps removing the recipe.id == 0 check is an issue
 if that is the reason, then maybe we could pass a param to indicate
 whether it's for travel or an item
-also lost blue bar recipes, when making the star or water maybe
-
-win condition quantity min and max, like attribs for recipes
-Fission Plant: no more than a certain amount of pollution
-
-saving grandfather clock resets hour, an enumerated attrib, to 12am
+    the following error may have happened as a result, after the recipe was lost
+    game_routes.py", line 723, in stop_item  progress.batches_for_elapsed_time()
+        line 254, in batches_for_elapsed_time  if not self.change_quantity(batches_to_do)
+        line 198, in change_quantity  self.pholder_to_db()
+    insert or update on table "recipe_sources" violates
+    foreign key constraint "recipe_sources_game_token_recipe_id_fkey"
+    db_serializable.py:207  called from recipe.py:245
+        INSERT INTO recipe_sources (game_token, recipe_id, item_id, q_required, preserve)
+        VALUES %s
+        values=[('4689343b-de97-452d-bb15-0543c991746d', 36, 45, 1.0, True),
+            ('4689343b-de97-452d-bb15-0543c991746d', 36, 48, 1.0, False)]
 
 sometimes for overview there's a problem re-inserting recipe data
 in this case, we were coming from viewing black bar
@@ -37,6 +40,15 @@ Another example is coming from play Star to overview.
 recipe_sources records should be deleted by cascading when recipe deleted in Item.to_db()
     FOREIGN KEY (game_token, recipe_id) REFERENCES recipes (game_token, id) ON DELETE cascade
 verify in log that recipe deleted in Item.to_db() is the same id
+
+play item page should keep checking and automatically show button 
+if recipe becomes possible, using dynamic html
+likewise it should hide the button if recipe becomes impossible
+
+win condition quantity min and max, like attribs for recipes
+Fission Plant: no more than a certain amount of pollution
+
+saving grandfather clock resets hour, an enumerated attrib, to 12am
 
 ---- planning ----
 

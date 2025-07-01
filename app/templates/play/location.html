@@ -144,7 +144,7 @@
                             <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
                             <span class="hotkey-indicator">{{ letter }}</span>
                             <a href="{{ link }}">{{ item.maskable_name() }}</a>
-                            {% if item.pile.quantity %}&nbsp;{{ item.pile.quantity | formatNum }}{% endif %}
+                            {% if not (item.q_limit == 1 and item.pile.quantity == 1) %}{{ item.pile.quantity | formatNum }}{% endif %}
                             <br>
                         {% endfor %}
                     </ul>

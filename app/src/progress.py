@@ -170,7 +170,8 @@ class Progress(DependentIdentifiable):
     # returns true if able to change quantity
     def change_quantity(self, batches_requested):
         with self.lock:
-            num_batches, stop_when_done = self.determine_batches(batches_requested)
+            num_batches, stop_when_done = self.determine_batches(
+                batches_requested)
             if num_batches > 0:
                 # Deduct source quantity used
                 main_as_source_qty = 0

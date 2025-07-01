@@ -224,7 +224,7 @@
         },
         {
             "attribs": [],
-            "description": "Set this quantity (<c=\"lemonchiffon\">BSF</c>) to a simple multiplier such as:\r\n<pre>\r\n0.5   : slow\r\n1     : normal; uncheck <i>Show in Overview</i>\r\n2     : somewhat faster\r\n10    : very fast\r\n100   : practically no idling; incremental only\r\n</pre>\r\nThen, in the setup for bars and elements, multiply the <b>rate amounts</b> (including bonuses) by the <c=\"lemonchiffon\">BSF</c>.\r\n\r\nFor low-quantity items such as upgrades, multiply the <b>rate duration</b> according to the table below, generally 2 \u00f7 <c=\"lemonchiffon\">BSF</c>.\r\n<pre>\r\n<c=\"lemonchiffon\">BSF</c>    duration mult\r\n---    -------------\r\n0.5    2\r\n1      1 (no change)\r\n2      0.75\r\n3      0.67\r\n4      0.50\r\n5      0.40\r\n6      0.33\r\n8      0.25\r\n10     0.20\r\n</pre>\r\nMinimum duration 1 second.",
+            "description": "Set this quantity (<c=\"lemonchiffon\">BSF</c>) to a multiplier such as:\r\n<pre>\r\n0.5   : slow\r\n1     : normal; uncheck <i>Show in Overview</i>\r\n2     : somewhat faster\r\n10    : fast\r\n100   : practically no idling; incremental only\r\n</pre>\r\nThen, in the setup for bars and elements, multiply the <b>rate amounts</b> (including bonuses) by the <c=\"lemonchiffon\">BSF</c>.\r\n\r\nFor upgrades and other low-quantity items, reduce the <b>rate duration</b> according to the table below, generally 5% per <c=\"lemonchiffon\">BSF</c>. Minimum duration 1 second.\r\n<pre>\r\n<c=\"lemonchiffon\">BSF</c>    duration change\r\n---    ---------------\r\n0.5    10% more\r\n1      no change\r\n2      10% less\r\n4      20% less\r\n5      25% less\r\n8      40% less\r\n10     50% less\r\n</pre>",
             "id": 65,
             "masked": false,
             "name": "\ud83c\udfc1Base Speed Factor",
@@ -280,7 +280,7 @@
                     "id": 43,
                     "instant": false,
                     "rate_amount": 1.0,
-                    "rate_duration": 9.0,
+                    "rate_duration": 12.0,
                     "sources": [
                         {
                             "item_id": 17,
@@ -319,7 +319,7 @@
                     "id": 45,
                     "instant": false,
                     "rate_amount": 1.0,
-                    "rate_duration": 9.0,
+                    "rate_duration": 10.0,
                     "sources": [
                         {
                             "item_id": 20,
@@ -445,7 +445,7 @@
                     "id": 48,
                     "instant": false,
                     "rate_amount": 1.0,
-                    "rate_duration": 9.0,
+                    "rate_duration": 12.0,
                     "sources": [
                         {
                             "item_id": 20,
@@ -758,7 +758,7 @@
         },
         {
             "attribs": [],
-            "description": "Loosely pulls colors together, effectively separating them into large collections. Order black fabric in a texture that defines this force.\r\n\r\n<c=\"lemonchiffon\">When completed:</c>\r\n\u2022 Configure <a href=\"/configure/location/3\">this location</a> and check <i>Show in Overview</i>.",
+            "description": "Loosely pulls colors together, effectively separating them into large collections. Order black fabric in a texture that defines this force.\r\n\r\n<c=\"lemonchiffon\">When completed:</c>\r\n\u2022 Configure <a href=\"/configure/location/3\">this location</a> to check <i>Show in Overview</i>.",
             "id": 51,
             "masked": true,
             "name": "Gravity Force",
@@ -801,7 +801,7 @@
                     "id": 38,
                     "instant": false,
                     "rate_amount": 1.0,
-                    "rate_duration": 9.0,
+                    "rate_duration": 10.0,
                     "sources": [
                         {
                             "item_id": 17,
@@ -869,7 +869,7 @@
                     "id": 4,
                     "instant": false,
                     "rate_amount": 1.0,
-                    "rate_duration": 9.0,
+                    "rate_duration": 10.0,
                     "sources": [
                         {
                             "item_id": 15,
@@ -1052,7 +1052,7 @@
                     "id": 59,
                     "instant": false,
                     "rate_amount": 1.0,
-                    "rate_duration": 9.0,
+                    "rate_duration": 10.0,
                     "sources": [
                         {
                             "item_id": 57,
@@ -1439,7 +1439,7 @@
                     "id": 65,
                     "instant": false,
                     "rate_amount": 1.0,
-                    "rate_duration": 9.0,
+                    "rate_duration": 10.0,
                     "sources": [
                         {
                             "item_id": 57,
@@ -1544,7 +1544,7 @@
         }
     ],
     "overall": {
-        "description": "Form <c=\"#FF0000\">c</c><c=\"#FF6600\">o</c><c=\"#CC9900\">l</c><c=\"#CCCC00\">o</c><c=\"#99CC00\">r</c><c=\"#66CC00\">f</c><c=\"#0099CC\">u</c><c=\"#0000FF\">l</c> rectangular prisms at the beginning of space and time.\r\n\r\n&nbsp;&nbsp;&nbsp;&nbsp;<c=\"red\">[]]]]]]]]]]]]]]]]]]</c> &nbsp;&nbsp; <c=\"green\">######</c> &nbsp;&nbsp; <c=\"blue\">===</c>\r\n\r\nWhile all needed items are included, upgrades are done by changing their settings.",
+        "description": "Form <c=\"#FF0000\">c</c><c=\"#FF6600\">o</c><c=\"#CC9900\">l</c><c=\"#CCCC00\">o</c><c=\"#99CC00\">r</c><c=\"#66CC00\">f</c><c=\"#0099CC\">u</c><c=\"#0000FF\">l</c> rectangular prisms at the beginning of space and time.\r\n\r\nIncludes all needed items, but upgrades are done by changing their settings.\r\n\r\n&nbsp;&nbsp;&nbsp;&nbsp;<c=\"red\">[]]]]]]]]]]]]]]]]]]</c> &nbsp;&nbsp; <c=\"green\">######</c> &nbsp;&nbsp; <c=\"blue\">===</c>",
         "multiplayer": false,
         "number_format": "en_US",
         "progress_type": "Idle",
