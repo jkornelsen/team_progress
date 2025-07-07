@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 import logging
 from types import SimpleNamespace
 
@@ -80,6 +81,25 @@ class Serializable():
         either a dict or a record-like object with attributes.
         """
         raise NotImplementedError()
+
+@contextmanager
+def pg_advisory_lock(typename, entity_id):
+    """Context manager to acquire and release a PostgreSQL advisory lock
+    based on (entity_type, entity_id).
+    Works across flask requests, unlike threading.Lock().
+    """
+    typenum = 1
+    if isinstance(typename, str) and typename and typename[0].isalpha():
+        typenum = ord(typename[0].lower())
+    cursor = g.db.cursor()
+    try:
+        logging.debug(f"Acquiring lock ({typenum}, {entity_id})")
+        cursor.execute("SELECT pg_advisory_lock(%s, %s)", (typenum, entity_id))
+        yield
+    finally:
+        logging.debug(f"Releasing lock ({typenum}, {entity_id})")
+        cursor.execute("SELECT pg_advisory_unlock(%s, %s)", (typenum, entity_id))
+        cursor.close()
 
 #pylint: disable=abstract-method
 class DbSerializable(Serializable):

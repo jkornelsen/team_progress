@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta
 import logging
 import math
-import threading
 
 from flask import g
 
-from .db_serializable import DependentIdentifiable, QueryHelper, coldef
+from .db_serializable import (
+    DependentIdentifiable, QueryHelper, coldef, pg_advisory_lock)
 from .recipe import Recipe
 from .user_interaction import MessageLog
 from .utils import format_num
@@ -37,7 +37,6 @@ class Progress(DependentIdentifiable):
         self.stop_time = None
         self.batches_processed = 0
         self.is_ongoing = False
-        self.lock = threading.Lock()
         self.failure_reason = ""  # for caller to read
 
     @property
@@ -169,7 +168,7 @@ class Progress(DependentIdentifiable):
 
     # returns true if able to change quantity
     def change_quantity(self, batches_requested):
-        with self.lock:
+        with pg_advisory_lock(self.typename(), self.id):
             num_batches, stop_when_done = self.determine_batches(
                 batches_requested)
             if num_batches > 0:
@@ -257,17 +256,27 @@ class Progress(DependentIdentifiable):
         return batches_to_do
 
     def set_recipe_by_id(self, recipe_id=0):
+        allow_empty_recipe = self.pholder.typename() == 'char'
         if not self.pile:
             return
         if not recipe_id:
             recipe_id = self.recipe.id
             if not recipe_id:
-                return
-        self.recipe = Recipe()
+                if allow_empty_recipe:
+                    return
+                raise ValueError(
+                    f"Recipe missing for {self.pholder.typename()} "
+                    f"{self.pholder.id}.")
         for recipe in self.pile.item.recipes:
             if recipe.id == recipe_id:
                 self.recipe = recipe
                 return
+        if allow_empty_recipe:
+            self.recipe = Recipe()
+            return
+        raise ValueError(
+            f"Recipe missing for {self.pholder.typename()} "
+            f"{self.pholder.id}.")
 
     def can_produce(self, recipe_id=None):
         """True if at least one batch can be produced."""
