@@ -19,11 +19,13 @@ logger = logging.getLogger(__name__)
 OUTCOME_TYPES = [
     'fourway',  # critical/minor failure or success
     'numeric',  # such as a damage number
+    'determined',  # calculate from a single base number
     'selection',  # random selection from a list
     'coordinates',  # random coordinates from a location's grid
     ]
 (OUTCOME_FOURWAY,
     OUTCOME_NUMERIC,
+    OUTCOME_DETERMINED,
     OUTCOME_SELECTION,
     OUTCOME_COORDS) = OUTCOME_TYPES
 outcome_check = "outcome_type IN ({})".format(
@@ -37,6 +39,7 @@ tables_to_create = {
             CHECK ({outcome_check}),
         trigger_chance real,
         numeric_range integer[2],
+        single_number real,
         selection_strings text
         """
     }
@@ -134,6 +137,7 @@ class Event(CompleteIdentifiable):
         self.toplevel = False
         self.outcome_type = OUTCOME_FOURWAY
         self.numeric_range = NumTup((1, 20))  # (min, max)
+        self.single_number = 0.0  # for non-random calculations
         self.selection_strings = ""  # newline-separated possible outcomes
         self.determining_entities = []  # Determinant objects
         self.changed_entities = []  # changed by the outcome
@@ -148,6 +152,7 @@ class Event(CompleteIdentifiable):
             'description': self.description,
             'toplevel': self.toplevel,
             'outcome_type': self.outcome_type,
+            'single_number': self.single_number,
             'selection_strings': self.selection_strings,
             'trigger_chance': self.trigger_chance,
             }
@@ -183,6 +188,7 @@ class Event(CompleteIdentifiable):
         instance.toplevel = data.get('toplevel', True)
         instance.outcome_type = data.get('outcome_type', OUTCOME_FOURWAY)
         instance.numeric_range = NumTup(data.get('numeric_range') or (0, 10))
+        instance.single_number = data.get('single_number', 0.0)
         instance.selection_strings = data.get('selection_strings', "")
         instance.determining_entities = [
             Determinant.from_data(det_data)
@@ -355,6 +361,7 @@ class Event(CompleteIdentifiable):
             self.numeric_range = NumTup((
                 req.get_int('numeric_min', 1),
                 req.get_int('numeric_max', 20)))
+            self.single_number = req.get_float('base_amount', 0.0)
             self.selection_strings = req.get_str('selection_strings', "")
             self.determining_entities = []
             for typename, entity_id, operation, mode, label in zip(
@@ -370,7 +377,6 @@ class Event(CompleteIdentifiable):
                         'mode': mode,
                         'label': label
                     }))
-
             for reltype in ('changed', 'triggers'):
                 setattr(
                     self, f'{reltype}_entities', [

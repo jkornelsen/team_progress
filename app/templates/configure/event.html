@@ -45,28 +45,35 @@
         </label>
         <div id="outcome-type-container" class="spacious">
             <label>Outcome Type:</label>
-            <label>
+            <label title="Critical/minor failure or success">
                 <input type="radio"
                        name="outcome_type"
                        value="fourway"
                        {% if current.outcome_type == 'fourway' %}checked{% endif %}>
                 Four-Way
             </label>
-            <label>
+            <label title="For example damage numbers">
                 <input type="radio"
                        name="outcome_type"
                        value="numeric"
                        {% if current.outcome_type == 'numeric' %}checked{% endif %}>
                 Number
             </label>
-            <label>
+            <label title="Calculate from a chosen amount (not random)">
+                <input type="radio"
+                       name="outcome_type"
+                       value="determined"
+                       {% if current.outcome_type == 'determined' %}checked{% endif %}>
+                Determined
+            </label>
+            <label title="Random choice from a list">
                 <input type="radio"
                        name="outcome_type"
                        value="selection"
                        {% if current.outcome_type == 'selection' %}checked{% endif %}>
                 Selection
             </label>
-            <label>
+            <label title="Random cordinates from a specific location's grid">
                 <input type="radio"
                        name="outcome_type"
                        value="coordinates"
@@ -89,6 +96,14 @@
                    value="{{ current.numeric_range[1] }}"
                    size="8">
             <!--<span class="label-like">If negative, enter for example Min -2 and Max -10</span>-->
+        </div>
+        <div id="determined-base">
+            <label for="base-amount">Base Amount:</label>
+            <input type="text"
+                   id="base-amount"
+                   name="base_amount"
+                   value="{{ current.single_number }}"
+                   size="8">
         </div>
         <div id="selection-container">
             <label for="selection-strings">Enter a list to choose from (one per line):</label>
@@ -277,19 +292,21 @@
                     'input[name="outcome_type"]:checked').val();
                 console.log(`outcomeType=${outcomeType}`);
                 const numericFactorsDiv = $('#numeric-factors');
+                const determinedBaseDiv = $('#determined-base');
                 const selectionStringsDiv = $('#selection-container');
                 const determinantAttribsDiv = $('#determinant-entities-container');
-                if (outcomeType === "coordinates") {
-                    numericFactorsDiv.css('display', 'none');
-                    selectionStringsDiv.css('display', 'none');
-                    determinantAttribsDiv.css('display', 'none');
-                } else if (outcomeType === "selection") {
-                    numericFactorsDiv.css('display', 'none');
+
+                numericFactorsDiv.css('display', 'none');
+                determinedBaseDiv.css('display', 'none');
+                selectionStringsDiv.css('display', 'none');
+                determinantAttribsDiv.css('display', 'none');
+                if (outcomeType === "selection") {
                     selectionStringsDiv.css('display', 'block');
-                    determinantAttribsDiv.css('display', 'none');
-                } else {
+                } else if (outcomeType === "determined") {
+                    determinedBaseDiv.css('display', 'block');
+                    determinantAttribsDiv.css('display', 'block');
+                } else if (outcomeType !== "coordinates") {
                     numericFactorsDiv.css('display', 'block');
-                    selectionStringsDiv.css('display', 'none');
                     determinantAttribsDiv.css('display', 'block');
                 }
             }

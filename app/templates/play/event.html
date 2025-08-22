@@ -105,6 +105,16 @@
                                    value="{{ current.numeric_range[1] }}"
                                    size="5">
                             <br>
+                    {% elif current.outcome_type == 'determined' %}
+                        <div style="background-color: black; margin: 3px; padding: 10px">
+                            <label for="single-number">Calculated Value:</label>
+                            <input type="text"
+                                   id="single-number"
+                                   value="{{ current.single_number }}"
+                                   size="5">
+                            <br>
+                    {% endif %}
+                    {% if current.outcome_type in ['fourway', 'numeric', 'determined'] %}
                             {% for det in current.determining_entities|sort(attribute='entity.name') %}
                                 {% set entity = det.entity %}
                                 {% set det_ref = "_" ~ loop.index %}
@@ -151,10 +161,10 @@
                                                 <option value="{{ adjust_factor }}"
                                                         data-container-id="{{ item.id }}"
                                                         data-container-type="{{ item.typename() }}">
-                                                    {{ item.name }}
                                                     {% if entity.typename() == 'attrib' %}
+                                                        {{ item.name }}
                                                     {% else %}
-                                                        general
+                                                        (general)
                                                     {% endif %}
                                                     : {{ adjust_factor | formatNum }}
                                                 </option>
@@ -213,7 +223,8 @@
                         {% endif %}
                     {% endif %}
                     <!-- Coordinates requires locs_with_grids. -->
-                    {% if current.outcome_type != 'coordinates' or outerscope.locs_with_grids %}
+                    {% if current.outcome_type not in ['coordinates', 'determined'] 
+                          or (current.outcome_type == 'coordinates' and outerscope.locs_with_grids) %}
                         <div style="margin-top: 20px; text-align: center">
                             <button type="button" id="roll-btn">[R]oll</button>
                             <i><span id="roll-counter" class="label-like">
@@ -486,12 +497,17 @@
                 } else if (mode === 'half') {
                     operand = operand / 2;
                 }
-                const targetFields = [$('#die-min'), $('#die-max')];
-                if ($('#adjust-die-min').is(':checked')) {
-                    targetFields.pop();
-                } else if ($('#adjust-die-max').is(':checked')) {
-                    targetFields.shift();
-                }
+                let targetFields;
+                {% if current.outcome_type == 'determined' %}
+                    targetFields = [$('#single-number')];
+                {% else %}
+                    targetFields = [$('#die-min'), $('#die-max')];
+                    if ($('#adjust-die-min').is(':checked')) {
+                        targetFields.pop();
+                    } else if ($('#adjust-die-max').is(':checked')) {
+                        targetFields.shift();
+                    }
+                {% endif %}
                 for (let targetField of targetFields) {
                     const currentSetting = parseFloat(targetField.val()) || 0;
                     if (selectedIndex !== 0) {
@@ -543,7 +559,11 @@
                 const containerVal = parseFloat(selectedOption.val()) || 0;
                 const containerId = selectedOption.data('container-id');
                 const containerType = selectedOption.data('container-type');
-                const outcomeFromRoll = parseFloat($('#outcome-display').data('outcome')) || 0;
+                {% if current.outcome_type == 'determined' %}
+                    const outcomeFromRoll = parseFloat($('#single-number').val()) || 0;
+                {% else %}
+                    const outcomeFromRoll = parseFloat($('#outcome-display').data('outcome')) || 0;
+                {% endif %}
                 const newValInput = $(`#newval${keyRef}`);
                 const newValue = containerVal + outcomeFromRoll;
                 newValInput.val(newValue);
@@ -623,7 +643,7 @@
                     }
                 });
             });
-            if ({{ changed_by_form|tojson }}) {
+            {% if changed_by_form %}
                 $('#changed-row').css('opacity', 1);
                 const storedData = sessionStorage.getItem('outcome_data');
                 if (storedData) {
@@ -632,7 +652,9 @@
                     $('#outcome-display').html(outcomeData.outcome_display);
                     $('#outcome-display').data('outcome', outcomeData.outcome);
                 }
-            }
+            {% elif current.outcome_type == 'determined' %}
+                $('#changed-row').css('opacity', 1);
+            {% endif %}
             $('#reset-die-btn').click(() => {
                 {% if current.outcome_type == 'numeric' %}
                     $('#die-min').val({{ current.numeric_range[0] }});

@@ -105,7 +105,7 @@ def column_counts(table_name):
         'event_changed': 4,
         'event_determining': 7,
         'event_triggers': 5,
-        'events': 9,
+        'events': 10,
         'game_messages': 4,
         'items': 11,
         'loc_destinations': 7,
