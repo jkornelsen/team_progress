@@ -262,43 +262,47 @@
                                     {% if loop.first %}
                                         <tr>
                                             <td style="vertical-align: top;">
-                                                {% if current.progress.can_produce(recipe.id) %}
-                                                {% set letter = link_letters.next() %}
-                                                {% if recipe.instant %}
-                                                    <input type="text"
-                                                           class="quantity_to_gain"
-                                                           id="quantity-to-gain_{{ recipe.id }}"
-                                                           size="3"
-                                                           value="{{ max_batches.get(recipe.id, 1) }}">
-                                                    <div style="white-space: nowrap;">
+                                                {# {% if current.progress.can_produce(recipe.id) %} #}
+                                                <div id="can-produce_{{ recipe.id }}" {% if not current.progress.can_produce(recipe.id) %}style="display:none"{% endif %}>
+                                                    {% set letter = link_letters.next() %}
+                                                    {% if recipe.instant %}
+                                                        <input type="text"
+                                                               class="quantity_to_gain"
+                                                               id="quantity-to-gain_{{ recipe.id }}"
+                                                               size="3"
+                                                               value="{{ max_batches.get(recipe.id, 1) }}">
+                                                        <div style="white-space: nowrap;">
+                                                            [{{ letter }}]
+                                                            <button type="button"
+                                                                    data-recipe-id="{{ recipe.id }}"
+                                                                    data-rate-amount="{{ recipe.rate_amount }}"
+                                                                    class="gain-btn go-button"
+                                                                    id="gain-btn_{{ recipe.id }}">Gain</button>
+                                                        </div>
+                                                        <script>
+                                                        funcForKey['{{ letter }}'] = () => {
+                                                            document.querySelector('#gain-btn_{{ recipe.id }}').click();
+                                                        };
+                                                        </script>
+                                                    {% else %}
                                                         [{{ letter }}]
                                                         <button type="button"
-                                                                data-recipe-id="{{ recipe.id }}"
-                                                                data-rate-amount="{{ recipe.rate_amount }}"
-                                                                class="gain-btn go-button"
-                                                                id="gain-btn_{{ recipe.id }}">Gain</button>
-                                                    </div>
-                                                    <script>
-                                                    funcForKey['{{ letter }}'] = () => {
-                                                        document.querySelector('#gain-btn_{{ recipe.id }}').click();
-                                                    };
-                                                    </script>
-                                                {% else %}
-                                                    [{{ letter }}]
-                                                    <button type="button"
-                                                            class="start-stop-btn go-button"
-                                                            id="start-stop-btn_{{ recipe.id }}"
-                                                            data-recipe-id="{{ recipe.id }}">Start</button>
-                                                    <script>
-                                                    funcForKey['{{ letter }}'] = () => {
-                                                        document.querySelector('#start-stop-btn_{{ recipe.id }}').click();
-                                                    };
-                                                    </script>
-                                                {% endif %}
-                                                {% else %}
+                                                                class="start-stop-btn go-button"
+                                                                id="start-stop-btn_{{ recipe.id }}"
+                                                                data-recipe-id="{{ recipe.id }}">Start</button>
+                                                        <script>
+                                                        funcForKey['{{ letter }}'] = () => {
+                                                            document.querySelector('#start-stop-btn_{{ recipe.id }}').click();
+                                                        };
+                                                        </script>
+                                                    {% endif %}
+                                                </div>
+                                                {# {% else %} #}
+                                                <div id="cannot-produce_{{ recipe.id }}" {% if current.progress.can_produce(recipe.id) %}style="display:none"{% endif %}>
                                                     <span class="info-icon"
                                                           title=" {{ current.progress.failure_reason }}">🚫</span>
-                                                {% endif %}
+                                                </div>
+                                                {# {% endif %} #}
                                             </td>
                                             <td style="vertical-align: top; padding-top: 12px;">
                                                 <span class="rate-amount" id="rate-amount_{{ recipe.id }}">
@@ -664,6 +668,7 @@
                 }
                 in_progress = data.is_ongoing;
                 updateQuantities(combined_data);
+                updateProduceButtons(combined_data);
                 updateStartButtonLabel(data, data.recipe_id);
                 updateProgressVisibility();
                 updateVisibility(data.quantity);
@@ -682,6 +687,26 @@
                 {% endif %}
                 sources.forEach((source) => {
                     $(`.source-${source.id}-quantity`).text(source.quantity);
+                });
+            }
+            function updateProduceButtons(combined_data) {
+                const recipes = combined_data.recipes || [];
+                recipes.forEach((recipe) => {
+                    const canProduce = recipe.can_produce;
+                    const failureReason = recipe.failure_reason || "";
+                    const recipeId = recipe.id;
+                    console.log("Updating produce button", recipeId, canProduce, failureReason);
+                    const $can = $(`#can-produce_${recipeId}`);
+                    const $cannot = $(`#cannot-produce_${recipeId}`);
+                    if (canProduce) {
+                        $can.show();
+                        $cannot.hide();
+                    } else {
+                        $can.hide();
+                        $cannot.show()
+                            .find('.info-icon')
+                            .attr('title', failureReason);
+                    }
                 });
             }
 

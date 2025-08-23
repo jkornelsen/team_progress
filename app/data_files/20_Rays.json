@@ -4,7 +4,7 @@
         "8 → red/green bar",
         "20 → yellow/orange/violet/white bar",
         "12 → boost I",
-        "10 → boost II, red fabric",
+        "14 → boost II, red fabric",
         "15 → bars unlocked",
         "This 'comments' field is for reference only, ignored by the game and not saved."
     ],
@@ -57,7 +57,7 @@
         },
         {
             "changed": [],
-            "description": "To determine the rate:\r\n1. Multiply by the <i><c=\"lemonchiffon\">BSF</c></i>.\r\n2. Multiply by <i>Red Bar Boost I</i>.\r\n3. For every <i>Red Bar Boost II</i>, multiply by <i><c=\"lemonchiffon\">Boost II Factor</c></i> (press the button that many times).\r\n\r\nWith this result, in <a href=\"/play/item/15\">Red Bar</a> setup, set <i>Gain per Batch</i> for the <i>Ambient Energy</i> recipe.",
+            "description": "To determine the rate:\r\n1. Multiply by the <i><c=\"lemonchiffon\">BSF</c></i>.\r\n2. Multiply by <i>Red Bar Boost I</i>.\r\n3. For every <i>Red Bar Boost II</i>, multiply by <i><c=\"lemonchiffon\">Boost II Factor</c></i> (press the button that many times).\r\n\r\nThen go to <a href=\"/play/item/15\">Red Bar</a> setup (shift+click on PC to leave window open). Set <i>Gain per Batch</i> for the <i>Ambient Energy</i> recipe to this result.",
             "determining": [
                 {
                     "entity_data": ["item", 18],
@@ -97,12 +97,55 @@
                 ["item", 18],
                 ["item", 21]
             ]
+        },
+        {
+            "changed": [],
+            "description": "To determine the rate:\r\n1. Multiply by the <i><c=\"lemonchiffon\">BSF</c></i>.\r\n2. Multiply by <i>Yellow Bar Boost I</i>.\r\n3. For every <i>Yellow Bar Boost II</i>, press the button to multiply by <i><c=\"lemonchiffon\">Boost II Factor</c></i>.\r\n\r\nWith this result, go to <a href=\"/play/item/20\">Yellow Bar</a> setup and set <i>Gain per Batch</i>.",
+            "determining": [
+                {
+                    "entity_data": ["item", 65],
+                    "label": "",
+                    "mode": "",
+                    "operation": "*"
+                },
+                {
+                    "entity_data": ["item", 77],
+                    "label": "",
+                    "mode": "",
+                    "operation": "*"
+                },
+                {
+                    "entity_data": ["item", 49],
+                    "label": "",
+                    "mode": "",
+                    "operation": "*"
+                },
+                {
+                    "entity_data": ["item", 61],
+                    "label": "",
+                    "mode": "",
+                    "operation": "+"
+                }
+            ],
+            "id": 3,
+            "name": "Yellow Bar Rate",
+            "numeric_range": [1, 20],
+            "outcome_type": "determined",
+            "selection_strings": "",
+            "single_number": 1.0,
+            "toplevel": false,
+            "trigger_chance": 0.0,
+            "triggers": [
+                ["item", 20],
+                ["item", 49],
+                ["item", 61]
+            ]
         }
     ],
     "items": [
         {
             "attribs": [],
-            "description": "Rate amount 1 each.",
+            "description": "Rate amount +0.5 each.",
             "id": 19,
             "masked": true,
             "name": "Green Bar Boost I",
@@ -174,7 +217,7 @@
                     "id": 4,
                     "instant": false,
                     "rate_amount": 1.0,
-                    "rate_duration": 10.0,
+                    "rate_duration": 14.0,
                     "sources": [
                         {
                             "item_id": 15,
@@ -748,13 +791,13 @@
         },
         {
             "attribs": [],
-            "description": "Rate amount +1",
+            "description": "Rate amount +1 each.",
             "id": 49,
             "masked": true,
             "name": "Yellow Bar Boost I",
             "progress": {},
-            "q_limit": 9.0,
-            "quantity": 0.0,
+            "q_limit": 10.0,
+            "quantity": 1.0,
             "recipes": [
                 {
                     "attrib_reqs": [],
@@ -782,8 +825,8 @@
             "masked": true,
             "name": "Blue Bar Boost I",
             "progress": {},
-            "q_limit": 9.0,
-            "quantity": 0.0,
+            "q_limit": 10.0,
+            "quantity": 1.0,
             "recipes": [
                 {
                     "attrib_reqs": [],
@@ -830,7 +873,7 @@
                     "id": 45,
                     "instant": false,
                     "rate_amount": 1.0,
-                    "rate_duration": 10.0,
+                    "rate_duration": 14.0,
                     "sources": [
                         {
                             "item_id": 20,
@@ -1229,7 +1272,7 @@
                     "id": 38,
                     "instant": false,
                     "rate_amount": 1.0,
-                    "rate_duration": 10.0,
+                    "rate_duration": 14.0,
                     "sources": [
                         {
                             "item_id": 17,
@@ -1409,7 +1452,7 @@
                     "id": 31,
                     "instant": false,
                     "rate_amount": 1.0,
-                    "rate_duration": 8.0,
+                    "rate_duration": 15.0,
                     "sources": [
                         {
                             "item_id": 15,
@@ -1657,7 +1700,7 @@
         }
     ],
     "overall": {
-        "description": "Form <c=\"#FF0000\">c</c><c=\"#FF6600\">o</c><c=\"#CC9900\">l</c><c=\"#CCCC00\">o</c><c=\"#99CC00\">r</c><c=\"#66CC00\">f</c><c=\"#0099CC\">u</c><c=\"#0000FF\">l</c> rectangular prisms at the beginning of space and time.\r\n\r\nIncludes all needed items, but upgrades are done by changing their settings.\r\n\r\n&nbsp;&nbsp;&nbsp;&nbsp;<c=\"red\">[]]]]]]]]]]]]]]]]]]</c> &nbsp;&nbsp; <c=\"green\">######</c> &nbsp;&nbsp; <c=\"blue\">===</c>",
+        "description": "Form <c=\"#FF0000\">c</c><c=\"#FF6600\">o</c><c=\"#CC9900\">l</c><c=\"#CCCC00\">o</c><c=\"#99CC00\">r</c><c=\"#66CC00\">f</c><c=\"#0099CC\">u</c><c=\"#0000FF\">l</c> rectangular prisms at the beginning of space and time.\r\n\r\nComplete set of items and instructions. Upgrade rates by changing settings.\r\n\r\n&nbsp;&nbsp;&nbsp;&nbsp;<c=\"red\">[]]]]]]]]]]]]]]]]]]</c> &nbsp;&nbsp; <c=\"green\">######</c> &nbsp;&nbsp; <c=\"blue\">===</c>",
         "multiplayer": false,
         "number_format": "en_US",
         "progress_type": "Idle",

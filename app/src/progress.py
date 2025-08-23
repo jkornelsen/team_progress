@@ -301,6 +301,7 @@ class Progress(DependentIdentifiable):
             self.report_failure(msg)
             return False
         logger.debug("can produce")
+        self.failure_reason = ""
         return True
 
     def start(self, recipe_id=0):

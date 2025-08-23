@@ -663,6 +663,14 @@ def set_routes(app):
                 for source in recipe.sources
                 ],
             'unmasked_items': session.pop('unmasked_items', False),
+            'recipes': [
+                {
+                    'id': recipe.id,
+                    'can_produce': main_item.progress.can_produce(recipe.id),
+                    'failure_reason': main_item.progress.failure_reason
+                }
+                for recipe in main_item.recipes
+                ],
             })
 
     @app.route('/item/start/<int:item_id>/<int:recipe_id>')
