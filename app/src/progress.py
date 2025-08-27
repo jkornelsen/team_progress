@@ -330,12 +330,12 @@ class Progress(DependentIdentifiable):
 
     def calculate_elapsed_time(self):
         """Returns number of seconds between start and stop time."""
-        if self.is_ongoing:
-            elapsed_time = datetime.now() - self.start_time
-        elif self.start_time is not None and self.stop_time is not None:
-            elapsed_time = self.stop_time - self.start_time
-        else:
-            elapsed_time = timedelta(seconds=0)
+        elapsed_time = timedelta(0)
+        if self.start_time is not None:
+            if self.is_ongoing:
+                elapsed_time = datetime.now() - self.start_time
+            elif self.stop_time is not None:
+                elapsed_time = self.stop_time - self.start_time
         return elapsed_time.total_seconds()
 
     def report_failure(self, message):

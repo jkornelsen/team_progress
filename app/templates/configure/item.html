@@ -96,14 +96,13 @@
             <h3 class="label-like">Recipes</h3>
             <p class="info label-like">
                 Produce items by consuming other items or based on requirements.
-                This is the main way to handle logic, such as conversations.
+                This is also the way to handle conversation logic.
             </p>
             <p class="info label-like">
-                For idle recipes that depend on each other,
-                each will be produced in order as they are viewed,
-                but some idle time may be lost
-                if source item progress does not get updated first,
-                stopping production of the main item once source quantity runs out.
+                Recipes are produced in the order you view them.
+                If a source isn’t checked first,
+                production for items that depend on it may stop,
+                losing any remaining progress.
             </p>
             <!-- Placeholder for appending new recipes -->
             <div id="recipelist_end" class="unobtrusive"></div>

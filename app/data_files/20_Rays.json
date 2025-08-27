@@ -4,8 +4,9 @@
         "8 → red/green bar",
         "20 → yellow/orange/violet/white bar",
         "12 → boost I",
-        "14 → boost II, red fabric",
+        "14 → boost II",
         "15 → bars unlocked",
+        "10 → fabric",
         "This 'comments' field is for reference only, ignored by the game and not saved."
     ],
     "attribs": [],
@@ -357,13 +358,13 @@
         },
         {
             "attribs": [],
-            "description": "Rate amount +1",
+            "description": "Rate amount +1 each.",
             "id": 69,
             "masked": true,
             "name": "White Bar Boost I",
             "progress": {},
-            "q_limit": 9.0,
-            "quantity": 0.0,
+            "q_limit": 10.0,
+            "quantity": 1.0,
             "recipes": [
                 {
                     "attrib_reqs": [],
@@ -430,7 +431,7 @@
         },
         {
             "attribs": [],
-            "description": "Soil that holds its form, land. While earth does reach the planet's center, so does water, with tunnels, caverns and outcroppings in the depths. Both surface and depths include areas covered by earth roughly equal in size to those of water.",
+            "description": "Soil that holds its form, land. While earth does reach this planet's center, so does water, with tunnels, caverns and outcroppings in the depths. Both surface and depths include areas covered by earth roughly equal in size to those of water.",
             "id": 71,
             "masked": true,
             "name": "Earth",
@@ -606,13 +607,13 @@
         },
         {
             "attribs": [],
-            "description": "Rate amount +1",
+            "description": "Rate amount +1 each, so set <i>gain per batch</i> to 2 when completed.",
             "id": 75,
             "masked": true,
             "name": "Black Bar Boost I",
             "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
+            "q_limit": 2.0,
+            "quantity": 1.0,
             "recipes": [
                 {
                     "attrib_reqs": [],
@@ -635,7 +636,7 @@
         },
         {
             "attribs": [],
-            "description": "It seems like you shouldn't be able to see a black bar in space. Doesn't black absorb all light?<pre>\r\n  <c=\"black\">_____________\r\n<c=\"gray\">/</c>/____________/<c=\"gray\">/</c>\r\n</c></pre>\r\n<c=\"lemonchiffon\">Requires a reset:</c>\r\n1. Stop producing the sources of this item (<c=\"red\">#</c>, <c=\"green\">#</c>, <c=\"yellow\">#</c>).\r\n2. Produce as many black bars as possible.\r\n3. Set quantities of the sources to 0.\r\n4. Reset rates and boosts of <c=\"red\">#</c> (1/8s, <a href=\"/configure/item/18\">I</a>, <a href=\"/configure/item/21\">II</a>) and <c=\"green\">#</c> (0.5/8s, <a href=\"/configure/item/19\">I</a>, <a href=\"/configure/item/50\">II</a>).\r\n\r\n<c=\"lemonchiffon\">PC browser shortcuts</c>: <i>Ctrl+Click</i> to open multiple tabs, <i>Alt+LeftArrow</i> to go back.",
+            "description": "It seems like you shouldn't be able to see a black bar in space. Doesn't black absorb all light?<pre>\r\n  <c=\"black\">_____________\r\n<c=\"gray\">/</c>/____________/<c=\"gray\">/</c>\r\n</c></pre>\r\n<c=\"lemonchiffon\">Requires a reset:</c>\r\n1. Stop producing the sources of this item (<c=\"red\">#</c>, <c=\"green\">#</c>, <c=\"yellow\">#</c>).\r\n2. Produce as many black bars as possible.\r\n3. Set quantities of the sources to 0.\r\n4. Reset rates and boosts of <c=\"red\">#</c> (1/8s, <a href=\"/configure/item/18\">I</a>, <a href=\"/configure/item/21\">II</a>) and <c=\"green\">#</c> (0.5/8s, <a href=\"/configure/item/19\">I</a>, <a href=\"/configure/item/50\">II</a>), setting \"I\" boosts to 1.\r\n\r\n<c=\"lemonchiffon\">PC browser shortcuts</c>: <i>Ctrl+Click</i> to open multiple tabs, <i>Alt+LeftArrow</i> to go back.",
             "id": 22,
             "masked": true,
             "name": "\u2b1bBlack Bar",
@@ -820,7 +821,7 @@
         },
         {
             "attribs": [],
-            "description": "Rate amount +0.5",
+            "description": "Rate amount +0.5 each.",
             "id": 59,
             "masked": true,
             "name": "Blue Bar Boost I",
@@ -956,13 +957,13 @@
         },
         {
             "attribs": [],
-            "description": "Rate amount +1",
+            "description": "Rate amount +1 each.",
             "id": 64,
             "masked": true,
             "name": "Orange Bar Boost I",
             "progress": {},
-            "q_limit": 9.0,
-            "quantity": 0.0,
+            "q_limit": 10.0,
+            "quantity": 1.0,
             "recipes": [
                 {
                     "attrib_reqs": [],
@@ -1371,7 +1372,7 @@
         },
         {
             "attribs": [],
-            "description": "Gigantic heat-generating sphere on a scale that even imagining threatens to overwhelm the mind.\r\n\r\n<c=\"lemonchiffon\">After constructing:</c>\r\n\u2022 Configure <a href=\"/configure/location/2\">this location</a> to unmask and show in Overview.\r\n\u2022 Hide the <a href=\"/configure/location/3\">Local Solar System</a> from Overview by unchecking the box.\r\n\u2022 For bar recipes that use this item (listed below), update <i>gain per batch</i> to 100 multiplied by <i><c=\"lemonchiffon\">BSF</c></i>.",
+            "description": "Gigantic heat-generating sphere on a scale that even imagining threatens to overwhelm the mind.\r\n\r\n<c=\"lemonchiffon\">After constructing:</c>\r\n\u2022 Configure <a href=\"/configure/location/2\">this location</a> to unmask and show in Overview.\r\n\u2022 Hide the <a href=\"/configure/location/3\">Local Solar System</a> from Overview by unchecking the box.\r\n\u2022 For bar recipes that use this item (under <i>used for</i>), update <i>gain per batch</i> to 100 multiplied by <i><c=\"lemonchiffon\">BSF</c></i>.",
             "id": 60,
             "masked": true,
             "name": "Star",
@@ -1700,7 +1701,7 @@
         }
     ],
     "overall": {
-        "description": "Form <c=\"#FF0000\">c</c><c=\"#FF6600\">o</c><c=\"#CC9900\">l</c><c=\"#CCCC00\">o</c><c=\"#99CC00\">r</c><c=\"#66CC00\">f</c><c=\"#0099CC\">u</c><c=\"#0000FF\">l</c> rectangular prisms at the beginning of space and time.\r\n\r\nComplete set of items and instructions. Upgrade rates by changing settings.\r\n\r\n&nbsp;&nbsp;&nbsp;&nbsp;<c=\"red\">[]]]]]]]]]]]]]]]]]]</c> &nbsp;&nbsp; <c=\"green\">######</c> &nbsp;&nbsp; <c=\"blue\">===</c>",
+        "description": "Form <c=\"#FF0000\">c</c><c=\"#FF6600\">o</c><c=\"#CC9900\">l</c><c=\"#CCCC00\">o</c><c=\"#99CC00\">r</c><c=\"#66CC00\">f</c><c=\"#0099CC\">u</c><c=\"#0000FF\">l</c> rectangular prisms at the beginning of space and time.\r\n• Includes complete set of items and instructions.\r\n• Upgrade rates by changing settings.\r\n\r\n&nbsp;&nbsp;&nbsp;&nbsp;<c=\"red\">[]]]]]]]]]]]]]]]]]]</c> &nbsp;&nbsp; <c=\"green\">######</c> &nbsp;&nbsp; <c=\"blue\">===</c>",
         "multiplayer": false,
         "number_format": "en_US",
         "progress_type": "Idle",

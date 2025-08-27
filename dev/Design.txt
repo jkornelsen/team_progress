@@ -5,6 +5,25 @@ Fission Plant: no more than a certain amount of pollution
 
 saving grandfather clock resets hour, an enumerated attrib, to 12am
 
+when going to overview from red bar after increasing rate
+    insert or update on table "recipe_sources" violates foreign key constraint "recipe_sources_game_token_recipe_id_fkey" DETAIL: Key (game_token, recipe_id)=(d95c044c-a2a5-4bf0-bba7-203ff3e7b33f, 56) is not present in table "recipes".
+reloading continued play without any apparent longterm problems
+
+while making air and earth (and green bars), lost green bar recipe
+    game_routes.py line 731, in stop_item
+        progress.batches_for_elapsed_time()
+    progress.py line 240, in batches_for_elapsed_time
+        self.set_recipe_by_id()
+    progress.py", line 267, in set_recipe_by_id
+        raise ValueError()
+    ValueError: Recipe missing for item 17.
+shouldn't be too hard to reproduce -- start from that stage rather than beginning
+next time save a JSON example that shows missing data
+
+items sometimes cannot be started or stopped
+probably there's some invalid progress data -- never allow invalid states
+maybe in progress without start time?
+
 ---- planning ----
 
 hosting possibilities:
