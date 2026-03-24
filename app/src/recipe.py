@@ -13,7 +13,7 @@ tables_to_create = {
     'recipes': f"""
         {coldef('id')},
         item_id integer NOT NULL,
-        rate_amount float(4) NOT NULL,
+        rate_amount double precision NOT NULL,
         rate_duration float(4) NOT NULL,
         instant boolean NOT NULL,
         FOREIGN KEY (game_token, item_id)

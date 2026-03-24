@@ -19,8 +19,8 @@ tables_to_create = {
         -- for other masked items that use this item as a source
         counted_for_unmasking boolean not null,
         storage_type varchar(20) not null,
-        q_limit real not null,
-        quantity real not null,
+        q_limit double precision not null,
+        quantity double precision not null,
         progress_id integer,
         FOREIGN KEY (game_token, progress_id)
             REFERENCES progress (game_token, id)
@@ -51,7 +51,9 @@ class Item(CompleteIdentifiable):
         super().__init__(new_id)
         self.name = ""
         self.description = ""
-        self.storage_type = Storage.CARRIED  # typically matches pile type
+        self.storage_type = Storage.CARRIED
+            # Typically matches pile type, although carried items can be
+            # dropped on the floor, making them an ItemAt.
         self.toplevel = False
         self.masked = False
         self.counted_for_unmasking = False

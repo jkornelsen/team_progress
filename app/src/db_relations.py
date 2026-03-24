@@ -10,7 +10,7 @@ tables_to_create = {
         {coldef('game_token')},
         recipe_id integer not null,
         item_id integer not null,
-        q_required real not null,
+        q_required double precision not null,
         preserve boolean not null,
         PRIMARY KEY (game_token, recipe_id, item_id),
         FOREIGN KEY (game_token, recipe_id)
@@ -26,7 +26,7 @@ tables_to_create = {
         {coldef('game_token')},
         recipe_id integer not null,
         item_id integer not null,
-        rate_amount real not null,
+        rate_amount double precision not null,
         PRIMARY KEY (game_token, recipe_id, item_id),
         FOREIGN KEY (game_token, recipe_id)
             REFERENCES recipes (game_token, id)
@@ -58,7 +58,7 @@ tables_to_create = {
         {coldef('game_token')},
         char_id integer not null,
         item_id integer not null,
-        quantity real not null,
+        quantity double precision not null,
         slot varchar(50),
         PRIMARY KEY (game_token, char_id, item_id),
         FOREIGN KEY (game_token, char_id)
@@ -94,7 +94,7 @@ tables_to_create = {
         loc_id integer not null,
         item_id integer not null,
         is_ref boolean not null,
-        quantity real not null,
+        quantity double precision not null,
         position integer[2],
         PRIMARY KEY (game_token, loc_id, item_id, position),
         FOREIGN KEY (game_token, loc_id)
@@ -183,7 +183,7 @@ tables_to_create = {
         char_id integer,
         item_id integer,
         loc_id integer,
-        value real not null,
+        value double precision not null,
         UNIQUE (game_token, attrib_id, char_id, item_id, loc_id),
         FOREIGN KEY (game_token, attrib_id)
             REFERENCES attribs (game_token, id)
@@ -206,11 +206,11 @@ tables_to_create = {
     'win_requirements': f"""
         {coldef('id')},
         item_id integer,
-        quantity real,
+        quantity double precision,
         char_id integer,
         loc_id integer,
         attrib_id integer,
-        attrib_value real,
+        attrib_value double precision,
         UNIQUE (game_token, item_id, char_id, loc_id, attrib_id),
         FOREIGN KEY (game_token, item_id)
             REFERENCES items (game_token, id)

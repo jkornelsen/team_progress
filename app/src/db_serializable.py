@@ -302,6 +302,14 @@ class Identifiable(DbSerializable):
     def get_by_id(cls, id_to_get):
         return cls.get_coll().get(id_to_get)
 
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+        return self.id == other.id and self.typename() == other.typename()
+
+    def __hash__(self):
+        return hash((self.typename(), self.id))
+
     @classmethod
     def from_db_flat(cls, id_to_get):
         """Make a single object with base table data."""

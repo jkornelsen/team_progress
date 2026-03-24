@@ -9,6 +9,12 @@ from .utils import NumTup, Storage
 logger = logging.getLogger(__name__)
 
 class Pile(DbSerializable):
+    """How many of an item. Each pile is either:
+        - at a certain Location (ItemAt)
+        - carried by a certain Character (OwnedItem)
+        - in general storage (GeneralPile)
+        For example, a character carries 5 of an arrow item.
+    """
     def __init__(self, item=None, container=None, item_id=0):
         super().__init__()
         self.item = item
