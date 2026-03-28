@@ -1,0 +1,40 @@
+<div class="session-info">
+    <div class="dropdown-container">
+        <span class="dropdown-trigger">
+            player <span class="username-display">{{ current_username }}</span> 
+            <span class="dropdown-icon">▼</span>
+        </span>
+        <div class="dropdown-menu">
+            <a href="{{ url_for('session.get_session_link') }}">Invite Friends (Link)</a>
+            <a href="{{ url_for('session.session_users') }}">Who's Online?</a>
+            <hr>
+            <a href="{{ url_for('session.change_user') }}">Change Username</a>
+            <hr>
+            <div class="token-info">
+                <small>Session ID:</small><br>
+                <code>{{ game_token[:8] }}...</code>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Basic functionality for the dropdown */
+    .dropdown-container { position: relative; display: inline-block; }
+    .dropdown-menu { 
+        display: none; 
+        position: absolute; 
+        right: 0; 
+        background: #2a2a2a; 
+        border: 1px solid #444; 
+        padding: 10px; 
+        z-index: 1000;
+        min-width: 180px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+    }
+    .dropdown-container:hover .dropdown-menu { display: block; }
+    .dropdown-menu a { display: block; color: #fff; text-decoration: none; padding: 5px 0; }
+    .dropdown-menu a:hover { color: #00bcd4; }
+    .username-display { font-weight: bold; color: #00bcd4; }
+    .token-info { margin-top: 10px; font-size: 0.7em; color: #888; }
+</style>

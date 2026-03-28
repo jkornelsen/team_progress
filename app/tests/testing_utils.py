@@ -1,36 +1,28 @@
-from flask import g
-from app import app
-from database import set_default_schema
+import unittest
+from app import create_app, db
+from app.database_setup import init_game_session
 
-def configure_app():
-    app.config['TESTING'] = True
+class BaseTestCase(unittest.TestCase):
+    def setUp(self):
+        """Sets up an in-memory database and a test client."""
+        self.app = create_app()
+        self.app.config['TESTING'] = True
+        # Use SQLite in-memory for lightning fast tests
+        self.app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite://"
+        
+        self.client = self.app.test_client()
+        self.app_context = self.app.app_context()
+        self.app_context.push()
 
-def push_app_context():
-    """Push the app context to allow access to global objects like 'g'."""
-    app_context = app.app_context()
-    # Push the app context onto the context stack,
-    # making it available for the current thread.
-    app_context.push()
-    return app_context
+        # Create all tables in the in-memory DB
+        db.create_all()
+        
+        # Bootstrap the session
+        self.game_token = "test-token-123"
+        init_game_session(self.game_token)
 
-def set_schema():
-    """Set the schema for actual database connections.
-    Call push_app_context() first for g.
-    Not needed when mocking db.
-    """
-    set_default_schema('testing')
-
-def init_test_client():
-    """Initialize and return the Flask test client to simulate requests and
-    trigger before_request hooks.
-    """
-    client = app.test_client()
-    client.get('/')  # Trigger a GET request.
-    return client
-
-def setup_with_db():
-    configure_app()
-    app_context = push_app_context()
-    set_schema()
-    client = init_test_client()
-    return app_context, client
+    def tearDown(self):
+        """Cleans up the database and context."""
+        db.session.remove()
+        db.drop_all()
+        self.app_context.pop()

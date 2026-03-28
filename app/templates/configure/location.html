@@ -1,441 +1,178 @@
-{% extends 'base.html' %}
+{% extends 'layout/base.html' %}
+
 {% block upper_left %}
-    <div class="nav-container">
-        <a class="upper-left" href="{{ url_for("overview") }}">overview</a>
+    <nav class="nav-container">
+        <a href="{{ url_for('play.overview') }}">[o]verview</a>
         <span class="separator">|</span>
-        <a href="{{ url_for("configure_index") }}">main setup</a>
-    </div>
+        <a href="{{ url_for('configure.index') }}">main setup</a>
+    </nav>
 {% endblock %}
+
 {% block content %}
-    <h1>Location Setup</h1>
-    <form method="post">
-        <p class="info">
-            Room, area, or container where items and characters can be.
-            May be subdivided into a grid, with position 1,1 as the upper-left corner.
-        </p>
-        <label for="location-name">Name:</label>
-        <input type="text"
-               id="location-name"
-               name="location_name"
-               value="{{ current.name }}"
-               required>
-        <br>
-        <label for="location-description">Description:</label>
-        <textarea id="location-description"
-                  name="location_description"
-                  rows="6"
-                  cols="50">{{ current.description }}</textarea>
-        <br>
-        <input type="checkbox"
-               id="top_level"
-               name="top_level"
-               {% if current.toplevel %}checked{% endif %}>
-        <label for="top_level">Show in Overview</label>
-        <br>
-        <input type="checkbox"
-               id="masked"
-               name="masked"
-               {% if current.masked %}checked{% endif %}>
-        <label for="mask">Masked &mdash; reveal when a character travels here</label>
-        <br>
-        <label for="dimensions">Grid Dimensions:</label>
-        <input type="text"
-               id="dimensions"
-               name="dimensions"
-               value="{{ current.grid.dimensions[0] }}x{{ current.grid.dimensions[1] }}"
-               size="5">
-        <span class="label-like">width x height</span>
-        <br>
-        <label for="excluded-left-top">Exclude from Grid:</label>
-        <input type="text"
-               id="excluded-left-top"
-               name="excluded_left_top"
-               value="{{ current.grid.excluded[:2] }}"
-               size="5">
-        <label for="excluded-right-bottom">to</label>
-        <input type="text"
-               id="excluded-right-bottom"
-               name="excluded_right_bottom"
-               value="{{ current.grid.excluded[2:] }}"
-               size="5">
-        <span class="label-like">left,top to right,bottom</span>
-        <br>
-        <div id="attrib-container" class="outer-border">
-            <table id="attrib-table" style="display: none;">
-                <tbody id="attrib-rows">
-                </tbody>
-            </table>
-            <div>
-                {% if game_data.attribs %}
-                    <!-- Select box for adding another attribute -->
-                    <div class="select-box">
-                        <select id="add-attrib-select">
-                            <option value="" selected>(Select attribute)</option>
-                            {% for attrib in game_data.attribs %}
-                                <option value="{{ attrib.id }}"
-                                    data-binary="{{ attrib.binary | lower }}"
-                                    data-enum='{{ attrib.enum | tojson }}'>
-                                    {{ attrib.name }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                        <button type="button" id="add-attrib-btn" class="lesser-button">Add Attribute</button>
-                    </div>
-                {% else %}
-                    <p class="no-entities">(No attributes)</p>
-                {% endif %}
+<div class="configure-location">
+    <h1>Location Setup: {{ location.name if location else 'New Location' }}</h1>
+    
+    <form method="POST">
+        <!-- 1. Identity (Entity Table) -->
+        <section class="outer-border">
+            <h3>General Info</h3>
+            <div class="form-group">
+                <label for="name">Location Name:</label>
+                <input type="text" id="name" name="name" value="{{ location.name if location }}" required class="full-width">
             </div>
-        </div>
-        <div id="destinations-container" class="outer-border">
-            <!-- Placeholder for appending new destinations -->
-            <div id="destlist_end" class="unobtrusive"></div>
-            <div>
-                {% set outerscope = namespace(has_other_location = false) %}
-                {% for location in game_data.locations %}
-                    {% if location.id != current.id %}
-                        {% set outerscope.has_other_location = true %}
-                    {% endif %}
+            <div class="form-group spacious-top">
+                <label for="description">Description:</label>
+                <textarea id="description" name="description" rows="3" class="full-width">{{ location.description if location }}</textarea>
+            </div>
+        </section>
+
+        <!-- 2. Grid & Spatial Logic (Location Table) -->
+        <section class="outer-border">
+            <h3>Spatial Configuration</h3>
+            <div class="column-container">
+                <div class="form-group">
+                    <label for="dimensions">Grid Dimensions (WxH):</label>
+                    <input type="text" id="dimensions" name="dimensions_str" 
+                           value="{{ location.dimensions[0] }}x{{ location.dimensions[1] if location and location.dimensions else '0x0' }}" 
+                           placeholder="10x10" class="mini-input">
+                    <small class="label-like">Use 0x0 for non-physical locations.</small>
+                </div>
+                <div class="form-group">
+                    <label>Excluded Zone (L,T,R,B):</label>
+                    <input type="text" name="excluded_str" 
+                           value="{{ location.excluded | join(',') if location and location.excluded else '' }}" 
+                           placeholder="3,3,5,5" class="mini-input">
+                    <small class="label-like">Coordinates to block out.</small>
+                </div>
+                <div class="flex-column" style="padding-top: 5px;">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="toplevel" {{ 'checked' if location and location.toplevel }}> 
+                        Show in Overview
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="masked" {{ 'checked' if location and location.masked }}> 
+                        Masked (Hidden until visited)
+                    </label>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Destinations (loc_destinations Table) -->
+        <section class="outer-border">
+            <div class="flex-between">
+                <h3>Exits & Destinations</h3>
+                <button type="button" class="btn-sm" onclick="addRow('dest-list', 'dest-template')">+ Add Exit</button>
+            </div>
+            <div id="dest-list" class="spacious-top">
+                {% for dest in destinations %}
+                {% set is_loc1 = (dest.loc1_id == location.id) %}
+                {% set other_id = dest.loc2_id if is_loc1 else dest.loc1_id %}
+                <div class="dest-row outer-border flex-row gap-10 align-center spacious-bottom">
+                    <select name="dests[{{ loop.index0 }}][target_id]" style="flex: 2;">
+                        {% for loc in all_locations if loc.id != location.id %}
+                            <option value="{{ loc.id }}" {{ 'selected' if loc.id == other_id }}>{{ loc.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="flex-column">
+                        <label class="label-mini">Door Here (x,y)</label>
+                        <input type="text" name="dests[{{ loop.index0 }}][door_here]" 
+                               value="{{ dest.door1|join(',') if is_loc1 else dest.door2|join(',') }}" size="5">
+                    </div>
+                    <div class="flex-column">
+                        <label class="label-mini">Door There (x,y)</label>
+                        <input type="text" name="dests[{{ loop.index0 }}][door_there]" 
+                               value="{{ dest.door2|join(',') if is_loc1 else dest.door1|join(',') }}" size="5">
+                    </div>
+                    <div class="flex-column">
+                        <label class="label-mini">Duration</label>
+                        <input type="number" name="dests[{{ loop.index0 }}][duration]" value="{{ dest.duration }}" style="width: 40px;">
+                    </div>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="dests[{{ loop.index0 }}][bidirectional]" {{ 'checked' if dest.bidirectional }}> 2-Way
+                    </label>
+                    <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
+                </div>
                 {% endfor %}
-                {% if outerscope.has_other_location %}
-                    <!-- Select box for adding another destination -->
-                    <div class="select-box">
-                        <select id="dest-select">
-                            <option value="" selected>(Select location)</option>
-                            {% for location in game_data.locations %}
-                                {% if location.id != current.id %}<option value="{{ location.id }}">{{ location.name }}</option>{% endif %}
-                            {% endfor %}
-                        </select>
-                        <button type="button" id="add-dest-btn" class="lesser-button">Add Destination</button>
-                    </div>
-                {% else %}
-                    <p class="no-entities">(No other locations)</p>
-                {% endif %}
             </div>
-        </div>
-        <div class="outer-border">
-            <table id="items-table" style="display: none;">
-                <thead>
-                    <tr>
-                        <th>Item</th>
-                        <th>Quantity</th>
-                        <th>Grid Position</th>
-                        <th class="transparent-col"></th>
-                    </tr>
-                </thead>
-                <tbody id="items-rows">
-                </tbody>
-            </table>
-            <div>
-                {% set outerscope = namespace(locatable_items=[]) %}
-                {% for other_item in game_data.items
-                    if other_item.storage_type == 'local'
-                    or other_item.storage_type == 'carried' %}
-                    {% set _ = outerscope.locatable_items.append(other_item) %}
+        </section>
+
+        <!-- 4. Local Items (Inventory Table) -->
+        <section class="outer-border">
+            <div class="flex-between">
+                <h3>Items on the Ground</h3>
+                <button type="button" class="btn-sm" onclick="addRow('item-list', 'item-template')">+ Place Item</button>
+            </div>
+            <div id="item-list" class="spacious-top">
+                {% for pile in inventory if location %}
+                <div class="flex-row gap-10 align-center spacious-bottom">
+                    <select name="items[{{ loop.index0 }}][item_id]" style="flex: 2;">
+                        {% for item_def in all_items %}
+                            <option value="{{ item_def.id }}" {{ 'selected' if item_def.id == pile.item_id }}>{{ item_def.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="number" name="items[{{ loop.index0 }}][quantity]" value="{{ pile.quantity }}" step="any" placeholder="Qty" style="width: 60px;">
+                    <input type="text" name="items[{{ loop.index0 }}][pos]" value="{{ pile.position|join(',') }}" placeholder="x,y" style="width: 60px;">
+                    <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
+                </div>
                 {% endfor %}
-                {% if outerscope.locatable_items %}
-                    <!-- Select box for adding another source -->
-                    <div class="select-box">
-                        <select id="item-select">
-                            <option value="" selected>(Select item)</option>
-                            {% for item in outerscope.locatable_items %}
-                                <option value="{{ item.id }}">{{ item.name }}</option>
-                            {% endfor %}
-                        </select>
-                        <button type="button" class="add-item-btn lesser-button">Add Item Here</button>
-                    </div>
-                {% else %}
-                    <p class="no-entities">(No locatable items)</p>
+            </div>
+        </section>
+
+        <!-- Form Actions -->
+        <div class="footer-actions flex-between">
+            <div class="danger-zone">
+                {% if location %}
+                    <button type="submit" name="delete" class="dangerous-button" onclick="return confirm('Delete this location?')">Delete Location</button>
                 {% endif %}
             </div>
-        </div>
-        <div id="itemrefs-container" class="outer-border">
-            <table id="itemrefs-table" style="display: none;">
-                <thead>
-                    <tr>
-                        <th>Referenced Items</th>
-                        <th class="transparent-col"></th>
-                    </tr>
-                </thead>
-                <tbody id="itemrefs-rows">
-                </tbody>
-            </table>
-            <div>
-                {% set outerscope = namespace(universal_items=[]) %}
-                {% for item in game_data.items
-                    if item.storage_type == 'universal'
-                        and item.id not in current.item_refs %}
-                    {% set _ = outerscope.universal_items.append(item) %}
-                {% endfor %}
-                {% if outerscope.universal_items %}
-                    <!-- Select box for adding another item reference -->
-                    <div class="select-box">
-                        <select id="itemref-select">
-                            <option value="" selected>(Select item)</option>
-                            {% for item in outerscope.universal_items %}
-                                <option value="{{ item.id }}">{{ item.name }}</option>
-                            {% endfor %}
-                        </select>
-                        <button type="button" class="add-itemref-btn lesser-button">Add Referenced Item</button>
-                    </div>
-                {% else %}
-                    <p class="no-entities">(No other universal items)</p>
-                {% endif %}
+            <div class="save-zone">
+                <a href="{{ url_for('configure.index') }}" class="btn">Cancel</a>
+                <button type="submit" name="duplicate" class="btn">Save & Duplicate</button>
+                <button type="submit" name="save" class="go-button">Save Changes</button>
             </div>
-        </div>
-        <br>
-        <br>
-        <br>
-        <div class="footer-buttons">
-            <button type="submit" id="btn-save" name="save_changes">Save and Close</button>
-            <button type="submit" id="btn-duplicate" name="make_duplicate">Save and Duplicate</button>
-            <button type="submit" id="btn-cancel" name="cancel_changes" formnovalidate>Close without Saving</button>
-            <button type="submit"
-                    id="btn-delete"
-                    name="delete_location"
-                    class="dangerous-button">Delete Location</button>
         </div>
     </form>
-    <script>
-        function handleCheckboxChange() {
-            const $hiddenInput = $(this).closest('td').find('input[type=hidden][name="oneway[]"]');
-            $hiddenInput.val(this.checked ? '1' : '0');
-        }
+</div>
 
-        $(document).ready(() => {
-            {% if current.id > 0 %}
-                $('#btn-delete').removeAttr('disabled');
-            {% else %}
-                $('#btn-delete').attr('disabled', 'disabled');
-            {% endif %}
+<!-- TEMPLATES FOR DYNAMIC ROWS -->
+<template id="dest-template">
+    <div class="dest-row outer-border flex-row gap-10 align-center spacious-bottom">
+        <select name="dests[INDEX][target_id]" style="flex: 2;">
+            {% for loc in all_locations if loc.id != location.id %} <option value="{{ loc.id }}">{{ loc.name }}</option> {% endfor %}
+        </select>
+        <input type="text" name="dests[INDEX][door_here]" placeholder="Here x,y" size="8">
+        <input type="text" name="dests[INDEX][door_there]" placeholder="There x,y" size="8">
+        <input type="number" name="dests[INDEX][duration]" value="1" style="width: 40px;">
+        <label class="checkbox-label"><input type="checkbox" name="dests[INDEX][bidirectional]" checked> 2-Way</label>
+        <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
+    </div>
+</template>
 
-            function addAttrib(attribId, attribName, isBinary, enumVals, attribVal = 1) {
-                const uniqueId = `attrib${attribId}`;
-                const attribHtml = `
-                    <tr>
-                        <td>${attribName}
-                            <input type="hidden" name="attrib_id[]" value="${attribId}">
-                        </td><td>
-                            ${enumVals.length > 0 
-                            ? enumSelect(enumVals, "${uniqueId}_val", attribVal)
-                            : isBinary 
-                                ? `<input type="checkbox"
-                                          name="${uniqueId}_val"
-                                          value="1" ${attribVal === 1 ? 'checked' : ''}>` 
-                                : `<input type="text"
-                                          name="${uniqueId}_val"
-                                          value="${attribVal}"
-                                          size="8">`}
-                        </td><td>
-                            <button type="button" class="remove-attrib-btn lesser-button" id="remove-${uniqueId}">Remove</button>
-                        </td>
-                    </tr>
-                `;
-                $('#attrib-rows').prepend(attribHtml);
-                $('#attrib-table').show();
-            }
-            $('#add-attrib-btn').click(() => {
-                const selectedOption = $('#add-attrib-select option:selected');
-                const attribId = selectedOption.val();
-                const attribName = selectedOption.text();
-                const isBinary = selectedOption.data('binary');
-                const enumValues = selectedOption.data('enum');
-                console.log("enumValues:", enumValues);
-                if (attribId === "") {
-                    return; // don't add if the selected option is the placeholder
-                }
-                const existingAttrib = $(`#attrib-rows input[name="attrib_id[]"][value="${attribId}"]`).closest('tr');
-                if (existingAttrib.length > 0) {
-                    alert('Attribute already exists.');
-                    return;
-                }
-                addAttrib(attribId, attribName, isBinary, enumValues);
-            });
+<template id="item-template">
+    <div class="flex-row gap-10 align-center spacious-bottom">
+        <select name="items[INDEX][item_id]" style="flex: 2;">
+            {% for item_def in all_items %} <option value="{{ item_def.id }}">{{ item_def.name }}</option> {% endfor %}
+        </select>
+        <input type="number" name="items[INDEX][quantity]" value="1" step="any" style="width: 60px;">
+        <input type="text" name="items[INDEX][pos]" placeholder="1,1" style="width: 60px;">
+        <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
+    </div>
+</template>
 
-            $('#attrib-container').on('click', '.remove-attrib-btn', (event) => {
-                const attribRow = $(event.currentTarget).closest('tr');
-                attribRow.remove();
-                if ($('#attrib-rows').children().length === 0) {
-                    $('#attrib-table').hide();
-                }
-            });
+<script>
+    function addRow(containerId, templateId) {
+        const container = document.getElementById(containerId);
+        const template = document.getElementById(templateId).innerHTML;
+        const index = container.children.length;
+        const html = template.replace(/INDEX/g, index);
+        container.insertAdjacentHTML('beforeend', html);
+    }
+</script>
 
-            function addDestination(other_loc_id, other_loc_name, duration = "1", door_here = "", other_door = "", bidirectional = true, is_loc1 = true) {
-                const destHtml = `
-                    <table class="destination"><tr>
-                        <td class="align-top" style="padding: 5px;">
-                            <input type="hidden"
-                                name="other_loc_id[]"
-                                value="${other_loc_id}">
-                            <input type="hidden"
-                                name="is_loc1[]"
-                                value="${is_loc1}">
-                            ${other_loc_name}
-                        </td><td class="align-top">
-                            <label for="duration-${other_loc_id}">Duration:</label>
-                            <input type="text"
-                                id="duration-${other_loc_id}"
-                                name="duration[]"
-                                value="${duration}"
-                                class="duration-field"
-                                size="5">
-                        </td><td class="align-top">
-                            <label for="door-here-${other_loc_id}">Door:</label>
-                            <input type="text"
-                                id="door-here-${other_loc_id}"
-                                name="door_here[]"
-                                value="${door_here}"
-                                size="8"><br>
-                            <input type="hidden" name="other_door[]" value="${other_door}">
-                        </td><td class="align-top">
-                            ${is_loc1 ? `
-                                <!-- set hidden value when checkbox is clicked so that a
-                                     oneway[] key will be included in form submission
-                                     even when unchecked -->
-                                <input type="checkbox" 
-                                    id="oneway-${other_loc_id}" 
-                                    ${bidirectional ? '' : 'checked'} 
-                                    onchange="handleCheckboxChange.call(this)">
-                                <label for="oneway-${other_loc_id}">One-Way</label>
-                                <input type="hidden" name="oneway[]" value="${bidirectional ? '0' : '1'}">
-                            ` : `
-                                <input type="hidden" 
-                                       name="oneway[]" 
-                                       value="${bidirectional ? '0' : '1'}">
-                                ${!bidirectional ? '<span>Arrive Only</span>' : ''}
-                            `}
-                        </td><td class="align-top">
-                            ${!(is_loc1 || bidirectional) ? '' : `
-                                <button type="button" class="remove-dest-btn lesser-button">
-                                    Remove Destination
-                                </button>
-                            `}
-                        </td>
-                    </tr></table>
-                `;
-                $('#destlist_end').before(destHtml);
-            }
-            $('#add-dest-btn').click(() => {
-                const selectedOption = $('#dest-select option:selected');
-                const destId = selectedOption.val();
-                const destName = selectedOption.text();
-                if (destId === "") {
-                    return; // don't add if the selected option is the placeholder
-                }
-                let destExists = false;
-                $('.destination').each((index, element) => {
-                    const existingId = $(element).find('input[name="other_loc_id[]"]').val();
-                    if (existingId === destId) {
-                        destExists = true;
-                        return false; // exit the each loop
-                    }
-                    return true; // continue
-                });
-                if (destExists) {
-                    alert('Destination already exists.');
-                    return;
-                }
-                addDestination(destId, destName);
-            });
-            $('#destinations-container').on('click', '.remove-dest-btn', (event) => {
-                const destContainer = $(event.currentTarget).closest('.destination');
-                destContainer.remove();
-            });
-
-            function addItem(itemId, itemName, itemQty = "1", itemPos = "") {
-                const itemHtml = `
-                    <tr>
-                        <td>${itemName}
-                            <input type="hidden" name="item_id[]" value="${itemId}">
-                        </td><td>
-                            <input type="text" name="item_qty[]" value="${itemQty}" size="8">
-                        </td><td>
-                            <input type="text" name="item_pos[]" value="${itemPos}" size="8">
-                        </td><td>
-                            <button type="button" class="remove-item-btn lesser-button">Remove</button>
-                        </td>
-                    </tr>
-                `;
-                $('#items-rows').prepend(itemHtml);
-                $('#items-table').show();
-            }
-            function addItemRef(itemId, itemName) {
-                const itemHtml = `
-                    <tr>
-                        <td>${itemName}
-                            <input type="hidden" name="ref_item_id[]" value="${itemId}">
-                        </td><td>
-                            <button type="button" class="remove-item-btn lesser-button">Remove</button>
-                        </td>
-                    </tr>
-                `;
-                $('#itemrefs-rows').prepend(itemHtml);
-                $('#itemrefs-table').show();
-            }
-            $('.add-item-btn').click((event) => {
-                const selectBox = $(event.currentTarget).prev('#item-select');
-                const selectedOption = selectBox.find(':selected');
-                const itemId = selectedOption.val();
-                const itemName = selectedOption.text();
-                if (itemId === '') {
-                    return; // don't add if the selected option is the placeholder
-                }
-                addItem(itemId, itemName);
-            });
-            $('.add-itemref-btn').click((event) => {
-                const selectBox = $(event.currentTarget).prev('#itemref-select');
-                const selectedOption = selectBox.find(':selected');
-                const itemId = selectedOption.val();
-                const itemName = selectedOption.text();
-                if (itemId === '') {
-                    return; // don't add if the selected option is the placeholder
-                }
-                const existingItem = $(`#itemrefs-rows input[name="ref_item_id[]"][value="${itemId}"]`).closest('tr');
-                if (existingItem.length > 0) {
-                    alert('Item already exists.');
-                    return;
-                }
-                addItemRef(itemId, itemName);
-            });
-
-            console.log("number of attribs={{ current.attribs.keys() | length }}");
-            {% for attrib_id, attrib_of in current.attribs.items() %}
-                addAttrib(
-                    {{ attrib_id }},
-                    "{{ attrib_of.attrib.name }}",
-                    {{ attrib_of.attrib.binary | lower }},
-                    {{ attrib_of.attrib.enum | tojson }},
-                    {{ attrib_of.val | formatNum }});
-            {% endfor %}
-            {% for dest in current.destinations %}
-                addDestination(
-                    {{ dest.other_loc.id }},
-                    "{{ dest.other_loc.name }}",
-                    "{{ dest.duration }}",
-                    "{{ dest.door_here }}",
-                    "{{ dest.other_door }}",
-                    {{ dest.bidirectional | lower }},
-                    {{ (dest.loc1.id == current.id) | lower }}
-                    );
-            {% endfor %}
-            {% for items_at in current.items_at.values() %}
-                {% for item_at in items_at %}
-                    addItem(
-                        {{ item_at.item.id }},
-                        "{{ item_at.item.name }}",
-                        "{{ item_at.quantity | formatNum }}",
-                        "{{ item_at.position }}");
-                {% endfor %}
-            {% endfor %}
-            {% for item in current.item_refs %}
-                addItemRef(
-                    {{ item.id }},
-                    "{{ item.name }}");
-            {% endfor %}
-
-            $('#items-rows, #itemrefs-rows').on('click', '.remove-item-btn', (event) => {
-                const itemContainer = $(event.currentTarget).closest('tr');
-                itemContainer.remove();
-            });
-        });
-    </script>
+<style>
+    .dest-row { background: #111; padding: 10px; }
+    .label-mini { font-size: 0.7em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 2px; }
+    .mini-input { background: #000; color: #fff; border: 1px solid var(--border); padding: 5px; width: 100px; }
+    .full-width { width: 100%; box-sizing: border-box; background: #000; color: #fff; border: 1px solid var(--border); padding: 8px; }
+</style>
 {% endblock %}

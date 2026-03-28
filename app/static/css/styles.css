@@ -1,0 +1,217 @@
+/* --- Global Theme --- */
+:root {
+    --bg-dark: #1a1a1a;
+    --bg-panel: #2a2a2a;
+    --text-main: #e0e0e0;
+    --text-dim: #a0a0a0;
+    --accent: #00bcd4; /* Cyan */
+    --accent-hover: #0097a7;
+    --danger: #ff5252;
+    --success: #4caf50;
+    --border: #444;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    line-height: 1.6;
+}
+
+a {
+    color: var(--accent);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+a:hover {
+    color: var(--accent-hover);
+    text-decoration: underline;
+}
+
+/* --- Layout --- */
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+
+.column-container {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.column-container > div {
+    flex: 1;
+    min-width: 300px;
+}
+
+/* --- Navigation & Menus --- */
+.nav-container {
+    font-size: 0.9em;
+}
+
+.separator {
+    margin: 0 10px;
+    color: var(--border);
+}
+
+.hotkey-indicator {
+    color: var(--accent);
+    font-weight: bold;
+    font-family: monospace;
+    margin-right: 4px;
+}
+
+/* --- Components: Panels & Cards --- */
+.outer-border {
+    border: 1px solid var(--border);
+    padding: 15px;
+    margin-bottom: 20px;
+    background: #222;
+    border-radius: 4px;
+}
+
+/* --- Progress Bars --- */
+.progress-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+progress {
+    appearance: none;
+    width: 100%;
+    height: 12px;
+}
+
+progress::-webkit-progress-bar {
+    background-color: #444;
+    border-radius: 6px;
+}
+
+progress::-webkit-progress-value {
+    background-color: var(--accent);
+    border-radius: 6px;
+}
+
+progress::-moz-progress-bar {
+    background-color: var(--accent);
+    border-radius: 6px;
+}
+
+/* --- Tables --- */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+th {
+    text-align: left;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+    padding: 8px;
+    font-size: 0.85em;
+    text-transform: uppercase;
+}
+
+td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #333;
+}
+
+/* --- Buttons --- */
+button {
+    background-color: var(--bg-panel);
+    color: white;
+    border: 1px solid var(--border);
+    padding: 8px 16px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+button:hover {
+    background-color: #333;
+    border-color: var(--accent);
+}
+
+.go-button {
+    background-color: #006064;
+    border-color: var(--accent);
+}
+
+.dangerous-button {
+    background-color: #b71c1c;
+    border-color: var(--danger);
+}
+
+.dangerous-button:hover {
+    background-color: #d32f2f;
+}
+
+/* --- Navigation Grid (Location View) --- */
+.grid-table {
+    border-collapse: collapse;
+    background-color: #000;
+}
+
+.grid-cell {
+    width: 32px;
+    height: 32px;
+    border: 1px solid #222;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 1.2em;
+}
+
+.grid-cell.excluded {
+    background-color: #111;
+}
+
+.grid-cell.included {
+    background-color: #222;
+}
+
+.grid-cell:hover {
+    background-color: #333;
+}
+
+/* --- Game Log --- */
+.scrollable-log {
+    height: 250px;
+    overflow-y: auto;
+    background: #000;
+    padding: 10px;
+    border: 1px solid var(--border);
+    font-family: monospace;
+    font-size: 0.9em;
+}
+
+.log-entry {
+    margin: 4px 0;
+    color: #ccc;
+}
+
+.log-entry .count {
+    color: var(--accent);
+    margin-left: 5px;
+}
+
+/* --- Utilities --- */
+.hidden { display: none !important; }
+.label-like { color: var(--text-dim); font-size: 0.85em; }
+.text-accent { color: var(--accent); }

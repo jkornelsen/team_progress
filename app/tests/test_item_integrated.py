@@ -1,199 +1,133 @@
-"""
-To run:
-python -m unittest tests/test_item_integrated.py
-"""
 import unittest
-from unittest.mock import patch
-from flask import g
-import logging
+from .testing_utils import BaseTestCase
+from app.models import (
+    db, Item, Entity, Recipe, RecipeSource, Pile, GENERAL_ID)
+from app.src.progress_logic import can_perform_recipe
+from app.src.serialization import import_from_dict
 
-from app import app
-from src.item import Item
-from tests.testing_utils import setup_with_db
+class TestItemIntegrated(BaseTestCase):
 
-class Test1(unittest.TestCase):
-    def setUp(self):
-        """Set up app context and mock g."""
-        self.app_context, _ = setup_with_db()
+    def test_jti_inheritance(self):
+        """Verify that creating an Item creates the underlying Entity registry row."""
+        new_item = Item(
+            id=100, 
+            game_token=self.game_token, 
+            name="Steel Ingot", 
+            entity_type="item",
+            storage_type="universal"
+        )
+        db.session.add(new_item)
+        db.session.commit()
 
-    def tearDown(self):
-        """Tear down the app context."""
-        self.app_context.pop()
+        # Check that it exists in the subclass table
+        item_row = Item.query.get((100, self.game_token))
+        self.assertEqual(item_row.name, "Steel Ingot")
 
-    def test_create_item(self):
-        """Test creating an item."""
-        item1_data = {
-            'name': "item1",
-            'description': "item1desc",
-        }
-        item = Item.from_data(item1_data)
-        item.to_db()
-        item1_id = item.id
-        self.assertNotIn(item1_id, g.game_data.items)
-        Item.load_complete_objects()
-        self.assertIn(item1_id, g.game_data.items)
-        item = g.game_data.items[item1_id]
-        self.assertEqual(item.name, item1_data['name'])
-        self.assertEqual(item.description, item1_data['description'])
+        # Check that it exists in the base entity table (Inheritance check)
+        entity_row = Entity.query.get((100, self.game_token))
+        self.assertIsNotNone(entity_row)
+        self.assertEqual(entity_row.entity_type, "item")
 
-class Test2_RecipesOfSources(unittest.TestCase):
-    def setUp(self):
-        self.app_context, _ = setup_with_db()
-        data = {
-            "attribs": [],
-            "characters": [],
-            "events": [],
+    def test_recipe_dependency_logic(self):
+        """Test if production logic correctly sees ingredients across the relational tables."""
+        # 1. Setup: Create Item A (Tool), Item B (Resource), and Item C (Product)
+        tool = Item(id=10, game_token=self.game_token, name="Hammer", storage_type="universal")
+        resource = Item(id=11, game_token=self.game_token, name="Wood", storage_type="universal")
+        product = Item(id=12, game_token=self.game_token, name="Plank", storage_type="universal")
+        db.session.add_all([tool, resource, product])
+        
+        # 2. Setup: Create a Recipe for Plank
+        # Needs 1 Hammer (preserved) and 2 Wood (consumed)
+        recipe = Recipe(id=1, game_token=self.game_token, item_id=12, rate_amount=1)
+        db.session.add(recipe)
+        db.session.flush()
+
+        src1 = RecipeSource(game_token=self.game_token, recipe_id=1, item_id=10, q_required=1, preserve=True)
+        src2 = RecipeSource(game_token=self.game_token, recipe_id=1, item_id=11, q_required=2, preserve=False)
+        db.session.add_all([src1, src2])
+        db.session.commit()
+
+        # 3. Execution: Check production when inventory is empty
+        possible, reason = can_perform_recipe(self.game_token, GENERAL_ID, recipe)
+        self.assertFalse(possible)
+        self.assertIn("Not enough Hammer", reason)
+
+        # 4. Execution: Add only the tool
+        db.session.add(Pile(game_token=self.game_token, item_id=10, owner_id=GENERAL_ID, quantity=1))
+        db.session.commit()
+        possible, reason = can_perform_recipe(self.game_token, GENERAL_ID, recipe)
+        self.assertFalse(possible)
+        self.assertIn("Not enough Wood", reason)
+
+        # 5. Execution: Add resources
+        db.session.add(Pile(game_token=self.game_token, item_id=11, owner_id=GENERAL_ID, quantity=10))
+        db.session.commit()
+        possible, reason = can_perform_recipe(self.game_token, GENERAL_ID, recipe)
+        self.assertTrue(possible)
+
+    def test_item_deletion_cascade(self):
+        """Verify that deleting an item scrubs its recipes and inventory piles."""
+        item = Item(id=50, game_token=self.game_token, name="DeleteMe", storage_type="universal")
+        db.session.add(item)
+        db.session.flush()
+        
+        # Add a pile and a recipe
+        db.session.add(Pile(game_token=self.game_token, item_id=50, owner_id=GENERAL_ID, quantity=10))
+        db.session.add(Recipe(id=50, game_token=self.game_token, item_id=50))
+        db.session.commit()
+
+        # Verify exists
+        self.assertIsNotNone(Pile.query.filter_by(item_id=50, game_token=self.game_token).first())
+
+        # Delete the item
+        db.session.delete(item)
+        db.session.commit()
+
+        # Verify cascades wiped related data
+        self.assertIsNone(Pile.query.filter_by(item_id=50, game_token=self.game_token).first())
+        self.assertIsNone(Recipe.query.filter_by(item_id=50, game_token=self.game_token).first())
+
+    def test_import_hydration(self):
+        """Verify that the serialization service correctly hydrates a complex item JSON."""
+        scenario_data = {
             "items": [
                 {
-                    "attribs": [],
-                    "description": "Expected to lose one of the recipes if the problematic behavior persists.",
-                    "id": 1,
-                    "masked": False,
-                    "name": "item1",
-                    "progress": {},
-                    "q_limit": 0.0,
-                    "quantity": 0.0,
+                    "id": 200,
+                    "name": "Magic Wand",
+                    "storage_type": "universal",
+                    "quantity": 5.0,
                     "recipes": [
                         {
-                            "attrib_reqs": [],
-                            "byproducts": [],
-                            "id": 1,
-                            "instant": False,
-                            "rate_amount": 1.0,
-                            "rate_duration": 3.0,
-                            "sources": [
-                                {
-                                    "item_id": 2,
-                                    "preserve": True,
-                                    "q_required": 1.0
-                                }
-                            ]
-                        },
-                        {
-                            "attrib_reqs": [],
-                            "byproducts": [],
-                            "id": 2,
-                            "instant": False,
-                            "rate_amount": 1.0,
-                            "rate_duration": 3.0,
-                            "sources": [
-                                {
-                                    "item_id": 3,
-                                    "preserve": True,
-                                    "q_required": 1.0
-                                },
-                                {
-                                    "item_id": 4,
-                                    "preserve": True,
-                                    "q_required": 1.0
-                                }
-                            ]
+                            "id": 99,
+                            "rate_amount": 1,
+                            "rate_duration": 10,
+                            "sources": [{"item_id": 201, "q_required": 1}]
                         }
-                    ],
-                    "storage_type": "universal",
-                    "toplevel": True
+                    ]
                 },
                 {
-                    "attribs": [],
-                    "description": "",
-                    "id": 2,
-                    "masked": False,
-                    "name": "item2",
-                    "progress": {},
-                    "q_limit": 0.0,
-                    "quantity": 100.0,
-                    "recipes": [],
+                    "id": 201,
+                    "name": "Stick",
                     "storage_type": "universal",
-                    "toplevel": False
-                },
-                {
-                    "attribs": [],
-                    "description": "",
-                    "id": 3,
-                    "masked": False,
-                    "name": "item3",
-                    "progress": {},
-                    "q_limit": 0.0,
-                    "quantity": 100.0,
-                    "recipes": [],
-                    "storage_type": "universal",
-                    "toplevel": False
-                },
-                {
-                    "attribs": [],
-                    "description": "Playing this item is expected to cause item1 to lose a recipe.",
-                    "id": 4,
-                    "masked": False,
-                    "name": "item4",
-                    "progress": {},
-                    "q_limit": 0.0,
-                    "quantity": 0,
-                    "recipes": [
-                        {
-                            "attrib_reqs": [],
-                            "byproducts": [],
-                            "id": 3,
-                            "instant": False,
-                            "rate_amount": 1.0,
-                            "rate_duration": 3.0,
-                            "sources": [
-                                {
-                                    "item_id": 1,
-                                    "preserve": False,
-                                    "q_required": 1.0
-                                }
-                            ]
-                        }
-                    ],
-                    "storage_type": "local",
-                    "toplevel": False
+                    "quantity": 0
                 }
-            ],
-            "locations": [
-                {
-                    "description": "",
-                    "destinations": [],
-                    "dimensions": [0,0],
-                    "excluded": [0,0,0,0],
-                    "id": 1,
-                    "item_refs": [],
-                    "items": [
-                        {
-                            "item_id": 4,
-                            "position": [0,0],
-                            "quantity": 0.0
-                        }
-                    ],
-                    "masked": False,
-                    "name": "loc1",
-                    "toplevel": True
-                }
-            ],
-            "overall": {
-                "description": "",
-                "multiplayer": False,
-                "number_format": "en_US",
-                "progress_type": "?",
-                "slots": [],
-                "title": "Generic Adventure",
-                "win_reqs": []
-            }
+            ]
         }
-        g.game_data.from_json(data)
-        g.game_data.to_db()
 
-    def tearDown(self):
-        """Tear down the app context."""
-        self.app_context.pop()
+        import_from_dict(scenario_data, self.game_token)
 
-    def test2(self):
-        """Test the recipes of sources for items."""
-        item1 = Item.data_for_play(1)
-        self.assertEqual(len(item1.recipes), 2)
-        item4 = Item.data_for_play(4)
-        self.assertEqual(len(item4.recipes), 1)
-        item1 = Item.data_for_play(1)
-        self.assertEqual(len(item1.recipes), 2)
+        # 1. Check item was created
+        wand = Item.query.get((200, self.game_token))
+        self.assertEqual(wand.name, "Magic Wand")
+
+        # 2. Check quantity was mapped to Pile Owner ID 1
+        pile = Pile.query.filter_by(item_id=200, owner_id=GENERAL_ID).first()
+        self.assertEqual(pile.quantity, 5.0)
+
+        # 3. Check recipe was reconstructed
+        recipe = Recipe.query.get((99, self.game_token))
+        self.assertEqual(recipe.item_id, 200)
+        self.assertEqual(recipe.sources[0].item_id, 201)
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,292 +1,174 @@
-{% extends 'base.html' %}
+{% extends 'layout/base.html' %}
+
 {% block upper_left %}
-    <div class="nav-container">
-        <a class="upper-left" href="{{ url_for("overview") }}">overview</a>
+    <nav class="nav-container">
+        <a href="{{ url_for('play.overview') }}">[o]verview</a>
         <span class="separator">|</span>
-        <a href="{{ url_for("configure_index") }}">main setup</a>
-    </div>
+        <a href="{{ url_for('configure.index') }}">main setup</a>
+    </nav>
 {% endblock %}
+
 {% block content %}
-    <h1>Overall Settings</h1>
-    <p class="info">
-        Fulfilling all win conditions shows a message in the log.
-        At that point, you can either consider the scenario finished
-        or change the win conditions and continue playing.
-    </p>
-    <form method="post">
-        <label for="title">Scenario Title:</label>
-        <input type="text"
-               id="title"
-               name="scenario_title"
-               value="{{ current.title }}"
-               required>
-        <br>
-        <label for="description">Scenario Description:</label>
-        <textarea id="description" name="scenario_description" rows="8" cols="50">{{ current.description }}</textarea>
-        <br>
-        <style>
-            .winning-container label,
-            .winning-container select,
-            .winning-container input {
-                display: inline;
-            }
-        </style>
-        <div class="winning-container">
-            <!-- List of added requirements -->
-            <label>Win Conditions:</label>
-            <div id="req-list"
-                 class="outer-border"
-                 {% if current.win_reqs|length == 0 %}style="display: none;"{% endif %}></div>
-            <button type="button" id="add-item-req-button" class="lesser-button">Set Up Item Requirement</button>
-            <button type="button" id="add-char-req-button" class="lesser-button">Set Up Character Requirement</button>
-            <!-- Form to add Character requirement -->
-            <div class="char-req-container" style="display: none;">
-                <label>Character:</label>
-                <select class="character-select">
-                    <option value="" selected>(None)</option>
-                    {% for character in game_data.characters %}
-                        <option value="{{ character.id }}"
-                                {% if current.win_reqs.character and current.win_reqs.character.id == character.id %}selected{% endif %}>
-                            {{ character.name }}
-                        </option>
-                    {% endfor %}
-                </select>
-                <label>At Location:</label>
-                <select class="location-select">
-                    <option value="" selected>(None)</option>
-                    {% for location in game_data.locations %}
-                        <option value="{{ location.id }}"
-                                {% if current.win_reqs.location and current.win_reqs.location.id == location.id %}selected{% endif %}>
-                            {{ location.name }}
-                        </option>
-                    {% endfor %}
-                </select>
-                <label>Has Attribute:</label>
-                <select class="attrib-select">
-                    <option value="" selected>(None)</option>
-                    {% for attrib in game_data.attribs %}
-                        <option value="{{ attrib.id }}"
-                                {% if current.win_reqs.attrib and current.win_reqs.attrib.id == attrib.id %}selected{% endif %}>
-                            {{ attrib.name }}
-                        </option>
-                    {% endfor %}
-                </select>
-                <label for="attrib-value">Attribute Value:</label>
-                <input type="text"
-                       id="attrib-value"
-                       name="attrib_value"
-                       value="{{ current.win_reqs.attrib_value|default(0) }}">
-                <button type="button" id="add-char-req" class="lesser-button">Save Requirement</button>
+<div class="configure-overall">
+    <h1>Scenario Settings & Objectives</h1>
+    
+    <form method="POST">
+        <!-- 1. Basic Metadata -->
+        <section class="outer-border">
+            <h3>Scenario Identity</h3>
+            <div class="form-group">
+                <label for="title">Scenario Title:</label>
+                <input type="text" id="title" name="title" value="{{ overall.title }}" required class="full-width">
             </div>
-            <!-- Form to add Item requirement -->
-            <div class="item-req-container" style="display: none;">
-                <label>Item:</label>
-                <select class="item-select">
-                    <option value="" selected>(None)</option>
-                    {% for item in game_data.items %}<option value="{{ item.id }}">{{ item.name }}</option>{% endfor %}
-                </select>
-                <label for="item-quantity">Quantity:</label>
-                <input type="text" id="item-quantity" name="item_quantity" value="0">
-                <label>At Location:</label>
-                <select class="location-select">
-                    <option value="" selected>(None)</option>
-                    {% for location in game_data.locations %}<option value="{{ location.id }}">{{ location.name }}</option>{% endfor %}
-                </select>
-                <label>Owned by Character:</label>
-                <select class="character-select">
-                    <option value="" selected>(None)</option>
-                    {% for character in game_data.characters %}
-                        <option value="{{ character.id }}">{{ character.name }}</option>
-                    {% endfor %}
-                </select>
-                <button type="button" id="add-item-req" class="lesser-button">Save Requirement</button>
+            <div class="form-group spacious-top">
+                <label for="description">Introductory Description:</label>
+                <textarea id="description" name="description" rows="5" class="full-width">{{ overall.description }}</textarea>
             </div>
-        </div>
-        <br>
-        <br>
-        <label for="number-format">Number Format:</label>
-        <select id="number-format" name="number_format">
-            <option value="sci">Scientific 1.23e6</option>
-            <option value="abbr">Abbreviated 1.23m</option>
-            <option value="en_US">International 1,230,000</option>
-            <option value="en_IN">Indian 12,30,000</option>
-            <option value="de_DE">European 1.230.000,00</option>
-        </select>
-        <br>
-        <label for="slots">Equipment Slots:</label>
-        <textarea id="slots" name="slots" rows="5" cols="15">{{ '\n'.join(current.slots) }}</textarea>
-        <br>
-        <div class="footer-buttons">
-            <button type="submit" id="btn-save" name="save_changes">Save and Continue</button>
-            <button type="submit" id="btn-cancel" name="cancel_changes" formnovalidate>Don't Save</button>
+        </section>
+
+        <!-- 2. Application Logic -->
+        <section class="outer-border">
+            <h3>Global Configuration</h3>
+            <div class="grid-2-col">
+                <div class="form-group">
+                    <label for="number_format">Display Number Format:</label>
+                    <select id="number_format" name="number_format" class="full-width">
+                        <option value="en_US" {{ 'selected' if overall.number_format == 'en_US' }}>International (1,234.56)</option>
+                        <option value="de_DE" {{ 'selected' if overall.number_format == 'de_DE' }}>European (1.234,56)</option>
+                        <option value="abbr" {{ 'selected' if overall.number_format == 'abbr' }}>Abbreviated (1.2k, 1.5m)</option>
+                        <option value="sci" {{ 'selected' if overall.number_format == 'sci' }}>Scientific (1.2e3)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="slots">Equipment Slots (One per line):</label>
+                    <textarea id="slots" name="slots" rows="4" class="full-width" 
+                              placeholder="Main Hand&#10;Off Hand&#10;Body">{{ overall.slots | join('\n') }}</textarea>
+                    <small class="label-like">These appear in the Character and Item editors.</small>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Win Requirements -->
+        <section class="outer-border">
+            <div class="flex-between align-center">
+                <h3>Win Conditions (Objectives)</h3>
+                <button type="button" class="btn-sm" onclick="addRow('winreq-list', 'winreq-template')">+ Add Objective</button>
+            </div>
+            <p class="label-like spacious-bottom">Define what needs to happen to "Win" this scenario. All conditions must be met.</p>
+            
+            <div id="winreq-list">
+                {% for req in win_reqs %}
+                <div class="winreq-card outer-border spacious-bottom">
+                    <div class="flex-between">
+                        <span class="text-accent">Condition #{{ loop.index }}</span>
+                        <button type="button" class="btn-sm dangerous-button" onclick="this.closest('.winreq-card').remove()">Remove</button>
+                    </div>
+                    
+                    <div class="grid-3-col spacious-top">
+                        <!-- Target Entity (Item or Character) -->
+                        <div class="form-group">
+                            <label>Target Entity:</label>
+                            <select name="winreqs[{{ loop.index0 }}][target_id]">
+                                <option value="">(None)</option>
+                                <optgroup label="Items">
+                                    {% for i in all_items %}<option value="{{ i.id }}" {{ 'selected' if i.id == req.item_id }}>{{ i.name }}</option>{% endfor %}
+                                </optgroup>
+                                <optgroup label="Characters">
+                                    {% for c in all_chars %}<option value="{{ c.id }}" {{ 'selected' if c.id == req.char_id }}>{{ c.name }}</option>{% endfor %}
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <!-- Target Context (Location) -->
+                        <div class="form-group">
+                            <label>Must be at Location:</label>
+                            <select name="winreqs[{{ loop.index0 }}][loc_id]">
+                                <option value="">(Anywhere)</option>
+                                {% for l in all_locations %}
+                                    <option value="{{ l.id }}" {{ 'selected' if l.id == req.loc_id }}>{{ l.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Requirements (Quantity or Attribute) -->
+                        <div class="form-group">
+                            <label>Required Value:</label>
+                            <div class="flex-row gap-5">
+                                <input type="number" name="winreqs[{{ loop.index0 }}][quantity]" value="{{ req.quantity or req.attrib_value or 0 }}" step="any">
+                                <select name="winreqs[{{ loop.index0 }}][attrib_id]" style="width: 100px;">
+                                    <option value="">(Qty)</option>
+                                    {% for a in all_attribs %}
+                                        <option value="{{ a.id }}" {{ 'selected' if a.id == req.attrib_id }}>{{ a.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Form Actions -->
+        <div class="footer-actions flex-between">
+            <a href="{{ url_for('configure.index') }}" class="btn">Cancel</a>
+            <button type="submit" class="go-button" style="padding: 10px 30px;">Save Overall Configuration</button>
         </div>
     </form>
-    <script>
-        $(document).ready(() => {
-            // default for select box
-            const defaultNumberFormat = '{{ current.number_format }}';
-            if (defaultNumberFormat) {
-                $('#number-format').val(defaultNumberFormat);
-            }
+</div>
 
-            $('#add-char-req-button').on('click', () => {
-                $('.char-req-container').css('display', 'block');
-                $('.item-req-container').css('display', 'none');
-                $('#add-char-req').css('display', 'block');
-                $('#add-item-req').css('display', 'none');
-            });
-            $('#add-item-req-button').on('click', () => {
-                $('.item-req-container').css('display', 'block');
-                $('.char-req-container').css('display', 'none');
-                $('#add-item-req').css('display', 'block');
-                $('#add-char-req').css('display', 'none');
-            });
+<!-- TEMPLATE FOR DYNAMIC ROW -->
+<template id="winreq-template">
+    <div class="winreq-card outer-border spacious-bottom">
+        <div class="flex-between">
+            <span class="text-accent">New Objective</span>
+            <button type="button" class="btn-sm dangerous-button" onclick="this.closest('.winreq-card').remove()">Remove</button>
+        </div>
+        <div class="grid-3-col spacious-top">
+            <div class="form-group">
+                <label>Target Entity:</label>
+                <select name="winreqs[INDEX][target_id]">
+                    <option value="">(None)</option>
+                    <optgroup label="Items">{% for i in all_items %}<option value="{{ i.id }}">{{ i.name }}</option>{% endfor %}</optgroup>
+                    <optgroup label="Characters">{% for c in all_chars %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</optgroup>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Must be at Location:</label>
+                <select name="winreqs[INDEX][loc_id]">
+                    <option value="">(Anywhere)</option>
+                    {% for l in all_locations %}<option value="{{ l.id }}">{{ l.name }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Required Value:</label>
+                <div class="flex-row gap-5">
+                    <input type="number" name="winreqs[INDEX][quantity]" value="1" step="any">
+                    <select name="winreqs[INDEX][attrib_id]" style="width: 100px;">
+                        <option value="">(Qty)</option>
+                        {% for a in all_attribs %}<option value="{{ a.id }}">{{ a.name }}</option>{% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
 
-            let winreqCounter = 0;
-            function addRequirement(params) {
-                const {
-                    itemId, itemName, itemQuantity,
-                    locationId, locationName,
-                    characterId, characterName,
-                    attribId, attribName, attribValue
-                } = params;
-                winreqCounter++;
-                const winreqPrefix = `winreq${winreqCounter}_`;
-                const reqList = document.getElementById('req-list');
-                reqList.style.display = 'block';
-                let newRow = `<div class="req flexdiv">
-                    <input type="hidden" name="winreq_id" value="${winreqCounter}">`;
-                if (itemId !== "") {
-                    newRow += `
-                        <input type="hidden" name="${winreqPrefix}item_id" value="${itemId}">
-                        <input type="hidden" name="${winreqPrefix}quantity" value="${itemQuantity}">
-                        ${itemQuantity} ${itemName}
-                    `;
-                    if (locationId !== "") {
-                        newRow += `
-                            <input type="hidden" name="${winreqPrefix}loc_id" value="${locationId}">
-                            at ${locationName}
-                        `;
-                    } else if (characterId !== "") {
-                        newRow += `
-                            <input type="hidden" name="${winreqPrefix}char_id" value="${characterId}">
-                            owned by ${characterName}
-                        `;
-                    }
-                } else {
-                    newRow += `
-                        <input type="hidden" name="${winreqPrefix}char_id" value="${characterId}">
-                        ${characterName}
-                    `;
-                    if (locationId !== "") {
-                        newRow += `
-                            <input type="hidden" name="${winreqPrefix}loc_id" value="${locationId}">
-                            at ${locationName}
-                        `;
-                    }
-                    if (attribId !== "" && attribValue !== 0) {
-                        newRow += `
-                            <input type="hidden" name="${winreqPrefix}attrib_id" value="${attribId}">
-                            <input type="hidden" name="${winreqPrefix}attribValue" value="${attribValue}">
-                            with ${attribValue} ${attribName}
-                        `;
-                    }
-                }
-                newRow += `
-                    <button type="button" class="remove-req-button lesser-button">Remove Requirement</button>
-                </div>`;
-                document.getElementById('req-list').insertAdjacentHTML('beforeend', newRow);
-                document.getElementById('req-list').style.display = 'block';
-            }
+<script>
+    function addRow(containerId, templateId) {
+        const container = document.getElementById(containerId);
+        const template = document.getElementById(templateId).innerHTML;
+        const index = container.querySelectorAll('.winreq-card').length + Date.now(); // Unique index
+        const html = template.replace(/INDEX/g, index);
+        container.insertAdjacentHTML('beforeend', html);
+    }
+</script>
 
-            function getSelectData(className) {
-                let result = { id: '', name: '' };
-                $(`.${className}`).each((_, sel) => {
-                    const $sel = $(sel);
-                    const parentDiv = $sel.closest('div');
-                    if (parentDiv.css('display') !== 'none') {
-                        const id = $sel.val();
-                        const name = $sel.find('option:selected').text();
-                        result = { id, name };
-                        return false;
-                    }
-                });
-                return result;
-            }
-            function addSelectedRequirement() {
-                const item = getSelectData('item-select');
-                const loc = getSelectData('location-select');
-                const character = getSelectData('character-select');
-                const attrib = getSelectData('attrib-select');
-                item.quantity = document.getElementById('item-quantity').value;
-                attrib.value = document.getElementById('attrib-value').value;
-                if (item.id !== "" && item.quantity === 0) {
-                    alert("Please specify a winning quantity for the item.");
-                    return;
-                }
-                if (attrib.id !== "" && attrib.value === "") { // Use strict equality (===) for comparison
-                    alert("Please specify a winning value for the attribute.");
-                    return;
-                }
-                addRequirement({
-                    itemId: item.id,
-                    itemName: item.name,
-                    itemQuantity: item.quantity,
-                    locationId: loc.id,
-                    locationName: loc.name,
-                    characterId: character.id,
-                    characterName: character.name,
-                    attribId: attrib.id,
-                    attribName: attrib.name,
-                    attribValue: attrib.value
-                });
-                $('.item-req-container').hide();
-                $('.char-req-container').hide();
-            }
-
-            {% for req in current.win_reqs %}
-                addRequirement({
-                    'itemId': "{{ req.item.id }}",
-                    'itemName': "{{ req.item.name }}",
-                    'itemQuantity': "{{ req.quantity | formatNum }}",
-                    'locationId': "{{ req.location.id }}",
-                    'locationName': "{{ req.location.name }}",
-                    'characterId': "{{ req.character.id }}",
-                    'characterName': "{{ req.character.name }}",
-                    'attribId': "{{ req.attrib.id }}",
-                    'attribName': "{{ req.attrib.name }}",
-                    'attribValue': "{{ req.attrib_value | formatNum }}"
-                });
-            {% endfor %}
-
-            document.getElementById('add-item-req').addEventListener('click', () => {
-                const item = getSelectData('item-select');
-                if (item.id === "") {
-                    alert("Please select an item.");
-                    return;
-                }
-                addSelectedRequirement();
-            });
-
-            document.getElementById('add-char-req').addEventListener('click', () => {
-                const character = getSelectData('character-select');
-                if (character.id === "") {
-                    alert("Please select a character.");
-                    return;
-                }
-                addSelectedRequirement();
-            });
-
-            $('#req-list').on('click', (event) => {
-                if ($(event.target).hasClass('remove-req-button')) {
-                    const reqDiv = $(event.target).closest('.req');
-                    reqDiv.remove();
-                    const reqElements = $('.req');
-                    if (reqElements.length === 0) {
-                        $('#req-list').hide();
-                    }
-                }
-            });
-        });
-    </script>
+<style>
+    .winreq-card { background: #111; padding: 15px; border-left: 4px solid var(--border); }
+    .winreq-card:hover { border-left-color: var(--accent); }
+    .grid-3-col { display: grid; grid-template-columns: 1.5fr 1.5fr 2fr; gap: 15px; }
+    .full-width { width: 100%; box-sizing: border-box; background: #000; color: #fff; border: 1px solid var(--border); padding: 10px; }
+    .footer-actions { margin-top: 40px; padding: 20px; border-top: 1px solid var(--border); }
+</style>
 {% endblock %}

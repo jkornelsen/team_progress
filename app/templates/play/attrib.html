@@ -1,215 +1,116 @@
-{% extends 'base.html' %}
+{% extends 'layout/base.html' %}
+{% from 'layout/macros.html' import hotkey, render_attr %}
+
 {% block upper_left %}
-    <div class="nav-container">
-        <a class="upper-left" href="{{ url_for("overview") }}">[o]verview</a>
+    <nav class="nav-container">
+        <a href="{{ url_for('play.overview') }}">[o]verview</a>
         <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for("configure_index") }}">[m]ain setup</a>
+        <a href="{{ url_for('configure.edit_attrib', id=attribute.id) }}">attrib s[e]tup</a>
         <span class="separator">|</span>
-        <a class="upper-left"
-           href="{{ url_for('configure_attrib', attrib_id=current.id) }}">attribute s[e]tup</a>
-    </div>
+        <a href="#" onclick="window.history.back(); return false;">
+            &larr; [b]ack to {{ session.get('origin_name', 'previous') }}
+        </a>
+    </nav>
 {% endblock %}
+
 {% block content %}
-    <script>
-        const linkForKey = {
-            'o': '{{ url_for('overview') }}',
-            'm': '{{ url_for('configure_index') }}',
-            'e': '{{ url_for('configure_attrib', attrib_id=current.id) }}',
-        };
-        document.addEventListener('DOMContentLoaded', () => {
-            if (isMobile) {
-                return;
-            }
-            document.addEventListener('keypress', (event) => {
-                const key = event.key;
-                if (key === 'c') {
-                    document.getElementById('change-btn').click();
-                } else if (linkForKey[key]) {
-                    window.location.href = linkForKey[key];
-                }
-            });
-        });
-    </script>
-    <div class="entity-at">
-    Attribute of
-    {% if subject.typename() == 'char' %}
-        {% set link = url_for('play_character', char_id=subject.id) %}
-        {% set letter = link_letters.next(link) %}
-        <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
-        <span class="hotkey-indicator">{{ letter }}</span>
-        <a href="{{ link }}">{{ subject.name }}</a>
-    {% elif subject.typename() == 'item' %}
-        {% set referrer_link = session.get('referrer_link') %}
-        {% if referrer_link %}
-            &larr;
-            {% set link = referrer_link.get('url', '#') | safe %}
-        {% else %}
-            {% set link = url_for('play_item', item_id=subject.id) %}
+<div class="attrib-play-container">
+    <header class="entity-header">
+        <span class="label-like">
+            Attribute of 
+            <a href="{{ url_for('play.play_' + owner.entity_type, id=owner.id) }}">
+                {{ '👤' if owner.entity_type == 'character' else '📍' if owner.entity_type == 'location' else '📦' }} 
+                {{ owner.name }}
+            </a>
+        </span>
+        <h1>{{ attribute.name }}</h1>
+        {% if attribute.description %}
+            <div class="description-box">{{ attribute.description | htmlify }}</div>
         {% endif %}
-        {% set letter = link_letters.next(link) %}
-        <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
-        <span class="hotkey-indicator">{{ letter }}</span>
-        <a href="{{ link }}">{{ subject.name }}</a>
-    {% elif subject.typename() == 'loc' %}
-        {% set link = url_for('play_location', loc_id=subject.id) %}
-        {% set letter = link_letters.next(link) %}
-        <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
-        <span class="hotkey-indicator">{{ letter }}</span>
-        <a href="{{ link }}">{{ subject.name }}</a>
-    {% endif %}
-    </div>
-    <h1>{{ current.name }}</h1>
-    {% if current.description %}
-       {{ current.description|htmlify }}
-    {% endif %}
-    <hr>
-    <form method="post">
-        <table>
-            <tr>
-                <th>Current</th>
-                <th>Operation</th>
-                <th>New Value</th>
-            </tr>
-            <tr>
-                <td>
-                    {% if current.enum %}
-                        {% set index_from_val = subject_attrib_val | int %}
-                        {% if index_from_val in range(current.enum | length) %}
-                            <span title="{{ index_from_val }}">{{ current.enum[index_from_val] }}</span>
-                        {% else %}
-                            ?
-                        {% endif %}
-                    {% elif current.binary %}
-                        <span title="{{ subject_attrib_val }}">
-                        {{ ('&check;' if subject_attrib_val == 1 else 'X') | safe }}
-                        </span>
-                    {% else %}
-                        {{ subject_attrib_val | formatNum }}
-                    {% endif %}
-                </td>
-                <td>
-                    {% if current.binary %}
-                        toggle
-                    {% else %}
-                        {% set operators = [["add", "+"], ["sub", "-"], ["mult", "*"], ["div", "/"], ["pow", "Power"], ["log", "Log"]] %}
-                        <select name="operator" id="operator">
-                            {% for operator in operators %}
-                                <option value="{{ operator[0] }}"
-                                        {% if session.get('last_operator') == operator[0] %}selected{% endif %}>
-                                    {{ operator[1] }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                        <input type="text"
-                               name="operand"
-                               id="operand"
-                               size="8"
-                               value="{{ session.get('last_operand') or 1 }}">
-                    {% endif %}
-                </td>
-                <td>
-                    =
-                    {% if current.enum %}
-                        {% set index_from_val = subject_attrib_val | int %}
-                        <select name="result"
-                                id="result">
-                            {% for index in range(current.enum | length) %}
-                                {% set identifier = current.enum[index] %}
-                                <option value="{{ index }}" {% if index == index_from_val %}selected{% endif %}>{{ identifier }}</option>
-                            {% endfor %}
-                        </select>
-                    {% elif current.binary %}
-                        <input type="hidden"
-                               name="result"
-                               id="result"
-                               value="{{ 1 - subject_attrib_val }}">
-                        <span title="{{ 1 - subject_attrib_val }}">
-                        {{ ('X' if subject_attrib_val == 1 else '&check;') | safe }}
-                        </span>
-                    {% else %}
-                        <input type="text"
-                               name="result"
-                               id="result"
-                               size="8"
-                               value="{{ subject_attrib_val | formatNum }}">
-                    {% endif %}
-                </td>
-                <td>
-                    <button type="submit" name="change" id="change-btn">[C]hange</button>
-                </td>
-            </tr>
-        </table>
-    </form>
-    <div style="height: 20px;"></div>
-    {% if produced_items %}
-        <h2>Required to Produce</h2>
-        <ul>
-            {% for item in produced_items | sort(attribute='name') %}
-                {% set link = url_for('play_item', item_id=item.id) %}
-                {% set letter = link_letters.next(link) %}
-                <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
-                <span class="hotkey-indicator">{{ letter }}</span>
-                <a href="{{ link }}">{{ item.maskable_name() }}</a>
-                <br>
+    </header>
+
+    <section class="outer-border">
+        <h3>Current Status</h3>
+        <div class="current-val-display">
+            <span class="label-like">Value:</span>
+            <span class="text-accent large-text">
+                {{ render_attr(attrib_value, attribute) }}
+            </span>
+            <span class="label-like">({{ attrib_value.value | formatNum }} raw)</span>
+        </div>
+    </section>
+
+    <section class="outer-border">
+        <h3>Adjust Value</h3>
+        <form method="POST" class="calculator-form">
+            <div class="flex-row align-center">
+                
+                {# 1. Binary Toggle #}
+                {% if attribute.is_binary %}
+                    <input type="hidden" name="operator" value="set">
+                    <button type="submit" name="value" value="{{ 0 if attrib_value.value else 1 }}" class="go-button">
+                        Toggle {{ 'OFF' if attrib_value.value else 'ON' }}
+                    </button>
+
+                {# 2. Enum Selection #}
+                {% elif attribute.enum_list %}
+                    <input type="hidden" name="operator" value="set">
+                    <select name="value" class="flex-grow">
+                        {% for entry in attribute.enum_list %}
+                            <option value="{{ loop.index0 }}" {{ 'selected' if attrib_value.value == loop.index0 }}>
+                                {{ entry }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="go-button">Set State</button>
+
+                {# 3. Standard Numeric Calculator #}
+                {% else %}
+                    <select name="operator" id="op-select">
+                        <option value="+">Add (+)</option>
+                        <option value="-">Subtract (-)</option>
+                        <option value="*">Multiply (×)</option>
+                        <option value="/">Divide (÷)</option>
+                        <option value="set">Set To (=)</option>
+                    </select>
+                    <input type="number" name="operand" step="any" autofocus class="flex-grow">
+                    <button type="submit" class="go-button">Apply [C]hange</button>
+                {% endif %}
+            </div>
+        </form>
+    </section>
+
+    {% if items_requiring_this %}
+    <section class="outer-border label-like">
+        <h3>Required for Production</h3>
+        <p>This attribute is a prerequisite for the following items:</p>
+        <ul class="clean-list">
+            {% for item in items_requiring_this %}
+                <li><a href="{{ url_for('play.play_item', id=item.id) }}">📦 {{ item.name }}</a></li>
             {% endfor %}
         </ul>
+    </section>
     {% endif %}
-    <script>
-        $(document).ready(() => {
-            function calculate() {
-                const subjectAttribVal = {{ subject_attrib_val }};
-                const operator = $('#operator').val();
-                const operand = parseFloat($('#operand').val());
-                let result = subjectAttribVal;
-                switch (operator) {
-                    case 'add':
-                        result += operand;
-                        {% if current.enum %}
-                            result = (result + {{ current.enum | length }}) % {{ current.enum | length }};
-                        {% endif %}
-                        break;
-                    case 'sub':
-                        result -= operand;
-                        {% if current.enum %}
-                            result = (result + {{ current.enum | length }}) % {{ current.enum | length }};
-                        {% endif %}
-                        break;
-                    case 'mult':
-                        result *= operand;
-                        break;
-                    case 'div':
-                        if (operand !== 0) {
-                            result /= operand;
-                        } else {
-                            alert("Division by zero is not allowed.");
-                            return;
-                        }
-                        break;
-                    case 'pow':
-                        result = Math.pow(subjectAttribVal, operand);
-                        break;
-                    case 'log':
-                        if (subjectAttribVal > 0 && operand > 0) {
-                            result = Math.log(subjectAttribVal) / Math.log(operand);
-                        } else {
-                            alert("Logarithms require positive numbers.");
-                            return;
-                        }
-                        break;
-                    default:
-                        result = subjectAttribVal;
-                }
-                console.log(`Operator: ${operator}, Operand: ${operand}, Result: ${result}`);
-                {% if current.enum %}
-                    $('#result').prop('selectedIndex', result);
-                {% else %}
-                    $('#result').val(result);
-                {% endif %}
-            }
-            $('#operator, #operand').on('change', calculate);
-            {% if not current.binary %}
-                calculate(); // on page load
-            {% endif %}
-        });
-    </script>
+</div>
+
+<script>
+    // Hotkey for "Apply Change"
+    document.addEventListener('keypress', (e) => {
+        if (e.key.toLowerCase() === 'c') {
+            const btn = document.querySelector('.calculator-form button[type="submit"]');
+            if (btn) btn.click();
+        }
+    });
+</script>
+
+<style>
+    .large-text { font-size: 2em; font-weight: bold; margin: 0 10px; }
+    .calculator-form select, .calculator-form input { 
+        background: #000; color: white; border: 1px solid var(--border); padding: 10px; font-size: 1.1em;
+    }
+    .calculator-form button { padding: 10px 20px; font-size: 1.1em; }
+    .align-center { align-items: center; }
+    .clean-list { list-style: none; padding: 0; margin-top: 10px; }
+    .clean-list li { margin-bottom: 5px; }
+</style>
 {% endblock %}

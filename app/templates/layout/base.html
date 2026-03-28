@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>{{ config['TITLE'] }}</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    
+    <!-- External Dependencies -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <script>
+        // Global Game State for JS Logic
+        const GAME_TOKEN = "{{ game_token }}";
+        const CURRENT_USER = "{{ current_username }}";
+        const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+
+        // Global registry for hotkeys
+        const linkForKey = {};
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (isMobile) return;
+            
+            document.addEventListener('keypress', (event) => {
+                // Don't trigger hotkeys if user is typing in an input/textarea
+                if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+                    return;
+                }
+
+                const key = event.key; // Case sensitive to match alphabet
+                if (linkForKey[key]) {
+                    event.preventDefault();
+                    window.location.href = linkForKey[key];
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-left">
+            {% block upper_left %}
+                {# Default navigation for most pages #}
+                <nav class="nav-container">
+                    <a href="{{ url_for('play.overview') }}">[o]verview</a>
+                    <span class="separator">|</span>
+                    <a href="{{ url_for('configure.index') }}">[m]ain setup</a>
+                </nav>
+            {% endblock %}
+        </div>
+
+        <div class="header-right">
+            {% include 'layout/partials/upper_right_menu.html' %}
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Flash Messages / Global Notifications -->
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div class="flash-messages">
+              {% for message in messages %}
+                <div class="flash-item">{{ message }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="main-footer">
+        {% block footer %}{% endblock %}
+    </footer>
+</body>
+</html>

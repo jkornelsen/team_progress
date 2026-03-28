@@ -1,269 +1,205 @@
-{% extends 'base.html' %}
-{% block upper_left %}
-    <div class="nav-container">
-        <span class="upper-left">overview</span>
-        <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for("configure_index") }}">[m]ain setup</a>
-    </div>
-{% endblock %}
+{% extends 'layout/base.html' %}
+{% from 'layout/macros.html' import hotkey %}
+
 {% block content %}
-    <script>
-        const linkForKey = {
-            'm': '{{ url_for('configure_index') }}',
-        };
-        document.addEventListener('DOMContentLoaded', () => {
-            if (isMobile) {
-                return;
+<script>
+    const linkForKey = {};
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (isMobile) return;
+        
+        // Listen for hotkey presses
+        document.addEventListener('keypress', (event) => {
+            const key = event.key.toLowerCase();
+            if (linkForKey[key]) {
+                window.location.href = linkForKey[key];
             }
-            document.addEventListener('keypress', (event) => {
-                const key = event.key;
-                if (linkForKey[key]) {
-                    window.location.href = linkForKey[key];
-                }
-            });
         });
-    </script>
+    });
+</script>
+
+<div class="overview-header">
     <h1>
-        {{ current_data.overall.title }}
-        {% if current_data.overall.have_won() %}
-            <span title="You won the scenario!">✅</span>
-        {% elif current_data.overall.win_reqs %}
-            <span style="color: gray; font-size: 0.4em; position: relative; top: -0.8em;"
-            title="This scenario has win conditions &mdash; see Overall Settings.">🚩</span>
+        {{ overall.title }}
+        {% if all_requirements_met %}
+            <span title="Goal Achieved!" class="text-success">✅</span>
+        {% elif win_reqs %}
+            <span title="Active Win Conditions" style="color: #888; font-size: 0.5em;">🚩</span>
         {% endif %}
     </h1>
-    <p>{{ current_data.overall.description|htmlify }}</p>
-    <div class="column-container">
-        <div><!-- lefthand column -->
-            <!-- Top-level Events -->
-            {% if current_data.events %}
-                <div class="popup-button" style="margin-bottom: 20px">
-                    <button>
-                        Events <span class="dropdown-icon">▼</span>
-                    </button>
-                    <div class="popup-frame">
-                        <div class="popup-list">
-                            {% for event in current_data.events %}
-                                <a href="{{ url_for('play_event', event_id=event.id) }}">{{ event.name }}</a>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-            {% endif %}
-            <!-- Top-level Characters and their Location -->
-            {% if current_data.characters %}
-                <table class="spacious">
-                    <tr>
-                        <th>Character</th>
-                        <th>At</th>
-                    </tr>
+
+    {% if all_requirements_met %}
+    <section class="outer-border" style="border-color: var(--success); background: #002200; text-align: center; padding: 20px;">
+        <h2 class="text-success">🎉 Scenario Complete!</h2>
+        <p>All objectives have been fulfilled. You may continue exploring or load a new scenario.</p>
+    </section>
+    {% endif %}
+
+    <div class="scenario-description">
+        {{ overall.description | htmlify }}
+    </div>
+</div>
+
+<div class="column-container">
+    <!-- LEFT COLUMN: Status & Navigation -->
+    <div class="status-column">
+        
+        <!-- 1. Top-level Characters -->
+        {% if characters %}
+        <section class="outer-border">
+            <h3>Active Characters</h3>
+            <table>
+                <thead>
+                    <tr><th>Name</th><th>Location</th></tr>
+                </thead>
+                <tbody>
+                {% for char in characters %}
+                    {% set char_url = url_for('play.play_character', id=char.id) %}
+                    {% set key = link_letters.next(char_url) %}
+                    <script>linkForKey["{{ key }}"] = "{{ char_url }}";</script>
                     <tr>
                         <td>
-                            {% for char in current_data.characters %}
-                                <div>
-                                    {% set link = url_for('play_character', char_id=char.char_id) %}
-                                    {% set letter = link_letters.next(link) %}
-                                    <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
-                                    <span class="hotkey-indicator">{{ letter }}</span>
-                                    <a href="{{ link }}">{{ char.char_name }}</a>
-                                </div>
-                            {% endfor %}
+                            <script>linkForKey["{{ key }}"] = "{{ char_url|safe }}";</script>
+                            <span class="hotkey-indicator">{{ key }}</span>
+                            <a href="{{ char_url }}">{{ char.name }}</a>
                         </td>
                         <td>
-                            {% for char in current_data.characters %}
-                                <div>
-                                    {% if char.loc_id %}
-                                        {% set link = url_for('play_location', loc_id=char.loc_id) %}
-                                        {% set letter = link_letters.next(link) %}
-                                        <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
-                                        <span class="hotkey-indicator">{{ letter }}</span>
-                                        <a href="{{ link }}">{{ char.loc_name }}</a>
-                                    {% endif %}
-                                </div>
-                            {% endfor %}
-                        </td>
-                    </tr>
-                </table>
-            {% endif %}
-            <!-- Top-level Locations -->
-            {% if current_data.locations %}
-                <table class="spacious">
-                    <tr>
-                        <th>Locations</th>
-                    </tr>
-                    {% for loc in current_data.locations %}
-                        {% set link = url_for('play_location', loc_id=loc.id) %}
-                        {% set letter = link_letters.next(link) %}
-                        <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
-                        <tr>
-                            <td>
-                                <span class="hotkey-indicator">{{ letter }}</span>
-                                <a href="{{ link }}">{{ loc.name }}</a>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </table>
-            {% endif %}
-            <!-- Items in General Storage -->
-            {% set has_item_attribs = current_data.items | selectattr('attribs') | list | length > 0 %}
-            {% if current_data.items %}
-                <table class="spacious">
-                    <tr>
-                        <th>General Storage</th>
-                        <th>Quantity</th>
-                        {% if has_item_attribs %}
-                        <th>Attributes</th>
-                        {% endif %}
-                    </tr>
-                    {% for item in current_data.items %}
-                        {% set link = url_for('play_item', item_id=item.id, main='universal') %}
-                        {% set letter = link_letters.next(link) %}
-                        <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
-                        <tr>
-                            <td>
-                                <span class="hotkey-indicator">{{ letter }}</span>
-                                <a href="{{ link }}">{{ item.name }}</a>
-                            </td>
-                            <td id="item-{{ item.id }}-quantity">
-                                {{ item.quantity | formatNum }}
-                                {% if item.is_ongoing %}<span title="currently in production">🔄</span>{% endif %}
-                            </td>
-                            {% if has_item_attribs %}
-                            <td>
-                                {% if item.attribs %}
-                                    {% for attrib_of in item.attribs[:2] %}
-                                        {% set link = url_for('play_attrib', attrib_id=attrib_of.attrib_id, subject_type='item', subject_id=item.id) %}
-                                        {% set letter = link_letters.next(link) %}
-                                        <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
-                                        <span class="hotkey-indicator">{{ letter }}</span>
-                                        <a href="{{ link }}">{{ attrib_of.attrib.name }}</a>{% if not attrib_of.attrib.binary %}<span>:</span>{% endif %}
-                                        {% if attrib_of.attrib.enum %}
-                                            {% set index = attrib_of.val | int %}
-                                            {% if index in range(attrib_of.attrib.enum | length) %}
-                                                {{ attrib_of.attrib.enum[index] }}
-                                            {% else %}
-                                                ?
-                                            {% endif %}
-                                        {% elif not attrib_of.attrib.binary %}
-                                             {{ attrib_of.val | formatNum }}
-                                        {% endif %}
-                                        <br>
-                                    {% else %}
-                                        (None)
-                                    {% endfor %}
-                                {% endif %}
-                            </td>
+                            {% if char.location_id %}
+                                <a href="{{ url_for('play.play_location', id=char.location_id) }}" class="label-like">
+                                    {{ char.location.name }}
+                                </a>
+                            {% else %}
+                                <span class="label-like">Nowhere</span>
                             {% endif %}
-                        </tr>
-                    {% endfor %}
-                </table>
-            {% endif %}
-        </div>
-        <div class="expand"><!-- righthand column -->
-            <style>
-                .scrollable {
-                    height: 300px;
-                    max-width: 400px;
-                    overflow-y: auto;
-                    padding: 10px;
-                    background-color: #1a1a1a;
-                    border: 1px solid #333;
-                    border-left: 2px solid #555;
-                    border-top: 2px solid #555;
-                    border-radius: 4px;
-                    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
-                }
-                .scrollable p {
-                    margin: 4px 0;
-                    line-height: 1.3;
-                    color: tan;
-                }
-                .scrollable .tight {
-                    line-height: 1.0;
-                    display: inline-block;
-                }
-            </style>
-            <div class="scrollable">
-                {% for entry in log_messages %}
-                    <p>
-                        <span class="tight">{{ entry.message | safe }}</span>
-                        {% if entry.count > 1 %}
-                        <span class="label-like"> (x{{ entry.count }})</span>
-                        {% endif %}
-                    </p>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </section>
+        {% endif %}
+
+        <!-- 2. General Storage (Universal Items) -->
+        {% if items %}
+        <section class="outer-border">
+            <h3>General Storage</h3>
+            <table>
+                <thead>
+                    <tr><th>Resource</th><th>Quantity</th></tr>
+                </thead>
+                <tbody>
+                {% for item in items %}
+                    {% set item_url = url_for('play.play_item', id=item.id) %}
+                    {% set pile = item.in_piles | selectattr('owner_id', 'equalto', GENERAL_ID) | first %}
+                    <tr>
+                        <td>
+                            {% call hotkey_link(item_url, link_letters) %}
+                                {{ item.name if not item.masked else item.name|mask_string }}
+                            {% endcall %}
+                        </td>
+                        <td>
+                            <span class="text-accent">{{ (pile.quantity if pile else 0) | formatNum }}</span>
+                            {# Show reload icon if production logic is active for this item #}
+                            {% if item.is_producing %}
+                                <span title="Producing..." class="spin">🔄</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </section>
+        {% endif %}
+
+        <!-- 3. Major Locations -->
+        {% if locations %}
+        <section class="outer-border">
+            <h3>Locations</h3>
+            <div class="loc-list">
+                {% for loc in locations %}
+                    <div class="loc-item">
+                        <a href="{{ url_for('play.play_location', id=loc.id) }}">📍 {{ loc.name }}</a>
+                    </div>
                 {% endfor %}
             </div>
-            <br>
-            <label>
-                <input type="checkbox" id="reload-toggle">
-                Reload this page every
-            </label>
-            <select id="reload-every">
-                <option value="4">4 sec</option>
-                <option value="10" selected>10 sec</option>
-                <option value="30">30 sec</option>
-            </select>
-        </div>
+        </section>
+        {% endif %}
     </div>
-    <script>
-        $(document).ready(() => {
-            function scrollLogToBottom() {
-                const logContainer = document.querySelector('.scrollable');
-                logContainer.scrollTop = logContainer.scrollHeight;
-            }
-            scrollLogToBottom();
 
-            {% if session.get('clear_local_storage') %}
-                localStorage.clear();
-                console.log("Local storage cleared.");
-            {% endif %}
+    <!-- RIGHT COLUMN: Feedback & Logs -->
+    <div class="log-column">
+        
+        <!-- Win Requirements -->
+        {% if win_reqs %}
+        <section class="outer-border">
+            <h3>Objectives</h3>
+            <ul class="objective-list">
+                {% for req in win_reqs %}
+                <li class="{{ 'text-success' if req.fulfilled else 'text-dim' }}">
+                    {{ '✅' if req.fulfilled else '⬜' }} {{ req.description }}
+                </li>
+                {% endfor %}
+            </ul>
+        </section>
+        {% endif %}
 
-            let reloadInterval;
-            function initializeReloadSettings() {
-                const $reloadToggle = $('#reload-toggle');
-                const $reloadEvery = $('#reload-every');
-                const toggleState = localStorage.getItem($reloadToggle.attr('id'));
-                $reloadToggle.prop('checked', toggleState === 'true');
-                $reloadEvery.prop('disabled', toggleState !== 'true');
-                const valEvery = localStorage.getItem($reloadEvery.attr('id'));
-                if (valEvery) {
-                    $reloadEvery.val(valEvery);
-                    setReloadInterval($reloadEvery);
-                }
-            }
-            initializeReloadSettings();
+        <!-- Game Message Log -->
+        <section class="outer-border">
+            <div class="flex-between">
+                <h3>Chronicle</h3>
+                <div class="reload-controls">
+                    <label class="label-like">Refresh:</label>
+                    <select id="reload-interval" class="mini-select">
+                        <option value="0">Off</option>
+                        <option value="5000">5s</option>
+                        <option value="15000" selected>15s</option>
+                        <option value="60000">1m</option>
+                    </select>
+                </div>
+            </div>
+            <div class="scrollable-log" id="game-log">
+                {% for msg in messages %}
+                    <div class="log-entry">
+                        <span class="label-like">[{{ msg.timestamp.strftime('%H:%M') }}]</span>
+                        {{ msg.message }}
+                        {% if msg.count > 1 %}
+                            <span class="count">x{{ msg.count }}</span>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+</div>
 
-            function setReloadInterval($field) {
-                let seconds = parseInt($field.val(), 10);
-                clearInterval(reloadInterval);
-                localStorage.setItem($field.attr('id'), seconds);
-                const $toggle = $('#reload-toggle');
-                if (!$toggle.is(':checked')) {
-                    return;
-                }
-                reloadInterval = setInterval(() => {
-                    location.reload();
-                }, seconds * 1000);
-                console.log(`set reload interval to ${seconds} seconds`);
-            }
-            $('#reload-every').on('change', function() {
-                setReloadInterval($(this));
-                location.reload();
-            });
-            $('#reload-toggle').on('change', function() {
-                const $reloadEvery = $('#reload-every');
-                const $toggle = $(this);
-                const isChecked = $toggle.is(':checked');
-                localStorage.setItem($toggle.attr('id'), isChecked);
-                if (isChecked) {
-                    $reloadEvery.prop('disabled', false);
-                    setReloadInterval($reloadEvery);
-                    location.reload();
-                } else {
-                    $reloadEvery.prop('disabled', true);
-                    clearInterval(reloadInterval);
-                }
-            });
-        });
-    </script>
+<script>
+    // Handle Auto-Reload Logic
+    let reloadTimer = null;
+    const reloadSelect = document.getElementById('reload-interval');
+
+    function startTimer() {
+        const ms = parseInt(reloadSelect.value);
+        if (reloadTimer) clearInterval(reloadTimer);
+        if (ms > 0) {
+            reloadTimer = setInterval(() => location.reload(), ms);
+        }
+    }
+
+    reloadSelect.addEventListener('change', startTimer);
+    startTimer();
+
+    // Keep log scrolled to bottom
+    const log = document.getElementById('game-log');
+    log.scrollTop = log.scrollHeight;
+</script>
+
+<style>
+    .flex-between { display: flex; justify-content: space-between; align-items: center; }
+    .objective-list { list-style: none; padding: 0; }
+    .objective-list li { margin-bottom: 8px; }
+    .mini-select { background: #000; color: var(--accent); border: 1px solid var(--border); font-size: 0.8em; }
+    .spin { display: inline-block; animation: rotation 2s infinite linear; }
+    @keyframes rotation { from { transform: rotate(0deg); } to { transform: rotate(359deg); } }
+    .loc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+</style>
 {% endblock %}

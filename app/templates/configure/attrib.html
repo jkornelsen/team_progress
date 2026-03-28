@@ -1,91 +1,130 @@
-{% extends 'base.html' %}
+{% extends 'layout/base.html' %}
+
 {% block upper_left %}
-    <div class="nav-container">
-        <a class="upper-left" href="{{ url_for("overview") }}">overview</a>
+    <nav class="nav-container">
+        <a href="{{ url_for('play.overview') }}">[o]verview</a>
         <span class="separator">|</span>
-        <a href="{{ url_for("configure_index") }}">main setup</a>
-    </div>
+        <a href="{{ url_for('configure.index') }}">main setup</a>
+    </nav>
 {% endblock %}
+
 {% block content %}
-    <h1>Attribute Setup</h1>
-    <p class="info">Stat or state of a character or item, such as Strength or Poisoned.</p>
-    <p class="info">
-        Alternatively, set up an item to represent a status
-        that needs to be incremented,
-        such as the remaining HP of a tree to be felled.
-    </p>
-    <form method="post">
-        <label for="attrib-name">Name:</label>
-        <input type="text"
-               id="attrib-name"
-               name="attrib_name"
-               value="{{ current.name }}"
-               required>
-        <br>
-        <label for="attrib-description">Description:</label>
-        <textarea id="attrib-description" name="attrib_description" rows="10" cols="50">{{ current.description }}</textarea>
-        <br>
-        <label>
-            <input type="radio"
-                   name="value_type"
-                   id="type_number"
-                   value="number"
-                   {% if not current.binary %}checked{% endif %}>
-            Number
-        </label>
-        <label>
-            <input type="radio"
-                   name="value_type"
-                   id="type_binary"
-                   value="binary"
-                   {% if current.binary %}checked{% endif %}>
-            True/False
-        </label>
-        <br>
-        <div id="enum-container">
-            <label for="enum">Enumerated Values:</label>
-            <textarea id="enum" name="enum" rows="5" cols="15">{{ '\n'.join(current.enum) }}</textarea>
-            <br>
-        </div>
-        <div class="footer-buttons">
-            <button type="submit" id="btn-save" name="save_changes">Save and Close</button>
-            <button type="submit" id="btn-duplicate" name="make_duplicate">Save and Duplicate</button>
-            <button type="submit" id="btn-cancel" name="cancel_changes" formnovalidate>Close without Saving</button>
-            <button type="submit"
-                    id="btn-delete"
-                    name="delete_attrib"
-                    class="dangerous-button">Delete Attribute</button>
+<div class="configure-attrib">
+    <h1>Attribute Setup: {{ attrib.name if attrib else 'New Attribute' }}</h1>
+    <p class="label-like">Define a stat or state, such as "Strength", "Experience", or "Poisoned".</p>
+    
+    <form method="POST">
+        <!-- 1. Identity (Entity Table) -->
+        <section class="outer-border">
+            <h3>General Info</h3>
+            <div class="form-group">
+                <label for="name">Attribute Name:</label>
+                <input type="text" id="name" name="name" value="{{ attrib.name if attrib }}" required class="full-width">
+            </div>
+            <div class="form-group spacious-top">
+                <label for="description">Description:</label>
+                <textarea id="description" name="description" rows="3" class="full-width">{{ attrib.description if attrib }}</textarea>
+            </div>
+        </section>
+
+        <!-- 2. Logic Type (Attrib Table) -->
+        <section class="outer-border">
+            <h3>Value Definition</h3>
+            <div class="column-container">
+                <div class="type-selection">
+                    <label>Value Type:</label><br>
+                    <label class="radio-label">
+                        <input type="radio" name="value_type" value="number" 
+                               {{ 'checked' if not attrib or (not attrib.is_binary and not attrib.enum_list) }}> 
+                        Standard Number
+                    </label><br>
+                    <label class="radio-label">
+                        <input type="radio" name="value_type" value="binary" 
+                               {{ 'checked' if attrib and attrib.is_binary }}> 
+                        True / False (Binary)
+                    </label><br>
+                    <label class="radio-label">
+                        <input type="radio" name="value_type" value="enum" 
+                               {{ 'checked' if attrib and attrib.enum_list }}> 
+                        Enumerated List (States)
+                    </label>
+                </div>
+
+                <div id="enum-container" class="flex-grow {{ 'hidden' if not attrib or not attrib.enum_list }}">
+                    <label for="enum_values">State Labels (One per line):</label>
+                    <textarea id="enum_values" name="enum_values" rows="5" class="full-width" 
+                              placeholder="Empty&#10;Low&#10;Medium&#10;High&#10;Full">{{ attrib.enum_list | join('\n') if attrib and attrib.enum_list }}</textarea>
+                    <small class="label-like">Stored as 0, 1, 2... based on line index.</small>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer Actions -->
+        <div class="footer-actions flex-between">
+            <div class="danger-zone">
+                {% if attrib %}
+                    <button type="submit" name="delete" class="dangerous-button" onclick="return confirm('Delete this attribute? This will remove it from all characters and items!')">Delete Attribute</button>
+                {% endif %}
+            </div>
+            <div class="save-zone">
+                <a href="{{ url_for('configure.index') }}" class="btn">Cancel</a>
+                {% if attrib %}
+                    <button type="submit" name="duplicate" class="btn">Save & Duplicate</button>
+                {% endif %}
+                <button type="submit" name="save" class="go-button">Save Changes</button>
+            </div>
         </div>
     </form>
-    <script>
-        $(document).ready(() => {
-            {% if current.id > 0 %}
-                $('#btn-delete').removeAttr('disabled');
-            {% else %}
-                $('#btn-delete').attr('disabled', 'disabled');
-            {% endif %}
+</div>
 
-            const enumTextbox = $('#enum');
-            const enumContainer = $('#enum-container');
-            const numberRadio = $('#type_number');
-            const binaryRadio = $('#type_binary');
-            function enableDisable() {
-                if (enumTextbox.val().trim() !== "") {
-                    numberRadio.prop('checked', true);
-                    binaryRadio.prop('disabled', true);
-                } else {
-                    binaryRadio.prop('disabled', false);
-                }
-                if (binaryRadio.prop('checked')) {
-                    enumContainer.css('display', 'none');
-                } else {
-                    enumContainer.css('display', 'block');
-                }
-            }
-            enumTextbox.on('input', enableDisable);
-            numberRadio.on('change', enableDisable);
-            binaryRadio.on('change', enableDisable);
-            enableDisable();
-        });
-    </script>
+<script>
+<!-- team_progress/app/templates/configure/attrib.html -->
+
+<script>
+    const enumTextbox = document.getElementById('enum_values');
+    const enumContainer = document.getElementById('enum-container');
+    const radioNumber = document.querySelector('input[name="value_type"][value="number"]');
+    const radioBinary = document.querySelector('input[name="value_type"][value="binary"]');
+    const radioEnum = document.querySelector('input[name="value_type"][value="enum"]');
+
+    function syncAttribUI() {
+        const hasText = enumTextbox.value.trim() !== "";
+        const selectedType = document.querySelector('input[name="value_type"]:checked').value;
+
+        // 1. If text exists in the Enum box, force the "Enum" radio and lock the others
+        if (hasText) {
+            radioEnum.checked = true;
+            radioNumber.disabled = true;
+            radioBinary.disabled = true;
+        } else {
+            radioNumber.disabled = false;
+            radioBinary.disabled = false;
+        }
+
+        // 2. Control visibility of the text area
+        // Show if "Enum" is selected OR if it contains text (to prevent accidental hiding)
+        if (radioEnum.checked || hasText) {
+            enumContainer.classList.remove('hidden');
+        } else {
+            enumContainer.classList.add('hidden');
+        }
+    }
+
+    // Attach listeners
+    enumTextbox.addEventListener('input', syncAttribUI);
+    [radioNumber, radioBinary, radioEnum].forEach(radio => {
+        radio.addEventListener('change', syncAttribUI);
+    });
+
+    // Initial run on page load
+    window.onload = syncAttribUI;
+</script>
+
+<style>
+    .type-selection { min-width: 250px; }
+    .full-width { width: 100%; box-sizing: border-box; background: #000; color: #fff; border: 1px solid var(--border); padding: 8px; font-family: inherit; }
+    .radio-label { display: block; cursor: pointer; font-size: 0.9em; margin: 5px 0; }
+    .footer-actions { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); }
+    .hidden { display: none; }
+</style>
 {% endblock %}

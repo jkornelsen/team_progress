@@ -1,686 +1,327 @@
-{% extends 'base.html' %}
+{% extends 'layout/base.html' %}
+{% from 'layout/macros.html' import hotkey %}
+
 {% block upper_left %}
-    <div class="nav-container">
-        <a class="upper-left" href="{{ url_for("overview") }}">[o]verview</a>
+    <nav class="nav-container">
+        <a href="{{ url_for('play.overview') }}">[o]verview</a>
         <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for("configure_index") }}">[m]ain setup</a>
-        <span class="separator">|</span>
-        <a class="upper-left"
-           href="{{ url_for('configure_event', event_id=current.id) }}">event s[e]tup</a>
-    </div>
+        <a href="{{ url_for('configure.edit_event', id=event.id) }}">event s[e]tup</a>
+    </nav>
 {% endblock %}
+
 {% block content %}
-    <script>
-        const linkForKey = {
-            'o': '{{ url_for('overview') }}',
-            'm': '{{ url_for('configure_index') }}',
-            'e': '{{ url_for('configure_event', event_id=current.id) }}',
-        };
-        const funcForKey = {};
-        $(document).ready(() => {
-            if (isMobile) {
-                return;
-            }
-            $(document).on('keypress', (event) => {
-                const key = event.key;
-                if (key === 'r') {
-                    $('#roll-btn').click();
-                {% if current.outcome_type in ['fourway', 'numeric'] %}
-                } else if (key === 'd') {
-                    $('#reset-die-btn').click();
-                {% endif %}
-                } else if (linkForKey[key]) {
-                    window.location.href = linkForKey[key];
-                } else if (funcForKey[key]) {
-                    funcForKey[key]();
-                } else {
-                    return;
-                }
-                event.preventDefault();
-                event.stopPropagation();
-            });
-        });
-    </script>
-    {% set referrer_link = session.get('referrer_link') %}
-    {% if referrer_link %}
-        {% set link = referrer_link.get('url', '#') | safe %}
-        {% set letter = link_letters.next(link) %}
-        <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
-        &larr; back to
-        <a href="{{ link }}">{{ referrer_link.get('name', 'Previous') }}</a>
-        <span class="hotkey-indicator">{{ letter }}</span>
-        <br>
-    {% endif %}
-    <h1>{{ current.name }}</h1>
-    {% if current.description %}<p>{{ current.description|htmlify }}</p>{% endif %}
-    <table class="spacious">
-        <tr>
-            <td>
-                <form method="post"
-                      action="{{ url_for('play_event', event_id=current.id) }}"
-                      class="">
-                    {% if current.outcome_type == 'fourway' %}
-                        <label for="difficulty-select" style="padding-left: 10px;">Difficulty (resets the die):</label>
-                        <select id="difficulty-select" name="difficulty">
-                            <option value="0.0">None</option>
+<div class="event-play-container">
+    <header class="entity-header">
+        <h1>⚡ {{ event.name }}</h1>
+        {% if event.description %}
+            <div class="description-box">{{ event.description | htmlify }}</div>
+        {% endif %}
+    </header>
+
+    <div class="column-container">
+        <!-- LEFT COLUMN: Execution Setup -->
+        <div class="setup-column">
+            <section class="outer-border">
+                <h3>Dice Setup</h3>
+                <form id="event-form">
+                    {% if event.outcome_type in ['fourway', 'numeric'] %}
+                    <div class="difficulty-section spacious-bottom">
+                        <label for="difficulty-select">Difficulty:</label>
+                        <select id="difficulty-select" class="full-width">
+                            <option value="0.0">None (0%)</option>
                             <option value="0.25">Easy (-25%)</option>
                             <option value="0.40" selected>Moderate (-40%)</option>
                             <option value="0.55">Challenging (-55%)</option>
                             <option value="0.70">Very Hard (-70%)</option>
                             <option value="0.85">Extreme (-85%)</option>
                         </select>
-                        <br>
-                        <label for="threshold" style="padding-left: 10px;">Major/Minor Threshold:</label>
-                        <span id="threshold">{{ (current.numeric_range[1] * 0.45) | formatNum }}</span>
-                    {% endif %}
-                    {% if current.outcome_type in ['fourway', 'numeric'] %}
-                        <div style="background-color: black; margin: 3px; padding: 10px">
-                            <label>[A]djust / Focus:</label>
-                            <label for="adjust-die-max">
-                                <input type="radio" id="adjust-die-both" name="adjusting" value="max" checked>
-                                <i>Both</i>
-                            </label>
-                            <label for="adjust-die-min">
-                                <input type="radio" id="adjust-die-min" name="adjusting" value="min">
-                                <i>Min</i>
-                            </label>
-                            <label for="adjust-die-max">
-                                <input type="radio" id="adjust-die-max" name="adjusting" value="max">
-                                <i>Max</i>
-                            </label>
-                            <br>
-                            <label for="die-min">Die Min:</label>
-                            <input type="text"
-                                   id="die-min"
-                                   value="{{ current.numeric_range[0] }}"
-                                   size="5">
-                            <button type="button"
-                                    id="reset-die-btn">
-                                    Reset [d]ie
-                            </button>
-                            <br>
-                            <label for="die-max">Die Max:</label>
-                            <input type="text"
-                                   id="die-max"
-                                   value="{{ current.numeric_range[1] }}"
-                                   size="5">
-                            <br>
-                    {% elif current.outcome_type == 'determined' %}
-                        <div style="background-color: black; margin: 3px; padding: 10px">
-                            <label for="single-number">Calculated Value:</label>
-                            <input type="text"
-                                   id="single-number"
-                                   value="{{ current.single_number }}"
-                                   size="5">
-                            <br>
-                    {% endif %}
-                    {% if current.outcome_type in ['fourway', 'numeric', 'determined'] %}
-                            {% for det in current.determining_entities|sort(attribute='entity.name') %}
-                                {% set entity = det.entity %}
-                                {% set det_ref = "_" ~ loop.index %}
-                                <li style="margin-top: 5px">
-                                    {{ det.label ~ ": " if det.label }}
-                                    {{ entity.name }}
-                                    <select class="container-for-det"
-                                            id="det{{ det_ref }}"
-                                            data-role="determining"
-                                            data-det-label="{{ det.label }}"
-                                            data-type="{{ entity.typename() }}"
-                                            data-id="{{ entity.id }}"
-                                            data-operation="{{ det.operation }}"
-                                            data-mode="{{ det.mode }}">
-                                        <option value="" selected>(Select to adjust roll)</option>
-                                        {% for char in game_data.characters %}
-                                            {% set adjust_factor = None %}
-                                            {% if entity.typename() == 'attrib' and entity.id in char.attribs %}
-                                                {% set adjust_factor = char.attribs[entity.id].val %}
-                                            {% elif entity.typename() == 'item' and entity.id in char.owned_items %}
-                                                {% set adjust_factor = char.owned_items[entity.id].quantity %}
-                                            {% endif %}
-                                            {% if adjust_factor is not none %}
-                                                <option value="{{ adjust_factor }}"
-                                                        data-container-id="{{ char.id }}"
-                                                        data-container-type="{{ char.typename() }}">
-                                                    {{ char.name }}
-                                                    {% if entity.typename() == 'attrib' %}
-                                                    {% else %}
-                                                        has
-                                                    {% endif %}
-                                                    : {{ adjust_factor | formatNum }}
-                                                </option>
-                                            {% endif %}
-                                        {% endfor %}
-                                        {% for item in game_data.items %}
-                                            {% set adjust_factor = None %}
-                                            {% if entity.typename() == 'attrib' and entity.id in item.attribs %}
-                                                {% set adjust_factor = item.attribs[entity.id].val %}
-                                            {% elif entity.typename() == 'item' and entity.id == item.id and item.storage_type == 'universal' %}
-                                                {% set adjust_factor = item.pile.quantity %}
-                                            {% endif %}
-                                            {% if adjust_factor is not none %}
-                                                <option value="{{ adjust_factor }}"
-                                                        data-container-id="{{ item.id }}"
-                                                        data-container-type="{{ item.typename() }}">
-                                                    {% if entity.typename() == 'attrib' %}
-                                                        {{ item.name }}
-                                                    {% else %}
-                                                        (general)
-                                                    {% endif %}
-                                                    : {{ adjust_factor | formatNum }}
-                                                </option>
-                                            {% endif %}
-                                        {% endfor %}
-                                        {% if entity.typename() == 'item' %}
-                                            {% for loc in game_data.locations %}
-                                                {% for item_at in loc.items_at.get(entity.id, []) %}
-                                                    {% set adjust_factor = item_at.quantity %}
-                                                    <option value="{{ adjust_factor }}"
-                                                            data-container-id="{{ loc.id }}"
-                                                            data-container-type="{{ loc.typename() }}">
-                                                        at {{ loc.name }}: {{ adjust_factor | formatNum }}
-                                                    </option>
-                                                {% endfor %}
-                                            {% endfor %}
-                                        {% endif %}
-                                    </select>
-                                    {% set letter = link_letters.next() %}
-                                    <button type="button"
-                                            class="fill-det-btn"
-                                            id="fill-det-btn{{ det_ref }}"
-                                            data-id="{{ entity.id }}"
-                                            data-type="{{ entity.typename() }}">
-                                        [{{ letter }}]
-                                        {{ operations[det.operation].text }}
-                                        {% if det.mode %}
-                                            ({{ modes[det.mode] }})
-                                        {% endif %}
-                                    </button>
-                                    <script>
-                                    funcForKey['{{ letter }}'] = () => {
-                                        document.querySelector('#fill-det-btn{{ det_ref }}').click();
-                                    };
-                                    </script>
-                                {% endfor %}
-                            </li>
+                    </div>
+                    <div class="die-adjustment-grid">
+                        <div class="form-group">
+                            <label>Die Min:</label>
+                            <input type="number" id="die-min-input" name="die_min" value="{{ event.numeric_range[0] }}">
                         </div>
-                    {% endif %}
-                    {% if current.outcome_type == 'coordinates' %}
-                        {% set outerscope = namespace(locs_with_grids=[]) %}
-                        {% for loc in game_data.locations if max(loc.grid.dimensions) %}
-                            {% set _ = outerscope.locs_with_grids.append(loc) %}
-                        {% endfor %}
-                        {% if outerscope.locs_with_grids %}
-                            <div class="select-box">
-                                <label for="location-select">Choose grid coordinates for:</label>
-                                <select id="location-select">
-                                    {% for loc in outerscope.locs_with_grids|sort(attribute='name') %}
-                                        <option value="{{ loc.id }}">{{ loc.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        {% else %}
-                            <h3 style="color: tan">No locations have grids yet.</h3>
-                        {% endif %}
-                    {% endif %}
-                    <!-- Coordinates requires locs_with_grids. -->
-                    {% if current.outcome_type not in ['coordinates', 'determined'] 
-                          or (current.outcome_type == 'coordinates' and outerscope.locs_with_grids) %}
-                        <div style="margin-top: 20px; text-align: center">
-                            <button type="button" id="roll-btn">[R]oll</button>
-                            <i><span id="roll-counter" class="label-like">
-                                <span style="opacity: 0">Count: 0</span>
-                            </span></i>
+                        <div class="form-group">
+                            <label>Die Max:</label>
+                            <input type="number" id="die-max-input" name="die_max" value="{{ event.numeric_range[1] }}">
                         </div>
+                    </div>
+                    
+                    {% if event.outcome_type == 'fourway' %}
+                    <div class="threshold-info label-like text-dim spacious-top">
+                        Major Success Threshold: <span id="threshold-display" class="text-accent">--</span>
+                    </div>
+                    {% endif %}
                     {% endif %}
                 </form>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <div id="outcome-display" style="height: 3em;"></div>
-            </td>
-        </tr>
-        {% if current.changed_entities %}
-            <tr id="changed-row" style="opacity: 0.1;">
-                <td>
-                    <div style="background-color: black; margin: 3px; padding: 10px">
-                        <label>Affected Values:</label>
-                        {% for chg in current.changed_entities %}
-                            <form method="post"
-                                  action="{{ url_for('play_event', event_id=current.id) }}"
-                                  class="save-when-submitted">
-                                <!-- For example, a character is the container and an
-                                     attribute is the key, so on the server we would modify
-                                     that attribue of that character. -->
-                                <input type="hidden" name="key_id" value="{{ chg.id }}">
-                                <input type="hidden" name="key_type" value="{{ chg.typename() }}">
-                                {% set chg_ref = "_" ~ chg.typename() ~ "_" ~ chg.id %}
-                                <input type="hidden"
-                                       name="container_id"
-                                       value="0"
-                                       id="container_id{{ chg_ref }}">
-                                <input type="hidden"
-                                       name="container_type"
-                                       value=""
-                                       id="container_type{{ chg_ref }}">
-                                <li style="margin-top: 5px">
-                                    {{ chg.name }}
-                                    <select class="container-for-changed"
-                                            id="changed{{ chg_ref }}"
-                                            data-role="changed"
-                                            data-id="{{ chg.id }}"
-                                            data-type="{{ chg.typename() }}">
-                                        <option value="">(Select for changing value)</option>
-                                        {% for char in game_data.characters %}
-                                            {% set oldval = None %}
-                                            {% if chg.typename() == 'attrib' and chg.id in char.attribs %}
-                                                {% set oldval = char.attribs[chg.id].val %}
-                                            {% elif chg.typename() == 'item' and chg.id in char.owned_items %}
-                                                {% set oldval = char.owned_items[chg.id].quantity %}
-                                            {% endif %}
-                                            {% if oldval is not none %}
-                                                <option value="{{ oldval }}"
-                                                        data-container-id="{{ char.id }}"
-                                                        data-container-type="{{ char.typename() }}">
-                                                    {{ char.name }}
-                                                    {% if chg.typename() == 'attrib' %}
-                                                        stat
-                                                    {% else %}
-                                                        has
-                                                    {% endif %}
-                                                    : {{ oldval | formatNum }}
-                                                </option>
-                                            {% endif %}
-                                        {% endfor %}
-                                        {% for item in game_data.items %}
-                                            {% set oldval = None %}
-                                            {% if chg.typename() == 'attrib' and chg.id in item.attribs %}
-                                                {% set oldval = item.attribs[chg.id].val %}
-                                            {% elif chg.typename() == 'item' and chg.id == item.id and item.storage_type == 'universal' %}
-                                                {% set oldval = item.pile.quantity %}
-                                            {% endif %}
-                                            {% if oldval is not none %}
-                                                <option value="{{ oldval }}"
-                                                        data-container-id="{{ item.id }}"
-                                                        data-container-type="{{ item.typename() }}">
-                                                    {{ item.name }}
-                                                    {% if chg.typename() == 'attrib' %}
-                                                        stat
-                                                    {% else %}
-                                                        general
-                                                    {% endif %}
-                                                    : {{ oldval | formatNum }}
-                                                </option>
-                                            {% endif %}
-                                        {% endfor %}
-                                        {% if chg.typename() == 'item' %}
-                                            {% for loc in game_data.locations %}
-                                                {% for item_at in loc.items_at.get(chg.id, []) %}
-                                                    {% set oldval = item_at.quantity %}
-                                                    <option value="{{ oldval }}"
-                                                            data-container-id="{{ loc.id }}"
-                                                            data-container-type="{{ loc.typename() }}">
-                                                        at {{ loc.name }}: {{ oldval | formatNum }}
-                                                    </option>
-                                                {% endfor %}
-                                            {% endfor %}
-                                        {% endif %}
-                                    </select>
-                                    {% set letter = link_letters.next() %}
-                                    <button type="button"
-                                            class="fill-changed-btn"
-                                            id="fill-changed-btn{{ chg_ref }}"
-                                            data-chg-ref="{{ chg_ref }}">[{{ letter }}] Fill</button>
-                                    <script>
-                                        funcForKey['{{ letter }}'] = () => {
-                                            document.querySelector('#fill-changed-btn{{ chg_ref }}').click();
-                                        };
-                                    </script>
-                                    → <input type="text" name="newval" id="newval{{ chg_ref }}" size="8">
-                                    {% set letter = link_letters.next() %}
-                                    <button type="submit"
-                                            name="change_entity"
-                                            class="change-entity-btn"
-                                            id="apply{{ chg_ref }}"
-                                            data-chg-ref="{{ chg_ref }}">[{{ letter }}] Apply</button>
-                                    <script>
-                                        funcForKey['{{ letter }}'] = () => {
-                                            document.querySelector(`#apply{{ chg_ref }}`).click();
-                                        };
-                                    </script>
-                                </li>
-                                <br>
-                            </form>
+                <p class="label-like">Click to Apply Modifiers to Dice:</p>
+                {% for det in event.determinants %}
+                <div class="modifier-row outer-border">
+                    <span>{{ det.label or det.entity.name }}</span>
+                    <select class="det-source-select" 
+                            data-op="{{ det.operation }}" 
+                            data-mode="{{ det.mode }}">
+                        <option value="0">-- Select Entity --</option>
+                        {% for ent in eligible_entities %}
+                            <option value="{{ get_val(ent, det) }}">{{ ent.name }} ({{ get_val(ent, det) }})</option>
                         {% endfor %}
+                    </select>
+                    <button type="button" class="btn-sm fill-btn">Add Mod</button>
+                </div>
+                {% endfor %}
+                <div class="spacious-top text-center">
+                    <button id="roll-btn" class="go-button" style="width: 100%; font-size: 1.2em;">
+                        [R]oll for Outcome
+                    </button>
+                </div>
+            </section>
+        </div>
+
+        <!-- RIGHT COLUMN: Results & Application -->
+        <div class="results-column">
+            <section class="outer-border result-box" id="result-display">
+                <h3 class="text-dim">Outcome</h3>
+                <div id="outcome-text" class="outcome-placeholder">
+                    Roll to see result...
+                </div>
+            </section>
+                
+            <!-- Apply the roll result to selected containers -->
+            <section id="apply-section" class="outer-border hidden">
+                <h3>Apply Result to Items or Attributes</h3>
+                <p class="label-like text-dim">Select a character or location to apply the result to.</p>
+
+                {% for change in event.changes %}
+                <div class="change-row outer-border" data-key-id="{{ change.id }}" data-key-type="{{ change.entity_type }}">
+                    <div class="flex-between align-center">
+                        <strong>Modify {{ change.name }}:</strong>
+                        
+                        <select class="container-select">
+                            <option value="" data-current="0">-- Select Container --</option>
+                            
+                            {# Option group for Characters who have this stat/item #}
+                            <optgroup label="Characters">
+                                {% for char in eligible_chars %}
+                                    {% set current_val = get_val(char, change) %}
+                                    <option value="{{ char.id }}" data-current="{{ current_val }}">
+                                        {{ char.name }} (Current: {{ current_val | formatNum }})
+                                    </option>
+                                {% endfor %}
+                            </optgroup>
+
+                            {# Option group for Locations or General Storage #}
+                            <optgroup label="World/Storage">
+                                {% for loc in eligible_locs %}
+                                    {% set current_val = get_val(loc, change) %}
+                                    <option value="{{ loc.id }}" data-current="{{ current_val }}">
+                                        {{ loc.name }} (Current: {{ current_val | formatNum }})
+                                    </option>
+                                {% endfor %}
+                            </optgroup>
+                        </select>
                     </div>
-                </td>
-            </tr>
-        {% endif %}
-    </table>
-    {% if message %}<p>{{ message }}</p>{% endif %}
-    <script>
-        $(document).ready(() => {
-            function makeStorageKey(role, detLabel, fieldType, fieldId) {
-                const labelStr = detLabel || "";
-                const matchResult = labelStr.match(/[a-zA-Z0-9]+/g);  // only the alphanumeric parts
-                const sanitizedLabel = matchResult ? matchResult.join('') : '';
-                return `${role}_${sanitizedLabel}_${fieldType}_${fieldId}`;
+
+                    <div class="apply-controls spacious-top flex-between align-center">
+                        <div class="preview-text">
+                            Value: <span class="text-dim old-val">0</span> 
+                            &rarr; <span class="text-accent new-val-preview">--</span>
+                        </div>
+                        <button type="button" class="btn apply-btn">Apply [A]ction</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </section>
+        </div>
+    </div>
+</div>
+
+<script>
+    const baseMin = {{ event.numeric_range[0] if event.numeric_range else 1 }};
+    const baseMax = {{ event.numeric_range[1] if event.numeric_range else 20 }};
+    const baseSpan = baseMax - baseMin + 1;
+
+    const diffSelect = document.getElementById('difficulty-select');
+    const minInput = document.getElementById('die-min-input');
+    const maxInput = document.getElementById('die-max-input');
+    const thresholdSpan = document.getElementById('threshold-display');
+
+    const eventId = {{ event.id }};
+    const resultText = document.getElementById('outcome-text');
+    const resolution = document.getElementById('resolution-actions');
+
+    let lastRollValue = 0;
+
+    function updateDieLogic() {
+        if (!diffSelect) return;
+
+        const difficulty = parseFloat(diffSelect.value);
+        const adjustment = baseSpan * difficulty;
+
+        // Apply scaling
+        const newMin = Math.round(baseMin - adjustment);
+        const newMax = Math.round(baseMax - adjustment);
+
+        minInput.value = newMin;
+        maxInput.value = newMax;
+
+        // Success Threshold (45% Rule)
+        const currentSpan = newMax - newMin + 1;
+        const threshold = Math.round(currentSpan * 0.45);
+        if (thresholdSpan) thresholdSpan.innerText = `≥ ${threshold}`;
+    }
+
+    if (diffSelect) {
+        diffSelect.addEventListener('change', updateDieLogic);
+        // Also update if min/max are edited manually
+        minInput.addEventListener('input', updateDieLogic); 
+        maxInput.addEventListener('input', updateDieLogic);
+        
+        // Initial run
+        updateDieLogic();
+    }
+
+    /**
+     * Soft Capped logic.
+     * Prevents massive stats from breaking the game by using a log scale.
+     */
+    function scaledLog(value) {
+        if (value === 0) return 0;
+        const sign = Math.sign(value);
+        const magnitude = Math.abs(value);
+        // Base 10 log, scaled by 5 (matching the old project's logic)
+        return sign * 5 * (Math.log10(magnitude + 1));
+    }
+
+    /**
+     * Performs the actual arithmetic based on the operation selected in the determinant.
+     */
+    function calculate(base, mod, op) {
+        switch (op) {
+            case '+': return base + mod;
+            case '-': return base - mod;
+            case '*': return base * mod;
+            case '/': return mod !== 0 ? base / mod : base;
+            default: return base;
+        }
+    }
+
+    document.querySelectorAll('.fill-btn').forEach(btn => {
+        btn.onclick = () => {
+            const select = btn.parentElement.querySelector('.det-source-select');
+            const selectedOption = select.selectedOptions[0];
+            
+            // 1. Get the raw value from the selected Character/Item
+            let val = parseFloat(select.value) || 0;
+            if (selectedOption.index === 0) return; // Ignore placeholder
+
+            // 2. Apply Mode (Soft Capped or Half)
+            const mode = select.dataset.mode;
+            if (mode === 'log') {
+                val = scaledLog(val);
+            } else if (mode === 'half') {
+                val = val / 2;
             }
 
-            // Remember defaults for select boxes in client side storage.
-            const $selectBoxes = $('.container-for-changed, .container-for-det, #difficulty-select, #location-select');
-            const $dieFields = $('#die-min, #die-max');
-            function saveSelections() {
-                console.log("Saving default form selections.");
-                const eventDefaults = JSON.parse(localStorage.getItem('event_selection_defaults') || '{}');
-                $selectBoxes.each((index, select) => {
-                    const $select = $(select);
-                    const role = $select.data('role');
-                    const is_container = (role !== undefined);
-                    let storageKey;
-                    if (is_container) {
-                        const detLabel = $select.data('det-label');
-                        const fieldType = $select.data('type');
-                        const fieldId = $select.data('id');
-                        storageKey = makeStorageKey(role, detLabel, fieldType, fieldId);
-                    } else {
-                        storageKey = $select.attr('id');
-                    }
-                    const selectedValue = $select.val();
-                    const $selectedOption = $select.find('option:selected');
-                    eventDefaults[storageKey] = {
-                        id: $selectedOption.data('container-id') || null,
-                        type: $selectedOption.data('container-type') || null,
-                        value: selectedValue
-                    };
-                });
-                localStorage.setItem('event_selection_defaults', JSON.stringify(eventDefaults));
-                $dieFields.each((index, input) => {
-                    const $input = $(input);
-                    const inputId = $input.attr('id');
-                    const specifiedValue = $input.val();
-                    sessionStorage.setItem(inputId, specifiedValue);
-                });
-            }
+            // 3. Get the operation (+, -, *, /)
+            const op = select.dataset.op;
 
-            // Load selections from local storage.
-            function loadSelections() {
-                console.log("Loading default form selections.");
-                const eventDefaults = JSON.parse(localStorage.getItem('event_selection_defaults') || '{}');
-                $selectBoxes.each((index, select) => {
-                    const $select = $(select);
-                    const role = $select.data('role');
-                    const is_container = (role !== undefined);
-                    let storageKey;
-                    if (is_container) {
-                        const detLabel = $select.data('det-label');
-                        const fieldType = $select.data('type');
-                        const fieldId = $select.data('id');
-                        storageKey = makeStorageKey(role, detLabel, fieldType, fieldId);
-                    } else {
-                        storageKey = $select.attr('id');
-                    }
-                    const storedObj = eventDefaults[storageKey];
-                    if (!storedObj || !storedObj.value || $('#'+select.id+' option[value="' + storedObj.value + '"]').length === 0) {
-                        const indexToSelect = (select.id === 'difficulty-select')
-                            ? 2 // Moderate difficulty
-                            : 1; // First non-empty option
-                        const $optionToSelect = $(select.options[indexToSelect]);
-                        if ($optionToSelect.length > 0) {
-                            $optionToSelect.prop('selected', true);
-                        }
-                        return;
-                    }
-                    //if (process.env.NODE_ENV !== 'production')
-                    console.log(`${storageKey} default ${storedObj.type} ${storedObj.id}`);
-                    if (is_container) {
-                        $select.find('option').each((index, option) => {
-                            const $option = $(option);
-                            if ($option.data('container-type') === storedObj.type &&
-                                    $option.data('container-id') === storedObj.id) {
-                                $option.prop('selected', true);
-                                return false;  // exit loop
-                            }
-                            return true;
-                        });
-                    } else {
-                        $select.val(storedObj.value);
-                    }
-                });
-                $dieFields.each((index, input) => {
-                    const $input = $(input);
-                    const inputId = $input.attr('id');
-                    const storedValue = sessionStorage.getItem(inputId);
-                    if (storedValue !== null) {
-                        $input.val(storedValue);
-                    }
-                });
-            }
-            loadSelections();
+            // 4. Update the Die Min/Max inputs
+            const minInput = document.getElementById('die-min');
+            const maxInput = document.getElementById('die-max');
 
-            function calculateThreshold() {
-                const dieMin = parseFloat($('#die-min').val());
-                const dieMax = parseFloat($('#die-max').val());
-                const threshold = (dieMax - dieMin + 1) * 0.45;
-                $('#threshold').text(Math.round(threshold));
-            }
-            $dieFields.on('input', calculateThreshold);
-            $('#difficulty-select').on('change', (event) => {
-                const difficulty = parseFloat(event.currentTarget.value);
-                localStorage.setItem('difficulty', difficulty);
-                $dieFields.off('input', calculateThreshold);
-                const dieMin = {{ current.numeric_range[0] }};
-                const dieMax = {{ current.numeric_range[1] }};
-                const dieRange = dieMax - dieMin + 1;
-                const adjustment = dieRange * difficulty;
-                const newDieMin = dieMin - adjustment;
-                const newDieMax = dieMax - adjustment;
-                $('#die-min').val(newDieMin);
-                $('#die-max').val(newDieMax);
-                calculateThreshold();
-                $dieFields.on('input', calculateThreshold);
-            });
-            $('#difficulty-select').trigger('change');
+            // Apply mod to both ends of the range
+            const newMin = calculate(parseFloat(minInput.value), val, op);
+            const newMax = calculate(parseFloat(maxInput.value), val, op);
 
-            $('.fill-det-btn').on('click', (event) => {
-                const entityId = $(event.currentTarget).data('id');
-                const entityType = $(event.currentTarget).data('type');
-                const containerSelect = $(event.currentTarget).closest('button').prev('select');
-                const operation = $(containerSelect).data('operation');
-                const mode = $(containerSelect).data('mode');
-                const selectedIndex = $(containerSelect).prop('selectedIndex');
-                const selectedOption = $(containerSelect).find(':selected');
-                const containerVal = parseFloat(selectedOption.val()) || 0;
-                let operand = containerVal;
-                if (mode === 'log') {
-                    operand = scaledLog(operand);
-                } else if (mode === 'half') {
-                    operand = operand / 2;
-                }
-                let targetFields;
-                {% if current.outcome_type == 'determined' %}
-                    targetFields = [$('#single-number')];
-                {% else %}
-                    targetFields = [$('#die-min'), $('#die-max')];
-                    if ($('#adjust-die-min').is(':checked')) {
-                        targetFields.pop();
-                    } else if ($('#adjust-die-max').is(':checked')) {
-                        targetFields.shift();
-                    }
-                {% endif %}
-                for (let targetField of targetFields) {
-                    const currentSetting = parseFloat(targetField.val()) || 0;
-                    if (selectedIndex !== 0) {
-                        let newValue;
-                        switch (operation) {
-                            case '+':
-                                newValue = currentSetting + operand;
-                                break;
-                            case '-':
-                                newValue = currentSetting - operand;
-                                break;
-                            case '*':
-                                newValue = currentSetting * operand;
-                                break;
-                            case '/':
-                                newValue = currentSetting / operand;
-                                break;
-                            default:
-                                console.error("Unsupported operation:", operation);
-                                continue;
-                        }
-                        newValue = Math.round(newValue * 10) / 10;
-                        targetField.val(newValue);
-                    }
-                }
-            });
+            // Update UI with rounded values (keep it clean)
+            minInput.value = Math.round(newMin * 10) / 10;
+            maxInput.value = Math.round(newMax * 10) / 10;
 
-            // Make large numbers have a reduced impact on the dice.
-            function scaledLog(value, scaleFactor = 5, base = 10) {
-                if (value === 0) return 0;
-                const sign = Math.sign(value);
-                const magnitude = Math.abs(value);
-                return sign * scaleFactor * (Math.log(magnitude + 1) / Math.log(base));
-            }
+            // Visual feedback
+            btn.innerText = "Added!";
+            setTimeout(() => { btn.innerText = "Add Mod"; }, 1000);
+            
+            // Recalculate thresholds if it's a Four-Way roll
+            if (typeof updateDieLogic === "function") updateDieLogic();
+        };
+    });
 
-            function fill_container(selectBox) {
-                const keyId = $(selectBox).data('id');
-                const keyType = $(selectBox).data('type');
-                const keyRef = `_${keyType}_${keyId}`
-                let selectedOption = $(selectBox).find(':selected');
-                if (selectedOption.index() === 0) {
-                    const nextOption = $(selectBox).find('option').eq(1);
-                    if (nextOption.length) {
-                        selectedOption.prop('selected', false);
-                        nextOption.prop('selected', true);
-                        selectedOption = nextOption;
-                    }
-                }
-                const containerVal = parseFloat(selectedOption.val()) || 0;
-                const containerId = selectedOption.data('container-id');
-                const containerType = selectedOption.data('container-type');
-                {% if current.outcome_type == 'determined' %}
-                    const outcomeFromRoll = parseFloat($('#single-number').val()) || 0;
-                {% else %}
-                    const outcomeFromRoll = parseFloat($('#outcome-display').data('outcome')) || 0;
-                {% endif %}
-                const newValInput = $(`#newval${keyRef}`);
-                const newValue = containerVal + outcomeFromRoll;
-                newValInput.val(newValue);
-                newValInput.focus();
-            }
-            $('.container-for-changed').change((event) => {
-                fill_container(event.currentTarget);
-            });
-            $('.fill-changed-btn').on('click', (event) => {
-                const button = $(event.currentTarget);
-                const keyRef = button.data('chg-ref');
-                const selectBox = $(`#changed${keyRef}`);
-                selectBox.change();
-            });
-            $('.change-entity-btn').on('click', function (event) {
-                saveSelections();
-                const button = $(event.currentTarget);
-                const keyRef = button.data('chg-ref');
-                const selectBox = $(`#changed${keyRef}`);
-                console.log('button id: %s, selector: "#changed%s"', button.attr('id'), keyRef);
-                const selectedOption = $(selectBox).find(':selected');
-                const containerId = selectedOption.data('container-id');
-                const containerType = selectedOption.data('container-type');
-                const newValInput = parseFloat($(`#newval${keyRef}`).val());
-                console.log('container id %d, type %s', containerId, containerType);
-                console.log('newValInput:', newValInput);
-                if (containerType && !isNaN(newValInput)) {
-                    $(`#container_id${keyRef}`).val(containerId);
-                    $(`#container_type${keyRef}`).val(containerType);
-                    button.closest('form').submit();
-                } else {
-                    event.preventDefault();
-                    alert('Before applying changes, select or fill from the list, and ensure the new number is valid.');
-                }
-            });
+    document.getElementById('roll-btn').onclick = async () => {
+        const fd = new FormData();
+        fd.append('die_min', document.getElementById('die-min').value);
+        fd.append('die_max', document.getElementById('die-max').value);
+        
+        const res = await fetch(`/event/roll/{{ event.id }}`, { method: 'POST', body: fd });
+        const data = await res.json();
+        
+        lastRollValue = data.result_value;
+        document.getElementById('outcome-display').innerHTML = data.display;
+        document.getElementById('apply-section').classList.remove('hidden');
+        
+        // Trigger preview calculation for apply rows
+        updateApplyPreviews();
+    });
 
-            let rollCounter = 0;
-            $('#roll-btn').click(() => {
-                saveSelections();
-                const eventId = {{ current.id }};
-                let dieMin = Math.round(parseFloat($('#die-min').val()));
-                let dieMax = Math.round(parseFloat($('#die-max').val()));
-                // show rounded integers
-                $('#die-min').val(dieMin);
-                $('#die-max').val(dieMax);
-                const url = `/event/roll/${eventId}`;
-                const postData = {
-                    die_min: $('#die-min').val(),
-                    die_max: $('#die-max').val(),
-                    location: $('#location-select').val(),
-                    roll_counter: rollCounter
-                };
-                $.ajax({
-                    url: url,
-                    type: 'post',
-                    data: $.param(postData),
-                    contentType: 'application/x-www-form-urlencoded',
-                    success: function(data) {
-                        if (data.error) {
-                            alert(data.error);
-                        } else {
-                            rollCounter = data.roll_counter;
-                            $('#roll-counter').text(`Count: ${rollCounter}`);
-                            $('#outcome-display').html(data.outcome_display);
-                            $('#outcome-display').data('outcome', data.outcome);
-                            $('#changed-row').css('opacity', 1);
-                            const outcomeData = {
-                                roll_counter: data.roll_counter,
-                                outcome_display: data.outcome_display,
-                                outcome: data.outcome
-                            };
-                            sessionStorage.setItem('outcome_data', JSON.stringify(outcomeData));
-                        }
-                    },
-                    error: () => {
-                        alert('Could not get data from server. Please try again.');
-                    }
-                });
-            });
-            {% if changed_by_form %}
-                $('#changed-row').css('opacity', 1);
-                const storedData = sessionStorage.getItem('outcome_data');
-                if (storedData) {
-                    const outcomeData = JSON.parse(storedData);
-                    $('#roll-counter').text(`Count: ${outcomeData.roll_counter}`);
-                    $('#outcome-display').html(outcomeData.outcome_display);
-                    $('#outcome-display').data('outcome', outcomeData.outcome);
-                }
-            {% elif current.outcome_type == 'determined' %}
-                $('#changed-row').css('opacity', 1);
-            {% endif %}
-            $('#reset-die-btn').click(() => {
-                {% if current.outcome_type == 'numeric' %}
-                    $('#die-min').val({{ current.numeric_range[0] }});
-                    $('#die-max').val({{ current.numeric_range[1] }});
-                {% elif current.outcome_type == 'fourway' %}
-                    $('#difficulty-select').trigger('change');
-                {% endif %}
-            });
-            {% if current.outcome_type in ['fourway', 'numeric'] %}
-                $(document).keypress(function(event) {
-                    if (event.key === 'a') {
-                        event.stopPropagation();
-                        if ($('#adjust-die-min').is(':checked')) {
-                            $('#adjust-die-max').prop('checked', true);
-                            $('#die-max').focus();
-                        } else if ($('#adjust-die-max').is(':checked')) {
-                            $('#adjust-die-both').prop('checked', true);
-                            $('#die-min').focus();
-                        } else {
-                            $('#adjust-die-min').prop('checked', true);
-                            $('#die-min').focus();
-                        }
-                        event.preventDefault();
-                    }
-                });
-            {% endif %}
+    /**
+     * Updates the "New Value" preview labels in the Apply section
+     * based on the result of the roll.
+     */
+    function updateApplyPreviews() {
+        document.querySelectorAll('.change-row').forEach(row => {
+            const select = row.querySelector('.container-select');
+            const oldValSpan = row.querySelector('.old-val');
+            const newValSpan = row.querySelector('.new-val-preview');
+            
+            const selected = select.selectedOptions[0];
+            const currentVal = parseFloat(selected.dataset.current) || 0;
+            
+            oldValSpan.innerText = currentVal;
+            // The logic: New Value = Current + Roll Result
+            const calculated = currentVal + lastRollValue;
+            newValSpan.innerText = Math.round(calculated * 100) / 100;
         });
-    </script>
+    }
+
+    document.querySelectorAll('.apply-btn').forEach(btn => {
+        btn.onclick = async () => {
+            const row = btn.closest('.change-row');
+            const containerId = row.querySelector('.container-select').value;
+            const newValue = parseFloat(row.querySelector('.new-val-preview').innerText);
+
+            if (!containerId || isNaN(newValue)) {
+                alert("Please select a target container first.");
+                return;
+            }
+
+            const fd = new FormData();
+            fd.append('key_id', row.dataset.keyId);
+            fd.append('key_type', row.dataset.keyType); // 'attrib' or 'item'
+            fd.append('container_id', containerId);
+            fd.append('new_value', newValue);
+
+            const res = await fetch(`/event/apply/{{ event.id }}`, { method: 'POST', body: fd });
+            if (res.ok) {
+                btn.innerText = "Applied! ✅";
+                btn.disabled = true;
+            }
+        };
+    });
+
+    // Recalculate previews whenever selection changes
+    document.querySelectorAll('.container-select').forEach(s => {
+        s.onchange = updateApplyPreviews;
+    });
+</script>
+
+<style>
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .spacious-top { margin-top: 15px; }
+    .modifier-list { list-style: none; padding: 0; }
+    .modifier-list li { margin-bottom: 5px; border-bottom: 1px solid #333; padding-bottom: 3px; }
+    .outcome-placeholder { padding: 40px 20px; text-align: center; color: var(--text-dim); font-style: italic; border: 2px dashed #444; }
+    .active-result { border: 2px solid var(--accent); background: #111; color: white; font-style: normal; font-size: 1.2em; font-weight: bold; }
+    .outcome-final { animation: fadeIn 0.5s; }
+    .dim-hr { border: 0; border-top: 1px solid #333; margin: 15px 0; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
 {% endblock %}

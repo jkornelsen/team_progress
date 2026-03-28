@@ -1,32 +1,35 @@
-{% extends 'base.html' %}
-{% block upper_left %}
-    <div class="nav-container">
-        <a class="upper-left" href="{{ url_for("overview") }}">[o]verview</a>
-        <span class="separator">|</span>
-        <a href="{{ url_for("configure_index") }}">[m]ain setup</a>
-    </div>
-{% endblock %}
+{% extends 'layout/base.html' %}
+
 {% block content %}
-    <script>
-        const linkForKey = {
-            'o': '{{ url_for('overview') }}',
-            'm': '{{ url_for('configure_index') }}',
-        };
-        document.addEventListener('DOMContentLoaded', () => {
-            if (isMobile) {
-                return;
-            }
-            document.addEventListener('keypress', (event) => {
-                const key = event.key;
-                if (linkForKey[key]) {
-                    window.location.href = linkForKey[key];
-                }
-            });
-        });
-    </script>
-    <h1>Session Link</h1>
-    <p class="info">Share the following link to join the current game.</p>
-    <p>
-        <code>{{ url }}</code>
-    </p>
+<div class="session-card outer-border">
+    <h1>Invite Players</h1>
+    <p class="label-like">Share the unique URL below with others to allow them to join your current game session.</p>
+    
+    <div class="link-box spacious-top">
+        <code id="session-url">{{ url }}</code>
+        <button onclick="copyLink()" class="btn-sm" style="margin-left: 10px;">📋 Copy</button>
+    </div>
+
+    <div class="info-box spacious-top">
+        <p><strong>Note:</strong> Anyone with this link will have full access to view and modify the current game state. Keep it private to your group.</p>
+    </div>
+
+    <div class="spacious-top">
+        <a href="{{ url_for('play.overview') }}" class="go-button" style="display:inline-block; padding: 10px 20px;">Return to Game</a>
+    </div>
+</div>
+
+<script>
+function copyLink() {
+    const urlText = document.getElementById('session-url').innerText;
+    navigator.clipboard.writeText(urlText);
+    alert("Link copied to clipboard!");
+}
+</script>
+
+<style>
+    .link-box { background: #000; padding: 15px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; border-radius: 4px; }
+    #session-url { color: var(--accent); word-break: break-all; }
+    .info-box { background: #332b00; border-left: 4px solid #ffd700; padding: 10px; font-size: 0.9em; color: #eee; }
+</style>
 {% endblock %}

@@ -1,0 +1,106 @@
+<div class="recipe-card outer-border" data-recipe-index="{{ recipe_index }}">
+    <!-- Hidden ID for existing recipes -->
+    <input type="hidden" name="recipes[{{ recipe_index }}][id]" value="{{ recipe.id if recipe }}">
+    
+    <div class="flex-between align-center">
+        <h4>Recipe #{{ recipe_index + 1 }}</h4>
+        <button type="button" class="btn-sm dangerous-button" onclick="this.closest('.recipe-card').remove()">Remove Recipe</button>
+    </div>
+
+    <div class="grid-3-col spacious-top">
+        <div class="form-group">
+            <label>Gain per Batch:</label>
+            <input type="number" name="recipes[{{ recipe_index }}][rate_amount]" 
+                   value="{{ recipe.rate_amount if recipe else 1.0 }}" step="any" required>
+        </div>
+        <div class="form-group">
+            <label>Duration (Seconds):</label>
+            <input type="number" name="recipes[{{ recipe_index }}][rate_duration]" 
+                   value="{{ recipe.rate_duration if recipe else 3.0 }}" step="any" required>
+        </div>
+        <div class="form-group align-center flex-row" style="padding-top: 25px;">
+            <input type="checkbox" name="recipes[{{ recipe_index }}][instant]" 
+                   id="instant-{{ recipe_index }}" {{ 'checked' if recipe and recipe.instant }}>
+            <label for="instant-{{ recipe_index }}">Instant Production</label>
+        </div>
+    </div>
+
+    <hr class="dim-hr">
+
+    <div class="column-container">
+        <!-- 1. SOURCES (Ingredients) -->
+        <div class="sub-section">
+            <h5>📉 Ingredients (Sources)</h5>
+            <div class="source-list" id="sources-{{ recipe_index }}">
+                {% for source in recipe.sources if recipe %}
+                <div class="flex-row gap-5 align-center spacious-bottom">
+                    <select name="recipes[{{ recipe_index }}][sources][{{ loop.index0 }}][item_id]">
+                        {% for i in all_items %}
+                        <option value="{{ i.id }}" {{ 'selected' if i.id == source.item_id }}>{{ i.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="number" name="recipes[{{ recipe_index }}][sources][{{ loop.index0 }}][q_required]" 
+                           value="{{ source.q_required }}" step="any" style="width: 60px;">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="recipes[{{ recipe_index }}][sources][{{ loop.index0 }}][preserve]" 
+                               {{ 'checked' if source.preserve }}> Tool?
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+            <button type="button" class="btn-sm" onclick="addSource({{ recipe_index }})">+ Add Ingredient</button>
+        </div>
+
+        <!-- 2. BYPRODUCTS -->
+        <div class="sub-section">
+            <h5>🎁 Byproducts</h5>
+            <div class="byproduct-list" id="byproducts-{{ recipe_index }}">
+                {% for byproduct in recipe.byproducts if recipe %}
+                <div class="flex-row gap-5 align-center spacious-bottom">
+                    <select name="recipes[{{ recipe_index }}][byproducts][{{ loop.index0 }}][item_id]">
+                        {% for i in all_items %}
+                        <option value="{{ i.id }}" {{ 'selected' if i.id == byproduct.item_id }}>{{ i.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="number" name="recipes[{{ recipe_index }}][byproducts][{{ loop.index0 }}][rate_amount]" 
+                           value="{{ byproduct.rate_amount }}" step="any" style="width: 60px;">
+                </div>
+                {% endfor %}
+            </div>
+            <button type="button" class="btn-sm" onclick="addByproduct({{ recipe_index }})">+ Add Byproduct</button>
+        </div>
+    </div>
+
+    <hr class="dim-hr">
+
+    <!-- 3. ATTRIBUTE REQUIREMENTS -->
+    <div class="sub-section">
+        <h5>⚖️ Attribute Requirements</h5>
+        <div class="attrib-req-list" id="attribs-{{ recipe_index }}">
+            {% for req in recipe.attrib_reqs if recipe %}
+            <div class="flex-row gap-10 align-center spacious-bottom">
+                <select name="recipes[{{ recipe_index }}][attrib_reqs][{{ loop.index0 }}][attrib_id]">
+                    {% for a in all_attribs %}
+                    <option value="{{ a.id }}" {{ 'selected' if a.id == req.attrib_id }}>{{ a.name }}</option>
+                    {% endfor %}
+                </select>
+                <span class="label-like">Range:</span>
+                <input type="number" name="recipes[{{ recipe_index }}][attrib_reqs][{{ loop.index0 }}][min]" 
+                       value="{{ req.value_range.lower if req.value_range }}" placeholder="Min" step="any" style="width: 70px;">
+                <input type="number" name="recipes[{{ recipe_index }}][attrib_reqs][{{ loop.index0 }}][max]" 
+                       value="{{ req.value_range.upper if req.value_range }}" placeholder="Max" step="any" style="width: 70px;">
+            </div>
+            {% endfor %}
+        </div>
+        <button type="button" class="btn-sm" onclick="addAttribReq({{ recipe_index }})">+ Add Requirement</button>
+    </div>
+</div>
+
+<style>
+    .recipe-card { background: #1a1a1a; margin-top: 20px; border-left: 4px solid var(--accent); }
+    .grid-3-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
+    .sub-section { flex: 1; min-width: 250px; background: #222; padding: 10px; border-radius: 4px; }
+    h5 { margin-top: 0; color: var(--text-dim); }
+    .gap-5 { gap: 5px; }
+    .spacious-bottom { margin-bottom: 8px; }
+</style>

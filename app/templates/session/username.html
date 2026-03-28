@@ -1,51 +1,45 @@
-{% extends 'base.html' %}
-{% block upper_left %}
-    <div class="nav-container">
-        <a class="upper-left" href="{{ url_for("overview") }}">overview</a>
-        <span class="separator">|</span>
-        <a href="{{ url_for("configure_index") }}">main setup</a>
-    </div>
-{% endblock %}
+{% extends 'layout/base.html' %}
+
 {% block content %}
-    <h1>Change User ID</h1>
-    <p class="info">
-        So friends can see who is connected.
-        For example, the initials of your name.
-        Resets when the session times out.
-    </p>
-    <p class="info">Leave blank to generate random letters.</p>
-    <form method="post" action="{{ url_for("change_user") }}">
-        <label for="username">User ID:</label>
-        <input type="text"
-               id="username"
-               name="username"
-               value="{{ current_username }}"
-               autofocus>
-        <button type="submit">Submit</button>
-        <br>
-        <br>
-        <!--
+<div class="session-card outer-border" style="max-width: 500px; margin: 40px auto;">
+    <h1>Set User Identity</h1>
+    <p class="label-like">Choose a name so other players know who is performing actions.</p>
+
+    <form method="POST" action="{{ url_for('session.change_user') }}">
+        {# Carry the referrer so we can send the user back to the page they were on #}
+        <input type="hidden" name="referrer" value="{{ request.referrer }}">
+
+        <div class="form-group">
+            <label for="username">User ID:</label>
+            <input type="text" id="username" name="username" value="{{ current_username }}" 
+                   placeholder="e.g. Explorer1" class="full-width" autofocus required>
+        </div>
+
         {% if characters %}
-            <select id="char">
+        <div class="spacious-top">
+            <label class="label-like">Suggestions (Characters in this world):</label>
+            <div class="suggestion-chips">
                 {% for char in characters %}
-                    <option value="{{ char.name }}">{{ char.name }}</option>
+                <button type="button" class="chip" onclick="document.getElementById('username').value = '{{ char.name }}'">
+                    {{ char.name }}
+                </button>
                 {% endfor %}
-            </select>
-            <button type="button" id="char-btn">Add to field</button>
+            </div>
+        </div>
         {% endif %}
-        -->
+
+        <div class="footer-actions spacious-top">
+            <button type="submit" class="go-button" style="width: 100%;">Confirm Identity</button>
+            <p class="text-center"><a href="{{ url_for('play.overview') }}" class="label-like">Cancel</a></p>
+        </div>
     </form>
-    <script>
-        $(document).ready(() => {
-            $('#char-btn').click(() => {
-                const selectedChar = $('#char').val();
-                const currentUsername = $('#username').val();
-                if (currentUsername.includes(selectedChar)) {
-                    $('#username').val(selectedChar);
-                } else {
-                    $('#username').val(currentUsername + selectedChar);
-                }
-            });
-        });
-    </script>
+</div>
+
+<style>
+    .full-width { width: 100%; box-sizing: border-box; background: #000; color: #fff; border: 1px solid var(--border); padding: 12px; font-size: 1.1em; }
+    .suggestion-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
+    .chip { background: #333; border: 1px solid #444; padding: 4px 10px; border-radius: 15px; font-size: 0.8em; color: var(--text-dim); }
+    .chip:hover { background: #444; color: white; border-color: var(--accent); }
+    .text-center { text-align: center; margin-top: 10px; }
+</style>
 {% endblock %}

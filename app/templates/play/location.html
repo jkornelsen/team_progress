@@ -1,451 +1,284 @@
-{% extends 'base.html' %}
+{% extends 'layout/base.html' %}
+{% from 'layout/macros.html' import hotkey, render_attr %}
+
 {% block upper_left %}
-    <div class="nav-container">
-        <a class="upper-left" href="{{ url_for("overview") }}">[o]verview</a>
+    <nav class="nav-container">
+        <a href="{{ url_for('play.overview') }}">[o]verview</a>
         <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for("configure_index") }}">[m]ain setup</a>
-        <span class="separator">|</span>
-        <a class="upper-left"
-           href="{{ url_for('configure_location', loc_id=current.id) }}">location s[e]tup</a>
-    </div>
+        <a href="{{ url_for('configure.edit_location', id=location.id) }}">location s[e]tup</a>
+    </nav>
 {% endblock %}
+
 {% block content %}
-    <div id="content" style="display:none;">
-        <script>
-        const keyToMovement = {
-            'ArrowUp': { xChange: 0, yChange: -1 },
-            'ArrowDown': { xChange: 0, yChange: 1 },
-            'ArrowLeft': { xChange: -1, yChange: 0 },
-            'ArrowRight': { xChange: 1, yChange: 0 },
-            'Numpad8': { xChange: 0, yChange: -1 },
-            'Numpad2': { xChange: 0, yChange: 1 },
-            'Numpad4': { xChange: -1, yChange: 0 },
-            'Numpad6': { xChange: 1, yChange: 0 },
-            'Numpad7': { xChange: -1, yChange: -1 },
-            'Numpad9': { xChange: 1, yChange: -1 },
-            'Numpad1': { xChange: -1, yChange: 1 },
-            'Numpad3': { xChange: 1, yChange: 1 }
-        };
-        if (!isMobile) {
-            document.addEventListener('keydown', (event) => {
-                if (event.altKey || event.ctrlKey || event.shiftKey) {
-                    return;
-                }
-                const movement = keyToMovement[event.code];
-                if (movement) {
-                    moveCharacter(movement.xChange, movement.yChange);
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-            });
-        }
-        const linkForKey = {
-            'o': '{{ url_for('overview') }}',
-            'm': '{{ url_for('configure_index') }}',
-            'e': '{{ url_for('configure_location', loc_id=current.id) }}',
-        };
-        document.addEventListener('DOMContentLoaded', () => {
-            if (isMobile) {
-                return;
-            }
-            document.addEventListener('keypress', (event) => {
-                if (event.altKey || event.ctrlKey) {
-                    return;
-                }
-                const key = event.key;
-                if (linkForKey[key]) {
-                    window.location.href = linkForKey[key];
-                }
-            });
-        });
-        </script>
-        <h1>{{ current.name }}</h1>
-        {% if current.description %}<p>{{ current.description|htmlify }}</p>{% endif %}
-        {% set width, height = current.grid.dimensions %}
-        {% set has_grid = False %}
-        {% if width > 0 and height > 0 %}
-            {% set has_grid = True %}
+<div class="location-container">
+    <header class="entity-header">
+        <h1>📍 {{ location.name }}</h1>
+        {% if location.description %}
+            <div class="description-box">{{ location.description | htmlify }}</div>
         {% endif %}
-        <div class="column-container">
-            <div><!-- lefthand column -->
-                {% if current.attribs %}
-                    <h2>Attributes</h2>
-                    <ul>
-                        {% for attrib_of in current.attribs.values() %}
-                            {% set link = url_for('play_attrib', attrib_id=attrib_of.attrib_id, subject_type='loc', subject_id=current.id) %}
-                            {% set letter = link_letters.next(link) %}
-                            <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
-                            <li>
-                                <span class="hotkey-indicator">{{ letter }}</span>
-                                <a href="{{ link }}">{{ attrib_of.attrib.name }}</a>
-                                {% if attrib_of.attrib.enum %}
-                                    {% set index = attrib_of.val | int %}
-                                    {% if index in range(attrib_of.attrib.enum | length) %}
-                                        {{ attrib_of.attrib.enum[index] }}
-                                    {% else %}
-                                        ?
-                                    {% endif %}
-                                {% elif attrib_of.attrib.binary %}
-                                    {{ ('&check;' if attrib_of.val else 'X') | safe }}
-                                {% else %}
-                                    {{ attrib_of.val | formatNum }}
-                                {% endif %}
-                            </li>
-                        {% else %}
-                            (None)
-                            <br>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-                {% if game_data.characters %}
-                    <h2>Characters Here</h2>
-                    <ul>
-                        {% for char in game_data.characters %}
-                            {% set link = url_for('play_character', char_id=char.id) %}
-                            {% set letter = link_letters.next(link) %}
-                            <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
+    </header>
+
+    {% set width, height = location.dimensions %}
+    {% set has_grid = width > 0 and height > 0 %}
+
+    <div class="column-container">
+        <!-- LEFT COLUMN: The Grid & Navigation Controls -->
+        <div class="grid-column">
+            {% if attrib_values %}
+            <section class="outer-border">
+                <h3>Local Attributes</h3>
+                <ul class="presence-list">
+                    {% for av in attrib_values %}
+                        {% set link = url_for('play.play_attrib', attrib_id=av.attrib_id, owner_id=location.id) %}
+                        {% set letter = link_letters.next(link) %}
+                        <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
+                        <li>
                             <span class="hotkey-indicator">{{ letter }}</span>
-                            <a href="{{ link }}">{{ char.name }}</a>
-                            {% if has_grid %}
-                                <span class="label-like char-position" data-char-id="{{ char.id }}">&nbsp;[{{ char.position[0] }},{{ char.position[1] }}]</span>
-                            {% endif %}
-                            <br>
-                        {% else %}
-                            <p>(None)</p>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-                {% if current.items_at %}
-                    <h2>Items Here</h2>
-                    <ul class="item-list">
-                        {% for items_at in current.items_at.values() %}
-                            {% for item_at in items_at %}
-                                {% set item = item_at.item %}
-                                {% set link = url_for('play_item', item_id=item.id, loc_id=current.id, pos=item_at.position, main='local') %}
-                                {% set letter = link_letters.next(link) %}
-                                <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
-                                <span class="hotkey-indicator">{{ letter }}</span>
-                                <a href="{{ link }}">{{ item.maskable_name() }}</a>
-                                {% if not (item_at.item.q_limit == 1 and item_at.quantity == 1) %}{{ item_at.quantity | formatNum }}{% endif %}
-                                {% if has_grid %}
-                                    <span class="label-like">&nbsp;[{{ item_at.position[0] }},{{ item_at.position[1] }}]</span>
-                                {% endif %}
-                                <br>
-                            {% endfor %}
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-                {% if current.item_refs %}
-                    <h2>Referenced Items</h2>
-                    <ul>
-                        {% for item in current.item_refs | sort(attribute='name') %}
-                            {% set link = url_for('play_item', item_id=item.id, loc_id=current.id, main='universal') %}
-                            {% set letter = link_letters.next(link) %}
-                            <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
-                            <span class="hotkey-indicator">{{ letter }}</span>
-                            <a href="{{ link }}">{{ item.maskable_name() }}</a>
-                            {% if not (item.q_limit == 1 and item.pile.quantity == 1) %}{{ item.pile.quantity | formatNum }}{% endif %}
-                            <br>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-                {% if game_data.events %}
-                    <h2>Local Events</h2>
-                    <ul>
-                        {% for evt in game_data.events %}
-                            {% set link = url_for('play_event', event_id=evt.id, from_id=current.id, from_typename=current.typename()) | safe %}
-                            {% set letter = link_letters.next(link) %}
-                            <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
-                            <span class="hotkey-indicator">{{ letter }}</span>
-                            <a href="{{ link }}">{{ evt.name }}</a>
-                            {% if evt.trigger_chance > 0 %}
-                                <span class="label-like">&nbsp;(chance to trigger)</span>
-                            {% endif %}
-                            <br>
-                        {% else %}
-                            <p>(None)</p>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-                {% if current.destinations %}
-                    <h2>Destinations</h2>
-                    <ul>
-                        {% for dest in current.destinations %}
-                            {% if dest.other_loc.masked %}
-                                <span class="hotkey-indicator">&nbsp;&nbsp;</span>
-                                Somewhere not yet visited
-                            {% else %}
-                                {% set link = url_for('play_location', loc_id=dest.other_loc.id) %}
-                                {% set letter = link_letters.next(link) %}
-                                <script>linkForKey['{{ letter }}'] = "{{ link }}";</script>
-                                <span class="hotkey-indicator">{{ letter }}</span>
-                                <a href="{{ link }}">{{ dest.other_loc.name }}</a>
-                                {% if max(dest.door_here) %}
-                                    <span class="label-like">[{{ dest.door_here }}]</span>
-                                {% endif %}
-                            {% endif %}
-                            {% if dest.duration >= 2 %}
-                                — {{ dest.duration }}s
-                            {% endif %}
-                            <br>
-                        {% else %}
-                            <p>(None)</p>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-            </div>
-                {% set left, top, right, bottom = current.grid.excluded %}
-                {% if has_grid %}
-            <div class="expand"><!-- righthand column -->
-                <style>
-                td.grid {
-                    width: 1.8em;
-                    height: 1.8em;
-                    text-align: center;
-                    vertical-align: middle;
-                    padding: 0;
-                }
-                td.excluded {
-                    border: none;
-                }
-                td.included {
-                    border: 1px solid gray;
-                    background-color: #2a2a2a;
-                }
-                    </style>
-                    <table style="background: transparent;
-                                  border-collapse: collapse;
-                                  font-family: monospace;
-                                  width: max-content;
-                                  height: max-content;
-                                  margin: 0 10px 0 0;">
-                        {% for y in range(1, height + 1) %}
+                            <a href="{{ link }}">{{ av.attribute.name }}</a>: 
+                            <span class="text-accent">{{ render_attr(av, av.attribute) }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </section>
+            {% endif %}
+
+            {% if has_grid %}
+                <section class="outer-border grid-wrapper">
+                    <table class="grid-table" id="location-grid">
+                        {% for y in range(1, location.dimensions[1] + 1) %}
                             <tr>
-                                {% for x in range(1, width + 1) %}
-                                    {% if left <= x <= right and top <= y <= bottom %}
-                                        <td class="grid excluded" id="cell-{{ x }}-{{ y }}"></td>
-                                    {% else %}
-                                        <td class="grid included" id="cell-{{ x }}-{{ y }}"></td>
+                                {% for x in range(1, location.dimensions[0] + 1) %}
+                                    {% set is_excluded = false %}
+                                    {% if location.excluded and location.excluded|length == 4 %}
+                                        {% set l, t, r, b = location.excluded %}
+                                        {% if x >= l and x <= r and y >= t and y <= b %}
+                                            {% set is_excluded = true %}
+                                        {% endif %}
                                     {% endif %}
+                                    
+                                    <td class="grid-cell {{ 'excluded' if is_excluded else 'included' }}" 
+                                        id="cell-{{ x }}-{{ y }}"
+                                        data-x="{{ x }}" data-y="{{ y }}">
+                                        {# Content injected by JS fillGrid() #}
+                                    </td>
                                 {% endfor %}
                             </tr>
                         {% endfor %}
                     </table>
-                    {% if game_data.characters %}
-                        <style>
-                            .navigation-container {
-                                display: grid;
-                                grid-template-columns: auto auto auto;
-                                grid-template-rows: auto auto auto;
-                                gap: 5px;
-                                justify-content: start;
-                            }
-                            .navigation-container button {
-                                width: 30px;
-                                height: 30px;
-                                font-size: 12px;
-                                cursor: pointer;
-                            }
-                            .empty {
-                                visibility: hidden; /* Hide the empty grid spaces */
-                            }
-                        </style>
-                        <div class="navigation-container">
-                            <!-- Top Left (Northwest) -->
-                            <button type="button" data-x="-1" data-y="-1">↖</button>
-                            <!-- Up -->
-                            <button type="button" data-x="0" data-y="-1">↑</button>
-                            <!-- Top Right (Northeast) -->
-                            <button type="button" data-x="1" data-y="-1">↗</button>
-                            <!-- Left -->
-                            <button type="button" data-x="-1" data-y="0">←</button>
-                            <!-- Middle (empty) -->
-                            <span></span>
-                            <!-- Right -->
-                            <button type="button" data-x="1" data-y="0">→</button>
-                            <!-- Bottom Left (Southwest) -->
-                            <button type="button" data-x="-1" data-y="1">↙</button>
-                            <!-- Down -->
-                            <button type="button" data-x="0" data-y="1">↓</button>
-                            <!-- Bottom Right (Southeast) -->
-                            <button type="button" data-x="1" data-y="1">↘</button>
+
+                    <div class="movement-controls spacious-top">
+                        <div class="nav-numpad">
+                            <button onclick="move(0, -1)">↑</button>
+                            <div class="flex-row">
+                                <button onclick="move(-1, 0)">←</button>
+                                <button onclick="move(1, 0)">→</button>
+                            </div>
+                            <button onclick="move(0, 1)">↓</button>
                         </div>
-                        <div style="margin-top: 5px;">
-                            <label for="char-to-move">Moving:</label>
-                            <select id="char-to-move">
-                                {% for char in game_data.characters if char.location.id == current.id %}
-                                    <option value="{{ char.id }}"
-                                            {% if char.id == defaults.move_char %}selected{% endif %}>
+                        <div class="control-meta">
+                            <label class="label-like">Acting Character:</label>
+                            <select id="active-char-select" class="mini-select">
+                                {% for char in characters_here %}
+                                    <option value="{{ char.id }}" {{ 'selected' if char.id == active_char_id }}>
                                         {{ char.name }}
                                     </option>
                                 {% endfor %}
                             </select>
-                            <br>
-                            <label for="move-with">Move With:</label>
-                            <!-- default "{{ defaults.travel_with }}" -->
-                            <select id="move-with">
-                                <option value="">(No one else)</option>
-                                {% for group_name, ids_str in travel_groups %}
-                                    {% set ids_list = ids_str.split(',') | sort %}
-                                    {% set defaults_list = defaults.travel_with.split(',') | sort %}
-                                    <option value="{{ ids_str }}"
-                                            {% if ids_list == defaults_list %}selected{% endif %}>
-                                        {{ group_name }}
-                                    </option>
-                                {% endfor %}
-                                {% for char in game_data.characters %}
-                                    <option value="{{ char.id }}"
-                                            {% if char.id|string == defaults.travel_with %}selected{% endif %}>
-                                        {{ char.name }}
-                                    </option>
-                                {% endfor %}
-                            </select>
+                            <p class="label-like">Use Arrow Keys or Numpad to move.</p>
                         </div>
-                    {% endif %}
-                </div>
-                {% endif %}
-            </div>
-        <script>
-        const door_letter = "🚪"
-        function getFirstGrapheme(str) {
-            if (!str) return '';
-            if (typeof Intl !== 'undefined' && Intl.Segmenter) {
-                const segmenter = new Intl.Segmenter('en', { granularity: 'grapheme' });
-                const graphemes = Array.from(segmenter.segment(str));
-                return graphemes.length > 0 ? graphemes[0].segment : '';
-            }
-            // Fallback: Basic regex to handle emojis and ZWJ sequences
-            const graphemeRegex = /([\uD800-\uDBFF][\uDC00-\uDFFF]|[\u0300-\u036F\u1AB0-\u1AFF\u1DC0-\u1DFF\u20D0-\u20FF\uFE20-\uFE2F]|[^\uD800-\uDFFF])/g;
-            const match = str.match(graphemeRegex);
-            return match ? match[0] : '';
-        }
-        const characters = {
-            {% for char in game_data.characters if char.location.id == current.id %}
-                "{{ char.id }}": {
-                    letter: getFirstGrapheme('{{ char.name }}'),
-                    title: '{{ char.name }}',
-                    link: "{{ url_for('play_character', char_id=char.id) }}",
-                    x: "{{ char.position[0] }}",
-                    y: "{{ char.position[1] }}"
-                },
-            {% endfor %}
-        };
-        const items = [
-            {% for items_at in current.items_at.values() %}
-                {% for item_at in items_at %}
-                    {
-                        letter: getFirstGrapheme('{{ item_at.item.name }}'),
-                        title: '{{ item_at.item.name }}',
-                        link: "{{ url_for('play_item', item_id=item_at.item.id, loc_id=current.id, main='local') }}",
-                        x: "{{ item_at.position[0] }}",
-                        y: "{{ item_at.position[1] }}"
-                    },
+                    </div>
+                </section>
+            {% else %}
+                <div class="outer-border text-dim">This location has no physical grid.</div>
+            {% endif %}
+        </div>
+
+        <!-- RIGHT COLUMN: Lists of Presence -->
+        <div class="presence-column">
+            
+            <!-- Characters Here -->
+            <section class="outer-border">
+                <h3>Characters Here</h3>
+                <ul class="presence-list">
+                {% for char in characters_here %}
+                    {% set link = url_for('play.play_character', id=char.id) %}
+                    {% set letter = link_letters.next(link) %}
+                    <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
+                    <li>
+                        <span class="hotkey-indicator">{{ letter }}</span>
+                        <a href="{{ link }}">👤 {{ char.name }}</a>
+                        {% if has_grid %}
+                            <span class="label-like">[{{ char.position[0] }},{{ char.position[1] }}]</span>
+                        {% endif %}
+                    </li>
+                {% else %}
+                    <li class="text-dim">(None)</li>
                 {% endfor %}
-            {% endfor %}
-        ];
-        const doors = [
-            {% for dest in current.destinations %}
-                {
-                    letter: door_letter,
-                    title: "{{ dest.other_loc.name }}",
-                    link: "{{ url_for('play_location', loc_id=dest.other_loc.id) }}",
-                    x: "{{ dest.door_here[0] }}",
-                    y: "{{ dest.door_here[1] }}"
-                },
-            {% endfor %}
-        ];
-        function updateCharacterDisplay(charId, position) {
-            const coordElement = $(`span.char-position[data-char-id='${charId}']`);
-            if (coordElement.length) {
-                coordElement.html(`&nbsp;[${position[0]},${position[1]}]`);
-            } else {
-                console.error(`No coordinates element found for character ID ${charId}`);
-            }
+                </ul>
+            </section>
+
+            <!-- Local Items -->
+            <section class="outer-border">
+                <h3>Items on Ground</h3>
+                <ul class="presence-list">
+                {% for pile in inventory_piles %}
+                    {% set link = url_for('play.play_item', id=pile.item_id, loc_id=location.id, pos=pile.position) %}
+                    {% set letter = link_letters.next(link) %}
+                    <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
+                    <li>
+                        <span class="hotkey-indicator">{{ letter }}</span>
+                        <a href="{{ link }}">
+                            📦 {{ pile.item.name if not pile.item.masked else (pile.item.name | mask_string) }}
+                        </a>
+                        
+                        {# Only show quantity if it's not a single non-stackable item #}
+                        {% if not (pile.item.q_limit == 1 and pile.quantity == 1) %}
+                            <span class="qty text-accent">{{ pile.quantity | formatNum }}</span>
+                        {% endif %}
+
+                        {% if has_grid %}
+                            <span class="label-like">[{{ pile.position[0] }},{{ pile.position[1] }}]</span>
+                        {% endif %}
+                    </li>
+                {% else %}
+                    <li class="text-dim">No items here.</li>
+                {% endfor %}
+                </ul>
+            </section>
+
+            <!-- Referenced Universal Items -->
+            {% if referenced_items %}
+            <section class="outer-border">
+                <h3 title="Global resources accessible from here">Referenced Resources</h3>
+                <ul class="presence-list">
+                {% for ref in referenced_items %}
+                    <li>
+                        <span class="qty text-accent">{{ ref.quantity | formatNum }}x</span>
+                        {# Link to play_item with main_pile_type='universal' to signal general storage context #}
+                        <a href="{{ url_for('play.play_item', id=ref.item.id, loc_id=location.id) }}">
+                            🌐 {{ ref.item.name }}
+                        </a>
+                        <span class="label-like italic">(General Storage)</span>
+                    </li>
+                {% endfor %}
+                </ul>
+            </section>
+            {% endif %}
+
+            <!-- Destinations (Exits) -->
+            <section class="outer-border">
+                <h3>Exits</h3>
+                <ul class="presence-list">
+                {% for dest in destinations %}
+                    {% set other = dest.loc2 if dest.loc1_id == location.id else dest.loc1 %}
+                    {% set door = dest.door1 if dest.loc1_id == location.id else dest.door2 %}
+                    {% set link = url_for('play.play_location', id=other.id) %}
+                    {% set letter = link_letters.next(link) %}
+                    <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
+                    <li>
+                        <span class="hotkey-indicator">{{ letter }}</span>
+                        <a href="{{ link }}">🚪 {{ other.name }}</a>
+                        <span class="label-like"> [{{ door[0] }}, {{ door[1] }}]</span>
+                    </li>
+                {% endfor %}
+                </ul>
+            </section>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. Data Structures for the Grid
+    const chars = {
+        {% for char in characters_here %}
+        "{{ char.id }}": { name: "{{ char.name }}", x: {{ char.position[0] }}, y: {{ char.position[1] }}, icon: "👤" },
+        {% endfor %}
+    };
+
+    const items = [
+        {% for pile in inventory_piles %}
+        { name: "{{ pile.item.name }}", x: {{ pile.position[0] }}, y: {{ pile.position[1] }}, icon: "📦" },
+        {% endfor %}
+    ];
+
+    const exits = [
+        {% for dest in destinations %}
+        {% set door = dest.door1 if dest.loc1_id == location.id else dest.door2 %}
+        { x: {{ door[0] }}, y: {{ door[1] }}, icon: "🚪" },
+        {% endfor %}
+    ];
+
+    // 2. Grid Rendering
+    function fillGrid() {
+        // Clear all cells
+        $('.grid-cell.included').html('');
+
+        // Place Exits
+        exits.forEach(e => $(`#cell-${e.x}-${e.y}`).append(`<span title="Exit">${e.icon}</span>`));
+        
+        // Place Items
+        items.forEach(i => $(`#cell-${i.x}-${i.y}`).append(`<span title="${i.name}">${i.icon}</span>`));
+
+        // Place Characters
+        Object.values(chars).forEach(c => {
+            $(`#cell-${c.x}-${c.y}`).append(`<span class="char-token" title="${c.name}">${c.icon}</span>`);
+        });
+    }
+
+    // 3. Movement Logic
+    async function move(dx, dy) {
+        const charId = document.getElementById('active-char-select').value;
+        if (!charId) return;
+
+        const moveWith = document.getElementById('move-with')?.value || "";
+        
+        const formData = new FormData();
+        formData.append('dx', dx);
+        formData.append('dy', dy);
+        // Split the comma-separated IDs from the 'Move With' dropdown if needed
+        if (moveWith) {
+            moveWith.split(',').forEach(id => formData.append('move_with[]', id));
         }
-        function moveCharacter(xChange, yChange) {
-            const selectBox = $('#char-to-move');
-            const moveWith = $('#move-with').val();
-            const selectMoveWith = $('#move-with');
-                            move_with: $('#move-with').val()
-            const charId = (selectBox.length ? selectBox.val() : null);
-            if (!charId) {
-                alert("Select a character to move.");
-                return;
-            }
-            $.ajax({
-                url: `/char/move/${charId}/x_change/${xChange}/y_change/${yChange}`,
-                method: 'POST',
-                contentType: 'application/x-www-form-urlencoded',
-                data: {
-                    travel_with: moveWith
-                },
-                success: (data) => {
-                    if (data.positions) {
-                        console.log("Character positions:", data.positions);
-                        for (const [id_str, position] of Object.entries(data.positions)) {
-                            const id = parseInt(id_str, 10);
-                            characters[id].x = position[0];
-                            characters[id].y = position[1];
-                            updateCharacterDisplay(id, position);
-                        }
-                        fillGrid();
-                    } else {
-                        console.error('Failed to move character');
-                    }
-                },
-                error: (error) => {
-                    console.error('Error:', error);
-                    alert(`Error: ${error}`);
-                }
-            });
-        }
-        function fillGrid(redraw=true) {
-            if (redraw) {
-                $('.grid').empty();
-            }
-            for (const entity of [
-                    ...Object.values(characters),
-                    ...items,
-                    ...doors]) {
-                setCellContents(entity);
-            }
-        }
-        function setCellContents(entity, replace = false) {
-            const { x, y, letter, title, link } = entity;
-            if (!x && !y) {
-                return;
-            }
-            const cell = $(`#cell-${x}-${y}`);
-            if (cell.length) {
-                if (replace || cell.html().trim() === '') {
-                    let content = letter;
-                    if (title) {
-                        content = `<span title="${title}">${content}</span>`;
-                    }
-                    content = `<a href="${link}">${content}</a>`;
-                    cell.html(content);
-                } else {
-                    console.log(`Cell (${x}, ${y}) is already occupied.`);
-                }
-            } else if (Number(x) && Number(y)) {
-                console.error(`Cell (${x}, ${y}) not found.`);
-            }
-        }
-        async function initializePage() {
-            $('#content').css('display', 'block');
-        }
-        $('.navigation-container button').on('click', function() {
-            const xChange = parseInt($(this).data('x'));
-            const yChange = parseInt($(this).data('y'));
-            moveCharacter(xChange, yChange);
+
+        const response = await fetch(`/char/move/${charId}`, {
+            method: 'POST',
+            body: formData
         });
 
-        // Initial setup of cell contents
-        fillGrid(false);
-        $(document).ready(() => {
-            initializePage();
-        });
-        </script>
-    </div>
-    <!-- content -->
+        const data = await response.json();
+        if (data.status === 'success') {
+            // Iterate through all character positions returned by the backend
+            for (const [id, pos] of Object.entries(data.positions)) {
+                if (chars[id]) {
+                    chars[id].x = pos[0];
+                    chars[id].y = pos[1];
+                }
+            }
+            fillGrid();
+        }
+    }
+
+    // Keyboard Listeners
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowUp') move(0, -1);
+        if (e.key === 'ArrowDown') move(0, 1);
+        if (e.key === 'ArrowLeft') move(-1, 0);
+        if (e.key === 'ArrowRight') move(1, 0);
+    });
+
+    // Initial Load
+    $(document).ready(() => fillGrid());
+</script>
+
+<style>
+    .grid-wrapper { display: flex; flex-direction: column; align-items: center; background: #000; }
+    .nav-numpad { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+    .flex-row { display: flex; gap: 5px; }
+    .nav-numpad button { width: 45px; height: 45px; font-size: 1.5em; }
+    .char-token { color: var(--accent); font-weight: bold; }
+    .presence-list { list-style: none; padding: 0; }
+    .presence-list li { padding: 8px 0; border-bottom: 1px solid #333; }
+    .qty { font-family: monospace; font-weight: bold; margin-right: 8px; }
+    .control-meta { text-align: center; margin-top: 15px; }
+</style>
 {% endblock %}

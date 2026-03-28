@@ -1,126 +1,163 @@
-{% extends 'base.html' %}
+{% extends 'layout/base.html' %}
+
 {% block upper_left %}
     <div class="nav-container">
-        <a class="upper-left" href="{{ url_for("overview") }}">[o]verview</a>
+        <a class="upper-left" href="{{ url_for('play.overview') }}">[o]verview</a>
         <span class="separator">|</span>
-        <span class="upper-left">main setup</span>
+        <span class="text-dim">main setup</span>
         <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for("save_to_file") }}">[s]ave to file</a>
-        <span class="separator">|</span>
-        <a class="upper-left" href="{{ url_for("load_from_file") }}">[l]oad from file</a>
+        <a class="upper-left" href="{{ url_for('configure.save_to_file') }}">[s]ave to file</a>
     </div>
-    {% if file_message %}<p>{{ file_message }}</p>{% endif %}
 {% endblock %}
+
 {% block content %}
-    <script>
-        const linkForKey = {
-            'o': '{{ url_for('overview') }}',
-            'p': '{{ url_for('browse_scenarios') }}',
-            'P': '{{ url_for('browse_scenarios') }}',
-            's': '{{ url_for('save_to_file') }}',
-            'l': '{{ url_for('load_from_file') }}',
-        };
-        document.addEventListener('DOMContentLoaded', () => {
-            if (isMobile) {
-                return;
+<script>
+    const linkForKey = {
+        'o': '{{ url_for("play.overview") }}',
+        's': '{{ url_for("configure.save_to_file") }}'
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (isMobile) return;
+        document.addEventListener('keypress', (event) => {
+            const key = event.key.toLowerCase();
+            if (linkForKey[key]) {
+                window.location.href = linkForKey[key];
             }
-            document.addEventListener('keypress', (event) => {
-                const key = event.key;
-                if (linkForKey[key]) {
-                    window.location.href = linkForKey[key];
-                }
-            });
         });
-    </script>
-    <h1>Game Setup</h1>
-    <div style="text-align: center">
-        <a href="{{ url_for("browse_scenarios") }}">
-            <button>[P]re-Built Scenarios</button>
-        </a>
-        <a href="{{ url_for("blank_scenario") }}">
-            <button onclick="return confirm('Are you sure you want to clear the current game\'s data and start with an empty setup?')">
-                Blank Setup
-            </button>
-        </a>
+    });
+</script>
+
+<div class="configure-index">
+    <header class="flex-between align-center">
+        <h1>Game Editor</h1>
+        <div class="scenario-actions">
+            <a href="{{ url_for('configure.edit_overall') }}" class="btn">⚙️ Overall Settings</a>
+            <button onclick="confirmBlank()" class="dangerous-button">🗑️ Blank Setup</button>
+        </div>
+    </header>
+
+    <div class="mode-selector outer-border flex-row align-center">
+        <label class="label-like" style="margin-right: 20px;">Link Mode:</label>
+        <label>
+            <input type="radio" name="mode" value="configure" onchange="updateLinks()" checked>
+            Configure (Edit)
+        </label>
+        <label style="margin-left: 15px;">
+            <input type="radio" name="mode" value="lookup" onchange="updateLinks()">
+            Lookup (Usage)
+        </label>
     </div>
-    <div class="entitylist-container" style="margin-bottom: 20px;">
-        <a href="{{ url_for("configure_overall") }}">Overall Settings</a>
+
+    <!-- Entity Grid -->
+    <div class="entity-setup-grid">
+        {% set types = [
+            ('item', 'Items', items),
+            ('character', 'Characters', characters),
+            ('location', 'Locations', locations),
+            ('attrib', 'Attributes', attribs),
+            ('event', 'Events', events)
+        ] %}
+
+        {% for slug, label, collection in types %}
+        <section class="entity-section outer-border">
+            <div class="flex-between align-center">
+                <h3>{{ label }}</h3>
+                <a href="{{ url_for('configure.edit_' + slug, id='new') }}" class="text-accent">+ Add New</a>
+            </div>
+
+            <div class="entity-list-box">
+                {% if collection %}
+                    <select class="entity-select" onchange="navigateToEntity(this, '{{ slug }}')">
+                        <option value="">(Select to Edit {{ label }})</option>
+                        {% for ent in collection %}
+                            <option value="{{ ent.id }}">{{ ent.name }}</option>
+                        {% endfor %}
+                    </select>
+                {% else %}
+                    <p class="text-dim italic">No {{ label }} created yet.</p>
+                {% endif %}
+            </div>
+        </section>
+        {% endfor %}
     </div>
-    <style>
-        .flexdiv {
-            margin-top: 20px;
-        }
-    </style>
-    {% for entity_type in ['item', 'character', 'location', 'attrib', 'event'] %}
-        <div class="flexdiv">
-            {% set entity_list = game_data[entity_type + 's'] %}
-            {% if entity_list %}
-                <div class="popup-button">
-                    <button>
-                        {% if entity_type|title == "Attrib" %}
-                            Attributes
-                        {% else %}
-                            {{ entity_type|title }}s
-                        {% endif %}
-                        <span class="dropdown-icon">▼</span>
-                    </button>
-                    <div class="popup-frame">
-                        <div class="popup-list">
-                            {% for entity in entity_list %}
-                                <a href="/configure/{{ entity_type }}/{{ entity.id }}" class="entity-link">{{ entity.name }}</a>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-            {% else %}
-                <span class="no-items">(No {{ entity_type|title }}s)</span>
-            {% endif %}
-            <div class="entitylist-container">
-                <a href="/configure/{{ entity_type }}/new">Add New</a>
+
+    <!-- File Management Section -->
+    <section class="outer-border spacious-top">
+        <h3>Scenario File Management</h3>
+        <div class="column-container">
+            <div>
+                <p class="label-like">Download your current progress and configuration as a JSON file to keep as a backup or share with others.</p>
+                <a href="{{ url_for('configure.save_to_file') }}" class="btn">💾 Download Scenario</a>
+            </div>
+            <div style="border-left: 1px solid #444; padding-left: 20px;">
+                <p class="label-like">Upload a previously saved scenario file. <strong>Warning:</strong> This will overwrite current game data.</p>
+                <form action="{{ url_for('configure.load_from_file') }}" method="post" enctype="multipart/form-data" class="flex-row">
+                    <input type="file" name="file" accept=".json" required>
+                    <button type="submit" class="go-button">📤 Upload</button>
+                </form>
             </div>
         </div>
-    {% endfor %}
-    <div class="flexdiv">
-        <label>
-            <input type="radio" name="mode" value="configure" id="configure" onchange="updateLinks()" checked>
-            Configure
-        </label>
-        <label>
-            <input type="radio" name="mode" value="lookup" id="lookup" onchange="updateLinks()">
-            Lookup
-        </label>
-    </div>
-    <script>
-        window.addEventListener('load', () => {
-            let savedMode = localStorage.getItem('linkmode');
-            const patterns = ['configure', 'overview'];
-            if (patterns.some(pattern => document.referrer.includes(pattern))) {
-                savedMode = 'configure';
-                console.log('linkmode reset');
-            }
-            if (savedMode) {
-                document.querySelector(`input[name="mode"][value="${savedMode}"]`).checked = true;
-            }
-            updateLinks();
-        });
-        function updateLinks() {
-            const mode = document.querySelector('input[name="mode"]:checked').value;
-            localStorage.setItem('linkmode', mode);
-            const links = document.querySelectorAll('.entity-link');
-            links.forEach(link => {
-                let url = link.getAttribute('href');
-                if (mode === 'lookup') {
-                    link.setAttribute('href', url.replace('/configure/', '/lookup/'));
-                } else {
-                    link.setAttribute('href', url.replace('/lookup/', '/configure/'));
-                }
-            });
-        }
-        //document.addEventListener('DOMContentLoaded', updateLinks);
+    </section>
+</div>
 
-        {% if session.get('clear_local_storage') %}
-            localStorage.clear();
-            console.log("Local storage cleared.");
-        {% endif %}
-    </script>
+<script>
+    function navigateToEntity(select, type) {
+        const id = select.value;
+        if (!id) return;
+        
+        const mode = document.querySelector('input[name="mode"]:checked').value;
+        let url = '';
+        
+        if (mode === 'configure') {
+            // Standard edit route
+            url = `/configure/${type}/${id}`;
+        } else {
+            // Lookup route (shows where entity is used)
+            url = `/lookup/${type}/${id}`;
+        }
+        window.location.href = url;
+    }
+
+    function updateLinks() {
+        // This function resets select boxes to avoid confusion when switching modes
+        document.querySelectorAll('.entity-select').forEach(s => s.selectedIndex = 0);
+    }
+
+    function confirmBlank() {
+        if (confirm("Are you sure? This will wipe current characters, items, and progress.")) {
+            // Redirect to a clear-data route
+            window.location.href = "/configure/clear-all";
+        }
+    }
+</script>
+
+<style>
+    .entity-setup-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+    }
+    .entity-list-box { margin-top: 10px; }
+    .entity-select {
+        width: 100%;
+        background: #000;
+        color: white;
+        border: 1px solid var(--border);
+        padding: 8px;
+    }
+    .spacious-top { margin-top: 40px; }
+    .align-center { align-items: center; }
+    .italic { font-style: italic; }
+    .btn { 
+        display: inline-block;
+        padding: 8px 16px; 
+        background: var(--bg-panel); 
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        color: white;
+    }
+    .btn:hover { background: #333; color: var(--accent); text-decoration: none; }
+</style>
 {% endblock %}

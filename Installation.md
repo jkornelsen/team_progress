@@ -26,10 +26,11 @@ Upgrade pip and install the required packages into this venv:
 ```
 python.exe -m pip install --upgrade pip
 pip install flask
-pip install flask-caching
-pip install psycopg2
+pip install flask-sqlalchemy
+pip install flask-migrate
+pip install psycopg2-binary
+pip install markupsafe
 pip install bleach
-pip install tinycss2
 ```
 
 ## II. Database installation and setup
@@ -53,16 +54,15 @@ so either enter this command each time, or set to run automatically as a service
 ```
 & "C:/Program Files/PostgreSQL/16/bin/psql" -U postgres -d app
 create database app with encoding 'UTF8' template template0;
-drop schema public cascade;[^2]
-python database.py
 ```
 
 ## III. Run the app
 
 ```
-chdir team_progress/app
+chdir team_progress
 venv/Scripts/activate
-python app.py
+python database_setup.py --wipe
+python run.py
 ```
 Open a web browser to http://localhost:5000. 
 If it works, you're ready to play!

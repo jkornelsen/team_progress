@@ -1,56 +1,54 @@
-{% extends 'base.html' %}
-{% block upper_left %}
-    <div class="nav-container">
-        <a class="upper-left" href="{{ url_for("overview") }}">[o]verview</a>
-        <span class="separator">|</span>
-        <a href="{{ url_for("configure_index") }}">[m]ain setup</a>
-    </div>
-{% endblock %}
+{% extends 'layout/base.html' %}
+
 {% block content %}
-    <script>
-        const linkForKey = {
-            'o': '{{ url_for('overview') }}',
-            'm': '{{ url_for('configure_index') }}',
-        };
-        document.addEventListener('DOMContentLoaded', () => {
-            if (isMobile) {
-                return;
-            }
-            document.addEventListener('keypress', (event) => {
-                const key = event.key;
-                if (linkForKey[key]) {
-                    window.location.href = linkForKey[key];
-                }
-            });
-        });
-    </script>
-    <h1>Session Users</h1>
-    {% set count = interactions | length %}
-    {% if count > 1 %}
-        <p class="info">{{ count }} players have joined your current game.</p>
-    {% else %}
-        <p class="info">
-            There are no other players in your current game. To invite others, send them the <a href="{{ url_for("get_session_link") }}">session link</a>.
-        </p>
-    {% endif %}
-    {% if interactions %}
+<div class="session-users-container">
+    <h1>Active Players</h1>
+    <p class="label-like">Users who have interacted with this game session in the last 5 minutes.</p>
+
+    <div class="spacious-top">
+        {% if interactions %}
         <table class="spacious">
-            <tr>
-                <th>User ID</th>
-                <th>Last Interaction</th>
-                <th>Page</th>
-            </tr>
-            {% for interaction in interactions %}
+            <thead>
                 <tr>
-                    <td {% if interaction.username == current_username %}class="username"{% endif %}>{{ interaction.username }}</td>
-                    <td>{{ interaction.timestamp.strftime("%Y-%m-%d %H:%M:%S") }}</td>
+                    <th>Player</th>
+                    <th>Last Seen</th>
+                    <th>Current Activity</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for inter in interactions %}
+                <tr class="{{ 'current-user-row' if inter.username == current_username }}">
                     <td>
-                        {{ interaction.action_display() }}
-                        <!--link: {{ interaction.action_link }}-->
+                        <span class="user-badge">👤</span>
+                        <strong>{{ inter.username }}</strong>
+                        {% if inter.username == current_username %} <small class="text-accent">(You)</small>{% endif %}
+                    </td>
+                    <td class="label-like">
+                        {{ inter.timestamp.strftime('%H:%M:%S') }}
+                    </td>
+                    <td>
+                        <span class="activity-text">{{ inter.display_action }}</span>
                     </td>
                 </tr>
-            {% endfor %}
+                {% endfor %}
+            </tbody>
         </table>
-    {% else %}
-    {% endif %}
+        {% else %}
+        <div class="outer-border text-center">
+            <p class="text-dim">No recent activity found.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="spacious-top">
+        <a href="{{ url_for('play.overview') }}" class="btn">Return to Overview</a>
+    </div>
+</div>
+
+<style>
+    .current-user-row { background: #1a2a2a; }
+    .user-badge { margin-right: 8px; }
+    .activity-text { color: var(--text-main); font-style: italic; }
+    .session-users-container { max-width: 800px; margin: 0 auto; }
+</style>
 {% endblock %}
