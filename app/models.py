@@ -1,4 +1,3 @@
-import enum
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import ARRAY, NUMRANGE
 from sqlalchemy.ext.mutable import MutableList
@@ -6,16 +5,29 @@ from .utils import parse_numrange
 
 db = SQLAlchemy()
 
-class StorageType(enum.Enum):
-    """How Item objects are placed."""
-    CARRIED = "carried" # can be held by Character or on floor at Location
-    LOCAL = "local" # stationary at a Location
-    UNIVERSAL = "universal" # not anchored anywhere
-
 # Reserved ID in Entity table for universal storage.
 # Can have up to one general pile for each Item.
 # Progress can also be hosted generally rather than by char or at loc.
 GENERAL_ID = 1
+
+class StorageType:
+    """How Item objects are placed."""
+    UNIVERSAL = 'u' # not anchored anywhere
+    LOCAL     = 'l' # stationary at a Location
+    CARRIED   = 'c' # can be held by Character or on floor at Location
+    
+    @classmethod
+    def get_lc_map(cls):
+        """Returns dict { lowercase key name: single letter }"""
+        return {
+            name.lower(): value 
+            for name, value in cls.__dict__.items() 
+            if name.isupper() and isinstance(value, str) and len(value) == 1
+        }
+
+    @classmethod
+    def all_codes(cls):
+        return tuple(cls.get_lc_map().values())
 
 class JsonKeys:
     ENTITIES = 'entities'
@@ -91,7 +103,7 @@ class Item(Entity):
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
     storage_type = db.Column(
-        db.Enum(StorageType), nullable=False, default=StorageType.UNIVERSAL)
+        db.String(1), nullable=False, default=StorageType.UNIVERSAL)
     q_limit = db.Column(db.Float, default=0.0)
     toplevel = db.Column(db.Boolean, default=False)
     masked = db.Column(db.Boolean, default=False)
@@ -101,13 +113,13 @@ class Item(Entity):
     def from_dict(cls, data, game_token):
         item = super().from_dict(data, game_token)
         for r_data in data.get('recipes', []):
-            item.production_recipes.append(Recipe.from_dict(r_data, game_token))
+            item.recipes.append(Recipe.from_dict(r_data, game_token))
         for attr_pair in data.get('attribs', []):
             item.attrib_values.append(AttribValue(
                 game_token=game_token, attrib_id=attr_pair[0], value=attr_pair[1]
             ))
         if data.get('quantity'):
-            item.inventory_piles.append(Inventory(
+            item.in_piles.append(Inventory(
                 game_token=game_token, owner_id=GENERAL_ID, quantity=data['quantity']
             ))
         return item
@@ -115,7 +127,7 @@ class Item(Entity):
     def to_dict(self):
         data = super().to_dict()
         # Find the "General Storage" quantity (Owner ID 1)
-        gen_pile = next((p for p in self.inventory_piles if p.owner_id == 1), None)
+        gen_pile = next((p for p in self.in_piles if p.owner_id == 1), None)
         
         data.update({
             "storage_type": self.storage_type,
@@ -124,7 +136,7 @@ class Item(Entity):
             "masked": self.masked,
             "quantity": gen_pile.quantity if gen_pile else 0.0,
             "attribs": [[v.attrib_id, v.value] for v in self.attrib_values],
-            "recipes": [r.to_dict() for r in self.production_recipes]
+            "recipes": [r.to_dict() for r in self.recipes]
         })
         return data
 
@@ -153,6 +165,9 @@ class Item(Entity):
         db.ForeignKeyConstraint(
             ['game_token', 'id'],
             ['entities.game_token', 'entities.id'], ondelete='CASCADE'),
+        db.CheckConstraint(
+            f"storage_type IN {StorageType.all_codes()}", 
+            name="check_storage_type_valid"),
     )
     __mapper_args__ = {'polymorphic_identity': 'item'}
 

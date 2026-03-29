@@ -1,6 +1,7 @@
 import logging
 import json
 import os
+import re
 from flask import g, current_app
 from sqlalchemy import func
 from sqlalchemy.dialects.postgresql import Range
@@ -14,110 +15,8 @@ from .utils import parse_numrange
 logger = logging.getLogger(__name__)
 
 # ------------------------------------------------------------------------
-# Exporting Model -> JSON
+# Load or Reset Model
 # ------------------------------------------------------------------------
-
-def export_to_dict():
-    """
-    Serializes the entire game state into a dictionary.
-    """
-    output = { key: [] for key in ENTITIES.keys() }
-    output[JsonKeys.OVERALL] = {}
-
-    # Overall settings
-    game_token = g.game_token
-    ov = Overall.query.get(game_token)
-    if ov:
-        output[JsonKeys.OVERALL] = ov.to_dict()
-
-    # Export all entities
-    for key, model_cls in ENTITIES.items():
-        entities = model_cls.query.filter(
-            model_cls.game_token == game_token
-        ).all()
-        
-        output[key] = [ent.to_dict() for ent in entities]
-
-    return output
-
-def export_game_to_json():
-    """
-    Generates a formatted JSON string for file downloads.
-    Calls export_to_dict and applies 'condense_json' for readability.
-    """
-    # Get the raw dictionary
-    data = export_to_dict()
-    
-    # Standard JSON stringification
-    raw_json = json.dumps(data, indent=4)
-    
-    # Use the utility to collapse coordinates/ranges onto single lines
-    # (Makes the file much easier for humans to read/edit)
-    return condense_json(raw_json)
-
-def range_to_list(r):
-    """Converts a Postgres NumericRange to a [min, max] list."""
-    if r is None: return [None, None]
-    # Handle both infinity and specific values
-    lower = r.lower if not r.lower_inf else None
-    upper = r.upper if not r.upper_inf else None
-    return [lower, upper]
-
-# ------------------------------------------------------------------------
-# Importing JSON -> Model
-# ------------------------------------------------------------------------
-
-def import_from_dict(data):
-    """
-    Load all data from JSON dictionary.
-    Wipes existing session data and rebuilds using model hydration.
-    """
-    # 1. Wipe current data
-    game_token = g.game_token
-    db.session.query(Entity).filter_by(game_token=game_token).delete()
-    db.session.query(Overall).filter_by(game_token=game_token).delete()
-    
-    # 2. Overall Settings
-    ov = Overall.from_dict(data.get(JsonKeys.OVERALL, {}), game_token)
-    db.session.add(ov)
-    db.session.add(Entity(
-        id=GENERAL_ID, game_token=game_token, name="General Storage",
-        entity_type="entity"))
-
-    # 3. Entities
-    for key, model_cls in ENTITIES.items():
-        for entry in data.get(key, []):
-            instance = model_cls.from_dict(entry, game_token)
-            db.session.add(instance)
-
-    # 4. Sync the next ID counter
-    db.session.flush()
-    max_id = db.session.query(func.max(Entity.id)).filter_by(game_token=game_token).scalar()
-    ov.next_entity_id = (max_id or 1) + 1
-    
-    db.session.commit()
-    return True
-
-# ------------------------------------------------------------------------
-# Reset Scenario in Database
-# ------------------------------------------------------------------------
-
-def load_scenario_from_path(filename):
-    """
-    Helper to load a JSON file from the DATA_DIR and import it.
-    """
-    path = os.path.join(current_app.config['DATA_DIR'], filename)
-    if not os.path.exists(path):
-        logger.warning(f"Scenario file not found: {path}")
-        return False
-    
-    try:
-        with open(path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-            return import_from_dict(data)
-    except Exception as e:
-        logger.error(f"Failed to load scenario {filename}: {e}")
-        return False
 
 def init_game_session():
     """Bootstraps a specific game session."""
@@ -147,6 +46,56 @@ def init_game_session():
     else:
         logger.debug(f"Session {game_token} already initialized.")
 
+def load_scenario_from_path(filename):
+    """
+    Helper to load a JSON file from the DATA_DIR and import it.
+    """
+    path = os.path.join(current_app.config['DATA_DIR'], filename)
+    if not os.path.exists(path):
+        logger.warning(f"Scenario file not found: {path}")
+        return False
+    
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            return import_from_dict(data)
+    except Exception as e:
+        logger.error(f"Failed to load scenario {filename}: {e}")
+        return False
+
+def import_from_dict(data):
+    """
+    Load all data from JSON dictionary.
+    Wipes existing session data and rebuilds using model hydration.
+    """
+    # 1. Wipe current data
+    game_token = g.game_token
+    db.session.query(Entity).filter_by(game_token=game_token).delete()
+    db.session.query(Overall).filter_by(game_token=game_token).delete()
+    
+    # 2. Overall Settings
+    ov = Overall.from_dict(data.get(JsonKeys.OVERALL, {}), game_token)
+    db.session.add(ov)
+    db.session.add(Entity(
+        id=GENERAL_ID, game_token=game_token, name="General Storage",
+        entity_type="entity"))
+
+    # 3. Entities
+    entities_data = data.get(JsonKeys.ENTITIES, {})
+    for key, model_cls in ENTITIES.items():
+        for entry in entities_data.get(key, []):
+            instance = model_cls.from_dict(entry, game_token)
+            db.session.add(instance)
+        db.session.commit()
+
+    # 4. Sync the next ID counter
+    db.session.flush()
+    max_id = db.session.query(func.max(Entity.id)).filter_by(game_token=game_token).scalar()
+    ov.next_entity_id = (max_id or 1) + 1
+    
+    db.session.commit()
+    return True
+
 def clear_game_data():
     """
     Wipes all data associated with a specific token.
@@ -161,4 +110,84 @@ def clear_game_data():
     
     db.session.commit()
     logger.info(f"Token {game_token} cleared.")
+
+# ------------------------------------------------------------------------
+# Exporting Model -> JSON
+# ------------------------------------------------------------------------
+
+def export_game_to_json():
+    """
+    Generates a formatted JSON string for file downloads.
+    """
+    # Get the raw dictionary
+    data = export_to_dict()
+    
+    # Standard JSON stringification
+    raw_json = json.dumps(data, indent=4)
+    
+    # Use the utility to collapse coordinates/ranges onto single lines
+    # (Makes the file much easier for humans to read/edit)
+    return condense_json(raw_json)
+
+def export_to_dict():
+    """
+    Serializes the entire game state into a dictionary.
+    """
+    output = {
+        JsonKeys.ENTITIES: {key: [] for key in ENTITIES.keys()},
+        JsonKeys.GENERAL: {},
+        JsonKeys.OVERALL: {}
+    }
+
+    # Overall settings
+    game_token = g.game_token
+    ov = Overall.query.get(game_token)
+    if ov:
+        output[JsonKeys.OVERALL] = ov.to_dict()
+
+    # Export all entities
+    for key, model_cls in ENTITIES.items():
+        entities = model_cls.query.filter(
+            model_cls.game_token == game_token
+        ).all()
+        
+        output[JsonKeys.ENTITIES][key] = [ent.to_dict() for ent in entities]
+
+    return output
+
+def condense_json(json_str):
+    """
+    Post-processes a JSON string to collapse coordinate-style arrays 
+    onto a single line for better manual readability.
+    """
+    # 1. Collapse any 2-item arrays (e.g., [1, 2] or ["slot", "main"])
+    # Patterns: [ value , value ]
+    json_str = re.sub(
+        r'\[\s*(-?[\d.]+|".*?")\s*,\s*(-?[\d.]+|".*?")\s*\]',
+        lambda m: f'[{m.group(1)}, {m.group(2)}]',
+        json_str
+    )
+
+    # 2. Specifically target spatial keys that might have more items (like 'excluded' with 4)
+    tuple_keys = ["door1", "door2", "dimensions", "excluded", "position", "numeric_range"]
+    key_pattern = "|".join(tuple_keys)
+    pattern = rf'"({key_pattern})":\s*\[(.*?)\]'
+
+    def collapse_spatial_data(match):
+        key = match.group(1)
+        # Remove all internal whitespace and newlines
+        content = match.group(2).replace("\n", "").replace(" ", "")
+        # Re-insert clean spacing: [1,2,3,4] -> [1, 2, 3, 4]
+        formatted_content = ", ".join(content.split(","))
+        return f'"{key}": [{formatted_content}]'
+
+    return re.sub(pattern, collapse_spatial_data, json_str, flags=re.DOTALL)
+
+def range_to_list(r):
+    """Converts a Postgres NumericRange to a [min, max] list."""
+    if r is None: return [None, None]
+    # Handle both infinity and specific values
+    lower = r.lower if not r.lower_inf else None
+    upper = r.upper if not r.upper_inf else None
+    return [lower, upper]
 

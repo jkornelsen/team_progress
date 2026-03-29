@@ -70,33 +70,38 @@ def format_num(value, nformat='en_US'):
         return str(value)
 
 def unformat_num(value_str):
-    """
-    Parses strings like '1.23m' or '1,000.50' back into floats.
-    """
-    if not value_str:
+    """Remove formatting from a string. Returns a float."""
+    if not value_str or not isinstance(value_str, str):
         return 0.0
-    
-    value_str = str(value_str).strip().lower()
+    value_str = value_str.strip()
+    if value_str == '':
+        return 0.0
 
-    # Handle Scientific
-    if 'e' in value_str:
-        try: return float(value_str)
-        except ValueError: pass
+    # Scientific notation "1.23e6"
+    if re.match(r'^[-+]?\d+(\.\d+)?e[+-]?\d+$', value_str, re.IGNORECASE):
+        try:
+            return float(value_str)
+        except ValueError:
+            return 0.0
 
-    # Handle Abbreviated suffixes
-    for i, suffix in enumerate(SUFFIXES[1:], 1):
-        if suffix and value_str.endswith(suffix):
-            try:
-                num_part = value_str[:-len(suffix)]
-                return float(num_part) * (1000 ** i)
-            except ValueError: pass
+    # Abbreviated format like "1.23m"
+    abbr_map = {
+        suffix: 10 ** (3 * chunk)
+        for chunk, suffix in enumerate(SUFFIXES[1:])}
+    match = re.match(
+        rf'^(\d+(\.\d+)?)([{ "".join(SUFFIXES[1:]) }])$', value_str)
+    if match:
+        number = float(match.group(1))
+        suffix = match.group(3)
+        return number * abbr_map[suffix]
 
-    # Handle standard locale (strip everything but numbers, dots, and minus)
+    # Remove grouping characters like commas or periods
     try:
-        clean_str = re.sub(r'[^\d.-]', '', value_str)
-        return float(clean_str)
-    except ValueError:
+        normalized_value_str = re.sub(r'[^\d.-]', '', value_str)
+        return float(normalized_value_str)
+    except (ValueError, TypeError):
         return 0.0
+
 
 # ------------------------------------------------------------------------
 # Coordinate & Grid Parsing
@@ -193,30 +198,54 @@ def htmlify_filter(html):
 # ------------------------------------------------------------------------
 
 class RequestHelper:
-    """
-    Helper to safely extract typed values from request.form or request.args.
-    """
-    @staticmethod
-    def get_int(key, default=0):
-        val = request.values.get(key, '').strip()
+    """Safely extracts typed values from request.form or request.args."""
+    def __init__(self, source):
+        if source not in ['form', 'args']:
+            raise ValueError("Source must be 'form' or 'args'")
+        self.source = source
+
+    def _get_source(self):
+        return getattr(request, self.source)
+
+    def _get_from_request(self, key):
+        return self._get_source().get(key, '')
+
+    def get_str(self, key, default=''):
+        """Retrieve a string from the request.
+        No special checks are needed -- just a thin wrapper method.
+        """
+        return (self._get_from_request(key) or default).strip()
+
+    def get_int(self, key, default=0):
+        val = self._get_from_request(key)
         try:
-            return int(unformat_num(val))
+            return int(float(unformat_num(val)))
         except (ValueError, TypeError):
             return default
 
-    @staticmethod
-    def get_float(key, default=0.0):
-        val = request.values.get(key, '').strip()
-        return unformat_num(val)
+    def get_float(self, key, default=0.0):
+        """Retrieve a floating point value using unformat_num logic."""
+        formatted_str = self._get_from_request(key)
+        value_str = unformat_num(formatted_str)
+        if formatted_str == '' or value_str == '':
+            return default
+        try:
+            return float(value_str)
+        except (ValueError, TypeError):
+            return default
 
-    @staticmethod
-    def get_bool(key):
-        val = request.values.get(key, '').lower()
-        return val in ['true', 'on', '1', 'checked']
+    def get_bool(self, key, default=False):
+        """Retrieve a boolean value from the request."""
+        value_str = self._get_from_request(key)
+        if value_str == '':
+            return default
+        try:
+            return bool(value_str)
+        except ValueError:
+            return default
 
-    @staticmethod
-    def get_coords(key):
-        val = request.values.get(key, '').strip()
+    def get_coords(self, key):
+        val = self._get_from_request(key)
         return parse_coords(val)
 
 def parse_form_data(form_dict):
@@ -313,35 +342,3 @@ class LinkLetters:
                 self.links[link] = letter
             return letter
         return ""
-
-# ------------------------------------------------------------------------
-# JSON Condensing
-# ------------------------------------------------------------------------
-
-def condense_json(json_str):
-    """
-    Post-processes a JSON string to collapse coordinate-style arrays 
-    onto a single line for better manual readability.
-    """
-    # 1. Collapse any 2-item arrays (e.g., [1, 2] or ["slot", "main"])
-    # Patterns: [ value , value ]
-    json_str = re.sub(
-        r'\[\s*(-?[\d.]+|".*?")\s*,\s*(-?[\d.]+|".*?")\s*\]',
-        lambda m: f'[{m.group(1)}, {m.group(2)}]',
-        json_str
-    )
-
-    # 2. Specifically target spatial keys that might have more items (like 'excluded' with 4)
-    tuple_keys = ["door1", "door2", "dimensions", "excluded", "position", "numeric_range"]
-    key_pattern = "|".join(tuple_keys)
-    pattern = rf'"({key_pattern})":\s*\[(.*?)\]'
-
-    def collapse_spatial_data(match):
-        key = match.group(1)
-        # Remove all internal whitespace and newlines
-        content = match.group(2).replace("\n", "").replace(" ", "")
-        # Re-insert clean spacing: [1,2,3,4] -> [1, 2, 3, 4]
-        formatted_content = ", ".join(content.split(","))
-        return f'"{key}": [{formatted_content}]'
-
-    return re.sub(pattern, collapse_spatial_data, json_str, flags=re.DOTALL)

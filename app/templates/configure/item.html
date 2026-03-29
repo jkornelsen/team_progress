@@ -10,12 +10,14 @@
 
 {% block content %}
 <div class="configure-item">
-    <h1>Item Setup: {{ item.name or 'New Item' }}</h1>
-    
+    <h1>Item Setup</h1>
+    <p class="info">
+        Resources and equipment, or concepts such as upgrades.
+        Often produced according to recipes.
+    </p>
     <form method="POST" id="item-form">
         <!-- 1. Identity (Entity Table) -->
         <section class="outer-border">
-            <h3>General Info</h3>
             <div class="form-group">
                 <label for="name">Item Name:</label>
                 <input type="text" id="name" name="name" value="{{ item.name or '' }}" required class="full-width">
@@ -28,21 +30,29 @@
 
         <!-- 2. Logic & Storage (Item Table) -->
         <section class="outer-border">
-            <h3>Storage & Behavior</h3>
+            <p class="info">
+                Storage type is important to consider. Universal (accessible anywhere) is
+                good for idle progress, while carried is typically for RPGs.
+                Crafting stations reside at a location.
+                To store more than one way, create an additional item
+                and convert with a recipe.
+                For example,
+                <i>funds</i> in the bank (general) &rarr; <i>cash</i> on hand (carried).
+            </p>
             <div class="column-container">
                 <div>
                     <label>Storage Type:</label><br>
                     <label class="radio-label">
                         <input type="radio" name="storage_type" value="universal" {{ 'checked' if item.storage_type == 'universal' }}> 
-                        Universal (Accessible Anywhere)
+                        Universal &mdash; Accessible Anywhere
                     </label><br>
                     <label class="radio-label">
                         <input type="radio" name="storage_type" value="carried" {{ 'checked' if item.storage_type == 'carried' }}> 
-                        Carried (Inventory Based)
+                        Carried &mdash; Inventory Based
                     </label><br>
                     <label class="radio-label">
                         <input type="radio" name="storage_type" value="local" {{ 'checked' if item.storage_type == 'local' }}> 
-                        Local (Fixed to a Location)
+                        Local &mdash; Fixed to a Location
                     </label>
                 </div>
                 <div>
@@ -59,13 +69,13 @@
 
             <div class="spacious-top flex-row gap-20">
                 <div class="form-group">
-                    <label for="q_limit">Stack Limit:</label>
+                    <label for="q_limit">Limit per Pile:</label>
                     <input type="number" id="q_limit" name="q_limit" value="{{ item.q_limit }}" step="any">
                     <small class="label-like">0 for unlimited</small>
                 </div>
                 
                 <div id="universal-qty-box" class="form-group {{ 'hidden' if item.storage_type != 'universal' }}">
-                    <label for="quantity">Initial Qty (General Storage):</label>
+                    <label for="quantity">Initial Qty (Universal Storage):</label>
                     {# We fetch the quantity from the Inventory record linked to Owner ID 1 #}
                     <input type="number" id="quantity" name="quantity" value="{{ initial_qty or 0 }}" step="any">
                 </div>
@@ -89,16 +99,16 @@
 
         <!-- 4. Form Actions -->
         <div class="footer-actions flex-between">
-            <div class="danger-zone">
-                {% if item %}
-                    <button type="submit" name="delete" class="dangerous-button" onclick="return confirm('Delete this item?')">Delete Item</button>
-                {% endif %}
-            </div>
-            <div class="save-zone">
-                <a href="{{ url_for('configure.index') }}" class="btn">Cancel</a>
+            <div class="gap-20" style="display: flex">
                 <button type="submit" name="duplicate" class="btn">Save & Duplicate</button>
                 <button type="submit" name="save" class="go-button">Save Changes</button>
+                <a href="{{ url_for('configure.index') }}" class="btn">Cancel</a>
             </div>
+            {% if item %}
+            <div>
+                <button type="submit" name="delete" class="dangerous-button" onclick="return confirm('Delete this item?')">Delete Item</button>
+            </div>
+            {% endif %}
         </div>
     </form>
 </div>
@@ -204,8 +214,6 @@
 <style>
     .full-width { width: 100%; box-sizing: border-box; background: #000; color: #fff; border: 1px solid var(--border); padding: 8px; }
     .radio-label, .checkbox-label { font-size: 0.9em; cursor: pointer; }
-    .footer-actions { margin-top: 40px; padding: 20px; border-top: 1px solid var(--border); }
-    .gap-20 { gap: 20px; }
     .btn-sm { font-size: 0.8em; padding: 4px 8px; }
 </style>
 {% endblock %}

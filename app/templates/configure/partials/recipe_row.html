@@ -3,7 +3,9 @@
     <input type="hidden" name="recipes[{{ recipe_index }}][id]" value="{{ recipe.id if recipe }}">
     
     <div class="flex-between align-center">
-        <h4>Recipe #{{ recipe_index + 1 }}</h4>
+        <h4>
+            Recipe #<span class="recipe-display-number">{{ recipe_index + 1 if recipe_index is number else '???' }}</span>
+        </h4>
         <button type="button" class="btn-sm dangerous-button" onclick="this.closest('.recipe-card').remove()">Remove Recipe</button>
     </div>
 

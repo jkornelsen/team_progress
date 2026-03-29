@@ -6,15 +6,15 @@ from flask import (
     Blueprint, request, session, redirect, url_for, render_template, g,
     send_file, jsonify, current_app)
 from app.models import (
-    GENERAL_ID, JsonKeys, ENTITIES, db,
+    GENERAL_ID, StorageType, JsonKeys, ENTITIES, db,
     Entity, Item, Character, Location, Attrib, Event, 
     Pile, Recipe, RecipeSource, RecipeByproduct, AttribValue, 
     LocationDest, ItemRef, Overall, WinRequirement)
 from app.serialization import (
-    export_to_dict, import_from_dict, clear_game_data,
-    init_game_session, load_scenario_from_path)
+    init_game_session, load_scenario_from_path, import_from_dict,
+    clear_game_data, export_game_to_json, export_to_dict)
 from app.utils import (
-    LinkLetters, parse_coords, parse_dimensions, condense_json,
+    LinkLetters, RequestHelper, parse_coords, parse_dimensions,
     parse_form_data)
 
 logger = logging.getLogger(__name__)
@@ -50,6 +50,8 @@ def edit_item(id):
     item = Item.get_or_new(game_token, id)
 
     if request.method == 'POST':
+        req = RequestHelper('form')
+
         if 'delete' in request.form:
             db.session.delete(item)
             db.session.commit()
@@ -58,16 +60,19 @@ def edit_item(id):
         if item.id is None:
             item.id = Overall.generate_next_id(g.game_token)
             db.session.add(item)
-
-        item.name = request.form.get('name')
-        item.description = request.form.get('description')
         
-        item.storage_type = request.form.get('storage_type', 'universal')
-        item.q_limit = float(request.form.get('q_limit', 0))
+        item.name = req.get_str('name', item.name)
+        item.description = req.get_str('description', item.description)
+        
+        storage_map = StorageType.get_lc_map()
+        storage_lc = req.get_str('storage_type').lower()
+        item.storage_type = storage_map.get(storage_lc, StorageType.UNIVERSAL)
+        item.q_limit = req.get_float('q_limit', 0.0)
         item.toplevel = 'toplevel' in request.form
+        item.masked = 'masked' in request.form
         
         if item.storage_type == 'universal':
-            qty = float(request.form.get('quantity', 0))
+            qty = req.get_float('quantity', 0.0)
             gen_pile = Pile.query.filter_by(
                 game_token=game_token, item_id=item.id, owner_id=GENERAL_ID
             ).first()
@@ -450,7 +455,7 @@ def browse_scenarios():
 @configure_bp.route('/save')
 def save_to_file():
     """Exports the current game token state to a JSON file."""
-    json_data = export_game_to_json(g.game_token)
+    json_data = export_game_to_json()
     
     overall = Overall.query.get(g.game_token)
     title = (overall.title or '').strip() or 'scenario'
@@ -468,13 +473,11 @@ def upload():
     if request.method == 'POST':
         if 'file' not in request.files:
             return "No file uploaded", 400
-            
         file = request.files['file']
         data = json.load(file)
-        
         try:
             import_from_dict(data)
-            return redirect(url_for('configure.index'))
+            return redirect(url_for('play.overview'))
         except Exception as e:
             db.session.rollback()
             logger.error(f"Import failed: {e}")
@@ -484,12 +487,12 @@ def upload():
         'configure/upload.html', 
     )
 
-@configure_bp.route('/clear-all')
+@configure_bp.route('/clear-all', methods=['POST'])
 def clear_all():
     """Wipes data and re-applies the default scenario."""
     clear_game_data()
     init_game_session() 
-    return redirect(url_for('configure.index'))
+    return redirect(url_for('play.overview'))
 
 # ------------------------------------------------------------------------
 # Helpers

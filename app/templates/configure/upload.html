@@ -10,24 +10,25 @@
     <br/>
 
     <div class="upload-zone spacious-top" id="drop-zone">
-        <form action="{{ url_for('configure.upload') }}" method="POST" enctype="multipart/form-data">
+        <form id="upload-form" action="{{ url_for('configure.upload') }}" method="POST" enctype="multipart/form-data">
             <div class="flex-column align-center gap-10">
                 <span style="font-size: 3em;">📄</span>
                 <p>Drag and drop your <strong>.json</strong> file here</p>
                 <p class="label-like">or</p>
-                <input type="file" name="file" accept=".json" required id="file-input">
-                <div class="spacious-top">
-                    <button type="submit" class="go-button" style="padding: 10px 40px;">[U]pload & Initialize</button>
+                <div class="upload-container">
+                    <label for="file-input" class="custom-file-upload">
+                        ✨ Select JSON File
+                    </label>
+                    <input type="file" id="file-input" name="file" accept=".json" />
+                    <span id="file-name"></span>
                 </div>
             </div>
         </form>
     </div>
 
-    <div class="divider-horizontal">OR</div>
-
     <div class="blank-start-area">
         <form action="{{ url_for('configure.clear_all') }}" method="POST" enctype="multipart/form-data">
-        <p>Start from scratch with an empty world.</p>
+        <p class="label-like">To start with an empty world instead:</p>
         <button type="submit" class="dangerous-button">
             ✨ Initialize Blank Setup
         </button>
@@ -36,17 +37,64 @@
 </div>
 
 <script>
+    // Drag and Drop Logic
+    const dz = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const uploadForm = document.getElementById('upload-form');
+
     // Simple Hotkey for Upload
     document.addEventListener('keypress', (e) => {
-        if (e.key.toLowerCase() === 'u') {
-            document.querySelector('button[type="submit"]').click();
+        if (e.target.tagName !== 'INPUT' && e.key.toLowerCase() === 'u') {
+            fileInput.click(); // Opens the browse dialog
         }
     });
 
-    // Drag and Drop Visual Feedback
-    const dz = document.getElementById('drop-zone');
-    dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.style.borderColor = 'var(--accent)'; });
-    dz.addEventListener('dragleave', (e) => { dz.style.borderColor = 'var(--border)'; });
+    // Automatically submit the form once dropped
+    const autoSubmit = (files) => {
+        if (files.length > 0) {
+            // Use requestSubmit() to trigger HTML5 validation 
+            // and stay compatible with standard form behavior
+            if (typeof uploadForm.requestSubmit === 'function') {
+                uploadForm.requestSubmit();
+            } else {
+                uploadForm.submit();
+                //HTMLFormElement.prototype.submit.call(uploadForm);
+            }
+            console.log("File uploaded:", files[0].name);
+        }
+    };
+
+    // Manual Browse (The Fallback)
+    // Fires as soon as the user selects a file in the system dialog
+    fileInput.addEventListener('change', (e) => {
+        const files = e.target.files;
+        fileInput.files = files;  // Put file into the form input.
+        autoSubmit(files);
+    });
+
+    // Visual Feedback
+    dz.addEventListener('dragover', (e) => { 
+        e.preventDefault(); 
+        dz.style.borderColor = 'var(--accent)'; 
+    });
+
+    dz.addEventListener('dragleave', (e) => { 
+        dz.style.borderColor = 'var(--border)'; 
+    });
+
+    // Handling the Drop
+    dz.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dz.style.borderColor = 'var(--border)';
+
+        // 1. Get the files from the event
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            // 2. Assign the dropped file to the hidden file input
+            fileInput.files = files;  // Put file into the form input.
+            autoSubmit(files);
+        }
+    });
 </script>
 
 <style>
@@ -63,5 +111,32 @@
         padding: 10px;
     }
     .gap-10 { gap: 10px; }
+
+    #file-input {
+        display: none;
+    }
+
+    .custom-file-upload {
+        display: inline-block;
+        padding: 12px 30px;
+        cursor: pointer;
+        background: var(--accent, #007bff);
+        color: white;
+        border-radius: 8px;
+        font-weight: bold;
+    }
+
+    #file-name {
+        margin-left: 10px;
+        font-size: 0.9em;
+        color: #555;
+    }
+
+    .blank-start-area {
+        margin-top: 20px;
+        padding: 20px;
+        border-top: 1px solid #222;
+    }
+
 </style>
 {% endblock %}
