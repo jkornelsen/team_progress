@@ -10,7 +10,7 @@
 
 {% block content %}
 <div class="configure-item">
-    <h1>Item Setup: {{ item.name if item else 'New Item' }}</h1>
+    <h1>Item Setup: {{ item.name or 'New Item' }}</h1>
     
     <form method="POST" id="item-form">
         <!-- 1. Identity (Entity Table) -->
@@ -18,11 +18,11 @@
             <h3>General Info</h3>
             <div class="form-group">
                 <label for="name">Item Name:</label>
-                <input type="text" id="name" name="name" value="{{ item.name if item }}" required class="full-width">
+                <input type="text" id="name" name="name" value="{{ item.name or '' }}" required class="full-width">
             </div>
             <div class="form-group spacious-top">
                 <label for="description">Description:</label>
-                <textarea id="description" name="description" rows="4" class="full-width">{{ item.description if item }}</textarea>
+                <textarea id="description" name="description" rows="4" class="full-width">{{ item.description or '' }}</textarea>
             </div>
         </section>
 
@@ -33,25 +33,25 @@
                 <div>
                     <label>Storage Type:</label><br>
                     <label class="radio-label">
-                        <input type="radio" name="storage_type" value="universal" {{ 'checked' if not item or item.storage_type == 'universal' }}> 
+                        <input type="radio" name="storage_type" value="universal" {{ 'checked' if item.storage_type == 'universal' }}> 
                         Universal (Accessible Anywhere)
                     </label><br>
                     <label class="radio-label">
-                        <input type="radio" name="storage_type" value="carried" {{ 'checked' if item and item.storage_type == 'carried' }}> 
+                        <input type="radio" name="storage_type" value="carried" {{ 'checked' if item.storage_type == 'carried' }}> 
                         Carried (Inventory Based)
                     </label><br>
                     <label class="radio-label">
-                        <input type="radio" name="storage_type" value="local" {{ 'checked' if item and item.storage_type == 'local' }}> 
+                        <input type="radio" name="storage_type" value="local" {{ 'checked' if item.storage_type == 'local' }}> 
                         Local (Fixed to a Location)
                     </label>
                 </div>
                 <div>
                     <label class="checkbox-label">
-                        <input type="checkbox" name="toplevel" {{ 'checked' if item and item.toplevel }}> 
+                        <input type="checkbox" name="toplevel" {{ 'checked' if item.toplevel }}> 
                         Show in Overview
                     </label><br>
                     <label class="checkbox-label">
-                        <input type="checkbox" name="masked" {{ 'checked' if item and item.masked }}> 
+                        <input type="checkbox" name="masked" {{ 'checked' if item.masked }}> 
                         Masked (Hidden until explored)
                     </label>
                 </div>
@@ -60,11 +60,11 @@
             <div class="spacious-top flex-row gap-20">
                 <div class="form-group">
                     <label for="q_limit">Stack Limit:</label>
-                    <input type="number" id="q_limit" name="q_limit" value="{{ item.q_limit if item else 0 }}" step="any">
+                    <input type="number" id="q_limit" name="q_limit" value="{{ item.q_limit }}" step="any">
                     <small class="label-like">0 for unlimited</small>
                 </div>
                 
-                <div id="universal-qty-box" class="form-group {{ 'hidden' if item and item.storage_type != 'universal' }}">
+                <div id="universal-qty-box" class="form-group {{ 'hidden' if item.storage_type != 'universal' }}">
                     <label for="quantity">Initial Qty (General Storage):</label>
                     {# We fetch the quantity from the Inventory record linked to Owner ID 1 #}
                     <input type="number" id="quantity" name="quantity" value="{{ initial_qty or 0 }}" step="any">

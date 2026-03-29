@@ -3,7 +3,7 @@
 #
 import os
 
-def bundle_files(start_dir="..", output_file="bundled_project_context.md"):
+def bundle_files(start_dir="..", output_file="bundled_project.md"):
     # Target file extensions
     extensions = ('.py', '.html')
     # Folders to completely ignore

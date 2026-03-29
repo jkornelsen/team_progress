@@ -1,22 +1,15 @@
 {% extends 'layout/base.html' %}
-{% from 'layout/macros.html' import hotkey %}
+{% from 'layout/macros.html' import hotkey_link %}
+
+{% block upper_left %}
+    <div class="nav-container">
+        <span class="text-dim">overview</span>
+        <span class="separator">|</span>
+        <a href="{{ url_for('configure.index') }}">[m]ain setup</a>
+    </div>
+{% endblock %}
 
 {% block content %}
-<script>
-    const linkForKey = {};
-
-    document.addEventListener('DOMContentLoaded', () => {
-        if (isMobile) return;
-        
-        // Listen for hotkey presses
-        document.addEventListener('keypress', (event) => {
-            const key = event.key.toLowerCase();
-            if (linkForKey[key]) {
-                window.location.href = linkForKey[key];
-            }
-        });
-    });
-</script>
 
 <div class="overview-header">
     <h1>
@@ -54,14 +47,12 @@
                 </thead>
                 <tbody>
                 {% for char in characters %}
-                    {% set char_url = url_for('play.play_character', id=char.id) %}
-                    {% set key = link_letters.next(char_url) %}
-                    <script>linkForKey["{{ key }}"] = "{{ char_url }}";</script>
                     <tr>
                         <td>
-                            <script>linkForKey["{{ key }}"] = "{{ char_url|safe }}";</script>
-                            <span class="hotkey-indicator">{{ key }}</span>
-                            <a href="{{ char_url }}">{{ char.name }}</a>
+                            {% set target_url = url_for('play.play_character', id=char.id) %}
+                            {% call hotkey_link(target_url, link_letters) %}
+                                {{ char.name }}
+                            {% endcall %}
                         </td>
                         <td>
                             {% if char.location_id %}
@@ -89,11 +80,11 @@
                 </thead>
                 <tbody>
                 {% for item in items %}
-                    {% set item_url = url_for('play.play_item', id=item.id) %}
                     {% set pile = item.in_piles | selectattr('owner_id', 'equalto', GENERAL_ID) | first %}
                     <tr>
                         <td>
-                            {% call hotkey_link(item_url, link_letters) %}
+                            {% set target_url = url_for('play.play_item', id=item.id) %}
+                            {% call hotkey_link(target_url, link_letters) %}
                                 {{ item.name if not item.masked else item.name|mask_string }}
                             {% endcall %}
                         </td>
@@ -146,7 +137,7 @@
         <!-- Game Message Log -->
         <section class="outer-border">
             <div class="flex-between">
-                <h3>Chronicle</h3>
+                <h3>Log</h3>
                 <div class="reload-controls">
                     <label class="label-like">Refresh:</label>
                     <select id="reload-interval" class="mini-select">

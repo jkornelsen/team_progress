@@ -11,29 +11,34 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
     <script>
-        // Global Game State for JS Logic
-        const GAME_TOKEN = "{{ game_token }}";
-        const CURRENT_USER = "{{ current_username }}";
         const isMobile = /Mobi|Android/i.test(navigator.userAgent);
 
         // Global registry for hotkeys
-        const linkForKey = {};
+        window.linkForKey = {
+            'o': "{{ url_for('play.overview') }}",
+            'm': "{{ url_for('configure.index') }}"
+        };
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('keypress', (event) => {
             if (isMobile) return;
             
-            document.addEventListener('keypress', (event) => {
-                // Don't trigger hotkeys if user is typing in an input/textarea
-                if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
-                    return;
-                }
+            // Ignore if typing in a form field
+            const active = document.activeElement.tagName;
+            if (['INPUT', 'TEXTAREA', 'SELECT'].includes(active)) return;
 
-                const key = event.key; // Case sensitive to match alphabet
-                if (linkForKey[key]) {
-                    event.preventDefault();
-                    window.location.href = linkForKey[key];
+            const key = event.key; // Case sensitive for mapping
+            const target = window.linkForKey[key];
+            if (target) {
+                event.preventDefault();
+                // If it's a relative/absolute URL
+                if (target.startsWith('/') || target.startsWith('http')) {
+                    window.location.href = target;
+                } else {
+                    // Otherwise assume it is a CSS selector for a button/link
+                    const el = document.querySelector(target);
+                    if (el) el.click();
                 }
-            });
+            }
         });
     </script>
 </head>

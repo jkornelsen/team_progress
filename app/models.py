@@ -1,3 +1,4 @@
+import enum
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import ARRAY, NUMRANGE
 from sqlalchemy.ext.mutable import MutableList
@@ -5,18 +6,28 @@ from .utils import parse_numrange
 
 db = SQLAlchemy()
 
-# Reserved ID for General/Universal Storage
+class StorageType(enum.Enum):
+    """How Item objects are placed."""
+    CARRIED = "carried" # can be held by Character or on floor at Location
+    LOCAL = "local" # stationary at a Location
+    UNIVERSAL = "universal" # not anchored anywhere
+
+# Reserved ID in Entity table for universal storage.
+# Can have up to one general pile for each Item.
+# Progress can also be hosted generally rather than by char or at loc.
 GENERAL_ID = 1
+
+class JsonKeys:
+    ENTITIES = 'entities'
+    GENERAL = 'general data'
+    OVERALL = 'overall settings'
 
 # ------------------------------------------------------------------------
 # Entity Parent Class
 # ------------------------------------------------------------------------
 
 class Entity(db.Model):
-    """
-    Base table for all primary game objects.
-    ID: 1 is reserved to indicate General Storage of Items.
-    """
+    """Base table for all primary game objects."""
     __tablename__ = 'entities'
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
@@ -30,6 +41,14 @@ class Entity(db.Model):
         fields = {k: v for k, v in data.items()
             if hasattr(cls, k) and not isinstance(v, (list, dict))}
         return cls(game_token=game_token, **fields)
+
+    @classmethod
+    def get_or_new(cls, game_token, id):
+        if id is None:
+            # Create a fresh instance.
+            # Does not generate id or write to db.
+            return cls(game_token=game_token)
+        return cls.query.filter_by(game_token=game_token, id=id).first_or_404()
 
     def to_dict(self):
         """Base export for shared entity fields."""
@@ -65,10 +84,14 @@ class Entity(db.Model):
 # ------------------------------------------------------------------------
 
 class Item(Entity):
+    """The most important entity for idle scenarios,
+    also generally flexible and multi-purpose.
+    """
     __tablename__ = 'items'
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
-    storage_type = db.Column(db.String(20), nullable=False) # carried, local, universal
+    storage_type = db.Column(
+        db.Enum(StorageType), nullable=False, default=StorageType.UNIVERSAL)
     q_limit = db.Column(db.Float, default=0.0)
     toplevel = db.Column(db.Boolean, default=False)
     masked = db.Column(db.Boolean, default=False)
@@ -134,6 +157,9 @@ class Item(Entity):
     __mapper_args__ = {'polymorphic_identity': 'item'}
 
 class Location(Entity):
+    """Allows items or characters to be in different places,
+    making the scenario bigger.
+    """
     __tablename__ = 'locations'
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
@@ -192,9 +218,9 @@ class Location(Entity):
         cascade="all, delete-orphan",
         overlaps="exits")
     item_refs = db.relationship(
-        'LocationItemRef',
+        'ItemRef',
         back_populates='location',
-        foreign_keys="[LocationItemRef.game_token, LocationItemRef.loc_id]",
+        foreign_keys="[ItemRef.game_token, ItemRef.loc_id]",
         viewonly=True)
 
     __table_args__ = (
@@ -205,6 +231,11 @@ class Location(Entity):
     __mapper_args__ = {'polymorphic_identity': 'location'}
 
 class Character(Entity):
+    """The primary entity for role-playing scenarios.
+    The location_id foreign key means that Location must be defined first.
+    However, characters appear above locations in the JSON, since they often
+    feel more foundational.
+    """
     __tablename__ = 'characters'
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
@@ -252,6 +283,7 @@ class Character(Entity):
     __mapper_args__ = { 'polymorphic_identity': 'character' }
 
 class Attrib(Entity):
+    """Functional or informational stats for other entities."""
     __tablename__ = 'attribs'
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
@@ -290,6 +322,9 @@ class Attrib(Entity):
     __mapper_args__ = { 'polymorphic_identity': 'attrib' }
 
 class Event(Entity):
+    """Actions and things that can happen, typically with chance.
+    Many events use or change the Attrib values of other entities.
+    """
     __tablename__ = 'events'
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
@@ -343,19 +378,34 @@ class Event(Entity):
     )
     __mapper_args__ = {'polymorphic_identity': 'event'}
 
+ENTITIES = {
+    'items': Item,
+    'characters': Character,
+    'locations': Location,
+    'attribs': Attrib,
+    'events': Event
+}
+
 # ------------------------------------------------------------------------
 # Association Tables (Many-to-Many)
 # ------------------------------------------------------------------------
 
 class Pile(db.Model):
-    """Consolidated pile of items owned by any Entity (General, Char, or Loc)."""
+    """Consolidated pile of items either:
+    * held by a Character
+    * or at a Location
+    * or neither; the general pile of that Item
+    The 'owner' relationship handles all of these cases.
+    """
     __tablename__ = 'piles'
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
     owner_id = db.Column(db.Integer, primary_key=True)
     item_id = db.Column(db.Integer, primary_key=True)
+    # not relevant for universal storage
     position = db.Column(ARRAY(db.Integer), primary_key=True, default=[0,0])
     quantity = db.Column(db.Float, nullable=False, default=0.0)
+    # optional for carried items (equipment)
     slot = db.Column(db.String(50))
 
     owner = db.relationship(
@@ -437,9 +487,12 @@ class LocationDest(db.Model):
             ['locations.game_token', 'locations.id'], ondelete='CASCADE'),
     )
 
-class LocationItemRef(db.Model):
-    """Location links to show universal items."""
-    __tablename__ = 'loc_item_refs'
+class ItemRef(db.Model):
+    """Reference to an item shown when viewing that host.
+    Such items aren't actually anchored there, only mentioned.
+    This is a good way to organize a set of related universal items.
+    """
+    __tablename__ = 'item_refs'
     game_token = db.Column(db.String(50), primary_key=True)
     loc_id = db.Column(db.Integer, primary_key=True)
     item_id = db.Column(db.Integer, primary_key=True)
@@ -722,7 +775,7 @@ class TravelProgress(Progress):
 class Overall(db.Model):
     __tablename__ = 'overall'
     game_token = db.Column(db.String(50), primary_key=True)
-    title = db.Column(db.String(255), nullable=False)
+    title = db.Column(db.String(255), nullable=False, default='New Scenario')
     description = db.Column(db.Text)
     number_format = db.Column(db.String(5), default='en_US')
     slots = db.Column(ARRAY(db.Text))
@@ -752,6 +805,19 @@ class Overall(db.Model):
             "progress_type": self.progress_type,
             "multiplayer": self.multiplayer
         }
+
+    @classmethod
+    def generate_next_id(cls, game_token):
+        """
+        Generate per-token IDs, useful across entities.
+        Increments the counter and returns the new ID.
+        """
+        # Lock the record for this token until we call commit().
+        overall = cls.query.filter_by(game_token=game_token).with_for_update().first()
+        assigned_id = overall.next_entity_id
+        overall.next_entity_id += 1
+        
+        return assigned_id
 
     win_reqs = db.relationship(
         'WinRequirement',

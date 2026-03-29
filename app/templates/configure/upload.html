@@ -2,11 +2,15 @@
 
 {% block content %}
 <div class="session-card outer-border" style="max-width: 600px; margin: 40px auto;">
-    <h1>Restore Scenario</h1>
-    <p class="label-like">Upload a JSON scenario file to initialize or restore a game state.</p>
-    
+    <h1>Load Scenario Data</h1>
+    <p class="label-like">Upload a JSON scenario file to restore or change a game state.</p>
+    <div class="warning-box spacious-top">
+        <strong>Warning:</strong> Erases all current data. This cannot be undone.
+    </div>
+    <br/>
+
     <div class="upload-zone spacious-top" id="drop-zone">
-        <form action="{{ url_for('configure.load_from_file') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ url_for('configure.upload') }}" method="POST" enctype="multipart/form-data">
             <div class="flex-column align-center gap-10">
                 <span style="font-size: 3em;">📄</span>
                 <p>Drag and drop your <strong>.json</strong> file here</p>
@@ -19,9 +23,16 @@
         </form>
     </div>
 
-    <div class="warning-box spacious-top">
-        <p class="text-danger"><strong>CRITICAL WARNING:</strong> Uploading a file will erase all current data for session <code>{{ game_token[:8] }}...</code>. This cannot be undone.</p>
+    <div class="divider-horizontal">OR</div>
+
+    <div class="blank-start-area">
+        <form action="{{ url_for('configure.clear_all') }}" method="POST" enctype="multipart/form-data">
+        <p>Start from scratch with an empty world.</p>
+        <button type="submit" class="dangerous-button">
+            ✨ Initialize Blank Setup
+        </button>
     </div>
+
 </div>
 
 <script>
@@ -39,8 +50,18 @@
 </script>
 
 <style>
-    .upload-zone { border: 2px dashed var(--border); padding: 40px; text-align: center; border-radius: 8px; background: #111; transition: border-color 0.3s; }
-    .warning-box { background: #2a0000; border: 1px solid var(--danger); padding: 15px; border-radius: 4px; }
+    .upload-zone {
+        border: 2px dashed var(--border);
+        padding: 40px;
+        text-align: center;
+        border-radius: 8px;
+        background: #111;
+        transition: border-color 0.3s;
+    }
+    .warning-box {
+        background: #2a0000;
+        padding: 10px;
+    }
     .gap-10 { gap: 10px; }
 </style>
 {% endblock %}

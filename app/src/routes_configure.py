@@ -6,12 +6,13 @@ from flask import (
     Blueprint, request, session, redirect, url_for, render_template, g,
     send_file, jsonify, current_app)
 from app.models import (
-    db, Entity, Item, Character, Location, Attrib, Event, 
-    Recipe, RecipeSource, RecipeByproduct, AttribValue, 
-    LocationDest, LocationItemRef, Overall, WinRequirement,
-    Pile, GENERAL_ID)
+    GENERAL_ID, JsonKeys, ENTITIES, db,
+    Entity, Item, Character, Location, Attrib, Event, 
+    Pile, Recipe, RecipeSource, RecipeByproduct, AttribValue, 
+    LocationDest, ItemRef, Overall, WinRequirement)
 from app.serialization import (
-    export_to_dict, import_from_dict, clear_game_data, init_game_session)
+    export_to_dict, import_from_dict, clear_game_data,
+    init_game_session, load_scenario_from_path)
 from app.utils import (
     LinkLetters, parse_coords, parse_dimensions, condense_json,
     parse_form_data)
@@ -20,77 +21,33 @@ logger = logging.getLogger(__name__)
 configure_bp = Blueprint('configure', __name__, url_prefix='/configure')
 
 # ------------------------------------------------------------------------
-# Helpers
-# ------------------------------------------------------------------------
-
-def get_next_id():
-    """
-    Thread-safe, per-token ID generation.
-    Increments the counter in the 'Overall' table and returns the new ID.
-    """
-    # Find the Overall record for THIS token and LOCK it for this transaction
-    overall = Overall.query.filter_by(game_token=g.game_token).with_for_update().first()
-    assigned_id = overall.next_entity_id
-    overall.next_entity_id += 1
-    db.session.commit()
-    
-    return assigned_id
-
-def increment_name(name):
-    """Adds ' 2' or increments a trailing number for duplicates."""
-    import re
-    match = re.search(r'(.*?)(\d*)$', name)
-    base, num = match.groups()
-    if num:
-        return f"{base}{int(num) + 1}"
-    return f"{name} 2"
-
-def handle_deletion(entity):
-    """Safely removes an entity and triggers cascade cleanup."""
-    if entity:
-        if entity.id == GENERAL_ID:
-            from flask import flash
-            flash("Cannot delete the General Storage entity.")
-            return False
-        db.session.delete(entity)
-        db.session.commit()
-        return True
-    return False
-
-# ------------------------------------------------------------------------
 # Main Index
 # ------------------------------------------------------------------------
 
 @configure_bp.route('/')
 def index():
     """Lists all entities grouped by type."""
-    items = Item.query.filter_by(game_token=g.game_token).order_by(Item.name).all()
-    chars = Character.query.filter_by(game_token=g.game_token).order_by(Character.name).all()
-    locs = Location.query.filter_by(game_token=g.game_token).order_by(Location.name).all()
-    attribs = Attrib.query.filter_by(game_token=g.game_token).order_by(Attrib.name).all()
-    events = Event.query.filter_by(game_token=g.game_token).order_by(Event.name).all()
-    
+    entities = {
+        name: model.query.filter_by(game_token=g.game_token).order_by(model.name).all()
+        for name, model in ENTITIES.items()
+    }
     overall = Overall.query.get(g.game_token)
     
     return render_template(
         'configure/index.html',
-        items=items,
-        characters=chars,
-        locations=locs, 
-        attribs=attribs,
-        events=events,
-        overall=overall
+        overall=overall,
+        **entities
     )
 
 # ------------------------------------------------------------------------
-# Item Settings
+# Entity Settings
 # ------------------------------------------------------------------------
 
 @configure_bp.route('/item/<int:id>', methods=['GET', 'POST'])
 @configure_bp.route('/item/new', defaults={'id': None}, methods=['GET', 'POST'])
 def edit_item(id):
     game_token = g.game_token
-    item = Item.query.get((game_token, id)) if id else None
+    item = Item.get_or_new(game_token, id)
 
     if request.method == 'POST':
         if 'delete' in request.form:
@@ -98,21 +55,17 @@ def edit_item(id):
             db.session.commit()
             return redirect(url_for('configure.index'))
 
-        is_new = item is None
-        if is_new:
-            item = Item(game_token=game_token, id=get_next_id())
+        if item.id is None:
+            item.id = Overall.generate_next_id(g.game_token)
             db.session.add(item)
 
-        # Update base Entity fields via JTI
         item.name = request.form.get('name')
         item.description = request.form.get('description')
         
-        # Update Item specific fields
         item.storage_type = request.form.get('storage_type', 'universal')
         item.q_limit = float(request.form.get('q_limit', 0))
         item.toplevel = 'toplevel' in request.form
         
-        # Handle General Storage Quantity (Shared ID logic)
         if item.storage_type == 'universal':
             qty = float(request.form.get('quantity', 0))
             gen_pile = Pile.query.filter_by(
@@ -135,7 +88,7 @@ def edit_item(id):
 
     # GET: Prepare variables for the template
     gen_qty = 0
-    if item:
+    if item.id is not None:
         gen_pile = Pile.query.filter_by(
             game_token=game_token, item_id=item.id, owner_id=GENERAL_ID
         ).first()
@@ -149,22 +102,19 @@ def edit_item(id):
         recipes=item.recipes if item else []
     )
 
-# ------------------------------------------------------------------------
-# Attribute Settings
-# ------------------------------------------------------------------------
-
-@configure_bp.route('/attrib/<id>', methods=['GET', 'POST'])
+@configure_bp.route('/attrib/<int:id>', methods=['GET', 'POST'])
+@configure_bp.route('/attrib/new', defaults={'id': None}, methods=['GET', 'POST'])
 def edit_attrib(id):
     game_token = g.game_token
-    attrib = Attrib.query.get(game_token, (int(id))) if id != 'new' else None
+    attrib = Attrib.get_or_new(game_token, id)
 
     if request.method == 'POST':
         if 'delete' in request.form:
             handle_deletion(attrib)
             return redirect(url_for('configure.index'))
 
-        if not attrib:
-            attrib = Attrib(game_token=game_token, id=get_next_id())
+        if attrib.id is None:
+            attrib.id = Overall.generate_next_id(g.game_token)
             db.session.add(attrib)
 
         attrib.name = request.form.get('name')
@@ -191,22 +141,19 @@ def edit_attrib(id):
 
     return render_template('configure/attrib.html', attrib=attrib)
 
-# ------------------------------------------------------------------------
-# Character Settings
-# ------------------------------------------------------------------------
-
-@configure_bp.route('/character/<id>', methods=['GET', 'POST'])
+@configure_bp.route('/character/<int:id>', methods=['GET', 'POST'])
+@configure_bp.route('/character/new', defaults={'id': None}, methods=['GET', 'POST'])
 def edit_character(id):
     game_token = g.game_token
-    char = Character.query.get(game_token, (int(id))) if id != 'new' else None
+    char = Character.get_or_new(game_token, id)
 
     if request.method == 'POST':
         if 'delete' in request.form:
             handle_deletion(char)
             return redirect(url_for('configure.index'))
 
-        if not char:
-            char = Character(game_token=game_token, id=get_next_id())
+        if char.id is None:
+            char.id = Overall.generate_next_id(g.game_token)
             db.session.add(char)
 
         data = parse_form_data(request.form)
@@ -256,15 +203,11 @@ def edit_character(id):
         overall=Overall.query.get(game_token)
     )
 
-# ------------------------------------------------------------------------
-# Location Settings
-# ------------------------------------------------------------------------
-
-@configure_bp.route('/location/<id>', methods=['GET', 'POST'])
+@configure_bp.route('/location/<int:id>', methods=['GET', 'POST'])
+@configure_bp.route('/location/new', defaults={'id': None}, methods=['GET', 'POST'])
 def edit_location(id):
     game_token = g.game_token
-    loc_id = int(id) if id != 'new' else None
-    loc = Location.query.get((game_token, loc_id)) if loc_id else None
+    loc = Location.get_or_new(game_token, id)
 
     if request.method == 'POST':
         data = parse_form_data(request.form)
@@ -272,9 +215,9 @@ def edit_location(id):
             handle_deletion(loc)
             return redirect(url_for('configure.index'))
 
-        if not loc:
-            loc = Location(game_token=game_token, id=get_next_id())
-            db.session.add(loc)
+        if loc.id is None:
+            loc.id = Overall.generate_next_id(g.game_token)
+            db.session.add(char)
 
         loc.name = data.get('name')
         loc.description = data.get('description')
@@ -317,9 +260,9 @@ def edit_location(id):
                 ))
 
         # Update Item Refs (Universal items visible here)
-        LocationItemRef.query.filter_by(game_token=game_token, loc_id=loc.id).delete()
+        ItemRef.query.filter_by(game_token=game_token, loc_id=loc.id).delete()
         for r_id in data.getlist('item_refs[]'):
-            db.session.add(LocationItemRef(game_token=game_token, loc_id=loc.id, item_id=int(r_id)))
+            db.session.add(ItemRef(game_token=game_token, loc_id=loc.id, item_id=int(r_id)))
 
         db.session.commit()
         if 'duplicate' in request.form:
@@ -335,23 +278,20 @@ def edit_location(id):
         universal_items=Item.query.filter_by(game_token=game_token, storage_type='universal').all()
     )
 
-# ------------------------------------------------------------------------
-# Event Settings
-# ------------------------------------------------------------------------
-
-@configure_bp.route('/event/<id>', methods=['GET', 'POST'])
+@configure_bp.route('/event/<int:id>', methods=['GET', 'POST'])
+@configure_bp.route('/event/new', defaults={'id': None}, methods=['GET', 'POST'])
 def edit_event(id):
     game_token = g.game_token
-    event = Event.query.get(game_token, (int(id))) if id != 'new' else None
+    event = Event.get_or_new(game_token, id)
 
     if request.method == 'POST':
         if 'delete' in request.form:
             handle_deletion(event)
             return redirect(url_for('configure.index'))
 
-        if not event:
-            event = Event(game_token=game_token, id=get_next_id())
-            db.session.add(event)
+        if event.id is None:
+            event.id = Overall.generate_next_id(g.game_token)
+            db.session.add(char)
 
         event.name = request.form.get('name')
         event.description = request.form.get('description')
@@ -371,162 +311,6 @@ def edit_event(id):
         event=event,
         all_attribs=Attrib.query.filter_by(game_token=game_token).all()
     )
-
-# ------------------------------------------------------------------------
-# Duplication Engine
-# ------------------------------------------------------------------------
-
-# team_progress/app/src/routes_configure.py
-
-def duplicate_entity(source_id, entity_type):
-    """
-    Deep copies any game entity and its related records (Recipes, Stats, etc.)
-    within the shared ID space.
-    """
-    game_token = g.game_token
-    source_base = Entity.query.get((game_token, source_id))
-    if not source_base:
-        return redirect(url_for('configure.index'))
-
-    new_id = get_next_id()
-    new_name = increment_name(source_base.name)
-
-    # 1. Subclass-specific Logic
-    if entity_type == 'item':
-        src = Item.query.get((game_token, source_id))
-        new_obj = Item(
-            game_token=game_token, id=new_id,
-            name=new_name, description=src.description, toplevel=src.toplevel,
-            masked=src.masked, storage_type=src.storage_type, q_limit=src.q_limit
-        )
-        db.session.add(new_obj)
-        db.session.flush() # Secure the new_id
-
-        # Deep Copy Recipes
-        for r in Recipe.query.filter_by(game_token=game_token, product_id=source_id).all():
-            new_recipe = Recipe(game_token=game_token, product_id=new_id, 
-                                rate_amount=r.rate_amount, rate_duration=r.rate_duration, 
-                                instant=r.instant)
-            db.session.add(new_recipe)
-            db.session.flush()
-            
-            for s in r.sources:
-                db.session.add(RecipeSource(game_token=game_token, recipe_id=new_recipe.id, 
-                                           item_id=s.item_id, q_required=s.q_required, preserve=s.preserve))
-            for b in r.byproducts:
-                db.session.add(RecipeByproduct(game_token=game_token, recipe_id=new_recipe.id, 
-                                              item_id=b.item_id, rate_amount=b.rate_amount))
-
-    elif entity_type == 'character':
-        src = Character.query.get((game_token, source_id))
-        new_obj = Character(
-            game_token=game_token, id=new_id,
-            name=new_name, description=src.description, toplevel=src.toplevel,
-            masked=src.masked, travel_group=src.travel_group,
-            location_id=src.location_id, position=src.position
-        )
-        db.session.add(new_obj)
-
-    elif entity_type == 'location':
-        src = Location.query.get((game_token, source_id))
-        new_obj = Location(
-            game_token=game_token, id=new_id,
-            name=new_name, description=src.description, toplevel=src.toplevel,
-            masked=src.masked, dimensions=src.dimensions, excluded=src.excluded
-        )
-        db.session.add(new_obj)
-        db.session.flush()
-        
-        # Copy Universal Item References (what items are "visible" here)
-        for ref in LocationItemRef.query.filter_by(game_token=game_token, loc_id=source_id).all():
-            db.session.add(LocationItemRef(game_token=game_token, loc_id=new_id, item_id=ref.item_id))
-
-    elif entity_type == 'attrib':
-        src = Attrib.query.get((game_token, source_id))
-        new_obj = Attrib(
-            game_token=game_token, id=new_id,
-            name=new_name, description=src.description,
-            enum_list=src.enum_list, is_binary=src.is_binary
-        )
-        db.session.add(new_obj)
-
-    elif entity_type == 'event':
-        src = Event.query.get((game_token, source_id))
-        new_obj = Event(
-            game_token=game_token, id=new_id,
-            name=new_name,
-            description=src.description, toplevel=src.toplevel,
-            outcome_type=src.outcome_type, trigger_chance=src.trigger_chance,
-            numeric_range=src.numeric_range, single_number=src.single_number,
-            selection_strings=src.selection_strings
-        )
-        db.session.add(new_obj)
-
-    # 2. Shared Associations: Copy Attributes (Stats/Prerequisites)
-    # This applies to almost all entity types
-    attrib_values = AttribValue.query.filter_by(
-        game_token=game_token, subject_id=source_id).all()
-    for av in attrib_values:
-        db.session.add(AttribValue(
-            game_token=game_token, attrib_id=av.attrib_id,
-            subject_id=new_id, value=av.value
-        ))
-
-    db.session.commit()
-    return redirect(url_for(f'configure.edit_{entity_type}', id=new_id))
-
-# ------------------------------------------------------------------------
-# File Management (Save/Load)
-# ------------------------------------------------------------------------
-
-@configure_bp.route('/save')
-def save_to_file():
-    """Exports the current game token state to a JSON file."""
-    json_data = export_game_to_json(g.game_token)
-    
-    overall = Overall.query.get(g.game_token)
-    filename = f"{overall.title if overall else 'scenario'}.json"
-
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json') as tmp:
-        tmp.write(json_data)
-        path = tmp.name
-        
-    return send_file(path, as_attachment=True, download_name=filename)
-
-@configure_bp.route('/load', methods=['POST'])
-def load_from_file():
-    """Processes an uploaded JSON and updates the DB."""
-    if 'file' not in request.files:
-        return "No file uploaded", 400
-        
-    file = request.files['file']
-    data = json.load(file)
-    
-    try:
-        import_from_dict(data)
-        return redirect(url_for('configure.index'))
-    except Exception as e:
-        db.session.rollback()
-        logger.error(f"Import failed: {e}")
-        return f"Error importing scenario: {str(e)}", 500
-
-@configure_bp.route('/clear-all')
-def clear_all():
-    game_token = g.game_token
-    clear_game_data(game_token)
-    
-    # Optional: Look for a default file in the data directory
-    default_path = os.path.join(current_app.config['DATA_DIR'], '00_Default.json')
-    
-    if os.path.exists(default_path):
-        with open(default_path, 'r') as f:
-            data = json.load(f)
-            import_from_dict(data)
-    else:
-        # Fallback to minimal bootstrap if file is missing
-        init_game_session(game_token)
-        
-    return redirect(url_for('configure.index'))
 
 # ------------------------------------------------------------------------
 # Overall Settings
@@ -617,20 +401,19 @@ def lookup_entity(ent_type, id):
 
     return render_template('configure/lookup.html', entity=entity, results=results)
 
+# ------------------------------------------------------------------------
+# File Handling
+# ------------------------------------------------------------------------
+
 @configure_bp.route('/scenarios', methods=['GET', 'POST'])
 def browse_scenarios():
     data_dir = current_app.config['DATA_DIR']
     
     if request.method == 'POST':
         filename = request.form.get('scenario_file')
-        filepath = os.path.join(data_dir, filename)
-        
-        with open(filepath, 'r', encoding='utf-8') as f:
-            scenario_data = json.load(f)
-            
-        # Our serialization logic handles the wipe and the bootstrap
-        import_from_dict(scenario_data)
-        return redirect(url_for('play.overview'))
+        if load_scenario_from_path(filename):
+            return redirect(url_for('play.overview'))
+        return "Error loading scenario", 500
 
     # GET logic: List files
     scenarios = []
@@ -642,7 +425,7 @@ def browse_scenarios():
             with open(path, 'r', encoding='utf-8') as f:
                 try:
                     data = json.load(f)
-                    overall = data.get('overall', {})
+                    overall = data.get(JsonKeys.OVERALL, {})
                     scenarios.append({
                         'filename': filename,
                         'title': overall.get('title', filename),
@@ -663,3 +446,169 @@ def browse_scenarios():
         sort_by=sort_by,
         link_letters=LinkLetters(excluded='om') # Reserve 'o' and 'm' for nav
     )
+
+@configure_bp.route('/save')
+def save_to_file():
+    """Exports the current game token state to a JSON file."""
+    json_data = export_game_to_json(g.game_token)
+    
+    overall = Overall.query.get(g.game_token)
+    title = (overall.title or '').strip() or 'scenario'
+    filename = f"{title}.json"
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json') as tmp:
+        tmp.write(json_data)
+        path = tmp.name
+        
+    return send_file(path, as_attachment=True, download_name=filename)
+
+@configure_bp.route('/upload', methods=['GET', 'POST'])
+def upload():
+    """Processes an uploaded JSON and updates the DB."""
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            return "No file uploaded", 400
+            
+        file = request.files['file']
+        data = json.load(file)
+        
+        try:
+            import_from_dict(data)
+            return redirect(url_for('configure.index'))
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Import failed: {e}")
+            return f"Error importing scenario: {str(e)}", 500
+
+    return render_template(
+        'configure/upload.html', 
+    )
+
+@configure_bp.route('/clear-all')
+def clear_all():
+    """Wipes data and re-applies the default scenario."""
+    clear_game_data()
+    init_game_session() 
+    return redirect(url_for('configure.index'))
+
+# ------------------------------------------------------------------------
+# Helpers
+# ------------------------------------------------------------------------
+
+def increment_name(name):
+    """Adds ' 2' or increments a trailing number for duplicates."""
+    import re
+    match = re.search(r'(.*?)(\d*)$', name)
+    base, num = match.groups()
+    if num:
+        return f"{base}{int(num) + 1}"
+    return f"{name} 2"
+
+def handle_deletion(entity):
+    """Safely removes an entity and triggers cascade cleanup."""
+    if entity:
+        if entity.id == GENERAL_ID:
+            from flask import flash
+            flash("Cannot delete the General Storage entity.")
+            return False
+        db.session.delete(entity)
+        db.session.commit()
+        return True
+    return False
+
+def duplicate_entity(source_id, entity_type):
+    """
+    Deep copies any game entity and its related records (Recipes, Stats, etc.)
+    within the shared ID space.
+    """
+    game_token = g.game_token
+    source_base = Entity.query.get((game_token, source_id))
+    if not source_base:
+        return redirect(url_for('configure.index'))
+
+    new_id = Overall.generate_next_id(g.game_token)
+    new_name = increment_name(source_base.name)
+
+    # 1. Subclass-specific Logic
+    if entity_type == 'item':
+        src = Item.query.get((game_token, source_id))
+        new_obj = Item(
+            game_token=game_token, id=new_id,
+            name=new_name, description=src.description, toplevel=src.toplevel,
+            masked=src.masked, storage_type=src.storage_type, q_limit=src.q_limit
+        )
+        db.session.add(new_obj)
+        db.session.flush() # Secure the new_id
+
+        # Deep Copy Recipes
+        for r in Recipe.query.filter_by(game_token=game_token, product_id=source_id).all():
+            new_recipe = Recipe(game_token=game_token, product_id=new_id, 
+                                rate_amount=r.rate_amount, rate_duration=r.rate_duration, 
+                                instant=r.instant)
+            db.session.add(new_recipe)
+            db.session.flush()
+            
+            for s in r.sources:
+                db.session.add(RecipeSource(game_token=game_token, recipe_id=new_recipe.id, 
+                                           item_id=s.item_id, q_required=s.q_required, preserve=s.preserve))
+            for b in r.byproducts:
+                db.session.add(RecipeByproduct(game_token=game_token, recipe_id=new_recipe.id, 
+                                              item_id=b.item_id, rate_amount=b.rate_amount))
+
+    elif entity_type == 'character':
+        src = Character.query.get((game_token, source_id))
+        new_obj = Character(
+            game_token=game_token, id=new_id,
+            name=new_name, description=src.description, toplevel=src.toplevel,
+            masked=src.masked, travel_group=src.travel_group,
+            location_id=src.location_id, position=src.position
+        )
+        db.session.add(new_obj)
+
+    elif entity_type == 'location':
+        src = Location.query.get((game_token, source_id))
+        new_obj = Location(
+            game_token=game_token, id=new_id,
+            name=new_name, description=src.description, toplevel=src.toplevel,
+            masked=src.masked, dimensions=src.dimensions, excluded=src.excluded
+        )
+        db.session.add(new_obj)
+        db.session.flush()
+        
+        # Copy Item References
+        for ref in ItemRef.query.filter_by(game_token=game_token, loc_id=source_id).all():
+            db.session.add(ItemRef(game_token=game_token, loc_id=new_id, item_id=ref.item_id))
+
+    elif entity_type == 'attrib':
+        src = Attrib.query.get((game_token, source_id))
+        new_obj = Attrib(
+            game_token=game_token, id=new_id,
+            name=new_name, description=src.description,
+            enum_list=src.enum_list, is_binary=src.is_binary
+        )
+        db.session.add(new_obj)
+
+    elif entity_type == 'event':
+        src = Event.query.get((game_token, source_id))
+        new_obj = Event(
+            game_token=game_token, id=new_id,
+            name=new_name,
+            description=src.description, toplevel=src.toplevel,
+            outcome_type=src.outcome_type, trigger_chance=src.trigger_chance,
+            numeric_range=src.numeric_range, single_number=src.single_number,
+            selection_strings=src.selection_strings
+        )
+        db.session.add(new_obj)
+
+    # 2. Shared Associations: Copy Attributes (Stats/Prerequisites)
+    # This applies to almost all entity types
+    attrib_values = AttribValue.query.filter_by(
+        game_token=game_token, subject_id=source_id).all()
+    for av in attrib_values:
+        db.session.add(AttribValue(
+            game_token=game_token, attrib_id=av.attrib_id,
+            subject_id=new_id, value=av.value
+        ))
+
+    db.session.commit()
+    return redirect(url_for(f'configure.edit_{entity_type}', id=new_id))

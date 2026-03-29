@@ -288,11 +288,14 @@ def redirect_back(default='play.overview'):
 
 class LinkLetters:
     """
-    Generates unique letters (a-z) for links to be used as hotkeys.
-    Excludes specific keys such as 'o' because it already gets used for 'overview'.
+    Generates unique letters for links to be used as hotkeys.
+
+    Specify keys to exclude that are already used. You could also exclude
+    keys that may be difficult to distinguish on certain pages (e.g. l vs 1).
+
     Caches links to ensure the same URL gets the same hotkey on one page.
     """
-    def __init__(self, excluded='o'):
+    def __init__(self, excluded='om'): # 'o' (overview) and 'm' (main setup)
         self.index = 0
         self.alphabet = [chr(i) for i in range(ord('a'), ord('z')+1) if chr(i) not in excluded]
         self.alphabet += [chr(i) for i in range(ord('A'), ord('Z')+1)] # Add capitals as fallback

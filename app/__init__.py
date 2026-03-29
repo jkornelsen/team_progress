@@ -18,7 +18,9 @@ def create_app():
     # 1. Configuration
     # ------------------------------------------------------------------------
     app.config['TITLE'] = 'Team Progress Kit'
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'team-progress-kit')
+    app.config['SECRET_KEY'] = os.environ.get(
+        'SECRET_KEY', 'team-progress-kit')
+    app.config['DATA_DIR'] = os.path.join(app.root_path, 'data_files')
     
     # Database Configuration (PostgreSQL)
     # 1. Try to get password from sensitive.py
@@ -36,12 +38,12 @@ def create_app():
     db_port = os.environ.get('DB_PORT', '5432')
     
     # 3. Construct the SQLAlchemy URI
-    # Format: postgresql://user:password@host:port/dbname
-    app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
+    app.config['SQLALCHEMY_DATABASE_URI'] = (
+        f"postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}")
     
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    app.config['UPLOAD_DIR'] = os.path.join('data_files', 'uploads')
+    app.config['UPLOAD_DIR'] = os.path.join(app.config['DATA_DIR'], 'uploads')
     app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024
 
     # ------------------------------------------------------------------------

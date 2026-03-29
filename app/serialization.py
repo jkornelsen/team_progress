@@ -1,25 +1,17 @@
 import logging
 import json
-from flask import g
+import os
+from flask import g, current_app
 from sqlalchemy import func
 from sqlalchemy.dialects.postgresql import Range
 from .models import (
-    db, Entity, Item, Character, Location, Attrib, Event, 
+    GENERAL_ID, ENTITIES, JsonKeys, db,
+    Entity, Item, Character, Location, Attrib, Event, 
     Pile, AttribValue, Recipe, RecipeSource, RecipeByproduct, 
-    RecipeAttribReq, Progress, LocationDest, Overall, WinRequirement,
-    GENERAL_ID
-)
+    RecipeAttribReq, Progress, LocationDest, Overall, WinRequirement)
 from .utils import parse_numrange
 
 logger = logging.getLogger(__name__)
-
-ENTITIES = {
-    'items': Item,
-    'locations': Location,
-    'characters': Character,
-    'attribs': Attrib,
-    'events': Event
-}
 
 # ------------------------------------------------------------------------
 # Exporting Model -> JSON
@@ -30,13 +22,13 @@ def export_to_dict():
     Serializes the entire game state into a dictionary.
     """
     output = { key: [] for key in ENTITIES.keys() }
-    output["overall"] = {}
+    output[JsonKeys.OVERALL] = {}
 
     # Overall settings
     game_token = g.game_token
     ov = Overall.query.get(game_token)
     if ov:
-        output["overall"] = ov.to_dict()
+        output[JsonKeys.OVERALL] = ov.to_dict()
 
     # Export all entities
     for key, model_cls in ENTITIES.items():
@@ -86,7 +78,7 @@ def import_from_dict(data):
     db.session.query(Overall).filter_by(game_token=game_token).delete()
     
     # 2. Overall Settings
-    ov = Overall.from_dict(data.get('overall', {}), game_token)
+    ov = Overall.from_dict(data.get(JsonKeys.OVERALL, {}), game_token)
     db.session.add(ov)
     db.session.add(Entity(
         id=GENERAL_ID, game_token=game_token, name="General Storage",
@@ -110,20 +102,34 @@ def import_from_dict(data):
 # Reset Scenario in Database
 # ------------------------------------------------------------------------
 
-def init_game_session(title="New Game"):
+def load_scenario_from_path(filename):
+    """
+    Helper to load a JSON file from the DATA_DIR and import it.
+    """
+    path = os.path.join(current_app.config['DATA_DIR'], filename)
+    if not os.path.exists(path):
+        logger.warning(f"Scenario file not found: {path}")
+        return False
+    
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            return import_from_dict(data)
+    except Exception as e:
+        logger.error(f"Failed to load scenario {filename}: {e}")
+        return False
+
+def init_game_session():
     """Bootstraps a specific game session."""
     game_token = g.game_token
     overall = Overall.query.get(game_token)
     if not overall:
-        logger.info(f"Initializing game session: {game_token}")
-        overall = Overall(
-            game_token=game_token,
-            title=title,
-            description="A new adventure begins.",
-            progress_type="Idle",
-            number_format="en_US"
-        )
-        db.session.add(overall)
+        logger.info(f"Initializing game session")
+        success = load_scenario_from_path('00_Default.json')
+        if not success:
+            logger.warning(f"Falling back to class default.")
+            overall = Overall(game_token=game_token)
+            db.session.add(overall)
 
         # Ensure the 'General Storage' owner exists
         reserved_entity = Entity.query.filter_by(

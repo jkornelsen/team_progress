@@ -10,6 +10,19 @@
 {% endblock %}
 
 {% block content %}
+
+<script>
+    window.linkForKey['e'] = "{{ url_for('configure.edit_item', id=item.id) }}";
+    window.linkForKey['d'] = "#drop-btn";
+    window.linkForKey['p'] = "#pickup-btn";
+    
+    {% if pile.slot %}
+        window.linkForKey['q'] = "#unequip-btn";
+    {% else %}
+        window.linkForKey['q'] = "#equip-btn";
+    {% endif %}
+</script>
+
 <div class="item-play-container">
     <header class="entity-header">
         <span class="label-like">
