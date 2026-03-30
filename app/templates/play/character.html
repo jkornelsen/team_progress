@@ -94,7 +94,7 @@
                     {% for av in attrib_values %}
                         <div class="attr-item">
                             <span class="label-like">{{ av.attribute.name }}:</span>
-                            <a href="{{ url_for('play.play_attrib', attrib_id=av.attrib_id, owner_id=character.id) }}">
+                            <a href="{{ url_for('play.play_attrib', attrib_id=av.attrib_id, subject_id=character.id) }}">
                                 <span class="attr-value">{{ render_attr(av, av.attribute) }}</span>
                             </a>
                         </div>

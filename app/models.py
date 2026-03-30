@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import event
 from sqlalchemy.dialects.postgresql import ARRAY, NUMRANGE
 from sqlalchemy.ext.mutable import MutableList
 from .utils import parse_numrange
@@ -15,24 +16,26 @@ class StorageType:
     UNIVERSAL = 'u' # not anchored anywhere
     LOCAL     = 'l' # stationary at a Location
     CARRIED   = 'c' # can be held by Character or on floor at Location
-    
-    @classmethod
-    def get_lc_map(cls):
-        """Returns dict { lowercase key name: single letter }"""
-        return {
-            name.lower(): value 
-            for name, value in cls.__dict__.items() 
-            if name.isupper() and isinstance(value, str) and len(value) == 1
-        }
 
-    @classmethod
-    def all_codes(cls):
-        return tuple(cls.get_lc_map().values())
+    ALL_CODES = (UNIVERSAL, LOCAL, CARRIED)
 
 class JsonKeys:
     ENTITIES = 'entities'
     GENERAL = 'general data'
     OVERALL = 'overall settings'
+
+@event.listens_for(db.Model, 'init', propagate=True)
+def auto_init_defaults(target, args, kwargs):
+    """
+    Whenever a new Model instance is created, look for columns 
+    with defaults and apply them to the Python object immediately.
+    """
+    for column in target.__table__.columns:
+        if column.default is not None and column.name not in kwargs:
+            if callable(column.default.arg):
+                setattr(target, column.name, column.default.arg(None))
+            else:
+                setattr(target, column.name, column.default.arg)
 
 # ------------------------------------------------------------------------
 # Entity Parent Class
@@ -46,6 +49,14 @@ class Entity(db.Model):
     entity_type = db.Column(db.String(20), nullable=False)
     name = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text)
+
+    def to_dict(self):
+        """Base export for shared entity fields."""
+        return {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description
+        }
 
     @classmethod
     def from_dict(cls, data, game_token):
@@ -61,14 +72,6 @@ class Entity(db.Model):
             # Does not generate id or write to db.
             return cls(game_token=game_token)
         return cls.query.filter_by(game_token=game_token, id=id).first_or_404()
-
-    def to_dict(self):
-        """Base export for shared entity fields."""
-        return {
-            "id": self.id,
-            "name": self.name,
-            "description": self.description
-        }
 
     piles = db.relationship(
         'Pile', 
@@ -103,11 +106,23 @@ class Item(Entity):
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
     storage_type = db.Column(
-        db.String(1), nullable=False, default=StorageType.UNIVERSAL)
+        db.String(1), nullable=False, default=StorageType.CARRIED)
     q_limit = db.Column(db.Float, default=0.0)
     toplevel = db.Column(db.Boolean, default=False)
     masked = db.Column(db.Boolean, default=False)
     counted_for_unmasking = db.Column(db.Boolean, default=False)
+
+    def to_dict(self):
+        data = super().to_dict()
+        data.update({
+            "storage_type": self.storage_type,
+            "q_limit": self.q_limit,
+            "toplevel": self.toplevel,
+            "masked": self.masked,
+            "attribs": [[v.attrib_id, v.value] for v in self.attrib_values],
+            "recipes": [r.to_dict() for r in self.recipes]
+        })
+        return data
 
     @classmethod
     def from_dict(cls, data, game_token):
@@ -118,27 +133,7 @@ class Item(Entity):
             item.attrib_values.append(AttribValue(
                 game_token=game_token, attrib_id=attr_pair[0], value=attr_pair[1]
             ))
-        if data.get('quantity'):
-            item.in_piles.append(Inventory(
-                game_token=game_token, owner_id=GENERAL_ID, quantity=data['quantity']
-            ))
         return item
-
-    def to_dict(self):
-        data = super().to_dict()
-        # Find the "General Storage" quantity (Owner ID 1)
-        gen_pile = next((p for p in self.in_piles if p.owner_id == 1), None)
-        
-        data.update({
-            "storage_type": self.storage_type,
-            "q_limit": self.q_limit,
-            "toplevel": self.toplevel,
-            "masked": self.masked,
-            "quantity": gen_pile.quantity if gen_pile else 0.0,
-            "attribs": [[v.attrib_id, v.value] for v in self.attrib_values],
-            "recipes": [r.to_dict() for r in self.recipes]
-        })
-        return data
 
     in_piles = db.relationship(
         'Pile',
@@ -166,7 +161,7 @@ class Item(Entity):
             ['game_token', 'id'],
             ['entities.game_token', 'entities.id'], ondelete='CASCADE'),
         db.CheckConstraint(
-            f"storage_type IN {StorageType.all_codes()}", 
+            f"storage_type IN {StorageType.ALL_CODES}", 
             name="check_storage_type_valid"),
     )
     __mapper_args__ = {'polymorphic_identity': 'item'}
@@ -182,15 +177,6 @@ class Location(Entity):
     masked = db.Column(db.Boolean, default=False)
     dimensions = db.Column(MutableList.as_mutable(ARRAY(db.Integer)), default=[0, 0])
     excluded = db.Column(MutableList.as_mutable(ARRAY(db.Integer)))
-
-    @classmethod
-    def from_dict(cls, data, game_token):
-        loc = super().from_dict(data, game_token)
-        for i_data in data.get('items', []):
-            loc.inventory_piles.append(Inventory(game_token=game_token, **i_data))
-        for d_data in data.get('destinations', []):
-            loc.destinations.append(LocationDest(game_token=game_token, **d_data))
-        return loc
 
     def to_dict(self):
         data = super().to_dict()
@@ -211,6 +197,15 @@ class Location(Entity):
             ]
         })
         return data
+
+    @classmethod
+    def from_dict(cls, data, game_token):
+        loc = super().from_dict(data, game_token)
+        for i_data in data.get('items', []):
+            loc.inventory_piles.append(Pile(game_token=game_token, **i_data))
+        for d_data in data.get('destinations', []):
+            loc.destinations.append(LocationDest(game_token=game_token, **d_data))
+        return loc
 
     characters_here = db.relationship(
         'Character',
@@ -260,13 +255,6 @@ class Character(Entity):
     position = db.Column(MutableList.as_mutable(ARRAY(db.Integer)), default=[1, 1])
     location_id = db.Column(db.Integer)
 
-    @classmethod
-    def from_dict(cls, data, game_token):
-        char = super().from_dict(data, game_token)
-        for i_data in data.get('items', []):
-            char.inventory_piles.append(Inventory(game_token=game_token, **i_data))
-        return char
-
     def to_dict(self):
         data = super().to_dict()
         data.update({
@@ -281,6 +269,13 @@ class Character(Entity):
             ]
         })
         return data
+
+    @classmethod
+    def from_dict(cls, data, game_token):
+        char = super().from_dict(data, game_token)
+        for i_data in data.get('items', []):
+            char.inventory_piles.append(Pile(game_token=game_token, **i_data))
+        return char
 
     location = db.relationship(
         'Location',
@@ -305,10 +300,6 @@ class Attrib(Entity):
     enum_list = db.Column(ARRAY(db.Text))
     is_binary = db.Column(db.Boolean, default=False)
 
-    @classmethod
-    def from_dict(cls, data, game_token):
-        return super().from_dict(data, game_token)
-
     def to_dict(self):
         """Exports the attribute definition (type and states)."""
         data = super().to_dict()
@@ -317,6 +308,10 @@ class Attrib(Entity):
             "enum_list": self.enum_list or []
         })
         return data
+
+    @classmethod
+    def from_dict(cls, data, game_token):
+        return super().from_dict(data, game_token)
 
     attrib_values = db.relationship(
         'AttribValue',
@@ -350,19 +345,6 @@ class Event(Entity):
     single_number = db.Column(db.Float, default=0.0)
     selection_strings = db.Column(db.Text)
 
-    @classmethod
-    def from_dict(cls, data, game_token):
-        dets = data.pop('determinants', [])
-        effects = data.pop('effects', [])
-        event = super().from_dict(data, game_token)
-        event.determinants = [
-            EventDeterminant(game_token=game_token, **d) for d in dets
-        ]
-        event.effects = [
-            EventEffect(game_token=game_token, **e) for e in effects
-        ]
-        return event
-
     def to_dict(self):
         """Exports the event logic including dice ranges and modifiers."""
         data = super().to_dict()
@@ -385,6 +367,19 @@ class Event(Entity):
             ]
         })
         return data
+
+    @classmethod
+    def from_dict(cls, data, game_token):
+        dets = data.pop('determinants', [])
+        effects = data.pop('effects', [])
+        event = super().from_dict(data, game_token)
+        event.determinants = [
+            EventDeterminant(game_token=game_token, **d) for d in dets
+        ]
+        event.effects = [
+            EventEffect(game_token=game_token, **e) for e in effects
+        ]
+        return event
 
     __table_args__ = (
         db.ForeignKeyConstraint(
@@ -414,14 +409,55 @@ class Pile(db.Model):
     """
     __tablename__ = 'piles'
     game_token = db.Column(db.String(50), primary_key=True)
-    id = db.Column(db.Integer, primary_key=True)
-    owner_id = db.Column(db.Integer, primary_key=True)
-    item_id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    owner_id = db.Column(db.Integer)
+    item_id = db.Column(db.Integer)
     # not relevant for universal storage
-    position = db.Column(ARRAY(db.Integer), primary_key=True, default=[0,0])
+    position = db.Column(ARRAY(db.Integer), default=None)
     quantity = db.Column(db.Float, nullable=False, default=0.0)
     # optional for carried items (equipment)
     slot = db.Column(db.String(50))
+
+    def to_dict(self):
+        """Exports pile state, excluding internal database IDs."""
+        return {
+            "owner_id": self.owner_id,
+            "item_id": self.item_id,
+            "quantity": self.quantity,
+            "position": self.position,  # Will be a tuple/list or None
+            "slot": self.slot
+        }
+
+    @classmethod
+    def from_dict(cls, data, game_token):
+        """Creates a Pile instance from a dictionary without needing an ID."""
+        pos = data.get('position')
+        if isinstance(pos, list):
+            pos = tuple(pos)
+        return cls(
+            game_token=game_token,
+            owner_id=data.get('owner_id'),
+            item_id=data.get('item_id'),
+            quantity=data.get('quantity', 0.0),
+            position=pos,
+            slot=data.get('slot')
+        )
+
+    @property
+    def is_placed(self):
+        """The item stack occupies a grid coordinate on the floor
+        at a location.
+
+        This isn't true if the item stack is at a location without
+        a defined grid, or with an owner, or in universal storage.
+        """
+        return self.position is not None
+
+    def __repr__(self):
+        pos_label = f"at {self.position}" if self.is_placed else "unplaced"
+        return (
+            f"<Pile {self.item_id} (qty {self.quantity})"
+            f" {pos_label} owner {self.owner_id}>")
 
     owner = db.relationship(
         'Entity',
@@ -435,6 +471,15 @@ class Pile(db.Model):
         overlaps="owner,piles")
 
     __table_args__ = (
+        # Ensure uniqueness depending on whether position is NULL
+        db.Index('idx_pile_unpositioned_unique', 
+              'game_token', 'owner_id', 'item_id',
+              unique=True,
+              postgresql_where=(db.column('position').is_(None))),
+        db.Index('idx_pile_positioned_unique', 
+              'game_token', 'owner_id', 'item_id', 'position',
+              unique=True,
+              postgresql_where=(db.column('position').is_not(None))),
         # Define foreign keys in the "child" side of relationships
         db.ForeignKeyConstraint(
             ['game_token', 'owner_id'],

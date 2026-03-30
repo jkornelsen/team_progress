@@ -126,7 +126,7 @@ def transfer_item(item_id, from_owner_id, to_owner_id, quantity,
 # ------------------------------------------------------------------------
 
 def get_general_stock(item_id):
-    """Helper to check the 'Universal' pile."""
+    """Helper to check the universal pile."""
     ensure_owner_up_to_date(GENERAL_ID)
     pile = Pile.query.filter_by(
         game_token=g.game_token,

@@ -53,6 +53,18 @@
     <div class="column-container">
         <!-- LEFT COLUMN: Inventory Actions & Description -->
         <div class="info-column">
+            {% if item.masked %}
+            <section class="outer-border">
+                <div class="description-box">
+                    <i class="text-dim">This item is currently masked. To reveal, you must obtain at least one of each source material.</i>
+                </div>
+            </section>
+            {% elif item.description %}
+            <section class="outer-border">
+                <div class="description-box">{{ item.description | htmlify }}</div>
+            </section>
+            {% endif %}
+
             <section class="outer-border">
                 <h3>Inventory Actions</h3>
                 <div class="button-group">
@@ -77,24 +89,11 @@
                     {% endif %}
 
                     {# 3. Deposit to Universal (if applicable) #}
-                    {% if item.storage_type == 'universal' and owner.id != 1 %}
+                    {% if item.storage_type == StorageType.UNIVERSAL and owner.id != 1 %}
                         <button id="deposit-btn" class="go-button">Deposit to General Storage</button>
                     {% endif %}
                 </div>
             </section>
-
-            {% if item.masked %}
-            <section class="outer-border">
-                <div class="description-box">
-                    <i class="text-dim">This item is currently masked. To reveal, you must obtain at least one of each source material.</i>
-                </div>
-            </section>
-            {% elif item.description %}
-            <section class="outer-border">
-                <h3>Description</h3>
-                <div class="description-box">{{ item.description | htmlify }}</div>
-            </section>
-            {% endif %}
         </div>
 
         <!-- RIGHT COLUMN: Recipes & Production -->

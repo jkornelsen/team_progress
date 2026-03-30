@@ -43,15 +43,15 @@
                 <div>
                     <label>Storage Type:</label><br>
                     <label class="radio-label">
-                        <input type="radio" name="storage_type" value="universal" {{ 'checked' if item.storage_type == 'universal' }}> 
+                        <input type="radio" name="storage_type" value="{{ StorageType.UNIVERSAL }}" {{ 'checked' if item.storage_type == StorageType.UNIVERSAL }}> 
                         Universal &mdash; Accessible Anywhere
                     </label><br>
                     <label class="radio-label">
-                        <input type="radio" name="storage_type" value="carried" {{ 'checked' if item.storage_type == 'carried' }}> 
+                        <input type="radio" name="storage_type" value="{{ StorageType.CARRIED }}" {{ 'checked' if item.storage_type == StorageType.CARRIED }}> 
                         Carried &mdash; Inventory Based
                     </label><br>
                     <label class="radio-label">
-                        <input type="radio" name="storage_type" value="local" {{ 'checked' if item.storage_type == 'local' }}> 
+                        <input type="radio" name="storage_type" value="{{ StorageType.LOCAL }}" {{ 'checked' if item.storage_type == StorageType.LOCAL }}> 
                         Local &mdash; Fixed to a Location
                     </label>
                 </div>
@@ -74,8 +74,8 @@
                     <small class="label-like">0 for unlimited</small>
                 </div>
                 
-                <div id="universal-qty-box" class="form-group {{ 'hidden' if item.storage_type != 'universal' }}">
-                    <label for="quantity">Initial Qty (Universal Storage):</label>
+                <div id="universal-qty-box" class="form-group {{ 'hidden' if item.storage_type != StorageType.UNIVERSAL }}">
+                    <label for="quantity">Quantity in Universal Storage:</label>
                     {# We fetch the quantity from the Inventory record linked to Owner ID 1 #}
                     <input type="number" id="quantity" name="quantity" value="{{ initial_qty or 0 }}" step="any">
                 </div>
@@ -169,7 +169,7 @@
     document.querySelectorAll('input[name="storage_type"]').forEach(radio => {
         radio.addEventListener('change', (e) => {
             const qtyBox = document.getElementById('universal-qty-box');
-            if (e.target.value === 'universal') {
+            if (e.target.value === '{{ StorageType.UNIVERSAL }}') {
                 qtyBox.classList.remove('hidden');
             } else {
                 qtyBox.classList.add('hidden');
@@ -213,7 +213,6 @@
 
 <style>
     .full-width { width: 100%; box-sizing: border-box; background: #000; color: #fff; border: 1px solid var(--border); padding: 8px; }
-    .radio-label, .checkbox-label { font-size: 0.9em; cursor: pointer; }
     .btn-sm { font-size: 0.8em; padding: 4px 8px; }
 </style>
 {% endblock %}

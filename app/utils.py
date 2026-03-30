@@ -133,8 +133,10 @@ def parse_numrange(min_val, max_val):
     """
     try:
         # If input is empty, treat as None (Postgres Infinity)
-        l_bound = float(min_val) if (min_val is not None and str(min_val).strip() != "") else None
-        u_bound = float(max_val) if (max_val is not None and str(max_val).strip() != "") else None
+        l_bound = float(min_val) if (
+            min_val is not None and str(min_val).strip() != "") else None
+        u_bound = float(max_val) if (
+            max_val is not None and str(max_val).strip() != "") else None
         
         # [lower, upper) - inclusive lower, exclusive upper is standard
         return Range(l_bound, u_bound, bounds='[]') 
@@ -217,22 +219,21 @@ class RequestHelper:
         return (self._get_from_request(key) or default).strip()
 
     def get_int(self, key, default=0):
-        val = self._get_from_request(key)
+        formatted_str = self._get_from_request(key)
+        if formatted_str == '':
+            return default
+        float_value = unformat_num(formatted_str)
         try:
-            return int(float(unformat_num(val)))
+            return int(float_value)
         except (ValueError, TypeError):
             return default
 
     def get_float(self, key, default=0.0):
         """Retrieve a floating point value using unformat_num logic."""
         formatted_str = self._get_from_request(key)
-        value_str = unformat_num(formatted_str)
-        if formatted_str == '' or value_str == '':
+        if formatted_str == '':
             return default
-        try:
-            return float(value_str)
-        except (ValueError, TypeError):
-            return default
+        return unformat_num(formatted_str)
 
     def get_bool(self, key, default=False):
         """Retrieve a boolean value from the request."""
@@ -248,48 +249,63 @@ class RequestHelper:
         val = self._get_from_request(key)
         return parse_coords(val)
 
-def parse_form_data(form_dict):
-    """
-    Converts flat form keys like 'stats[0][id]' into a nested structure.
-    Returns a dictionary with lists where indices were present.
-    """
-    result = {}
+    def get_list(self, key_text):
+        """
+        Extracts nested form data starting with 'key_text[' and returns a list.
 
-    for key, value in form_dict.items():
-        # Split 'stats[0][attrib_id]' into ['stats', '0', 'attrib_id']
-        parts = re.findall(r'[^\[\]]+', key)
-        
-        curr = result
-        for i, part in enumerate(parts):
-            # Is this the last part? (The actual field name or value)
-            if i == len(parts) - 1:
-                curr[part] = value
-            else:
-                # Is the NEXT part a digit? If so, this part is a list/indexed dict
-                next_part = parts[i+1]
-                if next_part.isdigit():
-                    if part not in curr:
-                        curr[part] = {} # Use dict temporarily to handle indices
-                    curr = curr[part]
-                else:
-                    if part not in curr:
-                        curr[part] = {}
-                    curr = curr[part]
+        For example:
+        {
+            "stats[0][id]": "1",
+            "stats[0][val]": "A",
+            "stats[1][id]": "2"
+        }
+        ...is returned as:
+        [
+            {"id": "1", "val": "A"},
+            {"id": "2"}
+        ]
+        Keys that do not fit this structure are discarded.
+        """
+        temp_root = {}
 
-    # Post-process: Convert dictionaries that have only numeric keys into sorted lists
-    return _inflate_lists(result)
+        for key, value in form_dict.items():
+            if key.startswith(f"{key_text}["):
+                # Split 'stats[0][id]' into ['stats', '0', 'id']
+                parts = re.findall(r'[^\[\]]+', key)
+                
+                curr = temp_root
+                for i, part in enumerate(parts):
+                    if i == len(parts) - 1:
+                        curr[part] = value
+                    else:
+                        if part not in curr:
+                            curr[part] = {}
+                        curr = curr[part]
+
+        target_data = temp_root.get(key_text, {})
+        result = _inflate_lists(target_data)
+        if isinstance(result, list):
+            return result
+        return []
 
 def _inflate_lists(node):
+    """Recursively converts dictionaries with numeric keys into
+    sorted Python lists.
+    """
+    # If it's not a dict, it's a leaf value (string)
     if not isinstance(node, dict):
         return node
     
-    # Recursively process children
+    # Process children first
     for key in node:
-        node[key] = _inflate_lists(node[key])
+        node[key] = self._inflate_lists(node[key])
 
-    # If all keys are digits, convert this dict to a list
-    if node and all(k.isdigit() for k in node.keys()):
-        return [node[str(i)] for i in sorted(map(int, node.keys())) if str(i) in node]
+    # If any key is a digit, this level is intended to be a list
+    if node and any(k.isdigit() for k in node.keys()):
+        digit_keys = [k for k in node.keys() if k.isdigit()]
+        sorted_indices = sorted(map(int, digit_keys))
+        # Build the list. If indices are 0, 2, 4, this creates a list of 3 items.
+        return [node[str(i)] for i in sorted_indices]
     
     return node
 

@@ -57,20 +57,20 @@ def overview():
 # 2. Character & Location Routes
 # ------------------------------------------------------------------------
 
-@play_bp.route('/play/character/<int:char_id>')
-def play_character(char_id):
+@play_bp.route('/play/char/<int:id>')
+def play_character(id):
     game_token = g.game_token
-    character = Character.query.get_or_404((game_token, char_id))
+    character = Character.query.get_or_404((game_token, id))
     capture_origin(name=character.name)
     
     # 1. Fetch piles (Items carried)
     inventory = Pile.query.filter_by(
-        game_token=game_token, owner_id=char_id
+        game_token=game_token, owner_id=id
     ).all()
     
     # 2. Fetch Attributes (Stats)
     attrib_values = AttribValue.query.filter_by(
-        game_token=game_token, subject_id=char_id
+        game_token=game_token, subject_id=id
     ).all()
     
     # 3. Fetch Navigation (Nearby Destinations)
@@ -92,27 +92,27 @@ def play_character(char_id):
         link_letters=LinkLetters(excluded='moe')
     )
 
-@play_bp.route('/play/location/<int:loc_id>')
-def play_location(loc_id):
+@play_bp.route('/play/location/<int:id>')
+def play_location(id):
     game_token = g.game_token
-    location = Location.query.get_or_404((game_token, loc_id))
+    location = Location.query.get_or_404((game_token, id))
     capture_origin(name=location.name)
     
     # Fetch Items on the ground
     inventory_piles = Pile.query.filter_by(
-        game_token=game_token, owner_id=loc_id
+        game_token=game_token, owner_id=id
     ).all()
     
     # Fetch Characters present here
     characters_here = Character.query.filter_by(
-        game_token=game_token, location_id=loc_id
+        game_token=game_token, location_id=id
     ).all()
     
     # Fetch Exits (Destinations)
     destinations = LocationDest.query.filter(
         LocationDest.game_token == game_token,
-        ((LocationDest.loc1_id == loc_id) | 
-         ((LocationDest.loc2_id == loc_id) & (LocationDest.bidirectional == True)))
+        ((LocationDest.loc1_id == id) | 
+         ((LocationDest.loc2_id == id) & (LocationDest.bidirectional == True)))
     ).all()
 
     # Fetch Referenced Items and their "General Storage" (ID 1) quantities
@@ -130,7 +130,7 @@ def play_location(loc_id):
 
     # Local attributes (e.g., 'Danger Level', 'Temperature')
     attrib_values = AttribValue.query.filter_by(
-        game_token=game_token, subject_id=loc_id
+        game_token=game_token, subject_id=id
     ).all()
 
     # Which character is currently being controlled for movement
@@ -150,22 +150,24 @@ def play_location(loc_id):
         link_letters=LinkLetters(excluded='moe')
     )
 
-@play_bp.route('/char/move/<int:char_id>', methods=['POST'])
-def char_move(char_id):
-    dx = int(request.form.get('dx', 0))
-    dy = int(request.form.get('dy', 0))
+@play_bp.route('/char/move/<int:id>', methods=['POST'])
+def char_move(id):
+    req = RequestHelper('form')
+    dx = req.get_int('dx')
+    dy = req.get_int('dy')
     
-    move_with = request.form.getlist('move_with[]')
-    success, results = move_group(char_id, dx, dy, move_with)
+    move_with = req.get_list('move_with')
+    success, results = move_group(id, dx, dy, move_with)
     if success:
         return jsonify({"status": "success", "positions": results})
     return jsonify({"status": "error", "message": results}), 400
 
-@play_bp.route('/char/go/<int:char_id>', methods=['POST'])
-def char_travel(char_id):
-    dest_loc_id = int(request.form.get('dest_id'))
-    move_with = request.form.getlist('move_with[]')
-    success, message = arrive_at_destination(char_id, dest_loc_id, move_with)
+@play_bp.route('/char/go/<int:id>', methods=['POST'])
+def char_travel(id):
+    req = RequestHelper('form')
+    dest_loc_id = req.get_int('dest_id')
+    move_with = req.get_list('move_with')
+    success, message = arrive_at_destination(id, dest_loc_id, move_with)
     if success:
         return jsonify({"status": "arrived"})
     else:
@@ -175,10 +177,10 @@ def char_travel(char_id):
 # 3. Item & Pile Routes
 # ------------------------------------------------------------------------
 
-@play_bp.route('/play/item/<int:item_id>')
-def play_item(item_id):
+@play_bp.route('/play/item/<int:id>')
+def play_item(id):
     game_token = g.game_token
-    item = Item.query.get_or_404((game_token, item_id))
+    item = Item.query.get_or_404((game_token, id))
     capture_origin(name=item.name)
     
     # 1. Determine Context (Who owns the pile we are looking at?)
@@ -197,16 +199,23 @@ def play_item(item_id):
         abort(404, description="Item owner not found.")
 
     # 2. Fetch the specific Pile record
-    # We default position to [0,0] for non-grid items
-    pos = [int(x) for x in request.args.getlist('pos[]')] or [0, 0]
-    ensure_owner_up_to_date(owner.id)
-    pile = Pile.query.filter_by(
-        game_token=game_token, item_id=item_id, owner_id=owner.id, position=pos
-    ).first()
+    query = Pile.query.filter_by(
+        game_token=game_token, 
+        item_id=id, 
+        owner_id=owner.id
+    )
+    raw_pos = request.args.getlist('pos[]')
+    if raw_pos:
+        pos = tuple(int(x) for x in raw_pos)
+        query = query.filter_by(position=pos)
+    else:
+        pos = None
+        query = query.filter_by(position=None)
+    pile = query.first()
 
     # If no pile exists yet, create a virtual one for the UI
     if not pile:
-        pile = Pile(item_id=item_id, owner_id=owner.id, quantity=0.0, position=pos)
+        pile = Pile(item_id=id, owner_id=owner.id, quantity=0.0, position=pos)
 
     # 3. Enrich Recipes with Failure Reasons
     # This allows the UI to show the 🚫 icon and the specific reason tooltip immediately
@@ -239,7 +248,7 @@ def play_item(item_id):
 
     # 4. Check for active progress
     current_progress = Progress.query.filter_by(
-        game_token=game_token, owner_id=owner.id
+        game_token=game_token, host_id=owner.id
     ).first()
 
     # 5. UI Context: Characters nearby (for the "Pick Up" button)
@@ -257,18 +266,17 @@ def play_item(item_id):
         chars_here=chars_here
     )
 
-@play_bp.route('/item/drop', methods=['POST'])
-def drop_item():
-    char_id = int(request.form.get('char_id'))
-    item_id = int(request.form.get('item_id'))
-    qty = float(request.form.get('quantity'))
+@play_bp.route('/char/<int:id>/drop', methods=['POST'])
+def drop_item(id):
+    item_id = req.get_int('item_id')
+    qty = req.get_float('quantity')
     
     # Get character to find current location
-    char = Character.query.get((g.game_token, char_id))
+    char = Character.query.get((g.game_token, id))
     
     # Transfer from Char to Location at current Char position
     success = transfer_item(
-        item_id, from_owner_id=char_id, to_owner_id=char.location_id,
+        item_id, from_owner_id=id, to_owner_id=char.location_id,
         quantity=qty, to_pos=char.position)
     
     if success:
@@ -276,18 +284,17 @@ def drop_item():
         return jsonify({"status": "success"})
     return jsonify({"status": "error"}), 400
 
-@play_bp.route('/item/pickup', methods=['POST'])
+@play_bp.route('/char/<int:id>/pickup', methods=['POST'])
 def pickup_item():
-    char_id = int(request.form.get('char_id'))
-    item_id = int(request.form.get('item_id'))
-    qty = float(request.form.get('quantity'))
-    pos = [int(x) for x in request.form.getlist('pos[]')] # e.g. [1, 2]
+    item_id = req.get_int('item_id')
+    qty = req.get_float('quantity')
+    pos = [int(x) for x in req.get_list('pos')] # e.g. [1, 2]
     
-    char = Character.query.get((g.game_token, char_id))
+    char = Character.query.get((g.game_token, id))
     
     # Transfer from Location to Char
     success = transfer_item(
-        item_id, from_owner_id=char.location_id, to_owner_id=char_id,
+        item_id, from_owner_id=char.location_id, to_owner_id=id,
         quantity=qty, from_pos=pos
     )
     
@@ -300,30 +307,28 @@ def pickup_item():
 # 4. Progress & Production Routes
 # ------------------------------------------------------------------------
 
-@play_bp.route('/production/start', methods=['POST'])
+@play_bp.route('/production/start/host/<int:id>', methods=['POST'])
 def start_item_production():
-    owner_id = int(request.form.get('owner_id')) # Could be ID 1 or a Char ID
-    recipe_id = int(request.form.get('recipe_id'))
+    recipe_id = req.get_int('recipe_id')
     
-    success, message = start_production(owner_id, recipe_id)
+    success, message = start_production(id, recipe_id)
     return jsonify({"status": "success" if success else "error", "message": message})
 
-@play_bp.route('/production/stop', methods=['POST'])
+@play_bp.route('/production/stop/host/<int:id>', methods=['POST'])
 def stop_item_production():
-    owner_id = int(request.form.get('owner_id'))
-    if stop_production(owner_id):
+    if stop_production(id):
         return jsonify({"status": "success"})
     return jsonify({"status": "error"}), 400
 
-@play_bp.route('/production/status/<int:owner_id>')
-def production_status(owner_id):
+@play_bp.route('/production/status/host/<int:id>')
+def production_status(id):
     """Heartbeat endpoint to calculate current progress and refresh recipe availability."""
     game_token = g.game_token
     item_id = request.args.get('item_id', type=int) # Help route find definition
     
     try:
         # 1. Tick the logic
-        prog = Progress.query.filter_by(game_token=game_token, owner_id=owner_id).first()
+        prog = Progress.query.filter_by(game_token=game_token, owner_id=id).first()
         if prog and prog.is_ongoing:
             update_progress(prog.id)
         
@@ -344,7 +349,7 @@ def production_status(owner_id):
         if item_id:
             recipes = Recipe.query.filter_by(game_token=game_token, product_id=item_id).all()
             for r in recipes:
-                can_do, reason = can_perform_recipe(game_token, owner_id, r)
+                can_do, reason = can_perform_recipe(game_token, id, r)
                 res["recipes"].append({
                     "recipe_id": r.id,
                     "can_produce": can_do,
@@ -364,10 +369,10 @@ def production_status(owner_id):
 # 5. Events & Dice
 # ------------------------------------------------------------------------
 
-@play_bp.route('/play/event/<int:event_id>')
-def play_event(event_id):
+@play_bp.route('/play/event/<int:id>')
+def play_event(id):
     game_token = g.game_token
-    event = Event.query.get_or_404((game_token, event_id))
+    event = Event.query.get_or_404((game_token, id))
     capture_origin(name=event.name)
     
     # 1. Get Context (Who is acting?)
@@ -401,32 +406,32 @@ def play_event(event_id):
         determinants=determinants
     )
 
-@play_bp.route('/event/roll/<int:event_id>', methods=['POST'])
-def roll_event(event_id):
-    die_min = request.form.get('die_min', type=float, default=1.0)
-    die_max = request.form.get('die_max', type=float, default=20.0)
-    loc_id = request.form.get('location_id', type=int)
+@play_bp.route('/event/roll/<int:id>', methods=['POST'])
+def roll_event(id):
+    die_min = req.get_float('die_min', 1.0)
+    die_max = req.get_float('die_max', 20.0)
+    loc_id = req.get_int('location_id')
 
     result_num, result_str = roll_for_outcome(
-        event_id, die_min, die_max, loc_id)
+        id, die_min, die_max, loc_id)
     
     return jsonify({
         "result_value": result_num,
         "display": result_str
     })
 
-@play_bp.route('/event/apply/<int:event_id>', methods=['POST'])
-def apply_event(event_id):
+@play_bp.route('/event/apply/<int:id>', methods=['POST'])
+def apply_event(id):
     """Apply a roll result to a specific container."""
     # 1. The thing we are changing (The Key)
-    key_id = request.form.get('key_id', type=int)
-    key_type = request.form.get('key_type') # 'attrib' or 'item'
+    key_id = req.get_int('key_id')
+    key_type = req.get_str('key_type') # 'attrib' or 'item'
     
     # 2. Who owns it (The Container)
-    container_id = request.form.get('container_id', type=int)
+    container_id = req.get_int('container_id')
     
     # 3. The new calculated value from the UI
-    new_value = request.form.get('new_value', type=float)
+    new_value = req.get_float('new_value')
 
     if not key_id or not container_id:
         return jsonify({"status": "error", "message": "Missing target info"}), 400
@@ -444,7 +449,6 @@ def apply_event(event_id):
 @play_bp.route('/play/attrib/<int:attrib_id>/<int:subject_id>', methods=['GET', 'POST'])
 def play_attrib(attrib_id, subject_id):
     game_token = g.game_token
-    # Fetch Definition and Value
     attribute = Attrib.query.get_or_404((game_token, attrib_id))
     subject = Entity.query.get_or_404((game_token, subject_id))
     
@@ -458,12 +462,12 @@ def play_attrib(attrib_id, subject_id):
         db.session.add(val_record)
 
     if request.method == 'POST':
-        op = request.form.get('operator')
+        op = req.get_str('operator')
         
         if op == 'set':
-            new_val = float(request.form.get('value') or request.form.get('operand', 0))
+            new_val = req.get_float('value') or req.get_float('operand')
         else:
-            operand = float(request.form.get('operand', 0))
+            operand = req.get_float('operand')
             if op == '+': new_val = val_record.value + operand
             elif op == '-': new_val = val_record.value - operand
             elif op == '*': new_val = val_record.value * operand

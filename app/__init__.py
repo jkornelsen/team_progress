@@ -4,7 +4,7 @@ import uuid
 from flask import Flask, g, session, request, redirect, url_for
 from flask_migrate import Migrate
 
-from .models import db, GENERAL_ID
+from .models import db, GENERAL_ID, StorageType
 from .serialization import init_game_session
 from .utils import format_num, htmlify_filter, mask_string
 from app.src.routes_session import session_bp, generate_username, log_user_activity
@@ -83,7 +83,10 @@ def create_app():
 
     @app.context_processor
     def inject_globals():
-        return {'GENERAL_ID': GENERAL_ID}
+        return {
+            'GENERAL_ID': GENERAL_ID,
+            'StorageType': StorageType
+        }
 
     # ------------------------------------------------------------------------
     # 5. Middleware (Session & Multi-tenancy)

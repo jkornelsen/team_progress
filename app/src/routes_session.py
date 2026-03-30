@@ -88,14 +88,15 @@ def change_user():
         characters = Character.query.filter_by(game_token=g.game_token).all()
         return render_template('session/username.html', characters=characters)
 
-    new_username = request.form.get('username', '').strip()
+    req = RequestHelper('form')
+    new_username = req.get_str('username')
     if not new_username:
         new_username = generate_username()
     
     session['username'] = new_username
     
     # Return to the previous page if possible
-    referrer = request.form.get('referrer') or url_for('play.overview')
+    referrer = req.get_str('referrer') or url_for('play.overview')
     return redirect(referrer)
 
 @session_bp.route('/session-users')

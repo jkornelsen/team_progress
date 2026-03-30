@@ -29,7 +29,7 @@
                 <h3>Local Attributes</h3>
                 <ul class="presence-list">
                     {% for av in attrib_values %}
-                        {% set link = url_for('play.play_attrib', attrib_id=av.attrib_id, owner_id=location.id) %}
+                        {% set link = url_for('play.play_attrib', attrib_id=av.attrib_id, subject_id=location.id) %}
                         {% set letter = link_letters.next(link) %}
                         <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
                         <li>
@@ -154,7 +154,6 @@
                 {% for ref in referenced_items %}
                     <li>
                         <span class="qty text-accent">{{ ref.quantity | formatNum }}x</span>
-                        {# Link to play_item with main_pile_type='universal' to signal general storage context #}
                         <a href="{{ url_for('play.play_item', id=ref.item.id, loc_id=location.id) }}">
                             🌐 {{ ref.item.name }}
                         </a>

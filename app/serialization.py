@@ -68,19 +68,19 @@ def import_from_dict(data):
     Load all data from JSON dictionary.
     Wipes existing session data and rebuilds using model hydration.
     """
-    # 1. Wipe current data
+    # Wipe current data
     game_token = g.game_token
     db.session.query(Entity).filter_by(game_token=game_token).delete()
     db.session.query(Overall).filter_by(game_token=game_token).delete()
     
-    # 2. Overall Settings
+    # Overall Settings
     ov = Overall.from_dict(data.get(JsonKeys.OVERALL, {}), game_token)
     db.session.add(ov)
     db.session.add(Entity(
         id=GENERAL_ID, game_token=game_token, name="General Storage",
         entity_type="entity"))
 
-    # 3. Entities
+    # Entities
     entities_data = data.get(JsonKeys.ENTITIES, {})
     for key, model_cls in ENTITIES.items():
         for entry in entities_data.get(key, []):
@@ -88,9 +88,19 @@ def import_from_dict(data):
             db.session.add(instance)
         db.session.commit()
 
-    # 4. Sync the next ID counter
+    # General state
+    general_data = data.get(JsonKeys.GENERAL, {})
+    for pile_data in general_data.get("piles", []):
+        pile_data['owner_id'] = GENERAL_ID
+        db.session.add(Pile.from_dict(pile_data, game_token))
+    for prog_data in general_data.get("progress", []):
+        prog_data['host_id'] = GENERAL_ID
+        db.session.add(Progress.from_dict(prog_data, game_token))
+
+    # Sync the next ID counter
     db.session.flush()
-    max_id = db.session.query(func.max(Entity.id)).filter_by(game_token=game_token).scalar()
+    max_id = db.session.query(
+        func.max(Entity.id)).filter_by(game_token=game_token).scalar()
     ov.next_entity_id = (max_id or 1) + 1
     
     db.session.commit()
@@ -135,7 +145,10 @@ def export_to_dict():
     """
     output = {
         JsonKeys.ENTITIES: {key: [] for key in ENTITIES.keys()},
-        JsonKeys.GENERAL: {},
+        JsonKeys.GENERAL: {
+            "piles": [],
+            "progress": [],
+        },
         JsonKeys.OVERALL: {}
     }
 
@@ -153,6 +166,16 @@ def export_to_dict():
         
         output[JsonKeys.ENTITIES][key] = [ent.to_dict() for ent in entities]
 
+    # General state
+    gen_piles = Pile.query.filter_by(game_token=game_token, owner_id=GENERAL_ID).all()
+    output[JsonKeys.GENERAL]["piles"] = [
+        {"item_id": p.item_id, "quantity": p.quantity} 
+        for p in gen_piles
+    ]
+
+    gen_progress = Progress.query.filter_by(game_token=game_token, host_id=GENERAL_ID).all()
+    output[JsonKeys.GENERAL]["progress"] = [prog.to_dict() for prog in gen_progress]
+
     return output
 
 def condense_json(json_str):
@@ -160,15 +183,14 @@ def condense_json(json_str):
     Post-processes a JSON string to collapse coordinate-style arrays 
     onto a single line for better manual readability.
     """
-    # 1. Collapse any 2-item arrays (e.g., [1, 2] or ["slot", "main"])
+    # Collapse any 2-item arrays (e.g., [1, 2] or ["slot", "main"])
     # Patterns: [ value , value ]
     json_str = re.sub(
         r'\[\s*(-?[\d.]+|".*?")\s*,\s*(-?[\d.]+|".*?")\s*\]',
         lambda m: f'[{m.group(1)}, {m.group(2)}]',
-        json_str
-    )
+        json_str)
 
-    # 2. Specifically target spatial keys that might have more items (like 'excluded' with 4)
+    # Specifically target spatial keys that might have more items (like 'excluded' with 4)
     tuple_keys = ["door1", "door2", "dimensions", "excluded", "position", "numeric_range"]
     key_pattern = "|".join(tuple_keys)
     pattern = rf'"({key_pattern})":\s*\[(.*?)\]'
@@ -180,6 +202,12 @@ def condense_json(json_str):
         # Re-insert clean spacing: [1,2,3,4] -> [1, 2, 3, 4]
         formatted_content = ", ".join(content.split(","))
         return f'"{key}": [{formatted_content}]'
+
+    # Collapse universal item quantities
+    json_str = re.sub(
+        r'\{\s*"item_id":\s*(\d+),\s*"quantity":\s*([\d.]+)\s*\}',
+        r'{"item_id": \1, "quantity": \2}',
+        json_str)
 
     return re.sub(pattern, collapse_spatial_data, json_str, flags=re.DOTALL)
 
