@@ -243,14 +243,11 @@ class Location(Entity):
 class Character(Entity):
     """The primary entity for role-playing scenarios.
     The location_id foreign key means that Location must be defined first.
-    However, characters appear above locations in the JSON, since they often
-    feel more foundational.
     """
     __tablename__ = 'characters'
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
     toplevel = db.Column(db.Boolean, default=False)
-    masked = db.Column(db.Boolean, default=False)
     travel_group = db.Column(db.String(100))
     position = db.Column(ARRAY(db.Integer), default=None)
     location_id = db.Column(db.Integer)
@@ -259,7 +256,6 @@ class Character(Entity):
         data = super().to_dict()
         data.update({
             "toplevel": self.toplevel,
-            "masked": self.masked,
             "location_id": self.location_id,
             "position": self.position,
             "travel_group": self.travel_group,
@@ -390,8 +386,8 @@ class Event(Entity):
 
 ENTITIES = {
     'items': Item,
-    'characters': Character,
     'locations': Location,
+    'characters': Character,
     'attribs': Attrib,
     'events': Event
 }

@@ -137,69 +137,6 @@ def edit_item(id):
         recipes=item.recipes if item else []
     )
 
-@configure_bp.route('/character/<int:id>', methods=['GET', 'POST'])
-@configure_bp.route('/character/new', defaults={'id': None}, methods=['GET', 'POST'])
-def edit_character(id):
-    game_token = g.game_token
-    char = Character.get_or_new(game_token, id)
-
-    if request.method == 'POST':
-        req = RequestHelper('form')
-
-        if 'delete' in request.form:
-            handle_deletion(char)
-            return redirect(url_for('configure.index'))
-
-        if char.id is None:
-            char.id = Overall.generate_next_id(g.game_token)
-            db.session.add(char)
-
-        char.name = req.get_str('name', char.name)
-        char.description = req.get_str('description')
-        char.location_id = req.get_int('location_id', None)
-        char.position = parse_coords(req.get_str('pos_str'))
-        char.travel_group = req.get_str('travel_group')
-        char.toplevel = 'toplevel' in request.form
-        char.masked = 'masked' in request.form
-
-        # Update Attrib values
-        AttribValue.query.filter_by(game_token=game_token, subject_id=char.id).delete()
-        for attrib_row in req.get_list('stats'):
-            attr_id = attrib_row.get('attrib_id')
-            if attr_id:
-                val = float(attrib_row.get('value', 0))
-                db.session.add(
-                    AttribValue(
-                        game_token=game_token,
-                        subject_id=char.id,
-                        attrib_id=attr_id,
-                        value=val))
-
-        # Pile Handling
-        Pile.query.filter_by(game_token=game_token, owner_id=char.id).delete()
-        for item_row in req.get_list('items'):
-            item_id = item_row.get('item_id')
-            if item_id:
-                db.session.add(Pile(
-                    game_token=game_token,
-                    owner_id=char.id,
-                    item_id=int(item_id),
-                    quantity=float(item_row.get('quantity', 0)),
-                    slot=item_row.get('slot'),
-                    position=[0,0]
-                ))
-
-        db.session.commit()
-        return redirect_back('configure.index') 
-
-    return render_template('configure/character.html', 
-        character=char, 
-        all_locations=Location.query.filter_by(game_token=game_token).all(),
-        all_attribs=Attrib.query.filter_by(game_token=game_token).all(),
-        all_items=Item.query.filter_by(game_token=game_token).all(),
-        overall=Overall.query.get(game_token)
-    )
-
 @configure_bp.route('/location/<int:id>', methods=['GET', 'POST'])
 @configure_bp.route('/location/new', defaults={'id': None}, methods=['GET', 'POST'])
 def edit_location(id):
@@ -276,6 +213,68 @@ def edit_location(id):
         all_items=Item.query.filter_by(game_token=game_token).all(),
         universal_items=Item.query.filter_by(
             game_token=game_token, storage_type=StorageType.UNIVERSAL).all()
+    )
+
+@configure_bp.route('/character/<int:id>', methods=['GET', 'POST'])
+@configure_bp.route('/character/new', defaults={'id': None}, methods=['GET', 'POST'])
+def edit_character(id):
+    game_token = g.game_token
+    char = Character.get_or_new(game_token, id)
+
+    if request.method == 'POST':
+        req = RequestHelper('form')
+
+        if 'delete' in request.form:
+            handle_deletion(char)
+            return redirect(url_for('configure.index'))
+
+        if char.id is None:
+            char.id = Overall.generate_next_id(g.game_token)
+            db.session.add(char)
+
+        char.name = req.get_str('name', char.name)
+        char.description = req.get_str('description')
+        char.location_id = req.get_int('location_id', None)
+        char.position = parse_coords(req.get_str('pos_str'))
+        char.travel_group = req.get_str('travel_group')
+        char.toplevel = 'toplevel' in request.form
+
+        # Update Attrib values
+        AttribValue.query.filter_by(game_token=game_token, subject_id=char.id).delete()
+        for attrib_row in req.get_list('stats'):
+            attr_id = attrib_row.get('attrib_id')
+            if attr_id:
+                val = float(attrib_row.get('value', 0))
+                db.session.add(
+                    AttribValue(
+                        game_token=game_token,
+                        subject_id=char.id,
+                        attrib_id=attr_id,
+                        value=val))
+
+        # Pile Handling
+        Pile.query.filter_by(game_token=game_token, owner_id=char.id).delete()
+        for item_row in req.get_list('items'):
+            item_id = item_row.get('item_id')
+            if item_id:
+                db.session.add(Pile(
+                    game_token=game_token,
+                    owner_id=char.id,
+                    item_id=int(item_id),
+                    quantity=float(item_row.get('quantity', 0)),
+                    slot=item_row.get('slot'),
+                    position=[0,0]
+                ))
+
+        db.session.commit()
+        return redirect_back('configure.index') 
+
+    return render_template('configure/character.html', 
+        character=char, 
+        all_locations=Location.query.filter_by(game_token=game_token).all(),
+        all_attribs=Attrib.query.filter_by(game_token=game_token).all(),
+        all_items=Item.query.filter_by(game_token=game_token).all(),
+        overall=Overall.query.get(game_token)
     )
 
 @configure_bp.route('/attrib/<int:id>', methods=['GET', 'POST'])

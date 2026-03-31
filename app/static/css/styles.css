@@ -1,10 +1,9 @@
-/* --- Global Theme --- */
 :root {
     --bg-dark: #1a1a1a;
     --bg-panel: #2a2a2a;
     --text-main: #e0e0e0;
     --text-dim: #a0a0a0;
-    --accent: #00bcd4; /* Cyan */
+    --accent: #00bcd4;
     --accent-hover: #0097a7;
     --danger: #ff5252;
     --success: #4caf50;
@@ -30,7 +29,6 @@ a:hover {
     text-decoration: underline;
 }
 
-/* --- Layout --- */
 .main-header {
     display: flex;
     justify-content: space-between;
@@ -63,7 +61,6 @@ a:hover {
     gap: 10px;
 }
 
-/* --- Navigation & Menus --- */
 .nav-container {
     font-size: 0.9em;
 }
@@ -116,7 +113,6 @@ progress::-moz-progress-bar {
     border-radius: 6px;
 }
 
-/* --- Tables --- */
 table {
     width: 100%;
     border-collapse: collapse;
@@ -137,7 +133,6 @@ td {
     border-bottom: 1px solid #333;
 }
 
-/* --- Buttons --- */
 button {
     background-color: var(--bg-panel);
     color: white;
@@ -170,7 +165,6 @@ button:hover {
 .radio-label, .checkbox-label { font-size: 0.9em; cursor: pointer; }
 .radio-label:hover, .checkbox-label:hover { background-color: #333; }
 
-/* --- Navigation Grid (Location View) --- */
 .grid-table {
     border-collapse: collapse;
     background-color: #000;
@@ -197,7 +191,14 @@ button:hover {
     background-color: #333;
 }
 
-/* --- Game Log --- */
+.description-box {
+    display: block;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    margin-left: 10px;
+    margin-right: 0;
+}
+
 .scrollable-log {
     height: 250px;
     overflow-y: auto;

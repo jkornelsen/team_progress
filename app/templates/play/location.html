@@ -35,7 +35,7 @@
                     <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
                     <li>
                         <span class="hotkey-indicator">{{ letter }}</span>
-                        <a href="{{ link }}">👤 {{ char.name }}</a>
+                        <a href="{{ link }}">{{ char.name }}</a>
                         {% if has_grid %}
                             <span class="label-like">[{{ char.position[0] }},{{ char.position[1] }}]</span>
                         {% endif %}

@@ -55,10 +55,11 @@
                             {% endcall %}
                         </td>
                         <td>
-                            {% if char.location_id %}
-                                <a href="{{ url_for('play.play_location', id=char.location_id) }}" class="label-like">
+                            {% if char.location is not none %}
+                                {% set target_url = url_for('play.play_location', id=char.location.id) %}
+                                {% call hotkey_link(target_url, link_letters) %}
                                     {{ char.location.name }}
-                                </a>
+                                {% endcall %}
                             {% else %}
                                 <span class="label-like">Nowhere</span>
                             {% endif %}

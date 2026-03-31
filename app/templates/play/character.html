@@ -1,5 +1,5 @@
 {% extends 'layout/base.html' %}
-{% from 'layout/macros.html' import hotkey, render_attr %}
+{% from 'layout/macros.html' import hotkey_link, render_attr %}
 
 {% block upper_left %}
     <nav class="nav-container">
@@ -37,16 +37,18 @@
             
             <!-- 1. Navigation & Travel -->
             <section class="outer-border">
-                <h3>Presence</h3>
+                <h3>Location</h3>
                 <div class="status-row">
-                    <span class="label-like">Current Location:</span>
                     {% if character.location %}
-                        <a href="{{ url_for('play.play_location', id=character.location_id) }}">
-                            📍 {{ character.location.name }}
-                        </a>
-                        <span class="label-like">[{{ character.position[0] }}, {{ character.position[1] }}]</span>
+                        {% set target_url = url_for('play.play_location', id=character.location.id) %}
+                        {% call hotkey_link(target_url, link_letters) %}
+                            {{ character.location.name }}
+                        {% endcall %}
+                        {% if character.position %}
+                            <span class="label-like">[{{ character.position | join(",") }}]</span>
+                        {% endif %}
                     {% else %}
-                        <span class="text-dim">Floating in the void</span>
+                        <span class="text-dim">Wandering the Void</span>
                     {% endif %}
                 </div>
 
@@ -88,6 +90,7 @@
             </section>
 
             <!-- 2. Attributes (Stats) -->
+            {% if attrib_values %}
             <section class="outer-border">
                 <h3>Attributes</h3>
                 <div class="attr-grid">
@@ -101,41 +104,55 @@
                     {% endfor %}
                 </div>
             </section>
+            {% endif %}
         </div>
 
         <!-- RIGHT COLUMN: Gear & Abilities -->
         <div class="inventory-column">
             
             <!-- 3. Inventory -->
-            <section class="outer-border">
-                <h3>Equipment & Inventory</h3>
-                
-                <div class="inventory-section">
-                    <h4 class="label-like">Equipped</h4>
-                    <ul class="gear-list">
-                    {% for pile in inventory if pile.slot %}
-                        <li class="inventory-item">
-                            <span class="slot-name">[{{ pile.slot }}]</span>
-                            <a href="{{ url_for('play.play_item', id=pile.item_id, char_id=character.id) }}">
-                                {{ pile.item.name }}
-                            </a>
-                        </li>
-                    {% endfor %}
-                    </ul>
+            {% set equipped = inventory | selectattr("slot") | list %}
+            {% set backpack = inventory | rejectattr("slot") | list %}
+            {% if equipped or backpack %}
+                <section class="outer-border">
+                    <div class="inventory-section">
+                        {% if equipped %}
+                            <h3>Equipped</h3>
+                            <ul class="gear-list">
+                                {% for pile in equipped %}
+                                    <li class="inventory-item">
+                                        <span class="slot-name">[{{ pile.slot }}]</span>
+                                        {% if pile.quantity >= 2 %}
+                                            <span class="qty">{{ pile.quantity | formatNum }}x</span>
+                                        {% endif %}
+                                        <a href="{{ url_for('play.play_item', id=pile.item_id, char_id=character.id) }}">
+                                            {{ pile.item.name }}
+                                        </a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
 
-                    <h4 class="label-like spacious-top">Backpack</h4>
-                    <ul class="gear-list">
-                    {% for pile in inventory if not pile.slot %}
-                        <li class="inventory-item">
-                            <span class="qty">{{ pile.quantity | formatNum }}x</span>
-                            <a href="{{ url_for('play.play_item', id=pile.item_id, char_id=character.id) }}">
-                                {{ pile.item.name }}
-                            </a>
-                        </li>
-                    {% endfor %}
-                    </ul>
-                </div>
-            </section>
+                        {% if backpack %}
+                            {% if equipped %}
+                                <h3 class="spacious-top">Pack</h3>
+                            {% else %}
+                                <h3>Inventory</h3>
+                            {% endif %}
+                            <ul class="gear-list">
+                                {% for pile in backpack %}
+                                    <li class="inventory-item">
+                                        <span class="qty">{{ pile.quantity | formatNum }}x</span>
+                                        <a href="{{ url_for('play.play_item', id=pile.item_id, char_id=character.id) }}">
+                                            {{ pile.item.name }}
+                                        </a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </section>
+            {% endif %}
 
             <!-- 4. Abilities (Events) -->
             {% if abilities %}

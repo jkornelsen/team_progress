@@ -10,32 +10,33 @@
 
 {% block content %}
 <div class="configure-character">
-    <h1>Character Setup: {{ character.name if character else 'New Character' }}</h1>
+    <h1>Character Setup</h1>
+    <p class="info">
+        Participant or vehicle that moves and performs actions.
+    </p>
     
     <form method="POST">
         <!-- 1. Identity (Entity Table) -->
         <section class="outer-border">
-            <h3>General Info</h3>
             <div class="form-group">
                 <label for="name">Character Name:</label>
-                <input type="text" id="name" name="name" value="{{ character.name if character }}" required class="full-width">
+                <input type="text" id="name" name="name" value="{{ character.name or '' }}" required class="full-width">
             </div>
             <div class="form-group spacious-top">
                 <label for="description">Biography / Description:</label>
-                <textarea id="description" name="description" rows="4" class="full-width">{{ character.description if character }}</textarea>
+                <textarea id="description" name="description" rows="4" class="full-width">{{ character.description or '' }}</textarea>
             </div>
         </section>
 
-        <!-- 2. World Presence (Character Table) -->
+        <!-- 2. World Presence -->
         <section class="outer-border">
-            <h3>World Presence</h3>
             <div class="grid-2-col">
                 <div>
                     <label for="location_id">Current Location:</label>
                     <select id="location_id" name="location_id" class="full-width">
                         <option value="">(Nowhere / Inactive)</option>
                         {% for loc in all_locations %}
-                            <option value="{{ loc.id }}" {{ 'selected' if character and character.location_id == loc.id }}>
+                            <option value="{{ loc.id }}" {{ 'selected' if character.location.id == loc.id }}>
                                 {{ loc.name }}
                             </option>
                         {% endfor %}
@@ -44,7 +45,7 @@
                 <div>
                     <label for="pos_str">Grid Position (x, y):</label>
                     <input type="text" id="pos_str" name="pos_str" 
-                           value="{{ character.position[0] }},{{ character.position[1] if character and character.position else '1,1' }}" 
+                           value="{{ character.position | join(',') if character.position else '' }}" 
                            placeholder="1,1" class="full-width">
                 </div>
             </div>
@@ -52,18 +53,14 @@
             <div class="grid-2-col spacious-top">
                 <div class="form-group">
                     <label for="travel_group">Travel Group:</label>
-                    <input type="text" id="travel_group" name="travel_group" value="{{ character.travel_group if character }}" 
+                    <input type="text" id="travel_group" name="travel_group" value="{{ character.travel_group or '' }}" 
                            placeholder="e.g. Party A" class="full-width">
                     <small class="label-like">Characters in the same group can move together.</small>
                 </div>
-                <div class="flex-column" style="padding-top: 10px;">
+                <div class="flex-column" style="padding-top: 30px;">
                     <label class="checkbox-label">
-                        <input type="checkbox" name="toplevel" {{ 'checked' if character and character.toplevel }}> 
+                        <input type="checkbox" name="toplevel" {{ 'checked' if character.toplevel }}> 
                         Show in Overview
-                    </label>
-                    <label class="checkbox-label">
-                        <input type="checkbox" name="masked" {{ 'checked' if character and character.masked }}> 
-                        Masked (Hidden until met)
                     </label>
                 </div>
             </div>
@@ -76,7 +73,7 @@
                 <button type="button" class="btn-sm" onclick="addRow('stat-list', 'stat-template')">+ Add Stat</button>
             </div>
             <div id="stat-list" class="spacious-top">
-                {% for av in character.attrib_values if character %}
+                {% for av in character.attrib_values %}
                 <div class="flex-row gap-10 align-center spacious-bottom">
                     <select name="stats[{{ loop.index0 }}][attrib_id]" style="flex: 2;">
                         {% for attr in all_attribs %}
@@ -97,7 +94,7 @@
                 <button type="button" class="btn-sm" onclick="addRow('inv-list', 'inv-template')">+ Add Item</button>
             </div>
             <div id="inv-list" class="spacious-top">
-                {% for pile in character.inventory if character %}
+                {% for pile in character.piles %}
                 <div class="flex-row gap-10 align-center spacious-bottom">
                     <select name="items[{{ loop.index0 }}][item_id]" style="flex: 2;">
                         {% for item_def in all_items %}
@@ -119,16 +116,16 @@
 
         <!-- Form Actions -->
         <div class="footer-actions flex-between">
-            <div class="danger-zone">
-                {% if character %}
-                    <button type="submit" name="delete" class="dangerous-button" onclick="return confirm('Delete this character?')">Delete Character</button>
-                {% endif %}
-            </div>
-            <div class="save-zone">
-                <a href="{{ url_for('configure.index') }}" class="btn">Cancel</a>
+            <div class="gap-20" style="display: flex">
                 <button type="submit" name="duplicate" class="btn">Save & Duplicate</button>
                 <button type="submit" name="save" class="go-button">Save Changes</button>
+                <a href="{{ url_for('configure.cancel') }}" class="btn">Cancel</a>
             </div>
+            {% if character.id %}
+            <div>
+                <button type="submit" name="delete" class="dangerous-button" onclick="return confirm('Delete this character?')">Delete Character</button>
+            </div>
+            {% endif %}
         </div>
     </form>
 </div>
