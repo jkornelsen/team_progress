@@ -12,18 +12,90 @@
 {% block content %}
 <div class="location-container">
     <header class="entity-header">
-        <h1>📍 {{ location.name }}</h1>
+        <h1>{{ location.name }}</h1>
         {% if location.description %}
             <div class="description-box">{{ location.description | htmlify }}</div>
         {% endif %}
     </header>
 
-    {% set width, height = location.dimensions %}
-    {% set has_grid = width > 0 and height > 0 %}
+    {% set has_grid = location.dimensions is not none %}
 
     <div class="column-container">
-        <!-- LEFT COLUMN: The Grid & Navigation Controls -->
-        <div class="grid-column">
+        <!-- LEFT COLUMN: Lists of Presence -->
+        <div class="presence-column">
+            
+            <!-- Characters Here -->
+            {% if characters_here %}
+            <section class="outer-border">
+                <h3>Characters Here</h3>
+                <ul class="presence-list">
+                {% for char in characters_here %}
+                    {% set link = url_for('play.play_character', id=char.id) %}
+                    {% set letter = link_letters.next(link) %}
+                    <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
+                    <li>
+                        <span class="hotkey-indicator">{{ letter }}</span>
+                        <a href="{{ link }}">👤 {{ char.name }}</a>
+                        {% if has_grid %}
+                            <span class="label-like">[{{ char.position[0] }},{{ char.position[1] }}]</span>
+                        {% endif %}
+                    </li>
+                {% else %}
+                    <li class="text-dim">(None)</li>
+                {% endfor %}
+                </ul>
+            </section>
+            {% endif %}
+
+            <!-- Local Items -->
+            {% if inventory_piles %}
+            <section class="outer-border">
+                <h3>Items on Ground</h3>
+                <ul class="presence-list">
+                {% for pile in inventory_piles %}
+                    {% set link = url_for('play.play_item', id=pile.item_id, loc_id=location.id, pos=pile.position) %}
+                    {% set letter = link_letters.next(link) %}
+                    <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
+                    <li>
+                        <span class="hotkey-indicator">{{ letter }}</span>
+                        <a href="{{ link }}">
+                            📦 {{ pile.item.name if not pile.item.masked else (pile.item.name | mask_string) }}
+                        </a>
+                        
+                        {# Only show quantity if it's not a single non-stackable item #}
+                        {% if not (pile.item.q_limit == 1 and pile.quantity == 1) %}
+                            <span class="qty text-accent">{{ pile.quantity | formatNum }}</span>
+                        {% endif %}
+
+                        {% if has_grid %}
+                            <span class="label-like">[{{ pile.position[0] }},{{ pile.position[1] }}]</span>
+                        {% endif %}
+                    </li>
+                {% else %}
+                    <li class="text-dim">No items here.</li>
+                {% endfor %}
+                </ul>
+            </section>
+            {% endif %}
+
+            <!-- Referenced Universal Items -->
+            {% if referenced_items %}
+            <section class="outer-border">
+                <h3 title="Global resources accessible from here">Referenced Resources</h3>
+                <ul class="presence-list">
+                {% for ref in referenced_items %}
+                    <li>
+                        <span class="qty text-accent">{{ ref.quantity | formatNum }}x</span>
+                        <a href="{{ url_for('play.play_item', id=ref.item.id, loc_id=location.id) }}">
+                            🌐 {{ ref.item.name }}
+                        </a>
+                        <span class="label-like italic">(General Storage)</span>
+                    </li>
+                {% endfor %}
+                </ul>
+            </section>
+            {% endif %}
+
             {% if attrib_values %}
             <section class="outer-border">
                 <h3>Local Attributes</h3>
@@ -42,7 +114,31 @@
             </section>
             {% endif %}
 
-            {% if has_grid %}
+            <!-- Destinations (Exits) -->
+            {% if destinations %}
+            <section class="outer-border">
+                <h3>Exits</h3>
+                <ul class="presence-list">
+                {% for dest in destinations %}
+                    {% set other = dest.loc2 if dest.loc1_id == location.id else dest.loc1 %}
+                    {% set door = dest.door1 if dest.loc1_id == location.id else dest.door2 %}
+                    {% set link = url_for('play.play_location', id=other.id) %}
+                    {% set letter = link_letters.next(link) %}
+                    <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
+                    <li>
+                        <span class="hotkey-indicator">{{ letter }}</span>
+                        <a href="{{ link }}">🚪 {{ other.name }}</a>
+                        <span class="label-like"> [{{ door[0] }}, {{ door[1] }}]</span>
+                    </li>
+                {% endfor %}
+                </ul>
+            </section>
+            {% endif %}
+        </div>
+
+        <!-- RIGHT COLUMN: The Grid & Navigation Controls -->
+        {% if has_grid %}
+            <div class="grid-column">
                 <section class="outer-border grid-wrapper">
                     <table class="grid-table" id="location-grid">
                         {% for y in range(1, location.dimensions[1] + 1) %}
@@ -88,101 +184,8 @@
                         </div>
                     </div>
                 </section>
-            {% else %}
-                <div class="outer-border text-dim">This location has no physical grid.</div>
-            {% endif %}
-        </div>
-
-        <!-- RIGHT COLUMN: Lists of Presence -->
-        <div class="presence-column">
-            
-            <!-- Characters Here -->
-            <section class="outer-border">
-                <h3>Characters Here</h3>
-                <ul class="presence-list">
-                {% for char in characters_here %}
-                    {% set link = url_for('play.play_character', id=char.id) %}
-                    {% set letter = link_letters.next(link) %}
-                    <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
-                    <li>
-                        <span class="hotkey-indicator">{{ letter }}</span>
-                        <a href="{{ link }}">👤 {{ char.name }}</a>
-                        {% if has_grid %}
-                            <span class="label-like">[{{ char.position[0] }},{{ char.position[1] }}]</span>
-                        {% endif %}
-                    </li>
-                {% else %}
-                    <li class="text-dim">(None)</li>
-                {% endfor %}
-                </ul>
-            </section>
-
-            <!-- Local Items -->
-            <section class="outer-border">
-                <h3>Items on Ground</h3>
-                <ul class="presence-list">
-                {% for pile in inventory_piles %}
-                    {% set link = url_for('play.play_item', id=pile.item_id, loc_id=location.id, pos=pile.position) %}
-                    {% set letter = link_letters.next(link) %}
-                    <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
-                    <li>
-                        <span class="hotkey-indicator">{{ letter }}</span>
-                        <a href="{{ link }}">
-                            📦 {{ pile.item.name if not pile.item.masked else (pile.item.name | mask_string) }}
-                        </a>
-                        
-                        {# Only show quantity if it's not a single non-stackable item #}
-                        {% if not (pile.item.q_limit == 1 and pile.quantity == 1) %}
-                            <span class="qty text-accent">{{ pile.quantity | formatNum }}</span>
-                        {% endif %}
-
-                        {% if has_grid %}
-                            <span class="label-like">[{{ pile.position[0] }},{{ pile.position[1] }}]</span>
-                        {% endif %}
-                    </li>
-                {% else %}
-                    <li class="text-dim">No items here.</li>
-                {% endfor %}
-                </ul>
-            </section>
-
-            <!-- Referenced Universal Items -->
-            {% if referenced_items %}
-            <section class="outer-border">
-                <h3 title="Global resources accessible from here">Referenced Resources</h3>
-                <ul class="presence-list">
-                {% for ref in referenced_items %}
-                    <li>
-                        <span class="qty text-accent">{{ ref.quantity | formatNum }}x</span>
-                        <a href="{{ url_for('play.play_item', id=ref.item.id, loc_id=location.id) }}">
-                            🌐 {{ ref.item.name }}
-                        </a>
-                        <span class="label-like italic">(General Storage)</span>
-                    </li>
-                {% endfor %}
-                </ul>
-            </section>
-            {% endif %}
-
-            <!-- Destinations (Exits) -->
-            <section class="outer-border">
-                <h3>Exits</h3>
-                <ul class="presence-list">
-                {% for dest in destinations %}
-                    {% set other = dest.loc2 if dest.loc1_id == location.id else dest.loc1 %}
-                    {% set door = dest.door1 if dest.loc1_id == location.id else dest.door2 %}
-                    {% set link = url_for('play.play_location', id=other.id) %}
-                    {% set letter = link_letters.next(link) %}
-                    <script>linkForKey['{{ letter }}'] = "{{ link|safe }}";</script>
-                    <li>
-                        <span class="hotkey-indicator">{{ letter }}</span>
-                        <a href="{{ link }}">🚪 {{ other.name }}</a>
-                        <span class="label-like"> [{{ door[0] }}, {{ door[1] }}]</span>
-                    </li>
-                {% endfor %}
-                </ul>
-            </section>
-        </div>
+            </div>
+        {% endif %}
     </div>
 </div>
 

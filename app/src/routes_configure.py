@@ -14,7 +14,7 @@ from app.serialization import (
     init_game_session, load_scenario_from_path, import_from_dict,
     clear_game_data, export_game_to_json, export_to_dict)
 from app.utils import (
-    LinkLetters, RequestHelper, parse_coords, parse_dimensions,
+    LinkLetters, RequestHelper, parse_coords,
     capture_origin, redirect_back)
 
 logger = logging.getLogger(__name__)
@@ -215,17 +215,16 @@ def edit_location(id):
 
         if loc.id is None:
             loc.id = Overall.generate_next_id(g.game_token)
-            db.session.add(char)
+            db.session.add(loc)
 
         loc.name = req.get_str('name', loc.name)
         loc.description = req.get_str('description')
-        loc.dimensions = parse_dimensions(req.get_str('dimensions_str'))
+        loc.dimensions = parse_coords(req.get_str('dimensions_str'))
         loc.toplevel = 'toplevel' in request.form
         loc.masked = 'masked' in request.form
 
-        # Parse L,T,R,B.
-        raw_excluded = parse_coords(req.get_str('excluded_str'))
-        loc.excluded = raw_excluded[:4] if len(raw_excluded) >= 4 else None
+        # Parse L,T,R,B
+        loc.excluded = parse_coords(req.get_str('excluded_str'), 4)
 
         # Update Destinations (Exits)
         LocationDest.query.filter_by(game_token=game_token, loc1_id=loc.id).delete()
@@ -253,7 +252,7 @@ def edit_location(id):
                     owner_id=loc.id,
                     item_id=int(item_id),
                     quantity=float(row.get('quantity', 0)),
-                    position=parse_coords(row.get('pos')) or [0, 0]
+                    position=parse_coords(row.get('pos'))
                 ))
 
         # Update Item Refs
@@ -332,7 +331,7 @@ def edit_event(id):
 
         if event.id is None:
             event.id = Overall.generate_next_id(g.game_token)
-            db.session.add(char)
+            db.session.add(event)
 
         event.name = req.get_str('name', event.name)
         event.description = req.get_str('description')
@@ -496,14 +495,22 @@ def upload():
         if 'file' not in request.files:
             return "No file uploaded", 400
         file = request.files['file']
-        data = json.load(file)
+        json_data = json.load(file)
         try:
-            import_from_dict(data)
+            mode = request.form.get('import_mode')
+            if mode == 'patch':
+                patch_from_dict(json_data)
+            else:
+                import_from_dict(json_data)
             return redirect(url_for('play.overview'))
-        except Exception as e:
+        except (SyntaxError, NameError, AttributeError):
+            raise
+        except Exception as ex:
             db.session.rollback()
-            logger.error(f"Import failed: {e}")
-            return f"Error importing scenario: {str(e)}", 500
+            return render_template(
+                'error.html',
+                message="Couldn't Import",
+                details=str(ex))
 
     return render_template(
         'configure/upload.html', 

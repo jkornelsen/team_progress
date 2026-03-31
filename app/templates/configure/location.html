@@ -10,47 +10,52 @@
 
 {% block content %}
 <div class="configure-location">
-    <h1>Location Setup: {{ location.name if location else 'New Location' }}</h1>
+    <h1>Location Setup</h1>
+        <p class="info">
+            Room, area, or container where items and characters can be.
+            May be subdivided into a grid with position 1,1 as the upper-left corner.
+        </p>
+
     
     <form method="POST">
         <!-- 1. Identity (Entity Table) -->
         <section class="outer-border">
-            <h3>General Info</h3>
             <div class="form-group">
                 <label for="name">Location Name:</label>
-                <input type="text" id="name" name="name" value="{{ location.name if location }}" required class="full-width">
+                <input type="text" id="name" name="name" value="{{ location.name or '' }}" required class="full-width">
             </div>
             <div class="form-group spacious-top">
                 <label for="description">Description:</label>
-                <textarea id="description" name="description" rows="3" class="full-width">{{ location.description if location }}</textarea>
+                <textarea id="description" name="description" rows="3" class="full-width">{{ location.description or '' }}</textarea>
             </div>
         </section>
 
         <!-- 2. Grid & Spatial Logic (Location Table) -->
         <section class="outer-border">
-            <h3>Spatial Configuration</h3>
             <div class="column-container">
-                <div class="form-group">
-                    <label for="dimensions">Grid Dimensions (WxH):</label>
-                    <input type="text" id="dimensions" name="dimensions_str" 
-                           value="{{ location.dimensions[0] }}x{{ location.dimensions[1] if location and location.dimensions else '0x0' }}" 
-                           placeholder="10x10" class="mini-input">
-                    <small class="label-like">Use 0x0 for non-physical locations.</small>
-                </div>
-                <div class="form-group">
-                    <label>Excluded Zone (L,T,R,B):</label>
-                    <input type="text" name="excluded_str" 
-                           value="{{ location.excluded | join(',') if location and location.excluded else '' }}" 
-                           placeholder="3,3,5,5" class="mini-input">
-                    <small class="label-like">Coordinates to block out.</small>
+                <div class="flex-column">
+                    <div class="form-group">
+                        <label for="dimensions">Grid Dimensions:</label>
+                        <input type="text" id="dimensions" name="dimensions_str" 
+                                value="{{ location.dimensions | join('x') if location.dimensions else '' }}" 
+                               placeholder="10x10" class="mini-input">
+                        <small class="label-like">width x height</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Excluded Zone:</label>
+                        <input type="text" name="excluded_str" 
+                               value="{{ location.excluded | join(',') if location.excluded else '' }}" 
+                               placeholder="1,1,10,10" class="mini-input">
+                        <small class="label-like">L,T,R,B</small>
+                    </div>
                 </div>
                 <div class="flex-column" style="padding-top: 5px;">
                     <label class="checkbox-label">
-                        <input type="checkbox" name="toplevel" {{ 'checked' if location and location.toplevel }}> 
+                        <input type="checkbox" name="toplevel" {{ 'checked' if location.toplevel }}> 
                         Show in Overview
                     </label>
                     <label class="checkbox-label">
-                        <input type="checkbox" name="masked" {{ 'checked' if location and location.masked }}> 
+                        <input type="checkbox" name="masked" {{ 'checked' if location.masked }}> 
                         Masked (Hidden until visited)
                     </label>
                 </div>
@@ -103,7 +108,7 @@
                 <button type="button" class="btn-sm" onclick="addRow('item-list', 'item-template')">+ Place Item</button>
             </div>
             <div id="item-list" class="spacious-top">
-                {% for pile in inventory if location %}
+                {% for pile in inventory %}
                 <div class="flex-row gap-10 align-center spacious-bottom">
                     <select name="items[{{ loop.index0 }}][item_id]" style="flex: 2;">
                         {% for item_def in all_items %}
@@ -120,16 +125,16 @@
 
         <!-- Form Actions -->
         <div class="footer-actions flex-between">
-            <div class="danger-zone">
-                {% if location %}
-                    <button type="submit" name="delete" class="dangerous-button" onclick="return confirm('Delete this location?')">Delete Location</button>
-                {% endif %}
-            </div>
-            <div class="save-zone">
-                <a href="{{ url_for('configure.index') }}" class="btn">Cancel</a>
+            <div class="gap-20" style="display: flex">
                 <button type="submit" name="duplicate" class="btn">Save & Duplicate</button>
                 <button type="submit" name="save" class="go-button">Save Changes</button>
+                <a href="{{ url_for('configure.cancel') }}" class="btn">Cancel</a>
             </div>
+            {% if location.id %}
+            <div>
+                <button type="submit" name="delete" class="dangerous-button" onclick="return confirm('Delete this item?')">Delete Item</button>
+            </div>
+            {% endif %}
         </div>
     </form>
 </div>

@@ -109,7 +109,10 @@
             <div class="loc-list">
                 {% for loc in locations %}
                     <div class="loc-item">
-                        <a href="{{ url_for('play.play_location', id=loc.id) }}">📍 {{ loc.name }}</a>
+                        {% set target_url = url_for('play.play_location', id=loc.id) %}
+                        {% call hotkey_link(target_url, link_letters) %}
+                            {{ loc.name if not loc.masked else loc.name|mask_string }}
+                        {% endcall %}
                     </div>
                 {% endfor %}
             </div>

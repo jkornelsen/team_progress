@@ -3,40 +3,94 @@
 {% block content %}
 <div class="session-card outer-border" style="max-width: 600px; margin: 40px auto;">
     <h1>Load Scenario Data</h1>
-    <p class="label-like">Upload a JSON scenario file to restore or change a game state.</p>
-    <div class="warning-box spacious-top">
-        <strong>Warning:</strong> Erases all current data. This cannot be undone.
+    
+    <div class="flex-row gap-10 spacious-bottom justify-center">
+        <label class="tab-button">
+            <input type="radio" name="import_mode" value="overwrite" checked onchange="updateUI(this.value)"> 
+            <span>Overwrite</span>
+        </label>
+        <label class="tab-button">
+            <input type="radio" name="import_mode" value="patch" onchange="updateUI(this.value)"> 
+            <span>Patch</span>
+        </label>
+        <label class="tab-button">
+            <input type="radio" name="import_mode" value="clear" onchange="updateUI(this.value)"> 
+            <span>New Blank</span>
+        </label>
     </div>
-    <br/>
+
+    <div id="status-box" class="warning-box warning">
+        <strong id="status-title">Overwrite Mode</strong>
+        <p id="status-text">This will erase all current data and replace it with the contents of the JSON file.</p>
+    </div>
 
     <div class="upload-zone spacious-top" id="drop-zone">
         <form id="upload-form" action="{{ url_for('configure.upload') }}" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="active_mode" id="active-mode" value="overwrite">
+            
             <div class="flex-column align-center gap-10">
-                <span style="font-size: 3em;">📄</span>
-                <p>Drag and drop your <strong>.json</strong> file here</p>
-                <p class="label-like">or</p>
+                <span style="font-size: 3em;" id="mode-icon">📄</span>
+                <p id="upload-instruction">Drag and drop your <strong>.json</strong> file here</p>
                 <div class="upload-container">
                     <label for="file-input" class="custom-file-upload">
                         ✨ Select JSON File
                     </label>
                     <input type="file" id="file-input" name="file" accept=".json" />
-                    <span id="file-name"></span>
                 </div>
             </div>
         </form>
     </div>
 
-    <div class="blank-start-area">
-        <form action="{{ url_for('configure.clear_all') }}" method="POST" enctype="multipart/form-data">
-        <p class="label-like">To start with an empty world instead:</p>
-        <button type="submit" class="dangerous-button">
-            ✨ Initialize Blank Setup
-        </button>
+    <div id="clear-zone" class="spacious-top" style="display: none; text-align: center;">
+        <form action="{{ url_for('configure.clear_all') }}" method="POST">
+            <br/>
+            <button type="submit" class="dangerous-button">
+                🧹 Wipe & Initialize Blank World
+            </button>
+        </form>
     </div>
-
 </div>
 
 <script>
+    const statusBox = document.getElementById('status-box');
+    const statusTitle = document.getElementById('status-title');
+    const statusText = document.getElementById('status-text');
+    const dropZone = document.getElementById('drop-zone');
+    const clearZone = document.getElementById('clear-zone');
+    const modeInput = document.getElementById('active-mode');
+    const modeIcon = document.getElementById('mode-icon');
+
+    function updateUI(mode) {
+        const modeInput = document.getElementById('active-mode');
+        const statusBox = document.getElementById('status-box');
+        
+        modeInput.value = mode;
+        
+        // Reset classes and displays
+        statusBox.className = 'warning-box'; 
+        document.getElementById('drop-zone').style.display = 'block';
+        document.getElementById('clear-zone').style.display = 'none';
+
+        if (mode === 'overwrite') {
+            statusTitle.innerText = "Overwrite Mode";
+            statusText.innerHTML = "Erases current data and replaces it with JSON content.";
+            statusBox.classList.add('warning');
+            modeIcon.innerText = "📄";
+        } else if (mode === 'patch') {
+            statusTitle.innerText = "Patch Mode";
+            statusText.innerText = "Updates matching entities and appends new ones. Some connections may need to be fixed manually.";
+            statusBox.classList.add('info');
+            modeIcon.innerText = "🩹";
+        } else if (mode === 'clear') {
+            statusTitle.innerText = "Blank Mode";
+            statusText.innerText = "Permanently deletes everything. Use for starting a fresh project.";
+            statusBox.classList.add('danger');
+            document.getElementById('drop-zone').style.display = 'none';
+            document.getElementById('clear-zone').style.display = 'block';
+            modeIcon.innerText = "🧹";
+        }
+    }
+
     // Drag and Drop Logic
     const dz = document.getElementById('drop-zone');
     const fileInput = document.getElementById('file-input');
@@ -98,6 +152,39 @@
 </script>
 
 <style>
+    /* Tab Styling */
+    .tab-button input { display: none; }
+    .tab-button span {
+        padding: 8px 16px;
+        border: 1px solid var(--border);
+        cursor: pointer;
+        border-radius: 4px;
+        transition: 0.2s;
+    }
+    .tab-button input:checked + span {
+        background: var(--accent);
+        color: white;
+        border-color: var(--accent);
+    }
+    .warning-box.info { 
+        border-left: 5px solid #3498db; /* Blue */
+        background: rgba(52, 152, 219, 0.1);
+        color: var(--text);
+        font-size: 1em;
+    }
+    .warning-box.warning { 
+        border-left: 5px solid #f39c12; /* Amber/Orange */
+        background: rgba(243, 156, 18, 0.1); 
+        color: var(--text);
+        font-size: 1em;
+    }
+    .warning-box.danger { 
+        border-left: 5px solid #c0392b; /* Deep Red */
+        background: rgba(192, 57, 43, 0.1); 
+        color: var(--text);
+        font-size: 1em;
+    }
+
     .upload-zone {
         border: 2px dashed var(--border);
         padding: 40px;

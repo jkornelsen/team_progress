@@ -107,24 +107,21 @@ def unformat_num(value_str):
 # Coordinate & Grid Parsing
 # ------------------------------------------------------------------------
 
-def parse_coords(coord_str):
+def parse_coords(coord_str, required_len=2):
     """
-    Converts '1,2' into [1, 2] OR '1,1,3,3' into [1, 1, 3, 3].
-    Returns an empty list if no numbers are found.
+    For example '1x2' becomes (1, 2) and '1,1,3,3' becomes (1, 1, 3, 3).
+    Returns None if required_len numbers are not found.
     """
     if not coord_str:
-        return []
+        return None
     try:
         # Find all numbers (including negatives) in the string
         nums = [int(n) for n in re.findall(r'-?\d+', coord_str)]
-        return nums
-    except Exception:
-        return []
-
-def parse_dimensions(dim_str):
-    """Converts '10x10' or '10,10' into [10, 10]."""
-    res = parse_coords(dim_str)
-    return res[:2] if len(res) >= 2 else [0, 0]
+        if len(nums) == required_len:
+            return tuple(nums)
+        return None
+    except (ValueError, TypeError):
+        return None
 
 def parse_numrange(min_val, max_val):
     """
@@ -268,6 +265,7 @@ class RequestHelper:
         """
         temp_root = {}
 
+        form_dict = self._get_source()
         for key, value in form_dict.items():
             if key.startswith(f"{key_text}["):
                 # Split 'stats[0][id]' into ['stats', '0', 'id']

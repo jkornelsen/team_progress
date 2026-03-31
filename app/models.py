@@ -1,7 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import event
 from sqlalchemy.dialects.postgresql import ARRAY, NUMRANGE
-from sqlalchemy.ext.mutable import MutableList
 from .utils import parse_numrange
 
 db = SQLAlchemy()
@@ -175,8 +174,8 @@ class Location(Entity):
     id = db.Column(db.Integer, primary_key=True)
     toplevel = db.Column(db.Boolean, default=False)
     masked = db.Column(db.Boolean, default=False)
-    dimensions = db.Column(MutableList.as_mutable(ARRAY(db.Integer)), default=[0, 0])
-    excluded = db.Column(MutableList.as_mutable(ARRAY(db.Integer)))
+    dimensions = db.Column(ARRAY(db.Integer), default=None)
+    excluded = db.Column(ARRAY(db.Integer), default=None)
 
     def to_dict(self):
         data = super().to_dict()
@@ -187,14 +186,9 @@ class Location(Entity):
             "masked": self.masked,
             "items": [
                 {"item_id": p.item_id, "quantity": p.quantity, "position": p.position} 
-                for p in self.inventory_piles
+                for p in self.piles
             ],
-            "destinations": [
-                {
-                    "loc2_id": d.loc2_id, "duration": d.duration, 
-                    "door1": d.door1, "door2": d.door2, "bidirectional": d.bidirectional
-                } for d in self.destinations
-            ]
+            "destinations": [d.to_dict() for d in self.exits],
         })
         return data
 
@@ -202,9 +196,15 @@ class Location(Entity):
     def from_dict(cls, data, game_token):
         loc = super().from_dict(data, game_token)
         for i_data in data.get('items', []):
-            loc.inventory_piles.append(Pile(game_token=game_token, **i_data))
+            loc.piles.append(Pile(
+                game_token=game_token,
+                owner=loc, 
+                **i_data))
         for d_data in data.get('destinations', []):
-            loc.destinations.append(LocationDest(game_token=game_token, **d_data))
+            loc.exits.append(LocationDest(
+                    game_token=game_token, 
+                    loc1=loc, 
+                    **d_data))
         return loc
 
     characters_here = db.relationship(
@@ -252,7 +252,7 @@ class Character(Entity):
     toplevel = db.Column(db.Boolean, default=False)
     masked = db.Column(db.Boolean, default=False)
     travel_group = db.Column(db.String(100))
-    position = db.Column(MutableList.as_mutable(ARRAY(db.Integer)), default=[1, 1])
+    position = db.Column(ARRAY(db.Integer), default=None)
     location_id = db.Column(db.Integer)
 
     def to_dict(self):
@@ -265,7 +265,7 @@ class Character(Entity):
             "travel_group": self.travel_group,
             "items": [
                 {"item_id": p.item_id, "quantity": p.quantity, "slot": p.slot} 
-                for p in self.inventory_piles
+                for p in self.piles
             ]
         })
         return data
@@ -274,7 +274,7 @@ class Character(Entity):
     def from_dict(cls, data, game_token):
         char = super().from_dict(data, game_token)
         for i_data in data.get('items', []):
-            char.inventory_piles.append(Pile(game_token=game_token, **i_data))
+            char.piles.append(Pile(game_token=game_token, **i_data))
         return char
 
     location = db.relationship(
@@ -526,6 +526,15 @@ class LocationDest(db.Model):
     door2 = db.Column(ARRAY(db.Integer))
     duration = db.Column(db.Integer, nullable=False)
     bidirectional = db.Column(db.Boolean, default=True)
+
+    def to_dict(self):
+        return {
+            "loc2_id": self.loc2_id,
+            "duration": self.duration,
+            "door1": self.door1,
+            "door2": self.door2,
+            "bidirectional": self.bidirectional
+        }
 
     loc1 = db.relationship(
         'Location',

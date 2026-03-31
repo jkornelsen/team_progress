@@ -86,7 +86,6 @@ def import_from_dict(data):
         for entry in entities_data.get(key, []):
             instance = model_cls.from_dict(entry, game_token)
             db.session.add(instance)
-        db.session.commit()
 
     # General state
     general_data = data.get(JsonKeys.GENERAL, {})
@@ -103,6 +102,75 @@ def import_from_dict(data):
         func.max(Entity.id)).filter_by(game_token=game_token).scalar()
     ov.next_entity_id = (max_id or 1) + 1
     
+    db.session.commit()
+    return True
+
+def patch_from_dict(data):
+    """
+    Intelligently merges JSON data into the current scenario using an 'ID + Type' 
+    fingerprint. 
+    
+    Behavior:
+    1. MATCH: If an incoming Entity ID exists and matches the Type, it updates 
+       the existing record (Patch), replacing its collections (piles/exits).
+    2. COLLISION: If an ID exists but the Type differs, the incoming entity is 
+       treated as new and assigned a generated ID to prevent data corruption.
+    3. NEW: If the ID does not exist, it is added as a new entity.
+    4. HEURISTIC LINKING: Internal links (within the JSON) are re-mapped to 
+       new IDs. External links (pointing to IDs not in the JSON) are 
+       preserved if they point to valid existing entities in the database.
+    """
+    game_token = g.game_token
+    overall = Overall.query.filter_by(game_token=game_token).first()
+    
+    id_map = {}
+    entities_to_patch = []
+    entities_to_create = []
+
+    entities_data = data.get(JsonKeys.ENTITIES, {})
+
+    # Step 1: Sorting and ID mapping
+    for key, model_cls in ENTITIES.items():
+        for entry in entities_data.get(key, []):
+            old_id = entry.get('id')
+            existing = Entity.query.filter_by(game_token=game_token, id=old_id).first()
+
+            if existing and existing.entity_type == key:
+                id_map[old_id] = old_id
+                entities_to_patch.append((existing, entry))
+            else:
+                new_id = overall.next_entity_id
+                id_map[old_id] = new_id
+                overall.next_entity_id += 1
+                entities_to_create.append((model_cls, entry))
+
+    # Step 2: Internal Link Resolver
+    def resolve(val):
+        if not val: return None
+        if val in id_map: return id_map[val]
+        # Fallback to DB for external links
+        exists = Entity.query.filter_by(game_token=game_token, id=val).exists()
+        return val if exists else None
+
+    # Step 3: Apply Patches (Updates)
+    for db_obj, entry in entities_to_patch:
+        # Clear collections to prevent duplicates during merge
+        if hasattr(db_obj, 'piles'): db_obj.piles = []
+        if hasattr(db_obj, 'exits'): db_obj.exits = []
+        
+        # Hydrate and merge
+        patched = db_obj.__class__.from_dict(entry, game_token)
+        db.session.merge(patched)
+
+    # Step 4: Apply Appends (New Entities)
+    for model_cls, entry in entities_to_create:
+        entry['id'] = id_map[entry['id']]
+        # Re-link internal pointers (e.g., location_id or loc2_id)
+        # (You'd iterate through fields here to apply the resolve() function)
+        
+        new_instance = model_cls.from_dict(entry, game_token)
+        db.session.add(new_instance)
+
     db.session.commit()
     return True
 

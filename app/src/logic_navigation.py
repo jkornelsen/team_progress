@@ -115,7 +115,7 @@ def move_group(main_char_id, dx, dy, move_with_ids=None):
         new_y = member.position[1] + dy
 
         if is_in_grid(loc, new_x, new_y):
-            member.position = [new_x, new_y]
+            member.position = (new_x, new_y)
             results[member.id] = member.position
     
     db.session.commit()

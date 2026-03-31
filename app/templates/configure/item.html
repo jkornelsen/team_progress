@@ -102,9 +102,9 @@
             <div class="gap-20" style="display: flex">
                 <button type="submit" name="duplicate" class="btn">Save & Duplicate</button>
                 <button type="submit" name="save" class="go-button">Save Changes</button>
-                <a href="{{ url_for('configure.index') }}" class="btn">Cancel</a>
+                <a href="{{ url_for('configure.cancel') }}" class="btn">Cancel</a>
             </div>
-            {% if item %}
+            {% if item.id %}
             <div>
                 <button type="submit" name="delete" class="dangerous-button" onclick="return confirm('Delete this item?')">Delete Item</button>
             </div>

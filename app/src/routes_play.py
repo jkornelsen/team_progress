@@ -3,7 +3,7 @@ from flask import (
     Blueprint, render_template, request, jsonify, g, session, current_app)
 from app.models import (
     db, Entity, Item, Character, Location, Event, Pile,
-    Recipe, RecipeAttribReq, LocationDest,
+    Recipe, RecipeAttribReq, LocationDest, AttribValue,
     Progress, Overall, WinRequirement, GameMessage, GENERAL_ID)
 from app.utils import LinkLetters, capture_origin, redirect_back
 from app.src.logic_piles import (
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 play_bp = Blueprint('play', __name__)
 
 # ------------------------------------------------------------------------
-# 1. The Overview (Dashboard)
+# The Overview (Dashboard)
 # ------------------------------------------------------------------------
 
 @play_bp.route('/overview')
@@ -54,127 +54,7 @@ def overview():
     )
 
 # ------------------------------------------------------------------------
-# 2. Character & Location Routes
-# ------------------------------------------------------------------------
-
-@play_bp.route('/play/char/<int:id>')
-def play_character(id):
-    game_token = g.game_token
-    character = Character.query.get_or_404((game_token, id))
-    capture_origin(name=character.name)
-    
-    # 1. Fetch piles (Items carried)
-    inventory = Pile.query.filter_by(
-        game_token=game_token, owner_id=id
-    ).all()
-    
-    # 2. Fetch Attributes (Stats)
-    attrib_values = AttribValue.query.filter_by(
-        game_token=game_token, subject_id=id
-    ).all()
-    
-    # 3. Fetch Navigation (Nearby Destinations)
-    destinations, has_nonadjacent = get_available_destinations(character)
-    
-    # 4. Fetch Abilities (Events linked to this character)
-    # Assuming a relationship 'abilities' exists in the Character model
-    # Or query EventRegistry/Triggers
-    abilities = Event.query.filter_by(game_token=game_token, toplevel=True).all() # Placeholder logic
-
-    return render_template(
-        'play/character.html',
-        character=character,
-        inventory=inventory,
-        attrib_values=attrib_values,
-        destinations=destinations,
-        has_nonadjacent=has_nonadjacent,
-        abilities=abilities,
-        link_letters=LinkLetters(excluded='moe')
-    )
-
-@play_bp.route('/play/location/<int:id>')
-def play_location(id):
-    game_token = g.game_token
-    location = Location.query.get_or_404((game_token, id))
-    capture_origin(name=location.name)
-    
-    # Fetch Items on the ground
-    inventory_piles = Pile.query.filter_by(
-        game_token=game_token, owner_id=id
-    ).all()
-    
-    # Fetch Characters present here
-    characters_here = Character.query.filter_by(
-        game_token=game_token, location_id=id
-    ).all()
-    
-    # Fetch Exits (Destinations)
-    destinations = LocationDest.query.filter(
-        LocationDest.game_token == game_token,
-        ((LocationDest.loc1_id == id) | 
-         ((LocationDest.loc2_id == id) & (LocationDest.bidirectional == True)))
-    ).all()
-
-    # Fetch Referenced Items and their "General Storage" (ID 1) quantities
-    referenced_data = []
-    for item in location.item_refs:
-        # Check stock in General Storage
-        gen_pile = Pile.query.filter_by(
-            game_token=game_token, item_id=item.id, owner_id=GENERAL_ID
-        ).first()
-        
-        referenced_data.append({
-            'item': item,
-            'quantity': gen_pile.quantity if gen_pile else 0.0
-        })
-
-    # Local attributes (e.g., 'Danger Level', 'Temperature')
-    attrib_values = AttribValue.query.filter_by(
-        game_token=game_token, subject_id=id
-    ).all()
-
-    # Which character is currently being controlled for movement
-    active_char_id = request.args.get('active_char_id', type=int)
-    if not active_char_id and characters_here:
-        active_char_id = characters_here[0].id
-
-    return render_template(
-        'play/location.html',
-        location=location,
-        inventory_piles=inventory_piles,
-        characters_here=characters_here,
-        destinations=destinations,
-        referenced_items=referenced_data,
-        attrib_values=attrib_values,
-        active_char_id=active_char_id,
-        link_letters=LinkLetters(excluded='moe')
-    )
-
-@play_bp.route('/char/move/<int:id>', methods=['POST'])
-def char_move(id):
-    req = RequestHelper('form')
-    dx = req.get_int('dx')
-    dy = req.get_int('dy')
-    
-    move_with = req.get_list('move_with')
-    success, results = move_group(id, dx, dy, move_with)
-    if success:
-        return jsonify({"status": "success", "positions": results})
-    return jsonify({"status": "error", "message": results}), 400
-
-@play_bp.route('/char/go/<int:id>', methods=['POST'])
-def char_travel(id):
-    req = RequestHelper('form')
-    dest_loc_id = req.get_int('dest_id')
-    move_with = req.get_list('move_with')
-    success, message = arrive_at_destination(id, dest_loc_id, move_with)
-    if success:
-        return jsonify({"status": "arrived"})
-    else:
-        return jsonify({"status": "error", "message": message}), 400
-
-# ------------------------------------------------------------------------
-# 3. Item & Pile Routes
+# Item & Pile Routes
 # ------------------------------------------------------------------------
 
 @play_bp.route('/play/item/<int:id>')
@@ -304,7 +184,127 @@ def pickup_item():
     return jsonify({"status": "error"}), 400
 
 # ------------------------------------------------------------------------
-# 4. Progress & Production Routes
+# Character & Location Routes
+# ------------------------------------------------------------------------
+
+@play_bp.route('/play/char/<int:id>')
+def play_character(id):
+    game_token = g.game_token
+    character = Character.query.get_or_404((game_token, id))
+    capture_origin(name=character.name)
+    
+    # 1. Fetch piles (Items carried)
+    inventory = Pile.query.filter_by(
+        game_token=game_token, owner_id=id
+    ).all()
+    
+    # 2. Fetch Attributes (Stats)
+    attrib_values = AttribValue.query.filter_by(
+        game_token=game_token, subject_id=id
+    ).all()
+    
+    # 3. Fetch Navigation (Nearby Destinations)
+    destinations, has_nonadjacent = get_available_destinations(character)
+    
+    # 4. Fetch Abilities (Events linked to this character)
+    # Assuming a relationship 'abilities' exists in the Character model
+    # Or query EventRegistry/Triggers
+    abilities = Event.query.filter_by(game_token=game_token, toplevel=True).all() # Placeholder logic
+
+    return render_template(
+        'play/character.html',
+        character=character,
+        inventory=inventory,
+        attrib_values=attrib_values,
+        destinations=destinations,
+        has_nonadjacent=has_nonadjacent,
+        abilities=abilities,
+        link_letters=LinkLetters(excluded='moe')
+    )
+
+@play_bp.route('/play/location/<int:id>')
+def play_location(id):
+    game_token = g.game_token
+    location = Location.query.get_or_404((game_token, id))
+    capture_origin(name=location.name)
+    
+    # Fetch Items on the ground
+    inventory_piles = Pile.query.filter_by(
+        game_token=game_token, owner_id=id
+    ).all()
+    
+    # Fetch Characters present here
+    characters_here = Character.query.filter_by(
+        game_token=game_token, location_id=id
+    ).all()
+    
+    # Fetch Exits (Destinations)
+    destinations = LocationDest.query.filter(
+        LocationDest.game_token == game_token,
+        ((LocationDest.loc1_id == id) | 
+         ((LocationDest.loc2_id == id) & (LocationDest.bidirectional == True)))
+    ).all()
+
+    # Fetch Referenced Items and their "General Storage" (ID 1) quantities
+    referenced_data = []
+    for item in location.item_refs:
+        # Check stock in General Storage
+        gen_pile = Pile.query.filter_by(
+            game_token=game_token, item_id=item.id, owner_id=GENERAL_ID
+        ).first()
+        
+        referenced_data.append({
+            'item': item,
+            'quantity': gen_pile.quantity if gen_pile else 0.0
+        })
+
+    # Local attributes (e.g., 'Danger Level', 'Temperature')
+    attrib_values = AttribValue.query.filter_by(
+        game_token=game_token, subject_id=id
+    ).all()
+
+    # Which character is currently being controlled for movement
+    active_char_id = request.args.get('active_char_id', type=int)
+    if not active_char_id and characters_here:
+        active_char_id = characters_here[0].id
+
+    return render_template(
+        'play/location.html',
+        location=location,
+        inventory_piles=inventory_piles,
+        characters_here=characters_here,
+        destinations=destinations,
+        referenced_items=referenced_data,
+        attrib_values=attrib_values,
+        active_char_id=active_char_id,
+        link_letters=LinkLetters(excluded='moe')
+    )
+
+@play_bp.route('/char/move/<int:id>', methods=['POST'])
+def char_move(id):
+    req = RequestHelper('form')
+    dx = req.get_int('dx')
+    dy = req.get_int('dy')
+    
+    move_with = req.get_list('move_with')
+    success, results = move_group(id, dx, dy, move_with)
+    if success:
+        return jsonify({"status": "success", "positions": results})
+    return jsonify({"status": "error", "message": results}), 400
+
+@play_bp.route('/char/go/<int:id>', methods=['POST'])
+def char_travel(id):
+    req = RequestHelper('form')
+    dest_loc_id = req.get_int('dest_id')
+    move_with = req.get_list('move_with')
+    success, message = arrive_at_destination(id, dest_loc_id, move_with)
+    if success:
+        return jsonify({"status": "arrived"})
+    else:
+        return jsonify({"status": "error", "message": message}), 400
+
+# ------------------------------------------------------------------------
+# Progress & Production Routes
 # ------------------------------------------------------------------------
 
 @play_bp.route('/production/start/host/<int:id>', methods=['POST'])
@@ -366,7 +366,7 @@ def production_status(id):
         })
 
 # ------------------------------------------------------------------------
-# 5. Events & Dice
+# Events & Dice
 # ------------------------------------------------------------------------
 
 @play_bp.route('/play/event/<int:id>')
