@@ -15,13 +15,17 @@
     {% endif %}
 {% endmacro %}
 
-{% macro hotkey_link(url, link_letters) %}
-    {% set key = link_letters.next(url) %}
-    {% if key %}
+{% macro hotkey_link(url, link_letters, brackets=False) -%}
+    {% set key = link_letters.next(url) -%}
+    {% if key -%}
         <script>linkForKey["{{ key }}"] = "{{ url|safe }}";</script>
-        <span class="hotkey-indicator">{{ key }}</span>
-    {% endif %}
-    <a href="{{ url }}">
-        {{ caller() }}
-    </a>
-{% endmacro %}
+        <a href="{{ url }}">
+            {%- if brackets -%}
+                <span class="hotkey-bracket-indicator">[{{ key }}]</span>
+            {%- else -%}
+                <span class="hotkey-indicator">{{ key }}</span>
+            {%- endif -%}
+            {{- caller() | trim -}}
+        </a>
+    {%- endif %}
+{%- endmacro %}

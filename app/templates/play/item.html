@@ -1,5 +1,5 @@
 {% extends 'layout/base.html' %}
-{% from 'layout/macros.html' import hotkey, render_attr %}
+{% from 'layout/macros.html' import hotkey_link, render_attr %}
 
 {% block upper_left %}
     <nav class="nav-container">
@@ -31,8 +31,14 @@
             {% elif owner.entity_type == 'character' %}
                 🎒 Carried by <a href="{{ url_for('play.play_character', id=owner.id) }}">{{ owner.name }}</a>
             {% elif owner.entity_type == 'location' %}
-                📍 Lying at <a href="{{ url_for('play.play_location', id=owner.id) }}">{{ owner.name }}</a>
-                {% if pile.position != [0,0] %} <span class="label-like">[{{ pile.position[0] }}, {{ pile.position[1] }}]</span>{% endif %}
+                📍 Lying at 
+                {% set target_url = url_for('play.play_location', id=owner.id) %}
+                {% call hotkey_link(target_url, link_letters, brackets=True) %}
+                    {{ owner.name }}
+                {% endcall %}
+                {% if pile.position %}
+                    <span class="label-like">[{{ pile.position | join(",") }}]</span>
+                {% endif %}
             {% endif %}
         </span>
         
@@ -262,11 +268,8 @@
 
 <style>
     .recipe-list { display: flex; flex-direction: column; gap: 15px; }
-    .recipe-card { background: #111; padding: 15px; border-left: 4px solid #333; }
-    .recipe-card.active { border-left-color: var(--accent); background: #1a2a2a; }
     .source-list { list-style: none; padding: 5px 0; margin: 0; font-size: 0.85em; }
     .mini-input { width: 80px; background: #000; color: white; border: 1px solid var(--border); padding: 5px; }
     .action-box { display: flex; gap: 10px; margin-bottom: 10px; }
-    .flex-between { display: flex; justify-content: space-between; }
 </style>
 {% endblock %}

@@ -296,7 +296,7 @@ def _inflate_lists(node):
     
     # Process children first
     for key in node:
-        node[key] = self._inflate_lists(node[key])
+        node[key] = _inflate_lists(node[key])
 
     # If any key is a digit, this level is intended to be a list
     if node and any(k.isdigit() for k in node.keys()):

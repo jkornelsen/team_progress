@@ -143,7 +143,8 @@ def play_item(id):
         pile=pile,
         recipes=enriched_recipes,
         progress=current_progress,
-        chars_here=chars_here
+        chars_here=chars_here,
+        link_letters=LinkLetters(excluded='moe')
     )
 
 @play_bp.route('/char/<int:id>/drop', methods=['POST'])
@@ -403,8 +404,24 @@ def play_event(id):
         source_id=source_id,
         eligible_sources=eligible_sources,
         eligible_targets=eligible_targets,
-        determinants=determinants
+        determinants=determinants,
+        link_letters=LinkLetters(excluded='moe')
     )
+
+@play_bp.route('/event/preview/<int:id>')
+def event_preview(id):
+    game_token = g.game_token
+    event = Event.query.get((game_token, id))
+    context = {
+        'actor_id': request.args.get('actor_id', type=int),
+        'target_id': request.args.get('target_id', type=int),
+        'actor_item_id': request.args.get('actor_item_id', type=int),
+        'target_item_id': request.args.get('target_item_id', type=int),
+        'location_id': request.args.get('location_id', type=int)
+    }
+    
+    modifiers = calculate_determinants(event, context)
+    return jsonify(modifiers)
 
 @play_bp.route('/event/roll/<int:id>', methods=['POST'])
 def roll_event(id):

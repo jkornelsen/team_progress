@@ -19,6 +19,54 @@
     </header>
 
     <div class="column-container">
+
+        <section class="outer-border">
+            <h3>Participants</h3>
+            <div class="flex-column gap-10">
+                <!-- 1. The Actor (Usually pre-selected) -->
+                <div class="form-group">
+                    <label>Actor:</label>
+                    <select id="actor-id" class="full-width" disabled>
+                        <option value="{{ source_entity.id }}">{{ source_entity.name }}</option>
+                    </select>
+                </div>
+
+                <!-- 2. The Target (Nearby Characters) -->
+                {% if needs_target %}
+                <div class="form-group">
+                    <label>Target:</label>
+                    <select id="target-id" class="full-width participant-trigger">
+                        <option value="">-- Select Target --</option>
+                        {% for char in nearby_characters %}
+                            <option value="{{ char.id }}">{{ char.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+
+                <!-- 3. Actor's Item (Weapon/Tool) -->
+                {% if needs_actor_item %}
+                <div class="form-group">
+                    <label>Using Item:</label>
+                    <select id="actor-item-id" class="full-width participant-trigger">
+                        <option value="">-- Select Item --</option>
+                        {% for pile in actor_inventory %}
+                            <option value="{{ pile.item_id }}">{{ pile.item.name }} (Qty: {{ pile.quantity }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="outer-border">
+            <h3>Calculated Modifiers</h3>
+            <div id="modifier-preview" class="label-like">
+                <!-- JS will populate this when participants change -->
+                Select participants to calculate modifiers...
+            </div>
+        </section>
+
         <!-- LEFT COLUMN: Execution Setup -->
         <div class="setup-column">
             <section class="outer-border">

@@ -18,7 +18,7 @@
 
     
     <form method="POST">
-        <!-- 1. Identity (Entity Table) -->
+        <!-- Identity (Entity Table) -->
         <section class="outer-border">
             <div class="form-group">
                 <label for="name">Location Name:</label>
@@ -30,7 +30,7 @@
             </div>
         </section>
 
-        <!-- 2. Grid & Spatial Logic (Location Table) -->
+        <!-- Grid & Spatial Logic (Location Table) -->
         <section class="outer-border">
             <div class="column-container">
                 <div class="flex-column">
@@ -62,7 +62,7 @@
             </div>
         </section>
 
-        <!-- 3. Destinations (loc_destinations Table) -->
+        <!-- Destinations (loc_destinations Table) -->
         <section class="outer-border">
             <div class="flex-between">
                 <h3>Exits & Destinations</h3>
@@ -101,22 +101,90 @@
             </div>
         </section>
 
-        <!-- 4. Local Items (Inventory Table) -->
+        <!-- Local Items (Inventory Table) -->
         <section class="outer-border">
             <div class="flex-between">
                 <h3>Items on the Ground</h3>
                 <button type="button" class="btn-sm" onclick="addRow('item-list', 'item-template')">+ Place Item</button>
             </div>
-            <div id="item-list" class="spacious-top">
+            <div id="item-list" class="col-list">
+                <style>
+                    .floor-piles-row { --grid-cols: 8fr 4fr 2fr 1fr; }
+                </style>
+                <div class="col-row floor-piles-row header-style">
+                    <span>Item Name</span>
+                    <span>Quantity</span>
+                    <span>Pos (x,y)</span>
+                    <span></span>
+                </div>
                 {% for pile in inventory %}
-                <div class="flex-row gap-10 align-center spacious-bottom">
-                    <select name="items[{{ loop.index0 }}][item_id]" style="flex: 2;">
+                <div class="col-row floor-piles-row">
+                    <select name="items[{{ loop.index0 }}][item_id]">
                         {% for item_def in all_items %}
                             <option value="{{ item_def.id }}" {{ 'selected' if item_def.id == pile.item_id }}>{{ item_def.name }}</option>
                         {% endfor %}
                     </select>
-                    <input type="number" name="items[{{ loop.index0 }}][quantity]" value="{{ pile.quantity }}" step="any" placeholder="Qty" style="width: 60px;">
-                    <input type="text" name="items[{{ loop.index0 }}][pos]" value="{{ pile.position|join(',') }}" placeholder="x,y" style="width: 60px;">
+                    <input type="number" name="items[{{ loop.index0 }}][quantity]"
+                        value="{{ pile.quantity }}" step="any"
+                        placeholder="Qty">
+                    <input type="text" name="items[{{ loop.index0 }}][pos]"
+                        value="{{ pile.position|join(',') if position else '' }}"
+                        placeholder="1,1">
+                    <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="outer-border">
+            <div class="flex-between">
+                <h3>Referenced Universal Items</h3>
+                <button type="button" class="btn-sm" onclick="addRow('ref-list', 'ref-template')">+ Add Reference</button>
+            </div>
+            <div id="ref-list" class="col-list spacious-top">
+                <style>
+                    .ref-row { --grid-cols: 11fr 1fr; }
+                </style>
+                {% for item in location.item_refs %}
+                <div class="col-row ref-row">
+                    <select name="item_refs[]">
+                        {% for item_def in all_universal_items %}
+                            <option value="{{ item_def.id }}" {{ 'selected' if item_def.id == item.id }}>
+                                {{ item_def.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="outer-border">
+            <div class="flex-between">
+                <h3>Attributes</h3>
+                <button type="button" class="btn-sm" onclick="addRow('attrib-list', 'attrib-template')">+ Add Attribute</button>
+            </div>
+            <div id="attrib-list" class="col-list spacious-top">
+                <style>
+                    .attrib-row { --grid-cols: 6fr 6fr 1fr; }
+                </style>
+                <div class="col-row attrib-row header-style">
+                    <span>Attribute</span>
+                    <span>Value</span>
+                    <span></span>
+                </div>
+                {% for av in location.attrib_values %}
+                <div class="col-row attrib-row">
+                    <select name="attribs[{{ loop.index0 }}][id]">
+                        {% for attr_def in all_attributes %}
+                            <option value="{{ attr_def.id }}" {{ 'selected' if attr_def.id == av.attrib_id }}>
+                                {{ attr_def.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    {# Logic for binary vs value inputs can be expanded here based on attr_def type #}
+                    <input type="text" name="attribs[{{ loop.index0 }}][value]" value="{{ av.val }}">
                     <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
                 </div>
                 {% endfor %}
@@ -154,12 +222,35 @@
 </template>
 
 <template id="item-template">
-    <div class="flex-row gap-10 align-center spacious-bottom">
-        <select name="items[INDEX][item_id]" style="flex: 2;">
+    <div class="col-row floor-piles-row">
+        <select name="items[INDEX][item_id]">
             {% for item_def in all_items %} <option value="{{ item_def.id }}">{{ item_def.name }}</option> {% endfor %}
         </select>
-        <input type="number" name="items[INDEX][quantity]" value="1" step="any" style="width: 60px;">
-        <input type="text" name="items[INDEX][pos]" placeholder="1,1" style="width: 60px;">
+        <input type="number" name="items[INDEX][quantity]" value="1" step="any">
+        <input type="text" name="items[INDEX][pos]" placeholder="1,1">
+        <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
+    </div>
+</template>
+
+<template id="attrib-template">
+    <div class="col-row attrib-row">
+        <select name="attribs[INDEX][id]">
+            {% for attr_def in all_attributes %}
+                <option value="{{ attr_def.id }}">{{ attr_def.name }}</option>
+            {% endfor %}
+        </select>
+        <input type="text" name="attribs[INDEX][value]" placeholder="Value">
+        <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
+    </div>
+</template>
+
+<template id="ref-template">
+    <div class="col-row ref-row">
+        <select name="item_refs[]">
+            {% for item_def in all_universal_items %}
+                <option value="{{ item_def.id }}">{{ item_def.name }}</option>
+            {% endfor %}
+        </select>
         <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
     </div>
 </template>
@@ -179,5 +270,35 @@
     .label-mini { font-size: 0.7em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 2px; }
     .mini-input { background: #000; color: #fff; border: 1px solid var(--border); padding: 5px; width: 100px; }
     .full-width { width: 100%; box-sizing: border-box; background: #000; color: #fff; border: 1px solid var(--border); padding: 8px; }
+    .label-mini { 
+        font-size: 0.75rem; 
+        color: var(--text-dim); 
+        text-transform: uppercase; 
+        letter-spacing: 0.5px;
+    }
+
+    .flex-row .full-width {
+        padding: 5px;
+        height: 32px;
+    }
+
+    .inventory-grid {
+        display: grid;
+        grid-template-columns: 200px 70px 70px 30px; 
+        gap: 10px;
+        align-items: center;
+        padding: 5px;
+    }
+
+    .inventory-grid input, 
+    .inventory-grid select {
+        box-sizing: border-box;
+        width: 100%;
+        height: 32px;
+        background: #000;
+        color: #fff;
+        border: 1px solid var(--border);
+        padding: 5px;
+    }
 </style>
 {% endblock %}

@@ -1,3 +1,7 @@
+/* ==========================================================================
+   1. CORE FOUNDATION (Variables, Resets, Base Elements)
+   ========================================================================== */
+
 :root {
     --bg-dark: #1a1a1a;
     --bg-panel: #2a2a2a;
@@ -29,6 +33,16 @@ a:hover {
     text-decoration: underline;
 }
 
+/* ==========================================================================
+   2. LAYOUT SKELETON (Headers, Containers, Grids)
+   ========================================================================== */
+
+.container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+
 .main-header {
     display: flex;
     justify-content: space-between;
@@ -38,12 +52,7 @@ a:hover {
     border-bottom: 1px solid var(--border);
 }
 
-.container {
-    max-width: 1200px;
-    margin: 20px auto;
-    padding: 0 20px;
-}
-
+/* Two-column page layout */
 .column-container {
     display: flex;
     gap: 20px;
@@ -55,28 +64,18 @@ a:hover {
     min-width: 300px;
 }
 
-.flex-column {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+/* Play title/desc area */
+.entity-header {
+    margin-bottom: 5px;
 }
 
-.nav-container {
-    font-size: 0.9em;
-}
+.grid-2-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 
-.separator {
-    margin: 0 10px;
-    color: var(--border);
-}
+/* ==========================================================================
+   3. COMPONENTS (Cards, Lists, Navigation)
+   ========================================================================== */
 
-.hotkey-indicator {
-    color: var(--accent);
-    font-weight: bold;
-    font-family: monospace;
-    margin-right: 4px;
-}
-
+/* Card look */
 .outer-border {
     border: 1px solid var(--border);
     padding: 15px;
@@ -85,13 +84,149 @@ a:hover {
     border-radius: 4px;
 }
 
-.progress-container {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin: 10px 0;
+/* Specialized cards */
+.recipe-card { background: #111; padding: 15px; border-left: 4px solid #333; }
+.winreq-card { background: #111; padding: 15px; border-left: 4px solid var(--border); }
+.recipe-card.active { border-left-color: var(--accent); background: #1a2a2a; }
+
+/* Navigation Helpers */
+.nav-container { font-size: 0.9em; }
+.separator { margin: 0 10px; color: var(--border); }
+
+.hotkey-indicator {
+    color: var(--accent);
+    font-weight: bold;
+    font-family: monospace;
+    margin-right: 4px;
 }
 
+.hotkey-bracket-indicator {
+    color: var(--accent);
+    font-weight: bold;
+    font-family: monospace;
+    margin-right: 3px;
+}
+
+/* Attribute & Presence Lists */
+.attr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.attr-item { padding: 5px; background: #111; border-radius: 3px; border: 1px solid transparent; }
+.attr-item:hover { border-color: #444; }
+.presence-list { list-style: none; padding: 0; margin: 0; }
+.presence-list li { padding: 8px 0; border-bottom: 1px solid #333; }
+
+/* ==========================================================================
+   4. FORMS & INTERACTION (Inputs, Buttons)
+   ========================================================================== */
+
+button {
+    background-color: var(--bg-panel);
+    color: white;
+    border: 1px solid var(--border);
+    padding: 8px 16px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+button:hover {
+    background-color: #333;
+    border-color: var(--accent);
+}
+
+.go-button { background-color: #006064; border-color: var(--accent); }
+.dangerous-button { background-color: #b71c1c; border-color: var(--danger); }
+.dangerous-button:hover { background-color: #d32f2f; }
+.btn-sm { font-size: 0.8em; padding: 4px 8px; }
+
+input, select, textarea {
+    background: var(--bg-input);
+    color: #fff;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+}
+
+/* Primary style for inputs and selects */
+.full-width {
+    width: 100%;
+    box-sizing: border-box;
+    background: #000;
+    color: #fff;
+    border: 1px solid var(--border);
+    padding: 8px;
+}
+
+/* Small inputs inside rows */
+.mini-input { background: #000; color: #fff; border: 1px solid var(--border); padding: 5px; width: 100px; }
+.mini-select { background: #000; color: var(--accent); border: 1px solid var(--border); font-size: 0.8em; }
+
+.radio-label, .checkbox-label { font-size: 0.9em; cursor: pointer; }
+.radio-label:hover, .checkbox-label:hover { background-color: #333; }
+
+.footer-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 40px;
+    padding: 20px;
+    border-top: 1px solid var(--border);
+    gap: 15px;
+}
+
+/* ==========================================================================
+   5. WIDGETS (Tables, Progress, Logs)
+   ========================================================================== */
+
+/* Table-lite list of same-sized columns in header and rows */
+.col-list {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 500px;
+}
+
+.col-row {
+    display: grid;
+    /* Use the --grid-cols variable so each page can define its own widths */
+    grid-template-columns: var(--grid-cols, 2fr 1fr 1fr); 
+    gap: 10px;
+    align-items: center;
+    padding: 5px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.col-row input, 
+.col-row select {
+    box-sizing: border-box;
+    width: 100%;
+    height: 32px;
+    background: #000;
+    color: #fff;
+    border: 1px solid var(--border);
+    padding: 5px;
+}
+
+/* Standard data tables */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+th {
+    text-align: left;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+    padding: 8px;
+    font-size: 0.85em;
+    text-transform: uppercase;
+}
+
+td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #333;
+}
+
+/* Progress bars */
 progress {
     appearance: none;
     width: 100%;
@@ -113,92 +248,14 @@ progress::-moz-progress-bar {
     border-radius: 6px;
 }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
+.progress-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
 }
 
-th {
-    text-align: left;
-    color: var(--text-dim);
-    border-bottom: 1px solid var(--border);
-    padding: 8px;
-    font-size: 0.85em;
-    text-transform: uppercase;
-}
-
-td {
-    padding: 10px 8px;
-    border-bottom: 1px solid #333;
-}
-
-button {
-    background-color: var(--bg-panel);
-    color: white;
-    border: 1px solid var(--border);
-    padding: 8px 16px;
-    cursor: pointer;
-    border-radius: 4px;
-    font-size: 0.9em;
-}
-
-button:hover {
-    background-color: #333;
-    border-color: var(--accent);
-}
-
-.go-button {
-    background-color: #006064;
-    border-color: var(--accent);
-}
-
-.dangerous-button {
-    background-color: #b71c1c;
-    border-color: var(--danger);
-}
-
-.dangerous-button:hover {
-    background-color: #d32f2f;
-}
-
-.radio-label, .checkbox-label { font-size: 0.9em; cursor: pointer; }
-.radio-label:hover, .checkbox-label:hover { background-color: #333; }
-
-.grid-table {
-    border-collapse: collapse;
-    background-color: #000;
-}
-
-.grid-cell {
-    width: 32px;
-    height: 32px;
-    border: 1px solid #222;
-    text-align: center;
-    vertical-align: middle;
-    font-size: 1.2em;
-}
-
-.grid-cell.excluded {
-    background-color: #111;
-}
-
-.grid-cell.included {
-    background-color: #222;
-}
-
-.grid-cell:hover {
-    background-color: #333;
-}
-
-.description-box {
-    display: block;
-    margin-top: 1em;
-    margin-bottom: 1em;
-    margin-left: 10px;
-    margin-right: 0;
-}
-
+/* Logs */
 .scrollable-log {
     height: 250px;
     overflow-y: auto;
@@ -219,25 +276,48 @@ button:hover {
     margin-left: 5px;
 }
 
+/* ==========================================================================
+   6. UTILITIES (Margins, Colors, Display)
+   ========================================================================== */
+
+/* Margin utilities */
+.spacious-top { margin-top: 20px; }
+.spacious-bottom { margin-bottom: 8px; }
+
+/* Any text that shouldn't be as bright as the main data */
+.label-like { color: var(--text-dim); font-size: 0.85em; }
+
+/* Informational paragraphs. */
+.info { color: var(--text-dim); font-size: 0.90em; }
+
+.description-box {
+    display: block;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    margin-left: 10px;
+    margin-right: 0;
+}
+
+.text-accent { color: var(--accent); }
+.text-danger { color: var(--danger); }
+.text-success { color: var(--success); }
+.text-dim { color: var(--text-dim); }
+
 .gap-10 { gap: 10px; }
 .gap-20 { gap: 20px; }
 
+.hidden { display: none !important; }
+
+/* Standard flexbox utilities used for alignment */
 .flex-between {
     display: flex;
     justify-content: space-between;
 }
 
-.footer-actions {
+.flex-column {
     display: flex;
-    justify-content: space-between;
-    margin-top: 40px;
-    padding: 20px;
-    border-top: 1px solid var(--border);
-    gap: 15px;
+    flex-direction: column;
+    gap: 10px;
 }
 
-/* --- Utilities --- */
-.hidden { display: none !important; }
-.label-like { color: var(--text-dim); font-size: 0.85em; }
-.info { color: var(--text-dim); font-size: 0.90em; }
-.text-accent { color: var(--accent); }
+.flex-row { display: flex; gap: 5px; }

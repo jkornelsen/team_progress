@@ -138,6 +138,31 @@
 </div>
 
 <!-- TEMPLATES -->
+
+<template id="det-template">
+    <div class="flex-row gap-10 align-center spacious-bottom">
+        <select name="dets[INDEX][source_role]" style="width: 120px;">
+            <option value="actor">Actor (Self)</option>
+            <option value="target">Target</option>
+            <option value="actor_item">Actor's Item</option>
+            <option value="target_item">Target's Item</option>
+            <option value="location">Location</option>
+            <option value="global">Global</option>
+        </select>
+        
+        <select name="dets[INDEX][attrib_id]" style="flex: 2;">
+            {% for a in all_attribs %} <option value="{{ a.id }}">{{ a.name }}</option> {% endfor %}
+        </select>
+        
+        <select name="dets[INDEX][operation]" style="width: 50px;">
+            <option value="+">+</option><option value="-">-</option>
+            <option value="*">*</option><option value="/">/</option>
+        </select>
+        
+        <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
+    </div>
+</template>
+
 <template id="det-template">
     <div class="flex-row gap-10 align-center spacious-bottom">
         <input type="text" name="dets[INDEX][label]" placeholder="Label (e.g. Luck)" style="flex: 1;">
@@ -183,7 +208,6 @@
 
 <style>
     .grid-2-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    .full-width { width: 100%; box-sizing: border-box; background: #000; color: #fff; border: 1px solid var(--border); padding: 8px; }
     .gap-10 { gap: 10px; }
 </style>
 {% endblock %}

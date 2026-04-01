@@ -377,6 +377,15 @@ class Event(Entity):
         ]
         return event
 
+    determinants = db.relationship(
+        'EventDeterminant',
+        back_populates='event',
+        cascade="all, delete-orphan")
+    effects = db.relationship(
+        'EventEffect',
+        back_populates='event',
+        cascade="all, delete-orphan")
+
     __table_args__ = (
         db.ForeignKeyConstraint(
             ['game_token', 'id'],
@@ -577,6 +586,54 @@ class ItemRef(db.Model):
         db.ForeignKeyConstraint(
             ['game_token', 'item_id'],
             ['items.game_token', 'items.id'], ondelete='CASCADE'),
+    )
+
+class SourceRole:
+    ACTOR = 'actor'           # The subject performing the event
+    TARGET = 'target'         # Another character nearby
+    ACTOR_ITEM = 'actor_item' # An item held by the actor
+    TARGET_ITEM = 'target_item' # An item held by the target
+    LOCATION = 'location'     # The room itself
+    GLOBAL = 'global'         # General Storage (ID 1)
+
+    ALL = [ACTOR, TARGET, ACTOR_ITEM, TARGET_ITEM, LOCATION, GLOBAL]
+
+class EventDeterminant(db.Model):
+    __tablename__ = 'event_determinants'
+    id = db.Column(db.Integer, primary_key=True)
+    game_token = db.Column(db.String(50), primary_key=True)
+    event_id = db.Column(db.Integer, nullable=False)
+    
+    label = db.Column(db.String(50)) # e.g., "Accuracy"
+    source_role = db.Column(db.String(20), default=SourceRole.ACTOR)
+    attrib_id = db.Column(db.Integer)
+    item_id = db.Column(db.Integer) # If null, use attrib_id. If both, sum? Usually one.
+    
+    operation = db.Column(db.String(1), default='+') # +, -, *, /
+    mode = db.Column(db.String(10), default='')     # '', 'log', 'half'
+
+    event = db.relationship('Event', back_populates='determinants', foreign_keys=[game_token, event_id])
+
+    __table_args__ = (
+        db.ForeignKeyConstraint(['game_token', 'event_id'], ['events.game_token', 'events.id'], ondelete='CASCADE'),
+    )
+
+class EventEffect(db.Model):
+    """What changes when the event is applied."""
+    __tablename__ = 'event_effects'
+    id = db.Column(db.Integer, primary_key=True)
+    game_token = db.Column(db.String(50), primary_key=True)
+    event_id = db.Column(db.Integer, nullable=False)
+    
+    target_role = db.Column(db.String(20), default=SourceRole.TARGET)
+    attrib_id = db.Column(db.Integer)
+    item_id = db.Column(db.Integer)
+    multiplier = db.Column(db.Float, default=1.0) # Outcome * Multiplier
+
+    event = db.relationship('Event', back_populates='effects', foreign_keys=[game_token, event_id])
+
+    __table_args__ = (
+        db.ForeignKeyConstraint(['game_token', 'event_id'], ['events.game_token', 'events.id'], ondelete='CASCADE'),
     )
 
 # ------------------------------------------------------------------------

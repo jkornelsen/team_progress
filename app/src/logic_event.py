@@ -4,7 +4,7 @@ import logging
 from flask import g
 from app.models import (
     db, Entity, Event, AttribValue, Pile, Location, Character, Item,
-    LocationDest)
+    LocationDest, SourceRole)
 from app.src.logic_piles import set_quantity
 from app.src.logic_user_interaction import add_message
 from app.src.logic_navigation import get_all_valid_coords
@@ -67,6 +67,54 @@ def get_entity_value(owner_id, attrib_id=None, item_id=None):
         return sum(p.quantity for p in piles)
     
     return 0.0
+
+def resolve_role_id(role, actor_id, target_id, actor_item_id, target_item_id, location_id):
+    """Maps a SourceRole to a specific Entity ID."""
+    if role == SourceRole.ACTOR: return actor_id
+    if role == SourceRole.TARGET: return target_id
+    if role == SourceRole.ACTOR_ITEM: return actor_item_id
+    if role == SourceRole.TARGET_ITEM: return target_item_id
+    if role == SourceRole.LOCATION: return location_id
+    if role == SourceRole.GLOBAL: return GENERAL_ID
+    return None
+
+def calculate_determinants(event, context_ids):
+    """
+    Returns a list of calculated modifiers based on selected participants.
+    context_ids: {'actor_id', 'target_id', 'actor_item_id', 'target_item_id', 'location_id'}
+    """
+    modifiers = []
+    for det in event.determinants:
+        owner_id = resolve_role_id(
+            det.source_role, 
+            context_ids.get('actor_id'),
+            context_ids.get('target_id'),
+            context_ids.get('actor_item_id'),
+            context_ids.get('target_item_id'),
+            context_ids.get('location_id')
+        )
+        
+        if not owner_id:
+            continue
+
+        raw_val = get_entity_value(owner_id, det.attrib_id, det.item_id)
+        # Apply mode (log, half) logic here
+        effective_val = apply_modifier_mode(raw_val, det.mode)
+        
+        modifiers.append({
+            'label': det.label,
+            'value': effective_val,
+            'op': det.operation
+        })
+    return modifiers
+
+def apply_modifier_mode(val, mode):
+    if mode == 'log':
+        if val == 0: return 0
+        return math.sign(val) * 5 * math.log10(abs(val) + 1)
+    if mode == 'half':
+        return val / 2.0
+    return val
 
 def apply_modifier(base_val, mod_val, operation, mode):
     """
