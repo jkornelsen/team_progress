@@ -48,35 +48,48 @@ def check_triggers(entity, batches=1):
 # 1. Determinant Logic (Modifiers)
 # ------------------------------------------------------------------------
 
-def get_entity_value(owner_id, attrib_id=None, item_id=None):
+def get_entity_value(game_token, anchor_id, det):
     """
-    Finds the numeric value for a modifier.
-    Checks AttribValue or Pile based on what is provided.
+    The Core Resolver. 
+    Handles Base vs Child and Attr vs Qty logic.
     """
-    if attrib_id:
+    # 1. Determine the Target Entity (The Base or the Selected Child)
+    target_id = anchor_id
+    
+    if det.is_child:
+        # If it's a child, we need the specific item instance ID from the request/context
+        # This is where 'entity_id=NULL' logic lives in the route.
+        target_id = request.form.get(f"{det.source_who}_item_id")
+    
+    if not target_id and det.source_who != 'univ':
+        return 0.0
+
+    # 2. Fetch the Data
+    if det.source_mode == 'attr':
+        # If entity_id is set, we use that specific Attribute Blueprint
         val_obj = AttribValue.query.filter_by(
-            game_token=g.game_token, subject_id=owner_id, attrib_id=attrib_id
+            game_token=game_token, subject_id=target_id, attrib_id=det.entity_id
         ).first()
         return val_obj.value if val_obj else 0.0
     
-    if item_id:
-        # Sum quantity across all piles (if multiple positions exist in inventory)
-        piles = Pile.query.filter_by(
-            game_token=g.game_token, owner_id=owner_id, item_id=item_id
-        ).all()
-        return sum(p.quantity for p in piles)
-    
+    if det.source_mode == 'qty':
+        if det.source_who == 'univ' or not det.is_child:
+            # AUTO-FETCH: Sum all piles of the specific item blueprint
+            piles = Pile.query.filter_by(
+                game_token=game_token, owner_id=target_id, item_id=det.entity_id
+            ).all()
+            return sum(p.quantity for p in piles)
+        else:
+            # INSTANCE-FETCH: Get the quantity of the specific selected pile
+            pile = Pile.query.get((game_token, target_id))
+            return pile.quantity if pile else 0.0
+
     return 0.0
 
-def resolve_role_id(role, actor_id, target_id, actor_item_id, target_item_id, location_id):
-    """Maps a SourceRole to a specific Entity ID."""
-    if role == SourceRole.ACTOR: return actor_id
-    if role == SourceRole.TARGET: return target_id
-    if role == SourceRole.ACTOR_ITEM: return actor_item_id
-    if role == SourceRole.TARGET_ITEM: return target_item_id
-    if role == SourceRole.LOCATION: return location_id
-    if role == SourceRole.GLOBAL: return GENERAL_ID
-    return None
+def resolve_anchor_id(who, context):
+    """Maps 'subj', '2nd', '3rd', 'univ' to a physical Entity ID."""
+    if who == 'univ': return 1 # General Storage
+    return context.get(f"{who}_id")
 
 def calculate_determinants(event, context_ids):
     """

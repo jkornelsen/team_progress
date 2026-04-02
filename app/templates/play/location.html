@@ -51,84 +51,90 @@
             </section>
             {% endif %}
 
-            <!-- Local Items -->
+            <style>
+                .twocol-row, .item-ref-row { --grid-cols: minmax(20px, 500px) 1fr auto; }
+                .twocol-list, .item-ref-list { --col-list-max-width: 300px; }
+                {% if has_grid %}
+                .item-ref-row { --grid-cols: 4fr 1fr 1fr; }
+                .item-ref-list { --col-list-max-width: 350px; }
+                {% endif %}
+            </style>
+
             {% if inventory_piles %}
             <section class="outer-border">
                 <h3>Items on Ground</h3>
-                <ul class="presence-list">
+                <div class="col-list item-ref-list">
                 {% for pile in inventory_piles %}
-                    <li>
+                    <div class="col-row item-ref-row" style="--grid-cols: 1fr auto;">
                         {% set target_url = url_for('play.play_item', id=pile.item_id, loc_id=location.id, pos=pile.position) %}
                         {% call hotkey_link(target_url, link_letters) %}
                             {{ pile.item.name if not pile.item.masked else (pile.item.name | mask_string) }}
                         {% endcall %}
                         
-                        {# Only show quantity if it's not a single non-stackable item #}
                         {% if not (pile.item.q_limit == 1 and pile.quantity == 1) %}
                             <span>{{ pile.quantity | formatNum }}</span>
                         {% endif %}
 
                         {% if has_grid %}
-                            <span class="label-like">[{{ pile.position[0] }},{{ pile.position[1] }}]</span>
+                            <span class="label-like">[{{ pile.position | join(",") }}]</span>
                         {% endif %}
-                    </li>
-                {% else %}
-                    <li class="text-dim">No items here.</li>
+                    </div>
                 {% endfor %}
-                </ul>
             </section>
             {% endif %}
 
             {% if referenced_items %}
             <section class="outer-border">
                 <h3 title="Global items accessible from here">Referenced Items</h3>
-                <ul class="presence-list">
+                <div class="col-list twocol-list">
                 {% for ref in referenced_items %}
-                    <li>
-                        <span class="qty text-accent">{{ ref.quantity | formatNum }}x</span>
-                        <a href="{{ url_for('play.play_item', id=ref.item.id, loc_id=location.id) }}">
+                    <div class="col-row twocol-row">
+                        {% set target_url = url_for('play.play_item', id=ref.item.id, loc_id=location.id) %}
+                        {% call hotkey_link(target_url, link_letters) %}
                             {{ ref.item.name }}
-                        </a>
-                    </li>
+                        {% endcall %}
+                        {% if not (ref.item.q_limit == 1 and ref.quantity == 1) %}
+                            <span>{{ ref.quantity | formatNum }}</span>
+                        {% endif %}
+                    </div>
                 {% endfor %}
-                </ul>
+                </div>
             </section>
             {% endif %}
 
             {% if attrib_values %}
             <section class="outer-border">
                 <h3>Local Attributes</h3>
-                <ul class="presence-list">
-                    {% for av in attrib_values %}
-                        <li>
-                            {% set target_url = url_for('play.play_attrib', attrib_id=av.attrib_id, subject_id=location.id) %}
-                            {% call hotkey_link(target_url, link_letters) %}
-                                {{ av.attribute.name }}
-                            {% endcall %}
-                            : <span class="text-accent">{{ render_attr(av, av.attribute) }}</span>
-                        </li>
-                    {% endfor %}
-                </ul>
+                <div class="col-list twocol-list">
+                {% for av in attrib_values %}
+                    <div class="col-row twocol-row">
+                        {% set target_url = url_for('play.play_attrib', attrib_id=av.attrib_id, subject_id=location.id) %}
+                        {% call hotkey_link(target_url, link_letters) %}
+                            {{ av.attribute.name }}
+                        {% endcall %}
+                        <span class="text-accent">{{ render_attr(av, av.attribute) }}</span>
+                    </div>
+                {% endfor %}
+                </div>
             </section>
             {% endif %}
 
-            <!-- Destinations (Exits) -->
             {% if destinations %}
             <section class="outer-border">
                 <h3>Exits</h3>
-                <ul class="presence-list">
+                <div class="col-list twocol-list">
                 {% for dest in destinations %}
                     {% set other = dest.loc2 if dest.loc1_id == location.id else dest.loc1 %}
                     {% set door = dest.door1 if dest.loc1_id == location.id else dest.door2 %}
-                    <li>
+                    <div class="col-row twocol-row">
                         {% set target_url = url_for('play.play_location', id=other.id) %}
                         {% call hotkey_link(target_url, link_letters) %}
-                            {{ character.location.name }}
+                            {{ other.name }}
                         {% endcall %}
-                        <span class="label-like"> [{{ door | join(",") }}]</span>
-                    </li>
+                        <span class="label-like">[{{ door | join(",") }}]</span>
+                    </div>
                 {% endfor %}
-                </ul>
+                </div>
             </section>
             {% endif %}
         </div>

@@ -194,7 +194,7 @@ def edit_location(id):
 
         # Update Item Refs
         ItemRef.query.filter_by(game_token=game_token, loc_id=loc.id).delete()
-        for item_id in req.get_list('item_refs'):  # e.g. "item_refs[0]": "1"
+        for item_id in request.form.getlist('item_refs[]'):
             db.session.add(ItemRef(
                 game_token=game_token, loc_id=loc.id, item_id=int(item_id)))
 
@@ -341,6 +341,13 @@ def edit_event(id):
         event.numeric_range = [
             req.get_int('range_min'), req.get_int('range_max')]
         event.toplevel = 'toplevel' in request.form
+
+        # Auto-collapse Tertiary to Secondary for a cleaner UI
+        if any(d.source_who == '3rd' for d in event.determinants) and \
+           not any(d.source_who == '2nd' for d in event.determinants):
+            for d in event.determinants:
+                if d.source_who == '3rd':
+                    d.source_who = '2nd'
 
         db.session.commit()
         if 'duplicate' in request.form:

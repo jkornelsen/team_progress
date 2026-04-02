@@ -23,15 +23,33 @@
         <section class="outer-border">
             <h3>Participants</h3>
             <div class="flex-column gap-10">
-                <!-- 1. The Actor (Usually pre-selected) -->
                 <div class="form-group">
-                    <label>Actor:</label>
-                    <select id="actor-id" class="full-width" disabled>
-                        <option value="{{ source_entity.id }}">{{ source_entity.name }}</option>
-                    </select>
+                    <label>Subject:</label>
+                    <input type="hidden" name="subj_id" value="{{ subj.id }}">
+                    {{ subj.name }}
                 </div>
 
-                <!-- 2. The Target (Nearby Characters) -->
+                {% if needs_2nd %}
+                <div class="form-group">
+                    <label>Target:</label>
+                    <select name="sec_id" class="full-width participant-trigger">
+                        <option value="">-- Select Target --</option>
+                        {% for ent in nearby_entities %}
+                            <option value="{{ ent.id }}">{{ ent.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+
+                {% if needs_3rd %}
+                <div class="form-group">
+                    <label>Environment:</label>
+                    <select name="tert_id" class="full-width participant-trigger">
+                        <option value="{{ current_loc.id }}">{{ current_loc.name }} (Current)</option>
+                    </select>
+                </div>
+                {% endif %}
+
                 {% if needs_target %}
                 <div class="form-group">
                     <label>Target:</label>
@@ -44,18 +62,17 @@
                 </div>
                 {% endif %}
 
-                <!-- 3. Actor's Item (Weapon/Tool) -->
-                {% if needs_actor_item %}
-                <div class="form-group">
-                    <label>Using Item:</label>
-                    <select id="actor-item-id" class="full-width participant-trigger">
-                        <option value="">-- Select Item --</option>
-                        {% for pile in actor_inventory %}
-                            <option value="{{ pile.item_id }}">{{ pile.item.name }} (Qty: {{ pile.quantity }})</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                {% endif %}
+                {% for role_name, config in item_selectors.items() %}
+                    <div class="form-group">
+                        <label>Select {{ config.label }} for {{ role_name }}:</label>
+                        <select name="{{ role_name }}_item_id" class="full-width participant-trigger">
+                            <option value="">-- Select Item --</option>
+                            {% for pile in config.options %}
+                                <option value="{{ pile.id }}">{{ pile.item_blueprint.name }} (Qty: {{ pile.quantity }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endfor %}
             </div>
         </section>
 

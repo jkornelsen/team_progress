@@ -78,9 +78,9 @@ class Entity(db.Model):
         foreign_keys="[Pile.game_token, Pile.owner_id]",
         cascade="all, delete-orphan") # Deletes piles if Entity is deleted
     attrib_values = db.relationship(
-        'AttribValue', 
+        'AttribVal', 
         back_populates='subject',
-        foreign_keys="[AttribValue.game_token, AttribValue.subject_id]",
+        foreign_keys="[AttribVal.game_token, AttribVal.subject_id]",
         cascade="all, delete-orphan")
     progress_records = db.relationship(
         'Progress',
@@ -100,6 +100,9 @@ class Entity(db.Model):
 class Item(Entity):
     """The most important entity for idle scenarios,
     also generally flexible and multi-purpose.
+
+    BLUEPRINT: Static definition of an item type (e.g., 'Iron Ore').
+    Instance data (quantity, position) is managed by the Pile model.
     """
     __tablename__ = 'items'
     game_token = db.Column(db.String(50), primary_key=True)
@@ -129,7 +132,7 @@ class Item(Entity):
         for r_data in data.get('recipes', []):
             item.recipes.append(Recipe.from_dict(r_data, game_token))
         for attr_pair in data.get('attribs', []):
-            item.attrib_values.append(AttribValue(
+            item.attrib_values.append(AttribVal(
                 game_token=game_token, attrib_id=attr_pair[0], value=attr_pair[1]
             ))
         return item
@@ -168,6 +171,8 @@ class Item(Entity):
 class Location(Entity):
     """Allows items or characters to be in different places,
     making the scenario bigger.
+
+    SINGLETON: Each is a unique container for Piles and ItemRefs.
     """
     __tablename__ = 'locations'
     game_token = db.Column(db.String(50), primary_key=True)
@@ -188,6 +193,7 @@ class Location(Entity):
                 {"item_id": p.item_id, "quantity": p.quantity, "position": p.position} 
                 for p in self.piles
             ],
+            "item_refs": [ir.to_dict() for ir in self.item_refs],
             "destinations": [d.to_dict() for d in self.exits],
         })
         return data
@@ -200,6 +206,11 @@ class Location(Entity):
                 game_token=game_token,
                 owner=loc, 
                 **i_data))
+        for ir_data in data.get('item_refs', []):
+            loc.item_refs.append(ItemRef(
+                game_token=game_token,
+                loc_id=loc.id,
+                **ir_data))
         for d_data in data.get('destinations', []):
             loc.exits.append(LocationDest(
                     game_token=game_token, 
@@ -207,6 +218,11 @@ class Location(Entity):
                     **d_data))
         return loc
 
+    item_refs = db.relationship(
+        'ItemRef',
+        back_populates='location',
+        foreign_keys="[ItemRef.game_token, ItemRef.loc_id]",
+        cascade="all, delete-orphan")
     characters_here = db.relationship(
         'Character',
         back_populates='location',
@@ -227,11 +243,6 @@ class Location(Entity):
         foreign_keys="[LocationDest.game_token, LocationDest.loc2_id]",
         cascade="all, delete-orphan",
         overlaps="exits")
-    item_refs = db.relationship(
-        'ItemRef',
-        back_populates='location',
-        foreign_keys="[ItemRef.game_token, ItemRef.loc_id]",
-        viewonly=True)
 
     __table_args__ = (
         db.ForeignKeyConstraint(
@@ -243,6 +254,8 @@ class Location(Entity):
 class Character(Entity):
     """The primary entity for role-playing scenarios.
     The location_id foreign key means that Location must be defined first.
+
+    SINGLETON: Each is a unique actor and container for Piles.
     """
     __tablename__ = 'characters'
     game_token = db.Column(db.String(50), primary_key=True)
@@ -289,7 +302,14 @@ class Character(Entity):
     __mapper_args__ = { 'polymorphic_identity': 'character' }
 
 class Attrib(Entity):
-    """Functional or informational stats for other entities."""
+    """
+    Functional or informational stats for other entities.
+    Stats (Str), states (Is Open), or properties (Color).
+    Can be numeric, boolean, or enumerated list.
+
+    BLUEPRINT: Defines a property (e.g., 'Strength').
+    Actual values for entities are stored in 'AttribVal' instances.
+    """
     __tablename__ = 'attribs'
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
@@ -310,9 +330,9 @@ class Attrib(Entity):
         return super().from_dict(data, game_token)
 
     attrib_values = db.relationship(
-        'AttribValue',
+        'AttribVal',
         back_populates='attrib',
-        foreign_keys="[AttribValue.game_token, AttribValue.attrib_id]",
+        foreign_keys="[AttribVal.game_token, AttribVal.attrib_id]",
         viewonly=True)
     requirements = db.relationship(
         'RecipeAttribReq',
@@ -370,7 +390,7 @@ class Event(Entity):
         effects = data.pop('effects', [])
         event = super().from_dict(data, game_token)
         event.determinants = [
-            EventDeterminant(game_token=game_token, **d) for d in dets
+            EventDet(game_token=game_token, **d) for d in dets
         ]
         event.effects = [
             EventEffect(game_token=game_token, **e) for e in effects
@@ -378,7 +398,7 @@ class Event(Entity):
         return event
 
     determinants = db.relationship(
-        'EventDeterminant',
+        'EventDet',
         back_populates='event',
         cascade="all, delete-orphan")
     effects = db.relationship(
@@ -494,7 +514,7 @@ class Pile(db.Model):
             ['items.game_token', 'items.id'], ondelete='CASCADE'),
     )
 
-class AttribValue(db.Model):
+class AttribVal(db.Model):
     """Values of an Attrib applied to an Entity (Item, Character, or Location)."""
     __tablename__ = 'attrib_values'
     game_token = db.Column(db.String(50), primary_key=True)
@@ -571,6 +591,11 @@ class ItemRef(db.Model):
     loc_id = db.Column(db.Integer, primary_key=True)
     item_id = db.Column(db.Integer, primary_key=True)
 
+    def to_dict(self):
+        return {
+            "item_id": self.item_id
+        }
+
     location = db.relationship(
         'Location',
         back_populates='item_refs',
@@ -589,25 +614,53 @@ class ItemRef(db.Model):
     )
 
 class SourceRole:
-    ACTOR = 'actor'           # The subject performing the event
-    TARGET = 'target'         # Another character nearby
-    ACTOR_ITEM = 'actor_item' # An item held by the actor
-    TARGET_ITEM = 'target_item' # An item held by the target
-    LOCATION = 'location'     # The room itself
-    GLOBAL = 'global'         # General Storage (ID 1)
+    # --- Anchor ---
+    SUBJECT   = 'subj' # Context-driven e.g. player char
+    SECONDARY = '2nd'  # Typically user-selected e.g. enemy
+    TERTIARY  = '3rd'  # Environment or third participant
+    UNIVERSAL = 'univ' # Auto-fetched, can be multiple
 
-    ALL = [ACTOR, TARGET, ACTOR_ITEM, TARGET_ITEM, LOCATION, GLOBAL]
+    # --- Depth Traversal ---
+    # False: Use the anchor entity itself.
+    # True: Select an item pile inside the anchor.
+    # Only valid if the anchor resolves to a Character or Location.
+    ChildItem = False
 
-class EventDeterminant(db.Model):
+    # --- Data Mode ---
+    ATTR = 'attr'  # Fetch AttribVal
+    QTY  = 'qty'   # Fetch pile quantity
+
+    ALL = abc # [] array of all possible values for contraints. TODO
+
+class EventDet(db.Model):
+    """
+     Defines which attrib values or item quantities are used to determine
+        an Event's outcome.
+
+    Attribute Value Lookup:
+        - Look up an AttribVal for the given attrib_id, either for an
+          anchor or one of their child items.
+        - Example 1: Role SUBJECT, Mode ATTR, Attrib STR, AttribVal 3 
+        - Example 2: Role SUBJECT, ChildItem True, Mode ATTR, Attrib ACCURACY,
+            AttribVal 4 (a pile selected from the list of subject's inventory
+            and nearby carried/local piles)
+
+    Item Quantity Lookup:
+        - Look up the quantity of a Pile for the given item_id,
+          either specified in configuration or chosen by dropdown in play.
+        - Example: Role SUBJECT_ITEM_QTY, Item LEATHER (How much leather Bob has)
+    """
     __tablename__ = 'event_determinants'
     id = db.Column(db.Integer, primary_key=True)
     game_token = db.Column(db.String(50), primary_key=True)
     event_id = db.Column(db.Integer, nullable=False)
     
     label = db.Column(db.String(50)) # e.g., "Accuracy"
-    source_role = db.Column(db.String(20), default=SourceRole.ACTOR)
+    source_who = db.Column(db.String(10)) 
+    source_mode = db.Column(db.String(10)) 
+    child_of_source = db.Column(db.Boolean, default=False)
+    item_id = db.Column(db.Integer) # may need play dropdown if not specified
     attrib_id = db.Column(db.Integer)
-    item_id = db.Column(db.Integer) # If null, use attrib_id. If both, sum? Usually one.
     
     operation = db.Column(db.String(1), default='+') # +, -, *, /
     mode = db.Column(db.String(10), default='')     # '', 'log', 'half'
@@ -625,7 +678,7 @@ class EventEffect(db.Model):
     game_token = db.Column(db.String(50), primary_key=True)
     event_id = db.Column(db.Integer, nullable=False)
     
-    target_role = db.Column(db.String(20), default=SourceRole.TARGET)
+    target_role = db.Column(db.String(20), default=SourceRole.OTHER_ATTR)
     attrib_id = db.Column(db.Integer)
     item_id = db.Column(db.Integer)
     multiplier = db.Column(db.Float, default=1.0) # Outcome * Multiplier

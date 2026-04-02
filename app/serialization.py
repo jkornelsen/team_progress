@@ -197,15 +197,8 @@ def export_game_to_json():
     """
     Generates a formatted JSON string for file downloads.
     """
-    # Get the raw dictionary
     data = export_to_dict()
-    
-    # Standard JSON stringification
-    raw_json = json.dumps(data, indent=4)
-    
-    # Use the utility to collapse coordinates/ranges onto single lines
-    # (Makes the file much easier for humans to read/edit)
-    return condense_json(raw_json)
+    return serialize_smart(data, indent=4, max_line_length=70)
 
 def export_to_dict():
     """
@@ -246,38 +239,66 @@ def export_to_dict():
 
     return output
 
-def condense_json(json_str):
+def serialize_smart(obj, indent=4, max_line_length=60, current_indent=0):
     """
-    Post-processes a JSON string to collapse coordinate-style arrays 
-    onto a single line for better manual readability.
+    Recursively serializes a dict/list to JSON, collapsing small 
+    entries onto a single line.
+    Makes the file much easier for humans to read/edit.
     """
-    # Collapse any 2-item arrays (e.g., [1, 2] or ["slot", "main"])
-    # Patterns: [ value , value ]
-    json_str = re.sub(
-        r'\[\s*(-?[\d.]+|".*?")\s*,\s*(-?[\d.]+|".*?")\s*\]',
-        lambda m: f'[{m.group(1)}, {m.group(2)}]',
-        json_str)
+    padding = " " * current_indent
+    inner_padding = " " * (current_indent + indent)
 
-    # Specifically target spatial keys that might have more items (like 'excluded' with 4)
-    tuple_keys = ["door1", "door2", "dimensions", "excluded", "position", "numeric_range"]
-    key_pattern = "|".join(tuple_keys)
-    pattern = rf'"({key_pattern})":\s*\[(.*?)\]'
+    # --- HANDLE LISTS ---
+    if isinstance(obj, list):
+        if not obj:
+            return "[]"
+        
+        # Determine if we should collapse the WHOLE list (e.g. [1, 2, 3])
+        # We only collapse if it's short AND doesn't contain dictionaries/lists
+        items_formatted = [serialize_smart(item, indent, max_line_length, 0) for item in obj]
+        flat_list = "[" + ", ".join(items_formatted) + "]"
+        
+        contains_complex = any(isinstance(item, (dict, list)) for item in obj)
+        
+        if len(flat_list) <= max_line_length and not contains_complex:
+            return flat_list
+        
+        # Otherwise, vertical list: one item per line, with commas
+        lines = []
+        for i, item in enumerate(obj):
+            comma = "," if i < len(obj) - 1 else ""
+            formatted_item = serialize_smart(item, indent, max_line_length, current_indent + indent)
+            lines.append(f"\n{inner_padding}{formatted_item}{comma}")
+        
+        return "[" + "".join(lines) + f"\n{padding}]"
 
-    def collapse_spatial_data(match):
-        key = match.group(1)
-        # Remove all internal whitespace and newlines
-        content = match.group(2).replace("\n", "").replace(" ", "")
-        # Re-insert clean spacing: [1,2,3,4] -> [1, 2, 3, 4]
-        formatted_content = ", ".join(content.split(","))
-        return f'"{key}": [{formatted_content}]'
+    # --- HANDLE DICTIONARIES ---
+    if isinstance(obj, dict):
+        if not obj:
+            return "{}"
+        
+        # Try to see if this specific dictionary can be a single line
+        # (e.g. {"item_id": 2, "quantity": 5.0})
+        items_formatted = [f'"{k}": {serialize_smart(v, indent, max_line_length, 0)}' for k, v in obj.items()]
+        flat_dict = "{" + ", ".join(items_formatted) + "}"
+        
+        # Collapse if it's short and values aren't complex
+        contains_complex_val = any(isinstance(v, (dict, list)) for v in obj.values())
+        if len(flat_dict) <= max_line_length and not contains_complex_val:
+            return flat_dict
+            
+        # Otherwise, vertical dictionary
+        lines = []
+        keys = list(obj.keys())
+        for i, k in enumerate(keys):
+            comma = "," if i < len(keys) - 1 else ""
+            val_formatted = serialize_smart(obj[k], indent, max_line_length, current_indent + indent)
+            lines.append(f'\n{inner_padding}"{k}": {val_formatted}{comma}')
+            
+        return "{" + "".join(lines) + f"\n{padding}}}"
 
-    # Collapse universal item quantities
-    json_str = re.sub(
-        r'\{\s*"item_id":\s*(\d+),\s*"quantity":\s*([\d.]+)\s*\}',
-        r'{"item_id": \1, "quantity": \2}',
-        json_str)
-
-    return re.sub(pattern, collapse_spatial_data, json_str, flags=re.DOTALL)
+    # --- HANDLE PRIMITIVES ---
+    return json.dumps(obj)
 
 def range_to_list(r):
     """Converts a Postgres NumericRange to a [min, max] list."""

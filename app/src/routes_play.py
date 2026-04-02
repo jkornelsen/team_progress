@@ -248,14 +248,14 @@ def play_location(id):
 
     # Fetch Referenced Items and their "General Storage" (ID 1) quantities
     referenced_data = []
-    for item in location.item_refs:
+    for ref in location.item_refs:
         # Check stock in General Storage
         gen_pile = Pile.query.filter_by(
-            game_token=game_token, item_id=item.id, owner_id=GENERAL_ID
+            game_token=game_token, item_id=ref.item.id, owner_id=GENERAL_ID
         ).first()
         
         referenced_data.append({
-            'item': item,
+            'item': ref.item,
             'quantity': gen_pile.quantity if gen_pile else 0.0
         })
 
@@ -370,21 +370,41 @@ def production_status(id):
 # Events & Dice
 # ------------------------------------------------------------------------
 
-@play_bp.route('/play/event/<int:id>')
+@play_bp.route('/play/event/<int:id>', methods=['GET'])
 def play_event(id):
     game_token = g.game_token
     event = Event.query.get_or_404((game_token, id))
     capture_origin(name=event.name)
     
-    # 1. Get Context (Who is acting?)
+    # Get Context (Who is acting?)
     source_id = request.args.get('source_id', type=int)
+
+    # Analyze requirements
+    needs_2nd = any(d.source_who == '2nd' for d in event.determinants)
+    needs_3rd = any(d.source_who == '3rd' for d in event.determinants)
     
-    # 2. Fetch Eligible Participants (for the dropdowns)
+    # Identify Item Selectors
+    # If ChildItem is True but no item_id is configured, the user must choose.
+    # Or if there are multiple piles available for that item.
+    item_selectors = {}
+    for d in event.determinants:
+        if d.is_child
+            if d.source_who.type not in (Location, Character):
+                raise Exception(
+                    "Incorrect configuration: {d.source_who.type} cannot contain items")
+            # Add to a dict to ensure we only show one dropdown per role
+            if not d.item_id:
+                item_selectors[d.source_who] = {
+                    'label': d.label or "Item",
+                    'options': get_inventory_for_role(d.source_who) 
+                }
+    
+    # Fetch Eligible Participants (for the dropdowns)
     # We query the base Entity table because ANY entity might have the required attribute
     eligible_sources = Entity.query.filter_by(game_token=game_token).all()
     eligible_targets = eligible_sources # Simplified
     
-    # 3. Pre-calculate Determinants (Modifiers)
+    # Pre-calculate Determinants (Modifiers)
     # This logic helps the UI show things like "Strength (+5)" before rolling
     determinants = []
     if source_id:
@@ -402,6 +422,9 @@ def play_event(id):
         'play/event.html',
         event=event,
         source_id=source_id,
+        needs_2nd=needs_2nd,
+        needs_3rd=needs_3rd,
+        item_selectors=item_selectors
         eligible_sources=eligible_sources,
         eligible_targets=eligible_targets,
         determinants=determinants,
@@ -410,6 +433,7 @@ def play_event(id):
 
 @play_bp.route('/event/preview/<int:id>')
 def event_preview(id):
+    """AJAX helper to set up determinants."""
     game_token = g.game_token
     event = Event.query.get((game_token, id))
     context = {

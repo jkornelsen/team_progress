@@ -62,7 +62,6 @@
             </div>
         </section>
 
-        <!-- Destinations (loc_destinations Table) -->
         <section class="outer-border">
             <div class="flex-between">
                 <h3>Exits & Destinations</h3>
@@ -101,16 +100,15 @@
             </div>
         </section>
 
-        <!-- Local Items (Inventory Table) -->
         <section class="outer-border">
             <div class="flex-between">
                 <h3>Items on the Ground</h3>
                 <button type="button" class="btn-sm" onclick="addRow('item-list', 'item-template')">+ Place Item</button>
             </div>
+            <style>
+                .floor-piles-row { --grid-cols: 8fr 4fr 2fr 1fr; }
+            </style>
             <div id="item-list" class="col-list">
-                <style>
-                    .floor-piles-row { --grid-cols: 8fr 4fr 2fr 1fr; }
-                </style>
                 <div class="col-row floor-piles-row header-style">
                     <span>Item Name</span>
                     <span>Quantity</span>
@@ -120,8 +118,8 @@
                 {% for pile in inventory %}
                 <div class="col-row floor-piles-row">
                     <select name="items[{{ loop.index0 }}][item_id]">
-                        {% for item_def in all_items %}
-                            <option value="{{ item_def.id }}" {{ 'selected' if item_def.id == pile.item_id }}>{{ item_def.name }}</option>
+                        {% for item in all_items %}
+                            <option value="{{ item.id }}" {{ 'selected' if item.id == pile.item_id }}>{{ item.name }}</option>
                         {% endfor %}
                     </select>
                     <input type="number" name="items[{{ loop.index0 }}][quantity]"
@@ -141,16 +139,17 @@
                 <h3>Referenced Universal Items</h3>
                 <button type="button" class="btn-sm" onclick="addRow('ref-list', 'ref-template')">+ Add Reference</button>
             </div>
-            <div id="ref-list" class="col-list spacious-top">
-                <style>
-                    .ref-row { --grid-cols: 11fr 1fr; }
-                </style>
-                {% for item in location.item_refs %}
-                <div class="col-row ref-row">
+            <style>
+                .item-ref-row { --grid-cols: 11fr 1fr 5fr; }
+                .item-ref-list { --col-list-max-width: 300px; }
+            </style>
+            <div id="ref-list" class="col-list item-ref-list spacious-top">
+                {% for item_ref in location.item_refs %}
+                <div class="col-row item-ref-row">
                     <select name="item_refs[]">
-                        {% for item_def in all_universal_items %}
-                            <option value="{{ item_def.id }}" {{ 'selected' if item_def.id == item.id }}>
-                                {{ item_def.name }}
+                        {% for item in universal_items %}
+                            <option value="{{ item.id }}" {{ 'selected' if item.id == item_ref.item_id }}>
+                                {{ item.name }}
                             </option>
                         {% endfor %}
                     </select>
@@ -224,10 +223,21 @@
 <template id="item-template">
     <div class="col-row floor-piles-row">
         <select name="items[INDEX][item_id]">
-            {% for item_def in all_items %} <option value="{{ item_def.id }}">{{ item_def.name }}</option> {% endfor %}
+            {% for item in all_items %} <option value="{{ item.id }}">{{ item.name }}</option> {% endfor %}
         </select>
         <input type="number" name="items[INDEX][quantity]" value="1" step="any">
         <input type="text" name="items[INDEX][pos]" placeholder="1,1">
+        <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
+    </div>
+</template>
+
+<template id="ref-template">
+    <div class="col-row item-ref-row">
+        <select name="item_refs[]">
+            {% for item in universal_items %}
+                <option value="{{ item.id }}">{{ item.name }}</option>
+            {% endfor %}
+        </select>
         <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
     </div>
 </template>
@@ -240,17 +250,6 @@
             {% endfor %}
         </select>
         <input type="text" name="attribs[INDEX][value]" placeholder="Value">
-        <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
-    </div>
-</template>
-
-<template id="ref-template">
-    <div class="col-row ref-row">
-        <select name="item_refs[]">
-            {% for item_def in all_universal_items %}
-                <option value="{{ item_def.id }}">{{ item_def.name }}</option>
-            {% endfor %}
-        </select>
         <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
     </div>
 </template>

@@ -262,6 +262,9 @@ class RequestHelper:
             {"id": "2"}
         ]
         Keys that do not fit this structure are discarded.
+
+        If the form only sends a single value per row, then use the 
+        standard Flask `request.form.getlist('item_refs[]')` instead.
         """
         temp_root = {}
 
