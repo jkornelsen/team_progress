@@ -4,81 +4,113 @@
     <nav class="nav-container">
         <a href="{{ url_for('play.overview') }}">[o]verview</a>
         <span class="separator">|</span>
-        <a href="{{ url_for('configure.index') }}">main setup</a>
+        <a href="{{ url_for('configure.index') }}">[m]ain setup</a>
     </nav>
 {% endblock %}
 
 {% block content %}
 <div class="configure-event">
-    <h1>Event Setup: {{ event.name if event else 'New Event' }}</h1>
+    <h1>Event Setup</h1>
+    <p class="info">
+        Chance or magnitude of something happening, such as getting lost or
+        landing a certain type of attack.
+    </p>
+    <p class="info">
+        An example of a four-outcome roll is a 20-sided die
+        that comes up as 15,
+        with easy difficulty selected (-5).
+        Since 15 - 5 is greater than the major/minor threshold of 9,
+        the outcome is a major success.
+    </p>
     
     <form method="POST">
         <!-- 1. Identity -->
         <section class="outer-border">
-            <h3>General Info</h3>
-            <div class="form-group">
+            <div>
                 <label for="name">Event Name:</label>
-                <input type="text" id="name" name="name" value="{{ event.name if event }}" required class="full-width">
+                <input type="text" id="name" name="name" value="{{ event.name or '' }}" required class="full-width">
             </div>
-            <div class="form-group spacious-top">
+            <div class="spacious-top">
                 <label for="description">Description:</label>
-                <textarea id="description" name="description" rows="3" class="full-width">{{ event.description if event }}</textarea>
+                <textarea id="description" name="description" rows="3" class="full-width">{{ event.description or '' }}</textarea>
             </div>
         </section>
 
         <!-- 2. Logic Type -->
         <section class="outer-border">
-            <h3>Outcome Logic</h3>
             <div class="grid-2-col">
-                <div class="form-group">
+                <div>
                     <label for="outcome_type">Outcome Type:</label>
                     <select id="outcome_type" name="outcome_type" class="full-width" onchange="toggleOutcomeFields()">
-                        <option value="fourway" {{ 'selected' if event and event.outcome_type == 'fourway' }}>Four-Way (Fail/Success)</option>
-                        <option value="numeric" {{ 'selected' if event and event.outcome_type == 'numeric' }}>Numeric Roll</option>
-                        <option value="determined" {{ 'selected' if event and event.outcome_type == 'determined' }}>Determined (Calculated)</option>
-                        <option value="selection" {{ 'selected' if event and event.outcome_type == 'selection' }}>Random Selection</option>
-                        <option value="coordinates" {{ 'selected' if event and event.outcome_type == 'coordinates' }}>Random Coordinates</option>
+                        <option value="fourway" {{ 'selected' if event.outcome_type == 'fourway' }}>Four-Way (Success/Fail)</option>
+                        <option value="numeric" {{ 'selected' if event.outcome_type == 'numeric' }}>Numeric Roll</option>
+                        <option value="determined" {{ 'selected' if event.outcome_type == 'determined' }}>Determined (Calculated)</option>
+                        <option value="selection" {{ 'selected' if event.outcome_type == 'selection' }}>Random Selection</option>
+                        <option value="coordinates" {{ 'selected' if event.outcome_type == 'coordinates' }}>Random Coordinates</option>
+                        <option value="dice_system" {{ 'selected' if event.outcome_type == 'dice_system' }}>Dice System (Manual)</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label for="trigger_chance">Auto-Trigger Chance (0.0 - 1.0):</label>
-                    <input type="number" id="trigger_chance" name="trigger_chance" 
-                           value="{{ event.trigger_chance if event else 0.0 }}" step="0.01" min="0" max="1">
-                </div>
-            </div>
 
-            <!-- Contextual Fields -->
-            <div id="fields-range" class="spacious-top grid-2-col hidden">
-                <div class="form-group">
-                    <label>Die Min:</label>
-                    <input type="number" name="range_min" value="{{ event.numeric_range[0] if event and event.numeric_range else 1 }}">
-                </div>
-                <div class="form-group">
-                    <label>Die Max:</label>
-                    <input type="number" name="range_max" value="{{ event.numeric_range[1] if event and event.numeric_range else 20 }}">
-                </div>
-            </div>
-
-            <div id="fields-base" class="spacious-top hidden">
-                <label>Base Value:</label>
-                <input type="number" name="single_number" value="{{ event.single_number if event else 0.0 }}" step="any">
             </div>
 
             <div id="fields-selection" class="spacious-top hidden">
                 <label>Choices (One per line):</label>
-                <textarea name="selection_strings" rows="4" class="full-width" placeholder="Critical Hit&#10;Glancing Blow">{{ event.selection_strings if event }}</textarea>
+                <textarea name="selection_strings" rows="4" class="full-width" placeholder="Critical Hit&#10;Glancing Blow&#10;Fumble">{{ event.selection_strings or '' }}</textarea>
+            </div>
+            <div id="fields-dice" class="grid-2-col spacious-top hidden">
+                <div>
+                    <label>System:</label>
+                    <select name="roller_type" class="full-width">
+                        <option value="dnd" {{ 'selected' if event.roller_type == 'dnd' }}>D&D: XdY + Z</option>
+                        <option value="ironsworn" {{ 'selected' if event.roller_type == 'ironsworn' }}>Ironsworn: d6 + X vs 2d10</option>
+                    </select>
+                </div>
+
+                <!--
+                <div style="flex: 2;">
+                    <label>Formula / Modifier:</label>
+                    <input type="text" name="dice_formula" 
+                           value="{{ event.dice_formula or '' }}" 
+                           placeholder="e.g. 2d10+3">
+                </div>
+                -->
+            </div>
+
+            <div class="grid-2-col">
+                <div id="fields-range" class="spacious-top hidden">
+                    <div>
+                        <label>Die Min:</label>
+                        <input type="number" name="range_min" value="{{ event.numeric_range[0] if event.numeric_range else 1 }}">
+                    </div>
+                    <div>
+                        <label>Die Max:</label>
+                        <input type="number" name="range_max" value="{{ event.numeric_range[1] if event.numeric_range else 20 }}">
+                    </div>
+                </div>
+                <div id="fields-base" class="spacious-top hidden">
+                    <label>Base Value:</label>
+                    <input type="number" name="single_number" value="{{ event.single_number }}" step="any">
+                </div>
+                <div class="spacious-top">
+                    <div>
+                        <label for="trigger_chance">Auto Trigger Chance:</label>
+                        <input type="number" id="trigger_chance" name="trigger_chance" 
+                               value="{{ (event.trigger_chance * 100) | int }}"
+                                step="5" min="0" max="100">%
+                    </div>
+                </div>
             </div>
         </section>
 
-        <!-- 3. Determinants (Modifiers) -->
-        <section class="outer-border">
+        <!-- 3. Determinants -->
+        <section id="determinants" class="outer-border">
             <div class="flex-between">
-                <h3>Determining Values (Modifiers)</h3>
-                <button type="button" class="btn-sm" onclick="addRow('det-list', 'det-template')">+ Add Modifier</button>
+                <h3>Determining Values (Inputs)</h3>
+                <button type="button" class="btn-sm" onclick="addRow('det-list', 'det-template')">+ Add Input</button>
             </div>
             <div id="det-list" class="spacious-top">
                 {# Loop through determinants if editing existing event #}
-                {% for det in event.determinants if event %}
+                {% for det in event.determinants %}
                 <div class="flex-row gap-10 align-center spacious-bottom">
                     <input type="text" name="dets[{{ loop.index0 }}][label]" value="{{ det.label }}" placeholder="Label" style="flex: 1;">
                     <select name="dets[{{ loop.index0 }}][attrib_id]" style="flex: 2;">
@@ -87,7 +119,7 @@
                         {% endfor %}
                     </select>
                     <select name="dets[{{ loop.index0 }}][operation]" style="width: 50px;">
-                        {% for op in ['+', '-', '*', '/'] %}
+                        {% for op in ['+', '-', '*', '/', '^x', 'x^'] %}
                             <option value="{{ op }}" {{ 'selected' if det.operation == op }}>{{ op }}</option>
                         {% endfor %}
                     </select>
@@ -97,15 +129,15 @@
             </div>
         </section>
 
-        <!-- 4. Values Changed (Effects) -->
-        <section class="outer-border">
+        <!-- 4. Values Changed -->
+        <section id="effects" class="outer-border">
             <div class="flex-between">
                 <h3>Values Changed (Effects)</h3>
                 <button type="button" class="btn-sm" onclick="addRow('change-list', 'change-template')">+ Add Effect</button>
             </div>
             <div id="change-list" class="spacious-top">
                 {# Loop through effects if editing #}
-                {% for chg in event.changes if event %}
+                {% for chg in event.changes %}
                 <div class="flex-row gap-10 align-center spacious-bottom">
                     <select name="changes[{{ loop.index0 }}][attrib_id]" style="flex: 2;">
                         {% for a in all_attribs %}
@@ -121,18 +153,16 @@
 
         <!-- Footer Actions -->
         <div class="footer-actions flex-between">
-            <div class="danger-zone">
-                {% if event %}
-                    <button type="submit" name="delete" class="dangerous-button" onclick="return confirm('Delete this event?')">Delete Event</button>
-                {% endif %}
-            </div>
-            <div class="save-zone">
-                <label class="checkbox-label" style="display:inline; margin-right: 15px;">
-                    <input type="checkbox" name="toplevel" {{ 'checked' if event and event.toplevel }}> Show in Overview
-                </label>
-                <a href="{{ url_for('configure.index') }}" class="btn">Cancel</a>
+            <div class="gap-20" style="display: flex">
+                <button type="submit" name="duplicate" class="btn">Save & Duplicate</button>
                 <button type="submit" name="save" class="go-button">Save Changes</button>
+                <a href="{{ url_for('configure.cancel') }}" class="btn">Cancel</a>
             </div>
+            {% if event.id %}
+            <div>
+                <button type="submit" name="delete" class="dangerous-button" onclick="return confirm('Delete this event?')">Delete Event</button>
+            </div>
+            {% endif %}
         </div>
     </form>
 </div>
@@ -154,25 +184,15 @@
             {% for a in all_attribs %} <option value="{{ a.id }}">{{ a.name }}</option> {% endfor %}
         </select>
         
-        <select name="dets[INDEX][operation]" style="width: 50px;">
-            <option value="+">+</option><option value="-">-</option>
-            <option value="*">*</option><option value="/">/</option>
+        <select name="dets[INDEX][operation]" style="width: 70px;">
+            <option value="+">+</option>
+            <option value="-">-</option>
+            <option value="*">*</option>
+            <option value="/">/</option>
+            <option value="^x">^x</option>
+            <option value="x^">x^</option>
         </select>
         
-        <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
-    </div>
-</template>
-
-<template id="det-template">
-    <div class="flex-row gap-10 align-center spacious-bottom">
-        <input type="text" name="dets[INDEX][label]" placeholder="Label (e.g. Luck)" style="flex: 1;">
-        <select name="dets[INDEX][attrib_id]" style="flex: 2;">
-            {% for a in all_attribs %} <option value="{{ a.id }}">{{ a.name }}</option> {% endfor %}
-        </select>
-        <select name="dets[INDEX][operation]" style="width: 50px;">
-            <option value="+">+</option><option value="-">-</option>
-            <option value="*">*</option><option value="/">/</option>
-        </select>
         <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
     </div>
 </template>
@@ -193,6 +213,9 @@
         document.getElementById('fields-range').classList.toggle('hidden', !['fourway', 'numeric'].includes(type));
         document.getElementById('fields-base').classList.toggle('hidden', type !== 'determined');
         document.getElementById('fields-selection').classList.toggle('hidden', type !== 'selection');
+        document.getElementById('fields-dice').classList.toggle('hidden', type !== 'dice_system');
+        document.getElementById('determinants').classList.toggle('hidden', type == 'dice_system');
+        document.getElementById('effects').classList.toggle('hidden', type == 'dice_system');
     }
 
     function addRow(containerId, templateId) {
@@ -207,7 +230,9 @@
 </script>
 
 <style>
-    .grid-2-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    .gap-10 { gap: 10px; }
+#fields-dice:not(.hidden), 
+#fields-range:not(.hidden) {
+    display: grid !important;
+}
 </style>
 {% endblock %}

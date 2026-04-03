@@ -3,49 +3,17 @@ import math
 import logging
 from flask import g
 from app.models import (
-    db, Entity, Event, AttribValue, Pile, Location, Character, Item,
-    LocationDest, SourceRole)
+    db, Entity, Event, Location, Character, Item,
+    Operation, OutcomeType, RollerType,
+    AttribVal, Pile, LocationDest)
 from app.src.logic_piles import set_quantity
 from app.src.logic_user_interaction import add_message
 from app.src.logic_navigation import get_all_valid_coords
 
 logger = logging.getLogger(__name__)
 
-class TriggerException(Exception):
-    """Signals that a random event has interrupted normal progress."""
-    def __init__(self, message, event_id):
-        super().__init__(message)
-        self.event_id = event_id
-        self.message = message
-
-def check_triggers(entity, batches=1):
-    """
-    Checks if any events linked to this entity trigger based on probability.
-    'batches' represents the number of chances (ticks) that occurred.
-    """
-    # Find events where this entity_id is listed in 'triggers'
-    # In the new model, we need to ensure we have a way to query triggers.
-    # For now, let's assume a relationship or a helper query.
-    
-    # This query finds events that have a trigger_chance > 0 
-    # logic depends on how you implement the triggers link table (skipped in previous brief)
-    # Assuming Event model has a relationship or we query the registry:
-    events = Event.query.filter(
-        Event.game_token == g.game_token,
-        Event.trigger_chance > 0
-    ).all() 
-
-    for event in events:
-        # Probability math: 1 - (1 - chance)^batches
-        p_failure = 1.0 - event.trigger_chance
-        p_overall_success = 1.0 - (p_failure ** batches)
-        
-        if random.random() < p_overall_success:
-            # We have a hit!
-            raise TriggerException(f"Encounter: {event.name}", event.id)
-
 # ------------------------------------------------------------------------
-# 1. Determinant Logic (Modifiers)
+# Determinant Logic (Modifiers)
 # ------------------------------------------------------------------------
 
 def get_entity_value(game_token, anchor_id, det):
@@ -67,7 +35,7 @@ def get_entity_value(game_token, anchor_id, det):
     # 2. Fetch the Data
     if det.source_mode == 'attr':
         # If entity_id is set, we use that specific Attribute Blueprint
-        val_obj = AttribValue.query.filter_by(
+        val_obj = AttribVal.query.filter_by(
             game_token=game_token, subject_id=target_id, attrib_id=det.entity_id
         ).first()
         return val_obj.value if val_obj else 0.0
@@ -121,7 +89,10 @@ def calculate_determinants(event, context_ids):
         })
     return modifiers
 
-def apply_modifier_mode(val, mode):
+def apply_scaling(val, mode):
+    """
+    Applies logic like 'Soft Capped' (log) or 'Reduced' (half).
+    """
     if mode == 'log':
         if val == 0: return 0
         return math.sign(val) * 5 * math.log10(abs(val) + 1)
@@ -131,25 +102,22 @@ def apply_modifier_mode(val, mode):
 
 def apply_modifier(base_val, mod_val, operation, mode):
     """
-    Applies logic like 'Soft Capped' (log) or 'Reduced' (half).
+    Applies mathematical transformation including exponents.
+    base_val: The current die bound or calculated outcome.
+    mod_val: The value retrieved from the attribute/item.
     """
-    effective_mod = mod_val
-    if mode == 'log':
-        # scaledLog logic: sign * 5 * log10(abs + 1)
-        if effective_mod != 0:
-            sign = 1 if effective_mod > 0 else -1
-            effective_mod = sign * 5 * (math.log10(abs(effective_mod) + 1))
-    elif mode == 'half':
-        effective_mod /= 2.0
+    # ... existing mode logic (log, half) ...
 
-    if operation == '+': return base_val + effective_mod
-    if operation == '-': return base_val - effective_mod
-    if operation == '*': return base_val * effective_mod
-    if operation == '/': return base_val / effective_mod if effective_mod != 0 else base_val
+    if operation == '+': return base_val + mod_val
+    if operation == '-': return base_val - mod_val
+    if operation == '*': return base_val * mod_val
+    if operation == '/': return base_val / mod_val if mod_val != 0 else base_val
+    if operation == '^x': return base_val ** mod_val
+    if operation == 'x^': return mod_val ** base_val
     return base_val
 
 # ------------------------------------------------------------------------
-# 2. Outcome Resolution
+# Outcome Resolution
 # ------------------------------------------------------------------------
 
 def roll_for_outcome(event_id, die_min, die_max, loc_id=None):
@@ -241,8 +209,47 @@ def roll_coordinate(loc_id):
     chosen_x, chosen_y = random.choice(available)
     return 0, f"Coordinates: [{chosen_x}, {chosen_y}]"
 
+def roll_for_system_outcome(event_id, num_dice=1, sides=20, bonus=0):
+    """
+    Handles specific dice systems (D&D, Ironsworn) without
+    any database determining factors.
+    """
+    event = Event.query.get((g.game_token, event_id))
+    display_str = ""
+    numeric_val = 0.0
+
+    if event.roller_type == RollerType.DND:
+        rolls = [random.randint(1, sides) for _ in range(num_dice)]
+        total = sum(rolls) + bonus
+        
+        # d20(🎲18) + 2 formatting from your scales.py
+        rolls_details = " + ".join([f"d{sides}(🎲{r})" for r in rolls])
+        bonus_str = f" + {bonus}" if bonus != 0 else ""
+        
+        display_str = f"{rolls_details}{bonus_str} = <b>{total}</b>"
+        numeric_val = float(total)
+
+    elif event.roller_type == RollerType.IRONSWORN:
+        # Action: d6 + bonus vs two d10s
+        action_die = random.randint(1, 6)
+        challenge_dice = [random.randint(1, 10), random.randint(1, 10)]
+        total = action_die + bonus
+        
+        hits = sum(1 for die in challenge_dice if total > die)
+        res_text = "Strong Hit" if hits == 2 else "Weak Hit" if hits == 1 else "Miss"
+        
+        display_str = f"Action: {total} (🎲{action_die}+{bonus}) vs [🎲{challenge_dice[0]}][🎲{challenge_dice[1]}] -> <b>{res_text}</b>"
+        numeric_val = float(hits) # Use hits as the numeric result for potential triggers
+
+    add_message(g.game_token, f"{event.name}: {display_str}")
+    return numeric_val, display_str
+
+    event = Event.query.get((g.game_token, event_id))
+    display_str = ""
+    numeric_val = 0.0
+
 # ------------------------------------------------------------------------
-# 3. Applying Changes
+# Applying Changes
 # ------------------------------------------------------------------------
 
 def apply_event_change(target_id, target_type, owner_id, new_value):
@@ -255,13 +262,13 @@ def apply_event_change(target_id, target_type, owner_id, new_value):
     """
     if target_type == 'attrib':
         # Find or create the specific stat for this owner
-        record = AttribValue.query.filter_by(
+        record = AttribVal.query.filter_by(
             game_token=g.game_token,
             subject_id=owner_id,
             attrib_id=target_id
         ).first()
         if not record:
-            record = AttribValue(
+            record = AttribVal(
                 game_token=g.game_token,
                 subject_id=owner_id,
                 attrib_id=target_id,
@@ -275,3 +282,41 @@ def apply_event_change(target_id, target_type, owner_id, new_value):
 
     db.session.commit()
     return True
+
+# ------------------------------------------------------------------------
+# Triggers
+# ------------------------------------------------------------------------
+
+class TriggerException(Exception):
+    """Signals that a random event has interrupted normal progress."""
+    def __init__(self, message, event_id):
+        super().__init__(message)
+        self.event_id = event_id
+        self.message = message
+
+def check_triggers(entity, batches=1):
+    """
+    Checks if any events linked to this entity trigger based on probability.
+    'batches' represents the number of chances (ticks) that occurred.
+    """
+    # Find events where this entity_id is listed in 'triggers'
+    # In the new model, we need to ensure we have a way to query triggers.
+    # For now, let's assume a relationship or a helper query.
+    
+    # This query finds events that have a trigger_chance > 0 
+    # logic depends on how you implement the triggers link table (skipped in previous brief)
+    # Assuming Event model has a relationship or we query the registry:
+    events = Event.query.filter(
+        Event.game_token == g.game_token,
+        Event.trigger_chance > 0
+    ).all() 
+
+    for event in events:
+        # Probability math: 1 - (1 - chance)^batches
+        p_failure = 1.0 - event.trigger_chance
+        p_overall_success = 1.0 - (p_failure ** batches)
+        
+        if random.random() < p_overall_success:
+            # We have a hit!
+            raise TriggerException(f"Encounter: {event.name}", event.id)
+

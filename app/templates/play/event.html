@@ -25,8 +25,8 @@
             <div class="flex-column gap-10">
                 <div class="form-group">
                     <label>Subject:</label>
-                    <input type="hidden" name="subj_id" value="{{ subj.id }}">
-                    {{ subj.name }}
+                    <input type="hidden" name="subj_id" value="{{ subject.id }}">
+                    {{ subject.name }}
                 </div>
 
                 {% if needs_2nd %}
@@ -77,11 +77,37 @@
         </section>
 
         <section class="outer-border">
+        {% if event.outcome_type == 'dice_system' %}
+            <h3>Roll Setup</h3>
+            {% if event.roller_type == 'dnd' %}
+            <div class="system-controls dnd-fields">
+                <div class="input-group">
+                    <label>Dice</label>
+                    <input type="number" id="num-dice" name="num_dice" value="1" min="1" class="form-control">
+                    
+                    <label>Sides</label>
+                    <input type="number" id="num-sides" name="sides" value="20" min="2" class="form-control">
+                    
+                    <label>Bonus</label>
+                    <input type="number" id="num-bonus" name="bonus" value="0" class="form-control">
+                </div>
+            </div>
+            {% elif event.roller_type == 'ironsworn' %}
+            <div class="system-controls ironsworn-fields">
+                <div class="input-group">
+                    <label for="num-bonus">Action Bonus (Stat + Adds)</label>
+                    <input type="number" id="num-bonus" name="bonus" value="0" class="form-control" style="width: 80px;">
+                </div>
+                <p class="text-dim">Action (d6 + Bonus) vs. 2 Challenge Dice (d10)</p>
+            </div>
+            {% endif %}
+        {% else %}
             <h3>Calculated Modifiers</h3>
             <div id="modifier-preview" class="label-like">
                 <!-- JS will populate this when participants change -->
                 Select participants to calculate modifiers...
             </div>
+        {% endif %}
         </section>
 
         <!-- LEFT COLUMN: Execution Setup -->
@@ -266,6 +292,8 @@
             case '-': return base - mod;
             case '*': return base * mod;
             case '/': return mod !== 0 ? base / mod : base;
+            case '^x': return Math.pow(base, mod);
+            case 'x^': return Math.pow(mod, base);
             default: return base;
         }
     }
@@ -313,19 +341,34 @@
 
     document.getElementById('roll-btn').onclick = async () => {
         const fd = new FormData();
-        fd.append('die_min', document.getElementById('die-min').value);
-        fd.append('die_max', document.getElementById('die-max').value);
+
+        const dieMin = document.getElementById('die-min')?.value;
+        const dieMax = document.getElementById('die-max')?.value;
+        const nDice = document.getElementById('num-dice')?.value;
+        const nSides = document.getElementById('num-sides')?.value;
+        const nBonus = document.getElementById('num-bonus')?.value;
+
+        console.log("Rolling with:", { nDice, nSides, nBonus });
+
+        if (dieMin !== undefined) fd.append('die_min', dieMin);
+        if (dieMax !== undefined) fd.append('die_max', dieMax);
+        if (nDice !== undefined) fd.append('num_dice', nDice);
+        if (nSides !== undefined) fd.append('sides', nSides);
+        if (nBonus !== undefined) fd.append('bonus', nBonus);
+
+        const res = await fetch(`/event/roll/{{ event.id }}`, { 
+            method: 'POST', 
+            body: fd 
+        });
         
-        const res = await fetch(`/event/roll/{{ event.id }}`, { method: 'POST', body: fd });
         const data = await res.json();
         
         lastRollValue = data.result_value;
-        document.getElementById('outcome-display').innerHTML = data.display;
+        document.getElementById('outcome-text').innerHTML = data.display;
         document.getElementById('apply-section').classList.remove('hidden');
         
-        // Trigger preview calculation for apply rows
         updateApplyPreviews();
-    });
+    };
 
     /**
      * Updates the "New Value" preview labels in the Apply section

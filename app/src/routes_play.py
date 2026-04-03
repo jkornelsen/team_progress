@@ -2,18 +2,22 @@ import logging
 from flask import (
     Blueprint, render_template, request, jsonify, g, session, current_app)
 from app.models import (
-    db, Entity, Item, Character, Location, Event, Pile,
-    Recipe, RecipeAttribReq, LocationDest, AttribValue,
+    db, Entity, Item, Character, Location, Attrib, Event,
+    Pile, AttribVal, Operation, OutcomeType,
+    Recipe, RecipeAttribReq, LocationDest,
     Progress, Overall, WinRequirement, GameMessage, GENERAL_ID)
-from app.utils import LinkLetters, capture_origin, redirect_back
+from app.utils import (
+    RequestHelper, parse_coords, LinkLetters, capture_origin, redirect_back)
 from app.src.logic_piles import (
     transfer_item, get_character_piles, ensure_owner_up_to_date)
+from app.src.logic_event import (
+    roll_for_outcome, roll_for_system_outcome)
 from app.src.logic_progress import (
     start_production, stop_production, update_progress, can_perform_recipe)
-from app.src.logic_event import TriggerException
 from app.src.logic_navigation import (
     move_group, get_available_destinations, arrive_at_destination)
 from app.src.logic_objectives import validate_requirements
+from app.src.logic_user_interaction import add_message
 
 logger = logging.getLogger(__name__)
 play_bp = Blueprint('play', __name__)
@@ -149,6 +153,7 @@ def play_item(id):
 
 @play_bp.route('/char/<int:id>/drop', methods=['POST'])
 def drop_item(id):
+    req = RequestHelper('form')
     item_id = req.get_int('item_id')
     qty = req.get_float('quantity')
     
@@ -166,10 +171,11 @@ def drop_item(id):
     return jsonify({"status": "error"}), 400
 
 @play_bp.route('/char/<int:id>/pickup', methods=['POST'])
-def pickup_item():
+def pickup_item(id):
+    req = RequestHelper('form')
     item_id = req.get_int('item_id')
     qty = req.get_float('quantity')
-    pos = [int(x) for x in req.get_list('pos')] # e.g. [1, 2]
+    pos = parse_coords(req.get_str('pos'))
     
     char = Character.query.get((g.game_token, id))
     
@@ -199,8 +205,8 @@ def play_character(id):
         game_token=game_token, owner_id=id
     ).all()
     
-    # 2. Fetch Attributes (Stats)
-    attrib_values = AttribValue.query.filter_by(
+    # 2. Fetch Attributes
+    attrib_values = AttribVal.query.filter_by(
         game_token=game_token, subject_id=id
     ).all()
     
@@ -260,7 +266,7 @@ def play_location(id):
         })
 
     # Local attributes (e.g., 'Danger Level', 'Temperature')
-    attrib_values = AttribValue.query.filter_by(
+    attrib_values = AttribVal.query.filter_by(
         game_token=game_token, subject_id=id
     ).all()
 
@@ -377,7 +383,11 @@ def play_event(id):
     capture_origin(name=event.name)
     
     # Get Context (Who is acting?)
-    source_id = request.args.get('source_id', type=int)
+    subject = None
+    subject_id = request.args.get('subject_id', type=int)
+    if subject_id:
+        subject = Entity.query.filter_by(
+            game_token=game_token, id=subject_id).first_or_404()
 
     # Analyze requirements
     needs_2nd = any(d.source_who == '2nd' for d in event.determinants)
@@ -388,7 +398,7 @@ def play_event(id):
     # Or if there are multiple piles available for that item.
     item_selectors = {}
     for d in event.determinants:
-        if d.is_child
+        if d.is_child:
             if d.source_who.type not in (Location, Character):
                 raise Exception(
                     "Incorrect configuration: {d.source_who.type} cannot contain items")
@@ -407,10 +417,10 @@ def play_event(id):
     # Pre-calculate Determinants (Modifiers)
     # This logic helps the UI show things like "Strength (+5)" before rolling
     determinants = []
-    if source_id:
+    if subject_id:
         for det in getattr(event, 'determinants', []):
             from .logic_event import get_entity_value
-            val = get_entity_value(game_token, source_id, det.attrib_id, det.item_id)
+            val = get_entity_value(game_token, subject_id, det.attrib_id, det.item_id)
             determinants.append({
                 'label': det.label,
                 'operation': det.operation,
@@ -421,13 +431,14 @@ def play_event(id):
     return render_template(
         'play/event.html',
         event=event,
-        source_id=source_id,
+        subject=subject,
         needs_2nd=needs_2nd,
         needs_3rd=needs_3rd,
-        item_selectors=item_selectors
+        item_selectors=item_selectors,
         eligible_sources=eligible_sources,
         eligible_targets=eligible_targets,
         determinants=determinants,
+        operation=Operation,
         link_letters=LinkLetters(excluded='moe')
     )
 
@@ -449,12 +460,26 @@ def event_preview(id):
 
 @play_bp.route('/event/roll/<int:id>', methods=['POST'])
 def roll_event(id):
-    die_min = req.get_float('die_min', 1.0)
-    die_max = req.get_float('die_max', 20.0)
-    loc_id = req.get_int('location_id')
+    game_token = g.game_token
+    event = Event.query.get_or_404((game_token, id))
 
-    result_num, result_str = roll_for_outcome(
-        id, die_min, die_max, loc_id)
+    req = RequestHelper('form')
+    if event.outcome_type == OutcomeType.ROLLER:
+        n_dice = request.form.get('num_dice', 1, type=int)
+        sides = request.form.get('sides', 20, type=int)
+        bonus = request.form.get('bonus', 0, type=int)
+        result_num, result_str = roll_for_system_outcome(
+            event_id=id, 
+            num_dice=n_dice, 
+            sides=sides, 
+            bonus=bonus)
+    else:
+        die_min = req.get_float('die_min', 1.0)
+        die_max = req.get_float('die_max', 20.0)
+        loc_id = req.get_int('location_id')
+
+        result_num, result_str = roll_for_outcome(
+            id, die_min, die_max, loc_id)
     
     return jsonify({
         "result_value": result_num,
@@ -493,16 +518,17 @@ def play_attrib(attrib_id, subject_id):
     attribute = Attrib.query.get_or_404((game_token, attrib_id))
     subject = Entity.query.get_or_404((game_token, subject_id))
     
-    val_record = AttribValue.query.filter_by(
+    val_record = AttribVal.query.filter_by(
         game_token=game_token, attrib_id=attrib_id, subject_id=subject_id
     ).first()
     if not val_record:
-        val_record = AttribValue(
+        val_record = AttribVal(
             game_token=game_token, attrib_id=attrib_id,
             subject_id=subject_id, value=0.0)
         db.session.add(val_record)
 
     if request.method == 'POST':
+        req = RequestHelper('form')
         op = req.get_str('operator')
         
         if op == 'set':
@@ -530,6 +556,6 @@ def play_attrib(attrib_id, subject_id):
 
     return render_template('play/attrib.html', 
                            attribute=attribute, 
-                           owner=owner, 
+                           subject=subject, 
                            attrib_value=val_record,
                            items_requiring_this=items_requiring_this)

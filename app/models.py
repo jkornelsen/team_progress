@@ -54,7 +54,12 @@ class Entity(db.Model):
         return {
             "id": self.id,
             "name": self.name,
-            "description": self.description
+            "description": self.description,
+            "attribs": [
+                [av.attrib_id, av.value] 
+                for av in self.attrib_values
+            ],
+            "abilities": [link.event_id for link in self._ability_links]
         }
 
     @classmethod
@@ -62,7 +67,21 @@ class Entity(db.Model):
         """Standard base hydration for all entities."""
         fields = {k: v for k, v in data.items()
             if hasattr(cls, k) and not isinstance(v, (list, dict))}
-        return cls(game_token=game_token, **fields)
+        obj = cls(game_token=game_token, **fields)
+
+        for a_data in data.get('attribs', []):
+            if isinstance(a_data, list) and len(a_data) == 2:
+                obj.attrib_values.append(AttribVal(
+                    game_token=game_token,
+                    attrib_id=a_data[0],
+                    value=a_data[1]
+                ))
+        for event_id in data.get('abilities', []):
+            obj._ability_links.append(EntityAbility(
+                game_token=game_token,
+                event_id=event_id
+            ))
+        return obj
 
     @classmethod
     def get_or_new(cls, game_token, id):
@@ -71,6 +90,10 @@ class Entity(db.Model):
             # Does not generate id or write to db.
             return cls(game_token=game_token)
         return cls.query.filter_by(game_token=game_token, id=id).first_or_404()
+
+    @property
+    def abilities(self):
+        return [link.event for link in self._ability_links]
 
     piles = db.relationship(
         'Pile', 
@@ -82,6 +105,12 @@ class Entity(db.Model):
         back_populates='subject',
         foreign_keys="[AttribVal.game_token, AttribVal.subject_id]",
         cascade="all, delete-orphan")
+    _ability_links = db.relationship(
+        'EntityAbility',
+        back_populates='entity',
+        foreign_keys="[EntityAbility.game_token, EntityAbility.entity_id]",
+        cascade="all, delete-orphan",
+        overlaps="entity,event")
     progress_records = db.relationship(
         'Progress',
         back_populates='host',
@@ -319,6 +348,7 @@ class Attrib(Entity):
     def to_dict(self):
         """Exports the attribute definition (type and states)."""
         data = super().to_dict()
+        data.pop("attribs", None) 
         data.update({
             "is_binary": self.is_binary,
             "enum_list": self.enum_list or []
@@ -327,7 +357,9 @@ class Attrib(Entity):
 
     @classmethod
     def from_dict(cls, data, game_token):
-        return super().from_dict(data, game_token)
+        data_copy = data.copy()
+        data_copy.pop("attribs", None)
+        return super().from_dict(data_copy, game_token)
 
     attrib_values = db.relationship(
         'AttribVal',
@@ -347,6 +379,24 @@ class Attrib(Entity):
     )
     __mapper_args__ = { 'polymorphic_identity': 'attrib' }
 
+
+class OutcomeType:
+    FOURWAY ='fourway'        # strong/weak success or failure
+    NUMERIC = 'numeric'       # such as a damage number
+    DETERMINED = 'determined' # calculate from a single base number
+    SELECT = 'selection'      # random selection from a list
+    COORDS = 'coordinates'    # random coordinates from a location's grid
+    ROLLER = 'dice_system'    # manual inputs for standardized system
+
+    ALL = [FOURWAY, NUMERIC, DETERMINED, SELECT, COORDS, ROLLER]
+
+class RollerType:
+    """System for ROLLER outcome type"""
+    DND = 'dnd'
+    IRONSWORN = 'ironsworn'
+
+    ALL = [DND, IRONSWORN]
+
 class Event(Entity):
     """Actions and things that can happen, typically with chance.
     Many events use or change the Attrib values of other entities.
@@ -355,7 +405,10 @@ class Event(Entity):
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
     toplevel = db.Column(db.Boolean, default=False)
-    outcome_type = db.Column(db.String(20), nullable=False) # e.g. fourway, numeric
+    outcome_type = db.Column(
+        db.String(20), nullable=False, default=OutcomeType.FOURWAY)
+    roller_type = db.Column(
+        db.String(20), nullable=False, default=RollerType.DND)
     trigger_chance = db.Column(db.Float, default=0.0)
     numeric_range = db.Column(ARRAY(db.Integer)) # [min, max]
     single_number = db.Column(db.Float, default=0.0)
@@ -367,20 +420,13 @@ class Event(Entity):
         data.update({
             "toplevel": self.toplevel,
             "outcome_type": self.outcome_type,
+            "roller_type": self.roller_type,
             "trigger_chance": self.trigger_chance,
             "numeric_range": self.numeric_range,
             "single_number": self.single_number,
             "selection_strings": self.selection_strings,
-            "determinants": [
-                {
-                    "label": d.label, "attrib_id": d.attrib_id, 
-                    "operation": d.operation, "mode": d.mode
-                } for d in self.determinants
-            ],
-            "effects": [
-                {"attrib_id": e.attrib_id, "multiplier": e.multiplier} 
-                for e in self.effects
-            ]
+            "determinants": [d.to_dict() for d in self.determinants],
+            "effects": [e.to_dict() for e in self.effects],
         })
         return data
 
@@ -389,20 +435,27 @@ class Event(Entity):
         dets = data.pop('determinants', [])
         effects = data.pop('effects', [])
         event = super().from_dict(data, game_token)
-        event.determinants = [
-            EventDet(game_token=game_token, **d) for d in dets
-        ]
-        event.effects = [
-            EventEffect(game_token=game_token, **e) for e in effects
+        event.factors = [
+            EventFactor(game_token=game_token, event_id=event.id,
+                        usage_type=Participant.IN, **d) 
+            for d in dets
+        ] + [
+            EventFactor(game_token=game_token, event_id=event.id,
+                        usage_type=Participant.OUT, **e) 
+            for e in effects
         ]
         return event
 
-    determinants = db.relationship(
-        'EventDet',
-        back_populates='event',
-        cascade="all, delete-orphan")
-    effects = db.relationship(
-        'EventEffect',
+    @property
+    def determinants(self):
+        return [f for f in self.factors if f.usage_type == FactorUsage.IN]
+
+    @property
+    def effects(self):
+        return [f for f in self.factors if f.usage_type == FactorUsage.OUT]
+
+    factors = db.relationship(
+        'EventFactor',
         back_populates='event',
         cascade="all, delete-orphan")
 
@@ -410,6 +463,10 @@ class Event(Entity):
         db.ForeignKeyConstraint(
             ['game_token', 'id'],
             ['entities.game_token', 'entities.id'], ondelete='CASCADE'),
+        db.CheckConstraint(
+            outcome_type.in_(OutcomeType.ALL), name='check_outcome_type_valid'),
+        db.CheckConstraint(
+            roller_type.in_(RollerType.ALL), name='check_roller_type_valid'),
     )
     __mapper_args__ = {'polymorphic_identity': 'event'}
 
@@ -613,12 +670,18 @@ class ItemRef(db.Model):
             ['items.game_token', 'items.id'], ondelete='CASCADE'),
     )
 
-class SourceRole:
-    # --- Anchor ---
-    SUBJECT   = 'subj' # Context-driven e.g. player char
-    SECONDARY = '2nd'  # Typically user-selected e.g. enemy
-    TERTIARY  = '3rd'  # Environment or third participant
-    UNIVERSAL = 'univ' # Auto-fetched, can be multiple
+# ------------------------------------------------------------------------
+# Events
+# ------------------------------------------------------------------------
+
+class Participant:
+    """References a field to grab for an event factor."""
+
+    # --- Role of the Anchor Entity ---
+    SUBJECT = 'subj' # Context-driven e.g. player char
+    OTHER1 = '2nd'   # Typically user-selected e.g. enemy
+    OTHER2 = '3rd'   # Environment or third participant
+    UNIV = 'univ'    # General storage item, can be multiple
 
     # --- Depth Traversal ---
     # False: Use the anchor entity itself.
@@ -626,16 +689,43 @@ class SourceRole:
     # Only valid if the anchor resolves to a Character or Location.
     ChildItem = False
 
-    # --- Data Mode ---
+    # --- Field ---
     ATTR = 'attr'  # Fetch AttribVal
     QTY  = 'qty'   # Fetch pile quantity
 
-    ALL = abc # [] array of all possible values for contraints. TODO
+    # --- Usage ---
+    IN = 'in'   # Determinant
+    OUT = 'out' # Effect
 
-class EventDet(db.Model):
+    # --- Constraints ---
+    ALL_ROLES = [SUBJECT, OTHER1, OTHER2, UNIV]
+    ALL_FIELDS = [ATTR, QTY]
+    ALL_USAGE = [IN, OUT]
+
+class Operation:
+    ADD = '+'
+    SUB = '-'
+    MULT = '*'
+    DIV = '/'
+    VAL_TO_POW = 'x^'
+    POW_OF_VAL = '^x'
+
+    Repr = {
+        ADD:        {'symbol': '+',  'text': 'Add'},
+        SUB:        {'symbol': '−',  'text': 'Subtract'},
+        MULT:       {'symbol': '×',  'text': 'Multiply'},
+        DIV:        {'symbol': '÷',  'text': 'Divide'},
+        VAL_TO_POW: {'symbol': 'xⁿ', 'text': 'Val To Power'},
+        POW_OF_VAL: {'symbol': 'nˣ', 'text': 'Power Of Val'},
+    }
+
+    ALL = [ADD, SUB, MULT, DIV, VAL_TO_POW, POW_OF_VAL]
+
+class EventFactor(db.Model):
     """
-     Defines which attrib values or item quantities are used to determine
-        an Event's outcome.
+    Defines which attrib values or item quantities are used to determine
+        an Event's outcome, and how they apply.
+    Can be a Determinant (input) or an Effect (output).
 
     Attribute Value Lookup:
         - Look up an AttribVal for the given attrib_id, either for an
@@ -650,43 +740,91 @@ class EventDet(db.Model):
           either specified in configuration or chosen by dropdown in play.
         - Example: Role SUBJECT_ITEM_QTY, Item LEATHER (How much leather Bob has)
     """
-    __tablename__ = 'event_determinants'
+    __tablename__ = 'event_factors'
+    
     id = db.Column(db.Integer, primary_key=True)
     game_token = db.Column(db.String(50), primary_key=True)
     event_id = db.Column(db.Integer, nullable=False)
-    
-    label = db.Column(db.String(50)) # e.g., "Accuracy"
-    source_who = db.Column(db.String(10)) 
-    source_mode = db.Column(db.String(10)) 
-    child_of_source = db.Column(db.Boolean, default=False)
-    item_id = db.Column(db.Integer) # may need play dropdown if not specified
-    attrib_id = db.Column(db.Integer)
-    
-    operation = db.Column(db.String(1), default='+') # +, -, *, /
-    mode = db.Column(db.String(10), default='')     # '', 'log', 'half'
 
-    event = db.relationship('Event', back_populates='determinants', foreign_keys=[game_token, event_id])
+    # --- Identity & Logic Type ---
+    usage_type = db.Column(db.String(3), nullable=False, default=Participant.IN)
+    label = db.Column(db.String(50)) # "Base Damage", "Armor Soak", etc.
+
+    # --- Retrieval Logic (The "Who & What") ---
+    role = db.Column(db.String(10), nullable=False, default=Participant.SUBJECT)
+    field = db.Column(db.String(10), nullable=False, default=Participant.ATTR)
+    child_of_anchor = db.Column(db.Boolean, nullable=False, default=False)
+    item_id = db.Column(db.Integer, nullable=True) # play dropdown if null
+    attrib_id = db.Column(db.Integer, nullable=True)
+
+    # --- Mathematical Transformation ---
+    operation = db.Column(db.String(2), default=Operation.ADD) 
+    modifier = db.Column(db.Float, default=1.0) # e.g. 2 ^ field val
+    scaling = db.Column(db.String(10)) # curve: 'log', 'half'
+
+    # Relationships
+    event = db.relationship('Event', back_populates='factors', foreign_keys=[game_token, event_id])
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "usage_type": self.usage_type,
+            "label": self.label,
+            "role": self.role,
+            "field": self.field,
+            "child_of_anchor": self.child_of_anchor,
+            "item_id": self.item_id,
+            "attrib_id": self.attrib_id,
+            "operation": self.operation,
+            "modifier": self.modifier,
+            "scaling": self.scaling
+        }
 
     __table_args__ = (
-        db.ForeignKeyConstraint(['game_token', 'event_id'], ['events.game_token', 'events.id'], ondelete='CASCADE'),
+        db.ForeignKeyConstraint(
+            ['game_token', 'event_id'],
+            ['events.game_token', 'events.id'], ondelete='CASCADE'),
+        db.CheckConstraint(
+            usage_type.in_(Participant.ALL_USAGE), name='check_usage_type_valid'),
+        db.CheckConstraint(
+            role.in_(Participant.ALL_ROLES), name='check_role_valid'),
+        db.CheckConstraint(
+            field.in_(Participant.ALL_FIELDS), name='check_field_valid'),
+        db.CheckConstraint(
+            operation.in_(Operation.ALL), name='check_operation_valid'),
     )
 
-class EventEffect(db.Model):
-    """What changes when the event is applied."""
-    __tablename__ = 'event_effects'
-    id = db.Column(db.Integer, primary_key=True)
+class EntityAbility(db.Model):
+    """Who can call events, for example, a specific character. Shows a link
+    to the event that sets the caller as the subject.
+    """
+    __tablename__ = 'entity_abilities'
     game_token = db.Column(db.String(50), primary_key=True)
-    event_id = db.Column(db.Integer, nullable=False)
-    
-    target_role = db.Column(db.String(20), default=SourceRole.OTHER_ATTR)
-    attrib_id = db.Column(db.Integer)
-    item_id = db.Column(db.Integer)
-    multiplier = db.Column(db.Float, default=1.0) # Outcome * Multiplier
+    entity_id = db.Column(db.Integer, primary_key=True) # The Caller (Char/Loc/Item)
+    event_id = db.Column(db.Integer, primary_key=True)  # The Event being called
 
-    event = db.relationship('Event', back_populates='effects', foreign_keys=[game_token, event_id])
+    def to_dict(self):
+        return {
+            "event_id": self.event_id
+        }
+
+    entity = db.relationship(
+        'Entity',
+        foreign_keys=[game_token, entity_id],
+        back_populates='_ability_links',
+        overlaps="_ability_links,event")
+    event = db.relationship(
+        'Event',
+        foreign_keys=[game_token, event_id],
+        viewonly=True)
 
     __table_args__ = (
-        db.ForeignKeyConstraint(['game_token', 'event_id'], ['events.game_token', 'events.id'], ondelete='CASCADE'),
+        db.ForeignKeyConstraint(
+            ['game_token', 'entity_id'],
+            ['entities.game_token', 'entities.id'], ondelete='CASCADE'),
+        db.ForeignKeyConstraint(
+            ['game_token', 'event_id'],
+            ['events.game_token', 'events.id'], ondelete='CASCADE'),
     )
 
 # ------------------------------------------------------------------------

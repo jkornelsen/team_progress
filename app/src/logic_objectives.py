@@ -1,5 +1,5 @@
 from app.models import (
-    db, WinRequirement, Pile, Character, AttribValue, GENERAL_ID)
+    db, WinRequirement, Pile, Character, AttribVal, GENERAL_ID)
 
 def validate_requirements(game_token):
     """
@@ -53,7 +53,7 @@ def validate_requirements(game_token):
 
         # Condition 5: Character Attribute Level
         elif r.char_id and r.attrib_id:
-            val_rec = AttribValue.query.filter_by(
+            val_rec = AttribVal.query.filter_by(
                 game_token=game_token, owner_id=r.char_id, attrib_id=r.attrib_id
             ).first()
             current_val = val_rec.value if val_rec else 0

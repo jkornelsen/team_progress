@@ -6,13 +6,11 @@ from app.src.logic_discovery import check_item_unmasking
 logger = logging.getLogger(__name__)
 
 def get_or_create_pile(item_id, owner_id, position=None, slot=None):
+    """Retrieves an existing inventory pile or initializes a new one.
+
+    - If position is None, it looks for/creates an 'unplaced' pile.
+    - If position is provided, it looks for/creates a pile at those coordinates.
     """
-    Retrieves an existing inventory pile or initializes a new one.
-    - position defaults to [0, 0] for Characters and General Storage.
-    """
-    if position is None:
-        position = [0, 0]
-        
     game_token = g.game_token
     
     # Query for exact match on Token, Item, Owner, and Grid Position
@@ -108,11 +106,13 @@ def transfer_item(item_id, from_owner_id, to_owner_id, quantity,
         game_token=g.game_token,
         item_id=item_id,
         owner_id=from_owner_id,
-        position=from_pos or [0, 0]
+        position=from_pos
     ).first()
 
     if not source_pile or source_pile.quantity < quantity:
-        logger.error(f"Transfer failed: Owner {from_owner_id} lacks {quantity} of {item_id}")
+        logger.error(
+            f"Transfer failed: Owner {from_owner_id} lacks"
+            f" {quantity} of item {item_id}")
         return False
 
     # 2. Perform the logic atomicly

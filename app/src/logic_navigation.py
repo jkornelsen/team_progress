@@ -60,7 +60,7 @@ def get_all_valid_coords(location):
 def get_default_position(location):
     """Finds the first available non-excluded square."""
     valid = get_all_valid_coords(location)
-    return list(valid[0]) if valid else [0, 0]
+    return list(valid[0]) if valid else None
 
 # ------------------------------------------------------------------------
 # Party

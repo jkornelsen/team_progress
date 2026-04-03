@@ -18,9 +18,9 @@
     <header class="entity-header">
         <span class="label-like">
             Attribute of 
-            <a href="{{ url_for('play.play_' + owner.entity_type, id=owner.id) }}">
-                {{ '👤' if owner.entity_type == 'character' else '📍' if owner.entity_type == 'location' else '📦' }} 
-                {{ owner.name }}
+            <a href="{{ url_for('play.play_' + subject.entity_type, id=subject.id) }}">
+                {{ '👤' if subject.entity_type == 'character' else '📍' if subject.entity_type == 'location' else '📦' }} 
+                {{ subject.name }}
             </a>
         </span>
         <h1>{{ attribute.name }}</h1>

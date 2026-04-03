@@ -93,13 +93,31 @@
             {% if attrib_values %}
             <section class="outer-border">
                 <h3>Attributes</h3>
-                <div class="attr-grid">
+                <div class="col-list" style="--col-list-max-width: 200px;">
                     {% for av in attrib_values %}
-                        <div class="attr-item">
-                            <span class="label-like">{{ av.attribute.name }}:</span>
-                            <a href="{{ url_for('play.play_attrib', attrib_id=av.attrib_id, subject_id=character.id) }}">
-                                <span class="attr-value">{{ render_attr(av, av.attribute) }}</span>
-                            </a>
+                        <div class="col-row" style="--grid-cols: 1fr auto;">
+                            {% set attr_url = url_for('play.play_attrib', attrib_id=av.attrib_id, subject_id=character.id) %}
+                            {% call hotkey_link(attr_url, link_letters) %}
+                                {{ av.attrib.name }}
+                            {% endcall %}
+                            <span>{{ render_attr(av, av.attrib) }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
+            {% if character.abilities %}
+            <section class="outer-border">
+                <h3>Abilities</h3>
+                <div class="col-list" style="--col-list-max-width: 250px;">
+                    {% for event in character.abilities %}
+                        <div class="col-row" style="--grid-cols: 1fr auto;">
+                            {% set event_url = url_for('play.play_event', id=event.id, subject_id=character.id) %}
+                            
+                            {% call hotkey_link(event_url, link_letters) %}
+                                {{ event.name }} 
+                            {% endcall %}
                         </div>
                     {% endfor %}
                 </div>
@@ -109,64 +127,54 @@
 
         <!-- RIGHT COLUMN: Gear & Abilities -->
         <div class="inventory-column">
-            
             <!-- 3. Inventory -->
+            <style>
+                .twocol-row { --grid-cols: 1fr auto; }
+                .twocol-list { --col-list-max-width: 300px; }
+                .equipped-row { --grid-cols: 4fr 1fr 1fr; }
+                .equipped-list { --col-list-max-width: 350px; }
+            </style>
             {% set equipped = inventory | selectattr("slot") | list %}
             {% set backpack = inventory | rejectattr("slot") | list %}
             {% if equipped or backpack %}
-                <section class="outer-border">
-                    <div class="inventory-section">
-                        {% if equipped %}
-                            <h3>Equipped</h3>
-                            <ul class="gear-list">
-                                {% for pile in equipped %}
-                                    <li class="inventory-item">
-                                        <span class="slot-name">[{{ pile.slot }}]</span>
-                                        {% if pile.quantity >= 2 %}
-                                            <span class="qty">{{ pile.quantity | formatNum }}x</span>
-                                        {% endif %}
-                                        <a href="{{ url_for('play.play_item', id=pile.item_id, char_id=character.id) }}">
-                                            {{ pile.item.name }}
-                                        </a>
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-
-                        {% if backpack %}
-                            {% if equipped %}
-                                <h3 class="spacious-top">Pack</h3>
-                            {% else %}
-                                <h3>Inventory</h3>
-                            {% endif %}
-                            <ul class="gear-list">
-                                {% for pile in backpack %}
-                                    <li class="inventory-item">
-                                        <span class="qty">{{ pile.quantity | formatNum }}x</span>
-                                        <a href="{{ url_for('play.play_item', id=pile.item_id, char_id=character.id) }}">
-                                            {{ pile.item.name }}
-                                        </a>
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
-                </section>
-            {% endif %}
-
-            <!-- 4. Abilities (Events) -->
-            {% if abilities %}
             <section class="outer-border">
-                <h3>Abilities</h3>
-                <ul class="ability-list">
-                    {% for ability in abilities %}
-                    <li>
-                        <a href="{{ url_for('play.play_event', id=ability.id, source_id=character.id) }}" class="ability-link">
-                            ⚡ {{ ability.name }}
-                        </a>
-                    </li>
-                    {% endfor %}
-                </ul>
+                <div class="inventory-section">
+                    {% if equipped %}
+                        <h3>Equipped</h3>
+                        <div class="col-list eqipped-list">
+                            {% for pile in equipped %}
+                                <div class="col-row eqipped-row">
+                                    <span class="label-like">[{{ pile.slot }}]</span>
+                                    
+                                    {% set item_url = url_for('play.play_item', id=pile.item_id, char_id=character.id) %}
+                                    {% call hotkey_link(item_url, link_letters) %}
+                                        {{ pile.item.name }}
+                                    {% endcall %}
+                                    
+                                    <span>{{ pile.quantity | formatNum if pile.quantity >= 2 else '' }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    {% if backpack %}
+                        <h3 class="{{ 'spacious-top' if equipped else '' }}">
+                            {{ 'Pack' if equipped else 'Inventory' }}
+                        </h3>
+                        <div class="col-list twocol-list">
+                            {% for pile in backpack %}
+                                <div class="col-row twocol-row">
+                                    {% set item_url = url_for('play.play_item', id=pile.item_id, char_id=character.id) %}
+                                    {% call hotkey_link(item_url, link_letters) %}
+                                        {{ pile.item.name }}
+                                    {% endcall %}
+                                    
+                                    <span>{{ pile.quantity | formatNum }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
             </section>
             {% endif %}
         </div>
@@ -231,14 +239,5 @@
 </script>
 
 <style>
-    .attr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .attr-item { padding: 5px; background: #111; border-radius: 3px; }
-    .attr-value { font-weight: bold; color: var(--accent); }
-    .gear-list { list-style: none; padding: 0; }
-    .inventory-item { margin-bottom: 5px; border-bottom: 1px solid #333; padding-bottom: 3px; }
-    .slot-name { color: var(--text-dim); font-family: monospace; width: 80px; display: inline-block; }
-    .qty { color: var(--accent); margin-right: 5px; font-weight: bold; }
-    .ability-list { list-style: none; padding: 0; }
-    .ability-link { display: block; padding: 8px; background: #333; margin-bottom: 5px; border-radius: 4px; }
 </style>
 {% endblock %}

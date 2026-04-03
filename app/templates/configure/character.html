@@ -4,11 +4,88 @@
     <nav class="nav-container">
         <a href="{{ url_for('play.overview') }}">[o]verview</a>
         <span class="separator">|</span>
-        <a href="{{ url_for('configure.index') }}">main setup</a>
+        <a href="{{ url_for('configure.index') }}">[m]ain setup</a>
     </nav>
 {% endblock %}
 
 {% block content %}
+
+<!-- TEMPLATES FOR DYNAMIC ROWS -->
+
+{% macro attrib_row(index, av=None, all_attributes=[]) %}
+    {% set selected_id = av.attrib_id if av else None %}
+    {% set val = av.value if av else 0 %}
+    <div class="col-row attrib-row">
+        <select name="attribs[{{ index }}][id]">
+            {% for attr_def in all_attributes %}
+                <option value="{{ attr_def.id }}" {{ 'selected' if attr_def.id == selected_id }}>
+                    {{ attr_def.name }}
+                </option>
+            {% endfor %}
+        </select>
+        <input type="text" name="attribs[{{ index }}][value]" value="{{ val }}" placeholder="Value">
+        <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
+    </div>
+{% endmacro %}
+
+{% macro inv_row(index, pile=None, all_items=[], slots=[]) %}
+    {% set selected_item_id = pile.item_id if pile else None %}
+    {% set qty = pile.quantity if pile else 1 %}
+    {% set selected_slot = pile.slot if pile else '' %}
+
+    <div class="col-row inv-piles-row">
+        <select name="items[{{ index }}][item_id]">
+            {% for item_def in all_items %}
+                <option value="{{ item_def.id }}" {{ 'selected' if item_def.id == selected_item_id }}>
+                    {{ item_def.name }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <input type="number" name="items[{{ index }}][quantity]" 
+               value="{{ qty }}" step="any" placeholder="Qty">
+
+        <select name="items[{{ index }}][slot]">
+            <option value="">(In Pack)</option>
+            {% for slot in slots %}
+                <option value="{{ slot }}" {{ 'selected' if slot == selected_slot }}>
+                    {{ slot }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
+    </div>
+{% endmacro %}
+
+{% macro ability_row(index, selected_id=None, all_events=[]) %}
+    <div class="col-row ability-row">
+        <select name="abilities[{{ index }}][id]">
+            <option value="" disabled {{ 'selected' if not selected_id }}>Select an Event...</option>
+            {% for event_def in all_events %}
+                <option value="{{ event_def.id }}" {{ 'selected' if event_def.id == selected_id }}>
+                    {{ event_def.name }} ({{ event_def.outcome_type }})
+                </option>
+            {% endfor %}
+        </select>
+        <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
+    </div>
+{% endmacro %}
+
+<template id="attrib-template">
+    {{ attrib_row('INDEX', None, all_attributes) }}
+</template>
+
+<template id="inv-template">
+    {{ inv_row('INDEX', None, all_items, overall.slots) }}
+</template>
+
+<template id="ability-template">
+    {{ ability_row('INDEX', None, all_events) }}
+</template>
+
+<!-- MAIN CONTENT -->
+
 <div class="configure-character">
     <h1>Character Setup</h1>
     <p class="info">
@@ -16,7 +93,7 @@
     </p>
     
     <form method="POST">
-        <!-- 1. Identity (Entity Table) -->
+        <!-- Identity (Entity Table) -->
         <section class="outer-border">
             <div class="form-group">
                 <label for="name">Character Name:</label>
@@ -28,7 +105,7 @@
             </div>
         </section>
 
-        <!-- 2. World Presence -->
+        <!-- World Presence -->
         <section class="outer-border">
             <div class="grid-2-col">
                 <div>
@@ -66,50 +143,63 @@
             </div>
         </section>
 
-        <!-- 3. Starting Stats (AttribValue Table) -->
+        <!-- Attribute Values -->
         <section class="outer-border">
             <div class="flex-between">
                 <h3>Attributes</h3>
-                <button type="button" class="btn-sm" onclick="addRow('stat-list', 'stat-template')">+ Add Stat</button>
+                <button type="button" class="btn-sm" onclick="addRow('attrib-list', 'attrib-template')">+ Add Attribute</button>
             </div>
-            <div id="stat-list" class="spacious-top">
-                {% for av in character.attrib_values %}
-                <div class="flex-row gap-10 align-center spacious-bottom">
-                    <select name="stats[{{ loop.index0 }}][attrib_id]" style="flex: 2;">
-                        {% for attr in all_attribs %}
-                            <option value="{{ attr.id }}" {{ 'selected' if attr.id == av.attrib_id }}>{{ attr.name }}</option>
-                        {% endfor %}
-                    </select>
-                    <input type="number" name="stats[{{ loop.index0 }}][value]" value="{{ av.value }}" step="any" style="flex: 1;">
-                    <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
+            <div id="attrib-list" class="col-list spacious-top">
+                <style>
+                    .attrib-row { --grid-cols: 6fr 6fr 1fr; }
+                </style>
+                <div class="col-row attrib-row header-style">
+                    <span>Attribute</span>
+                    <span>Value</span>
+                    <span></span>
                 </div>
+                {% for av in character.attrib_values %}
+                    {{ attrib_row(loop.index0, av, all_attributes) }}
                 {% endfor %}
             </div>
         </section>
 
-        <!-- 4. Starting Inventory (Inventory Table) -->
+        <!-- Inventory -->
         <section class="outer-border">
             <div class="flex-between">
-                <h3>Starting Inventory</h3>
+                <h3>Inventory</h3>
                 <button type="button" class="btn-sm" onclick="addRow('inv-list', 'inv-template')">+ Add Item</button>
             </div>
-            <div id="inv-list" class="spacious-top">
-                {% for pile in character.piles %}
-                <div class="flex-row gap-10 align-center spacious-bottom">
-                    <select name="items[{{ loop.index0 }}][item_id]" style="flex: 2;">
-                        {% for item_def in all_items %}
-                            <option value="{{ item_def.id }}" {{ 'selected' if item_def.id == pile.item_id }}>{{ item_def.name }}</option>
-                        {% endfor %}
-                    </select>
-                    <input type="number" name="items[{{ loop.index0 }}][quantity]" value="{{ pile.quantity }}" step="any" placeholder="Qty" style="width: 60px;">
-                    <select name="items[{{ loop.index0 }}][slot]" style="flex: 1;">
-                        <option value="">(In Backpack)</option>
-                        {% for slot in overall.slots %}
-                            <option value="{{ slot }}" {{ 'selected' if slot == pile.slot }}>{{ slot }}</option>
-                        {% endfor %}
-                    </select>
-                    <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
+            
+            <style>
+                .inv-piles-row { --grid-cols: 6fr 3fr 4fr 1fr; }
+            </style>
+
+            <div id="inv-list" class="col-list spacious-top">
+                <div class="col-row inv-piles-row header-style">
+                    <span>Item Name</span>
+                    <span>Quantity</span>
+                    <span>Equipment Slot</span>
+                    <span></span>
                 </div>
+
+                {% for pile in character.piles %}
+                    {{ inv_row(loop.index0, pile, all_items, overall.slots) }}
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="outer-border">
+            <div class="flex-between">
+                <h3>Abilities</h3>
+                <button type="button" class="btn-sm" onclick="addRow('ability-list', 'ability-template')">+ Add Ability</button>
+            </div>
+            <div id="ability-list" class="col-list spacious-top" style="--col-list-max-width: 300px;">
+                <style>
+                    .ability-row { --grid-cols: 12fr 1fr; }
+                </style>
+                {% for link in character._ability_links %}
+                    {{ ability_row(loop.index0, link.event_id, all_events) }}
                 {% endfor %}
             </div>
         </section>
@@ -130,30 +220,7 @@
     </form>
 </div>
 
-<!-- TEMPLATES FOR DYNAMIC ROWS -->
-<template id="stat-template">
-    <div class="flex-row gap-10 align-center spacious-bottom">
-        <select name="stats[INDEX][attrib_id]" style="flex: 2;">
-            {% for attr in all_attribs %} <option value="{{ attr.id }}">{{ attr.name }}</option> {% endfor %}
-        </select>
-        <input type="number" name="stats[INDEX][value]" value="0" step="any" style="flex: 1;">
-        <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
-    </div>
-</template>
-
-<template id="inv-template">
-    <div class="flex-row gap-10 align-center spacious-bottom">
-        <select name="items[INDEX][item_id]" style="flex: 2;">
-            {% for item_def in all_items %} <option value="{{ item_def.id }}">{{ item_def.name }}</option> {% endfor %}
-        </select>
-        <input type="number" name="items[INDEX][quantity]" value="1" step="any" style="width: 60px;">
-        <select name="items[INDEX][slot]" style="flex: 1;">
-            <option value="">(In Backpack)</option>
-            {% for slot in overall.slots %} <option value="{{ slot }}">{{ slot }}</option> {% endfor %}
-        </select>
-        <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
-    </div>
-</template>
+<!-- JAVASCRIPT AND STYLES -->
 
 <script>
     function addRow(containerId, templateId) {

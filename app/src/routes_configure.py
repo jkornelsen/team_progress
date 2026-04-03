@@ -8,8 +8,10 @@ from flask import (
 from app.models import (
     GENERAL_ID, StorageType, JsonKeys, ENTITIES, db,
     Entity, Item, Character, Location, Attrib, Event, 
-    Pile, Recipe, RecipeSource, RecipeByproduct, AttribValue, 
-    LocationDest, ItemRef, Overall, WinRequirement)
+    Pile, AttribVal, Operation, EntityAbility,
+    Recipe, RecipeSource, RecipeByproduct,
+    LocationDest, ItemRef,
+    Overall, WinRequirement)
 from app.serialization import (
     init_game_session, load_scenario_from_path, import_from_dict,
     clear_game_data, export_game_to_json, export_to_dict)
@@ -240,13 +242,13 @@ def edit_character(id):
         char.toplevel = 'toplevel' in request.form
 
         # Update Attrib values
-        AttribValue.query.filter_by(game_token=game_token, subject_id=char.id).delete()
-        for attrib_row in req.get_list('stats'):
-            attr_id = attrib_row.get('attrib_id')
+        AttribVal.query.filter_by(game_token=game_token, subject_id=char.id).delete()
+        for attrib_row in req.get_list('attribs'):
+            attr_id = attrib_row.get('id')
             if attr_id:
                 val = float(attrib_row.get('value', 0))
                 db.session.add(
-                    AttribValue(
+                    AttribVal(
                         game_token=game_token,
                         subject_id=char.id,
                         attrib_id=attr_id,
@@ -263,8 +265,20 @@ def edit_character(id):
                     item_id=int(item_id),
                     quantity=float(item_row.get('quantity', 0)),
                     slot=item_row.get('slot'),
-                    position=[0,0]
                 ))
+
+        # Abilities
+        EntityAbility.query.filter_by(game_token=game_token, entity_id=char.id).delete()
+        for ability_row in req.get_list('abilities'):
+            event_id = ability_row.get('id')
+            if event_id:
+                db.session.add(
+                    EntityAbility(
+                        game_token=game_token,
+                        entity_id=char.id,
+                        event_id=event_id
+                    )
+                )
 
         db.session.commit()
         return redirect_back('configure.index') 
@@ -272,8 +286,9 @@ def edit_character(id):
     return render_template('configure/character.html', 
         character=char, 
         all_locations=Location.query.filter_by(game_token=game_token).all(),
-        all_attribs=Attrib.query.filter_by(game_token=game_token).all(),
+        all_attributes=Attrib.query.filter_by(game_token=game_token).all(),
         all_items=Item.query.filter_by(game_token=game_token).all(),
+        all_events=Event.query.filter_by(game_token=game_token).all(),
         overall=Overall.query.get(game_token)
     )
 
@@ -335,6 +350,7 @@ def edit_event(id):
         event.name = req.get_str('name', event.name)
         event.description = req.get_str('description')
         event.outcome_type = req.get_str('outcome_type')
+        event.roller_type = req.get_str('roller_type')
         event.trigger_chance = req.get_float('trigger_chance')
         event.single_number = req.get_float('single_number')
         event.selection_strings = req.get_str('selection_strings')
@@ -356,7 +372,8 @@ def edit_event(id):
 
     return render_template('configure/event.html', 
         event=event,
-        all_attribs=Attrib.query.filter_by(game_token=game_token).all()
+        all_attribs=Attrib.query.filter_by(game_token=game_token).all(),
+        operations=Operation
     )
 
 # ------------------------------------------------------------------------
@@ -387,7 +404,7 @@ def lookup_entity(ent_type, id):
 
     # 2. Check Attributes (Who uses this attribute?)
     if ent_type == 'attrib':
-        values = AttribValue.query.filter_by(game_token=game_token, attrib_id=id).all()
+        values = AttribVal.query.filter_by(game_token=game_token, attrib_id=id).all()
         results['Applied to Entities'] = []
         for v in values:
             owner = Entity.query.get((game_token, v.owner_id))
@@ -556,7 +573,7 @@ def handle_deletion(entity):
 
 def duplicate_entity(source_id, entity_type):
     """
-    Deep copies any game entity and its related records (Recipes, Stats, etc.)
+    Deep copies any game entity and its related records (Recipes, Attrs, etc.)
     within the shared ID space.
     """
     game_token = g.game_token
@@ -638,12 +655,12 @@ def duplicate_entity(source_id, entity_type):
         )
         db.session.add(new_obj)
 
-    # 2. Shared Associations: Copy Attributes (Stats/Prerequisites)
+    # 2. Shared Associations: Copy Attributes (Attrs/Prerequisites)
     # This applies to almost all entity types
-    attrib_values = AttribValue.query.filter_by(
+    attrib_values = AttribVal.query.filter_by(
         game_token=game_token, subject_id=source_id).all()
     for av in attrib_values:
-        db.session.add(AttribValue(
+        db.session.add(AttribVal(
             game_token=game_token, attrib_id=av.attrib_id,
             subject_id=new_id, value=av.value
         ))

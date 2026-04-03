@@ -224,14 +224,15 @@
     document.getElementById('pickup-btn')?.addEventListener('click', async () => {
         const charId = document.getElementById('pickup-char-id').value;
         const fd = new FormData();
-        fd.append('char_id', charId);
         fd.append('item_id', itemId);
         fd.append('quantity', {{ pile.quantity }});
         {% if pile.position %}
-            fd.append('pos[]', {{ pile.position[0] }});
-            fd.append('pos[]', {{ pile.position[1] }});
+            fd.append('pos', "{{ pile.position | join(',') }}");
         {% endif %}
-        const res = await fetch('/item/pickup', { method: 'POST', body: fd });
+        const res = await fetch(`/char/${charId}/pickup`, { 
+            method: 'POST', 
+            body: fd 
+        });
         if (res.ok) window.location.href = "{{ url_for('play.play_location', id=owner.id) }}";
     });
 

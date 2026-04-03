@@ -8,7 +8,7 @@ from sqlalchemy.dialects.postgresql import Range
 from .models import (
     GENERAL_ID, ENTITIES, JsonKeys, db,
     Entity, Item, Character, Location, Attrib, Event, 
-    Pile, AttribValue, Recipe, RecipeSource, RecipeByproduct, 
+    Pile, Recipe, RecipeSource, RecipeByproduct, 
     RecipeAttribReq, Progress, LocationDest, Overall, WinRequirement)
 from .utils import parse_numrange
 
