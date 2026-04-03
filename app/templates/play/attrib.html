@@ -5,6 +5,8 @@
     <nav class="nav-container">
         <a href="{{ url_for('play.overview') }}">[o]verview</a>
         <span class="separator">|</span>
+        <a href="{{ url_for('configure.index') }}">[m]ain setup</a>
+        <span class="separator">|</span>
         <a href="{{ url_for('configure.edit_attrib', id=attribute.id) }}">attrib s[e]tup</a>
         <span class="separator">|</span>
         <a href="#" onclick="window.history.back(); return false;">

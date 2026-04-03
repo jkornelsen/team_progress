@@ -196,14 +196,36 @@ def edit_location(id):
 
         # Update Item Refs
         ItemRef.query.filter_by(game_token=game_token, loc_id=loc.id).delete()
-        for item_id in request.form.getlist('item_refs[]'):
-            db.session.add(ItemRef(
-                game_token=game_token, loc_id=loc.id, item_id=int(item_id)))
+        for ref_id in request.form.getlist('item_refs[]'):
+            if ref_id:
+                db.session.add(ItemRef(
+                    game_token=game_token, 
+                    loc_id=loc.id, 
+                    item_id=int(ref_id)
+                ))
+
+        # Update Attribute Values
+        AttribVal.query.filter_by(game_token=game_token, subject_id=loc.id).delete()
+        for row in req.get_list('attribs'):
+            attr_id = row.get('id')
+            if attr_id:
+                db.session.add(AttribVal(
+                    game_token=game_token,
+                    subject_id=loc.id,
+                    attrib_id=int(attr_id),
+                    value=row.get('value', '0')
+                ))
 
         db.session.commit()
         if 'duplicate' in request.form:
             return duplicate_entity(loc.id, 'location')
         return redirect_back('configure.index') 
+
+    all_items = Item.query.filter_by(game_token=game_token).all()
+    universal_items = [
+        i for i in all_items if i.storage_type == StorageType.UNIVERSAL]
+    containable_items = [
+        i for i in all_items if i.storage_type != StorageType.UNIVERSAL]
 
     return render_template('configure/location.html', 
         location=loc,
@@ -211,10 +233,11 @@ def edit_location(id):
             game_token=game_token, loc1_id=id).all() if id != 'new' else [],
         inventory=Pile.query.filter_by(
             game_token=game_token, owner_id=id).all() if id != 'new' else [],
-        all_locations=Location.query.filter_by(game_token=game_token).all(),
-        all_items=Item.query.filter_by(game_token=game_token).all(),
-        universal_items=Item.query.filter_by(
-            game_token=game_token, storage_type=StorageType.UNIVERSAL).all()
+        all_locs=Location.query.filter_by(game_token=game_token).all(),
+        all_attribs=Attrib.query.filter_by(game_token=game_token).all(),
+        all_events=Event.query.filter_by(game_token=game_token).all(),
+        all_containable_items=containable_items,
+        all_universal_items=universal_items,
     )
 
 @configure_bp.route('/character/<int:id>', methods=['GET', 'POST'])
@@ -285,8 +308,8 @@ def edit_character(id):
 
     return render_template('configure/character.html', 
         character=char, 
-        all_locations=Location.query.filter_by(game_token=game_token).all(),
-        all_attributes=Attrib.query.filter_by(game_token=game_token).all(),
+        all_locs=Location.query.filter_by(game_token=game_token).all(),
+        all_attribs=Attrib.query.filter_by(game_token=game_token).all(),
         all_items=Item.query.filter_by(game_token=game_token).all(),
         all_events=Event.query.filter_by(game_token=game_token).all(),
         overall=Overall.query.get(game_token)

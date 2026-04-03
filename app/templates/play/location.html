@@ -5,6 +5,8 @@
     <nav class="nav-container">
         <a href="{{ url_for('play.overview') }}">[o]verview</a>
         <span class="separator">|</span>
+        <a href="{{ url_for('configure.index') }}">[m]ain setup</a>
+        <span class="separator">|</span>
         <a href="{{ url_for('configure.edit_location', id=location.id) }}">location s[e]tup</a>
     </nav>
 {% endblock %}
@@ -104,17 +106,17 @@
 
             {% if attrib_values %}
             <section class="outer-border">
-                <h3>Local Attributes</h3>
-                <div class="col-list twocol-list">
-                {% for av in attrib_values %}
-                    <div class="col-row twocol-row">
-                        {% set target_url = url_for('play.play_attrib', attrib_id=av.attrib_id, subject_id=location.id) %}
-                        {% call hotkey_link(target_url, link_letters) %}
-                            {{ av.attrib.name }}
-                        {% endcall %}
-                        <span class="text-accent">{{ render_attr(av, av.attrib) }}</span>
-                    </div>
-                {% endfor %}
+                <h3>Environment Attrs</h3>
+                <div class="col-list" style="--col-list-max-width: 200px;">
+                    {% for av in attrib_values %}
+                        <div class="col-row" style="--grid-cols: 1fr auto;">
+                            {% set attr_url = url_for('play.play_attrib', attrib_id=av.attrib_id, subject_id=location.id) %}
+                            {% call hotkey_link(attr_url, link_letters) %}
+                                {{ av.attrib.name }}
+                            {% endcall %}
+                            <span>{{ render_attr(av, av.attrib) }}</span>
+                        </div>
+                    {% endfor %}
                 </div>
             </section>
             {% endif %}
@@ -131,7 +133,7 @@
                         {% call hotkey_link(target_url, link_letters) %}
                             {{ other.name }}
                         {% endcall %}
-                        <span class="label-like">[{{ door | join(",") }}]</span>
+                        <span class="label-like">[{{ door | join(",") if door else '' }}]</span>
                     </div>
                 {% endfor %}
                 </div>

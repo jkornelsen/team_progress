@@ -12,12 +12,12 @@
 
 <!-- TEMPLATES FOR DYNAMIC ROWS -->
 
-{% macro attrib_row(index, av=None, all_attributes=[]) %}
+{% macro attrib_row(index, av=None, all_attribs=[]) %}
     {% set selected_id = av.attrib_id if av else None %}
     {% set val = av.value if av else 0 %}
     <div class="col-row attrib-row">
         <select name="attribs[{{ index }}][id]">
-            {% for attr_def in all_attributes %}
+            {% for attr_def in all_attribs %}
                 <option value="{{ attr_def.id }}" {{ 'selected' if attr_def.id == selected_id }}>
                     {{ attr_def.name }}
                 </option>
@@ -73,7 +73,7 @@
 {% endmacro %}
 
 <template id="attrib-template">
-    {{ attrib_row('INDEX', None, all_attributes) }}
+    {{ attrib_row('INDEX', None, all_attribs) }}
 </template>
 
 <template id="inv-template">
@@ -112,7 +112,7 @@
                     <label for="location_id">Current Location:</label>
                     <select id="location_id" name="location_id" class="full-width">
                         <option value="">(Nowhere / Inactive)</option>
-                        {% for loc in all_locations %}
+                        {% for loc in all_locs %}
                             <option value="{{ loc.id }}" {{ 'selected' if character.location.id == loc.id }}>
                                 {{ loc.name }}
                             </option>
@@ -159,7 +159,7 @@
                     <span></span>
                 </div>
                 {% for av in character.attrib_values %}
-                    {{ attrib_row(loop.index0, av, all_attributes) }}
+                    {{ attrib_row(loop.index0, av, all_attribs) }}
                 {% endfor %}
             </div>
         </section>
@@ -234,8 +234,6 @@
 
 <style>
     .grid-2-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    .full-width { width: 100%; box-sizing: border-box; background: #000; color: #fff; border: 1px solid var(--border); padding: 8px; }
     .checkbox-label { display: block; cursor: pointer; font-size: 0.9em; margin-bottom: 5px; }
-    .gap-10 { gap: 10px; }
 </style>
 {% endblock %}
