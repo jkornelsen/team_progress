@@ -24,7 +24,8 @@
             {% endfor %}
         </select>
         <input type="text" name="attribs[{{ index }}][value]" value="{{ val }}" placeholder="Value">
-        <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
+        <button type="button" class="btn-sm dangerous-button" 
+                onclick="removeRow(this, 'attrib-list')">×</button>
     </div>
 {% endmacro %}
 
@@ -54,7 +55,8 @@
             {% endfor %}
         </select>
 
-        <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
+        <button type="button" class="btn-sm dangerous-button" 
+                onclick="removeRow(this, 'inv-list')">×</button>
     </div>
 {% endmacro %}
 
@@ -68,20 +70,21 @@
                 </option>
             {% endfor %}
         </select>
-        <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
+        <button type="button" class="btn-sm dangerous-button" 
+                onclick="removeRow(this, 'ability-list')">×</button>
     </div>
 {% endmacro %}
 
 <template id="attrib-template">
-    {{ attrib_row('INDEX', None, all_attribs) }}
+    {{ attrib_row('__INDEX__', None, all_attribs) }}
 </template>
 
 <template id="inv-template">
-    {{ inv_row('INDEX', None, all_items, overall.slots) }}
+    {{ inv_row('__INDEX__', None, all_items, overall.slots) }}
 </template>
 
 <template id="ability-template">
-    {{ ability_row('INDEX', None, all_events) }}
+    {{ ability_row('__INDEX__', None, all_events) }}
 </template>
 
 <!-- MAIN CONTENT -->
@@ -113,7 +116,7 @@
                     <select id="location_id" name="location_id" class="full-width">
                         <option value="">(Nowhere / Inactive)</option>
                         {% for loc in all_locs %}
-                            <option value="{{ loc.id }}" {{ 'selected' if character.location.id == loc.id }}>
+                            <option value="{{ loc.id }}" {{ 'selected' if character.location_id == loc.id }}>
                                 {{ loc.name }}
                             </option>
                         {% endfor %}
@@ -147,9 +150,11 @@
         <section class="outer-border">
             <div class="flex-between">
                 <h3>Attributes</h3>
-                <button type="button" class="btn-sm" onclick="addRow('attrib-list', 'attrib-template')">+ Add Attribute</button>
+                {% if all_attribs %}
+                    <button type="button" class="btn-sm" onclick="addRow('attrib-list', 'attrib-template')">+ Add Attribute</button>
+                {% endif %}
             </div>
-            <div id="attrib-list" class="col-list spacious-top">
+            <div id="attrib-list" class="col-list spacious-top {{ 'hidden' if not character.attrib_values }}">
                 <style>
                     .attrib-row { --grid-cols: 6fr 6fr 1fr; }
                 </style>
@@ -162,20 +167,23 @@
                     {{ attrib_row(loop.index0, av, all_attribs) }}
                 {% endfor %}
             </div>
+            <div id="attrib-list-empty" class="no-entities {{ 'hidden' if character.attrib_values }}">
+                (No attributes assigned)
+            </div>
         </section>
 
         <!-- Inventory -->
         <section class="outer-border">
             <div class="flex-between">
                 <h3>Inventory</h3>
-                <button type="button" class="btn-sm" onclick="addRow('inv-list', 'inv-template')">+ Add Item</button>
+                {% if all_items %}
+                    <button type="button" class="btn-sm" onclick="addRow('inv-list', 'inv-template')">+ Add Item</button>
+                {% endif %}
             </div>
-            
             <style>
                 .inv-piles-row { --grid-cols: 6fr 3fr 4fr 1fr; }
             </style>
-
-            <div id="inv-list" class="col-list spacious-top">
+            <div id="inv-list" class="col-list spacious-top {{ 'hidden' if not character.piles }}">
                 <div class="col-row inv-piles-row header-style">
                     <span>Item Name</span>
                     <span>Quantity</span>
@@ -187,20 +195,28 @@
                     {{ inv_row(loop.index0, pile, all_items, overall.slots) }}
                 {% endfor %}
             </div>
+            <div id="inv-list-empty" class="no-entities {{ 'hidden' if character.piles }}">
+                (Inventory is empty)
+            </div>
         </section>
 
         <section class="outer-border">
             <div class="flex-between">
                 <h3>Abilities</h3>
-                <button type="button" class="btn-sm" onclick="addRow('ability-list', 'ability-template')">+ Add Ability</button>
+                {% if all_events %}
+                    <button type="button" class="btn-sm" onclick="addRow('ability-list', 'ability-template')">+ Add Ability</button>
+                {% endif %}
             </div>
-            <div id="ability-list" class="col-list spacious-top" style="--col-list-max-width: 300px;">
+            <div id="ability-list" class="col-list spacious-top {{ 'hidden' if not character.abilities }}" style="--col-list-max-width: 300px;">
                 <style>
                     .ability-row { --grid-cols: 12fr 1fr; }
                 </style>
-                {% for link in character._ability_links %}
-                    {{ ability_row(loop.index0, link.event_id, all_events) }}
+                {% for evt in character.abilities %}
+                    {{ ability_row(loop.index0, evt.id, all_events) }}
                 {% endfor %}
+            </div>
+            <div id="ability-list-empty" class="no-entities {{ 'hidden' if character.abilities }}">
+                (No abilities)
             </div>
         </section>
 
@@ -224,11 +240,29 @@
 
 <script>
     function addRow(containerId, templateId) {
-        const container = document.getElementById(containerId);
+        const list = document.getElementById(containerId);
+        list.classList.remove('hidden');
+
+        const emptyMsg = document.getElementById(containerId + '-empty');
+        if (emptyMsg) emptyMsg.classList.add('hidden');
+
         const template = document.getElementById(templateId).innerHTML;
-        const index = container.children.length;
-        const html = template.replace(/INDEX/g, index);
-        container.insertAdjacentHTML('beforeend', html);
+        const index = Date.now(); 
+        const html = template.replace(/__INDEX__/g, index);
+        list.insertAdjacentHTML('beforeend', html);
+    }
+
+    function removeRow(btn, listId) {
+        const list = document.getElementById(listId);
+        const row = btn.parentElement;
+        row.remove();
+
+        const remainingRows = list.querySelectorAll('.col-row:not(.header-style)');
+        if (remainingRows.length === 0) {
+            list.classList.add('hidden');
+            const emptyMsg = document.getElementById(listId + '-empty');
+            if (emptyMsg) emptyMsg.classList.remove('hidden');
+        }
     }
 </script>
 

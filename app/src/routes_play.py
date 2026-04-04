@@ -4,7 +4,7 @@ from flask import (
 from app.models import (
     db, Entity, Item, Character, Location, Attrib, Event,
     Pile, AttribVal, Operation, OutcomeType,
-    Recipe, RecipeAttribReq, LocationDest,
+    Recipe, RecipeAttribReq, LocDest,
     Progress, Overall, WinRequirement, GameMessage, GENERAL_ID)
 from app.utils import (
     RequestHelper, parse_coords, LinkLetters, capture_origin, redirect_back)
@@ -246,10 +246,10 @@ def play_location(id):
     ).all()
     
     # Fetch Exits (Destinations)
-    destinations = LocationDest.query.filter(
-        LocationDest.game_token == game_token,
-        ((LocationDest.loc1_id == id) | 
-         ((LocationDest.loc2_id == id) & (LocationDest.bidirectional == True)))
+    destinations = LocDest.query.filter(
+        LocDest.game_token == game_token,
+        ((LocDest.loc1_id == id) | 
+         ((LocDest.loc2_id == id) & (LocDest.bidirectional == True)))
     ).all()
 
     # Fetch Referenced Items and their "General Storage" (ID 1) quantities

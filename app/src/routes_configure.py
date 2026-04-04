@@ -3,18 +3,19 @@ import logging
 import json
 import tempfile
 from flask import (
-    Blueprint, request, session, redirect, url_for, render_template, g,
-    send_file, jsonify, current_app)
+    Blueprint, request, session, flash, redirect, url_for, render_template,
+    g, send_file, jsonify, current_app)
 from app.models import (
     GENERAL_ID, StorageType, JsonKeys, ENTITIES, db,
     Entity, Item, Character, Location, Attrib, Event, 
     Pile, AttribVal, Operation, EntityAbility,
     Recipe, RecipeSource, RecipeByproduct,
-    LocationDest, ItemRef,
+    LocDest, ItemRef,
     Overall, WinRequirement)
 from app.serialization import (
     init_game_session, load_scenario_from_path, import_from_dict,
     clear_game_data, export_game_to_json, export_to_dict)
+from app.database import clone_with_children
 from app.utils import (
     LinkLetters, RequestHelper, parse_coords,
     capture_origin, redirect_back)
@@ -165,23 +166,67 @@ def edit_location(id):
         # Parse L,T,R,B
         loc.excluded = parse_coords(req.get_str('excluded_str'), 4)
 
-        # Update Destinations (Exits)
-        LocationDest.query.filter_by(game_token=game_token, loc1_id=loc.id).delete()
-        for row in req.get_list('dests'):
-            target_id = row.get('target_id')
-            if target_id:
-                new_dest = LocationDest(
-                    game_token=game_token,
-                    loc1_id=loc.id,
-                    loc2_id=int(target_id),
-                    duration=int(row.get('duration', 1)),
-                    door1=parse_coords(row.get('door_here')),
-                    door2=parse_coords(row.get('door_there')),
-                    bidirectional=(row.get('bidirectional') is not None)
-                )
-                db.session.add(new_dest)
+        # Destinations (Exits) -- Symmetric Route Saving
+        # 1. Fetch existing routes involving this location to determine what to delete/update
+        existing_routes = LocDest.query.filter(
+            (LocDest.game_token == game_token) & 
+            ((LocDest.loc1_id == loc.id) | (LocDest.loc2_id == loc.id))
+        ).all()
+        existing_map = {r.id: r for r in existing_routes}
+        
+        submitted_ids = []
+        new_coords = set()
 
-        # Update Items on Ground
+        for row in req.get_list('dests'):
+            target_id = int(row.get('target_id') or 0)
+            if not target_id: continue
+
+            route_id = int(row.get('id') or 0)
+            direction = row.get('direction', 'two-way') # two-way, exit, entrance
+            
+            # Get or New
+            if route_id and route_id in existing_map:
+                route = existing_map[route_id]
+            else:
+                route = LocDest(game_token=game_token)
+                db.session.add(route)
+
+            # Normalize Slots: Ensure "Current" logic maps to loc1/loc2 correctly
+            # Convention: loc1 is Source/Here, loc2 is Target/There for One-Way
+            if direction == 'entrance':
+                route.loc1_id = target_id
+                route.loc2_id = loc.id
+                route.bidirectional = False
+                route.door1 = parse_coords(row.get('door_there'))
+                route.door2 = parse_coords(row.get('door_here'))
+            else:
+                route.loc1_id = loc.id
+                route.loc2_id = target_id
+                route.bidirectional = (direction == 'two-way')
+                route.door1 = parse_coords(row.get('door_here'))
+                route.door2 = parse_coords(row.get('door_there'))
+
+            route.duration = int(row.get('duration', 1))
+
+            # Nullify on Conflict
+            d1_tuple = tuple(route.door1) if route.door1 else None
+            if d1_tuple and d1_tuple in new_coords:
+                from flask import flash
+                flash(
+                    f"Cleared exit position at {target_name} as there is already a door.",
+                    "warning")
+                route.door1 = None
+            elif d1_tuple:
+                new_coords.add(d1_tuple)
+
+            submitted_ids.append(route.id)
+
+        # Cleanup: Delete routes that were removed from the UI
+        for rid, r_obj in existing_map.items():
+            if rid not in submitted_ids:
+                db.session.delete(r_obj)
+
+        # Items on Ground
         Pile.query.filter_by(game_token=game_token, owner_id=loc.id).delete()
         for row in req.get_list('items'):
             item_id = row.get('item_id')
@@ -194,7 +239,7 @@ def edit_location(id):
                     position=parse_coords(row.get('pos'))
                 ))
 
-        # Update Item Refs
+        # Item Refs
         ItemRef.query.filter_by(game_token=game_token, loc_id=loc.id).delete()
         for ref_id in request.form.getlist('item_refs[]'):
             if ref_id:
@@ -204,7 +249,18 @@ def edit_location(id):
                     item_id=int(ref_id)
                 ))
 
-        # Update Attribute Values
+        # Local Events
+        EntityAbility.query.filter_by(game_token=game_token, entity_id=loc.id).delete()
+        for row in req.get_list('events'):
+            event_id = row.get('id')
+            if event_id:
+                db.session.add(EntityAbility(
+                    game_token=game_token,
+                    entity_id=loc.id,
+                    event_id=int(event_id)
+                ))
+
+        # Attribute Values
         AttribVal.query.filter_by(game_token=game_token, subject_id=loc.id).delete()
         for row in req.get_list('attribs'):
             attr_id = row.get('id')
@@ -227,10 +283,26 @@ def edit_location(id):
     containable_items = [
         i for i in all_items if i.storage_type != StorageType.UNIVERSAL]
 
+    routes = LocDest.query.filter(
+        (LocDest.game_token == game_token) & 
+        ((LocDest.loc1_id == id) | (LocDest.loc2_id == id))
+    ).all()
+    normalized_dests = []
+    for r in routes:
+        is_loc1 = (r.loc1_id == id)
+        direction = 'two-way' if r.bidirectional else ('exit' if is_loc1 else 'entrance')
+        normalized_dests.append({
+            'id': r.id,
+            'target_id': r.loc2_id if is_loc1 else r.loc1_id,
+            'door_here': r.door1 if is_loc1 else r.door2,
+            'door_there': r.door2 if is_loc1 else r.door1,
+            'duration': r.duration,
+            'direction': direction
+        })
+
     return render_template('configure/location.html', 
         location=loc,
-        destinations=LocationDest.query.filter_by(
-            game_token=game_token, loc1_id=id).all() if id != 'new' else [],
+        destinations=normalized_dests,
         inventory=Pile.query.filter_by(
             game_token=game_token, owner_id=id).all() if id != 'new' else [],
         all_locs=Location.query.filter_by(game_token=game_token).all(),
@@ -304,6 +376,8 @@ def edit_character(id):
                 )
 
         db.session.commit()
+        if 'duplicate' in request.form:
+            return duplicate_entity(loc.id, 'location')
         return redirect_back('configure.index') 
 
     return render_template('configure/character.html', 
@@ -455,9 +529,9 @@ def lookup_entity(ent_type, id):
 
     # 4. Check Navigation (What links to this location?)
     if ent_type == 'location':
-        dests = LocationDest.query.filter(
-            LocationDest.game_token == game_token,
-            (LocationDest.loc1_id == id) | (LocationDest.loc2_id == id)
+        dests = LocDest.query.filter(
+            LocDest.game_token == game_token,
+            (LocDest.loc1_id == id) | (LocDest.loc2_id == id)
         ).all()
         results['Connected Locations'] = []
         for d in dests:
@@ -600,93 +674,16 @@ def duplicate_entity(source_id, entity_type):
     within the shared ID space.
     """
     game_token = g.game_token
-    source_base = Entity.query.get((game_token, source_id))
-    if not source_base:
+    model_class = ENTITIES[f"{entity_type}s"]
+    src = model_class.query.get((game_token, source_id))
+    if not src:
         return redirect(url_for('configure.index'))
+    
+    new_id = Overall.generate_next_id(game_token)
+    new_name = increment_name(src.name)
 
-    new_id = Overall.generate_next_id(g.game_token)
-    new_name = increment_name(source_base.name)
-
-    # 1. Subclass-specific Logic
-    if entity_type == 'item':
-        src = Item.query.get((game_token, source_id))
-        new_obj = Item(
-            game_token=game_token, id=new_id,
-            name=new_name, description=src.description, toplevel=src.toplevel,
-            masked=src.masked, storage_type=src.storage_type, q_limit=src.q_limit
-        )
-        db.session.add(new_obj)
-        db.session.flush() # Secure the new_id
-
-        # Deep Copy Recipes
-        for r in Recipe.query.filter_by(game_token=game_token, product_id=source_id).all():
-            new_recipe = Recipe(game_token=game_token, product_id=new_id, 
-                                rate_amount=r.rate_amount, rate_duration=r.rate_duration, 
-                                instant=r.instant)
-            db.session.add(new_recipe)
-            db.session.flush()
-            
-            for s in r.sources:
-                db.session.add(RecipeSource(game_token=game_token, recipe_id=new_recipe.id, 
-                                           item_id=s.item_id, q_required=s.q_required, preserve=s.preserve))
-            for b in r.byproducts:
-                db.session.add(RecipeByproduct(game_token=game_token, recipe_id=new_recipe.id, 
-                                              item_id=b.item_id, rate_amount=b.rate_amount))
-
-    elif entity_type == 'character':
-        src = Character.query.get((game_token, source_id))
-        new_obj = Character(
-            game_token=game_token, id=new_id,
-            name=new_name, description=src.description, toplevel=src.toplevel,
-            masked=src.masked, travel_group=src.travel_group,
-            location_id=src.location_id, position=src.position
-        )
-        db.session.add(new_obj)
-
-    elif entity_type == 'location':
-        src = Location.query.get((game_token, source_id))
-        new_obj = Location(
-            game_token=game_token, id=new_id,
-            name=new_name, description=src.description, toplevel=src.toplevel,
-            masked=src.masked, dimensions=src.dimensions, excluded=src.excluded
-        )
-        db.session.add(new_obj)
-        db.session.flush()
-        
-        # Copy Item References
-        for ref in ItemRef.query.filter_by(game_token=game_token, loc_id=source_id).all():
-            db.session.add(ItemRef(game_token=game_token, loc_id=new_id, item_id=ref.item_id))
-
-    elif entity_type == 'attrib':
-        src = Attrib.query.get((game_token, source_id))
-        new_obj = Attrib(
-            game_token=game_token, id=new_id,
-            name=new_name, description=src.description,
-            enum_list=src.enum_list, is_binary=src.is_binary
-        )
-        db.session.add(new_obj)
-
-    elif entity_type == 'event':
-        src = Event.query.get((game_token, source_id))
-        new_obj = Event(
-            game_token=game_token, id=new_id,
-            name=new_name,
-            description=src.description, toplevel=src.toplevel,
-            outcome_type=src.outcome_type, trigger_chance=src.trigger_chance,
-            numeric_range=src.numeric_range, single_number=src.single_number,
-            selection_strings=src.selection_strings
-        )
-        db.session.add(new_obj)
-
-    # 2. Shared Associations: Copy Attributes (Attrs/Prerequisites)
-    # This applies to almost all entity types
-    attrib_values = AttribVal.query.filter_by(
-        game_token=game_token, subject_id=source_id).all()
-    for av in attrib_values:
-        db.session.add(AttribVal(
-            game_token=game_token, attrib_id=av.attrib_id,
-            subject_id=new_id, value=av.value
-        ))
-
+    # Recursive Clone e.g. Item -> Recipes -> Sources/Byproducts
+    clone_with_children(src, {'id': new_id, 'name': new_name})
+    
     db.session.commit()
     return redirect(url_for(f'configure.edit_{entity_type}', id=new_id))

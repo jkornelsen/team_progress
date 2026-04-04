@@ -9,7 +9,7 @@ from .models import (
     GENERAL_ID, ENTITIES, JsonKeys, db,
     Entity, Item, Character, Location, Attrib, Event, 
     Pile, Recipe, RecipeSource, RecipeByproduct, 
-    RecipeAttribReq, Progress, LocationDest, Overall, WinRequirement)
+    RecipeAttribReq, Progress, Overall, WinRequirement)
 from .utils import parse_numrange
 
 logger = logging.getLogger(__name__)

@@ -1,7 +1,7 @@
 import logging
 from flask import g
 from sqlalchemy.orm.attributes import flag_modified
-from app.models import db, Character, Location, LocationDest
+from app.models import db, Character, Location, LocDest
 from app.src.logic_user_interaction import add_message
 
 logger = logging.getLogger(__name__)
@@ -135,10 +135,10 @@ def get_available_destinations(char):
     pos = char.position # [x, y]
 
     # Find all possible links for this location
-    all_links = LocationDest.query.filter(
-        LocationDest.game_token == game_token,
-        ((LocationDest.loc1_id == loc_id) | 
-         ((LocationDest.loc2_id == loc_id) & (LocationDest.bidirectional == True)))
+    all_links = LocDest.query.filter(
+        LocDest.game_token == game_token,
+        ((LocDest.loc1_id == loc_id) | 
+         ((LocDest.loc2_id == loc_id) & (LocDest.bidirectional == True)))
     ).all()
 
     reachable = []
@@ -165,10 +165,10 @@ def arrive_at_destination(main_char_id, dest_loc_id, move_with_ids=None):
     main_char = Character.query.get((game_token, main_char_id))
     
     # 1. Find the specific link
-    link = LocationDest.query.filter(
-        LocationDest.game_token == game_token,
-        ((LocationDest.loc1_id == main_char.location_id) & (LocationDest.loc2_id == dest_loc_id)) |
-        ((LocationDest.loc1_id == dest_loc_id) & (LocationDest.loc2_id == main_char.location_id))
+    link = LocDest.query.filter(
+        LocDest.game_token == game_token,
+        ((LocDest.loc1_id == main_char.location_id) & (LocDest.loc2_id == dest_loc_id)) |
+        ((LocDest.loc1_id == dest_loc_id) & (LocDest.loc2_id == main_char.location_id))
     ).first()
     if not link:
         return False, "No path exists to that location."

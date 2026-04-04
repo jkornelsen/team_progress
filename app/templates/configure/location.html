@@ -13,25 +13,35 @@
 <!-- TEMPLATES FOR DYNAMIC ROWS -->
 
 {% macro dest_row(index, dest=None, all_locs=[], current_loc_id=None) %}
-    {% set door_here = dest.door_here if dest else '' %}
-    <div class="col-row dest-row" style="align-items: center;">
+    <div class="col-row dest-row {{ 'unplaced-route' if not dest.door_here }}" style="align-items: center;">
+        <input type="hidden" name="dests[{{ index }}][id]" value="{{ dest.id or '' }}">
+        
         <select name="dests[{{ index }}][target_id]">
             {% for loc in all_locs if loc.id != current_loc_id %}
-                <option value="{{ loc.id }}" {{ 'selected' if loc.id == dest.target_id }}>
-                    {{ loc.name }}
-                </option>
+                <option value="{{ loc.id }}" {{ 'selected' if loc.id == dest.target_id }}>{{ loc.name }}</option>
             {% endfor %}
         </select>
-        <input type="text" name="dests[{{ index }}][door_here]" 
-               value="{{ door_here }}" placeholder="x,y" size="8">
-        <input type="number" name="dests[{{ index }}][duration]" 
-               value="{{ dest.duration if dest else 1 }}">
-        <label class="checkbox-label" style="justify-self: left;">
-            <input type="checkbox" name="dests[{{ index }}][bidirectional]" 
-                   {{ 'checked' if (dest is none or dest.bidirectional) }}>
-        </label>
-        <button type="button" class="btn-sm dangerous-button" 
-                onclick="removeRow(this, 'dest-list')">×</button>
+
+        <!-- Door Here (Exit/Arrival Point) -->
+        <div class="coord-input-group">
+            <input type="text" name="dests[{{ index }}][door_here]" 
+                   value="{{ dest.door_here|join(',') if dest.door_here else '' }}" 
+                   placeholder="x,y" size="8">
+            <small class="label-like direction-label">
+                {{ 'Arrival Point' if dest.direction == 'entrance' else 'Exit Point' }}
+            </small>
+        </div>
+
+        <input type="number" name="dests[{{ index }}][duration]" value="{{ dest.duration or 1 }}">
+
+        <!-- 3-Way Direction Toggle -->
+        <div class="direction-toggle">
+            <label title="Two-Way"><input type="radio" name="dests[{{ index }}][direction]" value="two-way" {{ 'checked' if dest.direction == 'two-way' or not dest }}> ↔</label>
+            <label title="Exit Only"><input type="radio" name="dests[{{ index }}][direction]" value="exit" {{ 'checked' if dest.direction == 'exit' }}> →</label>
+            <label title="Entrance Only"><input type="radio" name="dests[{{ index }}][direction]" value="entrance" {{ 'checked' if dest.direction == 'entrance' }}> ←</label>
+        </div>
+
+        <button type="button" class="btn-sm dangerous-button" onclick="removeRow(this, 'dest-list')">×</button>
     </div>
 {% endmacro %}
 
@@ -67,6 +77,21 @@
     </div>
 {% endmacro %}
 
+{% macro event_row(index, selected_id=None, all_events=[]) %}
+    <div class="col-row event-row">
+        <select name="events[{{ index }}][id]">
+            <option value="" disabled {{ 'selected' if not selected_id }}>Select an Event...</option>
+            {% for event_def in all_events %}
+                <option value="{{ event_def.id }}" {{ 'selected' if event_def.id == selected_id }}>
+                    {{ event_def.name }} ({{ event_def.outcome_type }})
+                </option>
+            {% endfor %}
+        </select>
+        <button type="button" class="btn-sm dangerous-button" 
+                onclick="removeRow(this, 'event-list')">×</button>
+    </div>
+{% endmacro %}
+
 {% macro attrib_row(index, av=None, all_attribs=[]) %}
     {% set selected_id = av.attrib_id if av else None %}
     {% set val = av.value if av else 0 %}
@@ -93,6 +118,10 @@
 
 <template id="ref-template">
     {{ ref_row(None, all_universal_items) }}
+</template>
+
+<template id="event-template">
+    {{ event_row('__INDEX__', None, all_events) }}
 </template>
 
 <template id="attrib-template">
@@ -155,9 +184,9 @@
 
         <section class="outer-border">
             <div class="flex-between">
-                <h3>Exits & Destinations</h3>
+                <h3>Routes</h3>
                 {% if all_locs %}
-                    <button type="button" class="btn-sm" onclick="addRow('dest-list', 'dest-template')">+ Add Exit</button>
+                    <button type="button" class="btn-sm" onclick="addRow('dest-list', 'dest-template')">+ Add Route</button>
                 {% endif %}
             </div>
             <style>
@@ -172,20 +201,20 @@
                     <span style="white-space: nowrap;">2-Way</span>
                     <span></span>
                 </div>
-                {% for dest in destinations %}
-                    {% set is_loc1 = (dest.loc1_id == location.id) %}
-                    {% set raw_here = dest.door1 if is_loc1 else dest.door2 %}
-                    {% set normalized_dest = {
-                        'target_id': dest.loc2_id if is_loc1 else dest.loc1_id,
-                        'door_here': raw_here|join(',') if raw_here else '',
-                        'duration': dest.duration,
-                        'bidirectional': dest.bidirectional
-                    } %}
-                    {{ dest_row(loop.index0, normalized_dest, all_locs, location.id) }}
+                {% for d in destinations if d.door_here %}
+                    {{ dest_row(loop.index0, d, all_locs, location.id) }}
                 {% endfor %}
             </div>
+            <div id="pending-placement" class="spacious-top outer-border" style="background: #111;">
+                <h4 class="label-like">Pending Placement (No Coords)</h4>
+                <div id="unplaced-list">
+                    {% for d in destinations if not d.door_here %}
+                        {{ dest_row(loop.index0 + 100, d, all_locs, location.id) }}
+                    {% endfor %}
+                </div>
+            </div>
             <div id="dest-list-empty" class="no-entities {{ 'hidden' if destinations }}">
-                (No exits defined)
+                (No exits)
             </div>
         </section>
 
@@ -247,6 +276,26 @@
 
         <section class="outer-border">
             <div class="flex-between">
+                <h3>Local Events</h3>
+                {% if all_events %}
+                    <button type="button" class="btn-sm" onclick="addRow('event-list', 'event-template')">+ Add Event</button>
+                {% endif %}
+            </div>
+            <div id="event-list" class="col-list {{ 'hidden' if not location.abilities }}" style="--col-list-max-width: 400px;">
+                <style>
+                    .event-row { --grid-cols: 11fr 1fr; }
+                </style>
+                {% for evt in location.abilities %}
+                    {{ event_row(loop.index0, evt.id, all_events) }}
+                {% endfor %}
+            </div>
+            <div id="event-list-empty" class="no-entities {{ 'hidden' if location.abilities }}">
+                (No local events)
+            </div>
+        </section>
+
+        <section class="outer-border">
+            <div class="flex-between">
                 <h3>Attributes</h3>
                 {% if all_attribs %}
                     <button type="button" class="btn-sm" onclick="addRow('attrib-list', 'attrib-template')">+ Add Attribute</button>
@@ -288,36 +337,24 @@
 
 <script>
     function addRow(containerId, templateId) {
-        // 1. Show the list container (which includes the header)
         const list = document.getElementById(containerId);
         list.classList.remove('hidden');
 
-        // 2. Hide the "Empty" message
         const emptyMsg = document.getElementById(containerId + '-empty');
         if (emptyMsg) emptyMsg.classList.add('hidden');
 
-        // 3. Add the row
-        const container = document.getElementById(containerId);
         const template = document.getElementById(templateId).innerHTML;
-        
-        // Use a timestamp or a unique count to prevent ID collisions 
-        // if you add items to different lists in one session
-        const index = Date.now(); 
-        
+        const index = Date.now();  // prevent ID collisions 
         const html = template.replace(/__INDEX__/g, index);
-        container.insertAdjacentHTML('beforeend', html);
+        list.insertAdjacentHTML('beforeend', html);
     }
 
     function removeRow(btn, listId) {
         const list = document.getElementById(listId);
         const row = btn.parentElement;
-        
-        // Remove the row
         row.remove();
 
-        // Check if any data rows are left (excluding the header-style div)
         const remainingRows = list.querySelectorAll('.col-row:not(.header-style)');
-        
         if (remainingRows.length === 0) {
             list.classList.add('hidden');
             const emptyMsg = document.getElementById(listId + '-empty');

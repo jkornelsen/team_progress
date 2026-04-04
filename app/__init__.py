@@ -4,7 +4,8 @@ import uuid
 from flask import Flask, g, session, request, redirect, url_for
 from flask_migrate import Migrate
 
-from .models import db, GENERAL_ID, StorageType
+from .database import db, get_db_uri
+from .models import GENERAL_ID, StorageType
 from .serialization import init_game_session
 from .utils import format_num, htmlify_filter, mask_string
 from app.src.routes_session import session_bp, generate_username, log_user_activity
@@ -21,26 +22,8 @@ def create_app():
     app.config['SECRET_KEY'] = os.environ.get(
         'SECRET_KEY', 'team-progress-kit')
     app.config['DATA_DIR'] = os.path.join(app.root_path, 'data_files')
-    
-    # Database Configuration (PostgreSQL)
-    # 1. Try to get password from sensitive.py
-    try:
-        from .sensitive import DB_PASSWORD
-    except (ImportError, ValueError):
-        # Fallback for local trusted authentication
-        DB_PASSWORD = 'no password needed with trust'
 
-    # 2. Get other connection details from Environment or Defaults
-    db_user = os.environ.get('DB_USER', 'postgres')
-    db_pass = os.environ.get('DB_PASS', DB_PASSWORD) 
-    db_host = os.environ.get('DB_HOST', 'localhost')
-    db_name = os.environ.get('DB_NAME', 'app')
-    db_port = os.environ.get('DB_PORT', '5432')
-    
-    # 3. Construct the SQLAlchemy URI
-    app.config['SQLALCHEMY_DATABASE_URI'] = (
-        f"postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}")
-    
+    app.config['SQLALCHEMY_DATABASE_URI'] = get_db_uri()
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     app.config['UPLOAD_DIR'] = os.path.join(app.config['DATA_DIR'], 'uploads')

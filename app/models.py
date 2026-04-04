@@ -1,9 +1,7 @@
-from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import event
 from sqlalchemy.dialects.postgresql import ARRAY, NUMRANGE
+from .database import db
 from .utils import parse_numrange
-
-db = SQLAlchemy()
 
 # Reserved ID in Entity table for universal storage.
 # Can have up to one general pile for each Item.
@@ -35,6 +33,10 @@ def auto_init_defaults(target, args, kwargs):
                 setattr(target, column.name, column.default.arg(None))
             else:
                 setattr(target, column.name, column.default.arg)
+
+def deep_rel(attr, child_cls, fk_field):
+    """Helper to format deep relationship dictionary entries."""
+    return {attr: (child_cls, fk_field)}
 
 # ------------------------------------------------------------------------
 # Entity Parent Class
@@ -82,6 +84,11 @@ class Entity(db.Model):
                 event_id=event_id
             ))
         return obj
+
+    def get_deep_relationships(self):
+        d = deep_rel('attrib_values', AttribVal, 'subject_id')
+        d.update(deep_rel('_ability_links', EntityAbility, 'entity_id'))
+        return d
 
     @classmethod
     def get_or_new(cls, game_token, id):
@@ -166,6 +173,11 @@ class Item(Entity):
             ))
         return item
 
+    def get_deep_relationships(self):
+        d = super().get_deep_relationships()
+        d.update(deep_rel('recipes', Recipe, 'product_id'))
+        return d
+
     in_piles = db.relationship(
         'Pile',
         back_populates='item',
@@ -241,11 +253,17 @@ class Location(Entity):
                 loc_id=loc.id,
                 **ir_data))
         for d_data in data.get('destinations', []):
-            loc.exits.append(LocationDest(
+            loc.exits.append(LocDest(
                     game_token=game_token, 
                     loc1=loc, 
                     **d_data))
         return loc
+
+    def get_deep_relationships(self):
+        d = super().get_deep_relationships()
+        d.update(deep_rel('item_refs', ItemRef, 'loc_id'))
+        d.update(deep_rel('exits', LocDest, 'loc1_id'))
+        return d
 
     item_refs = db.relationship(
         'ItemRef',
@@ -261,15 +279,15 @@ class Location(Entity):
         back_populates='destination',
         foreign_keys="[TravelProgress.game_token, TravelProgress.dest_id]")
     exits = db.relationship(
-        'LocationDest',
+        'LocDest',
         back_populates='loc1',
-        foreign_keys="[LocationDest.game_token, LocationDest.loc1_id]",
+        foreign_keys="[LocDest.game_token, LocDest.loc1_id]",
         cascade="all, delete-orphan",
         overlaps="entrances")
     entrances = db.relationship(
-        'LocationDest',
+        'LocDest',
         back_populates='loc2',
-        foreign_keys="[LocationDest.game_token, LocationDest.loc2_id]",
+        foreign_keys="[LocDest.game_token, LocDest.loc2_id]",
         cascade="all, delete-orphan",
         overlaps="exits")
 
@@ -446,6 +464,11 @@ class Event(Entity):
         ]
         return event
 
+    def get_deep_relationships(self):
+        d = super().get_deep_relationships()
+        d.update(deep_rel('factors', EventFactor, 'event_id'))
+        return d
+
     @property
     def determinants(self):
         return [f for f in self.factors if f.usage_type == FactorUsage.IN]
@@ -599,24 +622,30 @@ class AttribVal(db.Model):
             ['entities.game_token', 'entities.id'], ondelete='CASCADE'),
     )
 
-class LocationDest(db.Model):
+class LocDest(db.Model):
     __tablename__ = 'loc_destinations'
     game_token = db.Column(db.String(50), primary_key=True)
-    loc1_id = db.Column(db.Integer, primary_key=True)
-    loc2_id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    loc1_id = db.Column(db.Integer, nullable=False)
+    loc2_id = db.Column(db.Integer, nullable=False)
     door1 = db.Column(ARRAY(db.Integer))
     door2 = db.Column(ARRAY(db.Integer))
-    duration = db.Column(db.Integer, nullable=False)
+    duration = db.Column(db.Integer, nullable=False, default=1)
     bidirectional = db.Column(db.Boolean, default=True)
 
     def to_dict(self):
         return {
+            "id": self.id,
             "loc2_id": self.loc2_id,
             "duration": self.duration,
             "door1": self.door1,
             "door2": self.door2,
             "bidirectional": self.bidirectional
         }
+
+    def flip_direction(self):
+        self.loc1_id, self.loc2_id = self.loc2_id, self.loc1_id
+        self.door1, self.door2 = self.door2, self.door1
 
     loc1 = db.relationship(
         'Location',
@@ -883,6 +912,12 @@ class Recipe(db.Model):
                 value_range=parse_numrange(v_range[0], v_range[1])
             ))
         return recipe
+
+    def get_deep_relationships(self):
+        d = deep_rel('sources', RecipeSource, 'recipe_id')
+        d.update(deep_rel('byproducts', RecipeByproduct, 'recipe_id'))
+        d.update(deep_rel('attrib_reqs', RecipeAttribReq, 'recipe_id'))
+        return d
 
     @property
     def source_items(self):

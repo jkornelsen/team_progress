@@ -5,7 +5,7 @@ from flask import g
 from app.models import (
     db, Entity, Event, Location, Character, Item,
     Operation, OutcomeType, RollerType,
-    AttribVal, Pile, LocationDest)
+    AttribVal, Pile, LocDest)
 from app.src.logic_piles import set_quantity
 from app.src.logic_user_interaction import add_message
 from app.src.logic_navigation import get_all_valid_coords
@@ -190,9 +190,9 @@ def roll_coordinate(loc_id):
             occupied.add(tuple(i.position))
 
     # C. Doors/Exits (Destinations)
-    dests = LocationDest.query.filter(
-        LocationDest.game_token == g.game_token,
-        ((LocationDest.loc1_id == loc.id) | (LocationDest.loc2_id == loc.id))
+    dests = LocDest.query.filter(
+        LocDest.game_token == g.game_token,
+        ((LocDest.loc1_id == loc.id) | (LocDest.loc2_id == loc.id))
     ).all()
     for d in dests:
         # Add door1 if it's our location, otherwise door2

@@ -123,7 +123,7 @@
 
             {% if destinations %}
             <section class="outer-border">
-                <h3>Exits</h3>
+                <h3>Routes</h3>
                 <div class="col-list twocol-list">
                 {% for dest in destinations %}
                     {% set other = dest.loc2 if dest.loc1_id == location.id else dest.loc1 %}
