@@ -27,18 +27,22 @@
             <input type="text" name="dests[{{ index }}][door_here]" 
                    value="{{ dest.door_here|join(',') if dest.door_here else '' }}" 
                    placeholder="x,y" size="8">
-            <small class="label-like direction-label">
-                {{ 'Arrival Point' if dest.direction == 'entrance' else 'Exit Point' }}
-            </small>
         </div>
 
         <input type="number" name="dests[{{ index }}][duration]" value="{{ dest.duration or 1 }}">
 
-        <!-- 3-Way Direction Toggle -->
         <div class="direction-toggle">
-            <label title="Two-Way"><input type="radio" name="dests[{{ index }}][direction]" value="two-way" {{ 'checked' if dest.direction == 'two-way' or not dest }}> ↔</label>
-            <label title="Exit Only"><input type="radio" name="dests[{{ index }}][direction]" value="exit" {{ 'checked' if dest.direction == 'exit' }}> →</label>
-            <label title="Entrance Only"><input type="radio" name="dests[{{ index }}][direction]" value="entrance" {{ 'checked' if dest.direction == 'entrance' }}> ←</label>
+            <select name="dests[{{ index }}][direction]" class="input-sm">
+                <option value="two-way" {{ 'selected' if dest.direction == 'two-way' or not dest }}>
+                    ↔ Two-Way
+                </option>
+                <option value="forward" {{ 'selected' if dest.direction == 'forward' }}>
+                    → Exit Only
+                </option>
+                <option value="backward" {{ 'selected' if dest.direction == 'backward' }}>
+                    ← Entrance Only
+                </option>
+            </select>
         </div>
 
         <button type="button" class="btn-sm dangerous-button" onclick="removeRow(this, 'dest-list')">×</button>
@@ -158,15 +162,28 @@
                         <label for="dimensions">Grid Dimensions:</label>
                         <input type="text" id="dimensions" name="dimensions_str" 
                                 value="{{ location.dimensions | join('x') if location.dimensions else '' }}" 
-                               placeholder="10x10" class="mini-input">
-                        <small class="label-like">width x height</small>
+                               placeholder="width x height" class="mini-input">
                     </div>
                     <div class="form-group">
-                        <label>Excluded Zone:</label>
-                        <input type="text" name="excluded_str" 
-                               value="{{ location.excluded | join(',') if location.excluded else '' }}" 
-                               placeholder="1,1,10,10" class="mini-input">
-                        <small class="label-like">L,T,R,B</small>
+                        <div class="coord-range-group" style="self-justify: center; gap: 0.5rem;">
+                            <label>Excluded:</label>
+                            <input type="text"
+                                   name="excluded_left_top"
+                                   value="{{ location.excluded[:2] | join(',') if location.excluded else '' }}"
+                                   placeholder="left,top"
+                                   size="7"
+                                   class="mini-input">
+                                   
+                            <span class="label-like">to</span>
+                            
+                            <input type="text"
+                                   name="excluded_right_bottom"
+                                   value="{{ location.excluded[2:] | join(',') if location.excluded and location.excluded|length == 4 else '' }}"
+                                   placeholder="right,bottom"
+                                   size="7"
+                                   class="mini-input">
+                                   
+                        </div>
                     </div>
                 </div>
                 <div class="flex-column" style="padding-top: 5px;">
@@ -190,21 +207,22 @@
                 {% endif %}
             </div>
             <style>
-                .dest-row { --grid-cols: 6fr 3fr 2fr 1.5fr 1fr; }
+                .dest-row { --grid-cols: 5fr 2fr 2fr 3fr 1fr; }
                 .dest-list { --col-list-max-width: 600px; }
             </style>
             <div id="dest-list" class="col-list dest-list {{ 'hidden' if not destinations }}">
                 <div class="col-row dest-row header-style">
                     <span>Target Location</span>
-                    <span>Door</span>
+                    <span>Door Here</span>
                     <span>Duration</span>
-                    <span style="white-space: nowrap;">2-Way</span>
+                    <span style="white-space: nowrap;">Direction</span>
                     <span></span>
                 </div>
-                {% for d in destinations if d.door_here %}
+                {% for d in destinations %}
                     {{ dest_row(loop.index0, d, all_locs, location.id) }}
                 {% endfor %}
             </div>
+{#
             <div id="pending-placement" class="spacious-top outer-border" style="background: #111;">
                 <h4 class="label-like">Pending Placement (No Coords)</h4>
                 <div id="unplaced-list">
@@ -213,6 +231,7 @@
                     {% endfor %}
                 </div>
             </div>
+#}
             <div id="dest-list-empty" class="no-entities {{ 'hidden' if destinations }}">
                 (No exits)
             </div>

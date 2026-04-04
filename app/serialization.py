@@ -107,69 +107,98 @@ def import_from_dict(data):
 
 def patch_from_dict(data):
     """
-    Intelligently merges JSON data into the current scenario using an 'ID + Type' 
-    fingerprint. 
+    Intelligently merges JSON data into the current scenario.
     
-    Behavior:
-    1. MATCH: If an incoming Entity ID exists and matches the Type, it updates 
-       the existing record (Patch), replacing its collections (piles/exits).
-    2. COLLISION: If an ID exists but the Type differs, the incoming entity is 
-       treated as new and assigned a generated ID to prevent data corruption.
-    3. NEW: If the ID does not exist, it is added as a new entity.
-    4. HEURISTIC LINKING: Internal links (within the JSON) are re-mapped to 
-       new IDs. External links (pointing to IDs not in the JSON) are 
-       preserved if they point to valid existing entities in the database.
+    HOW IT WORKS:
+    1.  ID MAPPING (Phase 1):
+        We iterate through every entity in the JSON. 
+        - If an ID exists in the DB AND the Entity Type matches (e.g., both are Items), 
+          we keep the ID (Update Mode).
+        - If the ID is missing OR the Type differs (e.g., JSON says ID 5 is an Item, 
+          but DB says ID 5 is a Character), we assign a NEW unique ID (Append Mode).
+          
+    2.  LINK RESOLUTION (Phase 2):
+        Because we might have changed IDs in Phase 1, any internal references in 
+        the JSON (like a Character's 'location_id' or a Recipe's 'product_id') 
+        are now broken. We recursively walk through the JSON data and replace 
+        old IDs with the newly mapped IDs from Phase 1.
+        
+    3.  STATE MERGING (Phase 3):
+        - For NEW entities: We hydrate them via .from_dict() and add to session.
+        - For EXISTING entities: We clear their current collections (piles, 
+          attrib_values, etc.) to prevent the merge from duplicating rows, 
+          then use SQLAlchemy's merge() to update all fields.
     """
     game_token = g.game_token
-    overall = Overall.query.filter_by(game_token=game_token).first()
+    overall = Overall.query.get(game_token)
     
+    # --- PHASE 0: DETERMINE NEXT ID ---
+    # Find the absolute highest ID currently in use in the DB
+    max_db = db.session.query(
+        db.func.max(Entity.id)).filter_by(game_token=game_token).scalar() or 0
+    
+    # Find the highest ID mentioned in the incoming JSON
+    json_ids = []
+    entities_data = data.get(JsonKeys.rNTITIES, {})
+    for key in ENTITIES:
+        for entry in entities_data.get(key, []):
+            if 'id' in entry: json_ids.append(entry['id'])
+    max_json = max(json_ids) if json_ids else 0
+    logger.debug(f"Max DB ID: {max_db} | Max JSON ID: {max_json}")
+    
+    # Force the counter to be higher than BOTH
+    overall.next_entity_id = max(overall.next_entity_id, max_db, max_json) + 1
+    db.session.flush()
+
+    # --- PHASE 1: ID MAPPING ---
     id_map = {}
-    entities_to_patch = []
-    entities_to_create = []
+    entities_to_process = [] 
 
-    entities_data = data.get(JsonKeys.ENTITIES, {})
-
-    # Step 1: Sorting and ID mapping
     for key, model_cls in ENTITIES.items():
+        type_str = model_cls.__mapper_args__['polymorphic_identity']
         for entry in entities_data.get(key, []):
             old_id = entry.get('id')
             existing = Entity.query.filter_by(game_token=game_token, id=old_id).first()
 
-            if existing and existing.entity_type == key:
+            # If type matches, update existing (ID stays same)
+            if existing and existing.entity_type == type_str:
                 id_map[old_id] = old_id
-                entities_to_patch.append((existing, entry))
+                entities_to_process.append((model_cls, entry, False))
             else:
-                new_id = overall.next_entity_id
+                # Collision or New: Generate a fresh ID (Guaranteed > max_db)
+                new_id = Overall.generate_next_id(game_token)
                 id_map[old_id] = new_id
-                overall.next_entity_id += 1
-                entities_to_create.append((model_cls, entry))
+                entities_to_process.append((model_cls, entry, True))
 
-    # Step 2: Internal Link Resolver
-    def resolve(val):
-        if not val: return None
-        if val in id_map: return id_map[val]
-        # Fallback to DB for external links
-        exists = Entity.query.filter_by(game_token=game_token, id=val).exists()
-        return val if exists else None
+    # --- PHASE 2: LINK RESOLUTION ---
+    def resolve_links(node):
+        if isinstance(node, list):
+            for item in node: resolve_links(item)
+        elif isinstance(node, tuple): # Add tuple support for Phase 3 list
+            for item in node: resolve_links(item)
+        elif isinstance(node, dict):
+            links = ['id', 'location_id', 'product_id', 'recipe_id', 'item_id', 
+                     'attrib_id', 'subject_id', 'loc1_id', 'loc2_id', 'target_id']
+            for key in links:
+                if key in node and node[key] in id_map:
+                    node[key] = id_map[node[key]]
+            for val in node.values():
+                if isinstance(val, (dict, list)): resolve_links(val)
 
-    # Step 3: Apply Patches (Updates)
-    for db_obj, entry in entities_to_patch:
-        # Clear collections to prevent duplicates during merge
-        if hasattr(db_obj, 'piles'): db_obj.piles = []
-        if hasattr(db_obj, 'exits'): db_obj.exits = []
-        
-        # Hydrate and merge
-        patched = db_obj.__class__.from_dict(entry, game_token)
-        db.session.merge(patched)
+    resolve_links(entities_to_process)
 
-    # Step 4: Apply Appends (New Entities)
-    for model_cls, entry in entities_to_create:
-        entry['id'] = id_map[entry['id']]
-        # Re-link internal pointers (e.g., location_id or loc2_id)
-        # (You'd iterate through fields here to apply the resolve() function)
-        
-        new_instance = model_cls.from_dict(entry, game_token)
-        db.session.add(new_instance)
+    # --- PHASE 3: EXECUTION ---
+    for model_cls, entry, is_new in entities_to_process:
+        # Note: entry['id'] is already updated by resolve_links
+        if is_new:
+            db.session.add(model_cls.from_dict(entry, game_token))
+        else:
+            existing_obj = model_cls.query.get((game_token, entry['id']))
+            # Wipe collections to prevent data stacking
+            for attr in ['piles', 'recipes', 'attrib_values', 'routes_forward', 'item_refs']:
+                if hasattr(existing_obj, attr): setattr(existing_obj, attr, [])
+            
+            db.session.merge(model_cls.from_dict(entry, game_token))
 
     db.session.commit()
     return True

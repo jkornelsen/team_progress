@@ -13,7 +13,8 @@ from app.models import (
     LocDest, ItemRef,
     Overall, WinRequirement)
 from app.serialization import (
-    init_game_session, load_scenario_from_path, import_from_dict,
+    init_game_session, load_scenario_from_path,
+    import_from_dict, patch_from_dict,
     clear_game_data, export_game_to_json, export_to_dict)
 from app.database import clone_with_children
 from app.utils import (
@@ -163,8 +164,12 @@ def edit_location(id):
         loc.toplevel = 'toplevel' in request.form
         loc.masked = 'masked' in request.form
 
-        # Parse L,T,R,B
-        loc.excluded = parse_coords(req.get_str('excluded_str'), 4)
+        lt_coords = parse_coords(req.get_str('excluded_left_top'))
+        rb_coords = parse_coords(req.get_str('excluded_right_bottom'))
+        if lt_coords and rb_coords:
+            loc.excluded = lt_coords + rb_coords
+        else:
+            loc.excluded = None
 
         # Destinations (Exits) -- Symmetric Route Saving
         # 1. Fetch existing routes involving this location to determine what to delete/update
@@ -176,46 +181,48 @@ def edit_location(id):
         
         submitted_ids = []
         new_coords = set()
-
         for row in req.get_list('dests'):
             target_id = int(row.get('target_id') or 0)
             if not target_id: continue
-
             route_id = int(row.get('id') or 0)
-            direction = row.get('direction', 'two-way') # two-way, exit, entrance
+            direction = row.get('direction', 'two-way')
             
-            # Get or New
-            if route_id and route_id in existing_map:
-                route = existing_map[route_id]
+            existing_route = existing_map.get(route_id)
+            old_there_door = None
+            if existing_route:
+                if existing_route.loc1_id == target_id:
+                    old_there_door = existing_route.door1
+                else:
+                    old_there_door = existing_route.door2
+                route = existing_route
             else:
                 route = LocDest(game_token=game_token)
                 db.session.add(route)
 
-            # Normalize Slots: Ensure "Current" logic maps to loc1/loc2 correctly
-            # Convention: loc1 is Source/Here, loc2 is Target/There for One-Way
-            if direction == 'entrance':
+            if direction == 'backward':
                 route.loc1_id = target_id
                 route.loc2_id = loc.id
                 route.bidirectional = False
-                route.door1 = parse_coords(row.get('door_there'))
+                route.door1 = old_there_door
                 route.door2 = parse_coords(row.get('door_here'))
             else:
                 route.loc1_id = loc.id
                 route.loc2_id = target_id
                 route.bidirectional = (direction == 'two-way')
                 route.door1 = parse_coords(row.get('door_here'))
-                route.door2 = parse_coords(row.get('door_there'))
+                route.door2 = old_there_door
 
             route.duration = int(row.get('duration', 1))
 
-            # Nullify on Conflict
             d1_tuple = tuple(route.door1) if route.door1 else None
             if d1_tuple and d1_tuple in new_coords:
-                from flask import flash
-                flash(
-                    f"Cleared exit position at {target_name} as there is already a door.",
-                    "warning")
                 route.door1 = None
+                target_loc = Location.query.get((game_token, target_id))
+                target_name = target_loc.name if target_loc else "other location"
+                flash(
+                    f"Entrance at {target_name} was reset"
+                    " because there is another door at that position.",
+                    "warning")
             elif d1_tuple:
                 new_coords.add(d1_tuple)
 
@@ -289,13 +296,16 @@ def edit_location(id):
     ).all()
     normalized_dests = []
     for r in routes:
-        is_loc1 = (r.loc1_id == id)
-        direction = 'two-way' if r.bidirectional else ('exit' if is_loc1 else 'entrance')
+        target = r.other_loc(id)
+        if not target: continue
+        if r.bidirectional:
+            direction = 'two-way'
+        else:
+            direction = 'forward' if r.loc1_id == id else 'backward'
         normalized_dests.append({
             'id': r.id,
-            'target_id': r.loc2_id if is_loc1 else r.loc1_id,
-            'door_here': r.door1 if is_loc1 else r.door2,
-            'door_there': r.door2 if is_loc1 else r.door1,
+            'target_id': target.id,
+            'door_here': r.door_at(id),
             'duration': r.duration,
             'direction': direction
         })
@@ -617,7 +627,7 @@ def upload():
         file = request.files['file']
         json_data = json.load(file)
         try:
-            mode = request.form.get('import_mode')
+            mode = request.form.get('active_mode')
             if mode == 'patch':
                 patch_from_dict(json_data)
             else:

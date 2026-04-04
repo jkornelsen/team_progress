@@ -121,19 +121,21 @@
             </section>
             {% endif %}
 
-            {% if destinations %}
+            {% if location.exits %}
             <section class="outer-border">
-                <h3>Routes</h3>
+                <h3>Destinations</h3>
                 <div class="col-list twocol-list">
-                {% for dest in destinations %}
-                    {% set other = dest.loc2 if dest.loc1_id == location.id else dest.loc1 %}
-                    {% set door = dest.door1 if dest.loc1_id == location.id else dest.door2 %}
+                {% for route in location.exits %}
+                    {% set target = route.other_loc(location.id) %}
+                    {% set door = route.door_at(location.id) %}
                     <div class="col-row twocol-row">
-                        {% set target_url = url_for('play.play_location', id=other.id) %}
+                        {% set target_url = url_for('play.play_location', id=target.id) %}
                         {% call hotkey_link(target_url, link_letters) %}
-                            {{ other.name }}
+                            {{ target.name }}
                         {% endcall %}
-                        <span class="label-like">[{{ door | join(",") if door else '' }}]</span>
+                        {% if door %}
+                            <span class="label-like">[{{ door | join(",") }}]</span>
+                        {% endif %}
                     </div>
                 {% endfor %}
                 </div>
@@ -145,27 +147,28 @@
         {% if has_grid %}
             <div class="tactgrid-column">
                 <section class="outer-border tactgrid-wrapper">
-                    <table class="tactgrid-table" id="location-grid">
+                    <div class="tactgrid-layout" id="location-grid" 
+                         style="grid-template-columns: repeat({{ location.dimensions[0] }}, 32px); 
+                                grid-template-rows: repeat({{ location.dimensions[1] }}, 32px);">
+                        
                         {% for y in range(1, location.dimensions[1] + 1) %}
-                            <tr>
-                                {% for x in range(1, location.dimensions[0] + 1) %}
-                                    {% set is_excluded = false %}
-                                    {% if location.excluded and location.excluded|length == 4 %}
-                                        {% set l, t, r, b = location.excluded %}
-                                        {% if x >= l and x <= r and y >= t and y <= b %}
-                                            {% set is_excluded = true %}
-                                        {% endif %}
+                            {% for x in range(1, location.dimensions[0] + 1) %}
+                                {% set is_excluded = false %}
+                                {% if location.excluded and location.excluded|length == 4 %}
+                                    {% set l, t, r, b = location.excluded %}
+                                    {% if x >= l and x <= r and y >= t and y <= b %}
+                                        {% set is_excluded = true %}
                                     {% endif %}
-                                    
-                                    <td class="tactgrid-cell {{ 'excluded' if is_excluded else 'included' }}" 
-                                        id="cell-{{ x }}-{{ y }}"
-                                        data-x="{{ x }}" data-y="{{ y }}">
-                                        {# Content injected by JS fillGrid() #}
-                                    </td>
-                                {% endfor %}
-                            </tr>
+                                {% endif %}
+                                
+                                <div class="tactgrid-cell {{ 'excluded' if is_excluded else 'included' }}" 
+                                     id="cell-{{ x }}-{{ y }}"
+                                     data-x="{{ x }}" data-y="{{ y }}">
+                                    {# Content injected by JS fillGrid() #}
+                                </div>
+                            {% endfor %}
                         {% endfor %}
-                    </table>
+                    </div>
 
                     <div class="movement-controls spacious-top">
                         <div class="nav-numpad">
@@ -278,32 +281,37 @@
 </script>
 
 <style>
-    /* Tactical grid */
-    .tactgrid-wrapper { display: flex; flex-direction: column; align-items: center; background: #000; }
-    .nav-numpad { display: flex; flex-direction: column; align-items: center; gap: 5px; }
-    .nav-numpad button { width: 45px; height: 45px; font-size: 1.5em; }
-    .char-token { color: var(--accent); font-weight: bold; }
-    .presence-list { list-style: none; padding: 0; }
-    .presence-list li { padding: 8px 0; border-bottom: 1px solid #333; }
-    .qty { font-family: monospace; font-weight: bold; margin-right: 8px; }
-    .control-meta { text-align: center; margin-top: 15px; }
+    .tactgrid-wrapper { 
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        background: #000; 
+        overflow: auto; /* scrollbars if grid is too big */
+        max-width: 100%;
+    }
 
-    .tactgrid-table {
-        border-collapse: collapse;
+    .tactgrid-layout {
+        display: grid;
         background-color: #000;
+        width: max-content;
+        border: 1px solid #333;
     }
 
     .tactgrid-cell {
         width: 32px;
         height: 32px;
+        display: flex;         /* Modern centering */
+        align-items: center;   /* Vertical center */
+        justify-content: center; /* Horizontal center */
+        box-sizing: border-box;
         border: 1px solid #222;
-        text-align: center;
-        vertical-align: middle;
         font-size: 1.2em;
+        user-select: none;
     }
 
     .tactgrid-cell.excluded {
         background-color: #111;
+        border-color: #1a1a1a;
     }
 
     .tactgrid-cell.included {
@@ -313,5 +321,12 @@
     .tactgrid-cell:hover {
         background-color: #333;
     }
+    .nav-numpad { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+    .nav-numpad button { width: 45px; height: 45px; font-size: 1.5em; }
+    .char-token { color: var(--accent); font-weight: bold; }
+    .presence-list { list-style: none; padding: 0; }
+    .presence-list li { padding: 8px 0; border-bottom: 1px solid #333; }
+    .qty { font-family: monospace; font-weight: bold; margin-right: 8px; }
+    .control-meta { text-align: center; margin-top: 15px; }
 </style>
 {% endblock %}

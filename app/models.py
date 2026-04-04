@@ -67,6 +67,8 @@ class Entity(db.Model):
     @classmethod
     def from_dict(cls, data, game_token):
         """Standard base hydration for all entities."""
+        # Skip lists and dicts because they may be nested relationships.
+        # Subclass from_dict() methods will need to handle them instead.
         fields = {k: v for k, v in data.items()
             if hasattr(cls, k) and not isinstance(v, (list, dict))}
         obj = cls(game_token=game_token, **fields)
@@ -235,13 +237,17 @@ class Location(Entity):
                 for p in self.piles
             ],
             "item_refs": [ir.to_dict() for ir in self.item_refs],
-            "destinations": [d.to_dict() for d in self.exits],
+            "destinations": [d.to_dict() for d in self.routes_forward],
         })
         return data
 
     @classmethod
     def from_dict(cls, data, game_token):
         loc = super().from_dict(data, game_token)
+        # Handle list fields skipped by the base method
+        loc.dimensions = data.get('dimensions')
+        loc.excluded = data.get('excluded')
+        # Relationships
         for i_data in data.get('items', []):
             loc.piles.append(Pile(
                 game_token=game_token,
@@ -253,7 +259,7 @@ class Location(Entity):
                 loc_id=loc.id,
                 **ir_data))
         for d_data in data.get('destinations', []):
-            loc.exits.append(LocDest(
+            loc.routes_forward.append(LocDest(
                     game_token=game_token, 
                     loc1=loc, 
                     **d_data))
@@ -262,8 +268,18 @@ class Location(Entity):
     def get_deep_relationships(self):
         d = super().get_deep_relationships()
         d.update(deep_rel('item_refs', ItemRef, 'loc_id'))
-        d.update(deep_rel('exits', LocDest, 'loc1_id'))
+        d.update(deep_rel('routes_forward', LocDest, 'loc1_id'))
         return d
+
+    @property
+    def exits(self):
+        """
+        Any route where we are loc1 (always an exit)
+        Any route where we are loc2 AND it is bidirectional
+        """
+        forward = [r for r in self.routes_forward]
+        backward = [r for r in self.routes_backward if r.bidirectional]
+        return forward + backward
 
     item_refs = db.relationship(
         'ItemRef',
@@ -278,18 +294,18 @@ class Location(Entity):
         'TravelProgress',
         back_populates='destination',
         foreign_keys="[TravelProgress.game_token, TravelProgress.dest_id]")
-    exits = db.relationship(
+    routes_forward = db.relationship(
         'LocDest',
         back_populates='loc1',
         foreign_keys="[LocDest.game_token, LocDest.loc1_id]",
         cascade="all, delete-orphan",
-        overlaps="entrances")
-    entrances = db.relationship(
+        overlaps="routes_backward")
+    routes_backward = db.relationship(
         'LocDest',
         back_populates='loc2',
         foreign_keys="[LocDest.game_token, LocDest.loc2_id]",
         cascade="all, delete-orphan",
-        overlaps="exits")
+        overlaps="routes_forward")
 
     __table_args__ = (
         db.ForeignKeyConstraint(
@@ -450,9 +466,12 @@ class Event(Entity):
 
     @classmethod
     def from_dict(cls, data, game_token):
-        dets = data.pop('determinants', [])
-        effects = data.pop('effects', [])
         event = super().from_dict(data, game_token)
+        # Handle list fields skipped by the base method
+        event.numeric_range = data.get('numeric_range') 
+        # Relationships
+        dets = data.get('determinants', [])
+        effects = data.get('effects', [])
         event.factors = [
             EventFactor(game_token=game_token, event_id=event.id,
                         usage_type=Participant.IN, **d) 
@@ -643,20 +662,30 @@ class LocDest(db.Model):
             "bidirectional": self.bidirectional
         }
 
-    def flip_direction(self):
-        self.loc1_id, self.loc2_id = self.loc2_id, self.loc1_id
-        self.door1, self.door2 = self.door2, self.door1
+    def other_loc(self, loc_id):
+        if self.loc1_id == loc_id:
+            return self.loc2
+        if self.loc2_id == loc_id:
+            return self.loc1
+        return None
+
+    def door_at(self, loc_id):
+        if self.loc1_id == loc_id:
+            return self.door1
+        if self.loc2_id == loc_id:
+            return self.door2
+        return None
 
     loc1 = db.relationship(
         'Location',
-        back_populates='exits',
+        back_populates='routes_forward',
         foreign_keys=[game_token, loc1_id],
-        overlaps="loc2,entrances")
+        overlaps="loc2,routes_backward")
     loc2 = db.relationship(
         'Location',
-        back_populates='entrances',
+        back_populates='routes_backward',
         foreign_keys=[game_token, loc2_id],
-        overlaps="loc1,exits")
+        overlaps="loc1,routes_forward")
 
     __table_args__ = (
         db.ForeignKeyConstraint(
@@ -895,7 +924,7 @@ class Recipe(db.Model):
 
     @classmethod
     def from_dict(cls, data, game_token):
-        # Pop nested lists so the constructor doesn't crash
+        # Pop nested lists so the constructor doesn't try to handle them
         sources = data.pop('sources', [])
         byproducts = data.pop('byproducts', [])
         reqs = data.pop('attrib_reqs', [])
