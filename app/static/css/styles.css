@@ -33,6 +33,20 @@ a:hover {
     text-decoration: underline;
 }
 
+/* --- Desktop State (Default) --- */
+.mobile-only { display: none !important; }
+.desktop-only { display: block; }
+
+/* --- Mobile State (Small Screens) --- */
+@media (max-width: 768px) {
+    .mobile-only {
+        display: flex !important; /* or block, depending on your layout */
+        flex-direction: column;
+        align-items: center;
+    }
+    .desktop-only { display: none !important; }
+}
+
 /* ==========================================================================
    2. LAYOUT SKELETON (Headers, Containers, Grids)
    ========================================================================== */
@@ -143,6 +157,11 @@ input, select, textarea {
     color: #fff;
     border: 1px solid var(--border);
     border-radius: 2px;
+}
+
+select option {
+    background-color: var(--bg-input, #222);
+    color: #fff;
 }
 
 /* Primary style for inputs and selects */

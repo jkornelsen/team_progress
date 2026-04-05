@@ -15,7 +15,8 @@ from app.src.logic_event import (
 from app.src.logic_progress import (
     start_production, stop_production, update_progress, can_perform_recipe)
 from app.src.logic_navigation import (
-    move_group, get_available_destinations, arrive_at_destination)
+    move_group, get_available_destinations, arrive_at_destination,
+    is_in_grid, get_default_position)
 from app.src.logic_objectives import validate_requirements
 from app.src.logic_user_interaction import add_message
 
@@ -199,6 +200,7 @@ def play_character(id):
     game_token = g.game_token
     character = Character.query.get_or_404((game_token, id))
     capture_origin(name=character.name)
+    exit_loc_id = request.args.get('auto_select_exit', type=int)
     
     # 1. Fetch piles (Items carried)
     inventory = Pile.query.filter_by(
@@ -224,9 +226,10 @@ def play_character(id):
         inventory=inventory,
         attrib_values=attrib_values,
         destinations=destinations,
+        exit_loc_id=exit_loc_id,
         has_nonadjacent=has_nonadjacent,
         abilities=abilities,
-        link_letters=LinkLetters(excluded='moe')
+        link_letters=LinkLetters(excluded='lmoe')
     )
 
 @play_bp.route('/play/location/<int:id>')
@@ -235,42 +238,79 @@ def play_location(id):
     location = Location.query.get_or_404((game_token, id))
     capture_origin(name=location.name)
     
-    # Fetch Items on the ground
-    inventory_piles = Pile.query.filter_by(
-        game_token=game_token, owner_id=id
-    ).all()
+    has_grid = bool(location.dimensions and location.dimensions[0] > 0)
     
-    # Fetch Characters present here
+    # 1. Fetch Characters & Items
     characters_here = Character.query.filter_by(
         game_token=game_token, location_id=id
     ).all()
     
-    # Fetch Exits (Destinations)
+    inventory_piles = Pile.query.filter_by(
+        game_token=game_token, owner_id=id
+    ).all()
+
+    # 2. Fix Incorrectly Positioned Entities
+    if has_grid:
+        default_pos = get_default_position(location)
+        needs_commit = False
+
+        if default_pos:
+            # Validate Characters
+            for char in characters_here:
+                if not char.position or not is_in_grid(location, *char.position):
+                    char.position = default_pos
+                    db.session.add(char)
+                    needs_commit = True
+
+            # Validate & Merge Items
+            for pile in inventory_piles:
+                if not pile.position or not is_in_grid(location, *pile.position):
+                    pile.merge_to(default_pos)
+                    needs_commit = True
+
+        if needs_commit:
+            db.session.commit()
+            # Refresh list because some piles may have been merged/deleted
+            inventory_piles = Pile.query.filter_by(
+                game_token=game_token, owner_id=id
+            ).all()
+
+    # 3. Fetch Exits In Grid
     destinations = LocDest.query.filter(
         LocDest.game_token == game_token,
         ((LocDest.loc1_id == id) | 
          ((LocDest.loc2_id == id) & (LocDest.bidirectional == True)))
     ).all()
+    grid_exits = []
+    for dest in destinations:
+        door = dest.door_at(id)
+        if door and len(door) == 2:
+            if is_in_grid(location, door[0], door[1]):
+                target = dest.other_loc(id)
+                grid_exits.append({
+                    'x': door[0],
+                    'y': door[1],
+                    'name': target.name,
+                    'target_id': target.id
+                })
 
-    # Fetch Referenced Items and their "General Storage" (ID 1) quantities
+    # 4. Fetch Referenced Items
     referenced_data = []
     for ref in location.item_refs:
-        # Check stock in General Storage
         gen_pile = Pile.query.filter_by(
             game_token=game_token, item_id=ref.item.id, owner_id=GENERAL_ID
         ).first()
-        
         referenced_data.append({
             'item': ref.item,
             'quantity': gen_pile.quantity if gen_pile else 0.0
         })
 
-    # Local attributes (e.g., 'Danger Level', 'Temperature')
+    # 5. Local attributes
     attrib_values = AttribVal.query.filter_by(
         game_token=game_token, subject_id=id
     ).all()
 
-    # Which character is currently being controlled for movement
+    # 6. Active Character Setup
     active_char_id = request.args.get('active_char_id', type=int)
     if not active_char_id and characters_here:
         active_char_id = characters_here[0].id
@@ -278,13 +318,15 @@ def play_location(id):
     return render_template(
         'play/location.html',
         location=location,
+        has_grid=has_grid,
         inventory_piles=inventory_piles,
         characters_here=characters_here,
         destinations=destinations,
+        grid_exits=grid_exits,
         referenced_items=referenced_data,
         attrib_values=attrib_values,
         active_char_id=active_char_id,
-        link_letters=LinkLetters(excluded='moe')
+        link_letters=LinkLetters(excluded='ctmoe')
     )
 
 @play_bp.route('/char/move/<int:id>', methods=['POST'])

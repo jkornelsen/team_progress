@@ -42,8 +42,8 @@
                 <h3>Location</h3>
                 <div class="status-row">
                     {% if character.location %}
-                        {% set target_url = url_for('play.play_location', id=character.location.id) %}
-                        {% call hotkey_link(target_url, link_letters) %}
+                        {% set target_url = url_for('play.play_location', id=character.location.id, active_char_id=character.id) %}
+                        {% call hotkey_link(target_url, link_letters, forced_key='l') %}
                             {{ character.location.name }}
                         {% endcall %}
                         {% if character.position %}
@@ -61,9 +61,10 @@
                             <select id="dest-select" class="flex-grow">
                                 <option value="">(Select Destination)</option>
                                 {% for dest in destinations %}
-                                    {% set other = dest.loc2 if dest.loc1_id == character.location_id else dest.loc1 %}
-                                    <option value="{{ other.id }}" data-duration="{{ dest.duration }}">
-                                        {{ other.name }} ({{ dest.duration }}s)
+                                    {# Use the helper function from LocDest model #}
+                                    {% set target = dest.other_loc(character.location_id) %}
+                                    <option value="{{ target.id }}" data-duration="{{ dest.duration }}" {% if exit_loc_id == target.id %}selected{% endif %}>
+                                        {{ target.name }} ({{ dest.duration }}s)
                                     </option>
                                 {% endfor %}
                             </select>
@@ -72,10 +73,11 @@
                     {% endif %}
 
                     {% if has_nonadjacent and not destinations %}
-                        <div class="info-box label-like text-dim">
-                            ⚠️ Destinations are nearby; move to a door (🚪) on the map to travel.
+                        <div class="info-box label-like text-dim" style="border: 1px dashed #444; padding: 10px; margin-top: 10px;">
+                            There are exits in this location. Move your character next to a door (🚪) to travel.
                         </div>
                     {% endif %}
+                </div>
 
                     <!-- Travel Progress Bar (Hidden by default) -->
                     <div id="travel-progress-container" class="progress-section hidden">
@@ -226,8 +228,16 @@
             method: 'POST',
             body: formData
         });
-
-        if (response.ok) location.reload();
+        if (!response.ok) {
+            try {
+                const errorData = await response.json();
+                flashMessage(errorData.message || "Action failed.");
+            } catch (e) {
+                flashMessage("Server error. Please try again.");
+            }
+            return;
+        }
+        location.reload();
     });
 
     // Hotkey Support

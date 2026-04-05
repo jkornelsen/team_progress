@@ -190,11 +190,8 @@ def edit_location(id):
             existing_route = existing_map.get(route_id)
             old_there_door = None
             if existing_route:
-                if existing_route.loc1_id == target_id:
-                    old_there_door = existing_route.door1
-                else:
-                    old_there_door = existing_route.door2
                 route = existing_route
+                old_there_door = route.door_at(target_id)
             else:
                 route = LocDest(game_token=game_token)
                 db.session.add(route)
@@ -213,6 +210,7 @@ def edit_location(id):
                 route.door2 = old_there_door
 
             route.duration = int(row.get('duration', 1))
+            db.session.flush()
 
             d1_tuple = tuple(route.door1) if route.door1 else None
             if d1_tuple and d1_tuple in new_coords:

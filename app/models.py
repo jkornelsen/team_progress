@@ -532,8 +532,10 @@ class Pile(db.Model):
     The 'owner' relationship handles all of these cases.
     """
     __tablename__ = 'piles'
-    game_token = db.Column(db.String(50), primary_key=True)
+    # Single Primary Key: Postgres handles autoincrement globally without drama
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    # Still important for foreign keys
+    game_token = db.Column(db.String(50), index=True, nullable=False)
     owner_id = db.Column(db.Integer)
     item_id = db.Column(db.Integer)
     # not relevant for universal storage
@@ -576,6 +578,33 @@ class Pile(db.Model):
         a defined grid, or with an owner, or in universal storage.
         """
         return self.position is not None
+
+    def merge_to(self, target_position):
+        """
+        Moves this pile to a new position. If a pile of the same item 
+        already exists there, merges this one into it.
+        """
+        if not isinstance(target_position, (list, tuple)):
+            target_position = list(target_position)
+
+        # 1. Look for an existing pile at the target
+        existing_pile = Pile.query.filter_by(
+            game_token=self.game_token,
+            owner_id=self.owner_id,
+            item_id=self.item_id,
+            position=target_position
+        ).first()
+
+        if existing_pile and existing_pile.id != self.id:
+            # 2. Merge quantities
+            existing_pile.quantity += self.quantity
+            # 3. Remove the current (source) pile from the session
+            db.session.delete(self)
+            return existing_pile
+        else:
+            # 4. No collision, just move this pile
+            self.position = target_position
+            return self
 
     def __repr__(self):
         pos_label = f"at {self.position}" if self.is_placed else "unplaced"
@@ -643,8 +672,8 @@ class AttribVal(db.Model):
 
 class LocDest(db.Model):
     __tablename__ = 'loc_destinations'
-    game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    game_token = db.Column(db.String(50), index=True, nullable=False)
     loc1_id = db.Column(db.Integer, nullable=False)
     loc2_id = db.Column(db.Integer, nullable=False)
     door1 = db.Column(ARRAY(db.Integer))
@@ -654,7 +683,6 @@ class LocDest(db.Model):
 
     def to_dict(self):
         return {
-            "id": self.id,
             "loc2_id": self.loc2_id,
             "duration": self.duration,
             "door1": self.door1,
@@ -1269,7 +1297,7 @@ class UserInteraction(db.Model):
 class GameMessage(db.Model):
     __tablename__ = 'game_messages'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    game_token = db.Column(db.String(50), nullable=False)
+    game_token = db.Column(db.String(50), index=True, nullable=False)
     timestamp = db.Column(db.DateTime, default=db.func.current_timestamp())
     message = db.Column(db.Text)
     count = db.Column(db.Integer, default=1)

@@ -128,27 +128,20 @@ def move_group(main_char_id, dx, dy, move_with_ids=None):
 def get_available_destinations(char):
     """
     Returns (reachable_destinations, has_nonadjacent_flag).
-    A destination is reachable only if the character is adjacent to its door.
     """
-    game_token = g.game_token
-    loc_id = char.location_id
-    pos = char.position # [x, y]
+    if not char.location:
+        return [], False
 
-    # Find all possible links for this location
-    all_links = LocDest.query.filter(
-        LocDest.game_token == game_token,
-        ((LocDest.loc1_id == loc_id) | 
-         ((LocDest.loc2_id == loc_id) & (LocDest.bidirectional == True)))
-    ).all()
+    pos = char.position
+    loc_id = char.location_id
+
+    all_possible_exits = char.location.exits
 
     reachable = []
     has_nonadjacent = False
 
-    for link in all_links:
-        # Determine which door coordinate belongs to the character's CURRENT location
-        door_here = link.door1 if link.loc1_id == loc_id else link.door2
-        
-        # Adjacency check (Chebyshev distance <= 1)
+    for link in all_possible_exits:
+        door_here = link.door_at(loc_id)
         if is_adjacent(pos, door_here):
             reachable.append(link)
         else:
@@ -163,29 +156,32 @@ def arrive_at_destination(main_char_id, dest_loc_id, move_with_ids=None):
     """
     game_token = g.game_token
     main_char = Character.query.get((game_token, main_char_id))
-    
-    # 1. Find the specific link
-    link = LocDest.query.filter(
-        LocDest.game_token == game_token,
-        ((LocDest.loc1_id == main_char.location_id) & (LocDest.loc2_id == dest_loc_id)) |
-        ((LocDest.loc1_id == dest_loc_id) & (LocDest.loc2_id == main_char.location_id))
-    ).first()
-    if not link:
+    loc_here = main_char.location
+
+    all_exits = loc_here.exits
+    possible_links = [r for r in all_exits if r.other_loc(loc_here.id).id == dest_loc_id]
+    if not possible_links:
         return False, "No path exists to that location."
 
-    # 2. ENFORCE ADJACENCY: Character must be near the door to use it
-    door_here = link.door1 if link.loc1_id == main_char.location_id else link.door2
-    if not is_adjacent(main_char.position, door_here):
-        return False, "You are too far from the exit. Move closer to the door icon."
+    best_link = None
+    for link in possible_links:
+        door_here = link.door_at(loc_here.id)
+        if not door_here or is_adjacent(main_char.position, door_here):
+            best_link = link
+            break
 
-    # 3. Perform movement for the whole party
+    if not best_link:
+        target_name = possible_links[0].other_loc(loc_here.id).name
+        return False, f"You are too far from the exit to {target_name}." \
+                      " Move closer to the door icon."
+
+    new_pos = best_link.door_at(dest_loc_id)
+    target_loc = best_link.other_loc(loc_here.id)
+    if not new_pos:
+        new_pos = get_default_position(target_loc)
+
     party = get_moving_party(main_char, move_with_ids)
-    target_loc = Location.query.get((game_token, dest_loc_id))
-    
     for member in party:
-        # Enter at the corresponding door in the new room
-        new_pos = link.door2 if link.loc2_id == dest_loc_id else link.door1
-        
         member.location_id = dest_loc_id
         member.position = new_pos
         member.dest_id = None # Clear "in-flight" destination

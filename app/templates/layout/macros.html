@@ -15,8 +15,12 @@
     {% endif %}
 {% endmacro %}
 
-{% macro hotkey_link(url, link_letters, brackets=False) -%}
-    {% set key = link_letters.next(url) -%}
+{% macro hotkey_link(url, link_letters, brackets=False, forced_key=None) -%}
+    {% if forced_key %}
+        {% set key = forced_key %}
+    {% else %}
+        {% set key = link_letters.next(url) %}
+    {% endif %}
     {% if key -%}
         <script>linkForKey["{{ key }}"] = "{{ url|safe }}";</script>
         <a href="{{ url }}">

@@ -25,8 +25,6 @@
         {% endif %}
     </header>
 
-    {% set has_grid = location.dimensions is not none %}
-
     <div class="column-container">
         <!-- LEFT COLUMN: Lists of Presence -->
         <div class="presence-column">
@@ -41,7 +39,7 @@
                         {% set target_url = url_for('play.play_character', id=char.id) %}
                         {% call hotkey_link(target_url, link_letters) %}
                             {{ char.name }}
-                            {% if has_grid %}
+                            {% if has_grid and char.position %}
                                 <span class="label-like">[{{ char.position | join(",") }}]</span>
                             {% endif %}
                         {% endcall %}
@@ -131,7 +129,7 @@
                     <div class="col-row twocol-row">
                         {% set target_url = url_for('play.play_location', id=target.id) %}
                         {% call hotkey_link(target_url, link_letters) %}
-                            {{ target.name }}
+                            {{ target.name if not target.masked else (target.name | mask_string) }}
                         {% endcall %}
                         {% if door %}
                             <span class="label-like">[{{ door | join(",") }}]</span>
@@ -171,7 +169,7 @@
                     </div>
 
                     <div class="movement-controls spacious-top">
-                        <div class="nav-numpad">
+                        <div class="nav-numpad mobile-only">
                             <button onclick="move(0, -1)">↑</button>
                             <div class="flex-row">
                                 <button onclick="move(-1, 0)">←</button>
@@ -180,7 +178,7 @@
                             <button onclick="move(0, 1)">↓</button>
                         </div>
                         <div class="control-meta">
-                            <label class="label-like">Acting Character:</label>
+                            <label class="label-like">Active Character:</label>
                             <select id="active-char-select" class="mini-select">
                                 {% for char in characters_here %}
                                     <option value="{{ char.id }}" {{ 'selected' if char.id == active_char_id }}>
@@ -188,7 +186,10 @@
                                     </option>
                                 {% endfor %}
                             </select>
-                            <p class="label-like">Use Arrow Keys or Numpad to move.</p>
+                            <p class="label-like">Move With Party:</label> TO DO
+
+                            <p class="label-like desktop-only">Use Arrow Keys or Numpad to move.</p>
+                            <p class="label-like desktop-only">view [c]haracter, arrange [t]ravel</p>
                         </div>
                     </div>
                 </section>
@@ -198,41 +199,71 @@
 </div>
 
 <script>
-    // 1. Data Structures for the Grid
+    const getFirstGrapheme = (str) => {
+        if (!str) return '';
+        if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+            const segmenter = new Intl.Segmenter('en', { granularity: 'grapheme' });
+            const segments = Array.from(segmenter.segment(str));
+            return segments.length > 0 ? segments[0].segment : '';
+        }
+        return str.charAt(0);
+    };
+
     const chars = {
         {% for char in characters_here %}
-        "{{ char.id }}": { name: "{{ char.name }}", x: {{ char.position[0] }}, y: {{ char.position[1] }}, icon: "👤" },
+        "{{ char.id }}": { 
+            name: "{{ char.name }}", 
+            x: {{ char.position[0] }}, 
+            y: {{ char.position[1] }}, 
+            icon: getFirstGrapheme("{{ char.name }}"),
+            link: "{{ url_for('play.play_character', id=char.id) }}"
+        },
         {% endfor %}
     };
 
     const items = [
         {% for pile in inventory_piles %}
-        { name: "{{ pile.item.name }}", x: {{ pile.position[0] }}, y: {{ pile.position[1] }}, icon: "📦" },
+        { 
+            name: "{{ pile.item.name }}", 
+            x: {{ pile.position[0] }}, 
+            y: {{ pile.position[1] }}, 
+            icon: getFirstGrapheme("{{ pile.item.name }}"),
+            link: "{{ url_for('play.play_item', id=pile.item_id, loc_id=location.id) }}"
+        },
         {% endfor %}
     ];
 
     const exits = [
-        {% for dest in destinations %}
-        {% set door = dest.door1 if dest.loc1_id == location.id else dest.door2 %}
-        { x: {{ door[0] }}, y: {{ door[1] }}, icon: "🚪" },
+        {% for e in grid_exits %}
+        { 
+            name: "{{ e.name }}", 
+            x: {{ e.x }}, 
+            y: {{ e.y }}, 
+            target_id: {{ e.target_id }},
+            icon: "🚪", 
+            link: "{{ url_for('play.play_location', id=e.target_id) }}" 
+        },
         {% endfor %}
     ];
 
-    // 2. Grid Rendering
     function fillGrid() {
-        // Clear all cells
         $('.tactgrid-cell.included').html('');
 
-        // Place Exits
-        exits.forEach(e => $(`#cell-${e.x}-${e.y}`).append(`<span title="Exit">${e.icon}</span>`));
-        
-        // Place Items
-        items.forEach(i => $(`#cell-${i.x}-${i.y}`).append(`<span title="${i.name}">${i.icon}</span>`));
+        const renderToken = (obj, typeClass) => {
+            const $cell = $(`#cell-${obj.x}-${obj.y}`);
+            if ($cell.length) {
+                const $link = $('<a></a>')
+                    .attr('href', obj.link)
+                    .attr('title', obj.name)
+                    .addClass(`grid-token ${typeClass}`)
+                    .text(obj.icon);
+                $cell.append($link);
+            }
+        };
 
-        // Place Characters
-        Object.values(chars).forEach(c => {
-            $(`#cell-${c.x}-${c.y}`).append(`<span class="char-token" title="${c.name}">${c.icon}</span>`);
-        });
+        exits.forEach(e => renderToken(e, 'exit-token'));
+        items.forEach(i => renderToken(i, 'item-token'));
+        Object.values(chars).forEach(c => renderToken(c, 'char-token'));
     }
 
     // 3. Movement Logic
@@ -269,11 +300,77 @@
     }
 
     // Keyboard Listeners
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowUp') move(0, -1);
-        if (e.key === 'ArrowDown') move(0, 1);
-        if (e.key === 'ArrowLeft') move(-1, 0);
-        if (e.key === 'ArrowRight') move(1, 0);
+    document.addEventListener('keydown', (event) => {
+        if (isMobile) return;
+        
+        const active = document.activeElement.tagName;
+        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(active)) return;
+
+        const key = event.key;
+
+        // 1. Handle Movement (Arrows & Numpad)
+        const moveKeys = {
+            // Cardinal
+            'ArrowUp': [0, -1],    '8': [0, -1],
+            'ArrowDown': [0, 1],   '2': [0, 1],
+            'ArrowLeft': [-1, 0],  '4': [-1, 0],
+            'ArrowRight': [1, 0],  '6': [1, 0],
+            // Diagonals
+            '7': [-1, -1], '9': [1, -1],
+            '1': [-1, 1],  '3': [1, 1],
+            // Numpad center (Wait/Stay)
+            '5': [0, 0] 
+        };
+
+        if (moveKeys[key]) {
+            event.preventDefault();
+            const [dx, dy] = moveKeys[key];
+            if (typeof move === "function") {
+                move(dx, dy);
+            }
+            return; // Exit so it doesn't check linkForKey
+        }
+
+        {% if has_grid %}
+        // 2. Active character screen
+        if (event.key.toLowerCase() === 'c') {
+            const charSelect = document.getElementById('active-char-select');
+            if (charSelect && charSelect.value) {
+                const charId = charSelect.value;
+                window.location.href = `/play/char/${charId}`;
+            }
+        }
+        if (event.key.toLowerCase() === 't') {
+            const charSelect = document.getElementById('active-char-select');
+            if (charSelect && charSelect.value) {
+                const charId = charSelect.value;
+                const activeChar = chars[charId];
+                const exitByPos = exits.find(e => {
+                    const dx = Math.abs(Number(e.x) - Number(activeChar.x));
+                    const dy = Math.abs(Number(e.y) - Number(activeChar.y));
+                    return dx <= 1 && dy <= 1;
+                });
+                if (exitByPos) {
+                    const target_loc_id = exitByPos.target_id;
+                    let url = new URL(`${window.location.origin}/play/char/${charId}`);
+                    url.searchParams.append('auto_select_exit', target_loc_id);
+                    window.location.href = url.toString();
+                }
+            }
+        }
+        {% endif %}
+
+        // 3. Handle Global Hotkeys
+        const target = window.linkForKey[key];
+        if (target) {
+            event.preventDefault();
+            if (target.startsWith('/') || target.startsWith('http')) {
+                window.location.href = target;
+            } else {
+                const el = document.querySelector(target);
+                if (el) el.click();
+            }
+        }
     });
 
     // Initial Load
@@ -310,20 +407,40 @@
     }
 
     .tactgrid-cell.excluded {
-        background-color: #111;
-        border-color: #1a1a1a;
-    }
-
-    .tactgrid-cell.included {
         background-color: #222;
     }
 
-    .tactgrid-cell:hover {
+    .tactgrid-cell.included {
+        background-color: #444;
+        border-color: #1a1a1a;
+    }
+
+    .tactgrid-cell.included:hover {
         background-color: #333;
     }
+
+    .grid-token {
+        text-decoration: none;
+        color: inherit;
+        display: flex;
+        width: 100%;
+        height: 100%;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .char-token { color: var(--accent); font-weight: bold; }
+    .exit-token { filter: drop-shadow(0 0 2px gold); }
+    .item-token { opacity: 0.9; }
+
+    .tactgrid-cell a:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+    }
+
     .nav-numpad { display: flex; flex-direction: column; align-items: center; gap: 5px; }
     .nav-numpad button { width: 45px; height: 45px; font-size: 1.5em; }
-    .char-token { color: var(--accent); font-weight: bold; }
+
     .presence-list { list-style: none; padding: 0; }
     .presence-list li { padding: 8px 0; border-bottom: 1px solid #333; }
     .qty { font-family: monospace; font-weight: bold; margin-right: 8px; }
