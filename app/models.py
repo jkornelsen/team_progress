@@ -67,10 +67,18 @@ class Entity(db.Model):
     @classmethod
     def from_dict(cls, data, game_token):
         """Standard base hydration for all entities."""
-        # Skip lists and dicts because they may be nested relationships.
-        # Subclass from_dict() methods will need to handle them instead.
-        fields = {k: v for k, v in data.items()
-            if hasattr(cls, k) and not isinstance(v, (list, dict))}
+
+        # Skip lists and dicts because they may be nested relationships,
+        # except for ARRAY DB column type.
+        # Subclass from_dict() methods will need to handle skipped data.
+        fields = {}
+        for k, v in data.items():
+            if hasattr(cls, k):
+                column = cls.__table__.columns.get(k)
+                is_array_col = column is not None and isinstance(column.type, ARRAY)
+                if not isinstance(v, (list, dict)) or is_array_col:
+                    fields[k] = v
+
         obj = cls(game_token=game_token, **fields)
 
         for a_data in data.get('attribs', []):
@@ -244,10 +252,6 @@ class Location(Entity):
     @classmethod
     def from_dict(cls, data, game_token):
         loc = super().from_dict(data, game_token)
-        # Handle list fields skipped by the base method
-        loc.dimensions = data.get('dimensions')
-        loc.excluded = data.get('excluded')
-        # Relationships
         for i_data in data.get('items', []):
             loc.piles.append(Pile(
                 game_token=game_token,
@@ -324,7 +328,7 @@ class Character(Entity):
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
     toplevel = db.Column(db.Boolean, default=False)
-    travel_group = db.Column(db.String(100))
+    travel_party = db.Column(db.String(100))
     position = db.Column(ARRAY(db.Integer), default=None)
     location_id = db.Column(db.Integer)
 
@@ -334,7 +338,7 @@ class Character(Entity):
             "toplevel": self.toplevel,
             "location_id": self.location_id,
             "position": self.position,
-            "travel_group": self.travel_group,
+            "travel_party": self.travel_party,
             "items": [
                 {"item_id": p.item_id, "quantity": p.quantity, "slot": p.slot} 
                 for p in self.piles
@@ -391,9 +395,7 @@ class Attrib(Entity):
 
     @classmethod
     def from_dict(cls, data, game_token):
-        data_copy = data.copy()
-        data_copy.pop("attribs", None)
-        return super().from_dict(data_copy, game_token)
+        return super().from_dict(data, game_token)
 
     attrib_values = db.relationship(
         'AttribVal',
@@ -467,9 +469,6 @@ class Event(Entity):
     @classmethod
     def from_dict(cls, data, game_token):
         event = super().from_dict(data, game_token)
-        # Handle list fields skipped by the base method
-        event.numeric_range = data.get('numeric_range') 
-        # Relationships
         dets = data.get('determinants', [])
         effects = data.get('effects', [])
         event.factors = [

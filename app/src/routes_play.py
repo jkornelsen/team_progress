@@ -202,20 +202,30 @@ def play_character(id):
     capture_origin(name=character.name)
     exit_loc_id = request.args.get('auto_select_exit', type=int)
     
-    # 1. Fetch piles (Items carried)
+    # Identify other party members at this location
+    party_members = []
+    if character.travel_party:
+        party_members = Character.query.filter(
+            Character.game_token == game_token,
+            Character.location_id == character.location_id,
+            Character.travel_party == character.travel_party,
+            Character.id != character.id
+        ).all()
+
+    # Fetch piles (Items carried)
     inventory = Pile.query.filter_by(
         game_token=game_token, owner_id=id
     ).all()
     
-    # 2. Fetch Attributes
+    # Fetch Attributes
     attrib_values = AttribVal.query.filter_by(
         game_token=game_token, subject_id=id
     ).all()
     
-    # 3. Fetch Navigation (Nearby Destinations)
+    # Fetch Navigation (Nearby Destinations)
     destinations, has_nonadjacent = get_available_destinations(character)
     
-    # 4. Fetch Abilities (Events linked to this character)
+    # Fetch Abilities (Events linked to this character)
     # Assuming a relationship 'abilities' exists in the Character model
     # Or query EventRegistry/Triggers
     abilities = Event.query.filter_by(game_token=game_token, toplevel=True).all() # Placeholder logic
@@ -229,6 +239,7 @@ def play_character(id):
         exit_loc_id=exit_loc_id,
         has_nonadjacent=has_nonadjacent,
         abilities=abilities,
+        party_members=party_members,
         link_letters=LinkLetters(excluded='lmoe')
     )
 
@@ -334,9 +345,9 @@ def char_move(id):
     req = RequestHelper('form')
     dx = req.get_int('dx')
     dy = req.get_int('dy')
+    move_party = req.get_bool('move_party')
     
-    move_with = req.get_list('move_with')
-    success, results = move_group(id, dx, dy, move_with)
+    success, results = move_group(id, dx, dy, move_party)
     if success:
         return jsonify({"status": "success", "positions": results})
     return jsonify({"status": "error", "message": results}), 400
@@ -345,8 +356,8 @@ def char_move(id):
 def char_travel(id):
     req = RequestHelper('form')
     dest_loc_id = req.get_int('dest_id')
-    move_with = req.get_list('move_with')
-    success, message = arrive_at_destination(id, dest_loc_id, move_with)
+    move_party = req.get_bool('move_party')
+    success, message = arrive_at_destination(id, dest_loc_id, move_party)
     if success:
         return jsonify({"status": "arrived"})
     else:
@@ -587,7 +598,6 @@ def play_attrib(attrib_id, subject_id):
         
         # Log to Chronicle
         add_message(game_token, f"Modified {attribute.name} on {subject.name} to {new_val}")
-        #return redirect(url_for('play.play_attrib', attrib_id=attrib_id, subject_id=subject_id))
         return redirect_back()
 
     # Get reverse dependencies (items needing this for recipes)
@@ -596,8 +606,10 @@ def play_attrib(attrib_id, subject_id):
         Item.game_token == game_token
     ).all()
 
-    return render_template('play/attrib.html', 
-                           attribute=attribute, 
-                           subject=subject, 
-                           attrib_value=val_record,
-                           items_requiring_this=items_requiring_this)
+    return render_template(
+        'play/attrib.html', 
+        attribute=attribute, 
+        subject=subject, 
+        attrib_value=val_record,
+        items_requiring_this=items_requiring_this,
+        link_letters=LinkLetters(excluded='moe'))

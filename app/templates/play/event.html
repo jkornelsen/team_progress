@@ -1,5 +1,5 @@
 {% extends 'layout/base.html' %}
-{% from 'layout/macros.html' import hotkey %}
+{% from 'layout/macros.html' import hotkey_link %}
 
 {% block upper_left %}
     <nav class="nav-container">
@@ -14,6 +14,14 @@
 {% block content %}
 <div class="event-play-container">
     <header class="entity-header">
+        <span class="label-like">
+            Called by 
+            {{ '👤' if subject.entity_type == 'character' else '📍' if subject.entity_type == 'location' else '📦' }} 
+            {% set target_url = url_for('play.play_' + subject.entity_type, id=subject.id) %}
+            {% call hotkey_link(target_url, link_letters) %}
+                {{ subject.name }}
+            {% endcall %}
+        </span>
         <h1>⚡ {{ event.name }}</h1>
         {% if event.description %}
             <div class="description-box">{{ event.description | htmlify }}</div>

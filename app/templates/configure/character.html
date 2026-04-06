@@ -100,7 +100,7 @@
         <section class="outer-border">
             <div class="form-group">
                 <label for="name">Character Name:</label>
-                <input type="text" id="name" name="name" value="{{ character.name or '' }}" required class="full-width">
+                <input type="text" id="name" name="name" value="{{ character.name or '' }}" required class="full-width" placeholder="@Player">
             </div>
             <div class="form-group spacious-top">
                 <label for="description">Biography / Description:</label>
@@ -132,10 +132,10 @@
 
             <div class="grid-2-col spacious-top">
                 <div class="form-group">
-                    <label for="travel_group">Travel Group:</label>
-                    <input type="text" id="travel_group" name="travel_group" value="{{ character.travel_group or '' }}" 
-                           placeholder="e.g. Party A" class="full-width">
-                    <small class="label-like">Characters in the same group can move together.</small>
+                    <label for="travel_party">Travel Party:</label>
+                    <input type="text" id="travel_party" name="travel_party" value="{{ character.travel_party or '' }}" 
+                           placeholder="Party A" class="full-width">
+                    <small class="label-like">Characters in the same party can move together.</small>
                 </div>
                 <div class="flex-column" style="padding-top: 30px;">
                     <label class="checkbox-label">

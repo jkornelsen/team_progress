@@ -61,15 +61,26 @@
                             <select id="dest-select" class="flex-grow">
                                 <option value="">(Select Destination)</option>
                                 {% for dest in destinations %}
-                                    {# Use the helper function from LocDest model #}
                                     {% set target = dest.other_loc(character.location_id) %}
-                                    <option value="{{ target.id }}" data-duration="{{ dest.duration }}" {% if exit_loc_id == target.id %}selected{% endif %}>
-                                        {{ target.name }} ({{ dest.duration }}s)
+                                    <option value="{{ target.id }}" {% if exit_loc_id == target.id %}selected{% endif %}>
+                                        {{ target.name }}
+                                        {% if dest.duration > 1 %}
+                                            ({{ dest.duration }}s)
+                                        {% endif %}
                                     </option>
                                 {% endfor %}
                             </select>
                             <button id="start-travel-btn" class="go-button">[G]o</button>
                         </div>
+
+                        {% if party_members %}
+                        <div id="party-travel-container" style="margin-top: 10px;">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="travel-with-party-chk" onchange="this.blur()">
+                                Travel with Party ({{ party_members | length }} other{{ 's' if party_members | length != 1 }} nearby)
+                            </label>
+                        </div>
+                        {% endif %}
                     {% endif %}
 
                     {% if has_nonadjacent and not destinations %}
@@ -220,9 +231,11 @@
     document.getElementById('start-travel-btn')?.addEventListener('click', async () => {
         const destId = document.getElementById('dest-select').value;
         if (!destId) return;
+        const moveParty = document.getElementById('travel-with-party-chk')?.checked || false;
 
         const formData = new FormData();
         formData.append('dest_id', destId);
+        formData.append('move_party', moveParty);
         
         const response = await fetch(`/char/go/${charId}`, {
             method: 'POST',

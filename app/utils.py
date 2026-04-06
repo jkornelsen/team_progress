@@ -237,10 +237,14 @@ class RequestHelper:
         value_str = self._get_from_request(key)
         if value_str == '':
             return default
-        try:
-            return bool(value_str)
-        except ValueError:
-            return default
+
+        normalized = value_str.lower().strip()
+        if normalized in ('true', '1', 't', 'y', 'yes', 'on'):
+            return True
+        if normalized in ('false', '0', 'f', 'n', 'no', 'off'):
+            return False
+            
+        return default
 
     def get_coords(self, key):
         val = self._get_from_request(key)

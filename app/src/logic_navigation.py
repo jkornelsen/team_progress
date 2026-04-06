@@ -66,29 +66,20 @@ def get_default_position(location):
 # Party
 # ------------------------------------------------------------------------
 
-def get_moving_party(main_char, move_with_ids=None):
+def get_moving_party(main_char, move_party=False):
     """
-    Determines which characters are moving.
-    Includes:
-    1. The main character.
-    2. Any character IDs explicitly passed in (from a 'Move With' dropdown).
-    3. Any characters at the same location with the same 'travel_group' name.
+    Determines which characters are moving:
+    - The main character.
+    - Any characters at the same location with the same 'travel_party' name.
     """
     game_token = main_char.game_token
-    party = {main_char} # Use a set to avoid duplicates
+    party = {main_char}
 
-    # 1. Add explicit IDs from the form
-    if move_with_ids:
-        for cid in move_with_ids:
-            other = Character.query.get(game_token, (int(cid)))
-            if other and other.location_id == main_char.location_id:
-                party.add(other)
-
-    # 2. Add via travel_group string
-    if main_char.travel_group:
+    # If the user checked "Move with Party" and the character belongs to one
+    if move_party and main_char.travel_party:
         group_members = Character.query.filter_by(
             game_token=game_token,
-            travel_group=main_char.travel_group,
+            travel_party=main_char.travel_party,
             location_id=main_char.location_id
         ).all()
         party.update(group_members)
@@ -99,23 +90,25 @@ def get_moving_party(main_char, move_with_ids=None):
 # Character Movement At Location
 # ------------------------------------------------------------------------
 
-def move_group(main_char_id, dx, dy, move_with_ids=None):
+def move_group(main_char_id, dx, dy, move_party=False):
     """Moves an entire party relative to their current positions."""
     game_token = g.game_token
     main_char = Character.query.get((game_token, main_char_id))
     if not main_char or not main_char.location_id:
-        return False, "Main character not found or has no location."
+        return False, "Character not found."
 
     loc = Location.query.get((game_token, main_char.location_id))
-    party = get_moving_party(main_char, move_with_ids)
+    party = get_moving_party(main_char, move_party)
     
     results = {}
     for member in party:
+        if not member.position: continue
+        
         new_x = member.position[0] + dx
         new_y = member.position[1] + dy
 
         if is_in_grid(loc, new_x, new_y):
-            member.position = (new_x, new_y)
+            member.position = [new_x, new_y]
             results[member.id] = member.position
     
     db.session.commit()
@@ -190,5 +183,7 @@ def arrive_at_destination(main_char_id, dest_loc_id, move_with_ids=None):
         target_loc.masked = False
 
     db.session.commit()
-    add_message(game_token, f"{main_char.name} traveled to {target_loc.name}.")
+    party = " and party" if main_char.travel_party else ''
+    add_message(
+        game_token, f"{main_char.name}{party} traveled to {target_loc.name}.")
     return True, "Arrived."

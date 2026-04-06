@@ -40,7 +40,10 @@
                         {% call hotkey_link(target_url, link_letters) %}
                             {{ char.name }}
                             {% if has_grid and char.position %}
-                                <span class="label-like">[{{ char.position | join(",") }}]</span>
+                                <span class="label-like char-pos-display"
+                                      data-char-id="{{ char.id }}">
+                                    [{{ char.position | join(",") }}]
+                                </span>
                             {% endif %}
                         {% endcall %}
                     </li>
@@ -179,17 +182,29 @@
                         </div>
                         <div class="control-meta">
                             <label class="label-like">Active Character:</label>
-                            <select id="active-char-select" class="mini-select">
+                            <select id="active-char-select"
+                                class="mini-select" onchange="updatePartyUI(); this.blur();">
                                 {% for char in characters_here %}
                                     <option value="{{ char.id }}" {{ 'selected' if char.id == active_char_id }}>
                                         {{ char.name }}
                                     </option>
                                 {% endfor %}
                             </select>
-                            <p class="label-like">Move With Party:</label> TO DO
+                            <br>
+
+                            <div id="party-move-container" style="display: none; margin-top: 10px;">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="move-with-party-chk"
+                                        onchange="this.blur();"> 
+                                    Move with Party
+                                </label>
+                            </div>
 
                             <p class="label-like desktop-only">Use Arrow Keys or Numpad to move.</p>
-                            <p class="label-like desktop-only">view [c]haracter, arrange [t]ravel</p>
+                            <p class="label-like desktop-only">
+                                view [c]haracter, 
+                                <span id="travel-prompt">arrange [t]ravel</span>
+                            </p>
                         </div>
                     </div>
                 </section>
@@ -199,6 +214,8 @@
 </div>
 
 <script>
+    const charSelector = document.getElementById('active-char-select');
+
     const getFirstGrapheme = (str) => {
         if (!str) return '';
         if (typeof Intl !== 'undefined' && Intl.Segmenter) {
@@ -215,6 +232,7 @@
             name: "{{ char.name }}", 
             x: {{ char.position[0] }}, 
             y: {{ char.position[1] }}, 
+            travel_party: "{{ char.travel_party or '' }}",
             icon: getFirstGrapheme("{{ char.name }}"),
             link: "{{ url_for('play.play_character', id=char.id) }}"
         },
@@ -264,36 +282,105 @@
         exits.forEach(e => renderToken(e, 'exit-token'));
         items.forEach(i => renderToken(i, 'item-token'));
         Object.values(chars).forEach(c => renderToken(c, 'char-token'));
+        updateTravelUI();
+    }
+
+    function updateTravelUI() {
+        const travelPrompt = document.getElementById('travel-prompt');
+        if (!travelPrompt) return;
+
+        const nearbyExit = getActiveExit();
+
+        if (nearbyExit) {
+            travelPrompt.style.opacity = "1";
+            travelPrompt.style.color = "inherit"; // Or your standard highlight color
+            travelPrompt.style.textDecoration = "none";
+        } else {
+            travelPrompt.style.opacity = "0.5";
+            travelPrompt.style.color = "gray";
+            // Optional: travelPrompt.style.textDecoration = "line-through";
+        }
+    }
+
+    function getActiveChar() {
+        const id = charSelector ? charSelector.value : null;
+        if (id && chars[id]) {
+            return {
+                char_id: id,
+                char: chars[id]
+            };
+        }
+        return null;
+    }
+
+    function getActiveExit() {
+        const active = getActiveChar();
+        if (!active) return null;
+
+        // Returns the first exit within 1 unit (including diagonals)
+        return exits.find(e => {
+            const dx = Math.abs(Number(e.x) - Number(active.char.x));
+            const dy = Math.abs(Number(e.y) - Number(active.char.y));
+            return dx <= 1 && dy <= 1;
+        });
     }
 
     // 3. Movement Logic
-    async function move(dx, dy) {
-        const charId = document.getElementById('active-char-select').value;
-        if (!charId) return;
 
-        const moveWith = document.getElementById('move-with')?.value || "";
+    function updatePartyUI() {
+        const active = getActiveChar();
+        const container = document.getElementById('party-move-container');
+        
+        if (!active || !active.char.travel_party) {
+            container.style.display = 'none';
+            return;
+        }
+
+        // Check if there's at least one OTHER character in the same party here
+        const partyName = active.char.travel_party;
+        const otherMembers = Object.keys(chars).filter(id => 
+            id !== active.char_id && chars[id].travel_party === partyName
+        );
+
+        container.style.display = otherMembers.length > 0 ? 'block' : 'none';
+        updateTravelUI(); // Refresh the door prompts too
+    }
+
+    function updateCharListCoords(charId, pos) {
+        const el = document.querySelector(`.char-pos-display[data-char-id="${charId}"]`);
+        if (el) {
+            el.innerText = `[${pos[0]},${pos[1]}]`;
+            
+            // Optional: briefly highlight the text to show it changed
+            el.style.color = 'var(--accent)';
+            setTimeout(() => { el.style.color = ''; }, 300);
+        }
+    }
+
+    async function move(dx, dy) {
+        const active = getActiveChar();
+        if (!active) return;
+
+        const moveParty = document.getElementById('move-with-party-chk').checked;
         
         const formData = new FormData();
         formData.append('dx', dx);
         formData.append('dy', dy);
-        // Split the comma-separated IDs from the 'Move With' dropdown if needed
-        if (moveWith) {
-            moveWith.split(',').forEach(id => formData.append('move_with[]', id));
-        }
+        formData.append('move_party', moveParty); // Tell backend to move the whole party
 
-        const response = await fetch(`/char/move/${charId}`, {
+        const response = await fetch(`/char/move/${active.char_id}`, {
             method: 'POST',
             body: formData
         });
 
         const data = await response.json();
         if (data.status === 'success') {
-            // Iterate through all character positions returned by the backend
             for (const [id, pos] of Object.entries(data.positions)) {
                 if (chars[id]) {
                     chars[id].x = pos[0];
                     chars[id].y = pos[1];
                 }
+                updateCharListCoords(id, pos);
             }
             fillGrid();
         }
@@ -303,8 +390,11 @@
     document.addEventListener('keydown', (event) => {
         if (isMobile) return;
         
-        const active = document.activeElement.tagName;
-        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(active)) return;
+        const activeElem = document.activeElement.tagName;
+        const isInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes(activeElem.tagName);
+        if (isInput && activeElem.type !== 'checkbox') {
+            return;
+        }
 
         const key = event.key;
 
@@ -318,8 +408,6 @@
             // Diagonals
             '7': [-1, -1], '9': [1, -1],
             '1': [-1, 1],  '3': [1, 1],
-            // Numpad center (Wait/Stay)
-            '5': [0, 0] 
         };
 
         if (moveKeys[key]) {
@@ -331,28 +419,19 @@
             return; // Exit so it doesn't check linkForKey
         }
 
-        {% if has_grid %}
         // 2. Active character screen
-        if (event.key.toLowerCase() === 'c') {
-            const charSelect = document.getElementById('active-char-select');
-            if (charSelect && charSelect.value) {
-                const charId = charSelect.value;
-                window.location.href = `/play/char/${charId}`;
+        {% if has_grid %}
+        const active = getActiveChar();
+        if (active) {
+            if (event.key.toLowerCase() === 'c') {
+                window.location.href = `/play/char/${active.char_id}`;
             }
-        }
-        if (event.key.toLowerCase() === 't') {
-            const charSelect = document.getElementById('active-char-select');
-            if (charSelect && charSelect.value) {
-                const charId = charSelect.value;
-                const activeChar = chars[charId];
-                const exitByPos = exits.find(e => {
-                    const dx = Math.abs(Number(e.x) - Number(activeChar.x));
-                    const dy = Math.abs(Number(e.y) - Number(activeChar.y));
-                    return dx <= 1 && dy <= 1;
-                });
+            if (event.key.toLowerCase() === 't') {
+                const exitByPos = getActiveExit();
                 if (exitByPos) {
                     const target_loc_id = exitByPos.target_id;
-                    let url = new URL(`${window.location.origin}/play/char/${charId}`);
+                    let url = new URL(
+                        `${window.location.origin}/play/char/${active.char_id}`);
                     url.searchParams.append('auto_select_exit', target_loc_id);
                     window.location.href = url.toString();
                 }
@@ -374,7 +453,10 @@
     });
 
     // Initial Load
-    $(document).ready(() => fillGrid());
+    $(document).ready(() => {
+        fillGrid();
+        updatePartyUI();
+    });
 </script>
 
 <style>

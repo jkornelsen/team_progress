@@ -8,17 +8,17 @@
 
 - If you're not a divergent thinker, you may still enjoy the *Rays* scenario, designed like a standard idler.
 
-- The original idea behind this game was to be an *incremental-plus*, with roleplaying mechanics to provide the flexibility other idlers lack. Like, maybe in the middle of production, employees from a rival factory suddenly attack with staplers.
+- The original idea behind this game was to be an *incremental-plus*, with roleplaying mechanics to provide the flexibility other idlers lack. Like, in the middle of production, employees from a rival factory suddenly attack with staplers.
 
 ## Right for you?
 
 You'll probably 'get' this game if you have done any of these:
 
-* Enjoyed *A Dark Room*, *Universal Paperclips*, and *Crank*, but wish you could change things
-* Used a spreadsheet to figure out how to min/max *Leaf Blower Revolution*
-* Played both idle games and tabletop RPGs
+* Enjoyed *A Dark Room*, *Universal Paperclips*, and *Crank*, but wished you could change things
+* Used a spreadsheet to min/max *Leaf Blower Revolution*
+* Played *UnReal World* or *NetHack*
+* Set up your own text documents to play D&D on the computer
 * Used *Iron Journal*
-* Set up your own system of text documents to play D&D on the computer
 
 ## Suggestions for Playing
 
@@ -30,6 +30,6 @@ You'll probably 'get' this game if you have done any of these:
 
 ## Server
 
-- See [Installing](Installation.md) for everything needed to run on desktop (solo) or home network (play with friends). This includes setting up a PostgreSQL database.
+- See [Installing](Installation.md) for everything needed to run on desktop (solo) or home network (invite friends over). This includes setting up a PostgreSQL database.
 
-- The flexible, multiplayer design requires more on the server side than normal idlers. Websites such as *pythonAnywhere* can host this type of project.
+- The flexible, multiplayer design requires more on the server side than normal idlers. Websites such as *pythonAnywhere* should be able to host this type of project.

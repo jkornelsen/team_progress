@@ -341,7 +341,7 @@ def edit_character(id):
         char.description = req.get_str('description')
         char.location_id = req.get_int('location_id', None)
         char.position = parse_coords(req.get_str('pos_str'))
-        char.travel_group = req.get_str('travel_group')
+        char.travel_party = req.get_str('travel_party')
         char.toplevel = 'toplevel' in request.form
 
         # Update Attrib values
