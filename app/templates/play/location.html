@@ -130,6 +130,10 @@
                     {% set target = route.other_loc(location.id) %}
                     {% set door = route.door_at(location.id) %}
                     <div class="col-row twocol-row">
+                    {% if target.masked %}
+                        {{ target.name | mask_string }}
+                        (not yet visited)
+                    {% else %}
                         {% set target_url = url_for('play.play_location', id=target.id) %}
                         {% call hotkey_link(target_url, link_letters) %}
                             {{ target.name if not target.masked else (target.name | mask_string) }}
@@ -137,6 +141,7 @@
                         {% if door %}
                             <span class="label-like">[{{ door | join(",") }}]</span>
                         {% endif %}
+                    {% endif %}
                     </div>
                 {% endfor %}
                 </div>

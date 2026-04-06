@@ -1,461 +1,323 @@
 {
-    "attribs": [
-        {
-            "description": "Dispatch rodents to gain experience \u2014 bigger ones yield more.\r\n\r\nAlso, check whether it's time to increase <a href=\"/play/attrib/2/char/1\">XL</a>.",
-            "enum_list": [],
-            "id": 1,
-            "is_binary": false,
-            "name": "XP"
-        },
-        {
-            "description": "An enemy with this attribute is unique, so after victory, set to true.",
-            "enum_list": [],
-            "id": 3,
-            "is_binary": true,
-            "name": "Defeated"
-        },
-        {
-            "description": "Gaining a new level increases <a href=\"/configure/item/1\">energy limit</a> and sets <a href=\"/configure/character/1\">current energy</a> to full.\r\n\r\nOn reaching level 3, see <a href=\"/play/event/4\">Upgrade Bonus</a>.\r\n\r\n<pre>\r\nLevel  Total XP Required\r\n~~~~~  ~~~~~~~~~~~~~~~~~\r\n1      (0)\r\n2      10\r\n3      30\r\n4      70\r\n5      120\r\n6      200\r\n7      300\r\n8      450\r\n9      650\r\n10     900\r\n11     1200\r\n12     1600\r\n13     2100\r\n14     2700\r\n15     3400\r\n16     4200\r\n17     5100\r\n18     6100\r\n19     7200\r\n20     8500\r\n21     10000\r\n</pre>",
-            "enum_list": [],
-            "id": 2,
-            "is_binary": false,
-            "name": "XL"
-        }
-    ],
-    "characters": [
-        {
-            "attribs": [
-                [2, 1.0],
-                [1, 0.0]
-            ],
-            "description": "Remotely controlled machine \u2014 the player character.\r\n\r\nDoes not get diseases from being bitten, but has a limited amount of power. Battle testing allows the engineers to improve the technology incrementally.",
-            "dest_id": null,
-            "events": [],
-            "id": 1,
-            "items": [
-                {
-                    "item_id": 1,
-                    "quantity": 3.0,
-                    "slot": ""
-                }
-            ],
-            "location_id": 1,
-            "masked": false,
-            "name": "Herbert 2100B",
-            "position": [0,0],
-            "progress": {},
-            "toplevel": true,
-            "travel_group": ""
-        },
-        {
-            "attribs": [
-                [2, 8.0]
-            ],
-            "description": "Fur is greenish and sticky, with a fuzzy white tail.",
-            "dest_id": null,
-            "events": [],
-            "id": 4,
-            "items": [],
-            "location_id": 5,
-            "masked": false,
-            "name": "Tainted Bunny",
-            "position": [0,0],
-            "progress": {},
-            "toplevel": false,
-            "travel_group": ""
-        },
-        {
-            "attribs": [
-                [2, 5.0]
-            ],
-            "description": "Okay, it's still kind of cute, despite the toxic green eyes.",
-            "dest_id": null,
-            "events": [],
-            "id": 3,
-            "items": [],
-            "location_id": 3,
-            "masked": false,
-            "name": "Full-grown Mouse",
-            "position": [0,0],
-            "progress": {},
-            "toplevel": false,
-            "travel_group": ""
-        },
-        {
-            "attribs": [
-                [2, 2.0]
-            ],
-            "description": "Mutant, rabid and green-eyed, burning from within due to toxic waste.",
-            "dest_id": null,
-            "events": [],
-            "id": 2,
-            "items": [],
-            "location_id": 2,
-            "masked": false,
-            "name": "Baby Mouse",
-            "position": [0,0],
-            "progress": {},
-            "toplevel": false,
-            "travel_group": ""
-        },
-        {
-            "attribs": [
-                [3, 1.0],
-                [2, 13.0]
-            ],
-            "description": "Red-eyed monster that never stops hopping up and down, up and down.",
-            "dest_id": null,
-            "events": [],
-            "id": 5,
-            "items": [],
-            "location_id": 6,
-            "masked": false,
-            "name": "Bad Hare Day",
-            "position": [0,0],
-            "progress": {},
-            "toplevel": false,
-            "travel_group": ""
-        }
-    ],
-    "events": [
-        {
-            "changed": [
-                ["attrib", 1],
-                ["item", 1]
-            ],
-            "description": "After each fight, subtract 1 Energy, either below or <a href=\"/play/item/1/?char_id=1\">directly</a>.\r\n\r\nAlso, if the fight ended in victory, then add the enemy's XL to <a href=\"/play/attrib/1/char/1\">XP</a>. To set the outcome to enemy XL, reset the die and add to both die min and max, then roll. Once the outcome is set, fill for XP and apply.\r\n\r\nMajor success doubles the XP, while a critical failure decreases 2 Energy.",
-            "determining": [
-                {
-                    "entity_data": ["attrib", 2],
-                    "label": "Enemy",
-                    "operation": "+"
-                }
-            ],
-            "id": 2,
-            "name": "Finish Fight",
-            "numeric_range": [0, 0],
-            "outcome_type": "numeric",
-            "selection_strings": "",
-            "toplevel": true,
-            "trigger_chance": 0.0,
-            "triggers": []
-        },
-        {
-            "changed": [],
-            "description": "Set difficulty to Hard. At level 9, the range will be -18 to 1, small chance of success and significant chance of a critical failure that consumes more energy.\r\n\r\nOn victory, mark the boss as <a href=\"/play/attrib/3/char/5\">Defeated</a> and add 250 XP.",
-            "determining": [
-                {
-                    "entity_data": ["attrib", 2],
-                    "label": "Bad Hare",
-                    "operation": "-"
-                },
-                {
-                    "entity_data": ["attrib", 2],
-                    "label": "Player",
-                    "operation": "+"
-                }
-            ],
-            "id": 6,
-            "name": "Fight Bad Hare",
-            "numeric_range": [1, 20],
-            "outcome_type": "fourway",
-            "selection_strings": "",
-            "toplevel": false,
-            "trigger_chance": 0.0,
-            "triggers": [
-                ["loc", 6]
-            ]
-        },
-        {
-            "changed": [],
-            "description": "If you're massively outleveled, in this case level 1 or 2 to the enemy's 5, then set difficulty to <i>Hard</i>. If you're level 8 already, then set difficulty to <i>Easy</i>, although that is probably a good time to move on to the next location.\r\n\r\nRun like <a href=\"/play/event/1\">the first event</a>.",
-            "determining": [
-                {
-                    "entity_data": ["attrib", 2],
-                    "label": "Enemy",
-                    "operation": "-"
-                },
-                {
-                    "entity_data": ["attrib", 2],
-                    "label": "Player",
-                    "operation": "+"
-                }
-            ],
-            "id": 3,
-            "name": "Fight Grown Mice",
-            "numeric_range": [1, 20],
-            "outcome_type": "fourway",
-            "selection_strings": "",
-            "toplevel": false,
-            "trigger_chance": 0.0,
-            "triggers": [
-                ["loc", 3]
-            ]
-        },
-        {
-            "changed": [],
-            "description": "Determine the outcome of a fight.\r\n\r\nSelect <i>Moderate</i> difficulty, and adjust both min and max by player and enemy level, for an initial range -2 to 1. Enemies in this area are limited to <i>Baby Mouse</i> \u2014 go to a different area to fight other enemies. Make sure the robot has at least 1 Energy to start.\r\n\r\nThen, see <a href=\"/play/event/2\">Finish Fight</a>.",
-            "determining": [
-                {
-                    "entity_data": ["attrib", 2],
-                    "label": "Player",
-                    "operation": "+"
-                },
-                {
-                    "entity_data": ["attrib", 2],
-                    "label": "Enemy",
-                    "operation": "-"
-                }
-            ],
-            "id": 1,
-            "name": "Fight Baby Mice",
-            "numeric_range": [1, 4],
-            "outcome_type": "fourway",
-            "selection_strings": "",
-            "toplevel": false,
-            "trigger_chance": 0.0,
-            "triggers": [
-                ["loc", 2]
-            ]
-        },
-        {
-            "changed": [],
-            "description": "Run like <a href=\"/play/event/3\">Grown Mice</a> with upgraded stats.",
-            "determining": [
-                {
-                    "entity_data": ["attrib", 2],
-                    "label": "Player",
-                    "operation": "+"
-                },
-                {
-                    "entity_data": ["attrib", 2],
-                    "label": "Enemy",
-                    "operation": "-"
-                }
-            ],
-            "id": 5,
-            "name": "Fight Bunnies",
-            "numeric_range": [1, 20],
-            "outcome_type": "fourway",
-            "selection_strings": "",
-            "toplevel": false,
-            "trigger_chance": 0.0,
-            "triggers": [
-                ["loc", 5]
-            ]
-        },
-        {
-            "changed": [],
-            "description": "Run after every 3 experience levels.",
-            "determining": [],
-            "id": 4,
-            "name": "Upgrade Bonus",
-            "numeric_range": [1, 20],
-            "outcome_type": "selection",
-            "selection_strings": "Triple XP for the next three fights.\r\nGain 50% of XP towards the next level.\r\nIncrease Energy limit by 1.\r\nFor three fights, do not decrease Energy unless critical.\r\nNo Bonus.",
-            "toplevel": false,
-            "trigger_chance": 0.0,
-            "triggers": []
-        }
-    ],
-    "items": [
-        {
-            "attribs": [],
-            "description": "Must have at least 1 unit for fighting. A unit is 100 Kilojoules.\r\n\r\nAfter each fight, consume 1 energy with the recipe that shows a trash can. Restore by levelling up, or travel to the <i>Maintenance Building</i> and click on the <i>Recharging Station</i>.\r\n\r\nLimit is 2 + <a href=\"/play/attrib/2/char/1\">XL</a>, plus any special bonuses.",
-            "id": 1,
-            "masked": false,
-            "name": "Energy",
-            "progress": {},
-            "q_limit": 3.0,
-            "quantity": 0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 1,
-                    "instant": false,
-                    "item_id": 1,
-                    "rate_amount": 1.0,
-                    "rate_duration": 3.0,
-                    "sources": [
-                        {
-                            "item_id": 2,
-                            "preserve": true,
-                            "q_required": 1.0
-                        }
-                    ]
-                },
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 2,
-                    "instant": true,
-                    "item_id": 1,
-                    "rate_amount": 0.0,
-                    "rate_duration": 3.0,
-                    "sources": [
-                        {
-                            "item_id": 1,
-                            "preserve": false,
-                            "q_required": 1.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "carried",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Click on <i>Energy</i> to power up the robot.",
-            "id": 2,
-            "masked": false,
-            "name": "Recharging Station",
-            "progress": {},
-            "q_limit": 0.0,
-            "quantity": 0,
-            "recipes": [],
-            "storage_type": "local",
-            "toplevel": false
-        }
-    ],
-    "locations": [
-        {
-            "description": "",
-            "destinations": [
-                {
-                    "bidirectional": true,
-                    "door1": [0,0],
-                    "door2": [0,0],
-                    "duration": 1,
-                    "loc2_id": 2
-                }
-            ],
-            "dimensions": [0,0],
-            "excluded": [0,0,0,0],
-            "id": 3,
-            "item_refs": [],
-            "items": [],
-            "masked": true,
-            "name": "Grown Mice Area",
-            "toplevel": false
-        },
-        {
-            "description": "Advanced state of disrepair, though it beats trudging through swampland. Provides travel deeper south, for a higher degree of difficulty than the areas near the Maintenance Building.",
-            "destinations": [
-                {
-                    "bidirectional": true,
-                    "door1": [0,0],
-                    "door2": [0,0],
-                    "duration": 3,
-                    "loc2_id": 1
-                }
-            ],
-            "dimensions": [0,0],
-            "excluded": [0,0,0,0],
-            "id": 4,
-            "item_refs": [],
-            "items": [],
-            "masked": true,
-            "name": "Highway",
-            "toplevel": false
-        },
-        {
-            "description": "",
-            "destinations": [
-                {
-                    "bidirectional": true,
-                    "door1": [0,0],
-                    "door2": [0,0],
-                    "duration": 1,
-                    "loc2_id": 4
-                }
-            ],
-            "dimensions": [0,0],
-            "excluded": [0,0,0,0],
-            "id": 6,
-            "item_refs": [],
-            "items": [],
-            "masked": true,
-            "name": "Bad Hare Area",
-            "toplevel": false
-        },
-        {
-            "description": "The weakest of the rodents, but alarmingly close to the base. Populations must be controlled so they don't spread further.",
-            "destinations": [
-                {
-                    "bidirectional": true,
-                    "door1": [0,0],
-                    "door2": [0,0],
-                    "duration": 1,
-                    "loc2_id": 1
-                }
-            ],
-            "dimensions": [0,0],
-            "excluded": [0,0,0,0],
-            "id": 2,
-            "item_refs": [],
-            "items": [],
-            "masked": false,
-            "name": "Baby Mice Area",
-            "toplevel": false
-        },
-        {
-            "description": "",
-            "destinations": [
-                {
-                    "bidirectional": true,
-                    "door1": [0,0],
-                    "door2": [0,0],
-                    "duration": 1,
-                    "loc2_id": 4
-                }
-            ],
-            "dimensions": [0,0],
-            "excluded": [0,0,0,0],
-            "id": 5,
-            "item_refs": [],
-            "items": [],
-            "masked": true,
-            "name": "Tainted Bunny Area",
-            "toplevel": false
-        },
-        {
-            "description": "An outpost in northern Florida set up to contain the infestation. Engineers perform upgrades and repairs as well as charging. This is also where robots are controlled from, and where intel is assessed.",
-            "destinations": [],
-            "dimensions": [0,0],
-            "excluded": [0,0,0,0],
-            "id": 1,
-            "item_refs": [],
-            "items": [
-                {
-                    "item_id": 2,
-                    "position": [0,0],
-                    "quantity": 1.0
-                }
-            ],
-            "masked": false,
-            "name": "Maintenance Building",
-            "toplevel": false
-        }
-    ],
-    "overall": {
-        "description": "After a disastrous lab experiment, Florida has been overrun with mutant rodents. Especially dangerous ones are further south. Vacationers and residents have fled. Many retired folks are missing.\r\n\r\nCombat and strategy are simple\u2014all about <c=\"lime\">levelling up</c> for the next area.",
-        "multiplayer": false,
-        "number_format": "en_US",
-        "progress_type": "RPG",
-        "slots": [],
-        "title": "Infestation",
-        "win_reqs": [
+    "entities": {
+        "items": [
             {
-                "attrib_id": 2,
-                "attrib_value": 10.0,
-                "char_id": 1,
-                "id": 1,
-                "item_id": null,
-                "loc_id": null,
-                "quantity": 0.0
+                "id": 5,
+                "name": "Energy",
+                "description": "Must have at least 1 unit for fighting. A unit is 100 Kilojoules.\r\n\r\nAfter each fight, consume 1 energy with the recipe that shows a trash can. Restore by levelling up, or travel to the <i>Maintenance Building</i> and click on the <i>Recharging Station</i>.\r\n\r\nLimit is 2 + <a href=\"/play/attrib/2/char/1\">XL</a>, plus any special bonuses.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "c",
+                "q_limit": 3.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 1,
+                        "rate_amount": 1.0,
+                        "rate_duration": 3.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 6,
+                                "q_required": 1.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    },
+                    {
+                        "id": 2,
+                        "rate_amount": 0.0,
+                        "rate_duration": 3.0,
+                        "instant": true,
+                        "sources": [
+                            {
+                                "item_id": 5,
+                                "q_required": 1.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 6,
+                "name": "Recharging Station",
+                "description": "Click on <i>Energy</i> to power up the robot.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 0.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
             }
-        ]
+        ],
+        "locations": [
+            {
+                "id": 7,
+                "name": "Grown Mice Area",
+                "description": "",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": null,
+                "excluded": null,
+                "toplevel": false,
+                "masked": true,
+                "items": [],
+                "item_refs": [],
+                "destinations": [
+                    {
+                        "loc2_id": 10,
+                        "duration": 1,
+                        "bidirectional": true
+                    }
+                ]
+            },
+            {
+                "id": 8,
+                "name": "Highway",
+                "description": "Advanced state of disrepair, though it beats trudging through swampland. Provides travel deeper south, for a higher degree of difficulty than the areas near the Maintenance Building.",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": null,
+                "excluded": null,
+                "toplevel": false,
+                "masked": true,
+                "items": [],
+                "item_refs": [],
+                "destinations": [
+                    {
+                        "loc2_id": 12,
+                        "duration": 3,
+                        "bidirectional": true
+                    }
+                ]
+            },
+            {
+                "id": 9,
+                "name": "Bad Hare Area",
+                "description": "",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": null,
+                "excluded": null,
+                "toplevel": false,
+                "masked": true,
+                "items": [],
+                "item_refs": [],
+                "destinations": [
+                    {
+                        "loc2_id": 8,
+                        "duration": 1,
+                        "bidirectional": true
+                    }
+                ]
+            },
+            {
+                "id": 10,
+                "name": "Baby Mice Area",
+                "description": "The weakest of the rodents, but alarmingly close to the base. Populations must be controlled so they don't spread further.",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": null,
+                "excluded": null,
+                "toplevel": false,
+                "masked": false,
+                "items": [],
+                "item_refs": [],
+                "destinations": [
+                    {
+                        "loc2_id": 12,
+                        "duration": 1,
+                        "bidirectional": true
+                    }
+                ]
+            },
+            {
+                "id": 11,
+                "name": "Tainted Bunny Area",
+                "description": "",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": null,
+                "excluded": null,
+                "toplevel": false,
+                "masked": true,
+                "items": [],
+                "item_refs": [],
+                "destinations": [
+                    {
+                        "loc2_id": 8,
+                        "duration": 1,
+                        "bidirectional": true
+                    }
+                ]
+            },
+            {
+                "id": 12,
+                "name": "Maintenance Building",
+                "description": "An outpost in northern Florida set up to contain the infestation. Engineers perform upgrades and repairs as well as charging. This is also where robots are controlled from, and where intel is assessed.",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": null,
+                "excluded": null,
+                "toplevel": false,
+                "masked": false,
+                "items": [
+                    {
+                        "item_id": 6,
+                        "quantity": 1.0,
+                        "position": null
+                    }
+                ],
+                "item_refs": [],
+                "destinations": []
+            }
+        ],
+        "characters": [
+            {
+                "id": 13,
+                "name": "Herbert 2100B",
+                "description": "Remotely controlled machine \u2014 the player character.\r\n\r\nDoes not get diseases from being bitten, but has a limited amount of power. Battle testing allows the engineers to improve the technology incrementally.",
+                "attribs": [
+                    [
+                        4,
+                        1.0
+                    ],
+                    [
+                        2,
+                        0.0
+                    ]
+                ],
+                "abilities": [],
+                "toplevel": true,
+                "location_id": 12,
+                "position": null,
+                "travel_party": "",
+                "items": [
+                    {
+                        "item_id": 5,
+                        "quantity": 3.0,
+                        "slot": ""
+                    }
+                ]
+            },
+            {
+                "id": 14,
+                "name": "Tainted Bunny",
+                "description": "Fur is greenish and sticky, with a fuzzy white tail.",
+                "attribs": [
+                    [
+                        4,
+                        8.0
+                    ]
+                ],
+                "abilities": [],
+                "toplevel": false,
+                "location_id": 11,
+                "position": null,
+                "travel_party": "",
+                "items": []
+            },
+            {
+                "id": 15,
+                "name": "Full-grown Mouse",
+                "description": "Okay, it's still kind of cute, despite the toxic green eyes.",
+                "attribs": [
+                    [
+                        4,
+                        5.0
+                    ]
+                ],
+                "abilities": [],
+                "toplevel": false,
+                "location_id": 7,
+                "position": null,
+                "travel_party": "",
+                "items": []
+            },
+            {
+                "id": 16,
+                "name": "Baby Mouse",
+                "description": "Mutant, rabid and green-eyed, burning from within due to toxic waste.",
+                "attribs": [
+                    [
+                        4,
+                        2.0
+                    ]
+                ],
+                "abilities": [],
+                "toplevel": false,
+                "location_id": 10,
+                "position": null,
+                "travel_party": "",
+                "items": []
+            },
+            {
+                "id": 17,
+                "name": "Bad Hare Day",
+                "description": "Red-eyed monster that never stops hopping up and down, up and down.",
+                "attribs": [
+                    [
+                        3,
+                        1.0
+                    ],
+                    [
+                        4,
+                        13.0
+                    ]
+                ],
+                "abilities": [],
+                "toplevel": false,
+                "location_id": 9,
+                "position": null,
+                "travel_party": "",
+                "items": []
+            }
+        ],
+        "attribs": [
+            {
+                "id": 2,
+                "name": "XP",
+                "description": "Dispatch rodents to gain experience \u2014 bigger ones yield more.\r\n\r\nAlso, check whether it's time to increase <a href=\"/play/attrib/2/char/1\">XL</a>.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 3,
+                "name": "Defeated",
+                "description": "An enemy with this attribute is unique, so after victory, set to true.",
+                "abilities": [],
+                "is_binary": true,
+                "enum_list": []
+            },
+            {
+                "id": 4,
+                "name": "XL",
+                "description": "Gaining a new level increases <a href=\"/configure/item/1\">energy limit</a> and sets <a href=\"/configure/character/1\">current energy</a> to full.\r\n\r\nOn reaching level 3, see <a href=\"/play/event/4\">Upgrade Bonus</a>.\r\n\r\n<pre>\r\nLevel  Total XP Required\r\n~~~~~  ~~~~~~~~~~~~~~~~~\r\n1      (0)\r\n2      10\r\n3      30\r\n4      70\r\n5      120\r\n6      200\r\n7      300\r\n8      450\r\n9      650\r\n10     900\r\n11     1200\r\n12     1600\r\n13     2100\r\n14     2700\r\n15     3400\r\n16     4200\r\n17     5100\r\n18     6100\r\n19     7200\r\n20     8500\r\n21     10000\r\n</pre>",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            }
+        ],
+        "events": []
+    },
+    "general data": {
+        "piles": [],
+        "progress": []
+    },
+    "overall settings": {
+        "title": "Infestation",
+        "description": "After a disastrous lab experiment, Florida has been overrun with mutant rodents. Especially dangerous ones are further south. Vacationers and residents have fled. Many retired folks are missing.\r\n\r\nCombat and strategy are simple\u2014all about <c=\"lime\">levelling up</c> for the next area.",
+        "number_format": "en_US",
+        "slots": [],
+        "progress_type": "RPG",
+        "multiplayer": false
     }
 }

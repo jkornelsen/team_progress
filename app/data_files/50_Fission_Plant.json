@@ -1,407 +1,369 @@
 {
-    "attribs": [],
-    "characters": [],
-    "events": [
-        {
-            "changed": [],
-            "description": "Get more information about a problem that occurred.",
-            "determining": [],
-            "id": 2,
-            "name": "Fission Problem Type",
-            "numeric_range": [0, 10],
-            "outcome_type": "selection",
-            "selection_strings": "Radioactive Waste Leak\r\nWaste Bacteria Inert\r\nCooling System Leak\r\nMechanical Failure\r\nElectricity Down\r\nUnusable Amenities\r\nEnergy Not Gained\r\nExcess Energy\r\nCore Meltdown",
-            "toplevel": false,
-            "trigger_chance": 0.0,
-            "triggers": []
-        },
-        {
-            "changed": [],
-            "description": "Minor problems, such as waste leaks, up to the worst case, core meltdown. Waste buildup increases the chance of something going wrong.\r\n\r\nTo determine which problem occurred, especially for critical failures, run <a href=\"/play/event/2\">Fission Problem Type</a>.",
-            "determining": [
-                {
-                    "entity_data": ["item", 18],
-                    "label": "",
-                    "operation": "-log"
-                },
-                {
-                    "entity_data": ["item", 17],
-                    "label": "",
-                    "operation": "-log"
-                }
-            ],
-            "id": 1,
-            "name": "Fission Problem",
-            "numeric_range": [1, 1000],
-            "outcome_type": "fourway",
-            "selection_strings": "",
-            "toplevel": false,
-            "trigger_chance": 0.05,
-            "triggers": [
-                ["item", 20]
-            ]
-        }
-    ],
-    "items": [
-        {
-            "attribs": [],
-            "description": "Quadruple the energy production speed to 8 per 8 seconds. This only improves speed, so also double the waste generated and resources required.",
-            "id": 24,
-            "masked": false,
-            "name": "Production Speed II",
-            "progress": {},
-            "q_limit": 5.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 20,
-                    "instant": false,
-                    "item_id": 24,
-                    "rate_amount": 1.0,
-                    "rate_duration": 300.0,
-                    "sources": [
-                        {
-                            "item_id": 23,
-                            "preserve": false,
-                            "q_required": 1000.0
-                        },
-                        {
-                            "item_id": 22,
-                            "preserve": true,
-                            "q_required": 1.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "local",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Double energy production speed to 2 per 8 seconds. This only improves speed, so also double the waste generated and resources required.",
-            "id": 22,
-            "masked": false,
-            "name": "Production Speed I",
-            "progress": {},
-            "q_limit": 10.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 19,
-                    "instant": false,
-                    "item_id": 22,
-                    "rate_amount": 1.0,
-                    "rate_duration": 300.0,
-                    "sources": [
-                        {
-                            "item_id": 23,
-                            "preserve": false,
-                            "q_required": 100.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "local",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Valuable nuclear material used in a reactor to generate high energy levels.\r\n\r\nMeasured in units of 100 \u03bcg (0.0001 g). This amount causes 1e17 fission reactions, generating 1 kWh of energy.",
-            "id": 15,
-            "masked": false,
-            "name": "Plutonium",
-            "progress": {},
-            "q_limit": 0.0,
-            "quantity": 10.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 15,
-                    "instant": false,
-                    "item_id": 15,
-                    "rate_amount": 1.0,
-                    "rate_duration": 8.0,
-                    "sources": [
-                        {
-                            "item_id": 16,
-                            "preserve": false,
-                            "q_required": 1.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": true
-        },
-        {
-            "attribs": [],
-            "description": "Glowing, greenish sludge. Stored in thick metal barrels\u2014just hope they don't spring a leak.\r\n\r\nCan be consumed and neutralized by bio-engineered bacteria.",
-            "id": 17,
-            "masked": true,
-            "name": "Radioactive Waste",
-            "progress": {},
-            "q_limit": 0.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 16,
-                    "instant": false,
-                    "item_id": 17,
-                    "rate_amount": 1.0,
-                    "rate_duration": 8.0,
-                    "sources": [
-                        {
-                            "item_id": 17,
-                            "preserve": false,
-                            "q_required": 2.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": true
-        },
-        {
-            "attribs": [],
-            "description": "Accelerates atomic particles to collide with nuclei, splitting them into smaller parts and releasing energy.",
-            "id": 21,
-            "masked": false,
-            "name": "Reactor",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [],
-            "storage_type": "local",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Nuclear fuel becomes inefficient and radioactive after use. Refine into fresh plutonium by atomic reclamation.\r\n",
-            "id": 16,
-            "masked": true,
-            "name": "Spent Fuel",
-            "progress": {},
-            "q_limit": 0.0,
-            "quantity": 0.0,
-            "recipes": [],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Generated heat could turn nearby rivers into hot springs, upsetting \ud83d\udc1f fishes.",
-            "id": 18,
-            "masked": true,
-            "name": "Thermal Waste",
-            "progress": {},
-            "q_limit": 0.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 17,
-                    "instant": false,
-                    "item_id": 18,
-                    "rate_amount": 0.0,
-                    "rate_duration": 3.0,
-                    "sources": [
-                        {
-                            "item_id": 19,
-                            "preserve": true,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 18,
-                            "preserve": false,
-                            "q_required": 1.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": true
-        },
-        {
-            "attribs": [],
-            "description": "Stored in a high-capacity battery. Quantity is measured in kilowatt-hours (kWh).\r\n\r\nA fully charged battery is enough to provide backup power for a city while the main supply is repaired. (Note: Present-day batteries cannot hold such amounts.)",
-            "id": 20,
-            "masked": false,
-            "name": "Energy",
-            "progress": {},
-            "q_limit": 10000000.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [
-                        {
-                            "item_id": 16,
-                            "rate_amount": 1.0
-                        },
-                        {
-                            "item_id": 17,
-                            "rate_amount": 2.0
-                        },
-                        {
-                            "item_id": 18,
-                            "rate_amount": 2.0
-                        }
-                    ],
-                    "id": 14,
-                    "instant": false,
-                    "item_id": 20,
-                    "rate_amount": 1.0,
-                    "rate_duration": 8.0,
-                    "sources": [
-                        {
-                            "item_id": 15,
-                            "preserve": false,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 21,
-                            "preserve": true,
-                            "q_required": 1.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": true
-        },
-        {
-            "attribs": [],
-            "description": "Cycles water to cool through contact with air.\r\n\r\n",
-            "id": 19,
-            "masked": false,
-            "name": "Cooling Tower",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [],
-            "storage_type": "local",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Money is required for purchasing upgrades. Ultimately, the goal is to store energy, so don't sell all of it.",
-            "id": 23,
-            "masked": false,
-            "name": "Funds",
-            "progress": {},
-            "q_limit": 0.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 18,
-                    "instant": true,
-                    "item_id": 23,
-                    "rate_amount": 10.0,
-                    "rate_duration": 3.0,
-                    "sources": [
-                        {
-                            "item_id": 20,
-                            "preserve": false,
-                            "q_required": 10.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "carried",
-            "toplevel": false
-        }
-    ],
-    "locations": [
-        {
-            "description": "Large chamber with a controlled environment where fission takes place.",
-            "destinations": [],
-            "dimensions": [0,0],
-            "excluded": [0,0,0,0],
-            "id": 5,
-            "items": [
-                {
-                    "item_id": 21,
-                    "position": [0,0],
-                    "quantity": 1.0
-                }
-            ],
-            "masked": false,
-            "name": "Energy Core Room",
-            "progress": {},
-            "quantity": 0.0,
-            "toplevel": true
-        },
-        {
-            "description": "Handle excess heat away from the main room.",
-            "destinations": [],
-            "dimensions": [0,0],
-            "excluded": [0,0,0,0],
-            "id": 6,
-            "items": [
-                {
-                    "item_id": 19,
-                    "position": [0,0],
-                    "quantity": 1.0
-                }
-            ],
-            "masked": false,
-            "name": "Outdoor Facility",
-            "progress": {},
-            "quantity": 0.0,
-            "toplevel": true
-        },
-        {
-            "description": "Design and build upgrades to improve production.",
-            "destinations": [],
-            "dimensions": [0,0],
-            "excluded": [0,0,0,0],
-            "id": 7,
-            "items": [
-                {
-                    "item_id": 24,
-                    "position": [0,0],
-                    "quantity": 0.0
-                },
-                {
-                    "item_id": 22,
-                    "position": [0,0],
-                    "quantity": 0.0
-                }
-            ],
-            "masked": false,
-            "name": "Research and Development",
-            "progress": {},
-            "quantity": 0.0,
-            "toplevel": true
-        }
-    ],
-    "overall": {
-        "description": "Produce enough energy to fill a high-capacity battery while managing <c=orange>waste</c>. Handle any critical failures and then restore operations.\r\n\r\nYou're in charge of creating appropriate upgrades and event mechanics.",
-        "multiplayer": true,
-        "number_format": "sci",
-        "progress_type": "Idle",
-        "slots": [],
-        "title": "Fission Plant",
-        "win_reqs": [
+    "entities": {
+        "items": [
             {
-                "attrib_id": null,
-                "attrib_value": 0.0,
-                "char_id": null,
                 "id": 2,
-                "item_id": 20,
-                "loc_id": null,
-                "quantity": 10000000.0
+                "name": "Production Speed II",
+                "description": "Quadruple the energy production speed to 8 per 8 seconds. This only improves speed, so also double the waste generated and resources required.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 5.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 20,
+                        "rate_amount": 1.0,
+                        "rate_duration": 300.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 11,
+                                "q_required": 1000.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 3,
+                                "q_required": 1.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 3,
+                "name": "Production Speed I",
+                "description": "Double energy production speed to 2 per 8 seconds. This only improves speed, so also double the waste generated and resources required.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 10.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 19,
+                        "rate_amount": 1.0,
+                        "rate_duration": 300.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 11,
+                                "q_required": 100.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 4,
+                "name": "Plutonium",
+                "description": "Valuable nuclear material used in a reactor to generate high energy levels.\r\n\r\nMeasured in units of 100 \u03bcg (0.0001 g). This amount causes 1e17 fission reactions, generating 1 kWh of energy.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 0.0,
+                "toplevel": true,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 15,
+                        "rate_amount": 1.0,
+                        "rate_duration": 8.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 7,
+                                "q_required": 1.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 5,
+                "name": "Radioactive Waste",
+                "description": "Glowing, greenish sludge. Stored in thick metal barrels\u2014just hope they don't spring a leak.\r\n\r\nCan be consumed and neutralized by bio-engineered bacteria.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 0.0,
+                "toplevel": true,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 16,
+                        "rate_amount": 1.0,
+                        "rate_duration": 8.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 5,
+                                "q_required": 2.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 6,
+                "name": "Reactor",
+                "description": "Accelerates atomic particles to collide with nuclei, splitting them into smaller parts and releasing energy.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 7,
+                "name": "Spent Fuel",
+                "description": "Nuclear fuel becomes inefficient and radioactive after use. Refine into fresh plutonium by atomic reclamation.\r\n",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 0.0,
+                "toplevel": false,
+                "masked": true,
+                "recipes": []
+            },
+            {
+                "id": 8,
+                "name": "Thermal Waste",
+                "description": "Generated heat could turn nearby rivers into hot springs, upsetting \ud83d\udc1f fishes.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 0.0,
+                "toplevel": true,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 17,
+                        "rate_amount": 0.0,
+                        "rate_duration": 3.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 10,
+                                "q_required": 1.0,
+                                "preserve": true
+                            },
+                            {
+                                "item_id": 8,
+                                "q_required": 1.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 9,
+                "name": "Energy",
+                "description": "Stored in a high-capacity battery. Quantity is measured in kilowatt-hours (kWh).\r\n\r\nA fully charged battery is enough to provide backup power for a city while the main supply is repaired. (Note: Present-day batteries cannot hold such amounts.)",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 10000000.0,
+                "toplevel": true,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 14,
+                        "rate_amount": 1.0,
+                        "rate_duration": 8.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 4,
+                                "q_required": 1.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 6,
+                                "q_required": 1.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [
+                            {
+                                "product_id": 7,
+                                "rate_amount": 1.0
+                            },
+                            {
+                                "product_id": 5,
+                                "rate_amount": 2.0
+                            },
+                            {
+                                "product_id": 8,
+                                "rate_amount": 2.0
+                            }
+                        ],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 10,
+                "name": "Cooling Tower",
+                "description": "Cycles water to cool through contact with air.\r\n\r\n",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 11,
+                "name": "Funds",
+                "description": "Money is required for purchasing upgrades. Ultimately, the goal is to store energy, so don't sell all of it.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "c",
+                "q_limit": 0.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 18,
+                        "rate_amount": 10.0,
+                        "rate_duration": 3.0,
+                        "instant": true,
+                        "sources": [
+                            {
+                                "item_id": 9,
+                                "q_required": 10.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
             }
-        ]
+        ],
+        "locations": [
+            {
+                "id": 12,
+                "name": "Energy Core Room",
+                "description": "Large chamber with a controlled environment where fission takes place.",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": null,
+                "excluded": null,
+                "toplevel": true,
+                "masked": false,
+                "items": [
+                    {
+                        "item_id": 6,
+                        "quantity": 1.0,
+                        "position": null
+                    }
+                ],
+                "item_refs": [],
+                "destinations": []
+            },
+            {
+                "id": 13,
+                "name": "Outdoor Facility",
+                "description": "Handle excess heat away from the main room.",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": null,
+                "excluded": null,
+                "toplevel": true,
+                "masked": false,
+                "items": [
+                    {
+                        "item_id": 10,
+                        "quantity": 1.0,
+                        "position": null
+                    }
+                ],
+                "item_refs": [],
+                "destinations": []
+            },
+            {
+                "id": 14,
+                "name": "Research and Development",
+                "description": "Design and build upgrades to improve production.",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": null,
+                "excluded": null,
+                "toplevel": true,
+                "masked": false,
+                "items": [
+                    {
+                        "item_id": 2,
+                        "quantity": 0.0,
+                        "position": null
+                    },
+                    {
+                        "item_id": 3,
+                        "quantity": 0.0,
+                        "position": null
+                    }
+                ],
+                "item_refs": [],
+                "destinations": []
+            }
+        ],
+        "characters": [],
+        "attribs": [],
+        "events": []
+    },
+    "general data": {
+        "piles": [
+            {
+                "item_id": 4,
+                "quantity": 10.0
+            },
+            {
+                "item_id": 5,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 7,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 8,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 9,
+                "quantity": 0.0
+            }
+        ],
+        "progress": []
+    },
+    "overall settings": {
+        "title": "Fission Plant",
+        "description": "Produce enough energy to fill a high-capacity battery while managing <c=orange>waste</c>. Handle any critical failures and then restore operations.\r\n\r\nYou're in charge of creating appropriate upgrades and event mechanics.",
+        "number_format": "sci",
+        "slots": [],
+        "progress_type": "Idle",
+        "multiplayer": true
     }
 }

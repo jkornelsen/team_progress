@@ -1,534 +1,452 @@
 {
-    "attribs": [
-        {
-            "description": "How much chopping still needs to be done to finish chopping down the tree. Once HP is 0, the tree can be cut into logs.",
-            "enum_list": [],
-            "id": 6,
-            "is_binary": false,
-            "name": "HP"
-        },
-        {
-            "description": "Increases max cutting progress per chop.",
-            "enum_list": [],
-            "id": 7,
-            "is_binary": false,
-            "name": "Strength"
-        },
-        {
-            "description": "Increases likelihood of getting better rolls for chopping.",
-            "enum_list": [],
-            "id": 8,
-            "is_binary": false,
-            "name": "Accuracy"
-        },
-        {
-            "description": "Values are negative, to change a tree's HP. Similar to <i>Strength</i> but additive.",
-            "enum_list": [],
-            "id": 9,
-            "is_binary": false,
-            "name": "Base Power"
-        },
-        {
-            "description": "What shape a vehicle is in.",
-            "enum_list": [],
-            "id": 10,
-            "is_binary": false,
-            "name": "Repair"
-        }
-    ],
-    "characters": [
-        {
-            "attribs": [
-                [10, 2.0]
-            ],
-            "description": "A run-down workhorse with a little left to give. \r\n\r\nCarries logs. Someone must drive (move/travel with) the truck.",
-            "dest_id": null,
-            "events": [
-                8
-            ],
-            "id": 5,
-            "items": [
-                {
-                    "item_id": 19,
-                    "quantity": 2.0,
-                    "slot": ""
-                }
-            ],
-            "location_id": 4,
-            "masked": false,
-            "name": "Truck",
-            "position": [4,2],
-            "progress": {},
-            "toplevel": true,
-            "travel_group": ""
-        },
-        {
-            "attribs": [
-                [7, 1.1],
-                [8, 1.1]
-            ],
-            "description": "Player character who initially started the company.",
-            "dest_id": null,
-            "events": [
-                5
-            ],
-            "id": 4,
-            "items": [
-                {
-                    "item_id": 18,
-                    "quantity": 1.0,
-                    "slot": "Held"
-                }
-            ],
-            "location_id": 4,
-            "masked": false,
-            "name": "Owner",
-            "position": [4,3],
-            "progress": {},
-            "toplevel": true,
-            "travel_group": ""
-        }
-    ],
-    "events": [
-        {
-            "changed": [],
-            "description": "Choose the grid coordinates of the next tree to be actively harvested on a plot. See <a href=\"/play/item/15\">Marked Tree</a> for instructions.",
-            "determining": [],
-            "id": 3,
-            "name": "Mark a Tree",
-            "numeric_range": [1, 20],
-            "outcome_type": "coordinates",
-            "selection_strings": "",
-            "toplevel": false,
-            "trigger_chance": 0.0,
-            "triggers": [
-                ["item", 17],
-                ["loc", 4]
-            ]
-        },
-        {
-            "changed": [],
-            "description": "Run to get details on what happened after a <a href=\"/play/event/6\">Chopping Mishap</a> occurs.",
-            "determining": [],
-            "id": 7,
-            "name": "Chopping Mishap Type",
-            "numeric_range": [0, 10],
-            "outcome_type": "selection",
-            "selection_strings": "Tool damaged\r\nTool broken\r\nTool destroyed\r\nFewer resources gained\r\nResources lost\r\nNo progress\r\nMinor injury\r\nSevere injury",
-            "toplevel": false,
-            "trigger_chance": 0.0,
-            "triggers": []
-        },
-        {
-            "changed": [
-                ["attrib", 6]
-            ],
-            "description": "Adjust die max (not min) by axe power and wielder strength, giving -1 to -16 initially.\r\n\r\nAlso, run <a href=\"/play/event/6\">Chopping Mishap</a> when appropriate, such as after a poor damage roll, or for the final blow.",
-            "determining": [
-                {
-                    "entity_data": ["attrib", 9],
-                    "label": "Item",
-                    "operation": "-"
-                },
-                {
-                    "entity_data": ["attrib", 7],
-                    "label": "Wielder",
-                    "operation": "*"
-                }
-            ],
-            "id": 5,
-            "name": "Swing to Chop",
-            "numeric_range": [-1, -10],
-            "outcome_type": "numeric",
-            "selection_strings": "",
-            "toplevel": false,
-            "trigger_chance": 0.0,
-            "triggers": [
-                ["item", 19],
-                ["item", 15]
-            ]
-        },
-        {
-            "changed": [],
-            "description": "Not always a guarantee with old vehicles.\r\n\r\nUse Easy difficulty under normal circumstances, since it's somewhat routine. Also, add repair value to both min and max.",
-            "determining": [
-                {
-                    "entity_data": ["attrib", 10],
-                    "label": "",
-                    "operation": "+"
-                }
-            ],
-            "id": 8,
-            "name": "Start engine",
-            "numeric_range": [1, 20],
-            "outcome_type": "fourway",
-            "selection_strings": "",
-            "toplevel": false,
-            "trigger_chance": 0.0,
-            "triggers": []
-        },
-        {
-            "changed": [],
-            "description": "Chance of success. Roll to determine how well a batch of logs turns into boards, or if something perhaps goes wrong.\r\n\r\nUse Easy difficulty. If there is a large number of logs to be processed, lower the die min a little, making success a bit less likely.",
-            "determining": [
-                {
-                    "entity_data": ["item", 19],
-                    "label": "",
-                    "operation": "-"
-                }
-            ],
-            "id": 9,
-            "name": "Operate saw",
-            "numeric_range": [1, 20],
-            "outcome_type": "fourway",
-            "selection_strings": "",
-            "toplevel": false,
-            "trigger_chance": 0.0,
-            "triggers": [
-                ["item", 27],
-                ["loc", 10]
-            ]
-        },
-        {
-            "changed": [],
-            "description": "Chance of something bad, or possibly good, happening.  Use accuracy to modify both min and max if relevant for the situation, such as when attempting to land a blow.\r\n\r\nRun <a href=\"/play/event/7\">Chopping Mishap Type</a> for further details.",
-            "determining": [
-                {
-                    "entity_data": ["attrib", 8],
-                    "label": "Item",
-                    "operation": "+"
-                },
-                {
-                    "entity_data": ["attrib", 8],
-                    "label": "Wielder \u2014 Die Max",
-                    "operation": "*"
-                },
-                {
-                    "entity_data": ["attrib", 8],
-                    "label": "Wielder \u2014 Die Min",
-                    "operation": "/"
-                }
-            ],
-            "id": 6,
-            "name": "Chopping Mishap",
-            "numeric_range": [1, 20],
-            "outcome_type": "fourway",
-            "selection_strings": "",
-            "toplevel": false,
-            "trigger_chance": 0.1,
-            "triggers": []
-        }
-    ],
-    "items": [
-        {
-            "attribs": [],
-            "description": "Idle chopping is for when no characters are actively chopping, either because they are doing something else, or while offline.",
-            "id": 19,
-            "masked": false,
-            "name": "Logs",
-            "progress": {},
-            "q_limit": 0.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [
-                        {
-                            "attrib_id": 6,
-                            "show_max": true,
-                            "value_range": [null, -1.0]
-                        }
+    "entities": {
+        "items": [
+            {
+                "id": 7,
+                "name": "Logs",
+                "description": "Idle chopping is for when no characters are actively chopping, either because they are doing something else, or while offline.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "c",
+                "q_limit": 0.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 8,
+                        "rate_amount": 10.0,
+                        "rate_duration": 15.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 15,
+                                "q_required": 1.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": [
+                            {
+                                "attrib_id": 2,
+                                "value_range": [
+                                    null,
+                                    -1.0
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "id": 21,
+                        "rate_amount": 10.0,
+                        "rate_duration": 1200.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 10,
+                                "q_required": 1.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 8,
+                "name": "Cash",
+                "description": "Purchase new equipment, and eventually, a new plot of land.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 0.0,
+                "toplevel": true,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 22,
+                        "rate_amount": 5.0,
+                        "rate_duration": 3.0,
+                        "instant": true,
+                        "sources": [
+                            {
+                                "item_id": 12,
+                                "q_required": 4.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 9,
+                "name": "Rock",
+                "description": "Landscape feature that can get in the way of a lumber operation.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 0.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 10,
+                "name": "Plot 1 Trees",
+                "description": "How many trees are available on a plot.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 0.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 11,
+                "name": "Circular Saw",
+                "description": "",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 12,
+                "name": "Boards",
+                "description": "Cut from logs.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 0.0,
+                "toplevel": true,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 23,
+                        "rate_amount": 1.0,
+                        "rate_duration": 3.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 7,
+                                "q_required": 1.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 11,
+                                "q_required": 1.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 13,
+                "name": "Honeycomb",
+                "description": "Looks tempting. Smoke may help drive the bees away.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 14,
+                "name": "Old Axe",
+                "description": "Handle has been reattached many times in the past.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "c",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 15,
+                "name": "Marked Tree",
+                "description": "Plots are full of trees, but mark only one at a time for harvesting.\r\n\r\n<b><c=\"saddlebrown\">When Marked Tree quantity is 0</c></b>:\r\n1. Run <a href=\"/play/event/3\">Mark a Tree</a>, select <i>Starting Plot</i> and roll for coordinates.\r\n2. In <a href=\"/configure/location/4\">Starting Plot setup</a>, set the marked tree position to the new coordinates.\r\n3. Produce (below) a <i>Marked Tree</i> from <i>Plot 1 Trees</i> so quantity goes from 0 to 1.\r\n4. Set HP to 100.\r\n\r\nNow the tree is ready for a character such as the <i>Owner</i> to <i>Swing to Chop</i>.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 7,
+                        "rate_amount": 1.0,
+                        "rate_duration": 3.0,
+                        "instant": true,
+                        "sources": [
+                            {
+                                "item_id": 10,
+                                "q_required": 1.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            }
+        ],
+        "locations": [
+            {
+                "id": 16,
+                "name": "Lumber Yard",
+                "description": "",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": [
+                    7,
+                    3
+                ],
+                "excluded": null,
+                "toplevel": false,
+                "masked": false,
+                "items": [
+                    {
+                        "item_id": 11,
+                        "quantity": 1.0,
+                        "position": [
+                            3,
+                            2
+                        ]
+                    }
+                ],
+                "item_refs": [],
+                "destinations": [
+                    {
+                        "loc2_id": 18,
+                        "duration": 1,
+                        "bidirectional": true
+                    }
+                ]
+            },
+            {
+                "id": 17,
+                "name": "Tree \u2014 Climbing",
+                "description": "Use this view for characters to climb a tree, starting from the bottom.",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": [
+                    4,
+                    20
+                ],
+                "excluded": [
+                    1,
+                    3,
+                    2,
+                    20
+                ],
+                "toplevel": false,
+                "masked": false,
+                "items": [
+                    {
+                        "item_id": 13,
+                        "quantity": 1.0,
+                        "position": [
+                            1,
+                            2
+                        ]
+                    }
+                ],
+                "item_refs": [],
+                "destinations": [
+                    {
+                        "loc2_id": 18,
+                        "duration": 1,
+                        "bidirectional": true
+                    }
+                ]
+            },
+            {
+                "id": 18,
+                "name": "Starting Plot",
+                "description": "This plot of land is your family inheritance and the basis for setting up the company. There is a pond in the southeast.",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": [
+                    20,
+                    20
+                ],
+                "excluded": [
+                    8,
+                    12,
+                    18,
+                    17
+                ],
+                "toplevel": false,
+                "masked": false,
+                "items": [
+                    {
+                        "item_id": 7,
+                        "quantity": 4.0,
+                        "position": [
+                            3,
+                            2
+                        ]
+                    },
+                    {
+                        "item_id": 15,
+                        "quantity": 1.0,
+                        "position": [
+                            15,
+                            4
+                        ]
+                    },
+                    {
+                        "item_id": 9,
+                        "quantity": 1.0,
+                        "position": [
+                            14,
+                            5
+                        ]
+                    }
+                ],
+                "item_refs": [],
+                "destinations": []
+            }
+        ],
+        "characters": [
+            {
+                "id": 19,
+                "name": "Truck",
+                "description": "A run-down workhorse with a little left to give. \r\n\r\nCarries logs. Someone must drive (move/travel with) the truck.",
+                "attribs": [
+                    [
+                        6,
+                        2.0
+                    ]
+                ],
+                "abilities": [],
+                "toplevel": true,
+                "location_id": 18,
+                "position": [
+                    4,
+                    2
+                ],
+                "travel_party": "",
+                "items": [
+                    {
+                        "item_id": 7,
+                        "quantity": 2.0,
+                        "slot": ""
+                    }
+                ]
+            },
+            {
+                "id": 20,
+                "name": "Owner",
+                "description": "Player character who initially started the company.",
+                "attribs": [
+                    [
+                        3,
+                        1.1
                     ],
-                    "byproducts": [],
-                    "id": 8,
-                    "instant": false,
-                    "item_id": 19,
-                    "rate_amount": 10.0,
-                    "rate_duration": 15.0,
-                    "sources": [
-                        {
-                            "item_id": 15,
-                            "preserve": false,
-                            "q_required": 1.0
-                        }
+                    [
+                        4,
+                        1.1
                     ]
-                },
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 21,
-                    "instant": false,
-                    "item_id": 19,
-                    "rate_amount": 10.0,
-                    "rate_duration": 1200.0,
-                    "sources": [
-                        {
-                            "item_id": 17,
-                            "preserve": false,
-                            "q_required": 1.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "carried",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Purchase new equipment, and eventually, a new plot of land.",
-            "id": 25,
-            "masked": false,
-            "name": "Cash",
-            "progress": {},
-            "q_limit": 0.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 22,
-                    "instant": true,
-                    "item_id": 25,
-                    "rate_amount": 5.0,
-                    "rate_duration": 3.0,
-                    "sources": [
-                        {
-                            "item_id": 26,
-                            "preserve": false,
-                            "q_required": 4.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": true
-        },
-        {
-            "attribs": [],
-            "description": "Landscape feature that can get in the way of a lumber operation.",
-            "id": 16,
-            "masked": false,
-            "name": "Rock",
-            "progress": {},
-            "q_limit": 0.0,
-            "quantity": 0.0,
-            "recipes": [],
-            "storage_type": "local",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "How many trees are available on a plot.",
-            "id": 17,
-            "masked": false,
-            "name": "Plot 1 Trees",
-            "progress": {},
-            "q_limit": 0.0,
-            "quantity": 98.0,
-            "recipes": [],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "",
-            "id": 27,
-            "masked": false,
-            "name": "Circular Saw",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [],
-            "storage_type": "local",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Cut from logs.",
-            "id": 26,
-            "masked": false,
-            "name": "Boards",
-            "progress": {},
-            "q_limit": 0.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 23,
-                    "instant": false,
-                    "item_id": 26,
-                    "rate_amount": 1.0,
-                    "rate_duration": 3.0,
-                    "sources": [
-                        {
-                            "item_id": 19,
-                            "preserve": false,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 27,
-                            "preserve": true,
-                            "q_required": 1.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": true
-        },
-        {
-            "attribs": [],
-            "description": "Looks tempting. Smoke may help drive the bees away.",
-            "id": 28,
-            "masked": false,
-            "name": "Honeycomb",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [],
-            "storage_type": "local",
-            "toplevel": false
-        },
-        {
-            "attribs": [
-                [9, 5.0],
-                [8, 2.0]
-            ],
-            "description": "Handle has been reattached many times in the past.",
-            "id": 18,
-            "masked": false,
-            "name": "Old Axe",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [],
-            "storage_type": "carried",
-            "toplevel": false
-        },
-        {
-            "attribs": [
-                [6, 67.0]
-            ],
-            "description": "Plots are full of trees, but mark only one at a time for harvesting.\r\n\r\n<b><c=\"saddlebrown\">When Marked Tree quantity is 0</c></b>:\r\n1. Run <a href=\"/play/event/3\">Mark a Tree</a>, select <i>Starting Plot</i> and roll for coordinates.\r\n2. In <a href=\"/configure/location/4\">Starting Plot setup</a>, set the marked tree position to the new coordinates.\r\n3. Produce (below) a <i>Marked Tree</i> from <i>Plot 1 Trees</i> so quantity goes from 0 to 1.\r\n4. Set HP to 100.\r\n\r\nNow the tree is ready for a character such as the <i>Owner</i> to <i>Swing to Chop</i>.",
-            "id": 15,
-            "masked": false,
-            "name": "Marked Tree",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 7,
-                    "instant": true,
-                    "item_id": 15,
-                    "rate_amount": 1.0,
-                    "rate_duration": 3.0,
-                    "sources": [
-                        {
-                            "item_id": 17,
-                            "preserve": false,
-                            "q_required": 1.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "local",
-            "toplevel": false
-        }
-    ],
-    "locations": [
-        {
-            "description": "",
-            "destinations": [
-                {
-                    "bidirectional": true,
-                    "door1": [7,2],
-                    "door2": [1,2],
-                    "duration": 1,
-                    "loc2_id": 4
-                }
-            ],
-            "dimensions": [7,3],
-            "excluded": [0,0,0,0],
-            "id": 10,
-            "item_refs": [],
-            "items": [
-                {
-                    "item_id": 27,
-                    "position": [3,2],
-                    "quantity": 1.0
-                }
-            ],
-            "masked": false,
-            "name": "Lumber Yard",
-            "toplevel": false
-        },
-        {
-            "description": "Use this view for characters to climb a tree, starting from the bottom.",
-            "destinations": [
-                {
-                    "bidirectional": true,
-                    "door1": [3,20],
-                    "door2": [4,9],
-                    "duration": 1,
-                    "loc2_id": 4
-                }
-            ],
-            "dimensions": [4,20],
-            "excluded": [1,3,2,20],
-            "id": 9,
-            "item_refs": [],
-            "items": [
-                {
-                    "item_id": 28,
-                    "position": [1,2],
-                    "quantity": 1.0
-                }
-            ],
-            "masked": false,
-            "name": "Tree \u2014 Climbing",
-            "toplevel": false
-        },
-        {
-            "description": "This plot of land is your family inheritance and the basis for setting up the company. There is a pond in the southeast.",
-            "destinations": [],
-            "dimensions": [20,20],
-            "excluded": [8,12,18,17],
-            "id": 4,
-            "item_refs": [],
-            "items": [
-                {
-                    "item_id": 19,
-                    "position": [3,2],
-                    "quantity": 4.0
-                },
-                {
-                    "item_id": 15,
-                    "position": [15,4],
-                    "quantity": 1.0
-                },
-                {
-                    "item_id": 16,
-                    "position": [14,5],
-                    "quantity": 1.0
-                }
-            ],
-            "masked": false,
-            "name": "Starting Plot",
-            "toplevel": false
-        }
-    ],
-    "overall": {
+                ],
+                "abilities": [],
+                "toplevel": true,
+                "location_id": 18,
+                "position": [
+                    4,
+                    3
+                ],
+                "travel_party": "",
+                "items": [
+                    {
+                        "item_id": 14,
+                        "quantity": 1.0,
+                        "slot": "Held"
+                    }
+                ]
+            }
+        ],
+        "attribs": [
+            {
+                "id": 2,
+                "name": "HP",
+                "description": "How much chopping still needs to be done to finish chopping down the tree. Once HP is 0, the tree can be cut into logs.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 3,
+                "name": "Strength",
+                "description": "Increases max cutting progress per chop.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 4,
+                "name": "Accuracy",
+                "description": "Increases likelihood of getting better rolls for chopping.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 5,
+                "name": "Base Power",
+                "description": "Values are negative, to change a tree's HP. Similar to <i>Strength</i> but additive.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 6,
+                "name": "Repair",
+                "description": "What shape a vehicle is in.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            }
+        ],
+        "events": []
+    },
+    "general data": {
+        "piles": [
+            {
+                "item_id": 8,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 10,
+                "quantity": 98.0
+            },
+            {
+                "item_id": 12,
+                "quantity": 0.0
+            }
+        ],
+        "progress": []
+    },
+    "overall settings": {
+        "title": "Lumber",
         "description": "Run an outfit to <c=\"saddlebrown\">gather resources</c> either actively or idly. Could be expanded for fishing and mining.",
-        "multiplayer": true,
         "number_format": "en_US",
-        "progress_type": "Hybrid",
         "slots": [
             "Held"
         ],
-        "title": "Lumber",
-        "win_reqs": []
+        "progress_type": "Hybrid",
+        "multiplayer": true
     }
 }

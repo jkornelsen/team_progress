@@ -1,1147 +1,1083 @@
 {
-    "attribs": [
-        {
-            "description": "Hit Points \u2014 current health of a character.",
-            "enum_list": [],
-            "id": 6,
-            "is_binary": false,
-            "name": "HP"
-        },
-        {
-            "description": "How full magic reserves can be for a character. Also determines MP regen rate.",
-            "enum_list": [],
-            "id": 8,
-            "is_binary": false,
-            "name": "Max MP"
-        },
-        {
-            "description": "Turns remaining for the negative status to last.",
-            "enum_list": [],
-            "id": 9,
-            "is_binary": false,
-            "name": "Poisoned"
-        },
-        {
-            "description": "Level that indicates how powerful and advanced a character is. Increment when enough XP is gained.\r\n<pre>\r\n+-----------+------------+\r\n| XP Level  | XP Required|\r\n+-----------+------------+\r\n|    1      |     0      |\r\n|    2      |    20      |\r\n|    3      |    60      |\r\n|    4      |   120      |\r\n|    5      |   200      |\r\n|    6      |   300      |\r\n|    7      |   420      |\r\n|    8      |   560      |\r\n|    9      |   720      |\r\n|   10      |   900      |\r\n|   11      |  1100      |\r\n|   12      |  1320      |\r\n|   13      |  1560      |\r\n|   14      |  1820      |\r\n|   15      |  2100      |\r\n|   16      |  2400      |\r\n|   17      |  2720      |\r\n|   18      |  3060      |\r\n|   19      |  3420      |\r\n|   20      |  3800      |\r\n+-----------+------------+\r\n</pre>",
-            "enum_list": [],
-            "id": 11,
-            "is_binary": false,
-            "name": "XP Level"
-        },
-        {
-            "description": "Strength increases melee damage dealt.\r\n\r\nChoosing the Melee class grants 2 Str, 1 Dex, and 2 Max HP.",
-            "enum_list": [],
-            "id": 2,
-            "is_binary": false,
-            "name": "Str"
-        },
-        {
-            "description": "Intelligence increases magic success, reserves (MP), and damage.\r\n\r\nChoosing the Mage class grants 2 Int, 1 Dex, and 1 Max MP.\r\n\r\nChoosing the Priest class grants 1 Int, 1 Max HP, and 2 Max MP.",
-            "enum_list": [],
-            "id": 4,
-            "is_binary": false,
-            "name": "Int"
-        },
-        {
-            "description": "Amount when fully healthy. Also determines HP regen rate.\r\n\r\nTo calculate, add the base species and class stat and multiply the result by XP Level.",
-            "enum_list": [],
-            "id": 7,
-            "is_binary": false,
-            "name": "Max HP"
-        },
-        {
-            "description": "Harder is better quality but more difficult to craft.",
-            "enum_list": [],
-            "id": 13,
-            "is_binary": false,
-            "name": "Density"
-        },
-        {
-            "description": "Magic Points \u2014 reserves of magical energy used for casting.",
-            "enum_list": [],
-            "id": 5,
-            "is_binary": false,
-            "name": "MP"
-        },
-        {
-            "description": "Reserves of physical energy used for big actions.",
-            "enum_list": [],
-            "id": 14,
-            "is_binary": false,
-            "name": "Stamina"
-        },
-        {
-            "description": "Dexterity increases accuracy, evasion, and ranged damage dealt.\r\n\r\nChoosing the Thief class grants 3 Dex.\r\n\r\nChoosing the Archer class grants 2 Dex and 1 Str.",
-            "enum_list": [],
-            "id": 3,
-            "is_binary": false,
-            "name": "Dex"
-        },
-        {
-            "description": "Equipped armour can increase chance to dodge. Combines with character's Dex.",
-            "enum_list": [],
-            "id": 15,
-            "is_binary": false,
-            "name": "Evasion"
-        },
-        {
-            "description": "Equipped weapons can increase chance to hit. Combines with character's Dex.",
-            "enum_list": [],
-            "id": 16,
-            "is_binary": false,
-            "name": "Accuracy"
-        },
-        {
-            "description": "More light makes it easier to perceive enemies and details, and may affect light-sensitive creatures. Complete absence of light may even mean running into walls.",
-            "enum_list": [],
-            "id": 18,
-            "is_binary": false,
-            "name": "Brightness"
-        },
-        {
-            "description": "Equipped weapons can increase damage. Combines with character's Dex or Str.",
-            "enum_list": [],
-            "id": 17,
-            "is_binary": false,
-            "name": "Damage"
-        },
-        {
-            "description": "Experience Points are gained through combat. Defeating an enemy yields 10 \u00d7 the enemy's XP level to each party member.\r\n\r\nWhen high enough, increase XP Level.",
-            "enum_list": [],
-            "id": 12,
-            "is_binary": false,
-            "name": "XP"
-        },
-        {
-            "description": "Equipped or natural armour can reduce damage.",
-            "enum_list": [],
-            "id": 19,
-            "is_binary": false,
-            "name": "Phys Dmg Reduction"
-        },
-        {
-            "description": "Turns remaining for the negative status to last. Fire does extra damage to undead.",
-            "enum_list": [],
-            "id": 10,
-            "is_binary": false,
-            "name": "Burning"
-        },
-        {
-            "description": "Dungeon level. Could be specified in feet or meters, but it's simpler to use the number of floors. Determines chance of encountering higher level monsters and better items.",
-            "enum_list": [],
-            "id": 1,
-            "is_binary": false,
-            "name": "Depth"
-        }
-    ],
-    "characters": [
-        {
-            "attribs": [
-                [11, 1.0],
-                [12, 0.0],
-                [2, 1.0],
-                [3, 3.0],
-                [4, 5.0],
-                [5, 3.0],
-                [6, 7.0],
-                [7, 7.0],
-                [8, 3.0]
-            ],
-            "description": "Elves are intelligent and light on their feet, known especially for their Mages.\r\n\r\nDuplicate to create either a player char or NPC.",
-            "dest_id": null,
-            "events": [13, 14],
-            "id": 3,
-            "items": [],
-            "location_id": null,
-            "masked": false,
-            "name": "Elf Template",
-            "position": [0,0],
-            "progress": {},
-            "toplevel": false,
-            "travel_group": ""
-        },
-        {
-            "attribs": [
-                [11, 1.0],
-                [12, 0.0],
-                [2, 5.0],
-                [3, 1.0],
-                [4, 1.0],
-                [5, 1.0],
-                [6, 12.0],
-                [7, 12.0],
-                [8, 1.0]
-            ],
-            "description": "Dwarves are strong and tough, natural Melee Fighters, but clumsy and poor at magic.\r\n\r\nDuplicate to create either a player char or NPC.",
-            "dest_id": null,
-            "events": [13, 14],
-            "id": 4,
-            "items": [],
-            "location_id": null,
-            "masked": false,
-            "name": "Dwarf Template",
-            "position": [0,0],
-            "progress": {},
-            "toplevel": false,
-            "travel_group": ""
-        },
-        {
-            "attribs": [
-                [11, 1.0],
-                [12, 0.0],
-                [2, 1.0],
-                [3, 4.0],
-                [4, 2.0],
-                [5, 1.0],
-                [6, 9.0],
-                [7, 9.0],
-                [8, 1.0]
-            ],
-            "description": "Halflings are highly nimble, master Thieves and good with ranged weapons.\r\n\r\nDuplicate to create either a player char or NPC.",
-            "dest_id": null,
-            "events": [
-                13,
-                14,
-                5,
-                6
-            ],
-            "id": 6,
-            "items": [],
-            "location_id": null,
-            "masked": false,
-            "name": "Halfling Template",
-            "position": [0,0],
-            "progress": {},
-            "toplevel": false,
-            "travel_group": ""
-        },
-        {
-            "attribs": [
-                [11, 1.0],
-                [8, 0.0],
-                [7, 11.0],
-                [6, 11.0],
-                [5, 0.0],
-                [4, 1.0],
-                [3, 2.0],
-                [2, 3.0]
-            ],
-            "description": "Connected fungi that launch spores over long distances. Must wait a turn after attempting to attack.",
-            "dest_id": null,
-            "events": [5, 6],
-            "id": 11,
-            "items": [],
-            "location_id": 6,
-            "masked": false,
-            "name": "spore colony",
-            "position": [2,1],
-            "progress": {},
-            "toplevel": false,
-            "travel_group": ""
-        },
-        {
-            "attribs": [
-                [2, 2.0],
-                [3, 1.0],
-                [4, 1.0],
-                [5, 0.0],
-                [6, 15.0],
-                [7, 15.0],
-                [8, 0.0],
-                [11, 1.0]
-            ],
-            "description": "Slightly sentient green covering the stone floor. Cannot move but can attack slowly in melee. Some advanced species of moss may be able to teleport short distances, but this one can't.",
-            "dest_id": null,
-            "events": [14, 13],
-            "id": 10,
-            "items": [],
-            "location_id": 6,
-            "masked": false,
-            "name": "moss",
-            "position": [3,3],
-            "progress": {},
-            "toplevel": false,
-            "travel_group": ""
-        },
-        {
-            "attribs": [
-                [2, 5.0],
-                [3, 5.0],
-                [4, 1.0],
-                [6, 10.0],
-                [7, 10.0],
-                [11, 1.0]
-            ],
-            "description": "Animals rely on natural skills and do not use equipment.\r\n\r\nDuplicate to create enemies.",
-            "dest_id": null,
-            "events": [14, 13],
-            "id": 5,
-            "items": [],
-            "location_id": null,
-            "masked": false,
-            "name": "Animal Template",
-            "position": [0,0],
-            "progress": {},
-            "toplevel": false,
-            "travel_group": ""
-        },
-        {
-            "attribs": [
-                [2, 1.0],
-                [3, 6.0],
-                [4, 1.0],
-                [6, 10.0],
-                [7, 10.0],
-                [11, 1.0]
-            ],
-            "description": "Somehow they're always bigger when they're coming out of the shadows in an unexplored room.",
-            "dest_id": null,
-            "events": [14, 13],
-            "id": 8,
-            "items": [],
-            "location_id": 2,
-            "masked": false,
-            "name": "rat",
-            "position": [2,1],
-            "progress": {},
-            "toplevel": false,
-            "travel_group": ""
-        },
-        {
-            "attribs": [
-                [19, 2.0],
-                [2, 1.0],
-                [3, 5.0],
-                [4, 1.0],
-                [6, 6.0],
-                [7, 6.0],
-                [11, 1.0]
-            ],
-            "description": "Well, that's not something you'd find in sunlit lands. An underworld force binds and animates its bones.",
-            "dest_id": null,
-            "events": [14, 13],
-            "id": 9,
-            "items": [],
-            "location_id": 5,
-            "masked": false,
-            "name": "rat skeleton",
-            "position": [2,1],
-            "progress": {},
-            "toplevel": false,
-            "travel_group": ""
-        },
-        {
-            "attribs": [
-                [8, 3.0],
-                [7, 9.0],
-                [6, 9.0],
-                [5, 3.0],
-                [4, 5.0],
-                [3, 4.0],
-                [2, 2.0],
-                [12, 0.0],
-                [11, 1.0]
-            ],
-            "description": "Elf Archer, an example player character. A patch over his left eye has left him slower to react (-1 Dex), but his battle scars have made him resilient (+2 Max HP).",
-            "dest_id": null,
-            "events": [
-                5,
-                6,
-                13,
-                14
-            ],
-            "id": 7,
-            "items": [
-                {
-                    "item_id": 6,
-                    "quantity": 15.0,
-                    "slot": ""
-                },
-                {
-                    "item_id": 5,
-                    "quantity": 1.0,
-                    "slot": ""
-                },
-                {
-                    "item_id": 8,
-                    "quantity": 1.0,
-                    "slot": ""
-                },
-                {
-                    "item_id": 7,
-                    "quantity": 1.0,
-                    "slot": ""
-                }
-            ],
-            "location_id": 1,
-            "masked": false,
-            "name": "@Thornwick",
-            "position": [1,5],
-            "progress": {},
-            "toplevel": true,
-            "travel_group": ""
-        }
-    ],
-    "events": [
-        {
-            "changed": [],
-            "description": "Chance to detect items or stealthy characters, or avoid detection.\r\n\r\n\u2022 Int and Dex increase detection.\r\n\u2022 Dex increases stealth.",
-            "determining": [
-                {
-                    "entity_data": ["attrib", 3],
-                    "label": "",
-                    "operation": "+"
-                },
-                {
-                    "entity_data": ["attrib", 4],
-                    "label": "",
-                    "operation": "+"
-                }
-            ],
-            "id": 3,
-            "name": "Perception",
-            "numeric_range": [1, 20],
-            "outcome_type": "fourway",
-            "selection_strings": "",
-            "toplevel": true,
-            "trigger_chance": 0.0,
-            "triggers": []
-        },
-        {
-            "changed": [],
-            "description": "Determine who goes first in combat.\r\n\r\nHowever, this roll may not be needed if there is another way to determine who goes first. For example, if one party is stealthed and not detected, then they go first.",
-            "determining": [],
-            "id": 4,
-            "name": "Initiative",
-            "numeric_range": [1, 20],
-            "outcome_type": "fourway",
-            "selection_strings": "",
-            "toplevel": true,
-            "trigger_chance": 0.0,
-            "triggers": []
-        },
-        {
-            "changed": [],
-            "description": "Higher XP level means that more enemies may spawn. Also roll for:\r\n\u2022 <a href=\"/play/event/7\">Which Enemy</a>\r\n\u2022 <a href=\"/play/event/9\">Grid Coordinates</a>",
-            "determining": [
-                {
-                    "entity_data": ["attrib", 11],
-                    "label": "",
-                    "operation": "+"
-                }
-            ],
-            "id": 8,
-            "name": "Populate Room \u2014 Number of Enemies",
-            "numeric_range": [0, 2],
-            "outcome_type": "numeric",
-            "selection_strings": "",
-            "toplevel": true,
-            "trigger_chance": 0.0,
-            "triggers": []
-        },
-        {
-            "changed": [],
-            "description": "Find out where something is placed.",
-            "determining": [],
-            "id": 9,
-            "name": "Grid Coordinates",
-            "numeric_range": [1, 5],
-            "outcome_type": "coordinates",
-            "selection_strings": "",
-            "toplevel": true,
-            "trigger_chance": 0.0,
-            "triggers": []
-        },
-        {
-            "changed": [],
-            "description": "Shape bow and attach string. Success requires dexterity. Fletching arrows is similar.\r\n\r\n\u2022 Major success produces a bow with improved stats.\r\n\u2022 Minor success results in a standard bow.\r\n\u2022 Minor failure produces a bow with poor stats, or fewer arrows.\r\n\u2022 Major failure consumes resources and may cause injury.",
-            "determining": [
-                {
-                    "entity_data": ["attrib", 13],
-                    "label": "Material",
-                    "operation": "-"
-                },
-                {
-                    "entity_data": ["attrib", 3],
-                    "label": "Crafter",
-                    "operation": "+"
-                }
-            ],
-            "id": 1,
-            "name": "Carve or Fletch",
-            "numeric_range": [1, 20],
-            "outcome_type": "fourway",
-            "selection_strings": "",
-            "toplevel": false,
-            "trigger_chance": 0.0,
-            "triggers": [
-                ["item", 1]
-            ]
-        },
-        {
-            "changed": [],
-            "description": "Determines whether a ranged attack hits. Dexterity increases accuracy, while evasion decreases it.\r\n\r\nIf successful, also roll <a href=\"/play/event/6\">Shoot \u2014 Dmg</a> to determine how much damage is done and apply to a target.\r\n\r\nMajor failures cause destruction of ammo and may give the enemy a chance to counterattack.",
-            "determining": [
-                {
-                    "entity_data": ["attrib", 15],
-                    "label": "Defender Armour",
-                    "operation": "-"
-                },
-                {
-                    "entity_data": ["attrib", 3],
-                    "label": "Defender Evasion",
-                    "operation": "-"
-                },
-                {
-                    "entity_data": ["attrib", 3],
-                    "label": "Attacker Accuracy",
-                    "operation": "+"
-                },
-                {
-                    "entity_data": ["attrib", 16],
-                    "label": "Ranged Weapon",
-                    "operation": "+"
-                },
-                {
-                    "entity_data": ["attrib", 16],
-                    "label": "Ranged Ammo",
-                    "operation": "+"
-                }
-            ],
-            "id": 5,
-            "name": "Shoot \u2014 Success",
-            "numeric_range": [1, 20],
-            "outcome_type": "fourway",
-            "selection_strings": "",
-            "toplevel": false,
-            "trigger_chance": 0.0,
-            "triggers": []
-        },
-        {
-            "changed": [],
-            "description": "Determines whether a melee attack hits. Dexterity increases accuracy, while evasion decreases it.\r\n\r\nIf successful, also roll <a href=\"/play/event/13\">Melee \u2014 Dmg</a> to determine how much damage is done and apply to a target.",
-            "determining": [
-                {
-                    "entity_data": ["attrib", 15],
-                    "label": "Defender Armour",
-                    "operation": "-"
-                },
-                {
-                    "entity_data": ["attrib", 3],
-                    "label": "Defender Evasion",
-                    "operation": "-"
-                },
-                {
-                    "entity_data": ["attrib", 3],
-                    "label": "Attacker Accuracy",
-                    "operation": "+"
-                },
-                {
-                    "entity_data": ["attrib", 16],
-                    "label": "Melee Weapon",
-                    "operation": "+"
-                }
-            ],
-            "id": 13,
-            "name": "Melee \u2014 Success",
-            "numeric_range": [1, 20],
-            "outcome_type": "fourway",
-            "selection_strings": "",
-            "toplevel": false,
-            "trigger_chance": 0.0,
-            "triggers": []
-        },
-        {
-            "changed": [
-                ["attrib", 6]
-            ],
-            "description": "Dex increases both die min and max, while Str and damage from gear increase die max only.\r\n\r\nFirst roll <a href=\"/play/event/5\">Shoot \u2014 Success</a> to determine if the attack hits.",
-            "determining": [
-                {
-                    "entity_data": ["attrib", 3],
-                    "label": "Attacker",
-                    "operation": "-"
-                },
-                {
-                    "entity_data": ["attrib", 17],
-                    "label": "Launcher",
-                    "operation": "-"
-                },
-                {
-                    "entity_data": ["attrib", 17],
-                    "label": "Ammo",
-                    "operation": "-"
-                },
-                {
-                    "entity_data": ["attrib", 19],
-                    "label": "Defender",
-                    "operation": "+"
-                },
-                {
-                    "entity_data": ["attrib", 2],
-                    "label": "Attacker",
-                    "operation": "-"
-                }
-            ],
-            "id": 6,
-            "name": "Shoot \u2014 Dmg",
-            "numeric_range": [-1, -2],
-            "outcome_type": "numeric",
-            "selection_strings": "",
-            "toplevel": false,
-            "trigger_chance": 0.0,
-            "triggers": []
-        },
-        {
-            "changed": [
-                ["attrib", 6]
-            ],
-            "description": "Str increases both die min and max, while damage from gear increases die max only.\r\n\r\nFirst roll <a href=\"/play/event/14\">Melee \u2014 Success</a> to determine if the attack hits.",
-            "determining": [
-                {
-                    "entity_data": ["attrib", 17],
-                    "label": "Weapon",
-                    "operation": "-"
-                },
-                {
-                    "entity_data": ["attrib", 19],
-                    "label": "Defender",
-                    "operation": "+"
-                },
-                {
-                    "entity_data": ["attrib", 2],
-                    "label": "Attacker",
-                    "operation": "-"
-                }
-            ],
-            "id": 14,
-            "name": "Melee \u2014 Dmg",
-            "numeric_range": [-1, -2],
-            "outcome_type": "numeric",
-            "selection_strings": "",
-            "toplevel": false,
-            "trigger_chance": 0.0,
-            "triggers": []
-        },
-        {
-            "changed": [],
-            "description": "Roll after <a href=\"/play/event/8\">Number of Enemies</a>.",
-            "determining": [],
-            "id": 7,
-            "name": "Populate Room \u2014 Which Enemy",
-            "numeric_range": [1, 20],
-            "outcome_type": "selection",
-            "selection_strings": "(none)\r\nrat\r\nskeleton rat\r\nmoss\r\nspore colony",
-            "toplevel": true,
-            "trigger_chance": 0.0,
-            "triggers": []
-        },
-        {
-            "changed": [],
-            "description": "Roll after <a href=\"/play/event/11\">Number of Items</a>.",
-            "determining": [],
-            "id": 12,
-            "name": "Populate Room \u2014 Which Item",
-            "numeric_range": [1, 20],
-            "outcome_type": "selection",
-            "selection_strings": "(None)\r\nPine Wood\r\nBowstring\r\nImproved Pine Bow\r\nPine Bow\r\nPine Stick\r\nPine Arrow\r\nPine Arrow\r\nStone\r\nStone",
-            "toplevel": true,
-            "trigger_chance": 0.0,
-            "triggers": []
-        },
-        {
-            "changed": [],
-            "description": "After leaving the entry floor, divide die min by depth, giving a better chance for items.\r\n\r\nIf outcome is more than 0, then also roll for:\r\n\u2022 <a href=\"/play/event/12\">Which Item</a>\r\n\u2022 <a href=\"/play/event/9\">Grid Coordinates</a>",
-            "determining": [
-                {
-                    "entity_data": ["attrib", 1],
-                    "label": "",
-                    "operation": "/log"
-                }
-            ],
-            "id": 11,
-            "name": "Populate Room \u2014 Number of Items",
-            "numeric_range": [-10, 2],
-            "outcome_type": "numeric",
-            "selection_strings": "",
-            "toplevel": true,
-            "trigger_chance": 0.0,
-            "triggers": []
-        },
-        {
-            "changed": [],
-            "description": "Number of items dropped by an enemy on death. Add their XP level to max die.\r\n\r\nIf result is greater than 0, then roll for <a href=\"/play/event/12\">which item</a>.",
-            "determining": [
-                {
-                    "entity_data": ["attrib", 11],
-                    "label": "Enemy",
-                    "operation": "+"
-                }
-            ],
-            "id": 15,
-            "name": "Drops",
-            "numeric_range": [-10, 0],
-            "outcome_type": "numeric",
-            "selection_strings": "",
-            "toplevel": true,
-            "trigger_chance": 0.0,
-            "triggers": []
-        },
-        {
-            "changed": [
-                ["attrib", 6],
-                ["attrib", 5]
-            ],
-            "description": "Magical attack that does physical damage similar to shooting an arrow. Cannot miss but may do 0 damage. Consumes MP.",
-            "determining": [
-                {
-                    "entity_data": ["attrib", 19],
-                    "label": "Defender",
-                    "operation": "+"
-                },
-                {
-                    "entity_data": ["attrib", 4],
-                    "label": "Attacker",
-                    "operation": "*log"
-                }
-            ],
-            "id": 16,
-            "name": "@Magic Missile",
-            "numeric_range": [0, -2],
-            "outcome_type": "numeric",
-            "selection_strings": "",
-            "toplevel": false,
-            "trigger_chance": 0.0,
-            "triggers": []
-        }
-    ],
-    "items": [
-        {
-            "attribs": [],
-            "description": "",
-            "id": 3,
-            "masked": false,
-            "name": "_Bowstring",
-            "progress": {},
-            "q_limit": 0.0,
-            "quantity": 0,
-            "recipes": [],
-            "storage_type": "carried",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "For carving. Includes shelves to hold a selection of wood.",
-            "id": 1,
-            "masked": false,
-            "name": "#Woodworking Table",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0,
-            "recipes": [],
-            "storage_type": "local",
-            "toplevel": false
-        },
-        {
-            "attribs": [
-                [18, 1.0],
-                [10, 1.0]
-            ],
-            "description": "Standard torch, not particularly bright, but functional enough unless it gets too wet. Before attempting to craft, run the <i>Carve or Fletch</i> event from a <i>Woodworking Table</i>.",
-            "id": 7,
-            "masked": false,
-            "name": "*Pine Torch",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 4,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 8.0,
-                    "sources": [
-                        {
-                            "item_id": 1,
-                            "preserve": true,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 2,
-                            "preserve": false,
-                            "q_required": 1.0
-                        }
+    "entities": {
+        "items": [
+            {
+                "id": 21,
+                "name": "_Bowstring",
+                "description": "",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "c",
+                "q_limit": 0.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 22,
+                "name": "#Woodworking Table",
+                "description": "For carving. Includes shelves to hold a selection of wood.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 23,
+                "name": "*Pine Torch",
+                "description": "Standard torch, not particularly bright, but functional enough unless it gets too wet. Before attempting to craft, run the <i>Carve or Fletch</i> event from a <i>Woodworking Table</i>.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "c",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 4,
+                        "rate_amount": 1.0,
+                        "rate_duration": 8.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 22,
+                                "q_required": 1.0,
+                                "preserve": true
+                            },
+                            {
+                                "item_id": 28,
+                                "q_required": 1.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 24,
+                "name": "-Pine Arrow",
+                "description": "The most basic arrow. Before attempting to craft, run the <i>Carve or Fletch</i> event from a <i>Woodworking Table</i>.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "c",
+                "q_limit": 0.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 3,
+                        "rate_amount": 10.0,
+                        "rate_duration": 8.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 22,
+                                "q_required": 1.0,
+                                "preserve": true
+                            },
+                            {
+                                "item_id": 28,
+                                "q_required": 1.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 25,
+                "name": "/Pine Stick",
+                "description": "The most basic weapon, slightly better than fighting unarmed for those who can wield it. You'll generally aim to craft something better, but this may be the result of a minor crafting failure.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "c",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 5,
+                        "rate_amount": 1.0,
+                        "rate_duration": 8.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 22,
+                                "q_required": 1.0,
+                                "preserve": true
+                            },
+                            {
+                                "item_id": 28,
+                                "q_required": 1.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 26,
+                "name": "}Pine Bow",
+                "description": "The most basic bow. Before attempting to craft, run the <i>Carve or Fletch</i> event from a <i>Woodworking Table</i>.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "c",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 1,
+                        "rate_amount": 1.0,
+                        "rate_duration": 8.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 22,
+                                "q_required": 1.0,
+                                "preserve": true
+                            },
+                            {
+                                "item_id": 28,
+                                "q_required": 1.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 21,
+                                "q_required": 1.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 27,
+                "name": "}Improved Pine Bow",
+                "description": "Crafted if major success, or perhaps found.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "c",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 2,
+                        "rate_amount": 1.0,
+                        "rate_duration": 8.0,
+                        "instant": true,
+                        "sources": [
+                            {
+                                "item_id": 22,
+                                "q_required": 1.0,
+                                "preserve": true
+                            },
+                            {
+                                "item_id": 26,
+                                "q_required": 1.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 28,
+                "name": "_Pine Wood",
+                "description": "Can be carved into weapons or torches or burned for fuel.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "c",
+                "q_limit": 0.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 29,
+                "name": "Barometer",
+                "description": "Keep track of what floor the party is on or going to, relative to the entry floor where the danger is least. Useful for generating new rooms.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "toplevel": true,
+                "masked": false,
+                "recipes": []
+            }
+        ],
+        "locations": [
+            {
+                "id": 30,
+                "name": "Entry Cavern",
+                "description": "Torchlit and lined with crafting stations. A large central pillar supports the towering ceiling.",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": [
+                    7,
+                    7
+                ],
+                "excluded": [
+                    3,
+                    3,
+                    5,
+                    5
+                ],
+                "toplevel": false,
+                "masked": false,
+                "items": [
+                    {
+                        "item_id": 28,
+                        "quantity": 10.0,
+                        "position": [
+                            7,
+                            5
+                        ]
+                    },
+                    {
+                        "item_id": 21,
+                        "quantity": 5.0,
+                        "position": [
+                            7,
+                            5
+                        ]
+                    },
+                    {
+                        "item_id": 22,
+                        "quantity": 1.0,
+                        "position": [
+                            7,
+                            4
+                        ]
+                    }
+                ],
+                "item_refs": [],
+                "destinations": [
+                    {
+                        "loc2_id": 32,
+                        "duration": 1,
+                        "bidirectional": true
+                    }
+                ]
+            },
+            {
+                "id": 31,
+                "name": "D1R1",
+                "description": "The first room down from the entry floor. Again, there is a skittering in the shadows. Probably a rat like last time, although the squeaking noises feel thinner, grating.",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": [
+                    4,
+                    7
+                ],
+                "excluded": [
+                    1,
+                    3,
+                    1,
+                    7
+                ],
+                "toplevel": false,
+                "masked": true,
+                "items": [],
+                "item_refs": [],
+                "destinations": [
+                    {
+                        "loc2_id": 35,
+                        "duration": 1,
+                        "bidirectional": true
+                    }
+                ]
+            },
+            {
+                "id": 32,
+                "name": "Entry Floor Room 2",
+                "description": "North of Entry Cavern. There is a skittering noise in the shadows.",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": [
+                    3,
+                    6
+                ],
+                "excluded": [
+                    3,
+                    3,
+                    3,
+                    5
+                ],
+                "toplevel": false,
+                "masked": true,
+                "items": [],
+                "item_refs": [],
+                "destinations": []
+            },
+            {
+                "id": 33,
+                "name": "U1R1",
+                "description": "The first room up from the entry floor. There is a narrow passage, with a suspicious-looking moss all but blocking the middle, and spores are being shot at you from the far end.",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": [
+                    3,
+                    8
+                ],
+                "excluded": [
+                    1,
+                    2,
+                    1,
+                    8
+                ],
+                "toplevel": false,
+                "masked": true,
+                "items": [],
+                "item_refs": [],
+                "destinations": [
+                    {
+                        "loc2_id": 37,
+                        "duration": 1,
+                        "bidirectional": true
+                    }
+                ]
+            },
+            {
+                "id": 34,
+                "name": "D1R2",
+                "description": "Second room on the first floor down from entry floor. From here on, your group will have to decide what items, enemies and rooms are found.",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": [
+                    5,
+                    6
+                ],
+                "excluded": [
+                    1,
+                    1,
+                    3,
+                    3
+                ],
+                "toplevel": false,
+                "masked": true,
+                "items": [],
+                "item_refs": [],
+                "destinations": [
+                    {
+                        "loc2_id": 31,
+                        "duration": 1,
+                        "bidirectional": true
+                    }
+                ]
+            },
+            {
+                "id": 35,
+                "name": "Entry Floor Room 4",
+                "description": "Staircase down, leading to otherworldly enemies that get stronger in the depths: undead, dragons, and demons.",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": [
+                    6,
+                    5
+                ],
+                "excluded": [
+                    2,
+                    1,
+                    3,
+                    5
+                ],
+                "toplevel": false,
+                "masked": true,
+                "items": [],
+                "item_refs": [],
+                "destinations": [
+                    {
+                        "loc2_id": 30,
+                        "duration": 1,
+                        "bidirectional": true
+                    }
+                ]
+            },
+            {
+                "id": 36,
+                "name": "U1R2",
+                "description": "Second room on the first floor up from entry floor. From here on, your group will have to decide what items, enemies and rooms are found.",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": [
+                    5,
+                    5
+                ],
+                "excluded": [
+                    3,
+                    1,
+                    5,
+                    2
+                ],
+                "toplevel": false,
+                "masked": true,
+                "items": [],
+                "item_refs": [],
+                "destinations": [
+                    {
+                        "loc2_id": 33,
+                        "duration": 1,
+                        "bidirectional": true
+                    }
+                ]
+            },
+            {
+                "id": 37,
+                "name": "Entry Floor Room 3",
+                "description": "Staircase up, leading to earthbound enemies that get stronger nearer the surface: animals, plants, humanoid races, constructs.",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": [
+                    5,
+                    8
+                ],
+                "excluded": [
+                    3,
+                    4,
+                    5,
+                    7
+                ],
+                "toplevel": false,
+                "masked": true,
+                "items": [],
+                "item_refs": [],
+                "destinations": [
+                    {
+                        "loc2_id": 32,
+                        "duration": 1,
+                        "bidirectional": true
+                    },
+                    {
+                        "loc2_id": 35,
+                        "duration": 1,
+                        "bidirectional": true
+                    }
+                ]
+            }
+        ],
+        "characters": [
+            {
+                "id": 38,
+                "name": "Elf Template",
+                "description": "Elves are intelligent and light on their feet, known especially for their Mages.\r\n\r\nDuplicate to create either a player char or NPC.",
+                "attribs": [
+                    [
+                        5,
+                        1.0
+                    ],
+                    [
+                        17,
+                        0.0
+                    ],
+                    [
+                        6,
+                        1.0
+                    ],
+                    [
+                        12,
+                        3.0
+                    ],
+                    [
+                        7,
+                        5.0
+                    ],
+                    [
+                        10,
+                        3.0
+                    ],
+                    [
+                        2,
+                        7.0
+                    ],
+                    [
+                        8,
+                        7.0
+                    ],
+                    [
+                        3,
+                        3.0
                     ]
-                }
-            ],
-            "storage_type": "carried",
-            "toplevel": false
-        },
-        {
-            "attribs": [
-                [16, 1.0],
-                [17, 1.0]
-            ],
-            "description": "The most basic arrow. Before attempting to craft, run the <i>Carve or Fletch</i> event from a <i>Woodworking Table</i>.",
-            "id": 6,
-            "masked": false,
-            "name": "-Pine Arrow",
-            "progress": {},
-            "q_limit": 0.0,
-            "quantity": 0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 3,
-                    "instant": false,
-                    "rate_amount": 10.0,
-                    "rate_duration": 8.0,
-                    "sources": [
-                        {
-                            "item_id": 1,
-                            "preserve": true,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 2,
-                            "preserve": false,
-                            "q_required": 1.0
-                        }
+                ],
+                "abilities": [],
+                "toplevel": false,
+                "location_id": null,
+                "position": null,
+                "travel_party": "",
+                "items": []
+            },
+            {
+                "id": 39,
+                "name": "Dwarf Template",
+                "description": "Dwarves are strong and tough, natural Melee Fighters, but clumsy and poor at magic.\r\n\r\nDuplicate to create either a player char or NPC.",
+                "attribs": [
+                    [
+                        5,
+                        1.0
+                    ],
+                    [
+                        17,
+                        0.0
+                    ],
+                    [
+                        6,
+                        5.0
+                    ],
+                    [
+                        12,
+                        1.0
+                    ],
+                    [
+                        7,
+                        1.0
+                    ],
+                    [
+                        10,
+                        1.0
+                    ],
+                    [
+                        2,
+                        12.0
+                    ],
+                    [
+                        8,
+                        12.0
+                    ],
+                    [
+                        3,
+                        1.0
                     ]
-                }
-            ],
-            "storage_type": "carried",
-            "toplevel": false
-        },
-        {
-            "attribs": [
-                [17, 1.0]
-            ],
-            "description": "The most basic weapon, slightly better than fighting unarmed for those who can wield it. You'll generally aim to craft something better, but this may be the result of a minor crafting failure.",
-            "id": 8,
-            "masked": false,
-            "name": "/Pine Stick",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 5,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 8.0,
-                    "sources": [
-                        {
-                            "item_id": 1,
-                            "preserve": true,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 2,
-                            "preserve": false,
-                            "q_required": 1.0
-                        }
+                ],
+                "abilities": [],
+                "toplevel": false,
+                "location_id": null,
+                "position": null,
+                "travel_party": "",
+                "items": []
+            },
+            {
+                "id": 40,
+                "name": "Halfling Template",
+                "description": "Halflings are highly nimble, master Thieves and good with ranged weapons.\r\n\r\nDuplicate to create either a player char or NPC.",
+                "attribs": [
+                    [
+                        5,
+                        1.0
+                    ],
+                    [
+                        17,
+                        0.0
+                    ],
+                    [
+                        6,
+                        1.0
+                    ],
+                    [
+                        12,
+                        4.0
+                    ],
+                    [
+                        7,
+                        2.0
+                    ],
+                    [
+                        10,
+                        1.0
+                    ],
+                    [
+                        2,
+                        9.0
+                    ],
+                    [
+                        8,
+                        9.0
+                    ],
+                    [
+                        3,
+                        1.0
                     ]
-                }
-            ],
-            "storage_type": "carried",
-            "toplevel": false
-        },
-        {
-            "attribs": [
-                [16, 1.0]
-            ],
-            "description": "The most basic bow. Before attempting to craft, run the <i>Carve or Fletch</i> event from a <i>Woodworking Table</i>.",
-            "id": 4,
-            "masked": false,
-            "name": "}Pine Bow",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 1,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 8.0,
-                    "sources": [
-                        {
-                            "item_id": 1,
-                            "preserve": true,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 2,
-                            "preserve": false,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 3,
-                            "preserve": false,
-                            "q_required": 1.0
-                        }
+                ],
+                "abilities": [],
+                "toplevel": false,
+                "location_id": null,
+                "position": null,
+                "travel_party": "",
+                "items": []
+            },
+            {
+                "id": 41,
+                "name": "spore colony",
+                "description": "Connected fungi that launch spores over long distances. Must wait a turn after attempting to attack.",
+                "attribs": [
+                    [
+                        5,
+                        1.0
+                    ],
+                    [
+                        3,
+                        0.0
+                    ],
+                    [
+                        8,
+                        11.0
+                    ],
+                    [
+                        2,
+                        11.0
+                    ],
+                    [
+                        10,
+                        0.0
+                    ],
+                    [
+                        7,
+                        1.0
+                    ],
+                    [
+                        12,
+                        2.0
+                    ],
+                    [
+                        6,
+                        3.0
                     ]
-                }
-            ],
-            "storage_type": "carried",
-            "toplevel": false
-        },
-        {
-            "attribs": [
-                [16, 2.0]
-            ],
-            "description": "Crafted if major success, or perhaps found.",
-            "id": 5,
-            "masked": false,
-            "name": "}Improved Pine Bow",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 2,
-                    "instant": true,
-                    "rate_amount": 1.0,
-                    "rate_duration": 8.0,
-                    "sources": [
-                        {
-                            "item_id": 1,
-                            "preserve": true,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 4,
-                            "preserve": false,
-                            "q_required": 1.0
-                        }
+                ],
+                "abilities": [],
+                "toplevel": false,
+                "location_id": 33,
+                "position": [
+                    2,
+                    1
+                ],
+                "travel_party": "",
+                "items": []
+            },
+            {
+                "id": 42,
+                "name": "moss",
+                "description": "Slightly sentient green covering the stone floor. Cannot move but can attack slowly in melee. Some advanced species of moss may be able to teleport short distances, but this one can't.",
+                "attribs": [
+                    [
+                        6,
+                        2.0
+                    ],
+                    [
+                        12,
+                        1.0
+                    ],
+                    [
+                        7,
+                        1.0
+                    ],
+                    [
+                        10,
+                        0.0
+                    ],
+                    [
+                        2,
+                        15.0
+                    ],
+                    [
+                        8,
+                        15.0
+                    ],
+                    [
+                        3,
+                        0.0
+                    ],
+                    [
+                        5,
+                        1.0
                     ]
-                }
-            ],
-            "storage_type": "carried",
-            "toplevel": false
-        },
-        {
-            "attribs": [
-                [13, 1.0]
-            ],
-            "description": "Can be carved into weapons or torches or burned for fuel.",
-            "id": 2,
-            "masked": false,
-            "name": "_Pine Wood",
-            "progress": {},
-            "q_limit": 0.0,
-            "quantity": 0,
-            "recipes": [],
-            "storage_type": "carried",
-            "toplevel": false
-        },
-        {
-            "attribs": [
-                [1, 0.0]
-            ],
-            "description": "Keep track of what floor the party is on or going to, relative to the entry floor where the danger is least. Useful for generating new rooms.",
-            "id": 9,
-            "masked": false,
-            "name": "Barometer",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 1.0,
-            "recipes": [],
-            "storage_type": "universal",
-            "toplevel": true
-        }
-    ],
-    "locations": [
-        {
-            "description": "Torchlit and lined with crafting stations. A large central pillar supports the towering ceiling.",
-            "destinations": [
-                {
-                    "bidirectional": true,
-                    "door1": [3,1],
-                    "door2": [1,6],
-                    "duration": 1,
-                    "loc2_id": 2
-                }
-            ],
-            "dimensions": [7,7],
-            "excluded": [3,3,5,5],
-            "id": 1,
-            "item_refs": [],
-            "items": [
-                {
-                    "item_id": 2,
-                    "position": [7,5],
-                    "quantity": 10.0
-                },
-                {
-                    "item_id": 3,
-                    "position": [7,5],
-                    "quantity": 5.0
-                },
-                {
-                    "item_id": 1,
-                    "position": [7,4],
-                    "quantity": 1.0
-                }
-            ],
-            "masked": false,
-            "name": "Entry Cavern",
-            "toplevel": false
-        },
-        {
-            "description": "The first room down from the entry floor. Again, there is a skittering in the shadows. Probably a rat like last time, although the squeaking noises feel thinner, grating.",
-            "destinations": [
-                {
-                    "bidirectional": true,
-                    "door1": [3,6],
-                    "door2": [5,4],
-                    "duration": 1,
-                    "loc2_id": 3
-                }
-            ],
-            "dimensions": [4,7],
-            "excluded": [1,3,1,7],
-            "id": 5,
-            "item_refs": [],
-            "items": [],
-            "masked": true,
-            "name": "D1R1",
-            "toplevel": false
-        },
-        {
-            "description": "North of Entry Cavern. There is a skittering noise in the shadows.",
-            "destinations": [],
-            "dimensions": [3,6],
-            "excluded": [3,3,3,5],
-            "id": 2,
-            "item_refs": [],
-            "items": [],
-            "masked": true,
-            "name": "Entry Floor Room 2",
-            "toplevel": false
-        },
-        {
-            "description": "The first room up from the entry floor. There is a narrow passage, with a suspicious-looking moss all but blocking the middle, and spores are being shot at you from the far end.",
-            "destinations": [
-                {
-                    "bidirectional": true,
-                    "door1": [2,7],
-                    "door2": [4,2],
-                    "duration": 1,
-                    "loc2_id": 4
-                }
-            ],
-            "dimensions": [3,8],
-            "excluded": [1,2,1,8],
-            "id": 6,
-            "item_refs": [],
-            "items": [],
-            "masked": true,
-            "name": "U1R1",
-            "toplevel": false
-        },
-        {
-            "description": "Second room on the first floor down from entry floor. From here on, your group will have to decide what items, enemies and rooms are found.",
-            "destinations": [
-                {
-                    "bidirectional": true,
-                    "door1": [5,5],
-                    "door2": [1,2],
-                    "duration": 1,
-                    "loc2_id": 5
-                }
-            ],
-            "dimensions": [5,6],
-            "excluded": [1,1,3,3],
-            "id": 7,
-            "item_refs": [],
-            "items": [],
-            "masked": true,
-            "name": "D1R2",
-            "toplevel": false
-        },
-        {
-            "description": "Staircase down, leading to otherworldly enemies that get stronger in the depths: undead, dragons, and demons.",
-            "destinations": [
-                {
-                    "bidirectional": true,
-                    "door1": [1,2],
-                    "door2": [7,2],
-                    "duration": 1,
-                    "loc2_id": 1
-                }
-            ],
-            "dimensions": [6,5],
-            "excluded": [2,1,3,5],
-            "id": 3,
-            "item_refs": [],
-            "items": [],
-            "masked": true,
-            "name": "Entry Floor Room 4",
-            "toplevel": false
-        },
-        {
-            "description": "Second room on the first floor up from entry floor. From here on, your group will have to decide what items, enemies and rooms are found.",
-            "destinations": [
-                {
-                    "bidirectional": true,
-                    "door1": [2,5],
-                    "door2": [1,1],
-                    "duration": 1,
-                    "loc2_id": 6
-                }
-            ],
-            "dimensions": [5,5],
-            "excluded": [3,1,5,2],
-            "id": 8,
-            "item_refs": [],
-            "items": [],
-            "masked": true,
-            "name": "U1R2",
-            "toplevel": false
-        },
-        {
-            "description": "Staircase up, leading to earthbound enemies that get stronger nearer the surface: animals, plants, humanoid races, constructs.",
-            "destinations": [
-                {
-                    "bidirectional": true,
-                    "door1": [1,4],
-                    "door2": [3,2],
-                    "duration": 1,
-                    "loc2_id": 2
-                },
-                {
-                    "bidirectional": true,
-                    "door1": [5,8],
-                    "door2": [4,1],
-                    "duration": 1,
-                    "loc2_id": 3
-                }
-            ],
-            "dimensions": [5,8],
-            "excluded": [3,4,5,7],
-            "id": 4,
-            "item_refs": [],
-            "items": [],
-            "masked": true,
-            "name": "Entry Floor Room 3",
-            "toplevel": false
-        }
-    ],
-    "overall": {
+                ],
+                "abilities": [],
+                "toplevel": false,
+                "location_id": 33,
+                "position": [
+                    3,
+                    3
+                ],
+                "travel_party": "",
+                "items": []
+            },
+            {
+                "id": 43,
+                "name": "Animal Template",
+                "description": "Animals rely on natural skills and do not use equipment.\r\n\r\nDuplicate to create enemies.",
+                "attribs": [
+                    [
+                        6,
+                        5.0
+                    ],
+                    [
+                        12,
+                        5.0
+                    ],
+                    [
+                        7,
+                        1.0
+                    ],
+                    [
+                        2,
+                        10.0
+                    ],
+                    [
+                        8,
+                        10.0
+                    ],
+                    [
+                        5,
+                        1.0
+                    ]
+                ],
+                "abilities": [],
+                "toplevel": false,
+                "location_id": null,
+                "position": null,
+                "travel_party": "",
+                "items": []
+            },
+            {
+                "id": 44,
+                "name": "rat",
+                "description": "Somehow they're always bigger when they're coming out of the shadows in an unexplored room.",
+                "attribs": [
+                    [
+                        6,
+                        1.0
+                    ],
+                    [
+                        12,
+                        6.0
+                    ],
+                    [
+                        7,
+                        1.0
+                    ],
+                    [
+                        2,
+                        10.0
+                    ],
+                    [
+                        8,
+                        10.0
+                    ],
+                    [
+                        5,
+                        1.0
+                    ]
+                ],
+                "abilities": [],
+                "toplevel": false,
+                "location_id": 32,
+                "position": [
+                    2,
+                    1
+                ],
+                "travel_party": "",
+                "items": []
+            },
+            {
+                "id": 45,
+                "name": "rat skeleton",
+                "description": "Well, that's not something you'd find in sunlit lands. An underworld force binds and animates its bones.",
+                "attribs": [
+                    [
+                        18,
+                        2.0
+                    ],
+                    [
+                        6,
+                        1.0
+                    ],
+                    [
+                        12,
+                        5.0
+                    ],
+                    [
+                        7,
+                        1.0
+                    ],
+                    [
+                        2,
+                        6.0
+                    ],
+                    [
+                        8,
+                        6.0
+                    ],
+                    [
+                        5,
+                        1.0
+                    ]
+                ],
+                "abilities": [],
+                "toplevel": false,
+                "location_id": 31,
+                "position": [
+                    2,
+                    1
+                ],
+                "travel_party": "",
+                "items": []
+            },
+            {
+                "id": 46,
+                "name": "@Thornwick",
+                "description": "Elf Archer, an example player character. A patch over his left eye has left him slower to react (-1 Dex), but his battle scars have made him resilient (+2 Max HP).",
+                "attribs": [
+                    [
+                        3,
+                        3.0
+                    ],
+                    [
+                        8,
+                        9.0
+                    ],
+                    [
+                        2,
+                        9.0
+                    ],
+                    [
+                        10,
+                        3.0
+                    ],
+                    [
+                        7,
+                        5.0
+                    ],
+                    [
+                        12,
+                        4.0
+                    ],
+                    [
+                        6,
+                        2.0
+                    ],
+                    [
+                        17,
+                        0.0
+                    ],
+                    [
+                        5,
+                        1.0
+                    ]
+                ],
+                "abilities": [],
+                "toplevel": true,
+                "location_id": 30,
+                "position": [
+                    1,
+                    5
+                ],
+                "travel_party": "",
+                "items": [
+                    {
+                        "item_id": 24,
+                        "quantity": 15.0,
+                        "slot": ""
+                    },
+                    {
+                        "item_id": 27,
+                        "quantity": 1.0,
+                        "slot": ""
+                    },
+                    {
+                        "item_id": 25,
+                        "quantity": 1.0,
+                        "slot": ""
+                    },
+                    {
+                        "item_id": 23,
+                        "quantity": 1.0,
+                        "slot": ""
+                    }
+                ]
+            }
+        ],
+        "attribs": [
+            {
+                "id": 2,
+                "name": "HP",
+                "description": "Hit Points \u2014 current health of a character.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 3,
+                "name": "Max MP",
+                "description": "How full magic reserves can be for a character. Also determines MP regen rate.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 4,
+                "name": "Poisoned",
+                "description": "Turns remaining for the negative status to last.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 5,
+                "name": "XP Level",
+                "description": "Level that indicates how powerful and advanced a character is. Increment when enough XP is gained.\r\n<pre>\r\n+-----------+------------+\r\n| XP Level  | XP Required|\r\n+-----------+------------+\r\n|    1      |     0      |\r\n|    2      |    20      |\r\n|    3      |    60      |\r\n|    4      |   120      |\r\n|    5      |   200      |\r\n|    6      |   300      |\r\n|    7      |   420      |\r\n|    8      |   560      |\r\n|    9      |   720      |\r\n|   10      |   900      |\r\n|   11      |  1100      |\r\n|   12      |  1320      |\r\n|   13      |  1560      |\r\n|   14      |  1820      |\r\n|   15      |  2100      |\r\n|   16      |  2400      |\r\n|   17      |  2720      |\r\n|   18      |  3060      |\r\n|   19      |  3420      |\r\n|   20      |  3800      |\r\n+-----------+------------+\r\n</pre>",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 6,
+                "name": "Str",
+                "description": "Strength increases melee damage dealt.\r\n\r\nChoosing the Melee class grants 2 Str, 1 Dex, and 2 Max HP.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 7,
+                "name": "Int",
+                "description": "Intelligence increases magic success, reserves (MP), and damage.\r\n\r\nChoosing the Mage class grants 2 Int, 1 Dex, and 1 Max MP.\r\n\r\nChoosing the Priest class grants 1 Int, 1 Max HP, and 2 Max MP.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 8,
+                "name": "Max HP",
+                "description": "Amount when fully healthy. Also determines HP regen rate.\r\n\r\nTo calculate, add the base species and class stat and multiply the result by XP Level.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 9,
+                "name": "Density",
+                "description": "Harder is better quality but more difficult to craft.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 10,
+                "name": "MP",
+                "description": "Magic Points \u2014 reserves of magical energy used for casting.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 11,
+                "name": "Stamina",
+                "description": "Reserves of physical energy used for big actions.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 12,
+                "name": "Dex",
+                "description": "Dexterity increases accuracy, evasion, and ranged damage dealt.\r\n\r\nChoosing the Thief class grants 3 Dex.\r\n\r\nChoosing the Archer class grants 2 Dex and 1 Str.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 13,
+                "name": "Evasion",
+                "description": "Equipped armour can increase chance to dodge. Combines with character's Dex.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 14,
+                "name": "Accuracy",
+                "description": "Equipped weapons can increase chance to hit. Combines with character's Dex.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 15,
+                "name": "Brightness",
+                "description": "More light makes it easier to perceive enemies and details, and may affect light-sensitive creatures. Complete absence of light may even mean running into walls.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 16,
+                "name": "Damage",
+                "description": "Equipped weapons can increase damage. Combines with character's Dex or Str.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 17,
+                "name": "XP",
+                "description": "Experience Points are gained through combat. Defeating an enemy yields 10 \u00d7 the enemy's XP level to each party member.\r\n\r\nWhen high enough, increase XP Level.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 18,
+                "name": "Phys Dmg Reduction",
+                "description": "Equipped or natural armour can reduce damage.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 19,
+                "name": "Burning",
+                "description": "Turns remaining for the negative status to last. Fire does extra damage to undead.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 20,
+                "name": "Depth",
+                "description": "Dungeon level. Could be specified in feet or meters, but it's simpler to use the number of floors. Determines chance of encountering higher level monsters and better items.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            }
+        ],
+        "events": []
+    },
+    "general data": {
+        "piles": [
+            {
+                "item_id": 29,
+                "quantity": 1.0
+            }
+        ],
+        "progress": []
+    },
+    "overall settings": {
+        "title": "Dungeon Crawl",
         "description": "Your party was responding to a distress signal when suddenly, the ground below collapsed, and all fell down a nearly vertical shaft. No one seems to be injured <i>(yet)</i>. Doubtless there are <c=lightcoral>enemies</c> in the surrounding caverns \u2014 good source of <c=lightcoral>XP</c>, an optimist would say.\r\n\r\nModeled after traditional roguelikes and tabletop RPGs. Start by creating your player characters based on templates for species and class. Then craft rudimentary supplies before embarking on an escape to the surface or delving deeper.",
-        "multiplayer": true,
         "number_format": "en_US",
-        "progress_type": "RPG",
         "slots": [
             "Main Hand",
             "Off Hand",
@@ -1149,7 +1085,7 @@
             "Quiver",
             "Light Source"
         ],
-        "title": "Dungeon Crawl",
-        "win_reqs": []
+        "progress_type": "RPG",
+        "multiplayer": true
     }
 }

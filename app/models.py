@@ -21,6 +21,10 @@ class JsonKeys:
     GENERAL = 'general data'
     OVERALL = 'overall settings'
 
+# ------------------------------------------------------------------------
+# Model Utilities
+# ------------------------------------------------------------------------
+
 @event.listens_for(db.Model, 'init', propagate=True)
 def auto_init_defaults(target, args, kwargs):
     """
@@ -38,11 +42,39 @@ def deep_rel(attr, child_cls, fk_field):
     """Helper to format deep relationship dictionary entries."""
     return {attr: (child_cls, fk_field)}
 
+def scrub_array(data, field_name, min_length=2):
+    val = data.get(field_name)
+    if (isinstance(val, (list, tuple)) and 
+        len(val) >= min_length and 
+        any(v > 0 for v in val)):
+        data[field_name] = tuple(val)
+    else:
+        data[field_name] = None
+
+class DictHydrator:
+    """Map JSON keys to DB columns."""
+    @classmethod
+    def from_dict(cls, data, game_token, **overrides):
+        # Skip lists and dicts because they may be nested relationships,
+        # except for ARRAY DB column type.
+        # Subclass from_dict() methods will need to handle skipped data.
+        fields = {}
+        for k, v in data.items():
+            if hasattr(cls, k):
+                column = cls.__table__.columns.get(k)
+                is_array_col = column is not None and isinstance(column.type, ARRAY)
+                if not isinstance(v, (list, dict)) or is_array_col:
+                    fields[k] = v
+        
+        # Apply mandatory IDs or overrides
+        fields.update(overrides)
+        return cls(game_token=game_token, **fields)
+
 # ------------------------------------------------------------------------
 # Entity Parent Class
 # ------------------------------------------------------------------------
 
-class Entity(db.Model):
+class Entity(db.Model, DictHydrator):
     """Base table for all primary game objects."""
     __tablename__ = 'entities'
     game_token = db.Column(db.String(50), primary_key=True)
@@ -67,33 +99,20 @@ class Entity(db.Model):
     @classmethod
     def from_dict(cls, data, game_token):
         """Standard base hydration for all entities."""
-
-        # Skip lists and dicts because they may be nested relationships,
-        # except for ARRAY DB column type.
-        # Subclass from_dict() methods will need to handle skipped data.
-        fields = {}
-        for k, v in data.items():
-            if hasattr(cls, k):
-                column = cls.__table__.columns.get(k)
-                is_array_col = column is not None and isinstance(column.type, ARRAY)
-                if not isinstance(v, (list, dict)) or is_array_col:
-                    fields[k] = v
-
-        obj = cls(game_token=game_token, **fields)
-
+        entity = super().from_dict(data, game_token)
         for a_data in data.get('attribs', []):
             if isinstance(a_data, list) and len(a_data) == 2:
-                obj.attrib_values.append(AttribVal(
+                entity.attrib_values.append(AttribVal(
                     game_token=game_token,
                     attrib_id=a_data[0],
                     value=a_data[1]
                 ))
         for event_id in data.get('abilities', []):
-            obj._ability_links.append(EntityAbility(
+            entity._ability_links.append(EntityAbility(
                 game_token=game_token,
                 event_id=event_id
             ))
-        return obj
+        return entity
 
     def get_deep_relationships(self):
         d = deep_rel('attrib_values', AttribVal, 'subject_id')
@@ -251,22 +270,18 @@ class Location(Entity):
 
     @classmethod
     def from_dict(cls, data, game_token):
+        scrub_array(data, 'dimensions', 2)
+        scrub_array(data, 'excluded', 4)
         loc = super().from_dict(data, game_token)
         for i_data in data.get('items', []):
-            loc.piles.append(Pile(
-                game_token=game_token,
-                owner=loc, 
-                **i_data))
+            loc.piles.append(
+                Pile.from_dict(i_data, game_token, loc.id))
         for ir_data in data.get('item_refs', []):
-            loc.item_refs.append(ItemRef(
-                game_token=game_token,
-                loc_id=loc.id,
-                **ir_data))
+            loc.item_refs.append(
+                ItemRef.from_dict(d_data, game_token, loc.id))
         for d_data in data.get('destinations', []):
-            loc.routes_forward.append(LocDest(
-                    game_token=game_token, 
-                    loc1=loc, 
-                    **d_data))
+            loc.routes_forward.append(
+                LocDest.from_dict(d_data, game_token, loc.id))
         return loc
 
     def get_deep_relationships(self):
@@ -348,6 +363,7 @@ class Character(Entity):
 
     @classmethod
     def from_dict(cls, data, game_token):
+        scrub_array(data, 'position', 2)
         char = super().from_dict(data, game_token)
         for i_data in data.get('items', []):
             char.piles.append(Pile(game_token=game_token, **i_data))
@@ -523,7 +539,7 @@ ENTITIES = {
 # Association Tables (Many-to-Many)
 # ------------------------------------------------------------------------
 
-class Pile(db.Model):
+class Pile(db.Model, DictHydrator):
     """Consolidated pile of items either:
     * held by a Character
     * or at a Location
@@ -544,7 +560,6 @@ class Pile(db.Model):
     slot = db.Column(db.String(50))
 
     def to_dict(self):
-        """Exports pile state, excluding internal database IDs."""
         return {
             "owner_id": self.owner_id,
             "item_id": self.item_id,
@@ -554,19 +569,9 @@ class Pile(db.Model):
         }
 
     @classmethod
-    def from_dict(cls, data, game_token):
-        """Creates a Pile instance from a dictionary without needing an ID."""
-        pos = data.get('position')
-        if isinstance(pos, list):
-            pos = tuple(pos)
-        return cls(
-            game_token=game_token,
-            owner_id=data.get('owner_id'),
-            item_id=data.get('item_id'),
-            quantity=data.get('quantity', 0.0),
-            position=pos,
-            slot=data.get('slot')
-        )
+    def from_dict(cls, data, game_token, owner_id):
+        scrub_array(data, 'position', 2)
+        return super().from_dict(data, game_token, owner_id=owner_id)
 
     @property
     def is_placed(self):
@@ -669,7 +674,7 @@ class AttribVal(db.Model):
             ['entities.game_token', 'entities.id'], ondelete='CASCADE'),
     )
 
-class LocDest(db.Model):
+class LocDest(db.Model, DictHydrator):
     __tablename__ = 'loc_destinations'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     game_token = db.Column(db.String(50), index=True, nullable=False)
@@ -688,6 +693,12 @@ class LocDest(db.Model):
             "door2": self.door2,
             "bidirectional": self.bidirectional
         }
+
+    @classmethod
+    def from_dict(cls, data, game_token, loc1_id):
+        scrub_array(data, 'door1', 2)
+        scrub_array(data, 'door2', 2)
+        return super().from_dict(data, game_token, loc1_id=loc1_id)
 
     def other_loc(self, loc_id):
         if self.loc1_id == loc_id:
@@ -723,7 +734,7 @@ class LocDest(db.Model):
             ['locations.game_token', 'locations.id'], ondelete='CASCADE'),
     )
 
-class ItemRef(db.Model):
+class ItemRef(db.Model, DictHydrator):
     """Reference to an item shown when viewing that host.
     Such items aren't actually anchored there, only mentioned.
     This is a good way to organize a set of related universal items.
@@ -737,6 +748,10 @@ class ItemRef(db.Model):
         return {
             "item_id": self.item_id
         }
+
+    @classmethod
+    def from_dict(cls, data, game_token, loc_id):
+        return super().from_dict(data, game_token, loc_id=loc_id)
 
     location = db.relationship(
         'Location',
@@ -916,7 +931,7 @@ class EntityAbility(db.Model):
 # Recipes
 # ------------------------------------------------------------------------
 
-class Recipe(db.Model):
+class Recipe(db.Model, DictHydrator):
     __tablename__ = 'recipes'
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
@@ -928,7 +943,6 @@ class Recipe(db.Model):
     def to_dict(self):
         return {
             "id": self.id,
-            "product_id": self.product_id,
             "rate_amount": self.rate_amount,
             "rate_duration": self.rate_duration,
             "instant": self.instant,
@@ -951,17 +965,14 @@ class Recipe(db.Model):
 
     @classmethod
     def from_dict(cls, data, game_token):
-        # Pop nested lists so the constructor doesn't try to handle them
-        sources = data.pop('sources', [])
-        byproducts = data.pop('byproducts', [])
-        reqs = data.pop('attrib_reqs', [])
-        
-        recipe = cls(game_token=game_token, **data)
-        
-        # Re-insert nested data into relationships
-        recipe.sources = [RecipeSource(game_token=game_token, **s) for s in sources]
-        recipe.byproducts = [RecipeByproduct(game_token=game_token, **b) for b in byproducts]
-        for ar in reqs:
+        recipe = super().from_dict(data, game_token)
+        recipe.sources = [
+            RecipeSource(game_token=game_token, **s)
+            for s in data.get('sources')]
+        recipe.byproducts = [
+            RecipeByproduct(game_token=game_token, **b)
+            for b in data.get('byproducts')]
+        for ar in data.get('attrib_reqs'):
             v_range = ar.get('value_range', [None, None])
             recipe.attrib_reqs.append(RecipeAttribReq(
                 game_token=game_token, attrib_id=ar['attrib_id'],
@@ -1176,7 +1187,7 @@ class TravelProgress(Progress):
 # Global Configuration
 # ------------------------------------------------------------------------
 
-class Overall(db.Model):
+class Overall(db.Model, DictHydrator):
     __tablename__ = 'overall'
     game_token = db.Column(db.String(50), primary_key=True)
     title = db.Column(db.String(255), nullable=False, default='New Scenario')
@@ -1189,17 +1200,6 @@ class Overall(db.Model):
     # Used to generate unique IDs per game token
     next_entity_id = db.Column(db.Integer, default=2)
 
-    @classmethod
-    def from_dict(cls, data, game_token):
-        """Hydrates the global scenario settings and win conditions."""
-        reqs = data.pop('win_reqs', [])
-        overall = cls(game_token=game_token, **data)
-        for r in reqs:
-            overall.win_reqs.append(
-                WinRequirement(game_token=game_token, **r)
-            )
-        return overall
-
     def to_dict(self):
         return {
             "title": self.title,
@@ -1207,8 +1207,18 @@ class Overall(db.Model):
             "number_format": self.number_format,
             "slots": self.slots or [],
             "progress_type": self.progress_type,
-            "multiplayer": self.multiplayer
+            "multiplayer": self.multiplayer,
+            "win_reqs": [wr.to_dict() for wr in self.win_reqs]
         }
+
+    @classmethod
+    def from_dict(cls, data, game_token):
+        overall = super().from_dict(data, game_token)
+        for r_data in data.get('win_reqs', []):
+            overall.win_reqs.append(
+                WinRequirement.from_dict(r_data, game_token)
+            )
+        return overall
 
     @classmethod
     def generate_next_id(cls, game_token):
@@ -1230,7 +1240,7 @@ class Overall(db.Model):
         cascade="all, delete-orphan",
         overlaps="overall,item,char,loc,attrib")
 
-class WinRequirement(db.Model):
+class WinRequirement(db.Model, DictHydrator):
     __tablename__ = 'win_requirements'
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
@@ -1240,6 +1250,20 @@ class WinRequirement(db.Model):
     loc_id = db.Column(db.Integer)
     attrib_id = db.Column(db.Integer)
     attrib_value = db.Column(db.Float)
+
+    def to_dict(self):
+        return {
+            "item_id": self.item_id,
+            "quantity": self.quantity,
+            "char_id": self.char_id,
+            "loc_id": self.loc_id,
+            "attrib_id": self.attrib_id,
+            "attrib_value": self.attrib_value
+        }
+
+    @classmethod
+    def from_dict(cls, data, game_token):
+        return super().from_dict(data, game_token)
 
     overall = db.relationship(
         'Overall',

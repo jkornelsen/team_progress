@@ -18,13 +18,15 @@ logger = logging.getLogger(__name__)
 # Load or Reset Model
 # ------------------------------------------------------------------------
 
+DEFAULT_SCENARIO_FILE = "00_Default.json"
+
 def init_game_session():
     """Bootstraps a specific game session."""
     game_token = g.game_token
     overall = Overall.query.get(game_token)
     if not overall:
         logger.info(f"Initializing game session")
-        success = load_scenario_from_path('00_Default.json')
+        success = load_scenario_from_path(DEFAULT_SCENARIO_FILE)
         if not success:
             logger.warning(f"Falling back to class default.")
             overall = Overall(game_token=game_token)
@@ -74,7 +76,8 @@ def import_from_dict(data):
     db.session.query(Overall).filter_by(game_token=game_token).delete()
     
     # Overall Settings
-    ov = Overall.from_dict(data.get(JsonKeys.OVERALL, {}), game_token)
+    ov_data = data.get(JsonKeys.OVERALL, {})
+    ov = Overall.from_dict(ov_data, game_token)
     db.session.add(ov)
     db.session.add(Entity(
         id=GENERAL_ID, game_token=game_token, name="General Storage",
@@ -82,6 +85,7 @@ def import_from_dict(data):
 
     # Entities
     entities_data = data.get(JsonKeys.ENTITIES, {})
+    entities_data = remap_general_id(entities_data)
     for key, model_cls in ENTITIES.items():
         for entry in entities_data.get(key, []):
             instance = model_cls.from_dict(entry, game_token)
@@ -90,8 +94,7 @@ def import_from_dict(data):
     # General state
     general_data = data.get(JsonKeys.GENERAL, {})
     for pile_data in general_data.get("piles", []):
-        pile_data['owner_id'] = GENERAL_ID
-        db.session.add(Pile.from_dict(pile_data, game_token))
+        db.session.add(Pile.from_dict(pile_data, game_token, GENERAL_ID))
     for prog_data in general_data.get("progress", []):
         prog_data['host_id'] = GENERAL_ID
         db.session.add(Progress.from_dict(prog_data, game_token))
@@ -104,6 +107,46 @@ def import_from_dict(data):
     
     db.session.commit()
     return True
+
+def remap_general_id(entities_data):
+    """
+    If any user-provided entity uses GENERAL_ID, remap it to a new unique ID
+    and update all internal references within the entities_data.
+    """
+    # 1. Check for the specific conflict
+    conflict_found = False
+    max_id = GENERAL_ID
+    
+    for category in entities_data.values():
+        for entry in category:
+            current_id = entry.get('id', 0)
+            if current_id == GENERAL_ID:
+                conflict_found = True
+            if current_id > max_id:
+                max_id = current_id
+
+    if not conflict_found:
+        return entities_data
+
+    # 2. Perform the swap
+    new_id = max_id + 1
+    
+    def walk_and_remap(obj):
+        if isinstance(obj, dict):
+            for k, v in obj.items():
+                # Remap the actual ID or any FK pointing to it
+                # Exclude owner/host because they point to the SYSTEM general storage
+                if k == 'id' or (k.endswith('_id') and k not in ['owner_id', 'host_id']):
+                    if v == GENERAL_ID:
+                        obj[k] = new_id
+                else:
+                    walk_and_remap(v)
+        elif isinstance(obj, list):
+            for item in obj:
+                walk_and_remap(item)
+
+    walk_and_remap(entities_data)
+    return entities_data
 
 def patch_from_dict(data):
     """

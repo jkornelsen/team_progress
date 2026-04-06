@@ -3,7 +3,7 @@
 #
 import os
 
-def bundle_files(start_dir="..", output_file="bundled_project.md"):
+def bundle_files(start_dir="..", output_file="bundled.md"):
     extensions = ('.py', '.html')
     #extensions = ('.json')  # data files
     ignored_folders = {

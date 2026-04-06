@@ -1,7 +1,8 @@
 import os
 import logging
 import uuid
-from flask import Flask, g, session, request, redirect, url_for
+from flask import (
+    Flask, g, session, request, redirect, render_template, url_for)
 from flask_migrate import Migrate
 
 from .database import db, get_db_uri
@@ -116,6 +117,14 @@ def create_app():
     @app.route('/')
     def root():
         return redirect(url_for('play.overview'))
+
+    @app.errorhandler(404)
+    def page_not_found(e):
+        return render_template(
+            'error.html',
+            message="404 Not Found",
+            details="Perhaps you need to go back and reload the page.",
+        ), 404
 
     return app
 

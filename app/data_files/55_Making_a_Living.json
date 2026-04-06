@@ -1,735 +1,743 @@
 {
-    "attribs": [
-        {
-            "description": "",
-            "enum_list": [
-                "Sunday",
-                "Monday",
-                "Tuesday",
-                "Wednesday",
-                "Thursday",
-                "Friday",
-                "Saturday"
-            ],
-            "id": 27,
-            "is_binary": false,
-            "name": "Day of Week"
-        },
-        {
-            "description": "Letter grade for the class, based primarily on the final test. Low attendance also reduces grades.",
-            "enum_list": [
-                "S",
-                "A",
-                "B",
-                "C",
-                "F"
-            ],
-            "id": 28,
-            "is_binary": false,
-            "name": "Grade"
-        },
-        {
-            "description": "Percentage on the final test. Studying improves your chances.",
-            "enum_list": [],
-            "id": 29,
-            "is_binary": false,
-            "name": "Score"
-        },
-        {
-            "description": "Being cool, popular, or a good listener is more important for some jobs than how much you know. And it's always useful to help with finding a job, and in interviews.\r\n\r\nSpending time on things that improve people skills typically lowers intelligence.",
-            "enum_list": [],
-            "id": 30,
-            "is_binary": false,
-            "name": "People Skills"
-        },
-        {
-            "description": "Improves study and job performance.\r\n\r\nSpending time on things that improve intelligence, such as studying, typically lowers people skills.",
-            "enum_list": [],
-            "id": 31,
-            "is_binary": false,
-            "name": "Intelligence"
-        }
-    ],
-    "characters": [
-        {
-            "attribs": [
-                [31, 5.0],
-                [30, 5.0]
-            ],
-            "description": "Early 20's, high school diploma.",
-            "dest_id": null,
-            "events": [],
-            "id": 12,
-            "items": [],
-            "location_id": 30,
-            "masked": false,
-            "name": "(Enter your name)",
-            "position": [0,0],
-            "progress": {},
-            "quantity": 0.0,
-            "toplevel": true
-        }
-    ],
-    "events": [
-        {
-            "changed": [
-                ["attrib", 29]
-            ],
-            "description": "Main factor to determine class grade.\r\n\r\nThere's some possible variation on outcomes, but mostly it's determined by studying. Based on time spent doing homework, add up to 80 for stat adjustment.",
-            "determining": [
-                {
-                    "entity_data": ["item", 63],
-                    "operation": "+",
-                    "label": ""
-                }
-            ],
-            "id": 5,
-            "name": "Final Test",
-            "numeric_range": [0, 20],
-            "outcome_type": "numeric",
-            "selection_strings": "",
-            "toplevel": false,
-            "trigger_chance": 0.0,
-            "triggers": [
-                ["loc", 29]
-            ]
-        }
-    ],
-    "items": [
-        {
-            "attribs": [],
-            "description": "Buy at the grocery store.",
-            "id": 53,
-            "masked": false,
-            "name": "Unprepared Food",
-            "progress": {},
-            "q_limit": 0.0,
-            "quantity": 0.0,
-            "recipes": [],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Number of days since beginning the game.",
-            "id": 50,
-            "masked": false,
-            "name": "Days Count",
-            "progress": {},
-            "q_limit": 0.0,
-            "quantity": 2.0,
-            "recipes": [],
-            "storage_type": "universal",
-            "toplevel": true
-        },
-        {
-            "attribs": [
-                [27, 2.0]
-            ],
-            "description": "Tells the day of the week. Must be marked by hand.",
-            "id": 49,
-            "masked": false,
-            "name": "Calendar",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 1.0,
-            "recipes": [],
-            "storage_type": "universal",
-            "toplevel": true
-        },
-        {
-            "attribs": [],
-            "description": "One meal a day should be plenty. Healthier (producing fuller energy) if cooked rather than eaten straight out of a box. You could prepare several portions and refrigerate them.",
-            "id": 52,
-            "masked": false,
-            "name": "Meal",
-            "progress": {},
-            "q_limit": 5.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 15,
-                    "instant": false,
-                    "item_id": 52,
-                    "rate_amount": 1.0,
-                    "rate_duration": 8.0,
-                    "sources": [
-                        {
-                            "item_id": 53,
-                            "preserve": false,
-                            "q_required": 3.0
-                        }
+    "entities": {
+        "items": [
+            {
+                "id": 7,
+                "name": "Unprepared Food",
+                "description": "Buy at the grocery store.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 0.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 8,
+                "name": "Days Count",
+                "description": "Number of days since beginning the game.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 0.0,
+                "toplevel": true,
+                "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 9,
+                "name": "Calendar",
+                "description": "Tells the day of the week. Must be marked by hand.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "toplevel": true,
+                "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 10,
+                "name": "Meal",
+                "description": "One meal a day should be plenty. Healthier (producing fuller energy) if cooked rather than eaten straight out of a box. You could prepare several portions and refrigerate them.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 5.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 15,
+                        "rate_amount": 1.0,
+                        "rate_duration": 8.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 7,
+                                "q_required": 3.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 11,
+                "name": "Energy",
+                "description": "Requires daily rest and food.\r\n\r\n10 is full alertness, focus, and strength. Energy reserves should go higher than that at the end of each day, to prepare for the next. Reserves won't make you feel better, though.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 20.0,
+                "toplevel": true,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 16,
+                        "rate_amount": 1.0,
+                        "rate_duration": 8.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 10,
+                                "q_required": 1.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 14,
+                                "q_required": 8.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 12,
+                "name": "Park Facilities",
+                "description": "Places you find at the park.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 13,
+                "name": "Student Loan",
+                "description": "If you take out a loan now, monthly payments will be required later. Interest on these loans is not too bad, however, as the government encourages people to get college degrees.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 0.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 14,
+                "name": "Hours",
+                "description": "The basic measure of time needed to accomplish things. Starts (with 24 hours left) at sunrise \u2014 the hours aren't counted from midnight, even when staying up all night.\r\n\r\nTo conserve time (by sleeping less) and food, you could lower the energy required to start the next day. But you won't be at peak performance, and if too low, that might mean lying in bed all day.\r\n\r\nCould make sense if your character is too sick to keep food down. Hopefully, you don't let them get depressed and avoid food, sleep, and work.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 24.0,
+                "toplevel": true,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 14,
+                        "rate_amount": 24.0,
+                        "rate_duration": 3.0,
+                        "instant": true,
+                        "sources": [
+                            {
+                                "item_id": 8,
+                                "q_required": -1.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 11,
+                                "q_required": 10.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 17,
+                                "q_required": 1.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 15,
+                "name": "Pre-Med",
+                "description": "This degree isn't designed as an end, but rather, a means to eventually finish an M.D. and become a physician. If you're not interested in that much school, then it would be better to choose a different major.\r\n\r\nUndergrad degrees at this school typically require 8 classes taken. So, to finish this degree, add 6 more as sources for the recipe.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 20,
+                        "rate_amount": 1.0,
+                        "rate_duration": 3.0,
+                        "instant": true,
+                        "sources": [
+                            {
+                                "item_id": 25,
+                                "q_required": 5.0,
+                                "preserve": true
+                            },
+                            {
+                                "item_id": 24,
+                                "q_required": 5.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 16,
+                "name": "Biology 101",
+                "description": "Important for medical or other science related fields.\r\n\r\nTo start the class, pay for it and include it to be subtracted for the daily recipe to gain hours, like how Math 101 is set up.\r\n\r\nThe class will be taught over 1 week, and you'll need to attend most of the classes to get the best grades.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 12.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 19,
+                        "rate_amount": 12.0,
+                        "rate_duration": 3.0,
+                        "instant": true,
+                        "sources": [
+                            {
+                                "item_id": 22,
+                                "q_required": 5000.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 17,
+                "name": "Math 101",
+                "description": "This is a good time to decide whether you're happy enough to study strange symbols like capital greek letter sigma and elongated S's, or whether you'll switch to Art or another major to avoid further punishment.\r\n\r\nThe class will be taught over 1 week, and you'll need to attend most of the classes to get the best grades.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 12.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 18,
+                "name": "Classroom",
+                "description": "Required to attend a class.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 19,
+                "name": "Math 101 Homework",
+                "description": "Improves your chances on the final test.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 5.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 22,
+                        "rate_amount": 1.0,
+                        "rate_duration": 3.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 14,
+                                "q_required": 2.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 20,
+                "name": "Party",
+                "description": "Reduces stress and increases people skills but can significantly reduce intelligence, especially if you behave wildly.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 21,
+                "name": "Cash Register",
+                "description": "To work as a cashier (behind the counter) or bagger (at the end of the counter).",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 22,
+                "name": "Money",
+                "description": "Pay for classes, rent, buy food and clothing.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 0.0,
+                "toplevel": true,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 24,
+                        "rate_amount": 10.0,
+                        "rate_duration": 3.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 14,
+                                "q_required": 1.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 21,
+                                "q_required": 1.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 23,
+                "name": "Stress",
+                "description": "Byproduct of certain actions. Don't let it build up too high. The best way to blow off steam is to hang out at the park with friends.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 100.0,
+                "toplevel": true,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 17,
+                        "rate_amount": -1.0,
+                        "rate_duration": 3.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 12,
+                                "q_required": 1.0,
+                                "preserve": true
+                            },
+                            {
+                                "item_id": 14,
+                                "q_required": 1.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    },
+                    {
+                        "id": 25,
+                        "rate_amount": -2.0,
+                        "rate_duration": 3.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 14,
+                                "q_required": 1.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 20,
+                                "q_required": 1.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 24,
+                "name": "Biology 101 Taken",
+                "description": "",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 5.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 21,
+                        "rate_amount": 1.0,
+                        "rate_duration": 3.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 16,
+                                "q_required": 1.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 18,
+                                "q_required": 1.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 25,
+                "name": "Math 101 Taken",
+                "description": "Hopefully you will attend class each day. This is your record of attendance. If it's too low, you're sure to get a poor or failing grade. You can attend 1 hour each day, while the class lasts.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 5.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 18,
+                        "rate_amount": 1.0,
+                        "rate_duration": 3.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 17,
+                                "q_required": 1.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 18,
+                                "q_required": 1.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            }
+        ],
+        "locations": [
+            {
+                "id": 26,
+                "name": "Park",
+                "description": "Good place to hang out and reduce stress. Trees, basketball courts, skateboarding.",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": null,
+                "excluded": null,
+                "toplevel": false,
+                "masked": false,
+                "items": [
+                    {
+                        "item_id": 12,
+                        "quantity": 1.0,
+                        "position": null
+                    }
+                ],
+                "item_refs": [],
+                "destinations": []
+            },
+            {
+                "id": 27,
+                "name": "Restaurant",
+                "description": "More expensive than the grocery store but doesn't require preparation and more filling than boxed food.",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": null,
+                "excluded": null,
+                "toplevel": false,
+                "masked": false,
+                "items": [],
+                "item_refs": [],
+                "destinations": []
+            },
+            {
+                "id": 28,
+                "name": "School",
+                "description": "Full time is generally considered to be 2 classes, although classes vary as to how demanding they are. You could push and go up to 3, or take only 1 for a part-time load.",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": null,
+                "excluded": null,
+                "toplevel": true,
+                "masked": false,
+                "items": [
+                    {
+                        "item_id": 18,
+                        "quantity": 1.0,
+                        "position": null
+                    }
+                ],
+                "item_refs": [],
+                "destinations": []
+            },
+            {
+                "id": 29,
+                "name": "Home",
+                "description": "An adequate apartment. Could buy a nice house with mortgage payment, otherwise rent.\r\n\r\nSleep and cook meals here.",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": null,
+                "excluded": null,
+                "toplevel": false,
+                "masked": false,
+                "items": [],
+                "item_refs": [],
+                "destinations": [
+                    {
+                        "loc2_id": 30,
+                        "duration": 1,
+                        "bidirectional": true
+                    },
+                    {
+                        "loc2_id": 28,
+                        "duration": 1,
+                        "bidirectional": true
+                    },
+                    {
+                        "loc2_id": 27,
+                        "duration": 1,
+                        "bidirectional": true
+                    },
+                    {
+                        "loc2_id": 26,
+                        "duration": 1,
+                        "bidirectional": true
+                    },
+                    {
+                        "loc2_id": 31,
+                        "duration": 1,
+                        "bidirectional": true
+                    }
+                ]
+            },
+            {
+                "id": 30,
+                "name": "Greek House",
+                "description": "Fraternities and Sororities have the wildest parties.",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": null,
+                "excluded": null,
+                "toplevel": false,
+                "masked": false,
+                "items": [
+                    {
+                        "item_id": 20,
+                        "quantity": 1.0,
+                        "position": null
+                    }
+                ],
+                "item_refs": [],
+                "destinations": []
+            },
+            {
+                "id": 31,
+                "name": "Grocery Store",
+                "description": "Buy either unprepared food or boxed meals.\r\n\r\nThere are several types of jobs available here:\r\n\u2022 Cashier\r\n\u2022 Bagger\r\n\u2022 Stocker\r\n\u2022 Manager",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": null,
+                "excluded": null,
+                "toplevel": false,
+                "masked": false,
+                "items": [
+                    {
+                        "item_id": 21,
+                        "quantity": 1.0,
+                        "position": null
+                    }
+                ],
+                "item_refs": [],
+                "destinations": []
+            }
+        ],
+        "characters": [
+            {
+                "id": 32,
+                "name": "(Enter your name)",
+                "description": "Early 20's, high school diploma.",
+                "attribs": [
+                    [
+                        6,
+                        5.0
+                    ],
+                    [
+                        5,
+                        5.0
                     ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Requires daily rest and food.\r\n\r\n10 is full alertness, focus, and strength. Energy reserves should go higher than that at the end of each day, to prepare for the next. Reserves won't make you feel better, though.",
-            "id": 51,
-            "masked": false,
-            "name": "Energy",
-            "progress": {},
-            "q_limit": 20.0,
-            "quantity": 10.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 16,
-                    "instant": false,
-                    "item_id": 51,
-                    "rate_amount": 1.0,
-                    "rate_duration": 8.0,
-                    "sources": [
-                        {
-                            "item_id": 52,
-                            "preserve": false,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 48,
-                            "preserve": false,
-                            "q_required": 8.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": true
-        },
-        {
-            "attribs": [],
-            "description": "Places you find at the park.",
-            "id": 55,
-            "masked": false,
-            "name": "Park Facilities",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [],
-            "storage_type": "local",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "If you take out a loan now, monthly payments will be required later. Interest on these loans is not too bad, however, as the government encourages people to get college degrees.",
-            "id": 56,
-            "masked": false,
-            "name": "Student Loan",
-            "progress": {},
-            "q_limit": 0.0,
-            "quantity": 0.0,
-            "recipes": [],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "The basic measure of time needed to accomplish things. Starts (with 24 hours left) at sunrise \u2014 the hours aren't counted from midnight, even when staying up all night.\r\n\r\nTo conserve time (by sleeping less) and food, you could lower the energy required to start the next day. But you won't be at peak performance, and if too low, that might mean lying in bed all day.\r\n\r\nCould make sense if your character is too sick to keep food down. Hopefully, you don't let them get depressed and avoid food, sleep, and work.",
-            "id": 48,
-            "masked": false,
-            "name": "Hours",
-            "progress": {},
-            "q_limit": 24.0,
-            "quantity": 24.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 14,
-                    "instant": true,
-                    "item_id": 48,
-                    "rate_amount": 24.0,
-                    "rate_duration": 3.0,
-                    "sources": [
-                        {
-                            "item_id": 50,
-                            "preserve": false,
-                            "q_required": -1.0
-                        },
-                        {
-                            "item_id": 51,
-                            "preserve": false,
-                            "q_required": 10.0
-                        },
-                        {
-                            "item_id": 57,
-                            "preserve": false,
-                            "q_required": 1.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": true
-        },
-        {
-            "attribs": [],
-            "description": "This degree isn't designed as an end, but rather, a means to eventually finish an M.D. and become a physician. If you're not interested in that much school, then it would be better to choose a different major.\r\n\r\nUndergrad degrees at this school typically require 8 classes taken. So, to finish this degree, add 6 more as sources for the recipe.",
-            "id": 60,
-            "masked": false,
-            "name": "Pre-Med",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 20,
-                    "instant": true,
-                    "item_id": 60,
-                    "rate_amount": 1.0,
-                    "rate_duration": 3.0,
-                    "sources": [
-                        {
-                            "item_id": 58,
-                            "preserve": true,
-                            "q_required": 5.0
-                        },
-                        {
-                            "item_id": 61,
-                            "preserve": true,
-                            "q_required": 5.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Important for medical or other science related fields.\r\n\r\nTo start the class, pay for it and include it to be subtracted for the daily recipe to gain hours, like how Math 101 is set up.\r\n\r\nThe class will be taught over 1 week, and you'll need to attend most of the classes to get the best grades.",
-            "id": 59,
-            "masked": false,
-            "name": "Biology 101",
-            "progress": {},
-            "q_limit": 12.0,
-            "quantity": 12.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 19,
-                    "instant": true,
-                    "item_id": 59,
-                    "rate_amount": 12.0,
-                    "rate_duration": 3.0,
-                    "sources": [
-                        {
-                            "item_id": 47,
-                            "preserve": false,
-                            "q_required": 5000.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "This is a good time to decide whether you're happy enough to study strange symbols like capital greek letter sigma and elongated S's, or whether you'll switch to Art or another major to avoid further punishment.\r\n\r\nThe class will be taught over 1 week, and you'll need to attend most of the classes to get the best grades.",
-            "id": 57,
-            "masked": false,
-            "name": "Math 101",
-            "progress": {},
-            "q_limit": 12.0,
-            "quantity": 12.0,
-            "recipes": [],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Required to attend a class.",
-            "id": 62,
-            "masked": false,
-            "name": "Classroom",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [],
-            "storage_type": "local",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Improves your chances on the final test.",
-            "id": 63,
-            "masked": false,
-            "name": "Math 101 Homework",
-            "progress": {},
-            "q_limit": 5.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 22,
-                    "instant": false,
-                    "item_id": 63,
-                    "rate_amount": 1.0,
-                    "rate_duration": 3.0,
-                    "sources": [
-                        {
-                            "item_id": 48,
-                            "preserve": false,
-                            "q_required": 2.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Reduces stress and increases people skills but can significantly reduce intelligence, especially if you behave wildly.",
-            "id": 64,
-            "masked": false,
-            "name": "Party",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [],
-            "storage_type": "local",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "To work as a cashier (behind the counter) or bagger (at the end of the counter).",
-            "id": 65,
-            "masked": false,
-            "name": "Cash Register",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [],
-            "storage_type": "local",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Pay for classes, rent, buy food and clothing.",
-            "id": 47,
-            "masked": false,
-            "name": "Money",
-            "progress": {},
-            "q_limit": 0.0,
-            "quantity": 100.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 24,
-                    "instant": false,
-                    "item_id": 47,
-                    "rate_amount": 10.0,
-                    "rate_duration": 3.0,
-                    "sources": [
-                        {
-                            "item_id": 48,
-                            "preserve": false,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 65,
-                            "preserve": true,
-                            "q_required": 1.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": true
-        },
-        {
-            "attribs": [],
-            "description": "Byproduct of certain actions. Don't let it build up too high. The best way to blow off steam is to hang out at the park with friends.",
-            "id": 54,
-            "masked": false,
-            "name": "Stress",
-            "progress": {},
-            "q_limit": 100.0,
-            "quantity": 1.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 17,
-                    "instant": false,
-                    "item_id": 54,
-                    "rate_amount": -1.0,
-                    "rate_duration": 3.0,
-                    "sources": [
-                        {
-                            "item_id": 55,
-                            "preserve": true,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 48,
-                            "preserve": false,
-                            "q_required": 1.0
-                        }
-                    ]
-                },
-                {
-                    "attribs": [],
-                    "byproducts": [],
-                    "id": 25,
-                    "instant": false,
-                    "item_id": 54,
-                    "rate_amount": -2.0,
-                    "rate_duration": 3.0,
-                    "sources": [
-                        {
-                            "item_id": 48,
-                            "preserve": false,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 64,
-                            "preserve": true,
-                            "q_required": 1.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": true
-        },
-        {
-            "attribs": [
-                [29, 1.0],
-                [28, 1.0]
-            ],
-            "description": "",
-            "id": 61,
-            "masked": false,
-            "name": "Biology 101 Taken",
-            "progress": {},
-            "q_limit": 5.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 21,
-                    "instant": false,
-                    "item_id": 61,
-                    "rate_amount": 1.0,
-                    "rate_duration": 3.0,
-                    "sources": [
-                        {
-                            "item_id": 59,
-                            "preserve": false,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 62,
-                            "preserve": true,
-                            "q_required": 1.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [
-                [29, 1.0],
-                [28, 1.0]
-            ],
-            "description": "Hopefully you will attend class each day. This is your record of attendance. If it's too low, you're sure to get a poor or failing grade. You can attend 1 hour each day, while the class lasts.",
-            "id": 58,
-            "masked": false,
-            "name": "Math 101 Taken",
-            "progress": {},
-            "q_limit": 5.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 18,
-                    "instant": false,
-                    "item_id": 58,
-                    "rate_amount": 1.0,
-                    "rate_duration": 3.0,
-                    "sources": [
-                        {
-                            "item_id": 57,
-                            "preserve": false,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 62,
-                            "preserve": true,
-                            "q_required": 1.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": false
-        }
-    ],
-    "locations": [
-        {
-            "description": "Good place to hang out and reduce stress. Trees, basketball courts, skateboarding.",
-            "destinations": [],
-            "dimensions": [0,0],
-            "excluded": [0,0,0,0],
-            "id": 26,
-            "items": [
-                {
-                    "item_id": 55,
-                    "position": [0,0],
-                    "quantity": 1.0
-                }
-            ],
-            "masked": false,
-            "name": "Park",
-            "progress": {},
-            "quantity": 0.0,
-            "toplevel": false
-        },
-        {
-            "description": "More expensive than the grocery store but doesn't require preparation and more filling than boxed food.",
-            "destinations": [],
-            "dimensions": [0,0],
-            "excluded": [0,0,0,0],
-            "id": 28,
-            "items": [],
-            "masked": false,
-            "name": "Restaurant",
-            "progress": {},
-            "quantity": 0.0,
-            "toplevel": false
-        },
-        {
-            "description": "Full time is generally considered to be 2 classes, although classes vary as to how demanding they are. You could push and go up to 3, or take only 1 for a part-time load.",
-            "destinations": [],
-            "dimensions": [0,0],
-            "excluded": [0,0,0,0],
-            "id": 29,
-            "items": [
-                {
-                    "item_id": 62,
-                    "position": [0,0],
-                    "quantity": 1.0
-                }
-            ],
-            "masked": false,
-            "name": "School",
-            "progress": {},
-            "quantity": 0.0,
-            "toplevel": true
-        },
-        {
-            "description": "An adequate apartment. Could buy a nice house with mortgage payment, otherwise rent.\r\n\r\nSleep and cook meals here.",
-            "destinations": [
-                {
-                    "bidirectional": true,
-                    "duration": 1,
-                    "door1": [0,0],
-                    "door2": [0,0],
-                    "loc2_id": 31
-                },
-                {
-                    "bidirectional": true,
-                    "duration": 1,
-                    "door1": [0,0],
-                    "door2": [0,0],
-                    "loc2_id": 29
-                },
-                {
-                    "bidirectional": true,
-                    "duration": 1,
-                    "door1": [0,0],
-                    "door2": [0,0],
-                    "loc2_id": 28
-                },
-                {
-                    "bidirectional": true,
-                    "duration": 1,
-                    "door1": [0,0],
-                    "door2": [0,0],
-                    "loc2_id": 26
-                },
-                {
-                    "bidirectional": true,
-                    "duration": 1,
-                    "door1": [0,0],
-                    "door2": [0,0],
-                    "loc2_id": 27
-                }
-            ],
-            "dimensions": [0,0],
-            "excluded": [0,0,0,0],
-            "id": 30,
-            "items": [],
-            "masked": false,
-            "name": "Home",
-            "progress": {},
-            "quantity": 0.0,
-            "toplevel": false
-        },
-        {
-            "description": "Fraternities and Sororities have the wildest parties.",
-            "destinations": [],
-            "dimensions": [0,0],
-            "excluded": [0,0,0,0],
-            "id": 31,
-            "items": [
-                {
-                    "item_id": 64,
-                    "position": [0,0],
-                    "quantity": 1.0
-                }
-            ],
-            "masked": false,
-            "name": "Greek House",
-            "progress": {},
-            "quantity": 0.0,
-            "toplevel": false
-        },
-        {
-            "description": "Buy either unprepared food or boxed meals.\r\n\r\nThere are several types of jobs available here:\r\n\u2022 Cashier\r\n\u2022 Bagger\r\n\u2022 Stocker\r\n\u2022 Manager",
-            "destinations": [],
-            "dimensions": [0,0],
-            "excluded": [0,0,0,0],
-            "id": 27,
-            "items": [
-                {
-                    "item_id": 65,
-                    "position": [0,0],
-                    "quantity": 1.0
-                }
-            ],
-            "masked": false,
-            "name": "Grocery Store",
-            "progress": {},
-            "quantity": 0.0,
-            "toplevel": false
-        }
-    ],
-    "overall": {
+                ],
+                "abilities": [],
+                "toplevel": true,
+                "location_id": 29,
+                "position": null,
+                "travel_party": "",
+                "items": []
+            }
+        ],
+        "attribs": [
+            {
+                "id": 2,
+                "name": "Day of Week",
+                "description": "",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": [
+                    "Sunday",
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday",
+                    "Friday",
+                    "Saturday"
+                ]
+            },
+            {
+                "id": 3,
+                "name": "Grade",
+                "description": "Letter grade for the class, based primarily on the final test. Low attendance also reduces grades.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": [
+                    "S",
+                    "A",
+                    "B",
+                    "C",
+                    "F"
+                ]
+            },
+            {
+                "id": 4,
+                "name": "Score",
+                "description": "Percentage on the final test. Studying improves your chances.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 5,
+                "name": "People Skills",
+                "description": "Being cool, popular, or a good listener is more important for some jobs than how much you know. And it's always useful to help with finding a job, and in interviews.\r\n\r\nSpending time on things that improve people skills typically lowers intelligence.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 6,
+                "name": "Intelligence",
+                "description": "Improves study and job performance.\r\n\r\nSpending time on things that improve intelligence, such as studying, typically lowers people skills.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            }
+        ],
+        "events": []
+    },
+    "general data": {
+        "piles": [
+            {
+                "item_id": 7,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 8,
+                "quantity": 2.0
+            },
+            {
+                "item_id": 9,
+                "quantity": 1.0
+            },
+            {
+                "item_id": 10,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 11,
+                "quantity": 10.0
+            },
+            {
+                "item_id": 13,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 14,
+                "quantity": 24.0
+            },
+            {
+                "item_id": 15,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 16,
+                "quantity": 12.0
+            },
+            {
+                "item_id": 17,
+                "quantity": 12.0
+            },
+            {
+                "item_id": 19,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 22,
+                "quantity": 100.0
+            },
+            {
+                "item_id": 23,
+                "quantity": 1.0
+            },
+            {
+                "item_id": 24,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 25,
+                "quantity": 0.0
+            }
+        ],
+        "progress": []
+    },
+    "overall settings": {
+        "title": "Making a Living",
         "description": "Attend class or go to work. Figure out <i>what</i> you want to do with your life; then, figure out <i>how</i> to do that. Or maybe the other way around. In this scenario, resources such as time and money are tightly controlled, so <c=\"CadetBlue\">spend them wisely</c>.\r\n\r\nYou've just enrolled in the first class, Math 101, which starts tomorrow morning. It counts as credit towards a variety of different degrees. Arrangements have also been made to continue working part time at a grocery store in the afternoons and evenings.",
-        "progress_type": "RPG",
-        "multiplayer": false,
         "number_format": "en_US",
         "slots": [],
-        "title": "Making a Living",
-        "win_reqs": []
+        "progress_type": "RPG",
+        "multiplayer": false
     }
 }

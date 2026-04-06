@@ -1,1722 +1,1660 @@
 {
-    "comments": [
-        "General rate durations for various bars and boosts:",
-        "8 → red/green bar",
-        "20 → yellow/orange/violet/white bar",
-        "12 → boost I",
-        "14 → boost II",
-        "15 → bars unlocked",
-        "10 → fabric",
-        "This 'comments' field is for reference only, ignored by the game and not saved."
-    ],
-    "attribs": [],
-    "characters": [],
-    "events": [
-        {
-            "changed": [],
-            "description": "To determine the rate:\r\n1. Multiply by the <i><c=\"lemonchiffon\">BSF</c></i>.\r\n2. Multiply by <i>Green Bar Boost I</i>.\r\n3. For every <i>Green Bar Boost II</i>, press the button to multiply by <i><c=\"lemonchiffon\">Boost II Factor</c></i>.\r\n\r\nWith this result, in <a href=\"/play/item/17\">Green Bar</a> setup, set <i>Gain per Batch</i> for the <i>Ambient Energy</i> recipe.",
-            "determining": [
-                {
-                    "entity_data": ["item", 65],
-                    "label": "",
-                    "mode": "",
-                    "operation": "*"
-                },
-                {
-                    "entity_data": ["item", 77],
-                    "label": "",
-                    "mode": "",
-                    "operation": "*"
-                },
-                {
-                    "entity_data": ["item", 19],
-                    "label": "",
-                    "mode": "",
-                    "operation": "*"
-                },
-                {
-                    "entity_data": ["item", 50],
-                    "label": "",
-                    "mode": "",
-                    "operation": "+"
-                }
-            ],
-            "id": 2,
-            "name": "Green Bar Rate",
-            "numeric_range": [1, 1],
-            "outcome_type": "determined",
-            "selection_strings": "",
-            "single_number": 0.5,
-            "toplevel": false,
-            "trigger_chance": 0.0,
-            "triggers": [
-                ["item", 17],
-                ["item", 19],
-                ["item", 45],
-                ["item", 50]
-            ]
-        },
-        {
-            "changed": [],
-            "description": "To determine the rate:\r\n1. Multiply by the <i><c=\"lemonchiffon\">BSF</c></i>.\r\n2. Multiply by <i>Red Bar Boost I</i>.\r\n3. For every <i>Red Bar Boost II</i>, multiply by <i><c=\"lemonchiffon\">Boost II Factor</c></i> (press the button that many times).\r\n\r\nThen go to <a href=\"/play/item/15\">Red Bar</a> setup (shift+click on PC to leave window open). Set <i>Gain per Batch</i> for the <i>Ambient Energy</i> recipe to this result.",
-            "determining": [
-                {
-                    "entity_data": ["item", 18],
-                    "label": "",
-                    "mode": "",
-                    "operation": "*"
-                },
-                {
-                    "entity_data": ["item", 21],
-                    "label": "",
-                    "mode": "",
-                    "operation": "+"
-                },
-                {
-                    "entity_data": ["item", 65],
-                    "label": "",
-                    "mode": "",
-                    "operation": "*"
-                },
-                {
-                    "entity_data": ["item", 77],
-                    "label": "",
-                    "mode": "",
-                    "operation": "*"
-                }
-            ],
-            "id": 1,
-            "name": "Red Bar Rate",
-            "numeric_range": [1, 1],
-            "outcome_type": "determined",
-            "selection_strings": "",
-            "single_number": 1.0,
-            "toplevel": false,
-            "trigger_chance": 0.0,
-            "triggers": [
-                ["item", 15],
-                ["item", 18],
-                ["item", 21]
-            ]
-        },
-        {
-            "changed": [],
-            "description": "To determine the rate:\r\n1. Multiply by the <i><c=\"lemonchiffon\">BSF</c></i>.\r\n2. Multiply by <i>Yellow Bar Boost I</i>.\r\n3. For every <i>Yellow Bar Boost II</i>, press the button to multiply by <i><c=\"lemonchiffon\">Boost II Factor</c></i>.\r\n\r\nWith this result, go to <a href=\"/play/item/20\">Yellow Bar</a> setup and set <i>Gain per Batch</i>.",
-            "determining": [
-                {
-                    "entity_data": ["item", 65],
-                    "label": "",
-                    "mode": "",
-                    "operation": "*"
-                },
-                {
-                    "entity_data": ["item", 77],
-                    "label": "",
-                    "mode": "",
-                    "operation": "*"
-                },
-                {
-                    "entity_data": ["item", 49],
-                    "label": "",
-                    "mode": "",
-                    "operation": "*"
-                },
-                {
-                    "entity_data": ["item", 61],
-                    "label": "",
-                    "mode": "",
-                    "operation": "+"
-                }
-            ],
-            "id": 3,
-            "name": "Yellow Bar Rate",
-            "numeric_range": [1, 20],
-            "outcome_type": "determined",
-            "selection_strings": "",
-            "single_number": 1.0,
-            "toplevel": false,
-            "trigger_chance": 0.0,
-            "triggers": [
-                ["item", 20],
-                ["item", 49],
-                ["item", 61]
-            ]
-        }
-    ],
-    "items": [
-        {
-            "attribs": [],
-            "description": "Rate amount +0.5 each.",
-            "id": 19,
-            "masked": true,
-            "name": "Green Bar Boost I",
-            "progress": {},
-            "q_limit": 10.0,
-            "quantity": 1.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 7,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 12.0,
-                    "sources": [
-                        {
-                            "item_id": 20,
-                            "preserve": false,
-                            "q_required": 7.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "<i>Gain per batch</i> 1 each. See <a href=\"/play/event/1\">Red Bar Rate</a> for how to perform the upgrade (also linked below).",
-            "id": 18,
-            "masked": true,
-            "name": "Red Bar Boost I",
-            "progress": {},
-            "q_limit": 20.0,
-            "quantity": 1.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 6,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 12.0,
-                    "sources": [
-                        {
-                            "item_id": 17,
-                            "preserve": false,
-                            "q_required": 20.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Rate amount x1.5\r\n\r\nMultiplying for each upgrade means the total benefit is exponential, so with a base rate amount of 20 from all <i>Red Bar Boost I</i> upgrades, the rate amount becomes:\r\n<pre>20 * 1.5 ^ 6 = 228</pre>",
-            "id": 21,
-            "masked": true,
-            "name": "Red Bar Boost II",
-            "progress": {},
-            "q_limit": 6.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 4,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 14.0,
-                    "sources": [
-                        {
-                            "item_id": 15,
-                            "preserve": false,
-                            "q_required": 1000.0
-                        },
-                        {
-                            "item_id": 18,
-                            "preserve": true,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 20,
-                            "preserve": false,
-                            "q_required": 100.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Binds colors together into patterned objects.",
-            "id": 52,
-            "masked": true,
-            "name": "Sticky Force",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 55,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 120.0,
-                    "sources": [
-                        {
-                            "item_id": 68,
-                            "preserve": true,
-                            "q_required": 18.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Combine light to produce this secondary color.\r\n<pre><c=\"yellow\"> _____________\r\n/____________/\r\n</c></pre>",
-            "id": 20,
-            "masked": true,
-            "name": "\ud83d\udfe8Yellow Bar",
-            "progress": {},
-            "q_limit": 0.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 2,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 20.0,
-                    "sources": [
-                        {
-                            "item_id": 15,
-                            "preserve": false,
-                            "q_required": 10.0
-                        },
-                        {
-                            "item_id": 17,
-                            "preserve": false,
-                            "q_required": 5.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": true
-        },
-        {
-            "attribs": [],
-            "description": "An especially vibrant color.\r\n<pre><c=\"orange\"> _____________\r\n/____________/\r\n</c></pre>",
-            "id": 56,
-            "masked": true,
-            "name": "\ud83d\udfe7Orange Bar",
-            "progress": {},
-            "q_limit": 0.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 40,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 20.0,
-                    "sources": [
-                        {
-                            "item_id": 15,
-                            "preserve": false,
-                            "q_required": 5.0
-                        },
-                        {
-                            "item_id": 20,
-                            "preserve": false,
-                            "q_required": 5.0
-                        },
-                        {
-                            "item_id": 58,
-                            "preserve": true,
-                            "q_required": 1.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": true
-        },
-        {
-            "attribs": [],
-            "description": "At first, indeterminate flashes of energy are the only thing distinguishable from nothingness. The energy seems unlimited. Maybe it even is.\r\n<pre><c=\"yellow\">\r\n        |\r\n<*>   -<*>-   *\r\n        |\r\n</c></pre>",
-            "id": 16,
-            "masked": false,
-            "name": "Ambient Energy",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 1.0,
-            "recipes": [],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Rate amount +1 each.",
-            "id": 69,
-            "masked": true,
-            "name": "White Bar Boost I",
-            "progress": {},
-            "q_limit": 10.0,
-            "quantity": 1.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 59,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 12.0,
-                    "sources": [
-                        {
-                            "item_id": 55,
-                            "preserve": false,
-                            "q_required": 200.0
-                        },
-                        {
-                            "item_id": 57,
-                            "preserve": false,
-                            "q_required": 10.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "At the end of the visible spectrum.\r\n<pre><c=\"violet\"> _____________\r\n/____________/\r\n</c></pre>",
-            "id": 55,
-            "masked": true,
-            "name": "\ud83d\udfeaViolet Bar",
-            "progress": {},
-            "q_limit": 0.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 39,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 20.0,
-                    "sources": [
-                        {
-                            "item_id": 15,
-                            "preserve": false,
-                            "q_required": 5.0
-                        },
-                        {
-                            "item_id": 46,
-                            "preserve": false,
-                            "q_required": 5.0
-                        },
-                        {
-                            "item_id": 63,
-                            "preserve": true,
-                            "q_required": 1.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": true
-        },
-        {
-            "attribs": [],
-            "description": "Soil that holds its form, land. While earth does reach this planet's center, so does water, with tunnels, caverns and outcroppings in the depths. Both surface and depths include areas covered by earth roughly equal in size to those of water.",
-            "id": 71,
-            "masked": true,
-            "name": "Earth",
-            "progress": {},
-            "q_limit": 555.0,
-            "quantity": 0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 61,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 3.0,
-                    "sources": [
-                        {
-                            "item_id": 15,
-                            "preserve": false,
-                            "q_required": 70.0
-                        },
-                        {
-                            "item_id": 17,
-                            "preserve": false,
-                            "q_required": 35.0
-                        },
-                        {
-                            "item_id": 52,
-                            "preserve": true,
-                            "q_required": 1.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "local",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Loosely-knit atmosphere surrounding the planet, a firmament to displace the emptiness of space. About as big as the volume of earth and water combined.",
-            "id": 72,
-            "masked": true,
-            "name": "Air",
-            "progress": {},
-            "q_limit": 1110.0,
-            "quantity": 0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 62,
-                    "instant": false,
-                    "rate_amount": 4.0,
-                    "rate_duration": 7.0,
-                    "sources": [
-                        {
-                            "item_id": 20,
-                            "preserve": false,
-                            "q_required": 50.0
-                        },
-                        {
-                            "item_id": 51,
-                            "preserve": true,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 70,
-                            "preserve": false,
-                            "q_required": 1.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "local",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "<c=\"saddlebrown\">Roots push deep into the earth, a mighty trunk stands tall, branches spread toward the heavens, and <c=\"green\">leaves</c> drink <c=\"yellow\">sunlight</c></c>.\r\n\r\n<i><c=\"#333333\">World Tree... Tree of Life... Tree of Knowledge...\r\nwisdom, connection, growth</c></i>",
-            "id": 73,
-            "masked": true,
-            "name": "Tree",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 63,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 33.0,
-                    "sources": [
-                        {
-                            "item_id": 54,
-                            "preserve": true,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 70,
-                            "preserve": true,
-                            "q_required": 500.0
-                        },
-                        {
-                            "item_id": 71,
-                            "preserve": true,
-                            "q_required": 500.0
-                        },
-                        {
-                            "item_id": 72,
-                            "preserve": true,
-                            "q_required": 1000.0
-                        },
-                        {
-                            "item_id": 74,
-                            "preserve": false,
-                            "q_required": 1.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "local",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "The beginning of something greater. Place it just underneath the surface of the land.",
-            "id": 74,
-            "masked": true,
-            "name": "Seed",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 64,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 33.0,
-                    "sources": [
-                        {
-                            "item_id": 17,
-                            "preserve": false,
-                            "q_required": 10000.0
-                        },
-                        {
-                            "item_id": 54,
-                            "preserve": true,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 70,
-                            "preserve": false,
-                            "q_required": 10.0
-                        },
-                        {
-                            "item_id": 71,
-                            "preserve": false,
-                            "q_required": 10.0
-                        },
-                        {
-                            "item_id": 72,
-                            "preserve": false,
-                            "q_required": 10.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "local",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Rate amount +1 each, so set <i>gain per batch</i> to 2 when completed.",
-            "id": 75,
-            "masked": true,
-            "name": "Black Bar Boost I",
-            "progress": {},
-            "q_limit": 2.0,
-            "quantity": 1.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 65,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 12.0,
-                    "sources": [
-                        {
-                            "item_id": 57,
-                            "preserve": false,
-                            "q_required": 1000.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "It seems like you shouldn't be able to see a black bar in space. Doesn't black absorb all light?<pre>\r\n  <c=\"black\">_____________\r\n<c=\"gray\">/</c>/____________/<c=\"gray\">/</c>\r\n</c></pre>\r\n<c=\"lemonchiffon\">Requires a reset:</c>\r\n1. Stop producing the sources of this item (<c=\"red\">#</c>, <c=\"green\">#</c>, <c=\"yellow\">#</c>).\r\n2. Produce as many black bars as possible.\r\n3. Set quantities of the sources to 0.\r\n4. Reset rates and boosts of <c=\"red\">#</c> (1/8s, <a href=\"/configure/item/18\">I</a>, <a href=\"/configure/item/21\">II</a>) and <c=\"green\">#</c> (0.5/8s, <a href=\"/configure/item/19\">I</a>, <a href=\"/configure/item/50\">II</a>), setting \"I\" boosts to 1.\r\n\r\n<c=\"lemonchiffon\">PC browser shortcuts</c>: <i>Ctrl+Click</i> to open multiple tabs, <i>Alt+LeftArrow</i> to go back.",
-            "id": 22,
-            "masked": true,
-            "name": "\u2b1bBlack Bar",
-            "progress": {},
-            "q_limit": 0.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 5,
-                    "instant": true,
-                    "rate_amount": 1.0,
-                    "rate_duration": 3.0,
-                    "sources": [
-                        {
-                            "item_id": 15,
-                            "preserve": false,
-                            "q_required": 1000.0
-                        },
-                        {
-                            "item_id": 17,
-                            "preserve": false,
-                            "q_required": 1000.0
-                        },
-                        {
-                            "item_id": 20,
-                            "preserve": false,
-                            "q_required": 100.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": true
-        },
-        {
-            "attribs": [],
-            "description": "",
-            "id": 62,
-            "masked": true,
-            "name": "White Bar Unlocked",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 46,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 15.0,
-                    "sources": [
-                        {
-                            "item_id": 22,
-                            "preserve": false,
-                            "q_required": 100.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Mix all other wavelengths for the pinnacle of light combination, the seventh.\r\n<pre><c=\"white\"> _____________\r\n/____________/\r\n</c></pre>",
-            "id": 57,
-            "masked": true,
-            "name": "\u2b1cWhite Bar",
-            "progress": {},
-            "q_limit": 0.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 41,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 20.0,
-                    "sources": [
-                        {
-                            "item_id": 15,
-                            "preserve": false,
-                            "q_required": 10.0
-                        },
-                        {
-                            "item_id": 17,
-                            "preserve": false,
-                            "q_required": 5.0
-                        },
-                        {
-                            "item_id": 20,
-                            "preserve": false,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 46,
-                            "preserve": false,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 55,
-                            "preserve": false,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 56,
-                            "preserve": false,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 62,
-                            "preserve": true,
-                            "q_required": 1.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": true
-        },
-        {
-            "attribs": [],
-            "description": "",
-            "id": 63,
-            "masked": true,
-            "name": "Violet Bar Unlocked",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 47,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 15.0,
-                    "sources": [
-                        {
-                            "item_id": 56,
-                            "preserve": false,
-                            "q_required": 1000.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Rate amount +1 each.",
-            "id": 49,
-            "masked": true,
-            "name": "Yellow Bar Boost I",
-            "progress": {},
-            "q_limit": 10.0,
-            "quantity": 1.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 37,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 12.0,
-                    "sources": [
-                        {
-                            "item_id": 22,
-                            "preserve": false,
-                            "q_required": 2.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Rate amount +0.5 each.",
-            "id": 59,
-            "masked": true,
-            "name": "Blue Bar Boost I",
-            "progress": {},
-            "q_limit": 10.0,
-            "quantity": 1.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 43,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 12.0,
-                    "sources": [
-                        {
-                            "item_id": 17,
-                            "preserve": false,
-                            "q_required": 10000.0
-                        },
-                        {
-                            "item_id": 46,
-                            "preserve": false,
-                            "q_required": 25.0
-                        },
-                        {
-                            "item_id": 47,
-                            "preserve": true,
-                            "q_required": 1.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Rate amount x1.5\r\n<pre>Total: 10 * 1.5 ^ 6 = 114</pre>",
-            "id": 61,
-            "masked": true,
-            "name": "Yellow Bar Boost II",
-            "progress": {},
-            "q_limit": 6.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 45,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 14.0,
-                    "sources": [
-                        {
-                            "item_id": 20,
-                            "preserve": false,
-                            "q_required": 500.0
-                        },
-                        {
-                            "item_id": 49,
-                            "preserve": true,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 56,
-                            "preserve": false,
-                            "q_required": 50.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "",
-            "id": 58,
-            "masked": true,
-            "name": "Orange Bar Unlocked",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 42,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 15.0,
-                    "sources": [
-                        {
-                            "item_id": 46,
-                            "preserve": false,
-                            "q_required": 1000.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "No waiting required, but struggles to keep pace once upgrades start coming in.",
-            "id": 48,
-            "masked": false,
-            "name": "Attentively Collected Beam",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 34,
-                    "instant": true,
-                    "rate_amount": 1.0,
-                    "rate_duration": 3.0,
-                    "sources": [
-                        {
-                            "item_id": 16,
-                            "preserve": true,
-                            "q_required": 1.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Rate amount +1 each.",
-            "id": 64,
-            "masked": true,
-            "name": "Orange Bar Boost I",
-            "progress": {},
-            "q_limit": 10.0,
-            "quantity": 1.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 48,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 12.0,
-                    "sources": [
-                        {
-                            "item_id": 20,
-                            "preserve": false,
-                            "q_required": 1000.0
-                        },
-                        {
-                            "item_id": 56,
-                            "preserve": false,
-                            "q_required": 10.0
-                        },
-                        {
-                            "item_id": 58,
-                            "preserve": true,
-                            "q_required": 1.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "",
-            "id": 47,
-            "masked": true,
-            "name": "Blue Bar Unlocked",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 33,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 15.0,
-                    "sources": [
-                        {
-                            "item_id": 22,
-                            "preserve": false,
-                            "q_required": 1.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Enables the reaction of grouped colors to generate energy.",
-            "id": 53,
-            "masked": true,
-            "name": "Fire Force",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 54,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 300.0,
-                    "sources": [
-                        {
-                            "item_id": 51,
-                            "preserve": true,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 56,
-                            "preserve": true,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 68,
-                            "preserve": true,
-                            "q_required": 9.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Weave black light into an intricate, structured fabric that underlies and supports the universe.",
-            "id": 68,
-            "masked": true,
-            "name": "Black Fabric",
-            "progress": {},
-            "q_limit": 33.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 51,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 10.0,
-                    "sources": [
-                        {
-                            "item_id": 22,
-                            "preserve": false,
-                            "q_required": 33.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "It's wet! And inconstant, shifting. Bind blue light together tightly in regular amounts.",
-            "id": 70,
-            "masked": true,
-            "name": "Water",
-            "progress": {},
-            "q_limit": 555.0,
-            "quantity": 0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 60,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 3.0,
-                    "sources": [
-                        {
-                            "item_id": 46,
-                            "preserve": false,
-                            "q_required": 100.0
-                        },
-                        {
-                            "item_id": 52,
-                            "preserve": true,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 57,
-                            "preserve": false,
-                            "q_required": 1.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "local",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Required for living beings such as plants. Creating this force will consume all remaining ambient energy.",
-            "id": 54,
-            "masked": true,
-            "name": "Life Force",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 52,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 600.0,
-                    "sources": [
-                        {
-                            "item_id": 16,
-                            "preserve": false,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 17,
-                            "preserve": true,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 60,
-                            "preserve": true,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 68,
-                            "preserve": true,
-                            "q_required": 33.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Gather blue wavelengths of light.<pre><c=\"blue\">\r\n _____________\r\n/____________/\r\n</c></pre>",
-            "id": 46,
-            "masked": true,
-            "name": "\ud83d\udfe6Blue Bar",
-            "progress": {},
-            "q_limit": 0.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 32,
-                    "instant": false,
-                    "rate_amount": 0.5,
-                    "rate_duration": 30.0,
-                    "sources": [
-                        {
-                            "item_id": 16,
-                            "preserve": true,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 47,
-                            "preserve": true,
-                            "q_required": 1.0
-                        }
-                    ]
-                },
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 57,
-                    "instant": false,
-                    "rate_amount": 100.0,
-                    "rate_duration": 3.0,
-                    "sources": [
-                        {
-                            "item_id": 54,
-                            "preserve": true,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 60,
-                            "preserve": true,
-                            "q_required": 1.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": true
-        },
-        {
-            "attribs": [],
-            "description": "Loosely pulls colors together, effectively separating them into large collections. Order black fabric in a texture that defines this force.\r\n\r\n<c=\"lemonchiffon\">When completed:</c>\r\n\u2022 Configure <a href=\"/configure/location/3\">this location</a> to check <i>Show in Overview</i>.",
-            "id": 51,
-            "masked": true,
-            "name": "Gravity Force",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 53,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 180.0,
-                    "sources": [
-                        {
-                            "item_id": 68,
-                            "preserve": true,
-                            "q_required": 3.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Rate amount x1.5\r\n\r\nThis means increasing by 50% each, exponentially. So, the green bar rate with all boosts I and II is:\r\n<pre>5 * 1.5 ^ 6 = 57 per 8 seconds</pre>",
-            "id": 50,
-            "masked": true,
-            "name": "Green Bar Boost II",
-            "progress": {},
-            "q_limit": 6.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 38,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 14.0,
-                    "sources": [
-                        {
-                            "item_id": 17,
-                            "preserve": false,
-                            "q_required": 100.0
-                        },
-                        {
-                            "item_id": 19,
-                            "preserve": true,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 46,
-                            "preserve": false,
-                            "q_required": 25.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Shape green wavelengths into a form, a rectangular prism. Quantity describes the length from one end to the other.\r\n<pre><c=\"green\"> _____________\r\n/____________/\r\n</c></pre>",
-            "id": 17,
-            "masked": true,
-            "name": "\ud83d\udfe9Green Bar",
-            "progress": {},
-            "q_limit": 0.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 3,
-                    "instant": false,
-                    "rate_amount": 0.5,
-                    "rate_duration": 8.0,
-                    "sources": [
-                        {
-                            "item_id": 16,
-                            "preserve": true,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 45,
-                            "preserve": true,
-                            "q_required": 1.0
-                        }
-                    ]
-                },
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 36,
-                    "instant": true,
-                    "rate_amount": 0.5,
-                    "rate_duration": 3.0,
-                    "sources": [
-                        {
-                            "item_id": 45,
-                            "preserve": true,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 48,
-                            "preserve": false,
-                            "q_required": 1.0
-                        }
-                    ]
-                },
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 58,
-                    "instant": false,
-                    "rate_amount": 100.0,
-                    "rate_duration": 3.0,
-                    "sources": [
-                        {
-                            "item_id": 54,
-                            "preserve": true,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 60,
-                            "preserve": true,
-                            "q_required": 1.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": true
-        },
-        {
-            "attribs": [],
-            "description": "Gigantic heat-generating sphere on a scale that even imagining threatens to overwhelm the mind.\r\n\r\n<c=\"lemonchiffon\">After constructing:</c>\r\n\u2022 Configure <a href=\"/configure/location/2\">this location</a> to unmask and show in Overview.\r\n\u2022 Hide the <a href=\"/configure/location/3\">Local Solar System</a> from Overview by unchecking the box.\r\n\u2022 For bar recipes that use this item (under <i>used for</i>), update <i>gain per batch</i> to 100 multiplied by <i><c=\"lemonchiffon\">BSF</c></i>.",
-            "id": 60,
-            "masked": true,
-            "name": "Star",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 44,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 300.0,
-                    "sources": [
-                        {
-                            "item_id": 15,
-                            "preserve": false,
-                            "q_required": 500000.0
-                        },
-                        {
-                            "item_id": 20,
-                            "preserve": false,
-                            "q_required": 10000.0
-                        },
-                        {
-                            "item_id": 51,
-                            "preserve": true,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 53,
-                            "preserve": true,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 56,
-                            "preserve": false,
-                            "q_required": 10000.0
-                        },
-                        {
-                            "item_id": 57,
-                            "preserve": false,
-                            "q_required": 10000.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "For each boost II, multiply the rate by this fixed value. With a calculator, for example with 6 boost II upgrades, the formula is <code>1.5 ^ 6 = 11.39</code>. Or, with event aids, press the button 6 times.",
-            "id": 77,
-            "masked": false,
-            "name": "Boost II Factor",
-            "progress": {},
-            "q_limit": 0.0,
-            "quantity": 1.5,
-            "recipes": [],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "",
-            "id": 45,
-            "masked": false,
-            "name": "Green Bar Unlocked",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 31,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 15.0,
-                    "sources": [
-                        {
-                            "item_id": 15,
-                            "preserve": false,
-                            "q_required": 30.0
-                        },
-                        {
-                            "item_id": 67,
-                            "preserve": true,
-                            "q_required": 1.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Weave red light into an early, basic fabric that underlies and supports the universe. So named because it comes from red light, not because it has a color of its own.",
-            "id": 66,
-            "masked": true,
-            "name": "Red Fabric",
-            "progress": {},
-            "q_limit": 3.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 49,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 10.0,
-                    "sources": [
-                        {
-                            "item_id": 15,
-                            "preserve": false,
-                            "q_required": 10.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Select red wavelengths. Creating the first bar of light marks the start of meaningful time, the first different state.\r\n<pre><c=\"red\">\r\n _____________\r\n/____________/\r\n</c></pre>",
-            "id": 15,
-            "masked": false,
-            "name": "\ud83d\udfe5Red Bar",
-            "progress": {},
-            "q_limit": 0.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 1,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 8.0,
-                    "sources": [
-                        {
-                            "item_id": 16,
-                            "preserve": true,
-                            "q_required": 1.0
-                        }
-                    ]
-                },
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 35,
-                    "instant": true,
-                    "rate_amount": 1.0,
-                    "rate_duration": 3.0,
-                    "sources": [
-                        {
-                            "item_id": 48,
-                            "preserve": false,
-                            "q_required": 1.0
-                        }
-                    ]
-                },
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 56,
-                    "instant": false,
-                    "rate_amount": 100.0,
-                    "rate_duration": 3.0,
-                    "sources": [
-                        {
-                            "item_id": 54,
-                            "preserve": true,
-                            "q_required": 1.0
-                        },
-                        {
-                            "item_id": 60,
-                            "preserve": true,
-                            "q_required": 1.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": true
-        },
-        {
-            "attribs": [],
-            "description": "Supports three-dimensional space so that things can be in different places. Everything else in physics depends on spacetime, including interactions like gravity.\r\n\r\n<i>Note: While this could be seen as playing God, I prefer to think of the player role in this scenario as an observer, with apparent choices actually predestined.</i>",
-            "id": 67,
-            "masked": true,
-            "name": "Distance Force",
-            "progress": {},
-            "q_limit": 1.0,
-            "quantity": 0.0,
-            "recipes": [
-                {
-                    "attrib_reqs": [],
-                    "byproducts": [],
-                    "id": 50,
-                    "instant": false,
-                    "rate_amount": 1.0,
-                    "rate_duration": 15.0,
-                    "sources": [
-                        {
-                            "item_id": 66,
-                            "preserve": true,
-                            "q_required": 3.0
-                        }
-                    ]
-                }
-            ],
-            "storage_type": "universal",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "Set this quantity (<i><c=\"lemonchiffon\">BSF</c></i>) to a multiplier such as:\r\n<pre>\r\n0.5   : slow\r\n1     : normal &mdash; no change\r\n2     : somewhat faster\r\n10    : fast\r\n100   : practically no idling &mdash; incremental only\r\n</pre>\r\nYou'll be using this to multiply gains for bars and elements, starting with <a href=\"/play/event/1\">Red Bar Gain</a>.\r\n\r\nFor upgrades and other low-quantity items, you can reduce recipe durations according to the table below, generally 5% less per <i><c=\"lemonchiffon\">BSF</c></i>. Minimum duration 1 second.\r\n<pre>\r\n<c=\"lemonchiffon\">BSF</c>    rate multiplier\r\n---    ---------------\r\n0.5    10% more\r\n1      no change\r\n2      10% less\r\n4      20% less\r\n5      25% less\r\n8      40% less\r\n10     50% less\r\n</pre>",
-            "id": 65,
-            "masked": false,
-            "name": "\ud83c\udfc1Base Speed Factor",
-            "progress": {},
-            "q_limit": 0.0,
-            "quantity": 1.0,
-            "recipes": [],
-            "storage_type": "universal",
-            "toplevel": true
-        }
-    ],
-    "locations": [
-        {
-            "attribs": [],
-            "description": "",
-            "destinations": [],
-            "dimensions": [0,0],
-            "excluded": [0,0,0,0],
-            "id": 1,
-            "item_refs": [
-                18,
-                19,
-                21,
-                45,
-                47,
-                49,
-                50,
-                58,
-                59,
-                61,
-                62,
-                63,
-                64,
-                69,
-                75
-            ],
-            "items": [],
-            "masked": false,
-            "name": "Upgrades",
-            "toplevel": true
-        },
-        {
-            "attribs": [],
-            "description": "Ever new possibilities present themselves as we begin to see what the Sticky Force can do in this place, Terra. Rather than cosmically large and powerful, things here are of lesser scale but beautiful.",
-            "destinations": [],
-            "dimensions": [0,0],
-            "excluded": [0,0,0,0],
-            "id": 2,
-            "item_refs": [],
-            "items": [
-                {
-                    "item_id": 74,
-                    "position": [0,0],
-                    "quantity": 0.0
-                },
-                {
-                    "item_id": 73,
-                    "position": [0,0],
-                    "quantity": 0.0
-                },
-                {
-                    "item_id": 71,
-                    "position": [0,0],
-                    "quantity": 0.0
-                },
-                {
-                    "item_id": 70,
-                    "position": [0,0],
-                    "quantity": 0.0
-                },
-                {
-                    "item_id": 72,
-                    "position": [0,0],
-                    "quantity": 0.0
-                }
-            ],
-            "masked": true,
-            "name": "Planet",
-            "toplevel": false
-        },
-        {
-            "attribs": [],
-            "description": "An area designated to hold a star orbited by celestial bodies.",
-            "destinations": [
-                {
-                    "bidirectional": true,
-                    "door1": [0,0],
-                    "door2": [0,0],
-                    "duration": 1,
-                    "loc2_id": 2
-                }
-            ],
-            "dimensions": [0,0],
-            "excluded": [0,0,0,0],
-            "id": 3,
-            "item_refs": [
-                60
-            ],
-            "items": [],
-            "masked": false,
-            "name": "Local Solar System",
-            "toplevel": false
-        }
-    ],
-    "overall": {
-        "description": "Form <c=\"#FF0000\">c</c><c=\"#FF6600\">o</c><c=\"#CC9900\">l</c><c=\"#CCCC00\">o</c><c=\"#99CC00\">r</c><c=\"#66CC00\">f</c><c=\"#0099CC\">u</c><c=\"#0000FF\">l</c> rectangular prisms at the beginning of space and time.\r\n\r\nComplete set of items. Upgrade rates by changing settings.\r\n\r\n&nbsp;&nbsp;&nbsp;&nbsp;<c=\"red\">[]]]]]]]]]]]]]]]]]]</c> &nbsp;&nbsp; <c=\"green\">######</c> &nbsp;&nbsp; <c=\"blue\">===</c>",
-        "multiplayer": false,
-        "number_format": "en_US",
-        "progress_type": "Idle",
-        "slots": [],
-        "title": "Rays",
-        "win_reqs": [
+    "entities": {
+        "items": [
             {
-                "attrib_id": null,
-                "attrib_value": 0.0,
-                "char_id": null,
-                "id": 1,
-                "item_id": 73,
-                "loc_id": 2,
+                "id": 2,
+                "name": "Green Bar Boost I",
+                "description": "Rate amount +0.5 each.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 10.0,
+                "toplevel": false,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 7,
+                        "rate_amount": 1.0,
+                        "rate_duration": 12.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 6,
+                                "q_required": 7.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 3,
+                "name": "Red Bar Boost I",
+                "description": "<i>Gain per batch</i> 1 each. See <a href=\"/play/event/1\">Red Bar Rate</a> for how to perform the upgrade (also linked below).",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 20.0,
+                "toplevel": false,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 6,
+                        "rate_amount": 1.0,
+                        "rate_duration": 12.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 34,
+                                "q_required": 20.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 4,
+                "name": "Red Bar Boost II",
+                "description": "Rate amount x1.5\r\n\r\nMultiplying for each upgrade means the total benefit is exponential, so with a base rate amount of 20 from all <i>Red Bar Boost I</i> upgrades, the rate amount becomes:\r\n<pre>20 * 1.5 ^ 6 = 228</pre>",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 6.0,
+                "toplevel": false,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 4,
+                        "rate_amount": 1.0,
+                        "rate_duration": 14.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 39,
+                                "q_required": 1000.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 3,
+                                "q_required": 1.0,
+                                "preserve": true
+                            },
+                            {
+                                "item_id": 6,
+                                "q_required": 100.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 5,
+                "name": "Sticky Force",
+                "description": "Binds colors together into patterned objects.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 55,
+                        "rate_amount": 1.0,
+                        "rate_duration": 120.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 28,
+                                "q_required": 18.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 6,
+                "name": "\ud83d\udfe8Yellow Bar",
+                "description": "Combine light to produce this secondary color.\r\n<pre><c=\"yellow\"> _____________\r\n/____________/\r\n</c></pre>",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 0.0,
+                "toplevel": true,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 2,
+                        "rate_amount": 1.0,
+                        "rate_duration": 20.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 39,
+                                "q_required": 10.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 34,
+                                "q_required": 5.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 7,
+                "name": "\ud83d\udfe7Orange Bar",
+                "description": "An especially vibrant color.\r\n<pre><c=\"orange\"> _____________\r\n/____________/\r\n</c></pre>",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 0.0,
+                "toplevel": true,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 40,
+                        "rate_amount": 1.0,
+                        "rate_duration": 20.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 39,
+                                "q_required": 5.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 6,
+                                "q_required": 5.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 23,
+                                "q_required": 1.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 8,
+                "name": "Ambient Energy",
+                "description": "At first, indeterminate flashes of energy are the only thing distinguishable from nothingness. The energy seems unlimited. Maybe it even is.\r\n<pre><c=\"yellow\">\r\n        |\r\n<*>   -<*>-   *\r\n        |\r\n</c></pre>",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 9,
+                "name": "White Bar Boost I",
+                "description": "Rate amount +1 each.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 10.0,
+                "toplevel": false,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 59,
+                        "rate_amount": 1.0,
+                        "rate_duration": 12.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 10,
+                                "q_required": 200.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 18,
+                                "q_required": 10.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 10,
+                "name": "\ud83d\udfeaViolet Bar",
+                "description": "At the end of the visible spectrum.\r\n<pre><c=\"violet\"> _____________\r\n/____________/\r\n</c></pre>",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 0.0,
+                "toplevel": true,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 39,
+                        "rate_amount": 1.0,
+                        "rate_duration": 20.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 39,
+                                "q_required": 5.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 31,
+                                "q_required": 5.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 19,
+                                "q_required": 1.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 11,
+                "name": "Earth",
+                "description": "Soil that holds its form, land. While earth does reach this planet's center, so does water, with tunnels, caverns and outcroppings in the depths. Both surface and depths include areas covered by earth roughly equal in size to those of water.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 555.0,
+                "toplevel": false,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 61,
+                        "rate_amount": 1.0,
+                        "rate_duration": 3.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 39,
+                                "q_required": 70.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 34,
+                                "q_required": 35.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 5,
+                                "q_required": 1.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 12,
+                "name": "Air",
+                "description": "Loosely-knit atmosphere surrounding the planet, a firmament to displace the emptiness of space. About as big as the volume of earth and water combined.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 1110.0,
+                "toplevel": false,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 62,
+                        "rate_amount": 4.0,
+                        "rate_duration": 7.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 6,
+                                "q_required": 50.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 32,
+                                "q_required": 1.0,
+                                "preserve": true
+                            },
+                            {
+                                "item_id": 29,
+                                "q_required": 1.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 13,
+                "name": "Tree",
+                "description": "<c=\"saddlebrown\">Roots push deep into the earth, a mighty trunk stands tall, branches spread toward the heavens, and <c=\"green\">leaves</c> drink <c=\"yellow\">sunlight</c></c>.\r\n\r\n<i><c=\"#333333\">World Tree... Tree of Life... Tree of Knowledge...\r\nwisdom, connection, growth</c></i>",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 63,
+                        "rate_amount": 1.0,
+                        "rate_duration": 33.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 30,
+                                "q_required": 1.0,
+                                "preserve": true
+                            },
+                            {
+                                "item_id": 29,
+                                "q_required": 500.0,
+                                "preserve": true
+                            },
+                            {
+                                "item_id": 11,
+                                "q_required": 500.0,
+                                "preserve": true
+                            },
+                            {
+                                "item_id": 12,
+                                "q_required": 1000.0,
+                                "preserve": true
+                            },
+                            {
+                                "item_id": 14,
+                                "q_required": 1.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 14,
+                "name": "Seed",
+                "description": "The beginning of something greater. Place it just underneath the surface of the land.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 64,
+                        "rate_amount": 1.0,
+                        "rate_duration": 33.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 34,
+                                "q_required": 10000.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 30,
+                                "q_required": 1.0,
+                                "preserve": true
+                            },
+                            {
+                                "item_id": 29,
+                                "q_required": 10.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 11,
+                                "q_required": 10.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 12,
+                                "q_required": 10.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 15,
+                "name": "Black Bar Boost I",
+                "description": "Rate amount +1 each, so set <i>gain per batch</i> to 2 when completed.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 2.0,
+                "toplevel": false,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 65,
+                        "rate_amount": 1.0,
+                        "rate_duration": 12.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 18,
+                                "q_required": 1000.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 16,
+                "name": "\u2b1bBlack Bar",
+                "description": "It seems like you shouldn't be able to see a black bar in space. Doesn't black absorb all light?<pre>\r\n  <c=\"black\">_____________\r\n<c=\"gray\">/</c>/____________/<c=\"gray\">/</c>\r\n</c></pre>\r\n<c=\"lemonchiffon\">Requires a reset:</c>\r\n1. Stop producing the sources of this item (<c=\"red\">#</c>, <c=\"green\">#</c>, <c=\"yellow\">#</c>).\r\n2. Produce as many black bars as possible.\r\n3. Set quantities of the sources to 0.\r\n4. Reset rates and boosts of <c=\"red\">#</c> (1/8s, <a href=\"/configure/item/18\">I</a>, <a href=\"/configure/item/21\">II</a>) and <c=\"green\">#</c> (0.5/8s, <a href=\"/configure/item/19\">I</a>, <a href=\"/configure/item/50\">II</a>), setting \"I\" boosts to 1.\r\n\r\n<c=\"lemonchiffon\">PC browser shortcuts</c>: <i>Ctrl+Click</i> to open multiple tabs, <i>Alt+LeftArrow</i> to go back.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 0.0,
+                "toplevel": true,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 5,
+                        "rate_amount": 1.0,
+                        "rate_duration": 3.0,
+                        "instant": true,
+                        "sources": [
+                            {
+                                "item_id": 39,
+                                "q_required": 1000.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 34,
+                                "q_required": 1000.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 6,
+                                "q_required": 100.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 17,
+                "name": "White Bar Unlocked",
+                "description": "",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 46,
+                        "rate_amount": 1.0,
+                        "rate_duration": 15.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 16,
+                                "q_required": 100.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 18,
+                "name": "\u2b1cWhite Bar",
+                "description": "Mix all other wavelengths for the pinnacle of light combination, the seventh.\r\n<pre><c=\"white\"> _____________\r\n/____________/\r\n</c></pre>",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 0.0,
+                "toplevel": true,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 41,
+                        "rate_amount": 1.0,
+                        "rate_duration": 20.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 39,
+                                "q_required": 10.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 34,
+                                "q_required": 5.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 6,
+                                "q_required": 1.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 31,
+                                "q_required": 1.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 10,
+                                "q_required": 1.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 7,
+                                "q_required": 1.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 17,
+                                "q_required": 1.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 19,
+                "name": "Violet Bar Unlocked",
+                "description": "",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 47,
+                        "rate_amount": 1.0,
+                        "rate_duration": 15.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 7,
+                                "q_required": 1000.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 20,
+                "name": "Yellow Bar Boost I",
+                "description": "Rate amount +1 each.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 10.0,
+                "toplevel": false,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 37,
+                        "rate_amount": 1.0,
+                        "rate_duration": 12.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 16,
+                                "q_required": 2.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 21,
+                "name": "Blue Bar Boost I",
+                "description": "Rate amount +0.5 each.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 10.0,
+                "toplevel": false,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 43,
+                        "rate_amount": 1.0,
+                        "rate_duration": 12.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 34,
+                                "q_required": 10000.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 31,
+                                "q_required": 25.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 26,
+                                "q_required": 1.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 22,
+                "name": "Yellow Bar Boost II",
+                "description": "Rate amount x1.5\r\n<pre>Total: 10 * 1.5 ^ 6 = 114</pre>",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 6.0,
+                "toplevel": false,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 45,
+                        "rate_amount": 1.0,
+                        "rate_duration": 14.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 6,
+                                "q_required": 500.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 20,
+                                "q_required": 1.0,
+                                "preserve": true
+                            },
+                            {
+                                "item_id": 7,
+                                "q_required": 50.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 23,
+                "name": "Orange Bar Unlocked",
+                "description": "",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 42,
+                        "rate_amount": 1.0,
+                        "rate_duration": 15.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 31,
+                                "q_required": 1000.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 24,
+                "name": "Attentively Collected Beam",
+                "description": "No waiting required, but struggles to keep pace once upgrades start coming in.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 34,
+                        "rate_amount": 1.0,
+                        "rate_duration": 3.0,
+                        "instant": true,
+                        "sources": [
+                            {
+                                "item_id": 8,
+                                "q_required": 1.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 25,
+                "name": "Orange Bar Boost I",
+                "description": "Rate amount +1 each.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 10.0,
+                "toplevel": false,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 48,
+                        "rate_amount": 1.0,
+                        "rate_duration": 12.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 6,
+                                "q_required": 1000.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 7,
+                                "q_required": 10.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 23,
+                                "q_required": 1.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 26,
+                "name": "Blue Bar Unlocked",
+                "description": "",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 33,
+                        "rate_amount": 1.0,
+                        "rate_duration": 15.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 16,
+                                "q_required": 1.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 27,
+                "name": "Fire Force",
+                "description": "Enables the reaction of grouped colors to generate energy.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 54,
+                        "rate_amount": 1.0,
+                        "rate_duration": 300.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 32,
+                                "q_required": 1.0,
+                                "preserve": true
+                            },
+                            {
+                                "item_id": 7,
+                                "q_required": 1.0,
+                                "preserve": true
+                            },
+                            {
+                                "item_id": 28,
+                                "q_required": 9.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 28,
+                "name": "Black Fabric",
+                "description": "Weave black light into an intricate, structured fabric that underlies and supports the universe.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 33.0,
+                "toplevel": false,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 51,
+                        "rate_amount": 1.0,
+                        "rate_duration": 10.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 16,
+                                "q_required": 33.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 29,
+                "name": "Water",
+                "description": "It's wet! And inconstant, shifting. Bind blue light together tightly in regular amounts.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 555.0,
+                "toplevel": false,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 60,
+                        "rate_amount": 1.0,
+                        "rate_duration": 3.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 31,
+                                "q_required": 100.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 5,
+                                "q_required": 1.0,
+                                "preserve": true
+                            },
+                            {
+                                "item_id": 18,
+                                "q_required": 1.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 30,
+                "name": "Life Force",
+                "description": "Required for living beings such as plants. Creating this force will consume all remaining ambient energy.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 52,
+                        "rate_amount": 1.0,
+                        "rate_duration": 600.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 8,
+                                "q_required": 1.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 34,
+                                "q_required": 1.0,
+                                "preserve": true
+                            },
+                            {
+                                "item_id": 35,
+                                "q_required": 1.0,
+                                "preserve": true
+                            },
+                            {
+                                "item_id": 28,
+                                "q_required": 33.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 31,
+                "name": "\ud83d\udfe6Blue Bar",
+                "description": "Gather blue wavelengths of light.<pre><c=\"blue\">\r\n _____________\r\n/____________/\r\n</c></pre>",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 0.0,
+                "toplevel": true,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 32,
+                        "rate_amount": 0.5,
+                        "rate_duration": 30.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 8,
+                                "q_required": 1.0,
+                                "preserve": true
+                            },
+                            {
+                                "item_id": 26,
+                                "q_required": 1.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    },
+                    {
+                        "id": 57,
+                        "rate_amount": 100.0,
+                        "rate_duration": 3.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 30,
+                                "q_required": 1.0,
+                                "preserve": true
+                            },
+                            {
+                                "item_id": 35,
+                                "q_required": 1.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 32,
+                "name": "Gravity Force",
+                "description": "Loosely pulls colors together, effectively separating them into large collections. Order black fabric in a texture that defines this force.\r\n\r\n<c=\"lemonchiffon\">When completed:</c>\r\n\u2022 Configure <a href=\"/configure/location/3\">this location</a> to check <i>Show in Overview</i>.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 53,
+                        "rate_amount": 1.0,
+                        "rate_duration": 180.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 28,
+                                "q_required": 3.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 33,
+                "name": "Green Bar Boost II",
+                "description": "Rate amount x1.5\r\n\r\nThis means increasing by 50% each, exponentially. So, the green bar rate with all boosts I and II is:\r\n<pre>5 * 1.5 ^ 6 = 57 per 8 seconds</pre>",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 6.0,
+                "toplevel": false,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 38,
+                        "rate_amount": 1.0,
+                        "rate_duration": 14.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 34,
+                                "q_required": 100.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 2,
+                                "q_required": 1.0,
+                                "preserve": true
+                            },
+                            {
+                                "item_id": 31,
+                                "q_required": 25.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 34,
+                "name": "\ud83d\udfe9Green Bar",
+                "description": "Shape green wavelengths into a form, a rectangular prism. Quantity describes the length from one end to the other.\r\n<pre><c=\"green\"> _____________\r\n/____________/\r\n</c></pre>",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 0.0,
+                "toplevel": true,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 3,
+                        "rate_amount": 0.5,
+                        "rate_duration": 8.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 8,
+                                "q_required": 1.0,
+                                "preserve": true
+                            },
+                            {
+                                "item_id": 37,
+                                "q_required": 1.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    },
+                    {
+                        "id": 36,
+                        "rate_amount": 0.5,
+                        "rate_duration": 3.0,
+                        "instant": true,
+                        "sources": [
+                            {
+                                "item_id": 37,
+                                "q_required": 1.0,
+                                "preserve": true
+                            },
+                            {
+                                "item_id": 24,
+                                "q_required": 1.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    },
+                    {
+                        "id": 58,
+                        "rate_amount": 100.0,
+                        "rate_duration": 3.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 30,
+                                "q_required": 1.0,
+                                "preserve": true
+                            },
+                            {
+                                "item_id": 35,
+                                "q_required": 1.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 35,
+                "name": "Star",
+                "description": "Gigantic heat-generating sphere on a scale that even imagining threatens to overwhelm the mind.\r\n\r\n<c=\"lemonchiffon\">After constructing:</c>\r\n\u2022 Configure <a href=\"/configure/location/2\">this location</a> to unmask and show in Overview.\r\n\u2022 Hide the <a href=\"/configure/location/3\">Local Solar System</a> from Overview by unchecking the box.\r\n\u2022 For bar recipes that use this item (under <i>used for</i>), update <i>gain per batch</i> to 100 multiplied by <i><c=\"lemonchiffon\">BSF</c></i>.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 44,
+                        "rate_amount": 1.0,
+                        "rate_duration": 300.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 39,
+                                "q_required": 500000.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 6,
+                                "q_required": 10000.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 32,
+                                "q_required": 1.0,
+                                "preserve": true
+                            },
+                            {
+                                "item_id": 27,
+                                "q_required": 1.0,
+                                "preserve": true
+                            },
+                            {
+                                "item_id": 7,
+                                "q_required": 10000.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 18,
+                                "q_required": 10000.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 36,
+                "name": "Boost II Factor",
+                "description": "For each boost II, multiply the rate by this fixed value. With a calculator, for example with 6 boost II upgrades, the formula is <code>1.5 ^ 6 = 11.39</code>. Or, with event aids, press the button 6 times.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 0.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 37,
+                "name": "Green Bar Unlocked",
+                "description": "",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 31,
+                        "rate_amount": 1.0,
+                        "rate_duration": 15.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 39,
+                                "q_required": 30.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 40,
+                                "q_required": 1.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 38,
+                "name": "Red Fabric",
+                "description": "Weave red light into an early, basic fabric that underlies and supports the universe. So named because it comes from red light, not because it has a color of its own.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 3.0,
+                "toplevel": false,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 49,
+                        "rate_amount": 1.0,
+                        "rate_duration": 10.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 39,
+                                "q_required": 10.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 39,
+                "name": "\ud83d\udfe5Red Bar",
+                "description": "Select red wavelengths. Creating the first bar of light marks the start of meaningful time, the first different state.\r\n<pre><c=\"red\">\r\n _____________\r\n/____________/\r\n</c></pre>",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 0.0,
+                "toplevel": true,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 1,
+                        "rate_amount": 1.0,
+                        "rate_duration": 8.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 8,
+                                "q_required": 1.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    },
+                    {
+                        "id": 35,
+                        "rate_amount": 1.0,
+                        "rate_duration": 3.0,
+                        "instant": true,
+                        "sources": [
+                            {
+                                "item_id": 24,
+                                "q_required": 1.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    },
+                    {
+                        "id": 56,
+                        "rate_amount": 100.0,
+                        "rate_duration": 3.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 30,
+                                "q_required": 1.0,
+                                "preserve": true
+                            },
+                            {
+                                "item_id": 35,
+                                "q_required": 1.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 40,
+                "name": "Distance Force",
+                "description": "Supports three-dimensional space so that things can be in different places. Everything else in physics depends on spacetime, including interactions like gravity.\r\n\r\n<i>Note: While this could be seen as playing God, I prefer to think of the player role in this scenario as an observer, with apparent choices actually predestined.</i>",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 50,
+                        "rate_amount": 1.0,
+                        "rate_duration": 15.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 38,
+                                "q_required": 3.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 41,
+                "name": "\ud83c\udfc1Base Speed Factor",
+                "description": "Set this quantity (<i><c=\"lemonchiffon\">BSF</c></i>) to a multiplier such as:\r\n<pre>\r\n0.5   : slow\r\n1     : normal &mdash; no change\r\n2     : somewhat faster\r\n10    : fast\r\n100   : practically no idling &mdash; incremental only\r\n</pre>\r\nYou'll be using this to multiply gains for bars and elements, starting with <a href=\"/play/event/1\">Red Bar Gain</a>.\r\n\r\nFor upgrades and other low-quantity items, you can reduce recipe durations according to the table below, generally 5% less per <i><c=\"lemonchiffon\">BSF</c></i>. Minimum duration 1 second.\r\n<pre>\r\n<c=\"lemonchiffon\">BSF</c>    rate multiplier\r\n---    ---------------\r\n0.5    10% more\r\n1      no change\r\n2      10% less\r\n4      20% less\r\n5      25% less\r\n8      40% less\r\n10     50% less\r\n</pre>",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 0.0,
+                "toplevel": true,
+                "masked": false,
+                "recipes": []
+            }
+        ],
+        "locations": [
+            {
+                "id": 42,
+                "name": "Upgrades",
+                "description": "",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": null,
+                "excluded": null,
+                "toplevel": true,
+                "masked": false,
+                "items": [],
+                "item_refs": [],
+                "destinations": []
+            },
+            {
+                "id": 43,
+                "name": "Planet",
+                "description": "Ever new possibilities present themselves as we begin to see what the Sticky Force can do in this place, Terra. Rather than cosmically large and powerful, things here are of lesser scale but beautiful.",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": null,
+                "excluded": null,
+                "toplevel": false,
+                "masked": true,
+                "items": [
+                    {
+                        "item_id": 14,
+                        "quantity": 0.0,
+                        "position": null
+                    },
+                    {
+                        "item_id": 13,
+                        "quantity": 0.0,
+                        "position": null
+                    },
+                    {
+                        "item_id": 11,
+                        "quantity": 0.0,
+                        "position": null
+                    },
+                    {
+                        "item_id": 29,
+                        "quantity": 0.0,
+                        "position": null
+                    },
+                    {
+                        "item_id": 12,
+                        "quantity": 0.0,
+                        "position": null
+                    }
+                ],
+                "item_refs": [],
+                "destinations": []
+            },
+            {
+                "id": 44,
+                "name": "Local Solar System",
+                "description": "An area designated to hold a star orbited by celestial bodies.",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": null,
+                "excluded": null,
+                "toplevel": false,
+                "masked": false,
+                "items": [],
+                "item_refs": [],
+                "destinations": [
+                    {
+                        "loc2_id": 43,
+                        "duration": 1,
+                        "bidirectional": true
+                    }
+                ]
+            }
+        ],
+        "characters": [],
+        "attribs": [],
+        "events": []
+    },
+    "general data": {
+        "piles": [
+            {
+                "item_id": 2,
+                "quantity": 1.0
+            },
+            {
+                "item_id": 3,
+                "quantity": 1.0
+            },
+            {
+                "item_id": 4,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 5,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 6,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 7,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 8,
+                "quantity": 1.0
+            },
+            {
+                "item_id": 9,
+                "quantity": 1.0
+            },
+            {
+                "item_id": 10,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 15,
+                "quantity": 1.0
+            },
+            {
+                "item_id": 16,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 17,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 18,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 19,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 20,
+                "quantity": 1.0
+            },
+            {
+                "item_id": 21,
+                "quantity": 1.0
+            },
+            {
+                "item_id": 22,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 23,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 24,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 25,
+                "quantity": 1.0
+            },
+            {
+                "item_id": 26,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 27,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 28,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 30,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 31,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 32,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 33,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 34,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 35,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 36,
+                "quantity": 1.5
+            },
+            {
+                "item_id": 37,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 38,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 39,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 40,
+                "quantity": 0.0
+            },
+            {
+                "item_id": 41,
                 "quantity": 1.0
             }
-        ]
+        ],
+        "progress": []
+    },
+    "overall settings": {
+        "title": "Rays",
+        "description": "Form <c=\"#FF0000\">c</c><c=\"#FF6600\">o</c><c=\"#CC9900\">l</c><c=\"#CCCC00\">o</c><c=\"#99CC00\">r</c><c=\"#66CC00\">f</c><c=\"#0099CC\">u</c><c=\"#0000FF\">l</c> rectangular prisms at the beginning of space and time.\r\n\r\nComplete set of items. Upgrade rates by changing settings.\r\n\r\n&nbsp;&nbsp;&nbsp;&nbsp;<c=\"red\">[]]]]]]]]]]]]]]]]]]</c> &nbsp;&nbsp; <c=\"green\">######</c> &nbsp;&nbsp; <c=\"blue\">===</c>",
+        "number_format": "en_US",
+        "slots": [],
+        "progress_type": "Idle",
+        "multiplayer": false
     }
 }

@@ -93,9 +93,6 @@ def play_item(id):
     if raw_pos:
         pos = tuple(int(x) for x in raw_pos)
         query = query.filter_by(position=pos)
-    else:
-        pos = None
-        query = query.filter_by(position=None)
     pile = query.first()
 
     # If no pile exists yet, create a virtual one for the UI

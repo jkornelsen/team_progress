@@ -13,7 +13,7 @@ from app.models import (
     LocDest, ItemRef,
     Overall, WinRequirement)
 from app.serialization import (
-    init_game_session, load_scenario_from_path,
+    init_game_session, load_scenario_from_path, DEFAULT_SCENARIO_FILE,
     import_from_dict, patch_from_dict,
     clear_game_data, export_game_to_json, export_to_dict)
 from app.database import clone_with_children
@@ -574,6 +574,8 @@ def browse_scenarios():
     sort_by = request.args.get('sort_by', 'title')
 
     for filename in os.listdir(data_dir):
+        if filename == DEFAULT_SCENARIO_FILE:
+            continue
         if filename.endswith('.json'):
             path = os.path.join(data_dir, filename)
             with open(path, 'r', encoding='utf-8') as f:
