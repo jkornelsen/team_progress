@@ -31,9 +31,13 @@
             {% if owner.id == 1 %}
                 🌐 General Storage
             {% elif owner.entity_type == 'character' %}
-                🎒 Carried by <a href="{{ url_for('play.play_character', id=owner.id) }}">{{ owner.name }}</a>
+                🎒 Carried by
+                {% set target_url = url_for('play.play_character', id=owner.id) %}
+                {% call hotkey_link(target_url, link_letters) %}
+                    {{ owner.name }}
+                {% endcall %}
             {% elif owner.entity_type == 'location' %}
-                📍 Lying at 
+                📍 At 
                 {% set target_url = url_for('play.play_location', id=owner.id) %}
                 {% call hotkey_link(target_url, link_letters, brackets=True) %}
                     {{ owner.name }}
@@ -56,36 +60,58 @@
                 <small class="label-like">/ {{ item.q_limit | formatNum }}</small>
             {% endif %}
         </h1>
+        {% if item.masked %}
+            <div class="description-box">
+                <i class="text-dim">This item is currently masked. To reveal, you must obtain at least one of each source material.</i>
+            </div>
+        {% elif item.description %}
+            <div class="description-box">{{ item.description | htmlify }}</div>
+        {% endif %}
     </header>
 
     <div class="column-container">
-        <!-- LEFT COLUMN: Inventory Actions & Description -->
+        <!-- LEFT COLUMN -->
+        {% if item.storage_type == StorageType.CARRIED %}
         <div class="info-column">
-            {% if item.masked %}
-            <section class="outer-border">
-                <div class="description-box">
-                    <i class="text-dim">This item is currently masked. To reveal, you must obtain at least one of each source material.</i>
-                </div>
-            </section>
-            {% elif item.description %}
-            <section class="outer-border">
-                <div class="description-box">{{ item.description | htmlify }}</div>
-            </section>
-            {% endif %}
-
             <section class="outer-border">
                 <h3>Inventory Actions</h3>
                 <div class="button-group">
-                    {# 1. Carried -> Location (Drop) #}
-                    {% if owner.entity_type == 'character' and owner.location_id %}
-                        <div class="action-box">
-                            <input type="number" id="drop-qty" value="{{ pile.quantity }}" max="{{ pile.quantity }}" step="any" class="mini-input">
-                            <button id="drop-btn" class="go-button">[D]rop at Location</button>
+
+                    <!-- Equipment -->
+                    {% if owner.entity_type == 'character' %}
+                        <div class="action-box border-top-dim spacious-top" style="padding-top: 15px;">
+                            {% if pile.slot %}
+                                <div class="action-box">
+                                    <span class="label-like">Slot: <strong>{{ pile.slot }}</strong></span>
+                                    <button id="unequip-btn" class="go-button">une[q]uip</button>
+                                </div>
+                            {% else %}
+                                {% if available_slots %}
+                                    <div class="action-box">
+                                        <select id="equip-slot" class="full-width">
+                                            {% for slot in available_slots %}
+                                                <option value="{{ slot }}" {{ 'selected' if slot == session.get('default_slot') }}>
+                                                    {{ slot }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                        <button id="equip-btn" class="go-button">e[q]uip</button>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
                         </div>
                     {% endif %}
 
-                    {# 2. Location -> Character (Pickup) #}
-                    {% if owner.entity_type == 'location' and chars_here %}
+                    {# Carried -> Location (Drop) #}
+                    {% if owner.entity_type == 'character' and owner.location_id %}
+                        <div class="action-box">
+                            <input type="number" id="drop-qty" value="{{ pile.quantity | formatNum }}" max="{{ pile.quantity }}" step="any" class="mini-input">
+                            <button id="drop-btn" class="go-button">[d]rop at location</button>
+                        </div>
+                    {% endif %}
+
+                    {# Location -> Character (Pickup) #}
+                    {% if chars_here %}
                         <div class="action-box">
                             <select id="pickup-char-id" class="mini-select">
                                 {% for c in chars_here %}
@@ -95,14 +121,10 @@
                             <button id="pickup-btn" class="go-button">[P]ick Up</button>
                         </div>
                     {% endif %}
-
-                    {# 3. Deposit to Universal (if applicable) #}
-                    {% if item.storage_type == StorageType.UNIVERSAL and owner.id != 1 %}
-                        <button id="deposit-btn" class="go-button">Deposit to General Storage</button>
-                    {% endif %}
                 </div>
             </section>
         </div>
+        {% endif %}
 
         <!-- RIGHT COLUMN: Recipes & Production -->
         <div class="production-column">
@@ -215,12 +237,20 @@
 
     // 2. Inventory AJAX Logic
     document.getElementById('drop-btn')?.addEventListener('click', async () => {
+        const qtyInput = document.getElementById('drop-qty');
         const fd = new FormData();
-        fd.append('char_id', ownerId);
         fd.append('item_id', itemId);
-        fd.append('quantity', document.getElementById('drop-qty').value);
-        const res = await fetch('/item/drop', { method: 'POST', body: fd });
-        if (res.ok) window.location.href = "{{ url_for('play.play_character', id=owner.id) }}";
+        fd.append('quantity', qtyInput.value);
+        const res = await fetch(`/char/${ownerId}/drop`, { 
+            method: 'POST', 
+            body: fd 
+        });
+        if (res.ok) {
+            window.location.href = "{{ url_for('play.play_character', id=owner.id) }}";
+        } else {
+            const errorData = await res.json().catch(() => ({}));
+            console.error("Drop failed:", errorData.message || res.statusText);
+        }
     });
 
     document.getElementById('pickup-btn')?.addEventListener('click', async () => {
@@ -236,6 +266,43 @@
             body: fd 
         });
         if (res.ok) window.location.href = "{{ url_for('play.play_location', id=owner.id) }}";
+    });
+
+    document.getElementById('equip-btn')?.addEventListener('click', async () => {
+        const slotInput = document.getElementById('equip-slot');
+        const fd = new FormData();
+        
+        fd.append('item_id', itemId); // itemId should be globally defined in your template
+        fd.append('slot', slotInput.value);
+
+        const res = await fetch(`/char/${ownerId}/equip`, { 
+            method: 'POST', 
+            body: fd 
+        });
+
+        if (res.ok) {
+            window.location.reload(); 
+        } else {
+            const errorData = await res.json().catch(() => ({}));
+            alert("Equip failed: " + (errorData.message || "Unknown error"));
+        }
+    });
+
+    document.getElementById('unequip-btn')?.addEventListener('click', async () => {
+        const fd = new FormData();
+        fd.append('item_id', itemId);
+
+        const res = await fetch(`/char/${ownerId}/unequip`, { 
+            method: 'POST', 
+            body: fd 
+        });
+
+        if (res.ok) {
+            window.location.reload();
+        } else {
+            const errorData = await res.json().catch(() => ({}));
+            alert("Unequip failed: " + (errorData.message || "Unknown error"));
+        }
     });
 
     // 3. Heartbeat for Progress Bar

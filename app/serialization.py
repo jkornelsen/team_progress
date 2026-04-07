@@ -10,7 +10,6 @@ from .models import (
     Entity, Item, Character, Location, Attrib, Event, 
     Pile, Recipe, RecipeSource, RecipeByproduct, 
     RecipeAttribReq, Progress, Overall, WinRequirement)
-from .utils import parse_numrange
 from .src.logic_user_interaction import clear_session_logs
 
 logger = logging.getLogger(__name__)
@@ -19,7 +18,7 @@ logger = logging.getLogger(__name__)
 # Load or Reset Model
 # ------------------------------------------------------------------------
 
-DEFAULT_SCENARIO_FILE = "00_Default.json"
+DEFAULT_SCENARIO_FILE = "00 Default.json"
 
 def init_game_session():
     """Bootstraps a specific game session."""
@@ -330,7 +329,8 @@ def serialize_smart(obj, indent=4, max_line_length=60, current_indent=0):
         
         # Determine if we should collapse the WHOLE list (e.g. [1, 2, 3])
         # We only collapse if it's short AND doesn't contain dictionaries/lists
-        items_formatted = [serialize_smart(item, indent, max_line_length, 0) for item in obj]
+        items_formatted = [
+            serialize_smart(item, indent, max_line_length, 0) for item in obj]
         flat_list = "[" + ", ".join(items_formatted) + "]"
         
         contains_complex = any(isinstance(item, (dict, list)) for item in obj)
@@ -342,7 +342,8 @@ def serialize_smart(obj, indent=4, max_line_length=60, current_indent=0):
         lines = []
         for i, item in enumerate(obj):
             comma = "," if i < len(obj) - 1 else ""
-            formatted_item = serialize_smart(item, indent, max_line_length, current_indent + indent)
+            formatted_item = serialize_smart(
+                item, indent, max_line_length, current_indent + indent)
             lines.append(f"\n{inner_padding}{formatted_item}{comma}")
         
         return "[" + "".join(lines) + f"\n{padding}]"
@@ -354,11 +355,14 @@ def serialize_smart(obj, indent=4, max_line_length=60, current_indent=0):
         
         # Try to see if this specific dictionary can be a single line
         # (e.g. {"item_id": 2, "quantity": 5.0})
-        items_formatted = [f'"{k}": {serialize_smart(v, indent, max_line_length, 0)}' for k, v in obj.items()]
+        items_formatted = [
+            f'"{k}": {serialize_smart(v, indent, max_line_length, 0)}'
+            for k, v in obj.items()]
         flat_dict = "{" + ", ".join(items_formatted) + "}"
         
         # Collapse if it's short and values aren't complex
-        contains_complex_val = any(isinstance(v, (dict, list)) for v in obj.values())
+        contains_complex_val = any(
+            isinstance(v, (dict, list)) for v in obj.values())
         if len(flat_dict) <= max_line_length and not contains_complex_val:
             return flat_dict
             
@@ -367,7 +371,8 @@ def serialize_smart(obj, indent=4, max_line_length=60, current_indent=0):
         keys = list(obj.keys())
         for i, k in enumerate(keys):
             comma = "," if i < len(keys) - 1 else ""
-            val_formatted = serialize_smart(obj[k], indent, max_line_length, current_indent + indent)
+            val_formatted = serialize_smart(
+                obj[k], indent, max_line_length, current_indent + indent)
             lines.append(f'\n{inner_padding}"{k}": {val_formatted}{comma}')
             
         return "{" + "".join(lines) + f"\n{padding}}}"

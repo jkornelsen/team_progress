@@ -1,7 +1,6 @@
 from sqlalchemy import event
 from sqlalchemy.dialects.postgresql import ARRAY, NUMRANGE
 from .database import db
-from .utils import parse_numrange
 
 # Reserved ID in Entity table for universal storage.
 # Can have up to one general pile for each Item.
@@ -946,21 +945,9 @@ class Recipe(db.Model, DictHydrator):
             "rate_amount": self.rate_amount,
             "rate_duration": self.rate_duration,
             "instant": self.instant,
-            "sources": [
-                {"item_id": s.item_id, "q_required": s.q_required, "preserve": s.preserve} 
-                for s in self.sources
-            ],
-            "byproducts": [
-                {"item_id": b.item_id, "rate_amount": b.rate_amount} 
-                for b in self.byproducts
-            ],
-            "attrib_reqs": [
-                {
-                    "attrib_id": ar.attrib_id, 
-                    "value_range": [ar.value_range.lower, ar.value_range.upper],
-                    "show_max": ar.show_max
-                } for ar in self.attrib_reqs
-            ]
+            "sources": [s.to_dict() for s in self.sources],
+            "byproducts": [b.to_dict() for b in self.byproducts],
+            "attrib_reqs": [ar.to_dict() for ar in self.attrib_reqs]
         }
 
     @classmethod
@@ -972,12 +959,10 @@ class Recipe(db.Model, DictHydrator):
         recipe.byproducts = [
             RecipeByproduct(game_token=game_token, **b)
             for b in data.get('byproducts')]
-        for ar in data.get('attrib_reqs'):
-            v_range = ar.get('value_range', [None, None])
-            recipe.attrib_reqs.append(RecipeAttribReq(
-                game_token=game_token, attrib_id=ar['attrib_id'],
-                value_range=parse_numrange(v_range[0], v_range[1])
-            ))
+        recipe.attrib_reqs = [
+            RecipeAttribReq.from_dict(ar, game_token, recipe_id=recipe.id) 
+            for ar in data.get('attrib_reqs', [])
+        ]
         return recipe
 
     def get_deep_relationships(self):
@@ -1016,13 +1001,24 @@ class Recipe(db.Model, DictHydrator):
             ['items.game_token', 'items.id'], ondelete='CASCADE'),
     )
 
-class RecipeSource(db.Model):
+class RecipeSource(db.Model, DictHydrator):
     __tablename__ = 'recipe_sources'
     game_token = db.Column(db.String(50), primary_key=True)
     recipe_id = db.Column(db.Integer, primary_key=True)
     item_id = db.Column(db.Integer, primary_key=True) # Ingredient
     q_required = db.Column(db.Float, nullable=False)
     preserve = db.Column(db.Boolean, default=False)
+
+    def to_dict(self):
+        return {
+            "item_id": self.item_id,
+            "q_required": self.q_required,
+            "preserve": self.preserve
+        }
+
+    @classmethod
+    def from_dict(cls, data, game_token, recipe_id):
+        return super().from_dict(data, game_token, recipe_id=recipe_id)
 
     recipe = db.relationship(
         'Recipe',
@@ -1044,12 +1040,22 @@ class RecipeSource(db.Model):
             ['items.game_token', 'items.id'], ondelete='CASCADE'),
     )
 
-class RecipeByproduct(db.Model):
+class RecipeByproduct(db.Model, DictHydrator):
     __tablename__ = 'recipe_byproducts'
     game_token = db.Column(db.String(50), primary_key=True)
     recipe_id = db.Column(db.Integer, primary_key=True)
     item_id = db.Column(db.Integer, primary_key=True)
     rate_amount = db.Column(db.Float, nullable=False)
+
+    def to_dict(self):
+        return {
+            "item_id": self.item_id,
+            "rate_amount": self.rate_amount
+        }
+
+    @classmethod
+    def from_dict(cls, data, game_token, recipe_id):
+        return super().from_dict(data, game_token, recipe_id=recipe_id)
 
     recipe = db.relationship(
         'Recipe',
@@ -1071,13 +1077,69 @@ class RecipeByproduct(db.Model):
             ['items.game_token', 'items.id'], ondelete='CASCADE'),
     )
 
-class RecipeAttribReq(db.Model):
+class RecipeAttribReq(db.Model, DictHydrator):
     __tablename__ = 'recipe_attrib_reqs'
     game_token = db.Column(db.String(50), primary_key=True)
     recipe_id = db.Column(db.Integer, primary_key=True)
     attrib_id = db.Column(db.Integer, primary_key=True)
-    value_range = db.Column(NUMRANGE, nullable=False)
-    show_max = db.Column(db.Boolean)
+    min_val = db.Column(db.Float, nullable=False, default=float('-inf'))
+    max_val = db.Column(db.Float, nullable=False, default=float('inf'))
+    inclusive_min = db.Column(db.Boolean, default=True, nullable=False)
+    inclusive_max = db.Column(db.Boolean, default=True, nullable=False)
+
+    @classmethod
+    def from_dict(cls, data, game_token, recipe_id):
+        """Processes nested list data before delegating to DictHydrator."""
+        updates = {}
+        v_range = data.pop('value_range', None)
+        if v_range:
+            low = v_range[0] if v_range[0] is not None else float('-inf')
+            high = v_range[1] if v_range[1] is not None else float('inf')
+            if low > high:
+                low, high = high, low
+            updates['min_val'] = low
+            updates['max_val'] = high
+        inc = data.pop('inclusive', None)
+        if inc:
+            updates['inclusive_min'] = inc[0]
+            updates['inclusive_max'] = inc[1]
+        return super().from_dict(
+            data, game_token, recipe_id=recipe_id, **updates)
+
+    def to_dict(self):
+        return {
+            "attrib_id": self.attrib_id,
+            "value_range": [
+                None if self.min_val == float('-inf') else self.min_val,
+                None if self.max_val == float('inf') else self.max_val
+            ],
+            "range_inclusive": [self.inclusive_min, self.inclusive_max]
+        }
+
+    def in_range(self, val):
+        if self.inclusive_min:
+            if val < self.min_val: return False
+        else:
+            if val <= self.min_val: return False
+            
+        if self.inclusive_max:
+            if val > self.max_val: return False
+        else:
+            if val >= self.max_val: return False
+        return True
+
+    @property
+    def range_display(self):
+        low = "-∞" if self.min_val == float('-inf') else f"{self.min_val:g}"
+        high = "∞" if self.max_val == float('inf') else f"{self.max_val:g}"
+        
+        left_bracket = "[" if self.inclusive_min else "("
+        right_bracket = "]" if self.inclusive_max else ")"
+        
+        return f"{left_bracket}{low}, {high}{right_bracket}"
+
+    def is_bounded(self):
+        return self.min_val != float('-inf') or self.max_val != float('inf')
 
     recipe = db.relationship(
         'Recipe',

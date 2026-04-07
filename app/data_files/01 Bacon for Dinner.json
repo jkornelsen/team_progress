@@ -30,20 +30,14 @@
                         "rate_duration": 3.0,
                         "instant": true,
                         "sources": [
-                            {
-                                "item_id": 7,
-                                "q_required": 1.0,
-                                "preserve": false
-                            }
+                            {"item_id": 7, "q_required": 1.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": [
                             {
                                 "attrib_id": 3,
-                                "value_range": [
-                                    1.0,
-                                    1.0
-                                ]
+                                "value_range": [1.0, 1.0],
+                                "range_inclusive": [true, true]
                             }
                         ]
                     }
@@ -66,20 +60,14 @@
                         "rate_duration": 3.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 5,
-                                "q_required": 1.0,
-                                "preserve": true
-                            }
+                            {"item_id": 5, "q_required": 1.0, "preserve": true}
                         ],
                         "byproducts": [],
                         "attrib_reqs": [
                             {
                                 "attrib_id": 4,
-                                "value_range": [
-                                    1.0,
-                                    1.0
-                                ]
+                                "value_range": [1.0, 1.0],
+                                "range_inclusive": [true, true]
                             }
                         ]
                     }
@@ -102,16 +90,8 @@
                         "rate_duration": 2.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 12,
-                                "q_required": 1.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 13,
-                                "q_required": 1.0,
-                                "preserve": true
-                            }
+                            {"item_id": 12, "q_required": 1.0, "preserve": false},
+                            {"item_id": 13, "q_required": 1.0, "preserve": true}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -121,7 +101,7 @@
             {
                 "id": 9,
                 "name": "Knife",
-                "description": "For butchering.",
+                "description": "For butchering. Not much of a weapon, at least in the hands of a young girl.",
                 "attribs": [],
                 "abilities": [],
                 "storage_type": "c",
@@ -145,7 +125,7 @@
             {
                 "id": 11,
                 "name": "Pigs",
-                "description": "Can be raised or else bought from the market. Being near them makes your clothes smell for hours afterwards.\r\n<pre><c=\"pink\">\r\n   (\\____/)\r\n   / P  P \\\r\n  (  (oo)  )\r\n   `-.__.-'\r\n</c></pre>",
+                "description": "Can be raised or else bought from the market. Being near them makes your clothes smell for hours afterwards.\r\n{pink|\r\n```\r\n   (\\____/)\r\n   / P  P \\\r\n  (  (oo)  )\r\n   `-.__.-'\r\n```\r\n}",
                 "attribs": [],
                 "abilities": [],
                 "storage_type": "l",
@@ -159,11 +139,7 @@
                         "rate_duration": 8.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 11,
-                                "q_required": 2.0,
-                                "preserve": true
-                            }
+                            {"item_id": 11, "q_required": 2.0, "preserve": true}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -174,11 +150,7 @@
                         "rate_duration": 3.0,
                         "instant": true,
                         "sources": [
-                            {
-                                "item_id": 6,
-                                "q_required": 60.0,
-                                "preserve": false
-                            }
+                            {"item_id": 6, "q_required": 60.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -202,16 +174,8 @@
                         "rate_duration": 8.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 11,
-                                "q_required": 1.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 9,
-                                "q_required": 1.0,
-                                "preserve": true
-                            }
+                            {"item_id": 9, "q_required": 1.0, "preserve": true},
+                            {"item_id": 11, "q_required": 1.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -243,22 +207,16 @@
                 "toplevel": false,
                 "masked": true,
                 "items": [
-                    {
-                        "item_id": 11,
-                        "quantity": 4.0,
-                        "position": null
-                    },
-                    {
-                        "item_id": 5,
-                        "quantity": 1.0,
-                        "position": null
-                    }
+                    {"item_id": 11, "quantity": 4.0, "position": null},
+                    {"item_id": 5, "quantity": 1.0, "position": null}
                 ],
                 "item_refs": [],
                 "destinations": [
                     {
                         "loc2_id": 16,
                         "duration": 1,
+                        "door1": null,
+                        "door2": null,
                         "bidirectional": false
                     }
                 ]
@@ -266,7 +224,7 @@
             {
                 "id": 15,
                 "name": "Home",
-                "description": "Starting point, and we'll return here at the end.",
+                "description": "Suzy's house. Faded red bricks cover the front.",
                 "attribs": [],
                 "abilities": [],
                 "dimensions": null,
@@ -274,17 +232,15 @@
                 "toplevel": false,
                 "masked": false,
                 "items": [
-                    {
-                        "item_id": 13,
-                        "quantity": 1.0,
-                        "position": null
-                    }
+                    {"item_id": 13, "quantity": 1.0, "position": null}
                 ],
                 "item_refs": [],
                 "destinations": [
                     {
                         "loc2_id": 16,
                         "duration": 1,
+                        "door1": null,
+                        "door2": null,
                         "bidirectional": false
                     }
                 ]
@@ -292,9 +248,9 @@
             {
                 "id": 16,
                 "name": "Sketchy-Path Forest",
-                "description": "Easy to get lost in after the sun goes down.",
+                "description": "Easy to get lost in. After the sun goes down, do a *Travel Danger* check.",
                 "attribs": [],
-                "abilities": [],
+                "abilities": [20],
                 "dimensions": null,
                 "excluded": null,
                 "toplevel": false,
@@ -305,11 +261,15 @@
                     {
                         "loc2_id": 15,
                         "duration": 8,
+                        "door1": null,
+                        "door2": null,
                         "bidirectional": false
                     },
                     {
                         "loc2_id": 14,
                         "duration": 1,
+                        "door1": null,
+                        "door2": null,
                         "bidirectional": false
                     }
                 ]
@@ -321,32 +281,17 @@
                 "name": "Suzy",
                 "description": "Sent to fetch bacon for dinner by her mother.",
                 "attribs": [
-                    [
-                        2,
-                        2.0
-                    ],
-                    [
-                        4,
-                        1.0
-                    ]
+                    [2, 2.0],
+                    [4, 1.0]
                 ],
-                "abilities": [],
+                "abilities": [21],
                 "toplevel": true,
-                "masked": false,
                 "location_id": 15,
                 "position": null,
                 "travel_party": "",
                 "items": [
-                    {
-                        "item_id": 9,
-                        "quantity": 1.0,
-                        "slot": ""
-                    },
-                    {
-                        "item_id": 10,
-                        "quantity": 1.0,
-                        "slot": ""
-                    }
+                    {"item_id": 9, "quantity": 1.0, "slot": ""},
+                    {"item_id": 10, "quantity": 1.0, "slot": ""}
                 ]
             },
             {
@@ -354,14 +299,10 @@
                 "name": "Mom",
                 "description": "Suzy's mother. Good understanding of the trails in the woods.",
                 "attribs": [
-                    [
-                        2,
-                        7.0
-                    ]
+                    [2, 7.0]
                 ],
                 "abilities": [],
                 "toplevel": true,
-                "masked": false,
                 "location_id": 15,
                 "position": null,
                 "travel_party": "",
@@ -372,14 +313,10 @@
                 "name": "Uncle",
                 "description": "Will pay a modest salary for chores.",
                 "attribs": [
-                    [
-                        3,
-                        1.0
-                    ]
+                    [3, 1.0]
                 ],
                 "abilities": [],
                 "toplevel": false,
-                "masked": true,
                 "location_id": 14,
                 "position": null,
                 "travel_party": "",
@@ -417,90 +354,65 @@
                 "id": 20,
                 "name": "Travel Danger",
                 "description": "Chance of something happening during a trip, such as getting lost in the woods. Add Suzy's or her mother's Pathfinding skill to both die min and max.",
-                "trigger_chance": 0.95,
-                "numeric_range": [
-                    1,
-                    20
-                ],
-                "outcome_type": "fourway",
-                "selection_strings": "",
+                "attribs": [],
+                "abilities": [],
                 "toplevel": false,
-                "triggers": [
-                    [
-                        "loc",
-                        16
-                    ]
-                ],
-                "determining": [
-                    {
-                        "entity_data": [
-                            "attrib",
-                            2
-                        ],
-                        "operation": "+",
-                        "label": ""
-                    }
-                ]
+                "outcome_type": "fourway",
+                "roller_type": "dnd",
+                "trigger_chance": 0.95,
+                "numeric_range": [1, 20],
+                "single_number": 0.0,
+                "selection_strings": "",
+                "determinants": [],
+                "effects": []
             },
             {
                 "id": 21,
                 "name": "Connect to Service",
                 "description": "Attempt to connect a device. Choose Easy difficulty since we won't be far from civilization.",
-                "trigger_chance": 0.0,
-                "numeric_range": [
-                    1,
-                    20
-                ],
-                "outcome_type": "fourway",
-                "selection_strings": "",
+                "attribs": [],
+                "abilities": [],
                 "toplevel": false,
-                "triggers": [
-                    [
-                        "item",
-                        10
-                    ]
-                ],
-                "determining": []
+                "outcome_type": "fourway",
+                "roller_type": "dnd",
+                "trigger_chance": 0.0,
+                "numeric_range": [1, 20],
+                "single_number": 0.0,
+                "selection_strings": "",
+                "determinants": [],
+                "effects": []
             }
         ]
     },
     "general data": {
         "piles": [
-            {
-                "item_id": 6,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 7,
-                "quantity": 0.0
-            }
+            {"item_id": 6, "quantity": 0.0},
+            {"item_id": 7, "quantity": 0.0}
         ],
         "progress": []
     },
     "overall settings": {
         "title": "Bacon for Dinner",
-        "description": "Suzy must go to the farm for bacon and then return home to cook it.\r\n\r\nA good <c=yellow>introduction</c>, complete and fully set up.",
+        "description": "Suzy must go to the farm for bacon and then return home to cook it.\r\n\r\nA good {yellow|introduction}, complete and fully set up.",
         "number_format": "en_US",
         "slots": [],
         "progress_type": "Hybrid",
         "multiplayer": false,
         "win_reqs": [
             {
-                "id": 1,
                 "item_id": 8,
-                "loc_id": 15,
-                "char_id": null,
-                "attrib_id": null,
                 "quantity": 20.0,
+                "char_id": null,
+                "loc_id": 15,
+                "attrib_id": null,
                 "attrib_value": 0.0
             },
             {
-                "id": 2,
                 "item_id": 11,
-                "loc_id": 14,
-                "char_id": null,
-                "attrib_id": null,
                 "quantity": 2.0,
+                "char_id": null,
+                "loc_id": 14,
+                "attrib_id": null,
                 "attrib_value": 0.0
             }
         ]

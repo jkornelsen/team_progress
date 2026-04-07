@@ -15,7 +15,7 @@ If your system doesn't have it yet, download and install Python.
 Then, open a command line.
 Navigate to the project directory and create a new venv:
 ```
-chdir team_progress/app
+chdir team_progress
 rm -Path ./venv -Recurse -Force[^1]
 python -m venv venv
 venv/Scripts/activate
@@ -23,14 +23,9 @@ venv/Scripts/activate
 
 ### 2. Upgrade Pip and install dependencies
 Upgrade pip and install the required packages into this venv:
-```
+```powershell
 python.exe -m pip install --upgrade pip
-pip install flask
-pip install flask-sqlalchemy
-pip install flask-migrate
-pip install psycopg2-binary
-pip install markupsafe
-pip install bleach
+pip install -r requirements.txt
 ```
 
 ## II. Database installation and setup
@@ -50,10 +45,10 @@ so either enter this command each time, or set to run automatically as a service
 & "C:/Program Files/PostgreSQL/16/bin/pg_ctl" start -D postgres_data
 ```
 
-### 3. Set up tables
+### 3. Initialize application database
 ```
 & "C:/Program Files/PostgreSQL/16/bin/psql" -U postgres -d app
-create database app with encoding 'UTF8' template template0;
+create database app with encoding 'UTF8';
 ```
 
 ## III. Run the app

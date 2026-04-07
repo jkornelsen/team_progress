@@ -89,6 +89,7 @@ def play_item(id):
         item_id=id, 
         owner_id=owner.id
     )
+    pos = None
     raw_pos = request.args.getlist('pos[]')
     if raw_pos:
         pos = tuple(int(x) for x in raw_pos)
@@ -137,6 +138,7 @@ def play_item(id):
     chars_here = []
     if loc_id:
         chars_here = Character.query.filter_by(game_token=game_token, location_id=loc_id).all()
+    overall = Overall.query.get(game_token)
 
     return render_template(
         'play/item.html',
@@ -145,6 +147,7 @@ def play_item(id):
         pile=pile,
         recipes=enriched_recipes,
         progress=current_progress,
+        available_slots=overall.slots,
         chars_here=chars_here,
         link_letters=LinkLetters(excluded='moe')
     )
@@ -187,6 +190,89 @@ def pickup_item(id):
         db.session.commit()
         return jsonify({"status": "success"})
     return jsonify({"status": "error"}), 400
+
+@play_bp.route('/char/<int:id>/equip', methods=['POST'])
+def equip_item(id):
+    """Assigns an item pile to a specific equipment slot."""
+    req = RequestHelper('form')
+    game_token = g.game_token
+    item_id = req.get_int('item_id')
+    slot = req.get_str('slot')
+    
+    # Store the most recently used slot in the session for UI convenience
+    session['default_slot'] = slot
+    
+    # 1. Fetch character and item to ensure they exist (for the log message)
+    char = Character.query.get((game_token, id))
+    item = Item.query.get((game_token, item_id))
+    
+    if not char or not item:
+        return jsonify({'status': 'error', 'message': 'Character or Item not found.'}), 404
+
+    # 2. Find the specific pile in the character's inventory
+    pile = Pile.query.filter_by(
+        game_token=game_token, 
+        owner_id=id, 
+        item_id=item_id
+    ).first()
+
+    if not pile:
+        return jsonify({
+            'status': 'error',
+            'message': f"No {item.name} found in {char.name}'s inventory."
+        }), 400
+
+    # 3. Update the slot
+    pile.slot = slot
+    db.session.commit()
+
+    # 4. Log to Chronicle
+    msg = f"{char.name} equipped {item.name} to {slot}."
+    add_message(game_token, msg)
+
+    return jsonify({
+        'status': 'success',
+        'message': msg
+    })
+
+@play_bp.route('/char/<int:id>/unequip', methods=['POST'])
+def unequip_item(id):
+    """Removes an item from its equipment slot, returning it to the general pack."""
+    req = RequestHelper('form')
+    game_token = g.game_token
+    item_id = req.get_int('item_id')
+    
+    char = Character.query.get((game_token, id))
+    item = Item.query.get((game_token, item_id))
+
+    if not char or not item:
+        return jsonify({'status': 'error', 'message': 'Character or Item not found.'}), 404
+
+    # Find the pile
+    pile = Pile.query.filter_by(
+        game_token=game_token, 
+        owner_id=id, 
+        item_id=item_id
+    ).first()
+
+    if not pile:
+        return jsonify({
+            'status': 'error',
+            'message': f"No {item.name} found in {char.name}'s inventory."
+        }), 400
+
+    # Remove the slot assignment (set to None/NULL)
+    pile.slot = None
+    db.session.commit()
+
+    # Log to Chronicle
+    msg = f"{char.name} unequipped {item.name}."
+    add_message(game_token, msg)
+
+    return jsonify({
+        'status': 'success',
+        'message': msg
+    })
 
 # ------------------------------------------------------------------------
 # Character & Location Routes

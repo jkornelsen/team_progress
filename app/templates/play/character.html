@@ -33,172 +33,171 @@
         {% endif %}
     </header>
 
-    <div class="column-container">
-        <!-- LEFT COLUMN: Physical Presence & Stats -->
-        <div class="main-stats">
-            
-            <!-- 1. Navigation & Travel -->
-            <section class="outer-border">
-                <h3>Location</h3>
-                <div class="status-row">
-                    {% if character.location %}
-                        {% set target_url = url_for('play.play_location', id=character.location.id, active_char_id=character.id) %}
-                        {% call hotkey_link(target_url, link_letters, forced_key='l') %}
-                            {{ character.location.name }}
-                        {% endcall %}
-                        {% if character.position %}
-                            <span class="label-like">[{{ character.position | join(",") }}]</span>
-                        {% endif %}
-                    {% else %}
-                        <span class="text-dim">Wandering the Void</span>
+    <main>
+        <!-- Navigation & Travel -->
+        <section class="outer-border">
+            <h3>Location</h3>
+            <div class="status-row">
+                {% if character.location %}
+                    {% set target_url = url_for('play.play_location', id=character.location.id, active_char_id=character.id) %}
+                    {% call hotkey_link(target_url, link_letters, forced_key='l') %}
+                        {{ character.location.name }}
+                    {% endcall %}
+                    {% if character.position %}
+                        <span class="label-like">[{{ character.position | join(",") }}]</span>
                     {% endif %}
-                </div>
+                {% else %}
+                    <span class="text-dim">Wandering the Void</span>
+                {% endif %}
+            </div>
 
-                <div id="travel-interface" class="spacious-top">
-                    {% if destinations %}
-                        <div class="flex-row">
-                            <label for="dest-select">Travel [T]o:</label>
-                            <select id="dest-select" class="flex-grow">
-                                <option value="">(Select Destination)</option>
-                                {% for dest in destinations %}
-                                    {% set target = dest.other_loc(character.location_id) %}
-                                    <option value="{{ target.id }}" {% if exit_loc_id == target.id %}selected{% endif %}>
-                                        {% if target.masked %}
-                                            {{ target.name | mask_string }}
-                                            (not yet visited)
-                                        {% else %}
-                                            {{ target.name }}
-                                        {% endif %}
-                                        {% if dest.duration > 1 %}
-                                            ({{ dest.duration }}s)
-                                        {% endif %}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                            <button id="start-travel-btn" class="go-button">[G]o</button>
-                        </div>
-
-                        {% if party_members %}
-                        <div id="party-travel-container" style="margin-top: 10px;">
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="travel-with-party-chk" onchange="this.blur()">
-                                Travel with Party ({{ party_members | length }} other{{ 's' if party_members | length != 1 }} nearby)
-                            </label>
-                        </div>
-                        {% endif %}
-                    {% endif %}
-
-                    {% if has_nonadjacent and not destinations %}
-                        <div class="info-box label-like text-dim" style="border: 1px dashed #444; padding: 10px; margin-top: 10px;">
-                            There are exits in this location. Move your character next to a door (🚪) to travel.
-                        </div>
-                    {% endif %}
-                </div>
-
-                    <!-- Travel Progress Bar (Hidden by default) -->
-                    <div id="travel-progress-container" class="progress-section hidden">
-                        <div class="flex-between">
-                            <span id="travel-status-text">Traveling...</span>
-                            <button id="stop-travel-btn" class="dangerous-button">Halt</button>
-                        </div>
-                        <div class="progress-container">
-                            <progress id="travel-bar" value="0" max="100"></progress>
-                            <span id="travel-label" class="progress-label">0%</span>
-                        </div>
+            <div id="travel-interface" class="spacious-top">
+                {% if destinations %}
+                    <div class="flex-row">
+                        <label for="dest-select">Travel [T]o:</label>
+                        <select id="dest-select" class="flex-grow">
+                            <option value="">(Select Destination)</option>
+                            {% for dest in destinations %}
+                                {% set target = dest.other_loc(character.location_id) %}
+                                <option value="{{ target.id }}" {% if exit_loc_id == target.id %}selected{% endif %}>
+                                    {% if target.masked %}
+                                        {{ target.name | mask_string }}
+                                        (not yet visited)
+                                    {% else %}
+                                        {{ target.name }}
+                                    {% endif %}
+                                    {% if dest.duration > 1 %}
+                                        ({{ dest.duration }}s)
+                                    {% endif %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <button id="start-travel-btn" class="go-button">[G]o</button>
                     </div>
-                </div>
-            </section>
 
-            <!-- 2. Attributes (Stats) -->
-            {% if attrib_values %}
-            <section class="outer-border">
-                <h3>Attributes</h3>
-                <div class="col-list" style="--col-list-max-width: 200px;">
-                    {% for av in attrib_values %}
-                        <div class="col-row" style="--grid-cols: 1fr auto;">
-                            {% set attr_url = url_for('play.play_attrib', attrib_id=av.attrib_id, subject_id=character.id) %}
-                            {% call hotkey_link(attr_url, link_letters) %}
-                                {{ av.attrib.name }}
-                            {% endcall %}
-                            <span>{{ render_attr(av, av.attrib) }}</span>
-                        </div>
-                    {% endfor %}
-                </div>
-            </section>
-            {% endif %}
-
-            {% if character.abilities %}
-            <section class="outer-border">
-                <h3>Abilities</h3>
-                <div class="col-list" style="--col-list-max-width: 250px;">
-                    {% for event in character.abilities %}
-                        <div class="col-row" style="--grid-cols: 1fr auto;">
-                            {% set event_url = url_for('play.play_event', id=event.id, subject_id=character.id) %}
-                            
-                            {% call hotkey_link(event_url, link_letters) %}
-                                {{ event.name }} 
-                            {% endcall %}
-                        </div>
-                    {% endfor %}
-                </div>
-            </section>
-            {% endif %}
-        </div>
-
-        <!-- RIGHT COLUMN: Gear & Abilities -->
-        <div class="inventory-column">
-            <!-- 3. Inventory -->
-            <style>
-                .twocol-row { --grid-cols: 1fr auto; }
-                .twocol-list { --col-list-max-width: 300px; }
-                .equipped-row { --grid-cols: 4fr 1fr 1fr; }
-                .equipped-list { --col-list-max-width: 350px; }
-            </style>
-            {% set equipped = inventory | selectattr("slot") | list %}
-            {% set backpack = inventory | rejectattr("slot") | list %}
-            {% if equipped or backpack %}
-            <section class="outer-border">
-                <div class="inventory-section">
-                    {% if equipped %}
-                        <h3>Equipped</h3>
-                        <div class="col-list eqipped-list">
-                            {% for pile in equipped %}
-                                <div class="col-row eqipped-row">
-                                    <span class="label-like">[{{ pile.slot }}]</span>
-                                    
-                                    {% set item_url = url_for('play.play_item', id=pile.item_id, char_id=character.id) %}
-                                    {% call hotkey_link(item_url, link_letters) %}
-                                        {{ pile.item.name }}
-                                    {% endcall %}
-                                    
-                                    <span>{{ pile.quantity | formatNum if pile.quantity >= 2 else '' }}</span>
-                                </div>
-                            {% endfor %}
-                        </div>
+                    {% if party_members %}
+                    <div id="party-travel-container" style="margin-top: 10px;">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="travel-with-party-chk" onchange="this.blur()">
+                            Travel with Party ({{ party_members | length }} other{{ 's' if party_members | length != 1 }} nearby)
+                        </label>
+                    </div>
                     {% endif %}
+                {% endif %}
 
-                    {% if backpack %}
-                        <h3 class="{{ 'spacious-top' if equipped else '' }}">
-                            {{ 'Pack' if equipped else 'Inventory' }}
-                        </h3>
-                        <div class="col-list twocol-list">
-                            {% for pile in backpack %}
-                                <div class="col-row twocol-row">
-                                    {% set item_url = url_for('play.play_item', id=pile.item_id, char_id=character.id) %}
-                                    {% call hotkey_link(item_url, link_letters) %}
-                                        {{ pile.item.name }}
-                                    {% endcall %}
-                                    
-                                    <span>{{ pile.quantity | formatNum }}</span>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
+                {% if has_nonadjacent and not destinations %}
+                    <div class="info-box label-like text-dim" style="border: 1px dashed #444; padding: 10px; margin-top: 10px;">
+                        There are exits in this location. Move your character next to a door (🚪) to travel.
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Travel Progress Bar (Hidden by default) -->
+            <div id="travel-progress-container" class="progress-section hidden">
+                <div class="flex-between">
+                    <span id="travel-status-text">Traveling...</span>
+                    <button id="stop-travel-btn" class="dangerous-button">Halt</button>
                 </div>
-            </section>
-            {% endif %}
+                <div class="progress-container">
+                    <progress id="travel-bar" value="0" max="100"></progress>
+                    <span id="travel-label" class="progress-label">0%</span>
+                </div>
+            </div>
+        </section>
+
+        <div class="column-container">
+            <div><!-- LEFT COLUMN -->
+                <!-- Inventory -->
+                <style>
+                    .twocol-row { --grid-cols: 1fr auto; }
+                    .twocol-list { --col-list-max-width: 250px; }
+                    .equipped-row { --grid-cols: 4fr 1fr 1fr; }
+                    .equipped-list { --col-list-max-width: 300px; }
+                </style>
+                {% set equipped = inventory | selectattr("slot") | list %}
+                {% set backpack = inventory | rejectattr("slot") | list %}
+                {% if equipped or backpack %}
+                <section class="outer-border">
+                    <div class="inventory-section">
+                        {% if equipped %}
+                            <h3>Equipped</h3>
+                            <div class="col-list eqipped-list">
+                                {% for pile in equipped %}
+                                    <div class="col-row eqipped-row">
+                                        <span class="label-like">[{{ pile.slot }}]</span>
+                                        
+                                        {% set item_url = url_for('play.play_item', id=pile.item_id, char_id=character.id) %}
+                                        {% call hotkey_link(item_url, link_letters) %}
+                                            {{ pile.item.name }}
+                                        {% endcall %}
+                                        
+                                        <span>{{ pile.quantity | formatNum if pile.quantity >= 2 else '' }}</span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        {% if backpack %}
+                            <h3 class="{{ 'spacious-top' if equipped else '' }}">
+                                {{ 'Pack' if equipped else 'Inventory' }}
+                            </h3>
+                            <div class="col-list twocol-list">
+                                {% for pile in backpack %}
+                                    <div class="col-row twocol-row">
+                                        {% set item_url = url_for('play.play_item', id=pile.item_id, char_id=character.id) %}
+                                        {% call hotkey_link(item_url, link_letters) %}
+                                            {{ pile.item.name }}
+                                        {% endcall %}
+                                        
+                                        <span>{{ pile.quantity | formatNum }}</span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </section>
+                {% endif %}
+
+            </div><div><!-- RIGHT COLUMN -->
+
+                <!-- Attributes (Stats) -->
+                {% if attrib_values %}
+                <section class="outer-border">
+                    <h3>Attributes</h3>
+                    <div class="col-list" style="--col-list-max-width: 250px;">
+                        {% for av in attrib_values %}
+                            <div class="col-row" style="--grid-cols: 1fr auto;">
+                                {% set attr_url = url_for('play.play_attrib', attrib_id=av.attrib_id, subject_id=character.id) %}
+                                {% call hotkey_link(attr_url, link_letters) %}
+                                    {{ av.attrib.name }}
+                                {% endcall %}
+                                <span>{{ render_attr(av, av.attrib) }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </section>
+                {% endif %}
+
+                {% if character.abilities %}
+                <section class="outer-border">
+                    <h3>Abilities</h3>
+                    <div class="col-list" style="--col-list-max-width: 250px;">
+                        {% for event in character.abilities %}
+                            <div class="col-row" style="--grid-cols: 1fr auto;">
+                                {% set event_url = url_for('play.play_event', id=event.id, subject_id=character.id) %}
+                                
+                                {% call hotkey_link(event_url, link_letters) %}
+                                    {{ event.name }} 
+                                {% endcall %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </section>
+                {% endif %}
+
+            </div>
         </div>
-    </div>
+    </main>
 </div>
 
 {% include 'play/partials/modal_interrupt.html' %}
