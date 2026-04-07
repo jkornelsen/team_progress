@@ -515,6 +515,7 @@
                 ],
                 "abilities": [],
                 "toplevel": false,
+                "masked": false,
                 "location_id": null,
                 "position": null,
                 "travel_party": "",
@@ -564,6 +565,7 @@
                 ],
                 "abilities": [],
                 "toplevel": false,
+                "masked": false,
                 "location_id": null,
                 "position": null,
                 "travel_party": "",
@@ -613,6 +615,7 @@
                 ],
                 "abilities": [],
                 "toplevel": false,
+                "masked": false,
                 "location_id": null,
                 "position": null,
                 "travel_party": "",
@@ -658,6 +661,7 @@
                 ],
                 "abilities": [],
                 "toplevel": false,
+                "masked": false,
                 "location_id": 33,
                 "position": [
                     2,
@@ -706,6 +710,7 @@
                 ],
                 "abilities": [],
                 "toplevel": false,
+                "masked": false,
                 "location_id": 33,
                 "position": [
                     3,
@@ -746,6 +751,7 @@
                 ],
                 "abilities": [],
                 "toplevel": false,
+                "masked": false,
                 "location_id": null,
                 "position": null,
                 "travel_party": "",
@@ -783,6 +789,7 @@
                 ],
                 "abilities": [],
                 "toplevel": false,
+                "masked": false,
                 "location_id": 32,
                 "position": [
                     2,
@@ -827,6 +834,7 @@
                 ],
                 "abilities": [],
                 "toplevel": false,
+                "masked": false,
                 "location_id": 31,
                 "position": [
                     2,
@@ -879,6 +887,7 @@
                 ],
                 "abilities": [],
                 "toplevel": true,
+                "masked": false,
                 "location_id": 30,
                 "position": [
                     1,
@@ -1063,7 +1072,441 @@
                 "enum_list": []
             }
         ],
-        "events": []
+        "events": [
+            {
+                "id": 47,
+                "name": "Perception",
+                "description": "Chance to detect items or stealthy characters, or avoid detection.\r\n\r\n\u2022 Int and Dex increase detection.\r\n\u2022 Dex increases stealth.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": true,
+                "triggers": [],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            12
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            7
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    }
+                ]
+            },
+            {
+                "id": 48,
+                "name": "Initiative",
+                "description": "Determine who goes first in combat.\r\n\r\nHowever, this roll may not be needed if there is another way to determine who goes first. For example, if one party is stealthed and not detected, then they go first.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": true,
+                "triggers": [],
+                "determining": []
+            },
+            {
+                "id": 49,
+                "name": "Populate Room \u2014 Number of Enemies",
+                "description": "Higher XP level means that more enemies may spawn. Also roll for:\r\n\u2022 <a href=\"/play/event/7\">Which Enemy</a>\r\n\u2022 <a href=\"/play/event/9\">Grid Coordinates</a>",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    0,
+                    2
+                ],
+                "outcome_type": "numeric",
+                "selection_strings": "",
+                "toplevel": true,
+                "triggers": [],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            5
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    }
+                ]
+            },
+            {
+                "id": 50,
+                "name": "Grid Coordinates",
+                "description": "Find out where something is placed.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    5
+                ],
+                "outcome_type": "coordinates",
+                "selection_strings": "",
+                "toplevel": true,
+                "triggers": [],
+                "determining": []
+            },
+            {
+                "id": 51,
+                "name": "Carve or Fletch",
+                "description": "Shape bow and attach string. Success requires dexterity. Fletching arrows is similar.\r\n\r\n\u2022 Major success produces a bow with improved stats.\r\n\u2022 Minor success results in a standard bow.\r\n\u2022 Minor failure produces a bow with poor stats, or fewer arrows.\r\n\u2022 Major failure consumes resources and may cause injury.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [
+                    [
+                        "item",
+                        22
+                    ]
+                ],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            9
+                        ],
+                        "operation": "-",
+                        "label": "Material"
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            12
+                        ],
+                        "operation": "+",
+                        "label": "Crafter"
+                    }
+                ]
+            },
+            {
+                "id": 52,
+                "name": "Shoot \u2014 Success",
+                "description": "Determines whether a ranged attack hits. Dexterity increases accuracy, while evasion decreases it.\r\n\r\nIf successful, also roll <a href=\"/play/event/6\">Shoot \u2014 Dmg</a> to determine how much damage is done and apply to a target.\r\n\r\nMajor failures cause destruction of ammo and may give the enemy a chance to counterattack.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            13
+                        ],
+                        "operation": "-",
+                        "label": "Defender Armour"
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            12
+                        ],
+                        "operation": "-",
+                        "label": "Defender Evasion"
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            12
+                        ],
+                        "operation": "+",
+                        "label": "Attacker Accuracy"
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            14
+                        ],
+                        "operation": "+",
+                        "label": "Ranged Weapon"
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            14
+                        ],
+                        "operation": "+",
+                        "label": "Ranged Ammo"
+                    }
+                ]
+            },
+            {
+                "id": 53,
+                "name": "Melee \u2014 Success",
+                "description": "Determines whether a melee attack hits. Dexterity increases accuracy, while evasion decreases it.\r\n\r\nIf successful, also roll <a href=\"/play/event/13\">Melee \u2014 Dmg</a> to determine how much damage is done and apply to a target.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            13
+                        ],
+                        "operation": "-",
+                        "label": "Defender Armour"
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            12
+                        ],
+                        "operation": "-",
+                        "label": "Defender Evasion"
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            12
+                        ],
+                        "operation": "+",
+                        "label": "Attacker Accuracy"
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            14
+                        ],
+                        "operation": "+",
+                        "label": "Melee Weapon"
+                    }
+                ]
+            },
+            {
+                "id": 54,
+                "name": "Shoot \u2014 Dmg",
+                "description": "Dex increases both die min and max, while Str and damage from gear increase die max only.\r\n\r\nFirst roll <a href=\"/play/event/5\">Shoot \u2014 Success</a> to determine if the attack hits.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    -1,
+                    -2
+                ],
+                "outcome_type": "numeric",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            12
+                        ],
+                        "operation": "-",
+                        "label": "Attacker"
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            16
+                        ],
+                        "operation": "-",
+                        "label": "Launcher"
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            16
+                        ],
+                        "operation": "-",
+                        "label": "Ammo"
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            18
+                        ],
+                        "operation": "+",
+                        "label": "Defender"
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            6
+                        ],
+                        "operation": "-",
+                        "label": "Attacker"
+                    }
+                ]
+            },
+            {
+                "id": 55,
+                "name": "Melee \u2014 Dmg",
+                "description": "Str increases both die min and max, while damage from gear increases die max only.\r\n\r\nFirst roll <a href=\"/play/event/14\">Melee \u2014 Success</a> to determine if the attack hits.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    -1,
+                    -2
+                ],
+                "outcome_type": "numeric",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            16
+                        ],
+                        "operation": "-",
+                        "label": "Weapon"
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            18
+                        ],
+                        "operation": "+",
+                        "label": "Defender"
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            6
+                        ],
+                        "operation": "-",
+                        "label": "Attacker"
+                    }
+                ]
+            },
+            {
+                "id": 56,
+                "name": "Populate Room \u2014 Which Enemy",
+                "description": "Roll after <a href=\"/play/event/8\">Number of Enemies</a>.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "selection",
+                "selection_strings": "(none)\r\nrat\r\nskeleton rat\r\nmoss\r\nspore colony",
+                "toplevel": true,
+                "triggers": [],
+                "determining": []
+            },
+            {
+                "id": 57,
+                "name": "Populate Room \u2014 Which Item",
+                "description": "Roll after <a href=\"/play/event/11\">Number of Items</a>.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "selection",
+                "selection_strings": "(None)\r\nPine Wood\r\nBowstring\r\nImproved Pine Bow\r\nPine Bow\r\nPine Stick\r\nPine Arrow\r\nPine Arrow\r\nStone\r\nStone",
+                "toplevel": true,
+                "triggers": [],
+                "determining": []
+            },
+            {
+                "id": 58,
+                "name": "Populate Room \u2014 Number of Items",
+                "description": "After leaving the entry floor, divide die min by depth, giving a better chance for items.\r\n\r\nIf outcome is more than 0, then also roll for:\r\n\u2022 <a href=\"/play/event/12\">Which Item</a>\r\n\u2022 <a href=\"/play/event/9\">Grid Coordinates</a>",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    -10,
+                    2
+                ],
+                "outcome_type": "numeric",
+                "selection_strings": "",
+                "toplevel": true,
+                "triggers": [],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            20
+                        ],
+                        "operation": "/log",
+                        "label": ""
+                    }
+                ]
+            },
+            {
+                "id": 59,
+                "name": "Drops",
+                "description": "Number of items dropped by an enemy on death. Add their XP level to max die.\r\n\r\nIf result is greater than 0, then roll for <a href=\"/play/event/12\">which item</a>.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    -10,
+                    0
+                ],
+                "outcome_type": "numeric",
+                "selection_strings": "",
+                "toplevel": true,
+                "triggers": [],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            5
+                        ],
+                        "operation": "+",
+                        "label": "Enemy"
+                    }
+                ]
+            },
+            {
+                "id": 60,
+                "name": "@Magic Missile",
+                "description": "Magical attack that does physical damage similar to shooting an arrow. Cannot miss but may do 0 damage. Consumes MP.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    0,
+                    -2
+                ],
+                "outcome_type": "numeric",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            18
+                        ],
+                        "operation": "+",
+                        "label": "Defender"
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            7
+                        ],
+                        "operation": "*log",
+                        "label": "Attacker"
+                    }
+                ]
+            }
+        ]
     },
     "general data": {
         "piles": [
@@ -1086,6 +1529,7 @@
             "Light Source"
         ],
         "progress_type": "RPG",
-        "multiplayer": true
+        "multiplayer": true,
+        "win_reqs": []
     }
 }

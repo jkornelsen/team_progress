@@ -24,6 +24,14 @@ def migrate_file(filename):
         "characters": {},
         "events": {}
     }
+
+    def map_id(category, old_id):
+        """Returns the new ID from the map, or the original if not
+        found/None.
+        """
+        if old_id is None:
+            return None
+        return id_map.get(category, {}).get(old_id, old_id)
     
     global_counter = 2  # leave GENERAL_ID 1 free
     
@@ -52,6 +60,7 @@ def migrate_file(filename):
     general_piles = []
 
     # Process Attributes
+
     for a in old_data.get("attribs", []):
         new_entities["attribs"].append({
             "id": id_map["attribs"][a["id"]],
@@ -95,33 +104,28 @@ def migrate_file(filename):
             }
 
             # Check for byproducts in the old data
+
             for bp in r.get("byproducts", []):
                 # Use .get("item_id") to read from the OLD data
                 # but assign it to "product_id" for the NEW data
                 old_bp_id = bp.get("item_id") 
                 new_recipe["byproducts"].append({
-                    "product_id": id_map["items"].get(old_bp_id, old_bp_id),
+                    "product_id": map_id("items", bp.get("item_id")),
                     "rate_amount": bp.get("rate_amount", 1.0)
                 })
 
             # 2. Map the Source Items
             for src in r.get("sources", []):
-                old_src_id = src.get("item_id")
-                new_src_id = id_map["items"].get(old_src_id, old_src_id)
-                
                 new_recipe["sources"].append({
-                    "item_id": new_src_id,
+                    "item_id": map_id("items", src.get("item_id")),
                     "q_required": src.get("q_required", 1.0),
                     "preserve": src.get("preserve", False)
                 })
 
             # 3. Map the Attribute Requirements
             for req in r.get("attrib_reqs", []):
-                old_attr_id = req.get("attrib_id")
-                new_attr_id = id_map["attribs"].get(old_attr_id, old_attr_id)
-                
                 new_recipe["attrib_reqs"].append({
-                    "attrib_id": new_attr_id,
+                    "attrib_id": map_id("attribs", req.get("attrib_id")),
                     "value_range": req.get("value_range", [0.0, 0.0])
                 })
 
@@ -159,13 +163,13 @@ def migrate_file(filename):
             else:
                 new_pos = old_pos
             new_loc["items"].append({
-                "item_id": id_map["items"].get(item["item_id"], item["item_id"]),
+                "item_id": map_id("items", item.get("item_id")),
                 "quantity": item["quantity"],
                 "position": new_pos
             })
         for dest in l.get("destinations", []):
             new_loc["destinations"].append({
-                "loc2_id": id_map["locations"].get(dest["loc2_id"], dest["loc2_id"]),
+                "loc2_id": map_id("locations", dest.get("loc2_id")),
                 "duration": dest["duration"],
                 "bidirectional": dest.get("bidirectional", False)
             })
@@ -182,21 +186,60 @@ def migrate_file(filename):
             "id": id_map["characters"][c["id"]],
             "name": c["name"],
             "description": c["description"],
-            "attribs": [[id_map["attribs"].get(pair[0], pair[0]), pair[1]] for pair in c.get("attribs", [])],
+            "attribs": [[map_id("attribs", pair[0]), pair[1]]
+                         for pair in c.get("attribs", [])],
             "abilities": [],
             "toplevel": c.get("toplevel", False),
-            "location_id": id_map["locations"].get(c["location_id"], c["location_id"]),
+            "masked": c.get("masked", False),
+            "location_id": map_id("locations", c.get("location_id")),
             "position": new_pos,
             "travel_party": "",
             "items": []
         }
         for item in c.get("items", []):
             new_char["items"].append({
-                "item_id": id_map["items"].get(item["item_id"], item["item_id"]),
+                "item_id": map_id("items", item.get("item_id")),
                 "quantity": item["quantity"],
                 "slot": item.get("slot", "")
             })
         new_entities["characters"].append(new_char)
+
+    # Process Events
+    for e in old_data.get("events", []):
+        migrated_event = {
+            "id": id_map["events"][e["id"]],
+            "name": e["name"],
+            "description": e["description"],
+            "trigger_chance": e.get("trigger_chance", 0.0),
+            "numeric_range": e.get("numeric_range", [1, 20]),
+            "outcome_type": e.get("outcome_type", "fourway"),
+            "selection_strings": e.get("selection_strings", ""),
+            "toplevel": e.get("toplevel", False),
+            "triggers": [],
+            "determining": []
+        }
+
+        # Map Triggers (e.g., ["loc", 2] -> ["loc", new_id])
+        for trigger in e.get("triggers", []):
+            t_type, t_id = trigger[0], trigger[1]
+            category_map = {
+                "loc": "locations", "item": "items", "char": "characters"}
+            category = category_map.get(t_type)
+            new_t_id = map_id(category, t_id) if category else t_id
+            migrated_event["triggers"].append([t_type, new_t_id])
+
+        # Map Determining Factors (Attributes)
+        for det in e.get("determining", []):
+            entity_type = det["entity_data"][0]
+            if entity_type == "attrib":
+                new_attr_id = map_id("attribs", det["entity_data"][1])
+                migrated_event["determining"].append({
+                    "entity_data": ["attrib", new_attr_id],
+                    "operation": det.get("operation", "+"),
+                    "label": det.get("label", "")
+                })
+
+        new_entities["events"].append(migrated_event)
 
     # Final Assembly
     new_structure = {
@@ -211,7 +254,18 @@ def migrate_file(filename):
             "number_format": old_data["overall"].get("number_format", "en_US"),
             "slots": old_data["overall"].get("slots", []),
             "progress_type": old_data["overall"].get("progress_type", "?"),
-            "multiplayer": old_data["overall"].get("multiplayer", False)
+            "multiplayer": old_data["overall"].get("multiplayer", False),
+            "win_reqs": [
+                {
+                    "id": req["id"],
+                    "item_id": map_id("items", req.get("item_id")),
+                    "loc_id": map_id("locations", req.get("loc_id")),
+                    "char_id": map_id("characters", req.get("char_id")),
+                    "attrib_id": map_id("attribs", req.get("attrib_id")),
+                    "quantity": req.get("quantity", 0.0),
+                    "attrib_value": req.get("attrib_value", 0.0)
+                } for req in old_data["overall"].get("win_reqs", [])
+            ]
         }
     }
 

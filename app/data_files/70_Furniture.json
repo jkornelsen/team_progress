@@ -342,6 +342,7 @@
                 ],
                 "abilities": [],
                 "toplevel": false,
+                "masked": false,
                 "location_id": 22,
                 "position": null,
                 "travel_party": "",
@@ -371,6 +372,7 @@
                 ],
                 "abilities": [],
                 "toplevel": false,
+                "masked": false,
                 "location_id": 26,
                 "position": null,
                 "travel_party": "",
@@ -400,6 +402,7 @@
                 ],
                 "abilities": [],
                 "toplevel": false,
+                "masked": false,
                 "location_id": 26,
                 "position": null,
                 "travel_party": "",
@@ -429,6 +432,7 @@
                 ],
                 "abilities": [],
                 "toplevel": false,
+                "masked": false,
                 "location_id": 22,
                 "position": null,
                 "travel_party": "",
@@ -454,6 +458,7 @@
                 ],
                 "abilities": [],
                 "toplevel": false,
+                "masked": false,
                 "location_id": 27,
                 "position": [
                     6,
@@ -486,6 +491,7 @@
                 ],
                 "abilities": [],
                 "toplevel": false,
+                "masked": false,
                 "location_id": 25,
                 "position": null,
                 "travel_party": "",
@@ -523,6 +529,7 @@
                 ],
                 "abilities": [],
                 "toplevel": false,
+                "masked": false,
                 "location_id": 28,
                 "position": null,
                 "travel_party": "",
@@ -548,6 +555,7 @@
                 ],
                 "abilities": [],
                 "toplevel": false,
+                "masked": false,
                 "location_id": 25,
                 "position": null,
                 "travel_party": "",
@@ -752,7 +760,240 @@
                 "enum_list": []
             }
         ],
-        "events": []
+        "events": [
+            {
+                "id": 37,
+                "name": "Who Arrives",
+                "description": "After a successful arrival roll, if it's not clear from the schedule who might be arriving, roll from this list to get a better picture.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "selection",
+                "selection_strings": "(Nobody)\r\nReginald\r\nCharles\r\nAnne\r\nFrancis\r\nLucy\r\nDash\r\nMittens",
+                "toplevel": false,
+                "triggers": [
+                    [
+                        "loc",
+                        27
+                    ]
+                ],
+                "determining": []
+            },
+            {
+                "id": 38,
+                "name": "Chance of Arrival",
+                "description": "Adjust difficulty based on likelihood such as how many people would be awake. The determining values are relevant information only, not to directly adjust dice.\r\n\r\nIf successful, check schedules to see if we know who comes, and if no one is scheduled, <a href=\"/play/event/5\">roll to see who it might be</a>.",
+                "trigger_chance": 0.4,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [
+                    [
+                        "item",
+                        15
+                    ]
+                ],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            4
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            5
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            8
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    }
+                ]
+            },
+            {
+                "id": 39,
+                "name": "Chance to Sit",
+                "description": "Maybe they walk on through, or maybe they sit somewhere. Hopefully on you.\r\n\r\nAdd all factors to max die, then divide by proximity, which you should set to roughly the number of tiles away.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    -10,
+                    50
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [
+                    [
+                        "loc",
+                        27
+                    ]
+                ],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            6
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            7
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            3
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            2
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            10
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    }
+                ]
+            },
+            {
+                "id": 40,
+                "name": "Encounter Outcome",
+                "description": "Determine whether the outcome is pleasant, and a brief sit or perhaps a full-fledged nap. The result will affect the subject's favor towards you.\r\n\r\nAdd all factors to both dice.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    -20,
+                    10
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [
+                    [
+                        "loc",
+                        27
+                    ]
+                ],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            6
+                        ],
+                        "operation": "+log",
+                        "label": ""
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            7
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            3
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            2
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            12
+                        ],
+                        "operation": "+log",
+                        "label": ""
+                    }
+                ]
+            },
+            {
+                "id": 41,
+                "name": "Upgrade",
+                "description": "Chance of an upgrade, minor such as softer pillows, or major such as converting to a larger sofa. Wear and tear typically makes it more likely to get a repair or upgrade.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    -10,
+                    50
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [
+                    [
+                        "item",
+                        17
+                    ]
+                ],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            6
+                        ],
+                        "operation": "+",
+                        "label": "Person 2"
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            2
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            6
+                        ],
+                        "operation": "+",
+                        "label": "Person 1"
+                    }
+                ]
+            }
+        ]
     },
     "general data": {
         "piles": [
@@ -769,6 +1010,17 @@
         "number_format": "en_US",
         "slots": [],
         "progress_type": "Hybrid",
-        "multiplayer": false
+        "multiplayer": false,
+        "win_reqs": [
+            {
+                "id": 1,
+                "item_id": 20,
+                "loc_id": 27,
+                "char_id": null,
+                "attrib_id": null,
+                "quantity": 1.0,
+                "attrib_value": 0.0
+            }
+        ]
     }
 }

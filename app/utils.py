@@ -145,8 +145,8 @@ def parse_numrange(min_val, max_val):
 # ------------------------------------------------------------------------
 
 def mask_string(s):
-    """Replaces non-space characters with bullets."""
-    return ''.join('•' if c != ' ' else ' ' for c in s)
+    """Replaces letters and numbers with bullets."""
+    return ''.join('•' if c.isalnum() else c for c in s)
 
 # ------------------------------------------------------------------------
 # HTML Sanitization Filter

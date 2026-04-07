@@ -63,7 +63,12 @@
                                 {% for dest in destinations %}
                                     {% set target = dest.other_loc(character.location_id) %}
                                     <option value="{{ target.id }}" {% if exit_loc_id == target.id %}selected{% endif %}>
-                                        {{ target.name }}
+                                        {% if target.masked %}
+                                            {{ target.name | mask_string }}
+                                            (not yet visited)
+                                        {% else %}
+                                            {{ target.name }}
+                                        {% endif %}
                                         {% if dest.duration > 1 %}
                                             ({{ dest.duration }}s)
                                         {% endif %}

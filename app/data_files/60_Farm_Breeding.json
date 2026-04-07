@@ -179,6 +179,7 @@
                 "attribs": [],
                 "abilities": [],
                 "toplevel": false,
+                "masked": false,
                 "location_id": 18,
                 "position": null,
                 "travel_party": "",
@@ -284,7 +285,57 @@
                 "enum_list": []
             }
         ],
-        "events": []
+        "events": [
+            {
+                "id": 20,
+                "name": "inherit parent trait",
+                "description": "Whether to inherit a trait such as color from mother or father. Small chance of developing a new color that's not inherited directly from either one, based on some combination of genetics from ancestors.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "selection",
+                "selection_strings": "Mother\r\nMother\r\nMother\r\nMother\r\nMother\r\nNew Trait\r\nFather\r\nFather\r\nFather\r\nFather\r\nFather",
+                "toplevel": false,
+                "triggers": [
+                    [
+                        "loc",
+                        17
+                    ]
+                ],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            8
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    }
+                ]
+            },
+            {
+                "id": 21,
+                "name": "sex of offspring",
+                "description": "",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "selection",
+                "selection_strings": "Male \u2642\r\nFemale \u2640",
+                "toplevel": false,
+                "triggers": [
+                    [
+                        "loc",
+                        17
+                    ]
+                ],
+                "determining": []
+            }
+        ]
     },
     "general data": {
         "piles": [
@@ -301,6 +352,7 @@
         "number_format": "en_US",
         "slots": [],
         "progress_type": "Hybrid",
-        "multiplayer": false
+        "multiplayer": false,
+        "win_reqs": []
     }
 }

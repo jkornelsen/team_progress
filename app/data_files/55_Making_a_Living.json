@@ -603,6 +603,7 @@
                 ],
                 "abilities": [],
                 "toplevel": true,
+                "masked": false,
                 "location_id": 29,
                 "position": null,
                 "travel_party": "",
@@ -665,7 +666,28 @@
                 "enum_list": []
             }
         ],
-        "events": []
+        "events": [
+            {
+                "id": 33,
+                "name": "Final Test",
+                "description": "Main factor to determine class grade.\r\n\r\nThere's some possible variation on outcomes, but mostly it's determined by studying. Based on time spent doing homework, add up to 80 for stat adjustment.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    0,
+                    20
+                ],
+                "outcome_type": "numeric",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [
+                    [
+                        "loc",
+                        28
+                    ]
+                ],
+                "determining": []
+            }
+        ]
     },
     "general data": {
         "piles": [
@@ -738,6 +760,7 @@
         "number_format": "en_US",
         "slots": [],
         "progress_type": "RPG",
-        "multiplayer": false
+        "multiplayer": false,
+        "win_reqs": []
     }
 }

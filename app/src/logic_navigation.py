@@ -10,14 +10,18 @@ logger = logging.getLogger(__name__)
 # Coordinate & Grid Math
 # ------------------------------------------------------------------------
 
-def is_adjacent(pos1, pos2):
+def is_adjacent(pos, target_pos):
     """
-    Standard Chebyshev distance check. 
-    Returns True if pos1 is within 1 square (including diagonals) of pos2.
+    Chebyshev distance check. 
+    Returns True if pos is within 1 square (including diagonals) of target_pos
+    or if target_pos is None.
     """
-    if not pos1 or not pos2:
+    if not target_pos:
+        return True
+    if not pos:
         return False
-    return abs(pos1[0] - pos2[0]) <= 1 and abs(pos1[1] - pos2[1]) <= 1
+    return abs(pos[0] - target_pos[0]) <= 1 and \
+           abs(pos[1] - target_pos[1]) <= 1
 
 def is_in_grid(location, x, y):
     """

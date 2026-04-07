@@ -567,7 +567,10 @@ def browse_scenarios():
         filename = req.get_str('scenario_file')
         if load_scenario_from_path(filename):
             return redirect(url_for('play.overview'))
-        return "Error loading scenario", 500
+        return render_template(
+            'error.html',
+            message="Error loading scenario.",
+        ), 500
 
     # GET logic: List files
     scenarios = []

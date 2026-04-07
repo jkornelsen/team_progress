@@ -199,6 +199,7 @@
                 ],
                 "abilities": [],
                 "toplevel": true,
+                "masked": false,
                 "location_id": 16,
                 "position": null,
                 "travel_party": "",
@@ -234,6 +235,7 @@
                 ],
                 "abilities": [],
                 "toplevel": true,
+                "masked": false,
                 "location_id": 16,
                 "position": null,
                 "travel_party": "",
@@ -279,6 +281,7 @@
                 ],
                 "abilities": [],
                 "toplevel": true,
+                "masked": false,
                 "location_id": 16,
                 "position": null,
                 "travel_party": "",
@@ -314,6 +317,7 @@
                 ],
                 "abilities": [],
                 "toplevel": true,
+                "masked": false,
                 "location_id": 16,
                 "position": null,
                 "travel_party": "",
@@ -368,7 +372,258 @@
                 "enum_list": []
             }
         ],
-        "events": []
+        "events": [
+            {
+                "id": 21,
+                "name": "Navigate",
+                "description": "Success in making it past a certain point, or walking on a path.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": true,
+                "triggers": [],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            4
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    }
+                ]
+            },
+            {
+                "id": 22,
+                "name": "Hold",
+                "description": "Holding delicate, slippery, or awkward items.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": true,
+                "triggers": [],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            4
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    }
+                ]
+            },
+            {
+                "id": 23,
+                "name": "Throw",
+                "description": "",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": true,
+                "triggers": [],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            4
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    }
+                ]
+            },
+            {
+                "id": 24,
+                "name": "Seize",
+                "description": "Catch, grab, or restrain elusive targets.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": true,
+                "triggers": [],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            4
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    }
+                ]
+            },
+            {
+                "id": 25,
+                "name": "Perceive",
+                "description": "For example, discover details about an object by viewing it.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": true,
+                "triggers": [],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            6
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    }
+                ]
+            },
+            {
+                "id": 26,
+                "name": "Investigate",
+                "description": "Figure out how something works or what its purpose is.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": true,
+                "triggers": [],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            5
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    }
+                ]
+            },
+            {
+                "id": 27,
+                "name": "Operate",
+                "description": "Use or manipulate something to achieve an effect.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": true,
+                "triggers": [],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            5
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    }
+                ]
+            },
+            {
+                "id": 28,
+                "name": "Dig",
+                "description": "With a shovel, pickaxe for rock, or even bare hands. Primarily strength-based, but could require dexterity for certain targeted efforts.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": true,
+                "triggers": [
+                    [
+                        "item",
+                        8
+                    ]
+                ],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            2
+                        ],
+                        "operation": "+",
+                        "label": "Wielder"
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            4
+                        ],
+                        "operation": "+",
+                        "label": "Wielder"
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            2
+                        ],
+                        "operation": "+",
+                        "label": "Tool"
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            4
+                        ],
+                        "operation": "+",
+                        "label": "Tool"
+                    }
+                ]
+            },
+            {
+                "id": 29,
+                "name": "Pull",
+                "description": "Such as hoisting a rope.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": true,
+                "triggers": [
+                    [
+                        "item",
+                        9
+                    ]
+                ],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            2
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    }
+                ]
+            }
+        ]
     },
     "general data": {
         "piles": [],
@@ -384,6 +639,7 @@
             "Head"
         ],
         "progress_type": "RPG",
-        "multiplayer": true
+        "multiplayer": true,
+        "win_reqs": []
     }
 }

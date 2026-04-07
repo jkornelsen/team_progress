@@ -33,3 +33,21 @@
         </a>
     {%- endif %}
 {%- endmacro %}
+
+{% macro hotkey_submit(index, link_letters, label="Submit", forced_key=None) -%}
+    {% if forced_key %}
+        {% set key = forced_key %}
+    {% else %}
+        {% set key = link_letters.next() %}
+    {% endif %}
+
+    {% if key -%}
+        {# Map the key to the specific ID generated in the loop #}
+        <script>linkForKey["{{ key }}"] = "#submit-{{ index }}";</script>
+        
+        <button type="submit" id="submit-{{ index }}" class="go-button">
+            <span class="hotkey-indicator">{{ key }}</span>
+            {{ label }}
+        </button>
+    {%- endif %}
+{%- endmacro %}

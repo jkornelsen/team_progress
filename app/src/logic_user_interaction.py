@@ -131,6 +131,16 @@ def format_action_string(game_token, interaction):
             
     return "Exploring"
 
+def clear_session_logs(game_token):
+    """
+    Permanently deletes all messages and interaction logs for a specific token.
+    Called during 'Reset Game' or 'Load Scenario'.
+    """
+    GameMessage.query.filter_by(game_token=game_token).delete()
+    UserInteraction.query.filter_by(game_token=game_token).delete()
+    db.session.commit()
+    logger.info(f"Logs cleared for token: {game_token}")
+
 def clear_old_data(days=1):
     """Maintenance function to delete old messages and user logs."""
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)

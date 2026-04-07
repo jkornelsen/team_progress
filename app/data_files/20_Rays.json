@@ -1502,7 +1502,96 @@
         ],
         "characters": [],
         "attribs": [],
-        "events": []
+        "events": [
+            {
+                "id": 45,
+                "name": "Green Bar Rate",
+                "description": "To determine the rate:\r\n1. Multiply by the <i><c=\"lemonchiffon\">BSF</c></i>.\r\n2. Multiply by <i>Green Bar Boost I</i>.\r\n3. For every <i>Green Bar Boost II</i>, press the button to multiply by <i><c=\"lemonchiffon\">Boost II Factor</c></i>.\r\n\r\nWith this result, in <a href=\"/play/item/17\">Green Bar</a> setup, set <i>Gain per Batch</i> for the <i>Ambient Energy</i> recipe.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    1
+                ],
+                "outcome_type": "determined",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [
+                    [
+                        "item",
+                        34
+                    ],
+                    [
+                        "item",
+                        2
+                    ],
+                    [
+                        "item",
+                        37
+                    ],
+                    [
+                        "item",
+                        33
+                    ]
+                ],
+                "determining": []
+            },
+            {
+                "id": 46,
+                "name": "Red Bar Rate",
+                "description": "To determine the rate:\r\n1. Multiply by the <i><c=\"lemonchiffon\">BSF</c></i>.\r\n2. Multiply by <i>Red Bar Boost I</i>.\r\n3. For every <i>Red Bar Boost II</i>, multiply by <i><c=\"lemonchiffon\">Boost II Factor</c></i> (press the button that many times).\r\n\r\nThen go to <a href=\"/play/item/15\">Red Bar</a> setup (shift+click on PC to leave window open). Set <i>Gain per Batch</i> for the <i>Ambient Energy</i> recipe to this result.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    1
+                ],
+                "outcome_type": "determined",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [
+                    [
+                        "item",
+                        39
+                    ],
+                    [
+                        "item",
+                        3
+                    ],
+                    [
+                        "item",
+                        4
+                    ]
+                ],
+                "determining": []
+            },
+            {
+                "id": 47,
+                "name": "Yellow Bar Rate",
+                "description": "To determine the rate:\r\n1. Multiply by the <i><c=\"lemonchiffon\">BSF</c></i>.\r\n2. Multiply by <i>Yellow Bar Boost I</i>.\r\n3. For every <i>Yellow Bar Boost II</i>, press the button to multiply by <i><c=\"lemonchiffon\">Boost II Factor</c></i>.\r\n\r\nWith this result, go to <a href=\"/play/item/20\">Yellow Bar</a> setup and set <i>Gain per Batch</i>.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "determined",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [
+                    [
+                        "item",
+                        6
+                    ],
+                    [
+                        "item",
+                        20
+                    ],
+                    [
+                        "item",
+                        22
+                    ]
+                ],
+                "determining": []
+            }
+        ]
     },
     "general data": {
         "piles": [
@@ -1655,6 +1744,17 @@
         "number_format": "en_US",
         "slots": [],
         "progress_type": "Idle",
-        "multiplayer": false
+        "multiplayer": false,
+        "win_reqs": [
+            {
+                "id": 1,
+                "item_id": 13,
+                "loc_id": 43,
+                "char_id": null,
+                "attrib_id": null,
+                "quantity": 1.0,
+                "attrib_value": 0.0
+            }
+        ]
     }
 }

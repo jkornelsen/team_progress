@@ -761,6 +761,7 @@
                 ],
                 "abilities": [],
                 "toplevel": true,
+                "masked": false,
                 "location_id": 47,
                 "position": null,
                 "travel_party": "",
@@ -778,6 +779,7 @@
                 ],
                 "abilities": [],
                 "toplevel": false,
+                "masked": false,
                 "location_id": 46,
                 "position": null,
                 "travel_party": "",
@@ -835,6 +837,7 @@
                 ],
                 "abilities": [],
                 "toplevel": false,
+                "masked": false,
                 "location_id": 44,
                 "position": null,
                 "travel_party": "",
@@ -858,6 +861,7 @@
                 "attribs": [],
                 "abilities": [],
                 "toplevel": false,
+                "masked": false,
                 "location_id": 40,
                 "position": null,
                 "travel_party": "",
@@ -903,6 +907,7 @@
                 ],
                 "abilities": [],
                 "toplevel": false,
+                "masked": false,
                 "location_id": 52,
                 "position": null,
                 "travel_party": "",
@@ -944,6 +949,7 @@
                 ],
                 "abilities": [],
                 "toplevel": false,
+                "masked": false,
                 "location_id": 52,
                 "position": null,
                 "travel_party": "",
@@ -1007,6 +1013,7 @@
                 ],
                 "abilities": [],
                 "toplevel": true,
+                "masked": false,
                 "location_id": 47,
                 "position": null,
                 "travel_party": "",
@@ -1177,7 +1184,144 @@
                 "enum_list": []
             }
         ],
-        "events": []
+        "events": [
+            {
+                "id": 63,
+                "name": "How an Advance is Received",
+                "description": "Does the person draw back or are they happy about the initiative taken. The attempt could be spoken or physical.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            2
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            3
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            4
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            17
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            5
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            10
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            12
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    }
+                ]
+            },
+            {
+                "id": 64,
+                "name": "First Impression",
+                "description": "Based on appearance and greeting, people may like you, dislike you, or (maybe the worst if you want to be noticed) have no opinion about you.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            2
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            3
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            4
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            17
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            5
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            10
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    }
+                ]
+            }
+        ]
     },
     "general data": {
         "piles": [
@@ -1225,6 +1369,7 @@
             "Riding"
         ],
         "progress_type": "RPG",
-        "multiplayer": false
+        "multiplayer": false,
+        "win_reqs": []
     }
 }

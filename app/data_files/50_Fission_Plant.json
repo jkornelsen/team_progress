@@ -331,7 +331,43 @@
         ],
         "characters": [],
         "attribs": [],
-        "events": []
+        "events": [
+            {
+                "id": 15,
+                "name": "Fission Problem Type",
+                "description": "Get more information about a problem that occurred.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    0,
+                    10
+                ],
+                "outcome_type": "selection",
+                "selection_strings": "Radioactive Waste Leak\r\nWaste Bacteria Inert\r\nCooling System Leak\r\nMechanical Failure\r\nElectricity Down\r\nUnusable Amenities\r\nEnergy Not Gained\r\nExcess Energy\r\nCore Meltdown",
+                "toplevel": false,
+                "triggers": [],
+                "determining": []
+            },
+            {
+                "id": 16,
+                "name": "Fission Problem",
+                "description": "Minor problems, such as waste leaks, up to the worst case, core meltdown. Waste buildup increases the chance of something going wrong.\r\n\r\nTo determine which problem occurred, especially for critical failures, run <a href=\"/play/event/2\">Fission Problem Type</a>.",
+                "trigger_chance": 0.05,
+                "numeric_range": [
+                    1,
+                    1000
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [
+                    [
+                        "item",
+                        9
+                    ]
+                ],
+                "determining": []
+            }
+        ]
     },
     "general data": {
         "piles": [
@@ -364,6 +400,17 @@
         "number_format": "sci",
         "slots": [],
         "progress_type": "Idle",
-        "multiplayer": true
+        "multiplayer": true,
+        "win_reqs": [
+            {
+                "id": 2,
+                "item_id": 9,
+                "loc_id": null,
+                "char_id": null,
+                "attrib_id": null,
+                "quantity": 10000000.0,
+                "attrib_value": 0.0
+            }
+        ]
     }
 }

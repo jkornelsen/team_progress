@@ -333,6 +333,7 @@
                 ],
                 "abilities": [],
                 "toplevel": true,
+                "masked": false,
                 "location_id": 18,
                 "position": [
                     4,
@@ -363,6 +364,7 @@
                 ],
                 "abilities": [],
                 "toplevel": true,
+                "masked": false,
                 "location_id": 18,
                 "position": [
                     4,
@@ -420,7 +422,176 @@
                 "enum_list": []
             }
         ],
-        "events": []
+        "events": [
+            {
+                "id": 21,
+                "name": "Mark a Tree",
+                "description": "Choose the grid coordinates of the next tree to be actively harvested on a plot. See <a href=\"/play/item/15\">Marked Tree</a> for instructions.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "coordinates",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [
+                    [
+                        "item",
+                        10
+                    ],
+                    [
+                        "loc",
+                        18
+                    ]
+                ],
+                "determining": []
+            },
+            {
+                "id": 22,
+                "name": "Chopping Mishap Type",
+                "description": "Run to get details on what happened after a <a href=\"/play/event/6\">Chopping Mishap</a> occurs.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    0,
+                    10
+                ],
+                "outcome_type": "selection",
+                "selection_strings": "Tool damaged\r\nTool broken\r\nTool destroyed\r\nFewer resources gained\r\nResources lost\r\nNo progress\r\nMinor injury\r\nSevere injury",
+                "toplevel": false,
+                "triggers": [],
+                "determining": []
+            },
+            {
+                "id": 23,
+                "name": "Swing to Chop",
+                "description": "Adjust die max (not min) by axe power and wielder strength, giving -1 to -16 initially.\r\n\r\nAlso, run <a href=\"/play/event/6\">Chopping Mishap</a> when appropriate, such as after a poor damage roll, or for the final blow.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    -1,
+                    -10
+                ],
+                "outcome_type": "numeric",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [
+                    [
+                        "item",
+                        7
+                    ],
+                    [
+                        "item",
+                        15
+                    ]
+                ],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            5
+                        ],
+                        "operation": "-",
+                        "label": "Item"
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            3
+                        ],
+                        "operation": "*",
+                        "label": "Wielder"
+                    }
+                ]
+            },
+            {
+                "id": 24,
+                "name": "Start engine",
+                "description": "Not always a guarantee with old vehicles.\r\n\r\nUse Easy difficulty under normal circumstances, since it's somewhat routine. Also, add repair value to both min and max.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            6
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    }
+                ]
+            },
+            {
+                "id": 25,
+                "name": "Operate saw",
+                "description": "Chance of success. Roll to determine how well a batch of logs turns into boards, or if something perhaps goes wrong.\r\n\r\nUse Easy difficulty. If there is a large number of logs to be processed, lower the die min a little, making success a bit less likely.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [
+                    [
+                        "item",
+                        11
+                    ],
+                    [
+                        "loc",
+                        16
+                    ]
+                ],
+                "determining": []
+            },
+            {
+                "id": 26,
+                "name": "Chopping Mishap",
+                "description": "Chance of something bad, or possibly good, happening.  Use accuracy to modify both min and max if relevant for the situation, such as when attempting to land a blow.\r\n\r\nRun <a href=\"/play/event/7\">Chopping Mishap Type</a> for further details.",
+                "trigger_chance": 0.1,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            4
+                        ],
+                        "operation": "+",
+                        "label": "Item"
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            4
+                        ],
+                        "operation": "*",
+                        "label": "Wielder \u2014 Die Max"
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            4
+                        ],
+                        "operation": "/",
+                        "label": "Wielder \u2014 Die Min"
+                    }
+                ]
+            }
+        ]
     },
     "general data": {
         "piles": [
@@ -447,6 +618,7 @@
             "Held"
         ],
         "progress_type": "Hybrid",
-        "multiplayer": true
+        "multiplayer": true,
+        "win_reqs": []
     }
 }

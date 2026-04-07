@@ -332,6 +332,7 @@
                 ],
                 "abilities": [],
                 "toplevel": true,
+                "masked": false,
                 "location_id": 15,
                 "position": null,
                 "travel_party": "",
@@ -360,6 +361,7 @@
                 ],
                 "abilities": [],
                 "toplevel": true,
+                "masked": false,
                 "location_id": 15,
                 "position": null,
                 "travel_party": "",
@@ -377,6 +379,7 @@
                 ],
                 "abilities": [],
                 "toplevel": false,
+                "masked": true,
                 "location_id": 14,
                 "position": null,
                 "travel_party": "",
@@ -409,7 +412,57 @@
                 "enum_list": []
             }
         ],
-        "events": []
+        "events": [
+            {
+                "id": 20,
+                "name": "Travel Danger",
+                "description": "Chance of something happening during a trip, such as getting lost in the woods. Add Suzy's or her mother's Pathfinding skill to both die min and max.",
+                "trigger_chance": 0.95,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [
+                    [
+                        "loc",
+                        16
+                    ]
+                ],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            2
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    }
+                ]
+            },
+            {
+                "id": 21,
+                "name": "Connect to Service",
+                "description": "Attempt to connect a device. Choose Easy difficulty since we won't be far from civilization.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [
+                    [
+                        "item",
+                        10
+                    ]
+                ],
+                "determining": []
+            }
+        ]
     },
     "general data": {
         "piles": [
@@ -430,6 +483,26 @@
         "number_format": "en_US",
         "slots": [],
         "progress_type": "Hybrid",
-        "multiplayer": false
+        "multiplayer": false,
+        "win_reqs": [
+            {
+                "id": 1,
+                "item_id": 8,
+                "loc_id": 15,
+                "char_id": null,
+                "attrib_id": null,
+                "quantity": 20.0,
+                "attrib_value": 0.0
+            },
+            {
+                "id": 2,
+                "item_id": 11,
+                "loc_id": 14,
+                "char_id": null,
+                "attrib_id": null,
+                "quantity": 2.0,
+                "attrib_value": 0.0
+            }
+        ]
     }
 }

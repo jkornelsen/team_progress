@@ -29,11 +29,11 @@ def can_perform_recipe(game_token, host_id, recipe, batches=1):
     Returns (bool, reason_string)
     """
     # 1. Check Output Limit
-    item_def = Item.query.get((game_token, recipe.item_id))
+    item_def = Item.query.get((game_token, recipe.product_id))
     if item_def and item_def.q_limit > 0:
         # Get current quantity in this host's pile
         current_pile = Pile.query.filter_by(
-            game_token=game_token, owner_id=host_id, item_id=recipe.item_id
+            game_token=game_token, owner_id=host_id, item_id=recipe.product_id
         ).first()
         current_qty = current_pile.quantity if current_pile else 0.0
         
@@ -118,7 +118,7 @@ def update_progress(progress_id):
                 adjust_quantity(source.item_id, progress.host_id, -source.q_required)
         
         # 2. Produce Output
-        adjust_quantity(recipe.item_id, progress.host_id, recipe.rate_amount)
+        adjust_quantity(recipe.product_id, progress.host_id, recipe.rate_amount)
         
         # 3. Produce Byproducts
         for byproduct in recipe.byproducts:

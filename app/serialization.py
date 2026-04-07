@@ -11,6 +11,7 @@ from .models import (
     Pile, Recipe, RecipeSource, RecipeByproduct, 
     RecipeAttribReq, Progress, Overall, WinRequirement)
 from .utils import parse_numrange
+from .src.logic_user_interaction import clear_session_logs
 
 logger = logging.getLogger(__name__)
 
@@ -72,8 +73,9 @@ def import_from_dict(data):
     """
     # Wipe current data
     game_token = g.game_token
-    db.session.query(Entity).filter_by(game_token=game_token).delete()
     db.session.query(Overall).filter_by(game_token=game_token).delete()
+    db.session.query(Entity).filter_by(game_token=game_token).delete()
+    clear_session_logs(game_token)
     
     # Overall Settings
     ov_data = data.get(JsonKeys.OVERALL, {})
@@ -255,9 +257,10 @@ def clear_game_data():
     logger.warning(f"Clearing all data for token: {game_token}")
     
     # Due to CASCADE constraints, these two lines wipe the entire relational tree
-    Entity.query.filter_by(game_token=game_token).delete()
     Overall.query.filter_by(game_token=game_token).delete()
-    
+    Entity.query.filter_by(game_token=game_token).delete()
+    clear_session_logs(game_token)
+
     db.session.commit()
     logger.info(f"Token {game_token} cleared.")
 

@@ -124,20 +124,6 @@
     <!-- RIGHT COLUMN: Feedback & Logs -->
     <div class="log-column">
         
-        <!-- Win Requirements -->
-        {% if win_reqs %}
-        <section class="outer-border">
-            <h3>Objectives</h3>
-            <ul class="objective-list">
-                {% for req in win_reqs %}
-                <li class="{{ 'text-success' if req.fulfilled else 'text-dim' }}">
-                    {{ '✅' if req.fulfilled else '⬜' }} {{ req.description }}
-                </li>
-                {% endfor %}
-            </ul>
-        </section>
-        {% endif %}
-
         <!-- Game Message Log -->
         <section class="outer-border">
             <div class="flex-between">
@@ -164,6 +150,20 @@
                 {% endfor %}
             </div>
         </section>
+
+        <!-- Win Requirements -->
+        {% if win_reqs %}
+        <section class="outer-border">
+            <h3>Objectives</h3>
+            <ul class="objective-list">
+                {% for req in win_reqs %}
+                <li class="{{ 'text-success' if req.fulfilled else 'text-dim' }}">
+                    {{ '✅' if req.fulfilled else '⬜' }} {{ req.description }}
+                </li>
+                {% endfor %}
+            </ul>
+        </section>
+        {% endif %}
     </div>
 </div>
 

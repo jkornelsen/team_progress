@@ -328,6 +328,7 @@
                 ],
                 "abilities": [],
                 "toplevel": false,
+                "masked": false,
                 "location_id": 16,
                 "position": null,
                 "travel_party": "",
@@ -345,6 +346,7 @@
                 ],
                 "abilities": [],
                 "toplevel": true,
+                "masked": false,
                 "location_id": 14,
                 "position": null,
                 "travel_party": "",
@@ -366,6 +368,7 @@
                 ],
                 "abilities": [],
                 "toplevel": true,
+                "masked": false,
                 "location_id": 14,
                 "position": null,
                 "travel_party": "",
@@ -409,7 +412,57 @@
                 "enum_list": []
             }
         ],
-        "events": []
+        "events": [
+            {
+                "id": 20,
+                "name": "Travel Danger",
+                "description": "Set difficulty to Moderate, meaning the chance of getting lost or eaten by wolves in this particular forest is decent but not overwhelming. If Suzy is alone in the forest, select her name with stat 2 and press <i>Add</i>. Otherwise, use her Mother's stat. Then press <i>Roll</i>.\r\n\r\nBecause she's tired after all those chores, play at a disadvantage, which means we take the worst of two rolls. So, remember the first result and then press Roll again.\r\n\r\nActually, in this case, we need it to be a <i>Minor Failure</i>, so keep rolling until that happens. We'll take that to mean she's lost but there are no wolves or twisted ankles.\r\n\r\nTo get out of this pickle, go to Suzy's page and and find the <i>Connect to Service</i> event.",
+                "trigger_chance": 0.95,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [
+                    [
+                        "loc",
+                        15
+                    ]
+                ],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            2
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    }
+                ]
+            },
+            {
+                "id": 21,
+                "name": "Connect to Service",
+                "description": "Suzy needs to call her Mother for help of some kind. Choose Easy difficulty since we won't be far from civilization, then roll.\r\n\r\nFor a major success, Mother will explain to Suzy how to get home, meaning that she will arrive home without further incident. For a minor success, Mother can travel to the woods and lead Suzy out, using her higher <i>Pathfinding</i> skill so that <i>Travel Danger</i> has a better chance to succeed.\r\n\r\nFor a single minor failure, Suzy can probably just try to call again (wouldn't you, if you were her?) But if things get worse, you might have to go to setup and add a <i>Wolf</i> character, then roll either <i>Travel Danger</i> or a new event such as <i>Danger Interaction</i> to see if it is close enough to be threatening. If push comes to shove, maybe she can grab a fallen branch to fend it off (set up as a new item), or climb a tree, or yell.\r\n\r\nThis is the end of the walkthrough explanation. After returning home, Suzy can cook the bacon. Once the win condition described under <i>Overall Settings</i> is met, a green checkmark should show in the log on the overview page, indicating that the scenario is successfully completed.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [
+                    [
+                        "item",
+                        6
+                    ]
+                ],
+                "determining": []
+            }
+        ]
     },
     "general data": {
         "piles": [
@@ -430,6 +483,26 @@
         "number_format": "en_US",
         "slots": [],
         "progress_type": "Hybrid",
-        "multiplayer": false
+        "multiplayer": false,
+        "win_reqs": [
+            {
+                "id": 1,
+                "item_id": 8,
+                "loc_id": 14,
+                "char_id": null,
+                "attrib_id": null,
+                "quantity": 20.0,
+                "attrib_value": 0.0
+            },
+            {
+                "id": 2,
+                "item_id": 10,
+                "loc_id": 16,
+                "char_id": null,
+                "attrib_id": null,
+                "quantity": 2.0,
+                "attrib_value": 0.0
+            }
+        ]
     }
 }

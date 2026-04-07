@@ -65,7 +65,7 @@
 
             {% if inventory_piles %}
             <section class="outer-border">
-                <h3>Items on Ground</h3>
+                <h3>Items Here</h3>
                 <div class="col-list item-ref-list">
                 {% for pile in inventory_piles %}
                     <div class="col-row item-ref-row" style="--grid-cols: 1fr auto;">
@@ -105,6 +105,23 @@
             </section>
             {% endif %}
 
+            {% if location.abilities %}
+            <section class="outer-border">
+                <h3>Local Events</h3>
+                <div class="col-list" style="--col-list-max-width: 250px;">
+                    {% for event in location.abilities %}
+                        <div class="col-row" style="--grid-cols: 1fr auto;">
+                            {% set event_url = url_for('play.play_event', id=event.id, subject_id=location.id) %}
+                            
+                            {% call hotkey_link(event_url, link_letters) %}
+                                {{ event.name }} 
+                            {% endcall %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
             {% if attrib_values %}
             <section class="outer-border">
                 <h3>Environment Attrs</h3>
@@ -136,7 +153,7 @@
                     {% else %}
                         {% set target_url = url_for('play.play_location', id=target.id) %}
                         {% call hotkey_link(target_url, link_letters) %}
-                            {{ target.name if not target.masked else (target.name | mask_string) }}
+                            {{ target.name }}
                         {% endcall %}
                         {% if door %}
                             <span class="label-like">[{{ door | join(",") }}]</span>

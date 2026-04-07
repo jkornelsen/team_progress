@@ -196,6 +196,7 @@
                 ],
                 "abilities": [],
                 "toplevel": true,
+                "masked": false,
                 "location_id": 12,
                 "position": null,
                 "travel_party": "",
@@ -219,6 +220,7 @@
                 ],
                 "abilities": [],
                 "toplevel": false,
+                "masked": false,
                 "location_id": 11,
                 "position": null,
                 "travel_party": "",
@@ -236,6 +238,7 @@
                 ],
                 "abilities": [],
                 "toplevel": false,
+                "masked": false,
                 "location_id": 7,
                 "position": null,
                 "travel_party": "",
@@ -253,6 +256,7 @@
                 ],
                 "abilities": [],
                 "toplevel": false,
+                "masked": false,
                 "location_id": 10,
                 "position": null,
                 "travel_party": "",
@@ -274,6 +278,7 @@
                 ],
                 "abilities": [],
                 "toplevel": false,
+                "masked": false,
                 "location_id": 9,
                 "position": null,
                 "travel_party": "",
@@ -306,7 +311,195 @@
                 "enum_list": []
             }
         ],
-        "events": []
+        "events": [
+            {
+                "id": 18,
+                "name": "Finish Fight",
+                "description": "After each fight, subtract 1 Energy, either below or <a href=\"/play/item/1/?char_id=1\">directly</a>.\r\n\r\nAlso, if the fight ended in victory, then add the enemy's XL to <a href=\"/play/attrib/1/char/1\">XP</a>. To set the outcome to enemy XL, reset the die and add to both die min and max, then roll. Once the outcome is set, fill for XP and apply.\r\n\r\nMajor success doubles the XP, while a critical failure decreases 2 Energy.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    0,
+                    0
+                ],
+                "outcome_type": "numeric",
+                "selection_strings": "",
+                "toplevel": true,
+                "triggers": [],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            4
+                        ],
+                        "operation": "+",
+                        "label": "Enemy"
+                    }
+                ]
+            },
+            {
+                "id": 19,
+                "name": "Fight Bad Hare",
+                "description": "Set difficulty to Hard. At level 9, the range will be -18 to 1, small chance of success and significant chance of a critical failure that consumes more energy.\r\n\r\nOn victory, mark the boss as <a href=\"/play/attrib/3/char/5\">Defeated</a> and add 250 XP.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [
+                    [
+                        "loc",
+                        9
+                    ]
+                ],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            4
+                        ],
+                        "operation": "-",
+                        "label": "Bad Hare"
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            4
+                        ],
+                        "operation": "+",
+                        "label": "Player"
+                    }
+                ]
+            },
+            {
+                "id": 20,
+                "name": "Fight Grown Mice",
+                "description": "If you're massively outleveled, in this case level 1 or 2 to the enemy's 5, then set difficulty to <i>Hard</i>. If you're level 8 already, then set difficulty to <i>Easy</i>, although that is probably a good time to move on to the next location.\r\n\r\nRun like <a href=\"/play/event/1\">the first event</a>.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [
+                    [
+                        "loc",
+                        7
+                    ]
+                ],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            4
+                        ],
+                        "operation": "-",
+                        "label": "Enemy"
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            4
+                        ],
+                        "operation": "+",
+                        "label": "Player"
+                    }
+                ]
+            },
+            {
+                "id": 21,
+                "name": "Fight Baby Mice",
+                "description": "Determine the outcome of a fight.\r\n\r\nSelect <i>Moderate</i> difficulty, and adjust both min and max by player and enemy level, for an initial range -2 to 1. Enemies in this area are limited to <i>Baby Mouse</i> \u2014 go to a different area to fight other enemies. Make sure the robot has at least 1 Energy to start.\r\n\r\nThen, see <a href=\"/play/event/2\">Finish Fight</a>.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    4
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [
+                    [
+                        "loc",
+                        10
+                    ]
+                ],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            4
+                        ],
+                        "operation": "+",
+                        "label": "Player"
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            4
+                        ],
+                        "operation": "-",
+                        "label": "Enemy"
+                    }
+                ]
+            },
+            {
+                "id": 22,
+                "name": "Fight Bunnies",
+                "description": "Run like <a href=\"/play/event/3\">Grown Mice</a> with upgraded stats.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [
+                    [
+                        "loc",
+                        11
+                    ]
+                ],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            4
+                        ],
+                        "operation": "+",
+                        "label": "Player"
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            4
+                        ],
+                        "operation": "-",
+                        "label": "Enemy"
+                    }
+                ]
+            },
+            {
+                "id": 23,
+                "name": "Upgrade Bonus",
+                "description": "Run after every 3 experience levels.",
+                "trigger_chance": 0.0,
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "selection",
+                "selection_strings": "Triple XP for the next three fights.\r\nGain 50% of XP towards the next level.\r\nIncrease Energy limit by 1.\r\nFor three fights, do not decrease Energy unless critical.\r\nNo Bonus.",
+                "toplevel": false,
+                "triggers": [],
+                "determining": []
+            }
+        ]
     },
     "general data": {
         "piles": [],
@@ -318,6 +511,17 @@
         "number_format": "en_US",
         "slots": [],
         "progress_type": "RPG",
-        "multiplayer": false
+        "multiplayer": false,
+        "win_reqs": [
+            {
+                "id": 1,
+                "item_id": null,
+                "loc_id": null,
+                "char_id": 13,
+                "attrib_id": 4,
+                "quantity": 0.0,
+                "attrib_value": 10.0
+            }
+        ]
     }
 }

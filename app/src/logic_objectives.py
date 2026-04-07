@@ -1,5 +1,6 @@
 from app.models import (
     db, WinRequirement, Pile, Character, AttribVal, GENERAL_ID)
+from app.utils import format_num
 
 def validate_requirements(game_token):
     """
@@ -24,7 +25,7 @@ def validate_requirements(game_token):
             ).first()
             current_qty = pile.quantity if pile else 0
             is_fulfilled = current_qty >= r.quantity
-            desc = f"Collect {r.quantity} {r.item.name} in General Storage"
+            desc = f"Collect {format_num(r.quantity)} {r.item.name} in General Storage"
 
         # Condition 2: Item at a specific Location
         elif r.item_id and r.loc_id and not r.char_id:
@@ -34,7 +35,7 @@ def validate_requirements(game_token):
             ).all()
             current_qty = sum(p.quantity for p in piles)
             is_fulfilled = current_qty >= r.quantity
-            desc = f"Place {r.quantity} {r.item.name} at {r.location.name}"
+            desc = f"Place {format_num(r.quantity)} {r.item.name} at {r.loc.name}"
 
         # Condition 3: Item owned by a Character
         elif r.item_id and r.char_id:
@@ -43,13 +44,13 @@ def validate_requirements(game_token):
             ).first()
             current_qty = pile.quantity if pile else 0
             is_fulfilled = current_qty >= r.quantity
-            desc = f"{r.character.name} must carry {r.quantity} {r.item.name}"
+            desc = f"{r.char.name} must carry {format_num(r.quantity)} {r.item.name}"
 
         # Condition 4: Character at a Location
         elif r.char_id and r.loc_id and not r.item_id:
             char = Character.query.get((game_token, r.char_id))
             is_fulfilled = char.location_id == r.loc_id
-            desc = f"{char.name} must be at {r.location.name}"
+            desc = f"{char.name} must be at {r.loc.name}"
 
         # Condition 5: Character Attribute Level
         elif r.char_id and r.attrib_id:
@@ -58,7 +59,7 @@ def validate_requirements(game_token):
             ).first()
             current_val = val_rec.value if val_rec else 0
             is_fulfilled = current_val >= r.attrib_value
-            desc = f"{r.character.name} needs {r.attrib.name} ≥ {r.attrib_value}"
+            desc = f"{r.char.name} needs {r.attrib.name} ≥ {format_num(r.attrib_value)}"
 
         if not is_fulfilled:
             all_met = False

@@ -1290,19 +1290,24 @@ class WinRequirement(db.Model, DictHydrator):
     __table_args__ = (
         db.ForeignKeyConstraint(
             ['game_token'],
-            ['overall.game_token']),
+            ['overall.game_token'], 
+            ondelete='CASCADE'),
         db.ForeignKeyConstraint(
             ['game_token', 'item_id'],
-            ['items.game_token', 'items.id']),
+            ['items.game_token', 'items.id'], 
+            ondelete='CASCADE'),
         db.ForeignKeyConstraint(
             ['game_token', 'char_id'],
-            ['characters.game_token', 'characters.id']),
+            ['characters.game_token', 'characters.id'], 
+            ondelete='CASCADE'),
         db.ForeignKeyConstraint(
             ['game_token', 'loc_id'],
-            ['locations.game_token', 'locations.id']),
+            ['locations.game_token', 'locations.id'], 
+            ondelete='CASCADE'),
         db.ForeignKeyConstraint(
             ['game_token', 'attrib_id'],
-            ['attribs.game_token', 'attribs.id']),
+            ['attribs.game_token', 'attribs.id'], 
+            ondelete='CASCADE'),
     )
 
 # ------------------------------------------------------------------------
