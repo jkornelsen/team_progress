@@ -5,11 +5,10 @@ from app.models import (
     db, Entity, Item, Character, Location, Attrib, Event,
     Pile, AttribVal, Operation, OutcomeType,
     Recipe, RecipeAttribReq, LocDest,
-    Progress, Overall, WinRequirement, GameMessage, GENERAL_ID)
+    Progress, Overall, WinRequirement, GameMessage, GENERAL_ID, StorageType)
 from app.utils import (
     RequestHelper, parse_coords, LinkLetters, capture_origin, redirect_back)
-from app.src.logic_piles import (
-    transfer_item, get_character_piles, ensure_owner_up_to_date)
+from app.src.logic_piles import resolve_recipe_sources, transfer_item
 from app.src.logic_event import (
     roll_for_outcome, roll_for_system_outcome)
 from app.src.logic_progress import (
@@ -64,26 +63,39 @@ def overview():
 
 @play_bp.route('/play/item/<int:id>')
 def play_item(id):
+    req = RequestHelper('args')
     game_token = g.game_token
+    
     item = Item.query.get_or_404((game_token, id))
     capture_origin(name=item.name)
-    
-    # 1. Determine Context (Who owns the pile we are looking at?)
-    char_id = request.args.get('char_id', type=int)
-    loc_id = request.args.get('loc_id', type=int)
-    
-    if char_id:
-        owner = Character.query.get((game_token, char_id))
-    elif loc_id:
-        owner = Location.query.get((game_token, loc_id))
-    else:
-        # Default to General Storage
-        owner = Entity.query.get((game_token, GENERAL_ID))
+
+    # Determine the Data Anchor (Which pile are we looking at?)
+    owner_id = req.get_int('owner_id')
+    char_id = req.get_int('char_id')
+    loc_id = req.get_int('loc_id')
+    if not owner_id:
+        if item.storage_type == StorageType.UNIVERSAL:
+            owner_id = GENERAL_ID
+        elif item.storage_type == StorageType.LOCAL:
+            owner_id = loc_id
+        else:
+            owner_id = char_id or loc_id
+
+    owner = Entity.query.get((game_token, owner_id))
     if not owner:
         from flask import abort
         abort(404, description="Item owner not found.")
+    if isinstance(owner, Character):
+        char_id = owner.id
+    elif isinstance(owner, Location):
+        loc_id = owner.id
+    context = {
+        'char_id': char_id,
+        'loc_id': loc_id,
+        'owner_id': owner_id
+    }
 
-    # 2. Fetch the specific Pile record
+    # Fetch the specific Pile record
     query = Pile.query.filter_by(
         game_token=game_token, 
         item_id=id, 
@@ -100,24 +112,29 @@ def play_item(id):
     if not pile:
         pile = Pile(item_id=id, owner_id=owner.id, quantity=0.0, position=pos)
 
-    # 3. Recipes that PRODUCE this item
+    # Recipes that PRODUCE this item
     # Enriched allows UI to show 🚫 icon and specific reason tooltip.
     enriched_recipes = []
     for r in item.recipes:
         can_do, reason = can_perform_recipe(game_token, owner.id, r)
+        resolved_ingredients = resolve_recipe_sources(
+            game_token, 
+            host_id=owner.id, 
+            recipe=r
+        )
         
-        # We also want the UI to know current stock of ingredients
-        sources_with_stock = []
-        for s in r.sources:
-            stock_pile = Pile.query.filter_by(
-                game_token=game_token, item_id=s.item_id, owner_id=owner.id
-            ).first()
-            sources_with_stock.append({
-                'ingredient': s.ingredient, # JTI relationship
-                'q_required': s.q_required,
-                'preserve': s.preserve,
-                'current_stock': stock_pile.quantity if stock_pile else 0.0
+        sources_ui_data = []
+        for res in resolved_ingredients:
+            sources_ui_data.append({
+                'ingredient': res['item'],
+                'q_required': res['source_def'].q_required,
+                'preserve': res['source_def'].preserve,
+                'current_stock': res['total_available'],
+                'pile_owner_id': res['anticipated_owner_id'],
+                'pile_owner_type': res['anticipated_owner_type'],
+                'pile_pos': res['representative_pile'].position if res['representative_pile'] else None
             })
+
         enriched_recipes.append({
             'id': r.id,
             'rate_amount': r.rate_amount,
@@ -125,10 +142,10 @@ def play_item(id):
             'instant': r.instant,
             'can_produce': can_do,
             'reason': reason,
-            'sources': sources_with_stock
+            'sources': sources_ui_data
         })
 
-    # 4. Recipes where this item is a SOURCE (Ingredient)
+    # Recipes where this item is a SOURCE (Ingredient)
     used_for_production = []
     for source_link in item.as_ingredient:
         product = source_link.recipe.product
@@ -139,7 +156,7 @@ def play_item(id):
                 'preserve': source_link.preserve
             })
 
-    # 5. Recipes where this item is a BYPRODUCT
+    # Recipes where this item is a BYPRODUCT
     byproduct_of = []
     for byproduct_link in item.as_byproducts:
         product = byproduct_link.recipe.product
@@ -148,12 +165,12 @@ def play_item(id):
             'rate_amount': byproduct_link.rate_amount
         })
 
-    # 6. Check for active progress
+    # Check for active progress
     current_progress = Progress.query.filter_by(
         game_token=game_token, host_id=owner.id
     ).first()
 
-    # 7. UI Context: Characters nearby (for the "Pick Up" button)
+    # UI Context: Characters nearby (for the "Pick Up" button)
     chars_here = []
     if loc_id:
         chars_here = Character.query.filter_by(game_token=game_token, location_id=loc_id).all()
@@ -164,6 +181,7 @@ def play_item(id):
         item=item,
         owner=owner,
         pile=pile,
+        context=context,
         recipes=enriched_recipes,
         used_for_production=used_for_production,
         byproduct_of=byproduct_of,

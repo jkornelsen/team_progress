@@ -17,7 +17,7 @@
         {% if all_requirements_met %}
             <span title="Goal Achieved!" class="text-success">✅</span>
         {% elif win_reqs %}
-            <span title="Active Win Conditions" style="color: #888; font-size: 0.5em;">🚩</span>
+            <span title="Win Conditions" style="color: #888; font-size: 0.5em;">🚩</span>
         {% endif %}
     </h1>
 
@@ -37,10 +37,10 @@
     <!-- LEFT COLUMN: Status & Navigation -->
     <div class="status-column">
         
-        <!-- 1. Top-level Characters -->
+        <!-- Characters -->
         {% if characters %}
         <section class="outer-border">
-            <h3>Active Characters</h3>
+            <h3>Key Characters</h3>
             <table>
                 <thead>
                     <tr><th>Name</th><th>Location</th></tr>
@@ -71,10 +71,28 @@
         </section>
         {% endif %}
 
-        <!-- 2. General Storage (Universal Items) -->
+        <!-- Locations -->
+        {% if locations %}
+        <section class="outer-border">
+            <h3>Major Locations</h3>
+            <div class="loc-list">
+                {% for loc in locations %}
+                    <div class="loc-item">
+                        {% set target_url = url_for('play.play_location', id=loc.id) %}
+                        {% call hotkey_link(target_url, link_letters) %}
+                            {{ loc.name if not loc.masked else loc.name|mask_string }}
+                        {% endcall %}
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+    </div>
+
+        <!-- General Storage (Universal Items) -->
         {% if items %}
         <section class="outer-border">
-            <h3>General Storage</h3>
+            <h3>Pinned General</h3>
             <table>
                 <thead>
                     <tr><th>Resource</th><th>Quantity</th></tr>
@@ -84,7 +102,8 @@
                     {% set pile = item.in_piles | selectattr('owner_id', 'equalto', GENERAL_ID) | first %}
                     <tr>
                         <td>
-                            {% set target_url = url_for('play.play_item', id=item.id) %}
+                            {% set target_url = url_for('play.play_item',
+                                id=item.id, owner_id=GENERAL_ID) %}
                             {% call hotkey_link(target_url, link_letters) %}
                                 {{ item.name if not item.masked else item.name|mask_string }}
                             {% endcall %}
@@ -102,24 +121,6 @@
             </table>
         </section>
         {% endif %}
-
-        <!-- 3. Major Locations -->
-        {% if locations %}
-        <section class="outer-border">
-            <h3>Locations</h3>
-            <div class="loc-list">
-                {% for loc in locations %}
-                    <div class="loc-item">
-                        {% set target_url = url_for('play.play_location', id=loc.id) %}
-                        {% call hotkey_link(target_url, link_letters) %}
-                            {{ loc.name if not loc.masked else loc.name|mask_string }}
-                        {% endcall %}
-                    </div>
-                {% endfor %}
-            </div>
-        </section>
-        {% endif %}
-    </div>
 
     <!-- RIGHT COLUMN: Feedback & Logs -->
     <div class="log-column">

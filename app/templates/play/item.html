@@ -139,18 +139,30 @@
                             <span class="label-like">{{ r.rate_duration | formatNum }}s {{ '⚡ Instant' if r.instant }}</span>
                         </div>
                         
-                        {# Ingredients (Sources) #}
+                        <!-- Sources (Ingredients) -->
                         <ul class="source-list label-like">
                             {% for s in r.sources %}
                                 <li>
-                                    {{ '🛠️' if s.preserve else '📉' }} 
-                                    {{ s.q_required | formatNum }}
+                                    <span title="{{ 'Source must be available but is preserved' if s.preserve else 'Gets consumed' }}">
+                                        {{ '🛠️' if s.preserve else '📉' }}
+                                    </span>
                                     {% if s.ingredient.masked %}
-                                        {{ s.ingredient.name | mask_string }}
+                                        {{ s.ingredient.name | mask_string }}:
                                     {% else %}
-                                        {{ s.ingredient.name }}
+                                        {% set target_url = url_for('play.play_item', 
+                                            id=s.ingredient.id, 
+                                            owner_id=s.pile_owner_id,
+                                            char_id=context.char_id,
+                                            loc_id=context.loc_id,
+                                            **({'pos[]': s.pile_pos} if s.pile_pos else {})
+                                        ) %}
+                                        
+                                        {% call hotkey_link(target_url, link_letters) %}
+                                            {{ s.ingredient.name }}
+                                        {% endcall %}:
                                     {% endif %}
-                                    (Have: {{ s.current_stock | formatNum }})
+                                    {{ s.q_required | formatNum }}
+                                    (Have <span class="{{ 'text-danger' if s.current_stock < s.q_required else '' }}">{{ s.current_stock | formatNum }}</span>)
                                 </li>
                             {% endfor %}
                         </ul>
@@ -204,7 +216,10 @@
                 <div class="col-list reverse-lookup-list">
                     {% for entry in used_for_production | sort(attribute='item.name') %}
                         <div class="col-row used-for-row">
-                            {% set target_url = url_for('play.play_item', id=entry.item.id, char_id=request.args.get('char_id'), loc_id=request.args.get('loc_id')) %}
+                            {% set target_url = url_for('play.play_item',
+                                id=entry.item.id,
+                                char_id=context.char_id,
+                                loc_id=context.loc_id) %}
                             {% call hotkey_link(target_url, link_letters) %}
                                 {{ entry.item.name if not entry.item.masked else (entry.item.name | mask_string) }}
                             {% endcall %}
@@ -230,7 +245,10 @@
                 <div class="col-list reverse-lookup-list">
                     {% for entry in byproduct_of | sort(attribute='item.name') %}
                         <div class="col-row byproduct-of-row">
-                            {% set target_url = url_for('play.play_item', id=entry.item.id, char_id=request.args.get('char_id'), loc_id=request.args.get('loc_id')) %}
+                            {% set target_url = url_for('play.play_item',
+                                id=entry.item.id,
+                                char_id=context.char_id,
+                                loc_id=context.loc_id) %}
                             {% call hotkey_link(target_url, link_letters) %}
                                 {{ entry.item.name if not entry.item.masked else (entry.item.name | mask_string) }}
                             {% endcall %}

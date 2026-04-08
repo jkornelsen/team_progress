@@ -6,7 +6,7 @@ from app.models import (
     db, Pile, Progress, Recipe, RecipeSource, RecipeByproduct, Item,
     GENERAL_ID)
 from app.utils import format_num
-from app.src.logic_piles import adjust_quantity
+from app.src.logic_piles import adjust_quantity, resolve_recipe_sources
 from app.src.logic_user_interaction import add_message
 from app.src.logic_event import check_triggers, TriggerException
 
@@ -43,18 +43,13 @@ def can_perform_recipe(game_token, host_id, recipe, batches=1):
                 "Storage limit reached"
                 f" ({format_num(item_def.q_limit)} {item_def.name})")
 
-    # 2. Check Ingredients (Sources)
-    for source in recipe.sources:
-        pile = Pile.query.filter_by(
-            game_token=game_token, owner_id=host_id, item_id=source.item_id
-        ).first()
-        
-        current_qty = pile.quantity if pile else 0.0
-        required = source.q_required * batches
-        
-        if current_qty < required:
-            source_item = Item.query.get((game_token, source.item_id))
-            needed = required - current_qty
+    # 2. Check Sources (Ingredients)
+    resolved = resolve_recipe_sources(game_token, host_id, recipe)
+    for res in resolved:
+        required = res['source_def'].q_required * batches
+        if res['total_available'] < required:
+            source_item = res['item']
+            needed = required - res['total_available']
             return False, f"Missing {format_num(needed)} {source_item.name} (Need {format_num(required)})"
 
     return True, ""

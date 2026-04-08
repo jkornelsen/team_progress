@@ -2,6 +2,31 @@
     "entities": {
         "items": [
             {
+                "id": 8,
+                "name": "Cooked Bacon",
+                "description": "Cooked on the wood stove in a cast iron skillet at home.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "c",
+                "q_limit": 20.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 3,
+                        "rate_amount": 1.0,
+                        "rate_duration": 2.0,
+                        "instant": false,
+                        "sources": [
+                            {"item_id": 12, "q_required": 1.0, "preserve": false},
+                            {"item_id": 13, "q_required": 1.0, "preserve": true}
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
                 "id": 5,
                 "name": "Barn",
                 "description": "Where chores are done.",
@@ -74,34 +99,9 @@
                 ]
             },
             {
-                "id": 8,
-                "name": "Cooked Bacon",
-                "description": "Cooked on the wood stove in a cast iron skillet at home.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "c",
-                "q_limit": 20.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": [
-                    {
-                        "id": 3,
-                        "rate_amount": 1.0,
-                        "rate_duration": 2.0,
-                        "instant": false,
-                        "sources": [
-                            {"item_id": 12, "q_required": 1.0, "preserve": false},
-                            {"item_id": 13, "q_required": 1.0, "preserve": true}
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
-                    }
-                ]
-            },
-            {
                 "id": 9,
                 "name": "Knife",
-                "description": "For butchering. Not much of a weapon, at least in the hands of a young girl.",
+                "description": "For butchering. Not much of a weapon, at least not in the hands of a young girl.",
                 "attribs": [],
                 "abilities": [],
                 "storage_type": "c",
@@ -193,6 +193,18 @@
                 "toplevel": false,
                 "masked": false,
                 "recipes": []
+            },
+            {
+                "id": 22,
+                "name": "Branch",
+                "description": "Safer for fending off animals than a knife.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "c",
+                "q_limit": 0.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
             }
         ],
         "locations": [
@@ -211,15 +223,7 @@
                     {"item_id": 5, "quantity": 1.0, "position": null}
                 ],
                 "item_refs": [],
-                "destinations": [
-                    {
-                        "loc2_id": 16,
-                        "duration": 1,
-                        "door1": null,
-                        "door2": null,
-                        "bidirectional": false
-                    }
-                ]
+                "destinations": []
             },
             {
                 "id": 15,
@@ -235,15 +239,7 @@
                     {"item_id": 13, "quantity": 1.0, "position": null}
                 ],
                 "item_refs": [],
-                "destinations": [
-                    {
-                        "loc2_id": 16,
-                        "duration": 1,
-                        "door1": null,
-                        "door2": null,
-                        "bidirectional": false
-                    }
-                ]
+                "destinations": []
             },
             {
                 "id": 16,
@@ -251,8 +247,8 @@
                 "description": "Easy to get lost in. After the sun goes down, do a *Travel Danger* check.",
                 "attribs": [],
                 "abilities": [20],
-                "dimensions": null,
-                "excluded": null,
+                "dimensions": [12, 5],
+                "excluded": [5, 4, 9, 5],
                 "toplevel": false,
                 "masked": true,
                 "items": [],
@@ -260,17 +256,17 @@
                 "destinations": [
                     {
                         "loc2_id": 15,
-                        "duration": 8,
-                        "door1": null,
+                        "duration": 1,
+                        "door1": [1, 2],
                         "door2": null,
-                        "bidirectional": false
+                        "bidirectional": true
                     },
                     {
                         "loc2_id": 14,
                         "duration": 1,
-                        "door1": null,
+                        "door1": [12, 4],
                         "door2": null,
-                        "bidirectional": false
+                        "bidirectional": true
                     }
                 ]
             }
@@ -281,7 +277,7 @@
                 "name": "Suzy",
                 "description": "Sent to fetch bacon for dinner by her mother.",
                 "attribs": [
-                    [2, 2.0],
+                    [2, 1.0],
                     [4, 1.0]
                 ],
                 "abilities": [21],
@@ -299,7 +295,7 @@
                 "name": "Mom",
                 "description": "Suzy's mother. Good understanding of the trails in the woods.",
                 "attribs": [
-                    [2, 7.0]
+                    [2, 6.0]
                 ],
                 "abilities": [],
                 "toplevel": true,
@@ -318,6 +314,18 @@
                 "abilities": [],
                 "toplevel": false,
                 "location_id": 14,
+                "position": null,
+                "travel_party": "",
+                "items": []
+            },
+            {
+                "id": 23,
+                "name": "Wolf",
+                "description": "Shaggy forest dweller with teeth and a snarl.",
+                "attribs": [],
+                "abilities": [],
+                "toplevel": false,
+                "location_id": null,
                 "position": null,
                 "travel_party": "",
                 "items": []

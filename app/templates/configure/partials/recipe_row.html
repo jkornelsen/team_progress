@@ -4,7 +4,7 @@
     
     <div class="flex-between align-center">
         <h4>
-            Recipe #<span class="recipe-display-number">{{ recipe_index + 1 if recipe_index is number else '???' }}</span>
+            Recipe <span class="recipe-display-number">{{ '#' ~ (recipe_index + 1) if recipe_index is number else '' }}</span>
         </h4>
         <button type="button" class="btn-sm dangerous-button" onclick="this.closest('.recipe-card').remove()">Remove Recipe</button>
     </div>
@@ -32,7 +32,7 @@
     <div class="column-container">
         <!-- 1. SOURCES (Ingredients) -->
         <div class="sub-section">
-            <h5>📉 Ingredients (Sources)</h5>
+            <h5>📉 Sources (Ingredients)</h5>
             <div class="source-list" id="sources-{{ recipe_index }}">
                 {% for source in recipe.sources if recipe %}
                 <div class="flex-row gap-5 align-center spacious-bottom">
@@ -45,7 +45,7 @@
                            value="{{ source.q_required }}" step="any" style="width: 60px;">
                     <label class="checkbox-label">
                         <input type="checkbox" name="recipes[{{ recipe_index }}][sources][{{ loop.index0 }}][preserve]" 
-                               {{ 'checked' if source.preserve }}> Tool?
+                               {{ 'checked' if source.preserve }}> Preserve
                     </label>
                 </div>
                 {% endfor %}

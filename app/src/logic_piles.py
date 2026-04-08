@@ -1,6 +1,8 @@
 import logging
 from flask import g
-from app.models import db, Pile, Item, Progress, GENERAL_ID
+from app.models import (
+    db, Pile, Entity, Item, Character, Location, StorageType, GENERAL_ID,
+    Progress)
 from app.src.logic_discovery import check_item_unmasking
 
 logger = logging.getLogger(__name__)
@@ -33,6 +35,118 @@ def get_or_create_pile(item_id, owner_id, position=None, slot=None):
         db.session.add(pile)
         
     return pile
+
+def get_accessible_quantity(item_id, owner_id):
+    """
+    Returns the total quantity of an item available to the owner.
+    If owner is a Character, includes items at their current location.
+    """
+    game_token = g.game_token
+    total = 0.0
+
+    # 1. Get stock from the primary owner
+    primary_piles = Pile.query.filter_by(
+        game_token=game_token, item_id=item_id, owner_id=owner_id
+    ).all()
+    total += sum(p.quantity for p in primary_piles)
+
+    # 2. If the owner is a Character, add stock from their current Location
+    owner_entity = Entity.query.get((game_token, owner_id))
+    if owner_entity and owner_entity.entity_type == 'character':
+        char = Character.query.get((game_token, owner_id))
+        if char and char.location_id:
+            loc_piles = Pile.query.filter_by(
+                game_token=game_token, 
+                item_id=item_id, 
+                owner_id=char.location_id
+            ).all()
+            total += sum(p.quantity for p in loc_piles)
+
+    return total
+
+def resolve_recipe_sources(game_token, host_id, recipe):
+    """
+    Returns a list of resolved source data for a recipe.
+    Respects StorageType restrictions.
+    """
+    resolved_sources = []
+    
+    # 1. Determine Context
+    host = Entity.query.get((game_token, host_id))
+    location_id = None
+    if host.entity_type == 'character':
+        char = Character.query.get((game_token, host_id))
+        location_id = char.location_id
+    elif host.entity_type == 'location':
+        location_id = host.id
+
+    for source in recipe.sources:
+        item = source.ingredient
+        potential_owner_ids = []
+        
+        # Define search priorities based on storage type
+        if item.storage_type == StorageType.UNIVERSAL:
+            potential_owner_ids = [GENERAL_ID]
+        elif item.storage_type == StorageType.LOCAL:
+            if location_id:
+                potential_owner_ids = [location_id]
+        elif item.storage_type == StorageType.CARRIED:
+            potential_owner_ids = [host_id]
+            if location_id:
+                potential_owner_ids.append(location_id)
+
+        # Query existing piles
+        valid_piles = Pile.query.filter(
+            Pile.game_token == game_token,
+            Pile.item_id == item.id,
+            Pile.owner_id.in_(potential_owner_ids)
+        ).all()
+
+        total_qty = sum(p.quantity for p in valid_piles)
+        
+        # Pick a representative pile for the UI link
+        # Priority: Host -> Location -> General
+        representative_pile = None
+        anticipated_owner_id = None
+        anticipated_owner_type = None
+
+        if valid_piles:
+            def sort_priority(p):
+                if p.owner_id == host_id: return 0
+                if p.owner_id == location_id: return 1
+                return 2
+            sorted_piles = sorted(valid_piles, key=sort_priority)
+            representative_pile = sorted_piles[0]
+            anticipated_owner_id = representative_pile.owner_id
+
+            # Fetch type for the URL builder
+            ent = Entity.query.get((game_token, anticipated_owner_id))
+            anticipated_owner_type = ent.entity_type if ent else 'entity'
+        else:
+            # --- ANTICIPATED PILE LOGIC (No piles found) ---
+            if item.storage_type == StorageType.UNIVERSAL:
+                anticipated_owner_id = GENERAL_ID
+                anticipated_owner_type = 'entity'
+            elif item.storage_type == StorageType.LOCAL:
+                anticipated_owner_id = location_id
+                anticipated_owner_type = 'location'
+            else: # CARRIED
+                # If we are looking at a character, stay with that character
+                # If we are looking at a location, stay with that location
+                anticipated_owner_id = host_id
+                anticipated_owner_type = host.entity_type
+
+        resolved_sources.append({
+            'source_def': source,
+            'item': item,
+            'total_available': total_qty,
+            'representative_pile': representative_pile,
+            'anticipated_owner_id': anticipated_owner_id,
+            'anticipated_owner_type': anticipated_owner_type,
+            'all_piles': valid_piles
+        })
+
+    return resolved_sources
 
 def ensure_owner_up_to_date(owner_id):
     """

@@ -87,7 +87,7 @@
 
                 {% if has_nonadjacent and not destinations %}
                     <div class="info-box label-like text-dim" style="border: 1px dashed #444; padding: 10px; margin-top: 10px;">
-                        There are exits in this location. Move your character next to a door (🚪) to travel.
+                        There are exits in this location. Move your character next to a 🚪door to travel.
                     </div>
                 {% endif %}
             </div>
@@ -126,7 +126,8 @@
                                     <div class="col-row eqipped-row">
                                         <span class="label-like">[{{ pile.slot }}]</span>
                                         
-                                        {% set item_url = url_for('play.play_item', id=pile.item_id, char_id=character.id) %}
+                                        {% set item_url = url_for('play.play_item',
+                                            id=pile.item_id, owner_id=character.id) %}
                                         {% call hotkey_link(item_url, link_letters) %}
                                             {{ pile.item.name }}
                                         {% endcall %}
@@ -144,7 +145,7 @@
                             <div class="col-list twocol-list">
                                 {% for pile in backpack %}
                                     <div class="col-row twocol-row">
-                                        {% set item_url = url_for('play.play_item', id=pile.item_id, char_id=character.id) %}
+                                        {% set item_url = url_for('play.play_item', id=pile.item_id, owner_id=character.id) %}
                                         {% call hotkey_link(item_url, link_letters) %}
                                             {{ pile.item.name }}
                                         {% endcall %}

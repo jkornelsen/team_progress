@@ -69,7 +69,8 @@
                 <div class="col-list item-ref-list">
                 {% for pile in inventory_piles %}
                     <div class="col-row item-ref-row" style="--grid-cols: 1fr auto;">
-                        {% set target_url = url_for('play.play_item', id=pile.item_id, loc_id=location.id, pos=pile.position) %}
+                        {% set target_url = url_for('play.play_item',
+                            id=pile.item_id, owner_id=location.id, pos=pile.position) %}
                         {% call hotkey_link(target_url, link_letters) %}
                             {{ pile.item.name if not pile.item.masked else (pile.item.name | mask_string) }}
                         {% endcall %}
@@ -88,11 +89,12 @@
 
             {% if referenced_items %}
             <section class="outer-border">
-                <h3 title="Global items accessible from here">Referenced Items</h3>
+                <h3 title="Global items accessible from here">Pinned General</h3>
                 <div class="col-list twocol-list">
                 {% for ref in referenced_items %}
                     <div class="col-row twocol-row">
-                        {% set target_url = url_for('play.play_item', id=ref.item.id) %}
+                        {% set target_url = url_for('play.play_item',
+                            id=ref.item.id, owner_id=GENERAL_ID) %}
                         {% call hotkey_link(target_url, link_letters) %}
                             {{ ref.item.name }}
                         {% endcall %}
@@ -268,7 +270,8 @@
             x: {{ pile.position[0] }}, 
             y: {{ pile.position[1] }}, 
             icon: getFirstGrapheme("{{ pile.item.name }}"),
-            link: "{{ url_for('play.play_item', id=pile.item_id, loc_id=location.id) }}"
+            link: "{{ url_for('play.play_item',
+                id=pile.item_id, owner_id=location.id, pos=pile.position) }}"
         },
         {% endfor %}
     ];
@@ -301,9 +304,15 @@
             }
         };
 
-        exits.forEach(e => renderToken(e, 'exit-token'));
-        items.forEach(i => renderToken(i, 'item-token'));
         Object.values(chars).forEach(c => renderToken(c, 'char-token'));
+        exits.forEach(e => {
+            const isOccupiedByChar = Object.values(chars).some(
+                c => c.x === e.x && c.y === e.y);
+            if (!isOccupiedByChar) {
+                renderToken(e, 'exit-token');
+            }
+        });
+        items.forEach(i => renderToken(i, 'item-token'));
         updateTravelUI();
     }
 
