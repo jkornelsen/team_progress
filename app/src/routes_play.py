@@ -100,8 +100,8 @@ def play_item(id):
     if not pile:
         pile = Pile(item_id=id, owner_id=owner.id, quantity=0.0, position=pos)
 
-    # 3. Enrich Recipes with Failure Reasons
-    # This allows the UI to show the 🚫 icon and the specific reason tooltip immediately
+    # 3. Recipes that PRODUCE this item
+    # Enriched allows UI to show 🚫 icon and specific reason tooltip.
     enriched_recipes = []
     for r in item.recipes:
         can_do, reason = can_perform_recipe(game_token, owner.id, r)
@@ -118,7 +118,6 @@ def play_item(id):
                 'preserve': s.preserve,
                 'current_stock': stock_pile.quantity if stock_pile else 0.0
             })
-
         enriched_recipes.append({
             'id': r.id,
             'rate_amount': r.rate_amount,
@@ -129,12 +128,32 @@ def play_item(id):
             'sources': sources_with_stock
         })
 
-    # 4. Check for active progress
+    # 4. Recipes where this item is a SOURCE (Ingredient)
+    used_for_production = []
+    for source_link in item.as_ingredient:
+        product = source_link.recipe.product
+        if product.id != id:
+            used_for_production.append({
+                'item': product,
+                'q_required': source_link.q_required,
+                'preserve': source_link.preserve
+            })
+
+    # 5. Recipes where this item is a BYPRODUCT
+    byproduct_of = []
+    for byproduct_link in item.as_byproducts:
+        product = byproduct_link.recipe.product
+        byproduct_of.append({
+            'item': product,
+            'rate_amount': byproduct_link.rate_amount
+        })
+
+    # 6. Check for active progress
     current_progress = Progress.query.filter_by(
         game_token=game_token, host_id=owner.id
     ).first()
 
-    # 5. UI Context: Characters nearby (for the "Pick Up" button)
+    # 7. UI Context: Characters nearby (for the "Pick Up" button)
     chars_here = []
     if loc_id:
         chars_here = Character.query.filter_by(game_token=game_token, location_id=loc_id).all()
@@ -146,6 +165,8 @@ def play_item(id):
         owner=owner,
         pile=pile,
         recipes=enriched_recipes,
+        used_for_production=used_for_production,
+        byproduct_of=byproduct_of,
         progress=current_progress,
         available_slots=overall.slots,
         chars_here=chars_here,

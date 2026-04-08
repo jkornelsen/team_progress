@@ -182,12 +182,32 @@ select option {
 .radio-label:hover, .checkbox-label:hover { background-color: #333; }
 
 .footer-actions {
+    /* Layout Properties */
     display: flex;
     justify-content: space-between;
-    margin-top: 40px;
-    padding: 20px;
-    border-top: 1px solid var(--border);
+    align-items: center;
+    justify-content: center;
     gap: 15px;
+    padding: 20px;
+    margin-top: 40px;
+    border-top: 1px solid var(--border);
+
+    /* Sticky Behavior */
+    position: sticky;
+    bottom: 0;
+    background: var(--bg-panel);
+    z-index: 10;
+    
+    /* Visual separation when floating */
+    box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.05); 
+}
+
+/* Ensure the 'Cancel' link is as tall as the buttons */
+.footer-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
 }
 
 /* ==========================================================================

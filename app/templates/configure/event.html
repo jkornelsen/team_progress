@@ -1,4 +1,5 @@
 {% extends 'layout/base.html' %}
+{% from 'configure/partials/button_macros.html' import footer_actions %}
 
 {% block upper_left %}
     <nav class="nav-container">
@@ -152,18 +153,10 @@
         </section>
 
         <!-- Footer Actions -->
-        <div class="footer-actions flex-between">
-            <div class="gap-20" style="display: flex">
-                <button type="submit" name="duplicate" class="btn">Save & Duplicate</button>
-                <button type="submit" name="save" class="go-button">Save Changes</button>
-                <a href="{{ url_for('configure.cancel') }}" class="btn">Cancel</a>
-            </div>
-            {% if event.id %}
-            <div>
-                <button type="submit" name="delete" class="dangerous-button" onclick="return confirm('Delete this event?')">Delete Event</button>
-            </div>
-            {% endif %}
-        </div>
+        {{ footer_actions(
+            entity_name='event', 
+            entity_id=event.id
+        ) }}
     </form>
 </div>
 

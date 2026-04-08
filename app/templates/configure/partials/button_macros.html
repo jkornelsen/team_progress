@@ -1,0 +1,43 @@
+{% macro footer_actions(entity_name=None, entity_id=None) %}
+<div class="footer-actions flex-between">
+    <div class="gap-20" style="display: flex">
+        {% if entity_name %}
+        <button type="submit" name="duplicate" class="btn">Save & Duplicate</button>
+        {% endif %}
+        
+        <button type="submit" name="save" class="go-button">Save Changes</button>
+        <a href="{{ url_for('configure.cancel') }}" class="btn">Cancel</a>
+    </div>
+
+    {% if entity_id %}
+    <div>
+        <button type="submit" name="delete" class="dangerous-button" 
+                onclick="return confirm('Delete this {{ entity_name }}?')">
+            Delete {{ entity_name|capitalize }}
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    // Keyboard Shortcut (Ctrl+S)
+    document.addEventListener('keydown', function(e) {
+        if (typeof isMobile !== 'undefined' && isMobile) return;
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+            e.preventDefault();
+            const saveBtn = document.querySelector('button[name="save"]');
+            if (saveBtn) saveBtn.click();
+        }
+    });
+
+    // Update button text on Desktop
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof isMobile !== 'undefined' && !isMobile) {
+            const saveBtn = document.querySelector('button[name="save"]');
+            if (saveBtn && !saveBtn.textContent.includes('[Ctrl+S]')) {
+                saveBtn.textContent += ' [Ctrl+S]';
+            }
+        }
+    });
+</script>
+{% endmacro %}

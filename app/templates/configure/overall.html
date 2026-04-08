@@ -1,4 +1,5 @@
 {% extends 'layout/base.html' %}
+{% from 'configure/partials/button_macros.html' import footer_actions %}
 
 {% block upper_left %}
     <nav class="nav-container">
@@ -57,7 +58,7 @@
             <p class="label-like spacious-bottom">Define what needs to happen to "Win" this scenario. All conditions must be met.</p>
             
             <div id="winreq-list">
-                {% for req in win_reqs %}
+                {% for req in overall.win_reqs %}
                 <div class="winreq-card outer-border spacious-bottom">
                     <div class="flex-between">
                         <span class="text-accent">Condition #{{ loop.index }}</span>
@@ -67,37 +68,37 @@
                     <div class="grid-3-col spacious-top">
                         <!-- Target Entity (Item or Character) -->
                         <div class="form-group">
-                            <label>Target Entity:</label>
+                            <label>Target Entity</label>
                             <select name="winreqs[{{ loop.index0 }}][target_id]">
                                 <option value="">(None)</option>
                                 <optgroup label="Items">
-                                    {% for i in all_items %}<option value="{{ i.id }}" {{ 'selected' if i.id == req.item_id }}>{{ i.name }}</option>{% endfor %}
+                                    {% for i in items %}<option value="{{ i.id }}" {{ 'selected' if i.id == req.item_id }}>{{ i.name }}</option>{% endfor %}
                                 </optgroup>
                                 <optgroup label="Characters">
-                                    {% for c in all_chars %}<option value="{{ c.id }}" {{ 'selected' if c.id == req.char_id }}>{{ c.name }}</option>{% endfor %}
+                                    {% for c in chars %}<option value="{{ c.id }}" {{ 'selected' if c.id == req.char_id }}>{{ c.name }}</option>{% endfor %}
                                 </optgroup>
                             </select>
                         </div>
 
                         <!-- Target Context (Location) -->
                         <div class="form-group">
-                            <label>Must be at Location:</label>
+                            <label>Must be at Location</label>
                             <select name="winreqs[{{ loop.index0 }}][loc_id]">
                                 <option value="">(Anywhere)</option>
-                                {% for l in all_locations %}
+                                {% for l in locations %}
                                     <option value="{{ l.id }}" {{ 'selected' if l.id == req.loc_id }}>{{ l.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
 
                         <!-- Requirements (Quantity or Attribute) -->
-                        <div class="form-group">
-                            <label>Required Value:</label>
+                        <div class="form-group" style="background-color: #222">
+                            <label>Required Value</label>
                             <div class="flex-row gap-5">
                                 <input type="number" name="winreqs[{{ loop.index0 }}][quantity]" value="{{ req.quantity or req.attrib_value or 0 }}" step="any">
                                 <select name="winreqs[{{ loop.index0 }}][attrib_id]" style="width: 100px;">
                                     <option value="">(Qty)</option>
-                                    {% for a in all_attribs %}
+                                    {% for a in attribs %}
                                         <option value="{{ a.id }}" {{ 'selected' if a.id == req.attrib_id }}>{{ a.name }}</option>
                                     {% endfor %}
                                 </select>
@@ -110,10 +111,7 @@
         </section>
 
         <!-- Form Actions -->
-        <div class="footer-actions flex-between">
-            <a href="{{ url_for('configure.index') }}" class="btn">Cancel</a>
-            <button type="submit" class="go-button" style="padding: 10px 30px;">Save Overall Configuration</button>
-        </div>
+        {{ footer_actions() }}
     </form>
 </div>
 
@@ -129,15 +127,15 @@
                 <label>Target Entity:</label>
                 <select name="winreqs[INDEX][target_id]">
                     <option value="">(None)</option>
-                    <optgroup label="Items">{% for i in all_items %}<option value="{{ i.id }}">{{ i.name }}</option>{% endfor %}</optgroup>
-                    <optgroup label="Characters">{% for c in all_chars %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</optgroup>
+                    <optgroup label="Items">{% for i in items %}<option value="{{ i.id }}">{{ i.name }}</option>{% endfor %}</optgroup>
+                    <optgroup label="Characters">{% for c in chars %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</optgroup>
                 </select>
             </div>
             <div class="form-group">
                 <label>Must be at Location:</label>
                 <select name="winreqs[INDEX][loc_id]">
                     <option value="">(Anywhere)</option>
-                    {% for l in all_locations %}<option value="{{ l.id }}">{{ l.name }}</option>{% endfor %}
+                    {% for l in locations %}<option value="{{ l.id }}">{{ l.name }}</option>{% endfor %}
                 </select>
             </div>
             <div class="form-group">
@@ -146,7 +144,7 @@
                     <input type="number" name="winreqs[INDEX][quantity]" value="1" step="any">
                     <select name="winreqs[INDEX][attrib_id]" style="width: 100px;">
                         <option value="">(Qty)</option>
-                        {% for a in all_attribs %}<option value="{{ a.id }}">{{ a.name }}</option>{% endfor %}
+                        {% for a in attribs %}<option value="{{ a.id }}">{{ a.name }}</option>{% endfor %}
                     </select>
                 </div>
             </div>

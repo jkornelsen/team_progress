@@ -1304,8 +1304,8 @@ class Overall(db.Model, DictHydrator):
 
 class WinRequirement(db.Model, DictHydrator):
     __tablename__ = 'win_requirements'
-    game_token = db.Column(db.String(50), primary_key=True)
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    game_token = db.Column(db.String(50), index=True, nullable=False)
     item_id = db.Column(db.Integer)
     quantity = db.Column(db.Float)
     char_id = db.Column(db.Integer)

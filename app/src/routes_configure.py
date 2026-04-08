@@ -63,7 +63,15 @@ def edit_overall():
         db.session.commit()
         return redirect(url_for('configure.index'))
         
-    return render_template('configure/overall.html', overall=overall)
+    entities = {
+        name: model.query.filter_by(game_token=g.game_token).order_by(model.name).all()
+        for name, model in ENTITIES.items()
+    }
+    return render_template(
+        'configure/overall.html',
+        overall=overall,
+        **entities
+    )
 
 @configure_bp.route('/cancel')
 def cancel():

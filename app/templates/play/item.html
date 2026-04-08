@@ -1,5 +1,5 @@
 {% extends 'layout/base.html' %}
-{% from 'layout/macros.html' import hotkey_link, render_attr %}
+{% from 'layout/hotkey_macros.html' import hotkey_link, render_attr %}
 
 {% block upper_left %}
     <nav class="nav-container">
@@ -130,7 +130,7 @@
         <div class="production-column">
             {% if recipes %}
             <section class="outer-border">
-                <h3>Production (Recipes)</h3>
+                <h3>Production Recipes</h3>
                 <div class="recipe-list">
                     {% for r in recipes %}
                     <div class="recipe-card {{ 'active' if progress and progress.recipe_id == r.id }}">
@@ -193,6 +193,48 @@
                             {% endif %}
                         </div>
                     </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
+            {% if used_for_production %}
+            <section class="outer-border">
+                <h3>Used To Produce</h3>
+                <div class="col-list reverse-lookup-list">
+                    {% for entry in used_for_production | sort(attribute='item.name') %}
+                        <div class="col-row used-for-row">
+                            {% set target_url = url_for('play.play_item', id=entry.item.id, char_id=request.args.get('char_id'), loc_id=request.args.get('loc_id')) %}
+                            {% call hotkey_link(target_url, link_letters) %}
+                                {{ entry.item.name if not entry.item.masked else (entry.item.name | mask_string) }}
+                            {% endcall %}
+
+                            <span class="label-like">
+                                {% if entry.preserve %}
+                                    ({{ entry.q_required | formatNum }})
+                                {% else %}
+                                    {{ entry.q_required | formatNum }}
+                                {% endif %}
+                            </span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
+            {# SECTION: BYPRODUCT OF #}
+            {% if byproduct_of %}
+            <section class="outer-border">
+                <h3>Byproduct Of</h3>
+                <p class="label-like text-dim">Obtained while producing:</p>
+                <div class="col-list reverse-lookup-list">
+                    {% for entry in byproduct_of | sort(attribute='item.name') %}
+                        <div class="col-row byproduct-of-row">
+                            {% set target_url = url_for('play.play_item', id=entry.item.id, char_id=request.args.get('char_id'), loc_id=request.args.get('loc_id')) %}
+                            {% call hotkey_link(target_url, link_letters) %}
+                                {{ entry.item.name if not entry.item.masked else (entry.item.name | mask_string) }}
+                            {% endcall %}
+                        </div>
                     {% endfor %}
                 </div>
             </section>
@@ -337,9 +379,11 @@
 </script>
 
 <style>
+    .action-box { display: flex; gap: 10px; margin-bottom: 10px; }
     .recipe-list { display: flex; flex-direction: column; gap: 15px; }
     .source-list { list-style: none; padding: 5px 0; margin: 0; font-size: 0.85em; }
-    .mini-input { width: 80px; background: #000; color: white; border: 1px solid var(--border); padding: 5px; }
-    .action-box { display: flex; gap: 10px; margin-bottom: 10px; }
+    .used-for-row { --grid-cols: 1fr auto; }
+    .byproduct-of-row { --grid-cols: 1fr; }
+    .reverse-lookup-list { --col-list-max-width: 350px; }
 </style>
 {% endblock %}
