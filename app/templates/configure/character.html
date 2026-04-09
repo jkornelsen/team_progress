@@ -16,15 +16,28 @@
 {% macro attrib_row(index, av=None, all_attribs=[]) %}
     {% set selected_id = av.attrib_id if av else None %}
     {% set val = av.value if av else 0 %}
+    {% set selected_attrib = none %}
+    {% for attr in all_attribs %}
+        {% if attr.id == selected_id %}
+            {% set selected_attrib = attr %}
+        {% endif %}
+    {% endfor %}
     <div class="col-row attrib-row">
-        <select name="attribs[{{ index }}][id]">
+        <select name="attribs[{{ index }}][id]" onchange="updateAttribInput(this)">
             {% for attr_def in all_attribs %}
-                <option value="{{ attr_def.id }}" {{ 'selected' if attr_def.id == selected_id }}>
+                <option value="{{ attr_def.id }}" data-is-binary="{{ attr_def.is_binary }}" {{ 'selected' if attr_def.id == selected_id }}>
                     {{ attr_def.name }}
                 </option>
             {% endfor %}
         </select>
-        <input type="text" name="attribs[{{ index }}][value]" value="{{ val }}" placeholder="Value">
+        {% if selected_attrib and selected_attrib.is_binary %}
+            <input type="hidden" id="attrib-value-{{ index }}" name="attribs[{{ index }}][value]" value="{{ 1 if val == 1 or val == 1.0 else 0 }}">
+            <label class="checkbox-label">
+                <input type="checkbox" onchange="updateBinaryValue(this, {{ index }})" {{ 'checked' if val == 1 or val == 1.0 }}>
+            </label>
+        {% else %}
+            <input type="text" name="attribs[{{ index }}][value]" value="{{ val }}" placeholder="Value">
+        {% endif %}
         <button type="button" class="btn-sm dangerous-button" 
                 onclick="removeRow(this, 'attrib-list')">×</button>
     </div>
@@ -243,6 +256,15 @@
         const index = Date.now(); 
         const html = template.replace(/__INDEX__/g, index);
         list.insertAdjacentHTML('beforeend', html);
+        
+        // Initialize attribute row UI if it's a new attribute
+        if (templateId === 'attrib-template') {
+            const newRow = list.lastElementChild;
+            const selectElement = newRow.querySelector('select');
+            if (selectElement) {
+                updateAttribInput(selectElement);
+            }
+        }
     }
 
     function removeRow(btn, listId) {
@@ -257,10 +279,98 @@
             if (emptyMsg) emptyMsg.classList.remove('hidden');
         }
     }
+
+    function updateBinaryValue(checkbox, index) {
+        const hiddenInput = document.getElementById(`attrib-value-${index}`);
+        hiddenInput.value = checkbox.checked ? '1' : '0';
+    }
+
+    function updateAttribInput(selectElement) {
+        const row = selectElement.parentElement;
+        const selectedOption = selectElement.options[selectElement.selectedIndex];
+        const isBinary = selectedOption.dataset.isBinary === 'True' || selectedOption.dataset.isBinary === 'true';
+        
+        // Find the value input/checkbox
+        const textInput = row.querySelector('input[type="text"]');
+        const checkbox = row.querySelector('input[type="checkbox"]');
+        const hiddenField = row.querySelector('input[type="hidden"]');
+        const label = row.querySelector('label.checkbox-label');
+        
+        if (isBinary) {
+            // Replace with hidden + checkbox
+            if (textInput) {
+                const currentValue = textInput.value;
+                const name = textInput.name;
+                const index = name.match(/\[(\d+)\]/)[1];
+                
+                // Create hidden field
+                const hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.id = `attrib-value-${index}`;
+                hidden.name = name;
+                hidden.value = currentValue == '1' || currentValue == '1.0' ? '1' : '0';
+                
+                // Create label with checkbox
+                const newLabel = document.createElement('label');
+                newLabel.className = 'checkbox-label';
+                
+                const newCheckbox = document.createElement('input');
+                newCheckbox.type = 'checkbox';
+                newCheckbox.checked = currentValue == '1' || currentValue == '1.0';
+                newCheckbox.onchange = () => updateBinaryValue(newCheckbox, index);
+                
+                newLabel.appendChild(newCheckbox);
+                
+                textInput.replaceWith(hidden);
+                selectElement.parentElement.insertBefore(newLabel, hidden.nextSibling);
+            }
+        } else {
+            // Replace checkbox + hidden with text input
+            if (checkbox) {
+                const hiddenInput = row.querySelector('input[type="hidden"]');
+                const currentValue = hiddenInput ? hiddenInput.value : '0';
+                const name = hiddenInput ? hiddenInput.name : checkbox.name;
+                
+                const newInput = document.createElement('input');
+                newInput.type = 'text';
+                newInput.name = name;
+                newInput.placeholder = 'Value';
+                newInput.value = currentValue;
+                
+                if (hiddenInput) hiddenInput.remove();
+                if (label) label.replaceWith(newInput);
+            }
+        }
+    }
+
+    // Initialize all existing attribute rows on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        const attribList = document.getElementById('attrib-list');
+        if (attribList) {
+            const selectElements = attribList.querySelectorAll('select');
+            selectElements.forEach(selectElement => {
+                updateAttribInput(selectElement);
+            });
+            
+            // Initialize binary checkboxes with onchange handlers
+            const binaryCheckboxes = attribList.querySelectorAll('input[type="checkbox"]:not([name])');
+            binaryCheckboxes.forEach((checkbox, index) => {
+                const row = checkbox.closest('.col-row');
+                const hiddenInput = row.querySelector('input[type="hidden"]');
+                if (hiddenInput) {
+                    const indexMatch = hiddenInput.id.match(/attrib-value-(\d+)/);
+                    if (indexMatch) {
+                        const attribIndex = indexMatch[1];
+                        checkbox.onchange = () => updateBinaryValue(checkbox, attribIndex);
+                    }
+                }
+            });
+        }
+    });
+
 </script>
 
 <style>
     .grid-2-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    .checkbox-label { display: block; cursor: pointer; font-size: 0.9em; margin-bottom: 5px; }
 </style>
 {% endblock %}

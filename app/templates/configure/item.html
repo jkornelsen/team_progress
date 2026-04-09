@@ -92,6 +92,7 @@
             <div id="recipes-container" class="spacious-top">
                 {# Recipes are injected here via JS/Jinja loop #}
                 {% for recipe in recipes %}
+                    {% set recipe_index = loop.index0 %}
                     {% include 'configure/partials/recipe_row.html' %}
                 {% endfor %}
             </div>
@@ -143,15 +144,15 @@
 
 <!-- 4. Template for an Attribute Requirement Row -->
 <template id="attrib-req-template">
-    <div class="flex-row gap-10 align-center spacious-bottom">
-        <select name="recipes[RECIPE_INDEX][attrib_reqs][SUB_INDEX][attrib_id]">
+    <div class="flex-row gap-10 align-center spacious-bottom attrib-req-row">
+        <select name="recipes[RECIPE_INDEX][attrib_reqs][SUB_INDEX][attrib_id]" onchange="updateAttribReqInput(this)">
             {% for a in all_attribs %}
-                <option value="{{ a.id }}">{{ a.name }}</option>
+                <option value="{{ a.id }}" data-is-binary="{{ a.is_binary }}">{{ a.name }}</option>
             {% endfor %}
         </select>
-        <span class="label-like">Range:</span>
-        <input type="number" name="recipes[RECIPE_INDEX][attrib_reqs][SUB_INDEX][min]" placeholder="Min" step="any" style="width: 70px;">
-        <input type="number" name="recipes[RECIPE_INDEX][attrib_reqs][SUB_INDEX][max]" placeholder="Max" step="any" style="width: 70px;">
+        <span class="label-like range-label">Range:</span>
+        <input type="number" name="recipes[RECIPE_INDEX][attrib_reqs][SUB_INDEX][min]" placeholder="Min" step="any" style="width: 70px;" class="range-input">
+        <input type="number" name="recipes[RECIPE_INDEX][attrib_reqs][SUB_INDEX][max]" placeholder="Max" step="any" style="width: 70px;" class="range-input">
         <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
     </div>
 </template>
@@ -168,6 +169,64 @@
             }
         });
     });
+
+    /**
+     * Updates the attribute requirement input based on whether the attribute is binary
+     */
+    function updateAttribReqInput(selectElement) {
+        const row = selectElement.parentElement;
+        const selectedOption = selectElement.options[selectElement.selectedIndex];
+        const isBinary = selectedOption.dataset.isBinary === 'True' || selectedOption.dataset.isBinary === 'true';
+        
+        const rangeLabel = row.querySelector('.range-label');
+        const minInput = row.querySelector('input[name*="[min]"]');
+        const maxInput = row.querySelector('input[name*="[max]"]');
+        
+        const syncCheckbox = (checkbox) => {
+            if (!checkbox) return;
+            checkbox.onchange = (e) => {
+                if (minInput) minInput.value = e.target.checked ? '1' : '0';
+                if (maxInput) maxInput.value = e.target.checked ? '1' : '0';
+            };
+            if (minInput && maxInput) {
+                const minVal = parseFloat(minInput.value) || 0;
+                const maxVal = parseFloat(maxInput.value) || 0;
+                checkbox.checked = minVal > 0 || maxVal > 0;
+            }
+        };
+
+        if (isBinary) {
+            // Hide range label/inputs, show checkbox
+            if (minInput) minInput.style.display = 'none';
+            if (maxInput) maxInput.style.display = 'none';
+            if (rangeLabel) rangeLabel.style.display = 'none';
+            
+            // Find or create checkbox
+            let checkbox = row.querySelector('input[type="checkbox"]');
+            if (!checkbox) {
+                const label = document.createElement('label');
+                label.className = 'checkbox-label';
+                label.style.margin = '0';
+                const checkboxInput = document.createElement('input');
+                checkboxInput.type = 'checkbox';
+                checkboxInput.style.marginRight = '5px';
+                label.appendChild(checkboxInput);
+                if (minInput) minInput.parentElement.insertBefore(label, minInput);
+                checkbox = checkboxInput;
+            }
+            syncCheckbox(checkbox);
+        } else {
+            // Show range inputs, hide checkbox
+            if (minInput) minInput.style.display = 'inline';
+            if (maxInput) maxInput.style.display = 'inline';
+            if (rangeLabel) rangeLabel.style.display = 'inline';
+            
+            const checkbox = row.querySelector('input[type="checkbox"]');
+            if (checkbox && checkbox.parentElement.tagName === 'LABEL') {
+                checkbox.parentElement.remove();
+            }
+        }
+    }
 
     /**
      * Adds a top-level Recipe Card
@@ -200,6 +259,24 @@
     // Convenience wrappers called by buttons in recipe_row.html
     function addSource(idx) { addSubRow(idx, 'sources', 'source-template'); }
     function addByproduct(idx) { addSubRow(idx, 'byproducts', 'byproduct-template'); }
-    function addAttribReq(idx) { addSubRow(idx, 'attribs', 'attrib-req-template'); }
+    function addAttribReq(idx) { 
+        addSubRow(idx, 'attribs', 'attrib-req-template');
+        // Initialize the binary attribute UI for the newly added row
+        setTimeout(() => {
+            const container = document.getElementById(`attribs-${idx}`);
+            const lastRow = container.lastElementChild;
+            const selectElement = lastRow.querySelector('select');
+            if (selectElement) {
+                updateAttribReqInput(selectElement);
+            }
+        }, 0);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const selectElements = document.querySelectorAll('#recipes-container select[name*="[attrib_id]"]');
+        selectElements.forEach(selectElement => {
+            updateAttribReqInput(selectElement);
+        });
+    });
 </script>
 {% endblock %}

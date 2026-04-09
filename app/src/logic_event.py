@@ -1,7 +1,7 @@
 import random
 import math
 import logging
-from flask import g
+from flask import g, request
 from app.models import (
     db, Entity, Event, Location, Character, Item,
     Operation, OutcomeType, RollerType,

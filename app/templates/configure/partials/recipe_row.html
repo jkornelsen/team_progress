@@ -81,16 +81,26 @@
         <div class="attrib-req-list" id="attribs-{{ recipe_index }}">
             {% for req in recipe.attrib_reqs if recipe %}
             <div class="flex-row gap-10 align-center spacious-bottom">
-                <select name="recipes[{{ recipe_index }}][attrib_reqs][{{ loop.index0 }}][attrib_id]">
+                <select name="recipes[{{ recipe_index }}][attrib_reqs][{{ loop.index0 }}][attrib_id]" data-is-binary="{{ req.attrib.is_binary if req.attrib else false }}" onchange="updateAttribReqInput(this)">
                     {% for a in all_attribs %}
-                    <option value="{{ a.id }}" {{ 'selected' if a.id == req.attrib_id }}>{{ a.name }}</option>
+                    <option value="{{ a.id }}" data-is-binary="{{ a.is_binary }}" {{ 'selected' if a.id == req.attrib_id }}>{{ a.name }}</option>
                     {% endfor %}
                 </select>
-                <span class="label-like">Range:</span>
-                <input type="number" name="recipes[{{ recipe_index }}][attrib_reqs][{{ loop.index0 }}][min]" 
-                       value="{{ req.value_range.lower if req.value_range }}" placeholder="Min" step="any" style="width: 70px;">
-                <input type="number" name="recipes[{{ recipe_index }}][attrib_reqs][{{ loop.index0 }}][max]" 
-                       value="{{ req.value_range.upper if req.value_range }}" placeholder="Max" step="any" style="width: 70px;">
+                {% if req.attrib and req.attrib.is_binary %}
+                    <label class="checkbox-label" style="margin: 0;">
+                        <input type="checkbox" {{ 'checked' if req.min_val > 0 }} style="margin-right: 5px;">
+                    </label>
+                    <input type="hidden" name="recipes[{{ recipe_index }}][attrib_reqs][{{ loop.index0 }}][min]" value="{{ 1 if req.min_val > 0 else 0 }}">
+                    <input type="hidden" name="recipes[{{ recipe_index }}][attrib_reqs][{{ loop.index0 }}][max]" value="{{ 1 if req.min_val > 0 else 0 }}">
+                    <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
+                {% else %}
+                    <span class="label-like range-label">Range:</span>
+                    <input type="number" name="recipes[{{ recipe_index }}][attrib_reqs][{{ loop.index0 }}][min]" 
+                           value="{{ req.min_val }}" placeholder="Min" step="any" style="width: 70px;">
+                    <input type="number" name="recipes[{{ recipe_index }}][attrib_reqs][{{ loop.index0 }}][max]" 
+                           value="{{ req.max_val }}" placeholder="Max" step="any" style="width: 70px;">
+                    <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
+                {% endif %}
             </div>
             {% endfor %}
         </div>
@@ -106,3 +116,67 @@
     .gap-5 { gap: 5px; }
     .spacious-bottom { margin-bottom: 8px; }
 </style>
+
+<script>
+    /**
+     * Updates the attribute requirement input based on whether the attribute is binary
+     * This handles the inline attribute requirements in recipe_row.html
+     */
+    function updateAttribReqInput(selectElement) {
+        const row = selectElement.parentElement;
+        const selectedOption = selectElement.options[selectElement.selectedIndex];
+        const isBinary = selectedOption.dataset.isBinary === 'True' || selectedOption.dataset.isBinary === 'true';
+        
+        const rangeLabel = row.querySelector('.range-label');
+        const minInput = row.querySelector('input[name*="[min]"]');
+        const maxInput = row.querySelector('input[name*="[max]"]');
+        
+        const syncCheckbox = (checkbox) => {
+            if (!checkbox) return;
+            checkbox.onchange = (e) => {
+                if (minInput) minInput.value = e.target.checked ? '1' : '0';
+                if (maxInput) maxInput.value = e.target.checked ? '1' : '0';
+            };
+            if (minInput && maxInput) {
+                const minVal = parseFloat(minInput.value) || 0;
+                const maxVal = parseFloat(maxInput.value) || 0;
+                checkbox.checked = minVal > 0 || maxVal > 0;
+            }
+        };
+
+        if (isBinary) {
+            // Hide range inputs, show checkbox
+            if (minInput && minInput.style.display !== 'none') minInput.style.display = 'none';
+            if (maxInput && maxInput.style.display !== 'none') maxInput.style.display = 'none';
+            if (rangeLabel && rangeLabel.style.display !== 'none') rangeLabel.style.display = 'none';
+            
+            // Find or create checkbox
+            let checkbox = row.querySelector('input[type="checkbox"]');
+            if (!checkbox) {
+                const label = document.createElement('label');
+                label.className = 'checkbox-label';
+                label.style.margin = '0';
+                const checkboxInput = document.createElement('input');
+                checkboxInput.type = 'checkbox';
+                checkboxInput.name = selectElement.name.replace('[attrib_id]', '[is_checked]');
+                checkboxInput.style.marginRight = '5px';
+                syncCheckbox(checkboxInput);
+                label.appendChild(checkboxInput);
+                selectElement.parentElement.insertBefore(label, minInput || maxInput);
+                checkbox = checkboxInput;
+            } else {
+                syncCheckbox(checkbox);
+            }
+        } else {
+            // Show range inputs, hide checkbox
+            if (minInput && minInput.style.display === 'none') minInput.style.display = 'inline';
+            if (maxInput && maxInput.style.display === 'none') maxInput.style.display = 'inline';
+            if (rangeLabel && rangeLabel.style.display === 'none') rangeLabel.style.display = 'inline';
+            
+            const checkbox = row.querySelector('input[type="checkbox"]');
+            if (checkbox && checkbox.parentElement.tagName === 'LABEL') {
+                checkbox.parentElement.remove();
+            }
+        }
+    }
+</script>

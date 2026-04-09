@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from flask import g
 from app.models import (
     db, Entity, Item, Character, Pile, Progress,
-    Recipe, RecipeSource, RecipeByproduct, GENERAL_ID)
+    Recipe, RecipeSource, RecipeByproduct, AttribVal, GENERAL_ID)
 from app.utils import format_num
 from app.src.logic_piles import adjust_quantity, resolve_recipe_sources
 from app.src.logic_user_interaction import add_message
@@ -17,11 +17,19 @@ def get_elapsed_seconds(progress):
     if not progress.start_time:
         return 0.0
     
-    now = datetime.now(timezone.utc)
-    # Ensure start_time is offset-aware if it isn't already
-    start = progress.start_time.replace(tzinfo=timezone.utc) if progress.start_time.tzinfo is None else progress.start_time
+    # Use naive datetime for comparison (consistent with DB storage)
+    now = datetime.now()
+    start = progress.start_time
     
-    return (now - start).total_seconds()
+    # Handle both naive and timezone-aware start times by stripping timezone if present
+    if start.tzinfo is not None:
+        start = start.replace(tzinfo=None)
+    if now.tzinfo is not None:
+        now = now.replace(tzinfo=None)
+    
+    elapsed_seconds = (now - start).total_seconds()
+    logger.debug(f"get_elapsed_seconds: now={now}, start={start}, elapsed={elapsed_seconds}s")
+    return elapsed_seconds
 
 def can_perform_recipe(game_token, host_id, recipe, batches=1, context_id=None):
     """
@@ -52,6 +60,37 @@ def can_perform_recipe(game_token, host_id, recipe, batches=1, context_id=None):
             needed = required - res['total_available']
             return False, f"Missing {format_num(needed)} {source_item.name} (Need {format_num(required)})"
 
+    # 3. Check Attribute Requirements
+    # Check attributes on all relevant entities that could contribute to the recipe
+    # Include host entity and context entity (if different)
+    relevant_entities = set()
+    if host_id and host_id != GENERAL_ID:
+        relevant_entities.add(host_id)
+    if context_id and context_id != GENERAL_ID:
+        relevant_entities.add(context_id)
+    
+    for req in recipe.attrib_reqs:
+        req_met = False
+        for entity_id in relevant_entities:
+            # Get the current attribute value for this entity
+            attrib_val = AttribVal.query.filter_by(
+                game_token=game_token, subject_id=entity_id, attrib_id=req.attrib_id
+            ).first()
+            current_val = attrib_val.value if attrib_val else 0.0
+            
+            if req.in_range(current_val):
+                req_met = True
+                break
+        
+        if not req_met:
+            if req.attrib.is_binary:
+                if req.min_val > 0:
+                    return False, f"Requires {req.attrib.name} (must be enabled)"
+                else:
+                    return False, f"Requires {req.attrib.name} (must be disabled)"
+            else:
+                return False, f"{req.attrib.name} {req.range_display} required"
+
     return True, ""
 
 def update_progress(progress_id):
@@ -67,7 +106,7 @@ def update_progress(progress_id):
     if not progress.start_time:
         # If it's ongoing but has no start time, something is wrong. 
         # Reset it to now to prevent a crash.
-        progress.start_time = datetime.now(timezone.utc)
+        progress.start_time = datetime.now()  # Naive datetime
         db.session.commit()
         return
 
@@ -83,6 +122,10 @@ def update_progress(progress_id):
     
     # How many new batches occurred since the last time we checked?
     new_batches = total_potential_batches - progress.batches_processed
+    
+    logger.info(f"update_progress: elapsed={elapsed}s, rate_duration={recipe.rate_duration}s, "
+                f"total_potential={total_potential_batches}, processed={progress.batches_processed}, "
+                f"new_batches={new_batches}")
     
     if new_batches <= 0:
         return
@@ -111,7 +154,7 @@ def update_progress(progress_id):
             game_token, progress.host_id, recipe, context_id=ctx_id)
         if not possible:
             progress.is_ongoing = False
-            progress.stop_time = datetime.now(timezone.utc)
+            progress.stop_time = datetime.now()  # Naive datetime
             add_message(game_token, f"Production stopped: {reason}")
             break
         
@@ -157,7 +200,7 @@ def start_production(host_id, recipe_id, context_id=None):
         db.session.add(progress)
 
     progress.recipe_id = recipe_id
-    progress.start_time = datetime.now(timezone.utc)
+    progress.start_time = datetime.now()  # Naive datetime, consistent with DB storage
     progress.batches_processed = 0
     progress.is_ongoing = True
     progress.stop_time = None
@@ -177,7 +220,7 @@ def stop_production(host_id):
         update_progress(progress.id)
         
         progress.is_ongoing = False
-        progress.stop_time = datetime.now(timezone.utc)
+        progress.stop_time = datetime.now()  # Naive datetime
         db.session.commit()
         return True
     return False

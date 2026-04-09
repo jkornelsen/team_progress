@@ -11,7 +11,7 @@ from app.utils import (
     RequestHelper, parse_coords, LinkLetters, capture_origin, redirect_back)
 from .logic_piles import resolve_recipe_sources, transfer_item
 from .logic_event import (
-    roll_for_outcome, roll_for_system_outcome, TriggerException)
+    roll_for_outcome, roll_for_system_outcome, TriggerException, calculate_determinants)
 from .logic_progress import (
     start_production, stop_production, update_progress, can_perform_recipe)
 from .logic_navigation import (
@@ -22,6 +22,10 @@ from .logic_user_interaction import add_message
 
 logger = logging.getLogger(__name__)
 play_bp = Blueprint('play', __name__)
+
+def get_inventory_for_role(entity):
+    """Returns all piles (inventory items) for the given entity."""
+    return entity.piles
 
 # ------------------------------------------------------------------------
 # The Overview (Dashboard)
@@ -121,6 +125,13 @@ def play_item(id):
     if not pile:
         pile = Pile(item_id=id, owner_id=owner.id, quantity=0.0, position=pos)
 
+    # Collect all relevant entities for attribute checking
+    all_relevant_entities = set()
+    if owner.id != GENERAL_ID:
+        all_relevant_entities.add(owner.id)
+    if play_context_id and play_context_id != GENERAL_ID:
+        all_relevant_entities.add(play_context_id)
+
     # Recipes that PRODUCE this item
     # Enriched allows UI to show 🚫 icon and specific reason tooltip.
     enriched_recipes = []
@@ -154,6 +165,52 @@ def play_item(id):
                 'url_params': url_params
             })
 
+        # Check attribute requirements against all relevant entities
+        relevant_entities = set()
+        if owner.id != GENERAL_ID:
+            relevant_entities.add(owner.id)
+        if play_context_id and play_context_id != GENERAL_ID:
+            relevant_entities.add(play_context_id)
+        
+        # Add any entities that provide ingredients
+        for res in resolved_ingredients:
+            if res['anticipated_owner_id'] != GENERAL_ID:
+                relevant_entities.add(res['anticipated_owner_id'])
+                all_relevant_entities.add(res['anticipated_owner_id'])
+        
+        attrib_reqs_ui_data = []
+        for req in r.attrib_reqs:
+            req_met = False
+            current_val = 0.0
+            satisfying_entity = None
+            entity_with_value = None
+            
+            for entity_id in relevant_entities:
+                attrib_val = AttribVal.query.filter_by(
+                    game_token=game_token, subject_id=entity_id, attrib_id=req.attrib_id
+                ).first()
+                if attrib_val:
+                    if req.in_range(attrib_val.value):
+                        req_met = True
+                        current_val = attrib_val.value
+                        satisfying_entity = entity_id
+                        break
+                    elif attrib_val.value > current_val:
+                        current_val = attrib_val.value
+                        entity_with_value = entity_id
+            
+            # Use satisfying entity if requirement met, otherwise entity with highest value
+            link_entity_id = satisfying_entity or entity_with_value
+            
+            attrib_reqs_ui_data.append({
+                'attrib': req.attrib,
+                'min_val': req.min_val,
+                'max_val': req.max_val,
+                'current_val': current_val,
+                'is_satisfied': req_met,
+                'link_entity_id': link_entity_id
+            })
+
         enriched_recipes.append({
             'id': r.id,
             'rate_amount': r.rate_amount,
@@ -161,7 +218,8 @@ def play_item(id):
             'instant': r.instant,
             'can_produce': can_do,
             'reason': reason,
-            'sources': sources_ui_data
+            'sources': sources_ui_data,
+            'attrib_reqs': attrib_reqs_ui_data
         })
 
     # Recipes where this item is a SOURCE (Ingredient)
@@ -204,6 +262,14 @@ def play_item(id):
             game_token=game_token, location_id=ctx_loc_id).all()
     overall = Overall.query.get(game_token)
 
+    # Create entities lookup for attribute requirement links
+    entities = {}
+    for entity_id in all_relevant_entities:
+        if entity_id != GENERAL_ID:
+            entity = Entity.query.get((game_token, entity_id))
+            if entity:
+                entities[entity_id] = entity
+
     return render_template(
         'play/item.html',
         item=item,
@@ -216,6 +282,7 @@ def play_item(id):
         progress=current_progress,
         available_slots=overall.slots,
         chars_here=chars_here,
+        entities=entities,
         link_letters=LinkLetters(excluded='moe')
     )
 
@@ -548,29 +615,47 @@ def stop_item_production(id):
 def production_status(id):
     """Heartbeat endpoint to calculate current progress and refresh recipe availability."""
     game_token = g.game_token
-    item_id = request.args.get('item_id', type=int) # Help route find definition
+    item_id = request.args.get('item_id', type=int)
     
     try:
         # 1. Tick the logic
         prog = Progress.query.filter_by(game_token=game_token, host_id=id).first()
         if prog and prog.is_ongoing:
+            # DEBUG: Log before update
+            logger.info(f"Before update_progress: start_time={prog.start_time}, batches_processed={prog.batches_processed}")
             update_progress(prog.id)
+            # DEBUG: Log after update
+            logger.info(f"After update_progress: batches_processed={prog.batches_processed}, is_ongoing={prog.is_ongoing}")
         
         # 2. Build Response Base
         start_time_iso = None
+        rate_duration = None
         if prog and prog.start_time:
             start_time_iso = prog.start_time.isoformat()
+        
+        # Get rate_duration from active recipe if ongoing
+        if prog and prog.is_ongoing and prog.recipe_id:
+            recipe = Recipe.query.get((game_token, prog.recipe_id))
+            if recipe:
+                rate_duration = recipe.rate_duration
+                logger.info(f"Active recipe: id={recipe.id}, rate_duration={rate_duration}")
+
         res = {
             "is_ongoing": bool(prog and prog.is_ongoing),
             "batches": prog.batches_processed if prog else 0,
             "start_time": start_time_iso,
             "active_recipe_id": prog.recipe_id if prog else None,
+            "rate_duration": rate_duration,
             "recipes": []
         }
 
-        # 3. Dynamic Recipe Validation
-        # If we know which item page the user is on, re-verify all recipes for the 🚫 icons
+        # 3. Get current quantity of the item being viewed (if item_id provided)
         if item_id:
+            pile = Pile.query.filter_by(game_token=game_token, owner_id=id, item_id=item_id).first()
+            if pile:
+                res["current_quantity"] = pile.quantity
+            
+            # Also get recipe validation for 🚫 icons
             recipes = Recipe.query.filter_by(game_token=game_token, product_id=item_id).all()
             for r in recipes:
                 can_do, reason = can_perform_recipe(game_token, id, r)
@@ -707,6 +792,7 @@ def roll_event(id):
 def apply_event(id):
     """Apply a roll result to a specific container."""
     # 1. The thing we are changing (The Key)
+    req = RequestHelper('form')
     key_id = req.get_int('key_id')
     key_type = req.get_str('key_type') # 'attrib' or 'item'
     

@@ -194,27 +194,26 @@ def htmlify_filter(text):
 # Request Handling
 # ------------------------------------------------------------------------
 
-class RequestHelper:
-    """Safely extracts typed values from request.form or request.args."""
-    def __init__(self, source):
-        if source not in ['form', 'args']:
-            raise ValueError("Source must be 'form' or 'args'")
-        self.source = source
+class BaseFieldMap:
+    """Safely extracts typed values from a dict."""
+    def __init__(self, data):
+        self.data = data or {}
 
-    def _get_source(self):
-        return getattr(request, self.source)
+    def __contains__(self, key):
+        """Support 'key' in basefieldmap."""
+        return key in self.data
 
-    def _get_from_request(self, key):
-        return self._get_source().get(key, '')
+    def _get_raw(self, key):
+        return self.data.get(key, '')
 
     def get_str(self, key, default=''):
         """Retrieve a string from the request.
         No special checks are needed -- just a thin wrapper method.
         """
-        return (self._get_from_request(key) or default).strip()
+        return (self._get_raw(key) or default).strip()
 
     def get_int(self, key, default=0):
-        formatted_str = self._get_from_request(key)
+        formatted_str = self._get_raw(key)
         if formatted_str == '':
             return default
         float_value = unformat_num(formatted_str)
@@ -225,14 +224,14 @@ class RequestHelper:
 
     def get_float(self, key, default=0.0):
         """Retrieve a floating point value using unformat_num logic."""
-        formatted_str = self._get_from_request(key)
+        formatted_str = self._get_raw(key)
         if formatted_str == '':
             return default
         return unformat_num(formatted_str)
 
     def get_bool(self, key, default=False):
         """Retrieve a boolean value from the request."""
-        value_str = self._get_from_request(key)
+        value_str = self._get_raw(key)
         if value_str == '':
             return default
 
@@ -245,8 +244,32 @@ class RequestHelper:
         return default
 
     def get_coords(self, key):
-        val = self._get_from_request(key)
+        val = self._get_raw(key)
         return parse_coords(val)
+
+    def get_list(self, key_text):
+        """
+        Extracts nested data and returns a list of BaseFieldMap objects.
+        This allows for recursive calls: row.get_list('sub_items')
+        """
+        target_data = self.data.get(key_text, [])
+
+        if isinstance(target_data, dict):
+            target_data = _inflate_lists(target_data)
+
+        if not isinstance(target_data, list):
+            return []
+
+        return [_wrap_request_data(item) for item in target_data]
+
+class RequestHelper(BaseFieldMap):
+    """Extracts values from request.form or request.args."""
+    def __init__(self, source_type):
+        if source_type not in ['form', 'args']:
+            raise ValueError("Source type must be 'form' or 'args'")
+        source = getattr(request, source_type)
+        data = source.to_dict() 
+        super().__init__(data)
 
     def get_list(self, key_text):
         """
@@ -270,8 +293,7 @@ class RequestHelper:
         """
         temp_root = {}
 
-        form_dict = self._get_source()
-        for key, value in form_dict.items():
+        for key, value in self.data.items():
             if key.startswith(f"{key_text}["):
                 # Split 'stats[0][id]' into ['stats', '0', 'id']
                 parts = re.findall(r'[^\[\]]+', key)
@@ -286,9 +308,9 @@ class RequestHelper:
                         curr = curr[part]
 
         target_data = temp_root.get(key_text, {})
-        result = _inflate_lists(target_data)
-        if isinstance(result, list):
-            return result
+        raw_list = _inflate_lists(target_data)
+        if isinstance(raw_list, list):
+            return [_wrap_request_data(row) for row in raw_list]
         return []
 
 def _inflate_lists(node):
@@ -310,6 +332,13 @@ def _inflate_lists(node):
         # Build the list. If indices are 0, 2, 4, this creates a list of 3 items.
         return [node[str(i)] for i in sorted_indices]
     
+    return node
+
+def _wrap_request_data(node):
+    if isinstance(node, dict):
+        return BaseFieldMap({k: _wrap_request_data(v) for k, v in node.items()})
+    if isinstance(node, list):
+        return [_wrap_request_data(v) for v in node]
     return node
 
 def capture_origin(name=None):

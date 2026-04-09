@@ -70,63 +70,7 @@
     </header>
 
     <div class="column-container">
-        <!-- LEFT COLUMN -->
-        {% if item.storage_type == StorageType.CARRIED %}
-        <div class="info-column">
-            <section class="outer-border">
-                <h3>Inventory Actions</h3>
-                <div class="button-group">
-
-                    <!-- Equipment -->
-                    {% if owner.entity_type == 'character' %}
-                        <div class="action-box border-top-dim spacious-top" style="padding-top: 15px;">
-                            {% if pile.slot %}
-                                <div class="action-box">
-                                    <span class="label-like">Slot: <strong>{{ pile.slot }}</strong></span>
-                                    <button id="unequip-btn" class="go-button">une[q]uip</button>
-                                </div>
-                            {% else %}
-                                {% if available_slots %}
-                                    <div class="action-box">
-                                        <select id="equip-slot" class="full-width">
-                                            {% for slot in available_slots %}
-                                                <option value="{{ slot }}" {{ 'selected' if slot == session.get('default_slot') }}>
-                                                    {{ slot }}
-                                                </option>
-                                            {% endfor %}
-                                        </select>
-                                        <button id="equip-btn" class="go-button">e[q]uip</button>
-                                    </div>
-                                {% endif %}
-                            {% endif %}
-                        </div>
-                    {% endif %}
-
-                    {# Carried -> Location (Drop) #}
-                    {% if owner.entity_type == 'character' and owner.location_id %}
-                        <div class="action-box">
-                            <input type="number" id="drop-qty" value="{{ pile.quantity | formatNum }}" max="{{ pile.quantity }}" step="any" class="mini-input">
-                            <button id="drop-btn" class="go-button">[d]rop at location</button>
-                        </div>
-                    {% endif %}
-
-                    {# Location -> Character (Pickup) #}
-                    {% if chars_here %}
-                        <div class="action-box">
-                            <select id="pickup-char-id" class="mini-select">
-                                {% for c in chars_here %}
-                                    <option value="{{ c.id }}">{{ c.name }}</option>
-                                {% endfor %}
-                            </select>
-                            <button id="pickup-btn" class="go-button">[P]ick Up</button>
-                        </div>
-                    {% endif %}
-                </div>
-            </section>
-        </div>
-        {% endif %}
-
-        <!-- RIGHT COLUMN: Recipes & Production -->
+        <!-- COLUMN: Production -->
         <div class="production-column">
             {% if recipes %}
             <section class="outer-border">
@@ -160,6 +104,52 @@
                                 </li>
                             {% endfor %}
                         </ul>
+
+                        <!-- Attribute Requirements -->
+                        {% if r.attrib_reqs %}
+                        <ul class="attrib-req-list label-like">
+                            {% for req in r.attrib_reqs %}
+                                <li class="{{ 'text-danger' if not req.is_satisfied else '' }}">
+                                    {% if not req.attrib.is_binary %}
+                                        📊
+                                    {% endif %}
+                                    {% if req.link_entity_id %}
+                                        {% set link_entity = entities[req.link_entity_id] %}
+                                        {% if link_entity.entity_type == 'character' %}
+                                            {% set target_url = url_for('play.play_character', id=req.link_entity_id) %}
+                                            {% call hotkey_link(target_url, link_letters) %}
+                                                {{ req.attrib.name }}
+                                            {% endcall %}
+                                        {% elif link_entity.entity_type == 'location' %}
+                                            {% set target_url = url_for('play.play_location', id=req.link_entity_id) %}
+                                            {% call hotkey_link(target_url, link_letters, brackets=True) %}
+                                                {{ req.attrib.name }}
+                                            {% endcall %}
+                                        {% else %}
+                                            {{ req.attrib.name }}
+                                        {% endif %}
+                                    {% else %}
+                                        {{ req.attrib.name }}
+                                    {% endif %}
+                                    {% if req.attrib.is_binary %}
+                                        {% if req.min_val > 0 %}
+                                        {% else %}
+                                        {% endif %}
+                                        {{ '✓' if req.min_val > 0 else '✗' }}
+                                    {% else %}
+                                        {{ req.attrib.range_display }}
+                                    {% endif %}
+                                    {% if not req.is_satisfied %}
+                                        {% if req.attrib.is_binary %}
+                                            (currently {{ '✓' if req.current_val > 0 else '✗' }})
+                                        {% else %}
+                                            (currently {{ req.current_val | formatNum }})
+                                        {% endif %}
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
 
                         <div class="recipe-controls spacious-top">
                             <div id="controls-{{ r.id }}">
@@ -248,6 +238,62 @@
             </section>
             {% endif %}
         </div>
+
+        <!-- COLUMN: Inventory -->
+        <div class="info-column">
+            {% if item.storage_type == StorageType.CARRIED %}
+            <section class="outer-border">
+                <h3>Inventory Actions</h3>
+                <div class="button-group">
+
+                    <!-- Equipment -->
+                    {% if owner.entity_type == 'character' %}
+                        <div class="action-box border-top-dim spacious-top" style="padding-top: 15px;">
+                            {% if pile.slot %}
+                                <div class="action-box">
+                                    <span class="label-like">Slot: <strong>{{ pile.slot }}</strong></span>
+                                    <button id="unequip-btn" class="go-button">une[q]uip</button>
+                                </div>
+                            {% else %}
+                                {% if available_slots %}
+                                    <div class="action-box">
+                                        <select id="equip-slot" class="full-width">
+                                            {% for slot in available_slots %}
+                                                <option value="{{ slot }}" {{ 'selected' if slot == session.get('default_slot') }}>
+                                                    {{ slot }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                        <button id="equip-btn" class="go-button">e[q]uip</button>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    {# Carried -> Location (Drop) #}
+                    {% if owner.entity_type == 'character' and owner.location_id %}
+                        <div class="action-box">
+                            <input type="number" id="drop-qty" value="{{ pile.quantity | formatNum }}" max="{{ pile.quantity }}" step="any" class="mini-input">
+                            <button id="drop-btn" class="go-button">[d]rop at location</button>
+                        </div>
+                    {% endif %}
+
+                    {# Location -> Character (Pickup) #}
+                    {% if chars_here %}
+                        <div class="action-box">
+                            <select id="pickup-char-id" class="mini-select">
+                                {% for c in chars_here %}
+                                    <option value="{{ c.id }}">{{ c.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <button id="pickup-btn" class="go-button">[P]ick Up</button>
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+            {% endif %}
+        </div>
     </div>
 </div>
 
@@ -267,23 +313,71 @@
             return;
         }
 
-        // UPDATE BUTTONS AND 🚫 ICONS
+        // UPDATE QUANTITY DISPLAY (if available in response)
+        if (data.current_quantity !== undefined) {
+            const qtyDisplay = document.getElementById('main-qty-display');
+            if (qtyDisplay) {
+                qtyDisplay.textContent = Math.floor(data.current_quantity).toLocaleString();
+            }
+        }
+
+        // UPDATE PROGRESS BAR if ongoing
+        if (data.is_ongoing && data.active_recipe_id) {
+            const progBar = document.getElementById('prog-bar');
+            const progLabel = document.getElementById('prog-label');
+            
+            if (progBar && data.start_time && data.rate_duration) {
+                // Calculate elapsed time
+                const startTime = new Date(data.start_time);
+                const now = new Date();
+                const elapsedMs = now - startTime;
+                
+                // Use rate_duration from backend (in seconds, convert to ms)
+                const durationMs = data.rate_duration * 1000;
+                
+                // Calculate progress within the CURRENT batch
+                // elapsed time attributable to completed batches
+                const completedBatchesMs = (data.batches || 0) * durationMs;
+                // remaining elapsed time in the current batch
+                const elapsedInCurrentBatch = Math.max(0, elapsedMs - completedBatchesMs);
+                // progress as percentage of current batch
+                const progressPercent = Math.min((elapsedInCurrentBatch / durationMs) * 100, 100);
+                
+                progBar.value = progressPercent;
+                if (progLabel) {
+                    progLabel.textContent = Math.floor(progressPercent) + '%';
+                }
+            }
+        } else {
+            // Production is NOT ongoing - hide progress bar and show start button
+            const progContainer = document.querySelector('.progress-container:not(.hidden)');
+            
+            if (progContainer) {
+                progContainer.classList.add('hidden');
+            }
+        }
+
+        // UPDATE BUTTONS AND RECIPE AVAILABILITY
         if (data.recipes) {
             data.recipes.forEach(r => {
                 const startBtn = document.getElementById(`start-${r.recipe_id}`);
+                const stopBtn = document.getElementById(`stop-${r.recipe_id}`);
                 const controlsDiv = document.getElementById(`controls-${r.recipe_id}`);
                 
-                // If can_produce changed since page load, we'd swap 
-                // the button for the 🚫 icon here via DOM manipulation.
-                // Simplified: Update tooltip of existing icons
-                const icon = controlsDiv.querySelector('.info-icon');
+                // Show/hide stop button based on whether this recipe is active
+                if (data.is_ongoing && data.active_recipe_id === r.recipe_id) {
+                    if (startBtn) startBtn.classList.add('hidden');
+                    if (stopBtn) stopBtn.classList.remove('hidden');
+                } else {
+                    if (startBtn) startBtn.classList.remove('hidden');
+                    if (stopBtn) stopBtn.classList.add('hidden');
+                }
+                
+                // Update can_produce reason in tooltip if icon exists
+                const icon = controlsDiv?.querySelector('.info-icon');
                 if (icon) icon.setAttribute('title', r.reason);
             });
         }
-
-        // UPDATE QUANTITY DISPLAY
-        // In a real tick, quantities change. Refresh just the number:
-        // (You might need a small separate AJAX for current pile quantity)
     }
     setInterval(updateStatus, 2000);
 
@@ -296,7 +390,14 @@
             body: fd 
         });
         if (res.ok) {
-            location.reload();
+            // Update UI dynamically instead of reloading
+            const startBtn = document.getElementById(`start-${recipeId}`);
+            const stopBtn = document.getElementById(`stop-${recipeId}`);
+            const progContainer = document.getElementById(`prog-container-${recipeId}`);
+            
+            if (startBtn) startBtn.classList.add('hidden');
+            if (stopBtn) stopBtn.classList.remove('hidden');
+            if (progContainer) progContainer.classList.remove('hidden');
         } else {
             const err = await res.json();
             flashMessage(err.message || "Could not start production.");
@@ -309,7 +410,14 @@
         });
         
         if (res.ok) {
-            location.reload();
+            // Update UI dynamically - find the active recipe's buttons
+            const stopBtn = document.querySelector('button.dangerous-button:not(.hidden)');
+            const startBtn = document.querySelector('button.go-button[id^="start-"]:not(.hidden)');
+            
+            if (stopBtn) stopBtn.classList.add('hidden');
+            // The matching start button will be shown when updateStatus runs
+        } else {
+            flashMessage("Could not stop production.");
         }
     }
 
@@ -400,6 +508,7 @@
     .action-box { display: flex; gap: 10px; margin-bottom: 10px; }
     .recipe-list { display: flex; flex-direction: column; gap: 15px; }
     .source-list { list-style: none; padding: 5px 0; margin: 0; font-size: 0.85em; }
+    .attrib-req-list { list-style: none; padding: 5px 0; margin: 0; font-size: 0.85em; }
     .used-for-row { --grid-cols: 1fr auto; }
     .byproduct-of-row { --grid-cols: 1fr; }
     .reverse-lookup-list { --col-list-max-width: 350px; }

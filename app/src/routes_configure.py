@@ -9,7 +9,7 @@ from app.models import (
     GENERAL_ID, StorageType, JsonKeys, ENTITIES, db,
     Entity, Item, Character, Location, Attrib, Event, 
     Pile, AttribVal, Operation, EntityAbility,
-    Recipe, RecipeSource, RecipeByproduct,
+    Recipe, RecipeSource, RecipeByproduct, RecipeAttribReq,
     LocDest, ItemRef,
     Overall, WinRequirement)
 from app.serialization import (
@@ -126,6 +126,68 @@ def edit_item(id):
             elif gen_pile:
                 db.session.delete(gen_pile)
 
+        recipe_rows = req.get_list('recipes')
+        item.recipes = []
+
+        for recipe_row in recipe_rows:
+            if not recipe_row:
+                continue
+
+            recipe_id = recipe_row.get_int('id', None)
+            if recipe_id is None:
+                recipe_id = Overall.generate_next_id(game_token)
+
+            recipe = Recipe(
+                game_token=game_token,
+                id=recipe_id,
+                product_id=item.id,
+                rate_amount=recipe_row.get_float('rate_amount', 1.0),
+                rate_duration=recipe_row.get_float('rate_duration', 3.0),
+                instant=recipe_row.get_bool('instant')
+            )
+
+            for source_row in recipe_row.get_list('sources'):
+                if not source_row:
+                    continue
+                item_id = source_row.get_int('item_id')
+                if item_id:
+                    recipe.sources.append(RecipeSource(
+                        game_token=game_token,
+                        recipe_id=recipe_id,
+                        item_id=item_id,
+                        q_required=source_row.get_float('q_required', 0.0),
+                        preserve=source_row.get_bool('preserve')
+                    ))
+
+            for byproduct_row in recipe_row.get_list('byproducts'):
+                if not byproduct_row:
+                    continue
+                item_id = byproduct_row.get_int('item_id')
+                if item_id:
+                    recipe.byproducts.append(RecipeByproduct(
+                        game_token=game_token,
+                        recipe_id=recipe_id,
+                        item_id=item_id,
+                        rate_amount=byproduct_row.get_float('rate_amount')
+                    ))
+
+            for attrib_row in recipe_row.get_list('attrib_reqs'):
+                if not attrib_row:
+                    continue
+                attrib_id = attrib_row.get_int('attrib_id')
+                if attrib_id:
+                    min_val = attrib_row.get_float('min')
+                    max_val = attrib_row.get_float('max')
+                    recipe.attrib_reqs.append(RecipeAttribReq(
+                        game_token=game_token,
+                        recipe_id=recipe_id,
+                        attrib_id=attrib_id,
+                        min_val=min_val,
+                        max_val=max_val
+                    ))
+
+            item.recipes.append(recipe)
+
         db.session.commit()
 
         if 'duplicate' in request.form:
@@ -190,10 +252,10 @@ def edit_location(id):
         submitted_ids = []
         new_coords = set()
         for row in req.get_list('dests'):
-            target_id = int(row.get('target_id') or 0)
+            target_id = row.get_int('target_id')
             if not target_id: continue
-            route_id = int(row.get('id') or 0)
-            direction = row.get('direction', 'two-way')
+            route_id = row.get_int('id')
+            direction = row.get_str('direction', 'two-way')
             
             existing_route = existing_map.get(route_id)
             old_there_door = None
@@ -209,15 +271,15 @@ def edit_location(id):
                 route.loc2_id = loc.id
                 route.bidirectional = False
                 route.door1 = old_there_door
-                route.door2 = parse_coords(row.get('door_here'))
+                route.door2 = row.get_coords('door_here')
             else:
                 route.loc1_id = loc.id
                 route.loc2_id = target_id
                 route.bidirectional = (direction == 'two-way')
-                route.door1 = parse_coords(row.get('door_here'))
+                route.door1 = row.get_coords('door_here')
                 route.door2 = old_there_door
 
-            route.duration = int(row.get('duration', 1))
+            route.duration = row.get_int('duration', 1)
             db.session.flush()
 
             d1_tuple = tuple(route.door1) if route.door1 else None
@@ -242,14 +304,14 @@ def edit_location(id):
         # Items on Ground
         Pile.query.filter_by(game_token=game_token, owner_id=loc.id).delete()
         for row in req.get_list('items'):
-            item_id = row.get('item_id')
+            item_id = row.get_int('item_id')
             if item_id:
                 db.session.add(Pile(
                     game_token=game_token,
                     owner_id=loc.id,
-                    item_id=int(item_id),
-                    quantity=float(row.get('quantity', 0)),
-                    position=parse_coords(row.get('pos'))
+                    item_id=item_id,
+                    quantity=row.get_float('quantity'),
+                    position=row.get_coords('pos')
                 ))
 
         # Item Refs
@@ -265,24 +327,24 @@ def edit_location(id):
         # Local Events
         EntityAbility.query.filter_by(game_token=game_token, entity_id=loc.id).delete()
         for row in req.get_list('events'):
-            event_id = row.get('id')
+            event_id = row.get_int('id')
             if event_id:
                 db.session.add(EntityAbility(
                     game_token=game_token,
                     entity_id=loc.id,
-                    event_id=int(event_id)
+                    event_id=event_id
                 ))
 
         # Attribute Values
         AttribVal.query.filter_by(game_token=game_token, subject_id=loc.id).delete()
         for row in req.get_list('attribs'):
-            attr_id = row.get('id')
+            attr_id = row.get_int('id')
             if attr_id:
                 db.session.add(AttribVal(
                     game_token=game_token,
                     subject_id=loc.id,
-                    attrib_id=int(attr_id),
-                    value=row.get('value', '0')
+                    attrib_id=attr_id,
+                    value=row.get_float('value')
                 ))
 
         db.session.commit()
@@ -355,9 +417,9 @@ def edit_character(id):
         # Update Attrib values
         AttribVal.query.filter_by(game_token=game_token, subject_id=char.id).delete()
         for attrib_row in req.get_list('attribs'):
-            attr_id = attrib_row.get('id')
+            attr_id = attrib_row.get_int('id')
             if attr_id:
-                val = float(attrib_row.get('value', 0))
+                val = attrib_row.get_float('value')
                 db.session.add(
                     AttribVal(
                         game_token=game_token,
@@ -368,20 +430,20 @@ def edit_character(id):
         # Pile Handling
         Pile.query.filter_by(game_token=game_token, owner_id=char.id).delete()
         for item_row in req.get_list('items'):
-            item_id = item_row.get('item_id')
+            item_id = item_row.get_int('item_id')
             if item_id:
                 db.session.add(Pile(
                     game_token=game_token,
                     owner_id=char.id,
-                    item_id=int(item_id),
-                    quantity=float(item_row.get('quantity', 0)),
-                    slot=item_row.get('slot'),
+                    item_id=item_id,
+                    quantity=item_row.get_float('quantity'),
+                    slot=item_row.get_str('slot'),
                 ))
 
         # Abilities
         EntityAbility.query.filter_by(game_token=game_token, entity_id=char.id).delete()
         for ability_row in req.get_list('abilities'):
-            event_id = ability_row.get('id')
+            event_id = ability_row.get_int('id')
             if event_id:
                 db.session.add(
                     EntityAbility(
