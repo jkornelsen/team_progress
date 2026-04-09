@@ -2,7 +2,7 @@ import logging
 import json
 import os
 import re
-from flask import g, current_app
+from flask import g, current_app, session
 from sqlalchemy import func
 from sqlalchemy.dialects.postgresql import Range
 from .models import (
@@ -75,6 +75,8 @@ def import_from_dict(data):
     db.session.query(Overall).filter_by(game_token=game_token).delete()
     db.session.query(Entity).filter_by(game_token=game_token).delete()
     clear_session_logs(game_token)
+    for key in ['old_char_id', 'old_loc_id', 'default_slot']:
+        session.pop(key, None)
     
     # Overall Settings
     ov_data = data.get(JsonKeys.OVERALL, {})

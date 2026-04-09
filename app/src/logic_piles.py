@@ -3,7 +3,8 @@ from flask import g
 from app.models import (
     db, Pile, Entity, Item, Character, Location, StorageType, GENERAL_ID,
     Progress)
-from app.src.logic_discovery import check_item_unmasking
+from app.database import safe_remove
+from .logic_discovery import check_item_unmasking
 
 logger = logging.getLogger(__name__)
 
@@ -64,21 +65,45 @@ def get_accessible_quantity(item_id, owner_id):
 
     return total
 
-def resolve_recipe_sources(game_token, host_id, recipe):
+def resolve_recipe_sources(game_token, host_id, recipe, context_id=None):
     """
     Returns a list of resolved source data for a recipe.
     Respects StorageType restrictions.
+    'context_id' allows looking up local/carried items relative to a 
+    specific actor, even if the 'host_id' is General Storage.
     """
     resolved_sources = []
     
     # 1. Determine Context
-    host = Entity.query.get((game_token, host_id))
+    # Check both the host and the optional context_id for a location
     location_id = None
-    if host.entity_type == 'character':
-        char = Character.query.get((game_token, host_id))
-        location_id = char.location_id
-    elif host.entity_type == 'location':
-        location_id = host.id
+    effective_host_id = host_id
+    
+    search_ids = [host_id]
+    if context_id and context_id != host_id:
+        search_ids.append(context_id)
+
+    for eid in search_ids:
+        if not eid or eid == GENERAL_ID:
+            continue
+        ent = Entity.query.get((game_token, eid))
+        if not ent: 
+            continue
+        
+        if ent.entity_type == Character.TYPENAME:
+            char = Character.query.get((game_token, eid))
+            if char.location_id and not location_id:
+                location_id = char.location_id
+            if effective_host_id == GENERAL_ID:
+                effective_host_id = char.id
+        elif ent.entity_type == Location.TYPENAME:
+            if not location_id: 
+                location_id = ent.id
+            if effective_host_id == GENERAL_ID:
+                effective_host_id = ent.id
+
+    eff_host_ent = Entity.query.get((game_token, effective_host_id))
+    eff_host_type = eff_host_ent.entity_type if eff_host_ent else Entity.TYPENAME
 
     for source in recipe.sources:
         item = source.ingredient
@@ -91,8 +116,8 @@ def resolve_recipe_sources(game_token, host_id, recipe):
             if location_id:
                 potential_owner_ids = [location_id]
         elif item.storage_type == StorageType.CARRIED:
-            potential_owner_ids = [host_id]
-            if location_id:
+            potential_owner_ids = [effective_host_id]
+            if location_id and location_id != effective_host_id:
                 potential_owner_ids.append(location_id)
 
         # Query existing piles
@@ -121,20 +146,20 @@ def resolve_recipe_sources(game_token, host_id, recipe):
 
             # Fetch type for the URL builder
             ent = Entity.query.get((game_token, anticipated_owner_id))
-            anticipated_owner_type = ent.entity_type if ent else 'entity'
+            anticipated_owner_type = ent.entity_type if ent else Entity.TYPENAME
         else:
             # --- ANTICIPATED PILE LOGIC (No piles found) ---
             if item.storage_type == StorageType.UNIVERSAL:
                 anticipated_owner_id = GENERAL_ID
-                anticipated_owner_type = 'entity'
+                anticipated_owner_type = Entity.TYPENAME
             elif item.storage_type == StorageType.LOCAL:
                 anticipated_owner_id = location_id
-                anticipated_owner_type = 'location'
+                anticipated_owner_type = Location.TYPENAME
             else: # CARRIED
                 # If we are looking at a character, stay with that character
                 # If we are looking at a location, stay with that location
-                anticipated_owner_id = host_id
-                anticipated_owner_type = host.entity_type
+                anticipated_owner_id = effective_host_id
+                anticipated_owner_type = eff_host_type
 
         resolved_sources.append({
             'source_def': source,
@@ -153,13 +178,13 @@ def ensure_owner_up_to_date(owner_id):
     Checks if this owner is hosting an active production progress,
     and ticks it before we read their inventory.
     """
-    from .logic_progress import update_progress
     prog = Progress.query.filter_by(
         game_token=g.game_token, 
         host_id=owner_id, 
         is_ongoing=True
     ).first()
     if prog:
+        from .logic_progress import update_progress
         update_progress(prog.id)
 
 def set_quantity(item_id, owner_id, new_value, position=None, slot=None):
@@ -169,8 +194,8 @@ def set_quantity(item_id, owner_id, new_value, position=None, slot=None):
     """
     pile = get_or_create_pile(item_id, owner_id, position, slot)
     pile.quantity = float(new_value)
-    if pile.quantity <= 0:
-        db.session.delete(pile)
+    if pile.quantity == 0:
+        safe_remove(pile)
         return 0.0
         
     return pile.quantity
@@ -200,8 +225,8 @@ def adjust_quantity(item_id, owner_id, delta, position=None, slot=None):
         check_item_unmasking(g.game_token, item_id)
     
     # Cleanup: remove empty rows to keep the DB small
-    if pile.quantity <= 0:
-        db.session.delete(pile)
+    if pile.quantity == 0:
+        safe_remove(pile)
         return 0.0
         
     return pile.quantity

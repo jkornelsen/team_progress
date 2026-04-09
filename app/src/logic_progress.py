@@ -3,8 +3,8 @@ import logging
 from datetime import datetime, timezone
 from flask import g
 from app.models import (
-    db, Pile, Progress, Recipe, RecipeSource, RecipeByproduct, Item,
-    GENERAL_ID)
+    db, Entity, Item, Character, Pile, Progress,
+    Recipe, RecipeSource, RecipeByproduct, GENERAL_ID)
 from app.utils import format_num
 from app.src.logic_piles import adjust_quantity, resolve_recipe_sources
 from app.src.logic_user_interaction import add_message
@@ -23,7 +23,7 @@ def get_elapsed_seconds(progress):
     
     return (now - start).total_seconds()
 
-def can_perform_recipe(game_token, host_id, recipe, batches=1):
+def can_perform_recipe(game_token, host_id, recipe, batches=1, context_id=None):
     """
     Checks if the host has enough ingredients and hasn't hit item limits.
     Returns (bool, reason_string)
@@ -44,7 +44,7 @@ def can_perform_recipe(game_token, host_id, recipe, batches=1):
                 f" ({format_num(item_def.q_limit)} {item_def.name})")
 
     # 2. Check Sources (Ingredients)
-    resolved = resolve_recipe_sources(game_token, host_id, recipe)
+    resolved = resolve_recipe_sources(game_token, host_id, recipe, context_id)
     for res in resolved:
         required = res['source_def'].q_required * batches
         if res['total_available'] < required:
@@ -59,8 +59,7 @@ def update_progress(progress_id):
     The main tick function.
     Calculates completed batches, consumes sources, and produces items.
     """
-    game_token = g.game_token
-    progress = Progress.query.get((game_token, progress_id))
+    progress = Progress.query.get((progress_id))
     
     if not progress or not progress.is_ongoing or not progress.recipe_id:
         return
@@ -72,6 +71,7 @@ def update_progress(progress_id):
         db.session.commit()
         return
 
+    game_token = g.game_token
     recipe = Recipe.query.get((game_token, progress.recipe_id))
     if not recipe:
         return
@@ -96,22 +96,33 @@ def update_progress(progress_id):
         db.session.commit()
         raise e # Re-raise for the route to catch
 
+    # Identify Context (So we know where the host is standing)
+    # This ensures resolve_recipe_sources finds the "Farm" while Suzy is the host.
+    host_ent = Entity.query.get((game_token, progress.host_id))
+    ctx_id = None
+    if host_ent and host_ent.entity_type == 'character':
+        char = Character.query.get((game_token, progress.host_id))
+        ctx_id = char.location_id
+
     # Process batches one by one (or in a chunk) to check for resource exhaustion
     actual_batches_done = 0
     for _ in range(new_batches):
-        possible, reason = can_perform_recipe(game_token, progress.host_id, recipe)
+        possible, reason = can_perform_recipe(
+            game_token, progress.host_id, recipe, context_id=ctx_id)
         if not possible:
-            # Stop production if we run out of stuff
             progress.is_ongoing = False
             progress.stop_time = datetime.now(timezone.utc)
             add_message(game_token, f"Production stopped: {reason}")
             break
         
-        # 1. Consume Sources
-        for source in recipe.sources:
-            if not source.preserve:
-                adjust_quantity(source.item_id, progress.host_id, -source.q_required)
-        
+        resolved = resolve_recipe_sources(
+            game_token, progress.host_id, recipe, context_id=ctx_id)
+        for res in resolved:
+            source_def = res['source_def']
+            if not source_def.preserve:
+                target_owner_id = res['anticipated_owner_id']
+                adjust_quantity(res['item'].id, target_owner_id, -source_def.q_required)
+
         # 2. Produce Output
         adjust_quantity(recipe.product_id, progress.host_id, recipe.rate_amount)
         
@@ -125,13 +136,14 @@ def update_progress(progress_id):
     progress.batches_processed += actual_batches_done
     db.session.commit()
 
-def start_production(host_id, recipe_id):
+def start_production(host_id, recipe_id, context_id=None):
     """Initializes a Progress record for an Entity."""
     game_token = g.game_token
     recipe = Recipe.query.get((game_token, recipe_id))
     
     # Check if we can even start the first batch
-    possible, reason = can_perform_recipe(game_token, host_id, recipe)
+    possible, reason = can_perform_recipe(
+        game_token, host_id, recipe, context_id=context_id)
     if not possible:
         return False, reason
 

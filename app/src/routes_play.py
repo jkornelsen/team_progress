@@ -1,6 +1,7 @@
 import logging
 from flask import (
-    Blueprint, render_template, request, jsonify, g, session, current_app)
+    Blueprint, render_template, request, jsonify, g, session, current_app,
+    abort)
 from app.models import (
     db, Entity, Item, Character, Location, Attrib, Event,
     Pile, AttribVal, Operation, OutcomeType,
@@ -8,16 +9,16 @@ from app.models import (
     Progress, Overall, WinRequirement, GameMessage, GENERAL_ID, StorageType)
 from app.utils import (
     RequestHelper, parse_coords, LinkLetters, capture_origin, redirect_back)
-from app.src.logic_piles import resolve_recipe_sources, transfer_item
-from app.src.logic_event import (
-    roll_for_outcome, roll_for_system_outcome)
-from app.src.logic_progress import (
+from .logic_piles import resolve_recipe_sources, transfer_item
+from .logic_event import (
+    roll_for_outcome, roll_for_system_outcome, TriggerException)
+from .logic_progress import (
     start_production, stop_production, update_progress, can_perform_recipe)
-from app.src.logic_navigation import (
+from .logic_navigation import (
     move_group, get_available_destinations, arrive_at_destination,
     is_in_grid, get_default_position)
-from app.src.logic_objectives import validate_requirements
-from app.src.logic_user_interaction import add_message
+from .logic_objectives import validate_requirements
+from .logic_user_interaction import add_message
 
 logger = logging.getLogger(__name__)
 play_bp = Blueprint('play', __name__)
@@ -69,31 +70,39 @@ def play_item(id):
     item = Item.query.get_or_404((game_token, id))
     capture_origin(name=item.name)
 
+    # Context args
+    param_char_id = req.get_int('char_id')
+    param_loc_id = req.get_int('loc_id')
+    if param_char_id:
+        session['old_char_id'] = param_char_id
+    if param_loc_id:
+        session['old_loc_id'] = param_loc_id
+
     # Determine the Data Anchor (Which pile are we looking at?)
     owner_id = req.get_int('owner_id')
-    char_id = req.get_int('char_id')
-    loc_id = req.get_int('loc_id')
+    ctx_char_id = param_char_id or session.get('old_char_id')
+    ctx_loc_id = param_loc_id or session.get('old_loc_id')
+    play_context_id = ctx_char_id or ctx_loc_id
     if not owner_id:
         if item.storage_type == StorageType.UNIVERSAL:
             owner_id = GENERAL_ID
         elif item.storage_type == StorageType.LOCAL:
-            owner_id = loc_id
+            owner_id = ctx_loc_id
         else:
-            owner_id = char_id or loc_id
+            owner_id = ctx_char_id or ctx_loc_id
+    if not owner_id:
+        abort(400, description="No valid owner (character or location) provided.")
 
     owner = Entity.query.get((game_token, owner_id))
     if not owner:
-        from flask import abort
         abort(404, description="Item owner not found.")
     if isinstance(owner, Character):
-        char_id = owner.id
+        ctx_char_id = owner.id
+        session['old_char_id'] = ctx_char_id
+        session.pop('old_loc_id', None)
     elif isinstance(owner, Location):
-        loc_id = owner.id
-    context = {
-        'char_id': char_id,
-        'loc_id': loc_id,
-        'owner_id': owner_id
-    }
+        ctx_loc_id = owner.id
+        session['old_loc_id'] = ctx_loc_id
 
     # Fetch the specific Pile record
     query = Pile.query.filter_by(
@@ -116,15 +125,25 @@ def play_item(id):
     # Enriched allows UI to show 🚫 icon and specific reason tooltip.
     enriched_recipes = []
     for r in item.recipes:
-        can_do, reason = can_perform_recipe(game_token, owner.id, r)
+        can_do, reason = can_perform_recipe(
+            game_token, owner.id, r, context_id=play_context_id)
         resolved_ingredients = resolve_recipe_sources(
             game_token, 
             host_id=owner.id, 
-            recipe=r
+            recipe=r,
+            context_id=play_context_id
         )
         
         sources_ui_data = []
         for res in resolved_ingredients:
+            url_params = { 'owner_id': res['anticipated_owner_id'] }
+            if ctx_char_id and res['anticipated_owner_type'] != Character.TYPENAME:
+                url_params['char_id'] = ctx_char_id
+            elif ctx_loc_id and res['anticipated_owner_id'] == GENERAL_ID:
+                url_params['loc_id'] = ctx_loc_id
+            if res['representative_pile'] and res['representative_pile'].position:
+                url_params['pos[]'] = res['representative_pile'].position
+
             sources_ui_data.append({
                 'ingredient': res['item'],
                 'q_required': res['source_def'].q_required,
@@ -132,7 +151,7 @@ def play_item(id):
                 'current_stock': res['total_available'],
                 'pile_owner_id': res['anticipated_owner_id'],
                 'pile_owner_type': res['anticipated_owner_type'],
-                'pile_pos': res['representative_pile'].position if res['representative_pile'] else None
+                'url_params': url_params
             })
 
         enriched_recipes.append({
@@ -146,6 +165,12 @@ def play_item(id):
         })
 
     # Recipes where this item is a SOURCE (Ingredient)
+    url_params = {}
+    if ctx_char_id:
+        url_params['char_id'] = ctx_char_id
+    elif ctx_loc_id:
+        url_params['loc_id'] = ctx_loc_id
+
     used_for_production = []
     for source_link in item.as_ingredient:
         product = source_link.recipe.product
@@ -153,7 +178,8 @@ def play_item(id):
             used_for_production.append({
                 'item': product,
                 'q_required': source_link.q_required,
-                'preserve': source_link.preserve
+                'preserve': source_link.preserve,
+                'url_params': url_params
             })
 
     # Recipes where this item is a BYPRODUCT
@@ -162,7 +188,8 @@ def play_item(id):
         product = byproduct_link.recipe.product
         byproduct_of.append({
             'item': product,
-            'rate_amount': byproduct_link.rate_amount
+            'rate_amount': byproduct_link.rate_amount,
+            'url_params': url_params
         })
 
     # Check for active progress
@@ -172,8 +199,9 @@ def play_item(id):
 
     # UI Context: Characters nearby (for the "Pick Up" button)
     chars_here = []
-    if loc_id:
-        chars_here = Character.query.filter_by(game_token=game_token, location_id=loc_id).all()
+    if ctx_loc_id:
+        chars_here = Character.query.filter_by(
+            game_token=game_token, location_id=ctx_loc_id).all()
     overall = Overall.query.get(game_token)
 
     return render_template(
@@ -181,7 +209,7 @@ def play_item(id):
         item=item,
         owner=owner,
         pile=pile,
-        context=context,
+        #context=context,
         recipes=enriched_recipes,
         used_for_production=used_for_production,
         byproduct_of=byproduct_of,
@@ -323,6 +351,8 @@ def play_character(id):
     character = Character.query.get_or_404((game_token, id))
     capture_origin(name=character.name)
     exit_loc_id = request.args.get('auto_select_exit', type=int)
+    session['old_char_id'] = id
+    session.pop('old_loc_id', None)
     
     # Identify other party members at this location
     party_members = []
@@ -370,6 +400,7 @@ def play_location(id):
     game_token = g.game_token
     location = Location.query.get_or_404((game_token, id))
     capture_origin(name=location.name)
+    session['old_loc_id'] = id
     
     has_grid = bool(location.dimensions and location.dimensions[0] > 0)
     
@@ -381,6 +412,12 @@ def play_location(id):
     inventory_piles = Pile.query.filter_by(
         game_token=game_token, owner_id=id
     ).all()
+
+    # Validate the session's char_id
+    current_char_id = session.get('old_char_id')
+    if current_char_id:
+        if current_char_id not in [c.id for c in characters_here]:
+            session.pop('old_char_id', None)
 
     # 2. Fix Incorrectly Positioned Entities
     if has_grid:
@@ -490,14 +527,19 @@ def char_travel(id):
 # ------------------------------------------------------------------------
 
 @play_bp.route('/production/start/host/<int:id>', methods=['POST'])
-def start_item_production():
+def start_item_production(id):
+    req = RequestHelper('form')
     recipe_id = req.get_int('recipe_id')
     
-    success, message = start_production(id, recipe_id)
-    return jsonify({"status": "success" if success else "error", "message": message})
+    ctx_id = session.get('old_char_id') or session.get('old_loc_id')
+    success, message = start_production(id, recipe_id, context_id=ctx_id)
+    if success:
+        return jsonify({"status": "success", "message": message})
+    else:
+        return jsonify({"status": "error", "message": message}), 400
 
 @play_bp.route('/production/stop/host/<int:id>', methods=['POST'])
-def stop_item_production():
+def stop_item_production(id):
     if stop_production(id):
         return jsonify({"status": "success"})
     return jsonify({"status": "error"}), 400
@@ -510,7 +552,7 @@ def production_status(id):
     
     try:
         # 1. Tick the logic
-        prog = Progress.query.filter_by(game_token=game_token, owner_id=id).first()
+        prog = Progress.query.filter_by(game_token=game_token, host_id=id).first()
         if prog and prog.is_ongoing:
             update_progress(prog.id)
         

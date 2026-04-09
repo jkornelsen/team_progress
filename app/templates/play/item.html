@@ -150,13 +150,7 @@
                                         {{ s.ingredient.name | mask_string }}:
                                     {% else %}
                                         {% set target_url = url_for('play.play_item', 
-                                            id=s.ingredient.id, 
-                                            owner_id=s.pile_owner_id,
-                                            char_id=context.char_id,
-                                            loc_id=context.loc_id,
-                                            **({'pos[]': s.pile_pos} if s.pile_pos else {})
-                                        ) %}
-                                        
+                                            id=s.ingredient.id, **s.url_params) %}
                                         {% call hotkey_link(target_url, link_letters) %}
                                             {{ s.ingredient.name }}
                                         {% endcall %}:
@@ -217,9 +211,7 @@
                     {% for entry in used_for_production | sort(attribute='item.name') %}
                         <div class="col-row used-for-row">
                             {% set target_url = url_for('play.play_item',
-                                id=entry.item.id,
-                                char_id=context.char_id,
-                                loc_id=context.loc_id) %}
+                                id=entry.item.id, **entry.url_params) %}
                             {% call hotkey_link(target_url, link_letters) %}
                                 {{ entry.item.name if not entry.item.masked else (entry.item.name | mask_string) }}
                             {% endcall %}
@@ -246,9 +238,7 @@
                     {% for entry in byproduct_of | sort(attribute='item.name') %}
                         <div class="col-row byproduct-of-row">
                             {% set target_url = url_for('play.play_item',
-                                id=entry.item.id,
-                                char_id=context.char_id,
-                                loc_id=context.loc_id) %}
+                                id=entry.item.id, **entry.url_params) %}
                             {% call hotkey_link(target_url, link_letters) %}
                                 {{ entry.item.name if not entry.item.masked else (entry.item.name | mask_string) }}
                             {% endcall %}
@@ -267,20 +257,60 @@
     const itemId = {{ item.id }};
     const ownerId = {{ owner.id }};
 
-    // 1. Production AJAX Logic
+    // Heartbeat for Progress Bar
+    async function updateStatus() {
+        const res = await fetch(`/production/status/host/${ownerId}?item_id=${itemId}`);
+        const data = await res.json();
+
+        if (data.status === 'interrupt') {
+            showInterruptModal(data);
+            return;
+        }
+
+        // UPDATE BUTTONS AND 🚫 ICONS
+        if (data.recipes) {
+            data.recipes.forEach(r => {
+                const startBtn = document.getElementById(`start-${r.recipe_id}`);
+                const controlsDiv = document.getElementById(`controls-${r.recipe_id}`);
+                
+                // If can_produce changed since page load, we'd swap 
+                // the button for the 🚫 icon here via DOM manipulation.
+                // Simplified: Update tooltip of existing icons
+                const icon = controlsDiv.querySelector('.info-icon');
+                if (icon) icon.setAttribute('title', r.reason);
+            });
+        }
+
+        // UPDATE QUANTITY DISPLAY
+        // In a real tick, quantities change. Refresh just the number:
+        // (You might need a small separate AJAX for current pile quantity)
+    }
+    setInterval(updateStatus, 2000);
+
+    // Production AJAX Logic
     async function startProd(recipeId) {
         const fd = new FormData();
-        fd.append('owner_id', ownerId);
         fd.append('recipe_id', recipeId);
-        const res = await fetch('/production/start', { method: 'POST', body: fd });
-        if (res.ok) location.reload();
+        const res = await fetch(`/production/start/host/${ownerId}`, { 
+            method: 'POST', 
+            body: fd 
+        });
+        if (res.ok) {
+            location.reload();
+        } else {
+            const err = await res.json();
+            flashMessage(err.message || "Could not start production.");
+        }
     }
 
     async function stopProd() {
-        const fd = new FormData();
-        fd.append('owner_id', ownerId);
-        const res = await fetch('/production/stop', { method: 'POST', body: fd });
-        if (res.ok) location.reload();
+        const res = await fetch(`/production/stop/host/${ownerId}`, { 
+            method: 'POST' 
+        });
+        
+        if (res.ok) {
+            location.reload();
+        }
     }
 
     async function gainItem(recipeId) {
@@ -295,7 +325,7 @@
         }
     }
 
-    // 2. Inventory AJAX Logic
+    // Inventory AJAX Logic
     document.getElementById('drop-btn')?.addEventListener('click', async () => {
         const qtyInput = document.getElementById('drop-qty');
         const fd = new FormData();
@@ -364,36 +394,6 @@
             alert("Unequip failed: " + (errorData.message || "Unknown error"));
         }
     });
-
-    // 3. Heartbeat for Progress Bar
-    async function updateStatus() {
-        const res = await fetch(`/production/status/${ownerId}?item_id=${itemId}`);
-        const data = await res.json();
-
-        if (data.status === 'interrupt') {
-            showInterruptModal(data);
-            return;
-        }
-
-        // UPDATE BUTTONS AND 🚫 ICONS
-        if (data.recipes) {
-            data.recipes.forEach(r => {
-                const startBtn = document.getElementById(`start-${r.recipe_id}`);
-                const controlsDiv = document.getElementById(`controls-${r.recipe_id}`);
-                
-                // If can_produce changed since page load, we'd swap 
-                // the button for the 🚫 icon here via DOM manipulation.
-                // Simplified: Update tooltip of existing icons
-                const icon = controlsDiv.querySelector('.info-icon');
-                if (icon) icon.setAttribute('title', r.reason);
-            });
-        }
-
-        // UPDATE QUANTITY DISPLAY
-        // In a real tick, quantities change. Refresh just the number:
-        // (You might need a small separate AJAX for current pile quantity)
-    }
-    setInterval(updateStatus, 2000);
 </script>
 
 <style>

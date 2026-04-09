@@ -7,13 +7,7 @@
         <div class="dropdown-menu">
             <a href="{{ url_for('session.get_session_link') }}">Invite Friends (Link)</a>
             <a href="{{ url_for('session.session_users') }}">Who's Online?</a>
-            <hr>
             <a href="{{ url_for('session.change_user') }}">Change Username</a>
-            <hr>
-            <div class="token-info">
-                <small>Session ID:</small><br>
-                <code>{{ game_token[:8] }}...</code>
-            </div>
         </div>
     </div>
 </div>

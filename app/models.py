@@ -75,6 +75,7 @@ class DictHydrator:
 
 class Entity(db.Model, DictHydrator):
     """Base table for all primary game objects."""
+    TYPENAME = 'entity'
     __tablename__ = 'entities'
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
@@ -154,7 +155,7 @@ class Entity(db.Model, DictHydrator):
 
     __mapper_args__ = {
         'polymorphic_on': entity_type,
-        'polymorphic_identity': 'entity'
+        'polymorphic_identity': TYPENAME
     }
 
 # ------------------------------------------------------------------------
@@ -168,7 +169,8 @@ class Item(Entity):
     BLUEPRINT: Static definition of an item type (e.g., 'Iron Ore').
     Instance data (quantity, position) is managed by the Pile model.
     """
-    __tablename__ = 'items'
+    TYPENAME = 'item'
+    __tablename__ = f'{TYPENAME}s'
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
     storage_type = db.Column(
@@ -235,7 +237,7 @@ class Item(Entity):
             f"storage_type IN {StorageType.ALL_CODES}", 
             name="check_storage_type_valid"),
     )
-    __mapper_args__ = {'polymorphic_identity': 'item'}
+    __mapper_args__ = {'polymorphic_identity': TYPENAME}
 
 class Location(Entity):
     """Allows items or characters to be in different places,
@@ -243,7 +245,8 @@ class Location(Entity):
 
     SINGLETON: Each is a unique container for Piles and ItemRefs.
     """
-    __tablename__ = 'locations'
+    TYPENAME = 'location'
+    __tablename__ = f'{TYPENAME}s'
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
     toplevel = db.Column(db.Boolean, default=False)
@@ -308,10 +311,6 @@ class Location(Entity):
         'Character',
         back_populates='location',
         foreign_keys="[Character.game_token, Character.location_id]")
-    travelling_here = db.relationship(
-        'TravelProgress',
-        back_populates='destination',
-        foreign_keys="[TravelProgress.game_token, TravelProgress.dest_id]")
     routes_forward = db.relationship(
         'LocDest',
         back_populates='loc1',
@@ -330,7 +329,7 @@ class Location(Entity):
             ['game_token', 'id'],
             ['entities.game_token', 'entities.id'], ondelete='CASCADE'),
     )
-    __mapper_args__ = {'polymorphic_identity': 'location'}
+    __mapper_args__ = {'polymorphic_identity': TYPENAME}
 
 class Character(Entity):
     """The primary entity for role-playing scenarios.
@@ -338,7 +337,8 @@ class Character(Entity):
 
     SINGLETON: Each is a unique actor and container for Piles.
     """
-    __tablename__ = 'characters'
+    TYPENAME = 'character'
+    __tablename__ = f'{TYPENAME}s'
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
     toplevel = db.Column(db.Boolean, default=False)
@@ -381,7 +381,7 @@ class Character(Entity):
             ['game_token', 'location_id'],
             ['locations.game_token', 'locations.id']),
     )
-    __mapper_args__ = { 'polymorphic_identity': 'character' }
+    __mapper_args__ = {'polymorphic_identity': TYPENAME}
 
 class Attrib(Entity):
     """
@@ -392,7 +392,8 @@ class Attrib(Entity):
     BLUEPRINT: Defines a property (e.g., 'Strength').
     Actual values for entities are stored in 'AttribVal' instances.
     """
-    __tablename__ = 'attribs'
+    TYPENAME = 'attrib'
+    __tablename__ = f'{TYPENAME}s'
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
     enum_list = db.Column(ARRAY(db.Text))
@@ -428,7 +429,7 @@ class Attrib(Entity):
             ['id', 'game_token'],
             ['entities.id', 'entities.game_token'], ondelete='CASCADE'),
     )
-    __mapper_args__ = { 'polymorphic_identity': 'attrib' }
+    __mapper_args__ = {'polymorphic_identity': TYPENAME}
 
 
 class OutcomeType:
@@ -452,6 +453,7 @@ class Event(Entity):
     """Actions and things that can happen, typically with chance.
     Many events use or change the Attrib values of other entities.
     """
+    TYPENAME = 'event'
     __tablename__ = 'events'
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
@@ -524,7 +526,7 @@ class Event(Entity):
         db.CheckConstraint(
             roller_type.in_(RollerType.ALL), name='check_roller_type_valid'),
     )
-    __mapper_args__ = {'polymorphic_identity': 'event'}
+    __mapper_args__ = {'polymorphic_identity': TYPENAME}
 
 ENTITIES = {
     'items': Item,
@@ -1165,17 +1167,17 @@ class RecipeAttribReq(db.Model, DictHydrator):
 # State and Navigation
 # ------------------------------------------------------------------------
 
-class Progress(db.Model):
+class Progress(db.Model, DictHydrator):
     """
-    Base table for all timed activities, namely, Production and Travel.
+    Table for all timed activities.
+    Produce Items in a Pile via Recipes.
     """
     __tablename__ = 'progress'
-    game_token = db.Column(db.String(50), primary_key=True)
-    id = db.Column(db.Integer, primary_key=True)
-    activity_type = db.Column(db.String(20), nullable=False)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    game_token = db.Column(db.String(50), index=True, nullable=False)
     
-    # The Entity performing or hosting the activity
     host_id = db.Column(db.Integer, nullable=False)
+    recipe_id = db.Column(db.Integer, nullable=False)
     
     start_time = db.Column(db.DateTime)
     stop_time = db.Column(db.DateTime)
@@ -1185,65 +1187,25 @@ class Progress(db.Model):
     host = db.relationship(
         'Entity', 
         back_populates='progress_records',
-        foreign_keys=[game_token, host_id])
-
-    __table_args__ = (
-        db.ForeignKeyConstraint(
-            ['game_token', 'host_id'],
-            ['entities.game_token', 'entities.id'], ondelete='CASCADE'),
-    )
-
-    __mapper_args__ = {
-        'polymorphic_on': activity_type,
-        'polymorphic_identity': 'base'
-    }
-
-class ProductionProgress(Progress):
-    """Produce Items in a Pile via Recipes."""
-    __tablename__ = 'production_progress'
-    game_token = db.Column(db.String(50), primary_key=True)
-    id = db.Column(db.Integer, primary_key=True)
-    recipe_id = db.Column(db.Integer, nullable=False)
+        foreign_keys=[game_token, host_id],
+        overlaps="recipe,progress_records")
+    recipe = db.relationship(
+        'Recipe',
+        foreign_keys=[game_token, recipe_id],
+        overlaps="host,progress_records")
 
     @property
     def product(self):
         return self.recipe.product if self.recipe else None
 
-    recipe = db.relationship(
-        'Recipe',
-        foreign_keys=[game_token, recipe_id])
-
     __table_args__ = (
         db.ForeignKeyConstraint(
-            ['game_token', 'id'],
-            ['progress.game_token', 'progress.id'], ondelete='CASCADE'),
+            ['game_token', 'host_id'],
+            ['entities.game_token', 'entities.id'], ondelete='CASCADE'),
         db.ForeignKeyConstraint(
             ['game_token', 'recipe_id'],
-            ['recipes.game_token', 'recipes.id']),
+            ['recipes.game_token', 'recipes.id'], ondelete='CASCADE'),
     )
-    __mapper_args__ = {'polymorphic_identity': 'production'}
-
-class TravelProgress(Progress):
-    """Characters moving between locations."""
-    __tablename__ = 'travel_progress'
-    game_token = db.Column(db.String(50), primary_key=True)
-    id = db.Column(db.Integer, primary_key=True)
-    dest_id = db.Column(db.Integer, nullable=False)
-
-    destination = db.relationship(
-        'Location',
-        back_populates='travelling_here',
-        foreign_keys=[game_token, dest_id])
-
-    __table_args__ = (
-        db.ForeignKeyConstraint(
-            ['game_token', 'id'],
-            ['progress.game_token', 'progress.id'], ondelete='CASCADE'),
-        db.ForeignKeyConstraint(
-            ['game_token', 'dest_id'],
-            ['locations.game_token', 'locations.id']),
-    )
-    __mapper_args__ = {'polymorphic_identity': 'travel'}
 
 # ------------------------------------------------------------------------
 # Global Configuration

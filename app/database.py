@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import inspect
 from sqlalchemy.orm import make_transient
 import os
 import subprocess
@@ -92,3 +93,11 @@ def clone_with_children(obj, overrides):
             clone_with_children(child, child_overrides)
             
     return obj
+
+def safe_remove(obj):
+    """Removes an object from the session/DB regardless of whether it was saved yet."""
+    state = inspect(obj)
+    if state.persistent:
+        db.session.delete(obj)
+    elif state.pending:
+        db.session.expunge(obj)
