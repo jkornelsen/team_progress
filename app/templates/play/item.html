@@ -154,13 +154,24 @@
                         <div class="recipe-controls spacious-top">
                             <div id="controls-{{ r.id }}">
                                 {% if r.can_produce %}
+                                    {% set letter = link_letters.next() %}
                                     {% if r.instant %}
-                                        <button onclick="gainItem({{ r.id }})" class="go-button">Gain Instant</button>
+                                        <button id="gain-{{ r.id }}" onclick="gainItem({{ r.id }})" class="go-button">
+                                            <span class="hotkey-indicator">{{ letter }}</span>
+                                            Gain Instant
+                                        </button>
+                                        <script>
+                                            window.linkForKey['{{ letter }}'] = '#gain-{{ r.id }}';
+                                        </script>
                                     {% else %}
                                         <button id="start-{{ r.id }}" onclick="startProd({{ r.id }})" 
                                                 class="go-button {{ 'hidden' if progress and progress.is_ongoing and progress.recipe_id == r.id }}">
+                                            <span class="hotkey-indicator">{{ letter }}</span>
                                             Start
                                         </button>
+                                        <script>
+                                            window.linkForKey['{{ letter }}'] = '#start-{{ r.id }}';
+                                        </script>
                                     {% endif %}
                                 {% else %}
                                     {# INTEGRATION: The 🚫 Info Icon with specific reason tooltip #}
@@ -180,13 +191,12 @@
                                 {% endif %}
                             </div>
 
-                            {# Production Bar (Only for current active recipe) #}
-                            {% if progress and progress.recipe_id == r.id %}
-                            <div id="prog-container-{{ r.id }}" class="progress-container {{ 'hidden' if not progress.is_ongoing }}">
-                                <progress id="prog-bar" value="0" max="100"></progress>
-                                <span id="prog-label" class="progress-label">0%</span>
+                            <!-- Production Bar -->
+                            <div id="prog-container-{{ r.id }}" 
+                                 class="progress-container {{ 'hidden' if not (progress and progress.is_ongoing and progress.recipe_id == r.id) }}">
+                                <progress id="prog-bar-{{ r.id }}" value="0" max="100"></progress>
+                                <span id="prog-label-{{ r.id }}" class="progress-label">0%</span>
                             </div>
-                            {% endif %}
                         </div>
                     </div>
                     {% endfor %}
@@ -305,12 +315,16 @@
 
     // Heartbeat for Progress Bar
     async function updateStatus() {
-        const res = await fetch(`/production/status/host/${ownerId}?item_id=${itemId}`);
+        const res = await fetch(`/production/status/owner/${ownerId}?item_id=${itemId}`);
         const data = await res.json();
 
         if (data.status === 'interrupt') {
             showInterruptModal(data);
             return;
+        }
+
+        if (data.halt_message) {
+            flashMessage(`Production Halted: ${data.halt_message}`);
         }
 
         // UPDATE QUANTITY DISPLAY (if available in response)
@@ -322,31 +336,38 @@
         }
 
         // UPDATE PROGRESS BAR if ongoing
+        document.querySelectorAll('.progress-container').forEach(
+            el => el.classList.add('hidden'));
         if (data.is_ongoing && data.active_recipe_id) {
-            const progBar = document.getElementById('prog-bar');
-            const progLabel = document.getElementById('prog-label');
-            
+            const recipeId = data.active_recipe_id;
+            const container = document.getElementById(`prog-container-${recipeId}`);
+            const progBar = document.getElementById(`prog-bar-${recipeId}`);
+            const progLabel = document.getElementById(`prog-label-${recipeId}`);
+        
+            if (container) container.classList.remove('hidden');
+
             if (progBar && data.start_time && data.rate_duration) {
-                // Calculate elapsed time
                 const startTime = new Date(data.start_time);
                 const now = new Date();
                 const elapsedMs = now - startTime;
                 
-                // Use rate_duration from backend (in seconds, convert to ms)
                 const durationMs = data.rate_duration * 1000;
                 
                 // Calculate progress within the CURRENT batch
                 // elapsed time attributable to completed batches
                 const completedBatchesMs = (data.batches || 0) * durationMs;
-                // remaining elapsed time in the current batch
                 const elapsedInCurrentBatch = Math.max(0, elapsedMs - completedBatchesMs);
-                // progress as percentage of current batch
                 const progressPercent = Math.min((elapsedInCurrentBatch / durationMs) * 100, 100);
                 
                 progBar.value = progressPercent;
                 if (progLabel) {
                     progLabel.textContent = Math.floor(progressPercent) + '%';
                 }
+
+                const startBtn = document.getElementById(`start-${recipeId}`);
+                const stopBtn = document.getElementById(`stop-${recipeId}`);
+                if (startBtn) startBtn.classList.add('hidden');
+                if (stopBtn) stopBtn.classList.remove('hidden');
             }
         } else {
             // Production is NOT ongoing - hide progress bar and show start button
@@ -385,7 +406,7 @@
     async function startProd(recipeId) {
         const fd = new FormData();
         fd.append('recipe_id', recipeId);
-        const res = await fetch(`/production/start/host/${ownerId}`, { 
+        const res = await fetch(`/production/start/owner/${ownerId}`, { 
             method: 'POST', 
             body: fd 
         });
@@ -405,7 +426,7 @@
     }
 
     async function stopProd() {
-        const res = await fetch(`/production/stop/host/${ownerId}`, { 
+        const res = await fetch(`/production/stop/owner/${ownerId}`, { 
             method: 'POST' 
         });
         
@@ -424,9 +445,11 @@
     async function gainItem(recipeId) {
         // Logic for instant gain (one-off execution)
         const fd = new FormData();
-        fd.append('owner_id', ownerId);
         fd.append('recipe_id', recipeId);
-        const res = await fetch('/production/start', { method: 'POST', body: fd });
+        const res = await fetch(
+            `/production/start/owner/${ownerId}`, {
+            method: 'POST', body: fd
+        });
         if (res.ok) {
             await stopProd(); // Trigger processing immediately
             location.reload();

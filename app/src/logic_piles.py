@@ -207,6 +207,8 @@ def adjust_quantity(item_id, owner_id, delta, position=None, slot=None):
     - Returns: The new quantity.
     """
     pile = get_or_create_pile(item_id, owner_id, position, slot)
+
+    logger.info(f"[QTY CHANGE] Item:{item_id} | Owner:{owner_id} | Delta:{delta} | Current:{pile.quantity}")
     
     # Check Item limits if increasing
     if delta > 0:
@@ -226,6 +228,7 @@ def adjust_quantity(item_id, owner_id, delta, position=None, slot=None):
     
     # Cleanup: remove empty rows to keep the DB small
     if pile.quantity == 0:
+        logger.info(f"[QTY DELETE] Removing empty pile for Item:{item_id} Owner:{owner_id}")
         safe_remove(pile)
         return 0.0
         

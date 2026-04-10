@@ -63,6 +63,309 @@ def overview():
     )
 
 # ------------------------------------------------------------------------
+# Location & Character Routes
+# ------------------------------------------------------------------------
+
+@play_bp.route('/play/location/<int:id>')
+def play_location(id):
+    game_token = g.game_token
+    location = Location.query.get_or_404((game_token, id))
+    capture_origin(name=location.name)
+    session['old_loc_id'] = id
+    
+    has_grid = bool(location.dimensions and location.dimensions[0] > 0)
+    
+    # 1. Fetch Characters & Items
+    characters_here = Character.query.filter_by(
+        game_token=game_token, location_id=id
+    ).all()
+    
+    inventory_piles = Pile.query.filter_by(
+        game_token=game_token, owner_id=id
+    ).all()
+
+    # Validate the session's char_id
+    current_char_id = session.get('old_char_id')
+    if current_char_id:
+        if current_char_id not in [c.id for c in characters_here]:
+            session.pop('old_char_id', None)
+
+    # 2. Fix Incorrectly Positioned Entities
+    if has_grid:
+        default_pos = get_default_position(location)
+        needs_commit = False
+
+        if default_pos:
+            # Validate Characters
+            for char in characters_here:
+                if not char.position or not is_in_grid(location, *char.position):
+                    char.position = default_pos
+                    db.session.add(char)
+                    needs_commit = True
+
+            # Validate & Merge Items
+            for pile in inventory_piles:
+                if not pile.position or not is_in_grid(location, *pile.position):
+                    pile.merge_to(default_pos)
+                    needs_commit = True
+
+        if needs_commit:
+            db.session.commit()
+            # Refresh list because some piles may have been merged/deleted
+            inventory_piles = Pile.query.filter_by(
+                game_token=game_token, owner_id=id
+            ).all()
+
+    # 3. Fetch Exits In Grid
+    destinations = LocDest.query.filter(
+        LocDest.game_token == game_token,
+        ((LocDest.loc1_id == id) | 
+         ((LocDest.loc2_id == id) & (LocDest.bidirectional == True)))
+    ).all()
+    grid_exits = []
+    for dest in destinations:
+        door = dest.door_at(id)
+        if door and len(door) == 2:
+            if is_in_grid(location, door[0], door[1]):
+                target = dest.other_loc(id)
+                grid_exits.append({
+                    'x': door[0],
+                    'y': door[1],
+                    'name': target.name,
+                    'target_id': target.id
+                })
+
+    # 4. Fetch Referenced Items
+    referenced_data = []
+    for ref in location.item_refs:
+        gen_pile = Pile.query.filter_by(
+            game_token=game_token, item_id=ref.item.id, owner_id=GENERAL_ID
+        ).first()
+        referenced_data.append({
+            'item': ref.item,
+            'quantity': gen_pile.quantity if gen_pile else 0.0
+        })
+
+    # 5. Local attributes
+    attrib_values = AttribVal.query.filter_by(
+        game_token=game_token, subject_id=id
+    ).all()
+
+    # 6. Active Character Setup
+    active_char_id = request.args.get('active_char_id', type=int)
+    if not active_char_id and characters_here:
+        active_char_id = characters_here[0].id
+
+    return render_template(
+        'play/location.html',
+        location=location,
+        has_grid=has_grid,
+        inventory_piles=inventory_piles,
+        characters_here=characters_here,
+        destinations=destinations,
+        grid_exits=grid_exits,
+        referenced_items=referenced_data,
+        attrib_values=attrib_values,
+        active_char_id=active_char_id,
+        link_letters=LinkLetters(excluded='ctmoe')
+    )
+
+@play_bp.route('/play/char/<int:id>')
+def play_character(id):
+    game_token = g.game_token
+    character = Character.query.get_or_404((game_token, id))
+    capture_origin(name=character.name)
+    exit_loc_id = request.args.get('auto_select_exit', type=int)
+    session['old_char_id'] = id
+    session.pop('old_loc_id', None)
+    
+    # Identify other party members at this location
+    party_members = []
+    if character.travel_party:
+        party_members = Character.query.filter(
+            Character.game_token == game_token,
+            Character.location_id == character.location_id,
+            Character.travel_party == character.travel_party,
+            Character.id != character.id
+        ).all()
+
+    # Fetch piles (Items carried)
+    inventory = Pile.query.filter_by(
+        game_token=game_token, owner_id=id
+    ).all()
+    
+    # Fetch Attributes
+    attrib_values = AttribVal.query.filter_by(
+        game_token=game_token, subject_id=id
+    ).all()
+    
+    # Fetch Navigation (Nearby Destinations)
+    destinations, has_nonadjacent = get_available_destinations(character)
+    
+    # Fetch Abilities (Events linked to this character)
+    # Assuming a relationship 'abilities' exists in the Character model
+    # Or query EventRegistry/Triggers
+    abilities = Event.query.filter_by(game_token=game_token, toplevel=True).all() # Placeholder logic
+
+    return render_template(
+        'play/character.html',
+        character=character,
+        inventory=inventory,
+        attrib_values=attrib_values,
+        destinations=destinations,
+        exit_loc_id=exit_loc_id,
+        has_nonadjacent=has_nonadjacent,
+        abilities=abilities,
+        party_members=party_members,
+        link_letters=LinkLetters(excluded='gltmoe')
+    )
+
+@play_bp.route('/char/<int:id>/drop', methods=['POST'])
+def drop_item(id):
+    req = RequestHelper('form')
+    item_id = req.get_int('item_id')
+    qty = req.get_float('quantity')
+    
+    # Get character to find current location
+    char = Character.query.get((g.game_token, id))
+    
+    # Transfer from Char to Location at current Char position
+    success = transfer_item(
+        item_id, from_owner_id=id, to_owner_id=char.location_id,
+        quantity=qty, to_pos=char.position)
+    
+    if success:
+        db.session.commit()
+        return jsonify({"status": "success"})
+    return jsonify({"status": "error"}), 400
+
+@play_bp.route('/char/<int:id>/pickup', methods=['POST'])
+def pickup_item(id):
+    req = RequestHelper('form')
+    item_id = req.get_int('item_id')
+    qty = req.get_float('quantity')
+    pos = parse_coords(req.get_str('pos'))
+    
+    char = Character.query.get((g.game_token, id))
+    
+    # Transfer from Location to Char
+    success = transfer_item(
+        item_id, from_owner_id=char.location_id, to_owner_id=id,
+        quantity=qty, from_pos=pos
+    )
+    
+    if success:
+        db.session.commit()
+        return jsonify({"status": "success"})
+    return jsonify({"status": "error"}), 400
+
+@play_bp.route('/char/<int:id>/equip', methods=['POST'])
+def equip_item(id):
+    """Assigns an item pile to a specific equipment slot."""
+    req = RequestHelper('form')
+    game_token = g.game_token
+    item_id = req.get_int('item_id')
+    slot = req.get_str('slot')
+    
+    # Store the most recently used slot in the session for UI convenience
+    session['default_slot'] = slot
+    
+    # 1. Fetch character and item to ensure they exist (for the log message)
+    char = Character.query.get((game_token, id))
+    item = Item.query.get((game_token, item_id))
+    
+    if not char or not item:
+        return jsonify({'status': 'error', 'message': 'Character or Item not found.'}), 404
+
+    # 2. Find the specific pile in the character's inventory
+    pile = Pile.query.filter_by(
+        game_token=game_token, 
+        owner_id=id, 
+        item_id=item_id
+    ).first()
+
+    if not pile:
+        return jsonify({
+            'status': 'error',
+            'message': f"No {item.name} found in {char.name}'s inventory."
+        }), 400
+
+    # 3. Update the slot
+    pile.slot = slot
+    db.session.commit()
+
+    # 4. Log to Chronicle
+    msg = f"{char.name} equipped {item.name} to {slot}."
+    add_message(game_token, msg)
+
+    return jsonify({
+        'status': 'success',
+        'message': msg
+    })
+
+@play_bp.route('/char/<int:id>/unequip', methods=['POST'])
+def unequip_item(id):
+    """Removes an item from its equipment slot, returning it to the general pack."""
+    req = RequestHelper('form')
+    game_token = g.game_token
+    item_id = req.get_int('item_id')
+    
+    char = Character.query.get((game_token, id))
+    item = Item.query.get((game_token, item_id))
+
+    if not char or not item:
+        return jsonify({'status': 'error', 'message': 'Character or Item not found.'}), 404
+
+    # Find the pile
+    pile = Pile.query.filter_by(
+        game_token=game_token, 
+        owner_id=id, 
+        item_id=item_id
+    ).first()
+
+    if not pile:
+        return jsonify({
+            'status': 'error',
+            'message': f"No {item.name} found in {char.name}'s inventory."
+        }), 400
+
+    # Remove the slot assignment (set to None/NULL)
+    pile.slot = None
+    db.session.commit()
+
+    # Log to Chronicle
+    msg = f"{char.name} unequipped {item.name}."
+    add_message(game_token, msg)
+
+    return jsonify({
+        'status': 'success',
+        'message': msg
+    })
+
+@play_bp.route('/char/move/<int:id>', methods=['POST'])
+def char_move(id):
+    req = RequestHelper('form')
+    dx = req.get_int('dx')
+    dy = req.get_int('dy')
+    move_party = req.get_bool('move_party')
+    
+    success, results = move_group(id, dx, dy, move_party)
+    if success:
+        return jsonify({"status": "success", "positions": results})
+    return jsonify({"status": "error", "message": results}), 400
+
+@play_bp.route('/char/go/<int:id>', methods=['POST'])
+def char_travel(id):
+    req = RequestHelper('form')
+    dest_loc_id = req.get_int('dest_id')
+    move_party = req.get_bool('move_party')
+    success, message = arrive_at_destination(id, dest_loc_id, move_party)
+    if success:
+        return jsonify({"status": "arrived"})
+    else:
+        return jsonify({"status": "error", "message": message}), 400
+
+# ------------------------------------------------------------------------
 # Item & Pile Routes
 # ------------------------------------------------------------------------
 
@@ -250,9 +553,13 @@ def play_item(id):
             'url_params': url_params
         })
 
+    # Determine the Host for production
+    # If a character is present, they host the work even for universal items.
+    host_id = ctx_char_id if ctx_char_id else owner.id
+
     # Check for active progress
     current_progress = Progress.query.filter_by(
-        game_token=game_token, host_id=owner.id
+        game_token=game_token, host_id=host_id
     ).first()
 
     # UI Context: Characters nearby (for the "Pick Up" button)
@@ -275,10 +582,10 @@ def play_item(id):
         item=item,
         owner=owner,
         pile=pile,
-        #context=context,
         recipes=enriched_recipes,
         used_for_production=used_for_production,
         byproduct_of=byproduct_of,
+        host_id=host_id,
         progress=current_progress,
         available_slots=overall.slots,
         chars_here=chars_here,
@@ -286,344 +593,48 @@ def play_item(id):
         link_letters=LinkLetters(excluded='moe')
     )
 
-@play_bp.route('/char/<int:id>/drop', methods=['POST'])
-def drop_item(id):
-    req = RequestHelper('form')
-    item_id = req.get_int('item_id')
-    qty = req.get_float('quantity')
-    
-    # Get character to find current location
-    char = Character.query.get((g.game_token, id))
-    
-    # Transfer from Char to Location at current Char position
-    success = transfer_item(
-        item_id, from_owner_id=id, to_owner_id=char.location_id,
-        quantity=qty, to_pos=char.position)
-    
-    if success:
-        db.session.commit()
-        return jsonify({"status": "success"})
-    return jsonify({"status": "error"}), 400
-
-@play_bp.route('/char/<int:id>/pickup', methods=['POST'])
-def pickup_item(id):
-    req = RequestHelper('form')
-    item_id = req.get_int('item_id')
-    qty = req.get_float('quantity')
-    pos = parse_coords(req.get_str('pos'))
-    
-    char = Character.query.get((g.game_token, id))
-    
-    # Transfer from Location to Char
-    success = transfer_item(
-        item_id, from_owner_id=char.location_id, to_owner_id=id,
-        quantity=qty, from_pos=pos
-    )
-    
-    if success:
-        db.session.commit()
-        return jsonify({"status": "success"})
-    return jsonify({"status": "error"}), 400
-
-@play_bp.route('/char/<int:id>/equip', methods=['POST'])
-def equip_item(id):
-    """Assigns an item pile to a specific equipment slot."""
-    req = RequestHelper('form')
-    game_token = g.game_token
-    item_id = req.get_int('item_id')
-    slot = req.get_str('slot')
-    
-    # Store the most recently used slot in the session for UI convenience
-    session['default_slot'] = slot
-    
-    # 1. Fetch character and item to ensure they exist (for the log message)
-    char = Character.query.get((game_token, id))
-    item = Item.query.get((game_token, item_id))
-    
-    if not char or not item:
-        return jsonify({'status': 'error', 'message': 'Character or Item not found.'}), 404
-
-    # 2. Find the specific pile in the character's inventory
-    pile = Pile.query.filter_by(
-        game_token=game_token, 
-        owner_id=id, 
-        item_id=item_id
-    ).first()
-
-    if not pile:
-        return jsonify({
-            'status': 'error',
-            'message': f"No {item.name} found in {char.name}'s inventory."
-        }), 400
-
-    # 3. Update the slot
-    pile.slot = slot
-    db.session.commit()
-
-    # 4. Log to Chronicle
-    msg = f"{char.name} equipped {item.name} to {slot}."
-    add_message(game_token, msg)
-
-    return jsonify({
-        'status': 'success',
-        'message': msg
-    })
-
-@play_bp.route('/char/<int:id>/unequip', methods=['POST'])
-def unequip_item(id):
-    """Removes an item from its equipment slot, returning it to the general pack."""
-    req = RequestHelper('form')
-    game_token = g.game_token
-    item_id = req.get_int('item_id')
-    
-    char = Character.query.get((game_token, id))
-    item = Item.query.get((game_token, item_id))
-
-    if not char or not item:
-        return jsonify({'status': 'error', 'message': 'Character or Item not found.'}), 404
-
-    # Find the pile
-    pile = Pile.query.filter_by(
-        game_token=game_token, 
-        owner_id=id, 
-        item_id=item_id
-    ).first()
-
-    if not pile:
-        return jsonify({
-            'status': 'error',
-            'message': f"No {item.name} found in {char.name}'s inventory."
-        }), 400
-
-    # Remove the slot assignment (set to None/NULL)
-    pile.slot = None
-    db.session.commit()
-
-    # Log to Chronicle
-    msg = f"{char.name} unequipped {item.name}."
-    add_message(game_token, msg)
-
-    return jsonify({
-        'status': 'success',
-        'message': msg
-    })
-
 # ------------------------------------------------------------------------
-# Character & Location Routes
+# Production Routes
 # ------------------------------------------------------------------------
 
-@play_bp.route('/play/char/<int:id>')
-def play_character(id):
-    game_token = g.game_token
-    character = Character.query.get_or_404((game_token, id))
-    capture_origin(name=character.name)
-    exit_loc_id = request.args.get('auto_select_exit', type=int)
-    session['old_char_id'] = id
-    session.pop('old_loc_id', None)
-    
-    # Identify other party members at this location
-    party_members = []
-    if character.travel_party:
-        party_members = Character.query.filter(
-            Character.game_token == game_token,
-            Character.location_id == character.location_id,
-            Character.travel_party == character.travel_party,
-            Character.id != character.id
-        ).all()
-
-    # Fetch piles (Items carried)
-    inventory = Pile.query.filter_by(
-        game_token=game_token, owner_id=id
-    ).all()
-    
-    # Fetch Attributes
-    attrib_values = AttribVal.query.filter_by(
-        game_token=game_token, subject_id=id
-    ).all()
-    
-    # Fetch Navigation (Nearby Destinations)
-    destinations, has_nonadjacent = get_available_destinations(character)
-    
-    # Fetch Abilities (Events linked to this character)
-    # Assuming a relationship 'abilities' exists in the Character model
-    # Or query EventRegistry/Triggers
-    abilities = Event.query.filter_by(game_token=game_token, toplevel=True).all() # Placeholder logic
-
-    return render_template(
-        'play/character.html',
-        character=character,
-        inventory=inventory,
-        attrib_values=attrib_values,
-        destinations=destinations,
-        exit_loc_id=exit_loc_id,
-        has_nonadjacent=has_nonadjacent,
-        abilities=abilities,
-        party_members=party_members,
-        link_letters=LinkLetters(excluded='lmoe')
-    )
-
-@play_bp.route('/play/location/<int:id>')
-def play_location(id):
-    game_token = g.game_token
-    location = Location.query.get_or_404((game_token, id))
-    capture_origin(name=location.name)
-    session['old_loc_id'] = id
-    
-    has_grid = bool(location.dimensions and location.dimensions[0] > 0)
-    
-    # 1. Fetch Characters & Items
-    characters_here = Character.query.filter_by(
-        game_token=game_token, location_id=id
-    ).all()
-    
-    inventory_piles = Pile.query.filter_by(
-        game_token=game_token, owner_id=id
-    ).all()
-
-    # Validate the session's char_id
-    current_char_id = session.get('old_char_id')
-    if current_char_id:
-        if current_char_id not in [c.id for c in characters_here]:
-            session.pop('old_char_id', None)
-
-    # 2. Fix Incorrectly Positioned Entities
-    if has_grid:
-        default_pos = get_default_position(location)
-        needs_commit = False
-
-        if default_pos:
-            # Validate Characters
-            for char in characters_here:
-                if not char.position or not is_in_grid(location, *char.position):
-                    char.position = default_pos
-                    db.session.add(char)
-                    needs_commit = True
-
-            # Validate & Merge Items
-            for pile in inventory_piles:
-                if not pile.position or not is_in_grid(location, *pile.position):
-                    pile.merge_to(default_pos)
-                    needs_commit = True
-
-        if needs_commit:
-            db.session.commit()
-            # Refresh list because some piles may have been merged/deleted
-            inventory_piles = Pile.query.filter_by(
-                game_token=game_token, owner_id=id
-            ).all()
-
-    # 3. Fetch Exits In Grid
-    destinations = LocDest.query.filter(
-        LocDest.game_token == game_token,
-        ((LocDest.loc1_id == id) | 
-         ((LocDest.loc2_id == id) & (LocDest.bidirectional == True)))
-    ).all()
-    grid_exits = []
-    for dest in destinations:
-        door = dest.door_at(id)
-        if door and len(door) == 2:
-            if is_in_grid(location, door[0], door[1]):
-                target = dest.other_loc(id)
-                grid_exits.append({
-                    'x': door[0],
-                    'y': door[1],
-                    'name': target.name,
-                    'target_id': target.id
-                })
-
-    # 4. Fetch Referenced Items
-    referenced_data = []
-    for ref in location.item_refs:
-        gen_pile = Pile.query.filter_by(
-            game_token=game_token, item_id=ref.item.id, owner_id=GENERAL_ID
-        ).first()
-        referenced_data.append({
-            'item': ref.item,
-            'quantity': gen_pile.quantity if gen_pile else 0.0
-        })
-
-    # 5. Local attributes
-    attrib_values = AttribVal.query.filter_by(
-        game_token=game_token, subject_id=id
-    ).all()
-
-    # 6. Active Character Setup
-    active_char_id = request.args.get('active_char_id', type=int)
-    if not active_char_id and characters_here:
-        active_char_id = characters_here[0].id
-
-    return render_template(
-        'play/location.html',
-        location=location,
-        has_grid=has_grid,
-        inventory_piles=inventory_piles,
-        characters_here=characters_here,
-        destinations=destinations,
-        grid_exits=grid_exits,
-        referenced_items=referenced_data,
-        attrib_values=attrib_values,
-        active_char_id=active_char_id,
-        link_letters=LinkLetters(excluded='ctmoe')
-    )
-
-@play_bp.route('/char/move/<int:id>', methods=['POST'])
-def char_move(id):
-    req = RequestHelper('form')
-    dx = req.get_int('dx')
-    dy = req.get_int('dy')
-    move_party = req.get_bool('move_party')
-    
-    success, results = move_group(id, dx, dy, move_party)
-    if success:
-        return jsonify({"status": "success", "positions": results})
-    return jsonify({"status": "error", "message": results}), 400
-
-@play_bp.route('/char/go/<int:id>', methods=['POST'])
-def char_travel(id):
-    req = RequestHelper('form')
-    dest_loc_id = req.get_int('dest_id')
-    move_party = req.get_bool('move_party')
-    success, message = arrive_at_destination(id, dest_loc_id, move_party)
-    if success:
-        return jsonify({"status": "arrived"})
-    else:
-        return jsonify({"status": "error", "message": message}), 400
-
-# ------------------------------------------------------------------------
-# Progress & Production Routes
-# ------------------------------------------------------------------------
-
-@play_bp.route('/production/start/host/<int:id>', methods=['POST'])
+@play_bp.route('/production/start/owner/<int:id>', methods=['POST'])
 def start_item_production(id):
     req = RequestHelper('form')
     recipe_id = req.get_int('recipe_id')
-    
-    ctx_id = session.get('old_char_id') or session.get('old_loc_id')
-    success, message = start_production(id, recipe_id, context_id=ctx_id)
-    if success:
-        return jsonify({"status": "success", "message": message})
-    else:
-        return jsonify({"status": "error", "message": message}), 400
+    host_id = determine_host_id(id)
 
-@play_bp.route('/production/stop/host/<int:id>', methods=['POST'])
+    ctx_id = session.get('old_char_id') or session.get('old_loc_id')
+    success, message = start_production(host_id, recipe_id, context_id=ctx_id)
+    return jsonify({
+        "status": "success" if success else "error", 
+        "message": message,
+        "host_id": host_id # Return the actual host for JS to update
+    })
+
+@play_bp.route('/production/stop/owner/<int:id>', methods=['POST'])
 def stop_item_production(id):
-    if stop_production(id):
+    host_id = determine_host_id(id)
+
+    if stop_production(host_id):
         return jsonify({"status": "success"})
     return jsonify({"status": "error"}), 400
 
-@play_bp.route('/production/status/host/<int:id>')
+@play_bp.route('/production/status/owner/<int:id>')
 def production_status(id):
     """Heartbeat endpoint to calculate current progress and refresh recipe availability."""
     game_token = g.game_token
     item_id = request.args.get('item_id', type=int)
-    
+    host_id = determine_host_id(id)
+
     try:
         # 1. Tick the logic
-        prog = Progress.query.filter_by(game_token=game_token, host_id=id).first()
+        prog = Progress.query.filter_by(
+            game_token=game_token, host_id=host_id).first()
+        halt_message = None
         if prog and prog.is_ongoing:
             # DEBUG: Log before update
             logger.info(f"Before update_progress: start_time={prog.start_time}, batches_processed={prog.batches_processed}")
-            update_progress(prog.id)
+            halt_message = update_progress(prog.id)
             # DEBUG: Log after update
             logger.info(f"After update_progress: batches_processed={prog.batches_processed}, is_ongoing={prog.is_ongoing}")
         
@@ -643,6 +654,7 @@ def production_status(id):
         res = {
             "is_ongoing": bool(prog and prog.is_ongoing),
             "batches": prog.batches_processed if prog else 0,
+            "halt_message": halt_message,
             "start_time": start_time_iso,
             "active_recipe_id": prog.recipe_id if prog else None,
             "rate_duration": rate_duration,
@@ -651,14 +663,15 @@ def production_status(id):
 
         # 3. Get current quantity of the item being viewed (if item_id provided)
         if item_id:
-            pile = Pile.query.filter_by(game_token=game_token, owner_id=id, item_id=item_id).first()
+            pile = Pile.query.filter_by(
+                game_token=game_token, owner_id=id, item_id=item_id).first()
             if pile:
                 res["current_quantity"] = pile.quantity
             
             # Also get recipe validation for 🚫 icons
             recipes = Recipe.query.filter_by(game_token=game_token, product_id=item_id).all()
             for r in recipes:
-                can_do, reason = can_perform_recipe(game_token, id, r)
+                can_do, reason = can_perform_recipe(game_token, host_id, r)
                 res["recipes"].append({
                     "recipe_id": r.id,
                     "can_produce": can_do,
@@ -673,6 +686,18 @@ def production_status(id):
             "message": e.message,
             "event_id": e.event_id
         })
+
+def determine_host_id(owner_id):
+    """
+    If we are trying to start a universal item from the General page (id 1),
+    but the session knows we are "Suzy", switch the host to Suzy.
+    """
+    host_id = owner_id
+    active_char_id = session.get('old_char_id')
+    if host_id == GENERAL_ID and active_char_id:
+        host_id = active_char_id
+    return host_id
+
 
 # ------------------------------------------------------------------------
 # Events & Dice

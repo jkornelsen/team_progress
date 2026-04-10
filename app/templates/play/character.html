@@ -208,7 +208,8 @@
     
     // Heartbeat Logic for Travel
     async function checkStatus() {
-        const response = await fetch(`/production/status/${charId}`);
+        //TODO: don't allow travel if character is currently involved in production
+        const response = await fetch(`/production/status/host/${charId}`);
         const data = await response.json();
 
         if (data.status === 'interrupt') {
@@ -265,7 +266,7 @@
         if (e.key === 'g') document.getElementById('start-travel-btn').click();
     });
 
-    setInterval(checkStatus, 2000);
+    //setInterval(checkStatus, 2000);
 </script>
 
 <style>

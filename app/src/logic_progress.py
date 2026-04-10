@@ -1,10 +1,11 @@
 import math
 import logging
 from datetime import datetime, timezone
-from flask import g
+from flask import g, session
 from app.models import (
     db, Entity, Item, Character, Pile, Progress,
-    Recipe, RecipeSource, RecipeByproduct, AttribVal, GENERAL_ID)
+    Recipe, RecipeSource, RecipeByproduct, AttribVal,
+    GENERAL_ID, StorageType)
 from app.utils import format_num
 from app.src.logic_piles import adjust_quantity, resolve_recipe_sources
 from app.src.logic_user_interaction import add_message
@@ -31,6 +32,20 @@ def get_elapsed_seconds(progress):
     logger.debug(f"get_elapsed_seconds: now={now}, start={start}, elapsed={elapsed_seconds}s")
     return elapsed_seconds
 
+def get_production_target(item, host_id, context_id=None):
+    """
+    Determines where a produced item should be placed based on its StorageType.
+    """
+    if item.storage_type == StorageType.UNIVERSAL:
+        return GENERAL_ID
+    
+    if item.storage_type == StorageType.LOCAL:
+        # If a character is producing it, it stays at their current location.
+        # Otherwise, it stays with the host (e.g. the location itself).
+        return context_id if context_id else host_id
+        
+    return host_id # CARRIED
+
 def can_perform_recipe(game_token, host_id, recipe, batches=1, context_id=None):
     """
     Checks if the host has enough ingredients and hasn't hit item limits.
@@ -39,9 +54,10 @@ def can_perform_recipe(game_token, host_id, recipe, batches=1, context_id=None):
     # 1. Check Output Limit
     item_def = Item.query.get((game_token, recipe.product_id))
     if item_def and item_def.q_limit > 0:
-        # Get current quantity in this host's pile
+        # Get current quantity in target pile
+        target_id = get_production_target(item_def, host_id, context_id)
         current_pile = Pile.query.filter_by(
-            game_token=game_token, owner_id=host_id, item_id=recipe.product_id
+            game_token=game_token, owner_id=target_id, item_id=recipe.product_id
         ).first()
         current_qty = current_pile.quantity if current_pile else 0.0
         
@@ -69,6 +85,11 @@ def can_perform_recipe(game_token, host_id, recipe, batches=1, context_id=None):
     if context_id and context_id != GENERAL_ID:
         relevant_entities.add(context_id)
     
+    # If we are in General Storage and have no context, 
+    # we should check General Storage (ID 1) itself for attributes.
+    if not relevant_entities:
+        relevant_entities.add(GENERAL_ID)
+
     for req in recipe.attrib_reqs:
         req_met = False
         for entity_id in relevant_entities:
@@ -143,21 +164,37 @@ def update_progress(progress_id):
     # This ensures resolve_recipe_sources finds the "Farm" while Suzy is the host.
     host_ent = Entity.query.get((game_token, progress.host_id))
     ctx_id = None
-    if host_ent and host_ent.entity_type == 'character':
+    if host_ent.entity_type == 'character':
         char = Character.query.get((game_token, progress.host_id))
         ctx_id = char.location_id
+    elif host_ent.entity_type == 'location':
+        ctx_id = host_ent.id
+    
+    # If the host is General Storage, try to use the 'old_loc_id' from the session 
+    # to provide a physical anchor for attribute/ingredient checks.
+    if progress.host_id == GENERAL_ID:
+        ctx_id = session.get('old_loc_id')
 
     # Process batches one by one (or in a chunk) to check for resource exhaustion
+    product_item = Item.query.get((game_token, recipe.product_id))
+    main_target_id = get_production_target(product_item, progress.host_id, ctx_id)
+
+    logger.info(f"[TICK] Host:{progress.host_id} Recipe:{recipe.id} -> Target:{main_target_id} (New Batches:{new_batches})")
+
     actual_batches_done = 0
+    halt_reason = None
     for _ in range(new_batches):
         possible, reason = can_perform_recipe(
             game_token, progress.host_id, recipe, context_id=ctx_id)
         if not possible:
+            logger.warning(f"[TICK BLOCKED] Host:{progress.host_id} Reason: {reason}")
             progress.is_ongoing = False
-            progress.stop_time = datetime.now()  # Naive datetime
+            progress.stop_time = datetime.now()
+            halt_reason = reason
             add_message(game_token, f"Production stopped: {reason}")
             break
         
+        # Consume Sources
         resolved = resolve_recipe_sources(
             game_token, progress.host_id, recipe, context_id=ctx_id)
         for res in resolved:
@@ -167,17 +204,21 @@ def update_progress(progress_id):
                 adjust_quantity(res['item'].id, target_owner_id, -source_def.q_required)
 
         # 2. Produce Output
-        adjust_quantity(recipe.product_id, progress.host_id, recipe.rate_amount)
+        adjust_quantity(recipe.product_id, main_target_id, recipe.rate_amount)
         
         # 3. Produce Byproducts
         for byproduct in recipe.byproducts:
-            adjust_quantity(byproduct.item_id, progress.host_id, byproduct.rate_amount)
+            bp_item = Item.query.get((game_token, byproduct.item_id))
+            bp_target_id = get_production_target(bp_item, progress.host_id, ctx_id)
+            adjust_quantity(byproduct.item_id, bp_target_id, byproduct.rate_amount)
             
         actual_batches_done += 1
 
     # Update state
     progress.batches_processed += actual_batches_done
     db.session.commit()
+    logger.info(f"[TICK DONE] Saved {actual_batches_done} batches.")
+    return halt_reason
 
 def start_production(host_id, recipe_id, context_id=None):
     """Initializes a Progress record for an Entity."""
