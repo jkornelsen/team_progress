@@ -27,7 +27,7 @@
 
 <div class="item-play-container">
     <header class="entity-header">
-        <span class="label-like">
+        <span id="context-links" class="label-like">
             {% if owner.id == 1 %}
                 🌐 General Storage
             {% elif owner.entity_type == 'character' %}
@@ -45,6 +45,13 @@
                 {% if pile.position %}
                     <span class="label-like">[{{ pile.position | join(",") }}]</span>
                 {% endif %}
+            {% endif %}
+            {% if ctx_entity %}
+                , active {{ ctx_entity.TYPENAME }}
+                {% set target_url = url_for('play.play_' ~ ctx_entity.TYPENAME, id=ctx_entity.id) %}
+                {% call hotkey_link(target_url, link_letters, brackets=True) %}
+                    {{ ctx_entity.name }}
+                {% endcall %}
             {% endif %}
         </span>
         
@@ -152,26 +159,32 @@
                         {% endif %}
 
                         <div class="recipe-controls spacious-top">
-                            <div id="controls-{{ r.id }}">
+                            {% set letter = link_letters.next() if r.can_produce else None %}
+                            <div id="controls-{{ r.id }}" data-recipe-hotkey="{{ letter or '' }}">
                                 {% if r.can_produce %}
-                                    {% set letter = link_letters.next() %}
                                     {% if r.instant %}
+                                        <div class="batch-selector flex-row align-center">
+                                            <input type="number" id="batches-{{ r.id }}" 
+                                                   value="{{ r.max_batches }}" 
+                                                   min="1" max="{{ r.max_batches }}" 
+                                                   class="mini-input">
+                                            
+                                            <div class="batch-presets">
+                                                <button type="button" class="tag-button" onclick="setBatch({{ r.id }}, 1)">1</button>
+                                                <button type="button" class="tag-button" onclick="setBatch({{ r.id }}, {{ (r.max_batches / 2) | int }})">½</button>
+                                                <button type="button" class="tag-button" onclick="setBatch({{ r.id }}, {{ r.max_batches }})">Max</button>
+                                            </div>
+                                        </div>
                                         <button id="gain-{{ r.id }}" onclick="gainItem({{ r.id }})" class="go-button">
                                             <span class="hotkey-indicator">{{ letter }}</span>
                                             Gain Instant
                                         </button>
-                                        <script>
-                                            window.linkForKey['{{ letter }}'] = '#gain-{{ r.id }}';
-                                        </script>
                                     {% else %}
                                         <button id="start-{{ r.id }}" onclick="startProd({{ r.id }})" 
                                                 class="go-button {{ 'hidden' if progress and progress.is_ongoing and progress.recipe_id == r.id }}">
                                             <span class="hotkey-indicator">{{ letter }}</span>
                                             Start
                                         </button>
-                                        <script>
-                                            window.linkForKey['{{ letter }}'] = '#start-{{ r.id }}';
-                                        </script>
                                     {% endif %}
                                 {% else %}
                                     {# INTEGRATION: The 🚫 Info Icon with specific reason tooltip #}
@@ -186,8 +199,26 @@
                                 {% if not r.instant %}
                                     <button id="stop-{{ r.id }}" onclick="stopProd()" 
                                             class="dangerous-button {{ 'hidden' if not (progress and progress.is_ongoing and progress.recipe_id == r.id) }}">
-                                        Stop
+                                        <span class="hotkey-indicator">{{ letter if letter else '' }}</span> Stop
                                     </button>
+                                {% endif %}
+                                {% if letter %}
+                                    <script>
+                                        (function() {
+                                            const letter = '{{ letter }}';
+                                            const recipeId = '{{ r.id }}';
+                                            {# Determine state on page load #}
+                                            {% if progress and progress.is_ongoing and progress.recipe_id == r.id %}
+                                                window.linkForKey[letter] = `#stop-${recipeId}`;
+                                            {% elif r.can_produce %}
+                                                {% if r.instant %}
+                                                    window.linkForKey[letter] = `#gain-${recipeId}`;
+                                                {% else %}
+                                                    window.linkForKey[letter] = `#start-${recipeId}`;
+                                                {% endif %}
+                                            {% endif %}
+                                        })();
+                                    </script>
                                 {% endif %}
                             </div>
 
@@ -384,14 +415,23 @@
                 const startBtn = document.getElementById(`start-${r.recipe_id}`);
                 const stopBtn = document.getElementById(`stop-${r.recipe_id}`);
                 const controlsDiv = document.getElementById(`controls-${r.recipe_id}`);
+                const letter = controlsDiv?.getAttribute('data-recipe-hotkey');
                 
                 // Show/hide stop button based on whether this recipe is active
                 if (data.is_ongoing && data.active_recipe_id === r.recipe_id) {
                     if (startBtn) startBtn.classList.add('hidden');
                     if (stopBtn) stopBtn.classList.remove('hidden');
+                    if (letter) window.linkForKey[letter] = `#stop-${r.recipe_id}`;
                 } else {
                     if (startBtn) startBtn.classList.remove('hidden');
                     if (stopBtn) stopBtn.classList.add('hidden');
+                    if (letter) {
+                        if (r.instant) {
+                            window.linkForKey[letter] = `#gain-${r.recipe_id}`;
+                        } else {
+                            window.linkForKey[letter] = `#start-${r.recipe_id}`;
+                        }
+                    }
                 }
                 
                 // Update can_produce reason in tooltip if icon exists
@@ -443,18 +483,26 @@
     }
 
     async function gainItem(recipeId) {
-        // Logic for instant gain (one-off execution)
+        // Instant gain (one-off execution)
+        const batchInput = document.getElementById(`batches-${recipeId}`);
+        const batches = batchInput ? batchInput.value : 1;
         const fd = new FormData();
         fd.append('recipe_id', recipeId);
+        fd.append('batches', batches);
         const res = await fetch(
-            `/production/start/owner/${ownerId}`, {
+            `/production/instant/owner/${ownerId}`, {
             method: 'POST', body: fd
         });
         if (res.ok) {
-            await stopProd(); // Trigger processing immediately
             location.reload();
         }
     }
+
+    function setBatch(recipeId, val) {
+        const input = document.getElementById(`batches-${recipeId}`);
+        if (input) input.value = Math.max(1, val);
+    }
+
 
     // Inventory AJAX Logic
     document.getElementById('drop-btn')?.addEventListener('click', async () => {
@@ -535,5 +583,16 @@
     .used-for-row { --grid-cols: 1fr auto; }
     .byproduct-of-row { --grid-cols: 1fr; }
     .reverse-lookup-list { --col-list-max-width: 350px; }
+
+    .batch-selector { gap: 5px; margin-bottom: 8px; }
+    .batch-presets { display: flex; gap: 2px; }
+    .tag-button { 
+        font-size: 0.7em; 
+        padding: 2px 6px; 
+        background: var(--bg-lighter); 
+        border: 1px solid var(--border-dim);
+        cursor: pointer;
+    }
+    .tag-button:hover { background: var(--accent-dim); }
 </style>
 {% endblock %}

@@ -19,6 +19,16 @@
 
 <div class="location-container">
     <header class="entity-header">
+        <span id="context-list" class="label-like">
+            {% if context_char %}
+                <span class="label-like">Active:</span>
+                {% set target_url = url_for('play.play_character', id=context_char.id) %}
+                {% call hotkey_link(target_url, link_letters) %}
+                    {{ context_char.name }}
+                {% endcall %}
+            {% endif %}
+        </span>
+
         <h1>{{ location.name }}</h1>
         {% if location.description %}
             <div class="description-box">{{ location.description | htmlify }}</div>
@@ -195,6 +205,7 @@
                         {% endfor %}
                     </div>
 
+                    {% if characters_here %}
                     <div class="movement-controls spacious-top">
                         <div class="nav-numpad mobile-only">
                             <button onclick="move(0, -1)">↑</button>
@@ -205,7 +216,7 @@
                             <button onclick="move(0, 1)">↓</button>
                         </div>
                         <div class="control-meta">
-                            <label class="label-like">Active Character:</label>
+                            <label class="label-like">Moving:</label>
                             <select id="active-char-select"
                                 class="mini-select" onchange="updatePartyUI(); this.blur();">
                                 {% for char in characters_here %}
@@ -231,6 +242,7 @@
                             </p>
                         </div>
                     </div>
+                    {% endif %}
                 </section>
             </div>
         {% endif %}

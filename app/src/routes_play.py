@@ -9,11 +9,13 @@ from app.models import (
     Progress, Overall, WinRequirement, GameMessage, GENERAL_ID, StorageType)
 from app.utils import (
     RequestHelper, parse_coords, LinkLetters, capture_origin, redirect_back)
-from .logic_piles import resolve_recipe_sources, transfer_item
+from .logic_piles import transfer_item
 from .logic_event import (
     roll_for_outcome, roll_for_system_outcome, TriggerException, calculate_determinants)
 from .logic_progress import (
-    start_production, stop_production, update_progress, can_perform_recipe)
+    start_production, stop_production, update_progress)
+from .logic_production import (
+    resolve_recipe_sources, can_perform_recipe, execute_production)
 from .logic_navigation import (
     move_group, get_available_destinations, arrive_at_destination,
     is_in_grid, get_default_position)
@@ -47,7 +49,7 @@ def overview():
     
     # 3. Recent Messages
     messages = GameMessage.query.filter_by(game_token=game_token)\
-                .order_by(GameMessage.timestamp.desc()).limit(20).all()
+                .order_by(GameMessage.timestamp.asc()).limit(20).all()
 
     return render_template(
         'play/overview.html',
@@ -86,9 +88,10 @@ def play_location(id):
 
     # Validate the session's char_id
     current_char_id = session.get('old_char_id')
-    if current_char_id:
-        if current_char_id not in [c.id for c in characters_here]:
-            session.pop('old_char_id', None)
+    current_char = next(
+        (c for c in characters_here if c.id == current_char_id), None)
+    if not current_char:
+        session.pop('old_char_id', None)
 
     # 2. Fix Incorrectly Positioned Entities
     if has_grid:
@@ -167,6 +170,7 @@ def play_location(id):
         referenced_items=referenced_data,
         attrib_values=attrib_values,
         active_char_id=active_char_id,
+        context_char=current_char,
         link_letters=LinkLetters(excluded='ctmoe')
     )
 
@@ -378,18 +382,34 @@ def play_item(id):
     capture_origin(name=item.name)
 
     # Context args
-    param_char_id = req.get_int('char_id')
-    param_loc_id = req.get_int('loc_id')
-    if param_char_id:
-        session['old_char_id'] = param_char_id
-    if param_loc_id:
-        session['old_loc_id'] = param_loc_id
+    ctx_entity = None
+    ctx_values = {}
+    for param_key, session_key, var_name in [
+                ('char_id', 'old_char_id', 'ctx_char_id'),
+                ('loc_id',  'old_loc_id',  'ctx_loc_id')
+            ]:
+        param_id = req.get_int(param_key)
+        if param_id:
+            session[session_key] = param_id
+        entity_id = param_id or session.get(session_key)
+        if entity_id:
+            found_entity = Entity.query.get((game_token, entity_id))
+            if found_entity:
+                ctx_values[var_name] = entity_id
+                # First valid entity (Character first) becomes ctx_entity
+                if not ctx_entity:
+                    ctx_entity = found_entity
+            else:
+                # ID is stale/invalid
+                session.pop(session_key, None)
+                ctx_values[var_name] = None
+        else:
+            ctx_values[var_name] = None
+    ctx_char_id = ctx_values['ctx_char_id']
+    ctx_loc_id = ctx_values['ctx_loc_id']
 
     # Determine the Data Anchor (Which pile are we looking at?)
     owner_id = req.get_int('owner_id')
-    ctx_char_id = param_char_id or session.get('old_char_id')
-    ctx_loc_id = param_loc_id or session.get('old_loc_id')
-    play_context_id = ctx_char_id or ctx_loc_id
     if not owner_id:
         if item.storage_type == StorageType.UNIVERSAL:
             owner_id = GENERAL_ID
@@ -400,7 +420,10 @@ def play_item(id):
     if not owner_id:
         abort(400, description="No valid owner (character or location) provided.")
 
-    owner = Entity.query.get((game_token, owner_id))
+    if ctx_entity and ctx_entity.id == owner_id:
+        owner = ctx_entity
+    else:
+        owner = Entity.query.get((game_token, owner_id))
     if not owner:
         abort(404, description="Item owner not found.")
     if isinstance(owner, Character):
@@ -410,6 +433,13 @@ def play_item(id):
     elif isinstance(owner, Location):
         ctx_loc_id = owner.id
         session['old_loc_id'] = ctx_loc_id
+    ctx_id = ctx_char_id or ctx_loc_id # additional context besides owner
+    if ctx_id == owner_id:
+        ctx_entity = None
+        ctx_id = None
+    if ctx_id and (not ctx_entity or ctx_entity.id != ctx_id):
+        # Could happen if owner is location and there is also character ctx
+        ctx_entity = Entity.query.get((game_token, ctx_id))
 
     # Fetch the specific Pile record
     query = Pile.query.filter_by(
@@ -432,20 +462,26 @@ def play_item(id):
     all_relevant_entities = set()
     if owner.id != GENERAL_ID:
         all_relevant_entities.add(owner.id)
-    if play_context_id and play_context_id != GENERAL_ID:
-        all_relevant_entities.add(play_context_id)
+    if ctx_id:
+        all_relevant_entities.add(ctx_id)
 
     # Recipes that PRODUCE this item
     # Enriched allows UI to show 🚫 icon and specific reason tooltip.
+    all_attrib_vals = AttribVal.query.filter(
+        AttribVal.game_token == game_token,
+        AttribVal.subject_id.in_(all_relevant_entities)
+    ).all()
+    attribval_lookup = {(av.subject_id, av.attrib_id): av for av in all_attrib_vals}
+
     enriched_recipes = []
     for r in item.recipes:
         can_do, reason = can_perform_recipe(
-            game_token, owner.id, r, context_id=play_context_id)
+            game_token, owner.id, r, context_id=ctx_id)
         resolved_ingredients = resolve_recipe_sources(
             game_token, 
             host_id=owner.id, 
             recipe=r,
-            context_id=play_context_id
+            context_id=ctx_id
         )
         
         sources_ui_data = []
@@ -472,8 +508,8 @@ def play_item(id):
         relevant_entities = set()
         if owner.id != GENERAL_ID:
             relevant_entities.add(owner.id)
-        if play_context_id and play_context_id != GENERAL_ID:
-            relevant_entities.add(play_context_id)
+        if ctx_id:
+            relevant_entities.add(ctx_id)
         
         # Add any entities that provide ingredients
         for res in resolved_ingredients:
@@ -489,17 +525,15 @@ def play_item(id):
             entity_with_value = None
             
             for entity_id in relevant_entities:
-                attrib_val = AttribVal.query.filter_by(
-                    game_token=game_token, subject_id=entity_id, attrib_id=req.attrib_id
-                ).first()
-                if attrib_val:
-                    if req.in_range(attrib_val.value):
+                av = attribval_lookup.get((entity_id, req.attrib_id), 0.0)
+                if av:
+                    if req.in_range(av.value):
                         req_met = True
-                        current_val = attrib_val.value
+                        current_val = av.value
                         satisfying_entity = entity_id
                         break
-                    elif attrib_val.value > current_val:
-                        current_val = attrib_val.value
+                    elif av.value > current_val:
+                        current_val = av.value
                         entity_with_value = entity_id
             
             # Use satisfying entity if requirement met, otherwise entity with highest value
@@ -524,6 +558,21 @@ def play_item(id):
             'sources': sources_ui_data,
             'attrib_reqs': attrib_reqs_ui_data
         })
+
+    for r_data in enriched_recipes:
+        recipe_obj = next(r for r in item.recipes if r.id == r_data['id'])
+        
+        # Find the limiting ingredient
+        possible_batches = []
+        for source in r_data['sources']:
+            if not source['preserve'] and source['q_required'] > 0:
+                batches = int(source['current_stock'] // source['q_required'])
+                possible_batches.append(batches)
+        
+        # If it's infinite/no ingredients, default to a sensible max or 1
+        max_val = min(possible_batches) if possible_batches else 1
+        # Ensure at least 1 is shown if they can produce, otherwise 0
+        r_data['max_batches'] = max(1, max_val) if r_data['can_produce'] else 0
 
     # Recipes where this item is a SOURCE (Ingredient)
     url_params = {}
@@ -570,9 +619,11 @@ def play_item(id):
     overall = Overall.query.get(game_token)
 
     # Create entities lookup for attribute requirement links
-    entities = {}
+    entities = {owner.id: owner}
+    if ctx_entity:
+        entities[ctx_entity.id] = ctx_entity
     for entity_id in all_relevant_entities:
-        if entity_id != GENERAL_ID:
+        if entity_id not in entities and entity_id != GENERAL_ID:
             entity = Entity.query.get((game_token, entity_id))
             if entity:
                 entities[entity_id] = entity
@@ -586,6 +637,7 @@ def play_item(id):
         used_for_production=used_for_production,
         byproduct_of=byproduct_of,
         host_id=host_id,
+        ctx_entity=ctx_entity,
         progress=current_progress,
         available_slots=overall.slots,
         chars_here=chars_here,
@@ -618,6 +670,32 @@ def stop_item_production(id):
     if stop_production(host_id):
         return jsonify({"status": "success"})
     return jsonify({"status": "error"}), 400
+
+@play_bp.route('/production/instant/owner/<int:id>', methods=['POST'])
+def instant_item_production(id):
+    req = RequestHelper('form')
+    recipe_id = req.get_int('recipe_id')
+    num_batches = req.get_int('batches')
+    host_id = determine_host_id(id)
+    ctx_id = session.get('old_char_id') or session.get('old_loc_id')
+
+    recipe = Recipe.query.get((g.game_token, recipe_id))
+    if not recipe:
+        return jsonify({"status": "error", "message": "Recipe not found."})
+
+    # Perform production
+    actual_done, halt_reason = execute_production(
+        g.game_token, host_id, recipe, batches=num_batches, context_id=ctx_id
+    )
+    
+    if actual_done > 0:
+        db.session.commit()
+        msg = f"Obtained {actual_done} batch{'es' if actual_done > 1 else ''}."
+        if halt_reason:
+            msg += f" Stopped early: {halt_reason}"
+        return jsonify({"status": "success", "message": msg})
+    
+    return jsonify({"status": "error", "message": halt_reason or "Production failed."})
 
 @play_bp.route('/production/status/owner/<int:id>')
 def production_status(id):

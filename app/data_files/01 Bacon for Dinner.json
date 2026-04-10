@@ -44,7 +44,7 @@
                 "description": "Get paid for chores. Useful for purchasing pigs at the market in case breeding doesn't work out.",
                 "attribs": [],
                 "abilities": [],
-                "storage_type": "u",
+                "storage_type": "c",
                 "q_limit": 100.0,
                 "toplevel": false,
                 "masked": false,
@@ -269,6 +269,30 @@
                         "bidirectional": true
                     }
                 ]
+            },
+            {
+                "id": 24,
+                "name": "Farmhouse",
+                "description": "Board siding and coruscated metal roof, primitive construction. Still, the property has a modestly inviting feel of fertile land.",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": null,
+                "excluded": null,
+                "toplevel": false,
+                "masked": false,
+                "items": [],
+                "item_refs": [
+                    {"item_id": 7}
+                ],
+                "destinations": [
+                    {
+                        "loc2_id": 14,
+                        "duration": 1,
+                        "door1": null,
+                        "door2": null,
+                        "bidirectional": true
+                    }
+                ]
             }
         ],
         "characters": [
@@ -288,7 +312,8 @@
                 "items": [
                     {"item_id": 9, "quantity": 1.0, "slot": ""},
                     {"item_id": 10, "quantity": 1.0, "slot": ""}
-                ]
+                ],
+                "progress": []
             },
             {
                 "id": 18,
@@ -302,7 +327,8 @@
                 "location_id": 15,
                 "position": null,
                 "travel_party": "",
-                "items": []
+                "items": [],
+                "progress": []
             },
             {
                 "id": 19,
@@ -313,10 +339,11 @@
                 ],
                 "abilities": [],
                 "toplevel": false,
-                "location_id": 14,
+                "location_id": 24,
                 "position": null,
                 "travel_party": "",
-                "items": []
+                "items": [],
+                "progress": []
             },
             {
                 "id": 23,
@@ -328,7 +355,8 @@
                 "location_id": null,
                 "position": null,
                 "travel_party": "",
-                "items": []
+                "items": [],
+                "progress": []
             }
         ],
         "attribs": [

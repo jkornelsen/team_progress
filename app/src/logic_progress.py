@@ -7,9 +7,12 @@ from app.models import (
     Recipe, RecipeSource, RecipeByproduct, AttribVal,
     GENERAL_ID, StorageType)
 from app.utils import format_num
-from app.src.logic_piles import adjust_quantity, resolve_recipe_sources
+from app.src.logic_piles import adjust_quantity
 from app.src.logic_user_interaction import add_message
 from app.src.logic_event import check_triggers, TriggerException
+from app.src.logic_production import (
+    can_perform_recipe, resolve_recipe_sources,
+    get_production_target, execute_production)
 
 logger = logging.getLogger(__name__)
 
@@ -32,103 +35,13 @@ def get_elapsed_seconds(progress):
     logger.debug(f"get_elapsed_seconds: now={now}, start={start}, elapsed={elapsed_seconds}s")
     return elapsed_seconds
 
-def get_production_target(item, host_id, context_id=None):
-    """
-    Determines where a produced item should be placed based on its StorageType.
-    """
-    if item.storage_type == StorageType.UNIVERSAL:
-        return GENERAL_ID
-    
-    if item.storage_type == StorageType.LOCAL:
-        # If a character is producing it, it stays at their current location.
-        # Otherwise, it stays with the host (e.g. the location itself).
-        return context_id if context_id else host_id
-        
-    return host_id # CARRIED
-
-def can_perform_recipe(game_token, host_id, recipe, batches=1, context_id=None):
-    """
-    Checks if the host has enough ingredients and hasn't hit item limits.
-    Returns (bool, reason_string)
-    """
-    # 1. Check Output Limit
-    item_def = Item.query.get((game_token, recipe.product_id))
-    if item_def and item_def.q_limit > 0:
-        # Get current quantity in target pile
-        target_id = get_production_target(item_def, host_id, context_id)
-        current_pile = Pile.query.filter_by(
-            game_token=game_token, owner_id=target_id, item_id=recipe.product_id
-        ).first()
-        current_qty = current_pile.quantity if current_pile else 0.0
-        
-        if current_qty >= item_def.q_limit:
-            return (
-                False,
-                "Storage limit reached"
-                f" ({format_num(item_def.q_limit)} {item_def.name})")
-
-    # 2. Check Sources (Ingredients)
-    resolved = resolve_recipe_sources(game_token, host_id, recipe, context_id)
-    for res in resolved:
-        required = res['source_def'].q_required * batches
-        if res['total_available'] < required:
-            source_item = res['item']
-            needed = required - res['total_available']
-            return False, f"Missing {format_num(needed)} {source_item.name} (Need {format_num(required)})"
-
-    # 3. Check Attribute Requirements
-    # Check attributes on all relevant entities that could contribute to the recipe
-    # Include host entity and context entity (if different)
-    relevant_entities = set()
-    if host_id and host_id != GENERAL_ID:
-        relevant_entities.add(host_id)
-    if context_id and context_id != GENERAL_ID:
-        relevant_entities.add(context_id)
-    
-    # If we are in General Storage and have no context, 
-    # we should check General Storage (ID 1) itself for attributes.
-    if not relevant_entities:
-        relevant_entities.add(GENERAL_ID)
-
-    for req in recipe.attrib_reqs:
-        req_met = False
-        for entity_id in relevant_entities:
-            # Get the current attribute value for this entity
-            attrib_val = AttribVal.query.filter_by(
-                game_token=game_token, subject_id=entity_id, attrib_id=req.attrib_id
-            ).first()
-            current_val = attrib_val.value if attrib_val else 0.0
-            
-            if req.in_range(current_val):
-                req_met = True
-                break
-        
-        if not req_met:
-            if req.attrib.is_binary:
-                if req.min_val > 0:
-                    return False, f"Requires {req.attrib.name} (must be enabled)"
-                else:
-                    return False, f"Requires {req.attrib.name} (must be disabled)"
-            else:
-                return False, f"{req.attrib.name} {req.range_display} required"
-
-    return True, ""
-
 def update_progress(progress_id):
     """
-    The main tick function.
-    Calculates completed batches, consumes sources, and produces items.
+    The main tick function. Handles timing and triggers, 
+    then delegates work to logic_production.
     """
-    progress = Progress.query.get((progress_id))
-    
+    progress = Progress.query.get(progress_id)
     if not progress or not progress.is_ongoing or not progress.recipe_id:
-        return
-
-    if not progress.start_time:
-        # If it's ongoing but has no start time, something is wrong. 
-        # Reset it to now to prevent a crash.
-        progress.start_time = datetime.now()  # Naive datetime
-        db.session.commit()
         return
 
     game_token = g.game_token
@@ -136,88 +49,49 @@ def update_progress(progress_id):
     if not recipe:
         return
 
+    # 1. Calculate timing
+    if recipe.instant:
+        raise Exception("Expected a recipe that uses duration.")
     elapsed = get_elapsed_seconds(progress)
-    
-    # Calculate how many total batches SHOULD have been done by now
     total_potential_batches = math.floor(elapsed / recipe.rate_duration)
-    
-    # How many new batches occurred since the last time we checked?
     new_batches = total_potential_batches - progress.batches_processed
-    
-    logger.info(f"update_progress: elapsed={elapsed}s, rate_duration={recipe.rate_duration}s, "
-                f"total_potential={total_potential_batches}, processed={progress.batches_processed}, "
-                f"new_batches={new_batches}")
     
     if new_batches <= 0:
         return
 
+    # 2. Check for random interrupts
     try:
-        # Check if the location or the item itself triggers something
         check_triggers(progress.host, batches=new_batches)
     except TriggerException as e:
-        # STOP production immediately so the user has to resolve the event
         progress.is_ongoing = False
         db.session.commit()
-        raise e # Re-raise for the route to catch
+        raise e 
 
-    # Identify Context (So we know where the host is standing)
-    # This ensures resolve_recipe_sources finds the "Farm" while Suzy is the host.
-    host_ent = Entity.query.get((game_token, progress.host_id))
+    # 3. Determine Context
     ctx_id = None
+    host_ent = Entity.query.get((game_token, progress.host_id))
     if host_ent.entity_type == 'character':
         char = Character.query.get((game_token, progress.host_id))
         ctx_id = char.location_id
     elif host_ent.entity_type == 'location':
         ctx_id = host_ent.id
-    
-    # If the host is General Storage, try to use the 'old_loc_id' from the session 
-    # to provide a physical anchor for attribute/ingredient checks.
-    if progress.host_id == GENERAL_ID:
+    elif progress.host_id == GENERAL_ID:
         ctx_id = session.get('old_loc_id')
 
-    # Process batches one by one (or in a chunk) to check for resource exhaustion
-    product_item = Item.query.get((game_token, recipe.product_id))
-    main_target_id = get_production_target(product_item, progress.host_id, ctx_id)
+    # 4. Delegate physical production
+    logger.info(f"[TICK] Host:{progress.host_id} Recipe:{recipe.id} batches:{new_batches}")
+    actual_done, halt_reason = execute_production(
+        game_token, progress.host_id, recipe, batches=new_batches, context_id=ctx_id
+    )
 
-    logger.info(f"[TICK] Host:{progress.host_id} Recipe:{recipe.id} -> Target:{main_target_id} (New Batches:{new_batches})")
+    # 5. Update Progress State
+    progress.batches_processed += actual_done
+    if halt_reason:
+        progress.is_ongoing = False
+        progress.stop_time = datetime.now()
+        add_message(game_token, f"Production stopped: {halt_reason}")
 
-    actual_batches_done = 0
-    halt_reason = None
-    for _ in range(new_batches):
-        possible, reason = can_perform_recipe(
-            game_token, progress.host_id, recipe, context_id=ctx_id)
-        if not possible:
-            logger.warning(f"[TICK BLOCKED] Host:{progress.host_id} Reason: {reason}")
-            progress.is_ongoing = False
-            progress.stop_time = datetime.now()
-            halt_reason = reason
-            add_message(game_token, f"Production stopped: {reason}")
-            break
-        
-        # Consume Sources
-        resolved = resolve_recipe_sources(
-            game_token, progress.host_id, recipe, context_id=ctx_id)
-        for res in resolved:
-            source_def = res['source_def']
-            if not source_def.preserve:
-                target_owner_id = res['anticipated_owner_id']
-                adjust_quantity(res['item'].id, target_owner_id, -source_def.q_required)
-
-        # 2. Produce Output
-        adjust_quantity(recipe.product_id, main_target_id, recipe.rate_amount)
-        
-        # 3. Produce Byproducts
-        for byproduct in recipe.byproducts:
-            bp_item = Item.query.get((game_token, byproduct.item_id))
-            bp_target_id = get_production_target(bp_item, progress.host_id, ctx_id)
-            adjust_quantity(byproduct.item_id, bp_target_id, byproduct.rate_amount)
-            
-        actual_batches_done += 1
-
-    # Update state
-    progress.batches_processed += actual_batches_done
     db.session.commit()
-    logger.info(f"[TICK DONE] Saved {actual_batches_done} batches.")
     return halt_reason
 
 def start_production(host_id, recipe_id, context_id=None):

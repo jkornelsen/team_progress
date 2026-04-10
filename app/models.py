@@ -89,9 +89,6 @@ class Entity(db.Model, DictHydrator):
             "id": self.id,
             "name": self.name,
             "description": self.description,
-            "progress": [
-                p.to_dict() for p in self.progress_records
-                if self.id != GENERAL_ID and p.is_ongoing],
             "attribs": [
                 [av.attrib_id, av.value] 
                 for av in self.attrib_values
@@ -103,9 +100,6 @@ class Entity(db.Model, DictHydrator):
     def from_dict(cls, data, game_token):
         """Standard base hydration for all entities."""
         entity = super().from_dict(data, game_token)
-        for p_data in data.get('progress', []):
-            entity.progress_records.append(
-                Progress.from_dict(p_data, game_token))
         for a_data in data.get('attribs', []):
             if isinstance(a_data, list) and len(a_data) == 2:
                 entity.attrib_values.append(AttribVal(
@@ -286,7 +280,7 @@ class Location(Entity):
                 Pile.from_dict(i_data, game_token, loc.id))
         for ir_data in data.get('item_refs', []):
             loc.item_refs.append(
-                ItemRef.from_dict(d_data, game_token, loc.id))
+                ItemRef.from_dict(ir_data, game_token, loc.id))
         for d_data in data.get('destinations', []):
             loc.routes_forward.append(
                 LocDest.from_dict(d_data, game_token, loc.id))
@@ -362,7 +356,10 @@ class Character(Entity):
             "items": [
                 {"item_id": p.item_id, "quantity": p.quantity, "slot": p.slot} 
                 for p in self.piles
-            ]
+            ],
+            "progress": [
+                p.to_dict() for p in self.progress_records
+                if p.is_ongoing],
         })
         return data
 
@@ -372,6 +369,9 @@ class Character(Entity):
         char = super().from_dict(data, game_token)
         for i_data in data.get('items', []):
             char.piles.append(Pile(game_token=game_token, **i_data))
+        for p_data in data.get('progress', []):
+            char.progress_records.append(
+                Progress.from_dict(p_data, game_token))
         return char
 
     location = db.relationship(

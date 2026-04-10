@@ -1,23 +1,32 @@
 ---- issues and proposed changes ----
 
-next problem: could only exchange 1 chores total for cash -- stuck at 9/10
+"give to" route
 
-should we display context char at top of item page even if not owner
-    otherwise uncle paying for chores gets confusing
-    old code looked for attribreqs from all chars at loc?
-    maybe implement production involving multiple characters: -chores, +cash
-    would we expect to manually select secondary char in that case
+show "required for recipes" list in play attrib page
+    to bring char context to the item
+
+ajax to keep updating source quantities on item play
+    get complex dict of all values needed in a single ajax call
+    also update start button usability -- call can_do_recipe() each time
 
 tightened subject-based events
     a determinant can be flagged as informational only
     otherwise they get calculated directly, not modifying the die fields
+
+disable "show in overview" if item storage type is not universal
+disable recipe duration if instant
 
 show item progress in locations like overview and sources do
 
 changing an enumerated attrib should display the text in the log
 
 win condition quantity min and max, like attribs for recipes
+or "at least" / "at most" toggle
 Fission Plant: no more than a certain amount of pollution
+
+bacon for dinner is a fun but minimalist quest
+consider adding a complex quest scenario with production, travel and combat
+maybe a set of tasks to enter guild or save village from invasion
 
 saving grandfather clock resets hour, an enumerated attrib, to 12am
 
