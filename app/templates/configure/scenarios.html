@@ -1,5 +1,5 @@
 {% extends 'layout/base.html' %}
-{% from 'layout/hotkey_macros.html' import hotkey_submit %}
+{% import 'macros/hotkeys.html' as hk %}
 
 {% block upper_left %}
     <nav class="nav-container">
@@ -52,7 +52,7 @@
 
                 <form method="POST" action="{{ url_for('configure.browse_scenarios') }}">
                     <input type="hidden" name="scenario_file" value="{{ scenario.filename }}">
-                    {{ hotkey_submit(loop.index, link_letters, label="Launch Scenario") }}
+                    {{ hk.submit(loop.index, link_letters, "Launch Scenario") }}
                 </form>
             </footer>
         </section>

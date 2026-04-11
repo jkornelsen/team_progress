@@ -29,92 +29,93 @@
                 {{ subject.name }}
             {% endcall %}
         </span>
-        <h1>{{ attribute.name }}</h1>
+        <h1>
+            {{ attribute.name }}
+            <span class="text-accent" id="current-val-display">
+                {{ render.attrib(attrib_value, attribute) }}
+            </span>
+        </h1>
+
         {% if attribute.description %}
             <div class="description-box">{{ attribute.description | htmlify }}</div>
         {% endif %}
     </header>
 
-    <section class="outer-border">
-        <h3>Current Status</h3>
-        <div class="current-val-display">
-            <span class="label-like">Value:</span>
-            <span class="text-accent large-text">
-                {{ render.attrib(attrib_value, attribute) }}
-            </span>
-            <span class="label-like">({{ attrib_value.value | formatNum }} raw)</span>
+    <div class="column-container">
+        <!-- Current Value -->
+        <div>
+            <section class="outer-border">
+                <h3>Adjust Value</h3>
+                <form method="POST" class="calculator-form">
+                    {# 1. Binary Toggle #}
+                    {% if attribute.is_binary %}
+                        <div class="flex-row align-center">
+                            <input type="hidden" name="operator" value="set">
+                            <input type="hidden" name="value"  value="{{ 0 if attrib_value.value else 1 }}">
+                            {% set text = hk.bracket('t') ~ "oggle " ~ ('OFF' if attrib_value.value else 'ON') %}
+                            {{ hk.submit(1, link_letters, text, 't', showLetter=False) }}
+                            </button>
+                        </div>
+
+                    {# 2. Enum Selection #}
+                    {% elif attribute.enum_list %}
+                        <div class="flex-row align-center">
+                            <input type="hidden" name="operator" value="set">
+                            <select name="value" class="flex-grow">
+                                {% for entry in attribute.enum_list %}
+                                    <option value="{{ loop.index0 }}" {{ 'selected' if attrib_value.value == loop.index0 }}>
+                                        {{ entry }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            {{ hk.submit(2, link_letters,
+                                hk.bracket('s') ~ "et", 's', showLetter=False) }}
+                        </div>
+
+                    {# 3. Standard Numeric Calculator #}
+                    {% else %}
+                        <div class="calculator flex-row align-center">
+                            <select name="operator" id="op-select" class="flex-grow">
+                                <option value="+">Add (+)</option>
+                                <option value="-">Subtract (-)</option>
+                                <option value="*">Multiply (×)</option>
+                                <option value="/">Divide (÷)</option>
+                                <option value="set">Set To (=)</option>
+                            </select>
+                            <input name="operand" type="number" step="any" style="max-width: 120px;">
+                            {{ hk.submit(3, link_letters,
+                                hk.bracket('c') ~ "hange", 'c', showLetter=False) }}
+                        </div>
+                    {% endif %}
+                </form>
+            </section>
         </div>
-    </section>
-
-    <section class="outer-border">
-        <h3>Adjust Value</h3>
-        <form method="POST" class="calculator-form">
-            <div class="flex-row align-center">
-                
-                {# 1. Binary Toggle #}
-                {% if attribute.is_binary %}
-                    <input type="hidden" name="operator" value="set">
-                    <button type="submit" name="value" value="{{ 0 if attrib_value.value else 1 }}" class="go-button">
-                        Toggle {{ 'OFF' if attrib_value.value else 'ON' }}
-                    </button>
-
-                {# 2. Enum Selection #}
-                {% elif attribute.enum_list %}
-                    <input type="hidden" name="operator" value="set">
-                    <select name="value" class="flex-grow">
-                        {% for entry in attribute.enum_list %}
-                            <option value="{{ loop.index0 }}" {{ 'selected' if attrib_value.value == loop.index0 }}>
-                                {{ entry }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                    <button type="submit" class="go-button">Set State</button>
-
-                {# 3. Standard Numeric Calculator #}
-                {% else %}
-                    <select name="operator" id="op-select">
-                        <option value="+">Add (+)</option>
-                        <option value="-">Subtract (-)</option>
-                        <option value="*">Multiply (×)</option>
-                        <option value="/">Divide (÷)</option>
-                        <option value="set">Set To (=)</option>
-                    </select>
-                    <input type="number" name="operand" step="any" autofocus class="flex-grow">
-                    <button type="submit" class="go-button">Apply [C]hange</button>
-                {% endif %}
-            </div>
-        </form>
-    </section>
-
-    {% if items_requiring_this %}
-    <section class="outer-border label-like">
-        <h3>Required for Production</h3>
-        <p>This attribute is a prerequisite for the following items:</p>
-        <ul class="clean-list">
-            {% for item in items_requiring_this %}
-                <li><a href="{{ url_for('play.play_item', id=item.id) }}">📦 {{ item.name }}</a></li>
-            {% endfor %}
-        </ul>
-    </section>
-    {% endif %}
+        <div>
+            {% if items_requiring_this %}
+            <section class="outer-border">
+                <h3>Required to Produce</h3>
+                <ul class="clean-list">
+                    {% for item in items_requiring_this %}
+                        <li>
+                            {% set target_url = url_for('play.play_item',
+                                id=item.id) %}
+                            {% call hk.hotlink(target_url, link_letters) %}
+                                {{ item.name if not item.masked else (item.name | mask_string) }}
+                            {% endcall %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </section>
+            {% endif %}
+        </div>
+    </div>
 </div>
 
 <script>
-    // Hotkey for "Apply Change"
-    document.addEventListener('keypress', (e) => {
-        if (e.key.toLowerCase() === 'c') {
-            const btn = document.querySelector('.calculator-form button[type="submit"]');
-            if (btn) btn.click();
-        }
-    });
 </script>
 
 <style>
     .large-text { font-size: 2em; font-weight: bold; margin: 0 10px; }
-    .calculator-form select, .calculator-form input { 
-        background: #000; color: white; border: 1px solid var(--border); padding: 10px; font-size: 1.1em;
-    }
-    .calculator-form button { padding: 10px 20px; font-size: 1.1em; }
     .align-center { align-items: center; }
     .clean-list { list-style: none; padding: 0; margin-top: 10px; }
     .clean-list li { margin-bottom: 5px; }

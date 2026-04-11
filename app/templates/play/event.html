@@ -41,7 +41,7 @@
                     {{ subject.name }}
                 </div>
 
-                {% if needs_2nd %}
+                {% if needs_other1 %}
                 <div class="form-group">
                     <label>Target:</label>
                     <select name="sec_id" class="full-width participant-trigger">
@@ -53,7 +53,7 @@
                 </div>
                 {% endif %}
 
-                {% if needs_3rd %}
+                {% if needs_other2 %}
                 <div class="form-group">
                     <label>Environment:</label>
                     <select name="tert_id" class="full-width participant-trigger">
@@ -128,35 +128,35 @@
                 <h3>Dice Setup</h3>
                 <form id="event-form">
                     {% if event.outcome_type in ['fourway', 'numeric'] %}
-                    <div class="difficulty-section spacious-bottom">
-                        <label for="difficulty-select">Difficulty:</label>
-                        <select id="difficulty-select" class="full-width">
-                            <option value="0.0">None (0%)</option>
-                            <option value="0.25">Easy (-25%)</option>
-                            <option value="0.40" selected>Moderate (-40%)</option>
-                            <option value="0.55">Challenging (-55%)</option>
-                            <option value="0.70">Very Hard (-70%)</option>
-                            <option value="0.85">Extreme (-85%)</option>
-                        </select>
-                    </div>
                     <div class="die-adjustment-grid">
                         <div class="form-group">
-                            <label>Die Min:</label>
-                            <input type="number" id="die-min-input" name="die_min" value="{{ event.numeric_range[0] }}">
+                            <label>Die: {{ event.numeric_range[0] }} to {{ event.numeric_range[1] }}
+                            <input type="hidden" id="die-min-input" name="die_min" value="{{ event.numeric_range[0] }}">
+                            <input type="hidden" id="die-max-input" name="die_max" value="{{ event.numeric_range[1] }}">
+                            </label>
                         </div>
-                        <div class="form-group">
-                            <label>Die Max:</label>
-                            <input type="number" id="die-max-input" name="die_max" value="{{ event.numeric_range[1] }}">
-                        </div>
+                    </div>
+                    <div class="flex-row spacious-bottom">
+                        <label for="difficulty-select">Difficulty:</label>
+                        <select id="difficulty-select">
+                            <option value="0.15">Very Easy</option>
+                            <option value="0.35">Easy</option>
+                            <option value="0.55" selected>Medium</option>
+                            <option value="0.75">Hard</option>
+                            <option value="0.95">Very Hard</option>
+                            <option value="1.05">Almost Impossible</option>
+                        </select>
                     </div>
                     
                     {% if event.outcome_type == 'fourway' %}
                     <div class="threshold-info label-like text-dim spacious-top">
-                        Major Success Threshold: <span id="threshold-display" class="text-accent">--</span>
+                        Minor Success: <span id="minor-threshold-display" class="text-accent">--</span>,
+                        Major Success: <span id="major-threshold-display" class="text-accent">--</span>
                     </div>
                     {% endif %}
                     {% endif %}
                 </form>
+{#
                 <p class="label-like">Click to Apply Modifiers to Dice:</p>
                 {% for det in event.determinants %}
                 <div class="modifier-row outer-border">
@@ -172,6 +172,7 @@
                     <button type="button" class="btn-sm fill-btn">Add Mod</button>
                 </div>
                 {% endfor %}
+#}
                 <div class="spacious-top text-center">
                     <button id="roll-btn" class="go-button" style="width: 100%; font-size: 1.2em;">
                         [R]oll for Outcome
@@ -246,7 +247,6 @@
     const diffSelect = document.getElementById('difficulty-select');
     const minInput = document.getElementById('die-min-input');
     const maxInput = document.getElementById('die-max-input');
-    const thresholdSpan = document.getElementById('threshold-display');
 
     const eventId = {{ event.id }};
     const resultText = document.getElementById('outcome-text');
@@ -258,26 +258,31 @@
         if (!diffSelect) return;
 
         const difficulty = parseFloat(diffSelect.value);
-        const adjustment = baseSpan * difficulty;
+        const min = baseMin;
+        const max = baseMax;
+        const span = max - min + 1;
 
-        // Apply scaling
-        const newMin = Math.round(baseMin - adjustment);
-        const newMax = Math.round(baseMax - adjustment);
+        // Minor Success Logic (Your existing "Good" feeling numbers)
+        const baseThreshold = Math.round(span * 0.10);
+        const difficultyShift = Math.round(span * difficulty);
+        const minorThreshold = baseThreshold + difficultyShift;
 
-        minInput.value = newMin;
-        maxInput.value = newMax;
+        // Major Success Logic
+        // We can add a "Major Gap" (e.g., 20% of the total span)
+        const majorGap = Math.round(span * 0.20); 
+        const majorThreshold = minorThreshold + majorGap;
 
-        // Success Threshold (45% Rule)
-        const currentSpan = newMax - newMin + 1;
-        const threshold = Math.round(currentSpan * 0.45);
-        if (thresholdSpan) thresholdSpan.innerText = `≥ ${threshold}`;
+        const minorSpan = document.getElementById('minor-threshold-display');
+        const majorSpan = document.getElementById('major-threshold-display');
+        minorSpan.innerText = `≥ ${minorThreshold}`;
+        majorSpan.innerText = `≥ ${majorThreshold}`;
     }
 
     if (diffSelect) {
         diffSelect.addEventListener('change', updateDieLogic);
         // Also update if min/max are edited manually
-        minInput.addEventListener('input', updateDieLogic); 
-        maxInput.addEventListener('input', updateDieLogic);
+        //minInput.addEventListener('input', updateDieLogic); 
+        //maxInput.addEventListener('input', updateDieLogic);
         
         // Initial run
         updateDieLogic();

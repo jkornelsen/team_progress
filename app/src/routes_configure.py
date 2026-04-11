@@ -10,7 +10,7 @@ from app.models import (
     Entity, Item, Character, Location, Attrib, Event, 
     Pile, AttribVal, Operation, EntityAbility,
     Recipe, RecipeSource, RecipeByproduct, RecipeAttribReq,
-    LocDest, ItemRef,
+    LocDest, ItemRef, EventFactor, Participant,
     Overall, WinRequirement)
 from app.serialization import (
     init_game_session, load_scenario_from_path, DEFAULT_SCENARIO_FILE,
@@ -534,11 +534,45 @@ def edit_event(id):
         event.toplevel = 'toplevel' in request.form
 
         # Auto-collapse Tertiary to Secondary for a cleaner UI
-        if any(d.source_who == '3rd' for d in event.determinants) and \
-           not any(d.source_who == '2nd' for d in event.determinants):
+        if any(d.role == Participant.OTHER2 for d in event.determinants) and \
+           not any(d.role == Participant.OTHER1 for d in event.determinants):
             for d in event.determinants:
-                if d.source_who == '3rd':
-                    d.source_who = '2nd'
+                if d.role == Participant.OTHER2:
+                    d.role = Participant.OTHER1
+        # --- SAVE DETERMINANTS & EFFECTS ---
+        # 1. Clear existing factors to perform a clean sync
+        # (This is simpler than matching IDs for small lists)
+        event.factors = [] 
+
+        # 2. Process Determinants (Inputs)
+        for row in req.get_list('dets'):
+            # Map the HTML 'source_role' to the DB 'role'
+            role = row.get_str('source_role')
+            if role:
+                new_factor = EventFactor(
+                    game_token=game_token,
+                    event_id=event.id,
+                    usage_type=Participant.IN, # Mark as Input
+                    role=role,
+                    attrib_id=row.get_int('attrib_id'),
+                    operation=row.get_str('operation', '+'),
+                    # You can add more fields here like 'scaling' later
+                )
+                event.factors.append(new_factor)
+
+        # 3. Process Effects (Changes)
+        for row in req.get_list('changes'):
+            attr_id = row.get_int('attrib_id')
+            if attr_id:
+                new_effect = EventFactor(
+                    game_token=game_token,
+                    event_id=event.id,
+                    usage_type=Participant.OUT, # Mark as Output
+                    role=Participant.SUBJECT, # Typically defaults to the actor
+                    attrib_id=attr_id,
+                    operation=Operation.ADD 
+                )
+                event.factors.append(new_effect)
 
         db.session.commit()
         if 'duplicate' in request.form:
@@ -582,11 +616,11 @@ def lookup_entity(ent_type, id):
         values = AttribVal.query.filter_by(game_token=game_token, attrib_id=id).all()
         results['Applied to Entities'] = []
         for v in values:
-            owner = Entity.query.get((game_token, v.owner_id))
+            subject = Entity.query.get((game_token, v.subject_id))
             results['Applied to Entities'].append({
-                'label': f'Stat on {owner.entity_type}',
-                'name': owner.name,
-                'link': url_for(f'play.play_{owner.entity_type}', id=owner.id),
+                'label': f'Stat on {subject.entity_type}',
+                'name': subject.name,
+                'link': url_for(f'play.play_{subject.entity_type}', id=subject.id),
                 'meta': f'Value: {v.value}'
             })
 

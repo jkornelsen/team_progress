@@ -39,7 +39,7 @@
     {{ fixed_text(url_for('configure.index'), bracket('m') ~ 'ain setup', 'm') }}
 {%- endmacro %}
 
-{% macro submit(index, link_letters, label="Submit", forced_key=None) -%}
+{% macro submit(index, link_letters, label="Submit", forced_key=None, showLetter=True) -%}
     {% if forced_key %}
         {% set key = forced_key %}
     {% else %}
@@ -49,7 +49,9 @@
         {# Map the key to the specific ID generated in the loop #}
         <script>linkForKey["{{ key }}"] = "#submit-{{ index }}";</script>
         <button type="submit" id="submit-{{ index }}" class="go-button">
-            <span class="hotkey-indicator">{{ key }}</span>
+            {% if showLetter -%}
+                <span class="hotkey-indicator">{{ key }}</span>
+            {%- endif %}
             {{ label }}
         </button>
     {%- endif %}

@@ -79,6 +79,7 @@ class Entity(db.Model, DictHydrator):
     PLURAL = f'entities'
     SHORT = 'ent'
     __tablename__ = PLURAL
+
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
     entity_type = db.Column(db.String(20), nullable=False)
@@ -179,6 +180,7 @@ class Item(Entity):
     PLURAL = f'{TYPENAME}s'
     SHORT = TYPENAME
     __tablename__ = PLURAL
+
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
     storage_type = db.Column(
@@ -257,6 +259,7 @@ class Location(Entity):
     PLURAL = f'{TYPENAME}s'
     SHORT = 'loc'
     __tablename__ = PLURAL
+
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
     toplevel = db.Column(db.Boolean, default=False)
@@ -351,6 +354,7 @@ class Character(Entity):
     PLURAL = f'{TYPENAME}s'
     SHORT = 'char'
     __tablename__ = PLURAL
+
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
     toplevel = db.Column(db.Boolean, default=False)
@@ -414,6 +418,7 @@ class Attrib(Entity):
     PLURAL = f'{TYPENAME}s'
     SHORT = 'attr'
     __tablename__ = PLURAL
+
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
     enum_list = db.Column(ARRAY(db.Text))
@@ -478,7 +483,10 @@ class Event(Entity):
     Many events use or change the Attrib values of other entities.
     """
     TYPENAME = 'event'
-    __tablename__ = 'events'
+    PLURAL = f'{TYPENAME}s'
+    SHORT = 'event'
+    __tablename__ = PLURAL
+
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
     toplevel = db.Column(db.Boolean, default=False)
@@ -513,12 +521,12 @@ class Event(Entity):
         dets = data.get('determinants', [])
         effects = data.get('effects', [])
         event.factors = [
-            EventFactor(game_token=game_token, event_id=event.id,
-                        usage_type=Participant.IN, **d) 
+            EventFactor.from_dict(
+                d, game_token, event.id, usage_type=Participant.IN) 
             for d in dets
         ] + [
-            EventFactor(game_token=game_token, event_id=event.id,
-                        usage_type=Participant.OUT, **e) 
+            EventFactor.from_dict(
+                e, game_token, event.id, usage_type=Participant.OUT) 
             for e in effects
         ]
         return event
@@ -530,11 +538,11 @@ class Event(Entity):
 
     @property
     def determinants(self):
-        return [f for f in self.factors if f.usage_type == FactorUsage.IN]
+        return [f for f in self.factors if f.usage_type == Participant.IN]
 
     @property
     def effects(self):
-        return [f for f in self.factors if f.usage_type == FactorUsage.OUT]
+        return [f for f in self.factors if f.usage_type == Participant.OUT]
 
     factors = db.relationship(
         'EventFactor',
@@ -846,7 +854,7 @@ class Operation:
 
     ALL = [ADD, SUB, MULT, DIV, VAL_TO_POW, POW_OF_VAL]
 
-class EventFactor(db.Model):
+class EventFactor(db.Model, DictHydrator):
     """
     Defines which attrib values or item quantities are used to determine
         an Event's outcome, and how they apply.
@@ -866,9 +874,9 @@ class EventFactor(db.Model):
         - Example: Role SUBJECT_ITEM_QTY, Item LEATHER (How much leather Bob has)
     """
     __tablename__ = 'event_factors'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    game_token = db.Column(db.String(50), primary_key=True)
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    game_token = db.Column(db.String(50), index=True, nullable=False)
     event_id = db.Column(db.Integer, nullable=False)
 
     # --- Identity & Logic Type ---
@@ -892,7 +900,6 @@ class EventFactor(db.Model):
 
     def to_dict(self):
         return {
-            "id": self.id,
             "usage_type": self.usage_type,
             "label": self.label,
             "role": self.role,
@@ -904,6 +911,11 @@ class EventFactor(db.Model):
             "modifier": self.modifier,
             "scaling": self.scaling
         }
+
+    @classmethod
+    def from_dict(cls, data, game_token, event_id, **overrides):
+        return super().from_dict(
+            data, game_token, event_id=event_id, **overrides)
 
     __table_args__ = (
         db.ForeignKeyConstraint(

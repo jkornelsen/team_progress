@@ -4,7 +4,7 @@ import logging
 from flask import g, request
 from app.models import (
     db, Entity, Event, Location, Character, Item,
-    Operation, OutcomeType, RollerType,
+    Operation, OutcomeType, RollerType, Participant,
     AttribVal, Pile, LocDest)
 from app.src.logic_piles import set_quantity
 from app.src.logic_user_interaction import add_message
@@ -24,27 +24,27 @@ def get_entity_value(game_token, anchor_id, det):
     # 1. Determine the Target Entity (The Base or the Selected Child)
     target_id = anchor_id
     
-    if det.is_child:
+    if det.child_of_anchor:
         # If it's a child, we need the specific item instance ID from the request/context
         # This is where 'entity_id=NULL' logic lives in the route.
-        target_id = request.form.get(f"{det.source_who}_item_id")
+        target_id = request.form.get(f"{det.role}_item_id")
     
-    if not target_id and det.source_who != 'univ':
+    if not target_id and det.role != Participant.UNIV:
         return 0.0
 
     # 2. Fetch the Data
-    if det.source_mode == 'attr':
+    if det.field == Participant.ATTR:
         # If entity_id is set, we use that specific Attribute Blueprint
         val_obj = AttribVal.query.filter_by(
-            game_token=game_token, subject_id=target_id, attrib_id=det.entity_id
+            game_token=game_token, subject_id=target_id, attrib_id=det.attrib_id
         ).first()
         return val_obj.value if val_obj else 0.0
     
-    if det.source_mode == 'qty':
-        if det.source_who == 'univ' or not det.is_child:
+    if det.field == Participant.QTY:
+        if det.role == 'univ' or not det.child_of_anchor:
             # AUTO-FETCH: Sum all piles of the specific item blueprint
             piles = Pile.query.filter_by(
-                game_token=game_token, owner_id=target_id, item_id=det.entity_id
+                game_token=game_token, owner_id=target_id, item_id=det.item_id
             ).all()
             return sum(p.quantity for p in piles)
         else:
@@ -55,8 +55,8 @@ def get_entity_value(game_token, anchor_id, det):
     return 0.0
 
 def resolve_anchor_id(who, context):
-    """Maps 'subj', '2nd', '3rd', 'univ' to a physical Entity ID."""
-    if who == 'univ': return 1 # General Storage
+    """Maps Participant roles to a physical Entity ID."""
+    if who == Participant.UNIV: return GENERAL_ID
     return context.get(f"{who}_id")
 
 def calculate_determinants(event, context_ids):
@@ -78,7 +78,7 @@ def calculate_determinants(event, context_ids):
         if not owner_id:
             continue
 
-        raw_val = get_entity_value(owner_id, det.attrib_id, det.item_id)
+        raw_val = get_entity_value(game_token, owner_id, det)
         # Apply mode (log, half) logic here
         effective_val = apply_modifier_mode(raw_val, det.mode)
         
@@ -120,7 +120,7 @@ def apply_modifier(base_val, mod_val, operation, mode):
 # Outcome Resolution
 # ------------------------------------------------------------------------
 
-def roll_for_outcome(event_id, die_min, die_max, loc_id=None):
+def roll_for_outcome(event_id, die_min, die_max, loc_id=None, difficulty=0.0):
     """
     Performs the random roll based on user-provided bounds and Event rules.
     Returns: (numeric_result, string_display)
@@ -135,6 +135,8 @@ def roll_for_outcome(event_id, die_min, die_max, loc_id=None):
         roll = random.randint(die_min, die_max)
         range_size = abs(die_max - die_min) + 1
         crit_threshold = round(range_size * 0.10)
+        shift = round(crit_threshold * difficulty)
+        crit_threshold = crit_threshold + shift
         if roll <= die_min + crit_threshold:
             res = "Strong Failure"
         elif roll <= 0:

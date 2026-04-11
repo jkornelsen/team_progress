@@ -6,7 +6,8 @@ from app.models import (
     db, Entity, Item, Character, Location, Attrib, Event,
     Pile, AttribVal, Operation, OutcomeType,
     Recipe, RecipeAttribReq, LocDest,
-    Progress, Overall, WinRequirement, GameMessage, GENERAL_ID, StorageType)
+    Progress, Overall, WinRequirement, GameMessage,
+    GENERAL_ID, StorageType, Participant)
 from app.utils import (
     RequestHelper, parse_coords, LinkLetters, capture_origin, redirect_back)
 from .logic_piles import transfer_item
@@ -632,7 +633,7 @@ def play_item(id):
         game_token=game_token, host_id=host_id
     ).first()
 
-    # Characters nearby (for the "Give" button)
+     # Characters nearby (for the "Give" button)
     other_chars_here = []
     if owner.location_id:
         other_chars_here = Character.query.filter(
@@ -819,23 +820,20 @@ def play_event(id):
             game_token=game_token, id=subject_id).first_or_404()
 
     # Analyze requirements
-    needs_2nd = any(d.source_who == '2nd' for d in event.determinants)
-    needs_3rd = any(d.source_who == '3rd' for d in event.determinants)
+    needs_other1 = any(d.role == Participant.OTHER1 for d in event.determinants)
+    needs_other2 = any(d.role == Participant.OTHER2 for d in event.determinants)
     
     # Identify Item Selectors
     # If ChildItem is True but no item_id is configured, the user must choose.
     # Or if there are multiple piles available for that item.
     item_selectors = {}
     for d in event.determinants:
-        if d.is_child:
-            if d.source_who.type not in (Location, Character):
-                raise Exception(
-                    "Incorrect configuration: {d.source_who.type} cannot contain items")
+        if d.child_of_anchor:
             # Add to a dict to ensure we only show one dropdown per role
             if not d.item_id:
-                item_selectors[d.source_who] = {
+                item_selectors[d.role] = {
                     'label': d.label or "Item",
-                    'options': get_inventory_for_role(d.source_who) 
+                    'options': get_inventory_for_role(d.role) 
                 }
     
     # Fetch Eligible Participants (for the dropdowns)
@@ -849,11 +847,12 @@ def play_event(id):
     if subject_id:
         for det in getattr(event, 'determinants', []):
             from .logic_event import get_entity_value
-            val = get_entity_value(game_token, subject_id, det.attrib_id, det.item_id)
+            val = get_entity_value(game_token, subject_id, det)
             determinants.append({
                 'label': det.label,
                 'operation': det.operation,
-                'mode': det.mode,
+                'modifier': det.modifier,
+                'scaling': det.scaling,
                 'value': val
             })
 
@@ -861,8 +860,8 @@ def play_event(id):
         'play/event.html',
         event=event,
         subject=subject,
-        needs_2nd=needs_2nd,
-        needs_3rd=needs_3rd,
+        needs_other1=needs_other1,
+        needs_other2=needs_other2,
         item_selectors=item_selectors,
         eligible_sources=eligible_sources,
         eligible_targets=eligible_targets,
@@ -989,4 +988,4 @@ def play_attrib(attrib_id, subject_id):
         subject=subject, 
         attrib_value=val_record,
         items_requiring_this=items_requiring_this,
-        link_letters=LinkLetters(excluded='moe'))
+        link_letters=LinkLetters(excluded='moesct'))

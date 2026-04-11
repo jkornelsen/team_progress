@@ -11,6 +11,8 @@
 
 {% block content %}
 
+<script src="{{ url_for('static', filename='js/configuration.js') }}"></script>
+
 <!-- TEMPLATES FOR DYNAMIC ROWS -->
 
 {% macro dest_row(index, dest=None, all_locs=[], current_loc_id=None) %}
@@ -46,7 +48,7 @@
             </select>
         </div>
 
-        <button type="button" class="btn-sm dangerous-button" onclick="removeRow(this, 'dest-list')">×</button>
+        <button type="button" class="btn-sm dangerous-button" onclick="ConfigEditor.removeRow(this, 'dest-list')">×</button>
     </div>
 {% endmacro %}
 
@@ -65,7 +67,7 @@
         </select>
         <input type="number" name="items[{{ index }}][quantity]" value="{{ qty }}" step="any">
         <input type="text" name="items[{{ index }}][pos]" value="{{ pos }}" placeholder="1,1">
-        <button type="button" class="btn-sm dangerous-button" onclick="removeRow(this, 'item-list')">×</button>
+        <button type="button" class="btn-sm dangerous-button" onclick="ConfigEditor.removeRow(this, 'item-list')">×</button>
     </div>
 {% endmacro %}
 
@@ -78,7 +80,7 @@
                 </option>
             {% endfor %}
         </select>
-        <button type="button" class="btn-sm dangerous-button" onclick="removeRow(this, 'ref-list')">×</button>
+        <button type="button" class="btn-sm dangerous-button" onclick="ConfigEditor.removeRow(this, 'ref-list')">×</button>
     </div>
 {% endmacro %}
 
@@ -93,7 +95,7 @@
             {% endfor %}
         </select>
         <button type="button" class="btn-sm dangerous-button" 
-                onclick="removeRow(this, 'event-list')">×</button>
+                onclick="ConfigEditor.removeRow(this, 'event-list')">×</button>
     </div>
 {% endmacro %}
 
@@ -109,7 +111,7 @@
             {% endfor %}
         </select>
         <input type="text" name="attribs[{{ index }}][value]" value="{{ val }}" placeholder="Value">
-        <button type="button" class="btn-sm dangerous-button" onclick="removeRow(this, 'attrib-list')">×</button>
+        <button type="button" class="btn-sm dangerous-button" onclick="ConfigEditor.removeRow(this, 'attrib-list')">×</button>
     </div>
 {% endmacro %}
 
@@ -204,7 +206,7 @@
             <div class="flex-between">
                 <h3>Routes</h3>
                 {% if all_locs %}
-                    <button type="button" class="btn-sm" onclick="addRow('dest-list', 'dest-template')">+ Add Route</button>
+                    <button type="button" class="btn-sm" onclick="ConfigEditor.addRow('dest-list', 'dest-template')">+ Add Route</button>
                 {% endif %}
             </div>
             <style>
@@ -242,7 +244,7 @@
             <div class="flex-between">
                 <h3>Items Here</h3>
                 {% if all_containable_items %}
-                    <button type="button" class="btn-sm" onclick="addRow('item-list', 'item-template')">+ Place Item</button>
+                    <button type="button" class="btn-sm" onclick="ConfigEditor.addRow('item-list', 'item-template')">+ Place Item</button>
                 {% endif %}
             </div>
             <style>
@@ -277,7 +279,7 @@
             <div class="flex-between">
                 <h3>Referenced Universal Items</h3>
                 {% if all_universal_items %}
-                    <button type="button" class="btn-sm" onclick="addRow('ref-list', 'ref-template')">+ Add Reference</button>
+                    <button type="button" class="btn-sm" onclick="ConfigEditor.addRow('ref-list', 'ref-template')">+ Add Reference</button>
                 {% endif %}
             </div>
             <style>
@@ -298,7 +300,7 @@
             <div class="flex-between">
                 <h3>Local Events</h3>
                 {% if all_events %}
-                    <button type="button" class="btn-sm" onclick="addRow('event-list', 'event-template')">+ Add Event</button>
+                    <button type="button" class="btn-sm" onclick="ConfigEditor.addRow('event-list', 'event-template')">+ Add Event</button>
                 {% endif %}
             </div>
             <div id="event-list" class="col-list {{ 'hidden' if not location.abilities }}" style="--col-list-max-width: 400px;">
@@ -318,7 +320,7 @@
             <div class="flex-between">
                 <h3>Attributes</h3>
                 {% if all_attribs %}
-                    <button type="button" class="btn-sm" onclick="addRow('attrib-list', 'attrib-template')">+ Add Attribute</button>
+                    <button type="button" class="btn-sm" onclick="ConfigEditor.addRow('attrib-list', 'attrib-template')">+ Add Attribute</button>
                 {% endif %}
             </div>
             <div id="attrib-list" class="col-list {{ 'hidden' if not location.attrib_values }}">
@@ -348,31 +350,6 @@
 </div>
 
 <script>
-    function addRow(containerId, templateId) {
-        const list = document.getElementById(containerId);
-        list.classList.remove('hidden');
-
-        const emptyMsg = document.getElementById(containerId + '-empty');
-        if (emptyMsg) emptyMsg.classList.add('hidden');
-
-        const template = document.getElementById(templateId).innerHTML;
-        const index = Date.now();  // prevent ID collisions 
-        const html = template.replace(/__INDEX__/g, index);
-        list.insertAdjacentHTML('beforeend', html);
-    }
-
-    function removeRow(btn, listId) {
-        const list = document.getElementById(listId);
-        const row = btn.parentElement;
-        row.remove();
-
-        const remainingRows = list.querySelectorAll('.col-row:not(.header-style)');
-        if (remainingRows.length === 0) {
-            list.classList.add('hidden');
-            const emptyMsg = document.getElementById(listId + '-empty');
-            if (emptyMsg) emptyMsg.classList.remove('hidden');
-        }
-    }
 </script>
 
 <style>

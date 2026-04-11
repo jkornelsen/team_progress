@@ -13,8 +13,8 @@
 {% block content %}
 <div class="lookup-container">
     <header class="entity-header">
-        <span class="label-like text-uppercase">{{ entity.entity_type }} Usage Analysis</span>
-        <h1>Usage Lookup: {{ entity.name }}</h1>
+        <span class="label-like text-uppercase">{{ entity.entity_type }} Usage</span>
+        <h1>Lookup: {{ entity.name }}</h1>
         <p class="text-dim">Tracking all relational dependencies for ID: {{ entity.id }}</p>
     </header>
 
@@ -54,20 +54,16 @@
             <section class="outer-border">
                 <h4>Quick Actions</h4>
                 <div class="flex-column gap-10">
-                    <a href="{{ url_for('play.play_' + entity.entity_type, id=entity.id) }}" class="go-button text-center" style="padding: 10px;">
-                        ▶️ Open in Play Mode
-                    </a>
+                    {% if entity.entity_type != 'attrib' %}
+                        {% set id_args = {'id': entity.id} %}
+                        <a href="{{ url_for('play.play_' + entity.entity_type, id=entity.id) }}" class="go-button text-center" style="padding: 10px;">
+                            ▶️ Open in Play Mode
+                        </a>
+                    {% endif %}
                     <a href="{{ url_for('configure.edit_' + entity.entity_type, id=entity.id) }}" class="btn text-center">
                         📝 Edit Configuration
                     </a>
                 </div>
-            </section>
-
-            <section class="outer-border label-like">
-                <h4>System Metadata</h4>
-                <p>Registry ID: <span class="text-main">{{ entity.id }}</span></p>
-                <p>Type Discriminator: <span class="text-main">{{ entity.entity_type }}</span></p>
-                <p>Multi-tenant Token: <span class="text-main">{{ entity.game_token[:8] }}...</span></p>
             </section>
         </div>
     </div>

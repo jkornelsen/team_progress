@@ -102,7 +102,7 @@
                                 {{ ent.name }}
                             </a>
                             <button type="button" 
-                                    onclick="manualNavigate('lookup', '{{ slug }}', '{{ ent.id }}')" 
+                                    onclick="window.location.href='{{ url_for('configure.lookup_entity', ent_type=slug, id=ent.id) }}'" 
                                     class="lookup-btn" 
                                     title="Look up usage for {{ ent.name }}">
                                 🔍
@@ -117,11 +117,6 @@
 </div>
 
 <script>
-    function manualNavigate(mode, type, id) {
-        const url = `/${mode}/${type}/${id}`;
-        window.location.href = url;
-    }
-
     function updateLinks() {
         // Resets select boxes to avoid confusion when switching modes
         document.querySelectorAll('.entity-select').forEach(s => s.selectedIndex = 0);

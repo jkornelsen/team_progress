@@ -11,6 +11,8 @@
 
 {% block content %}
 
+<script src="{{ url_for('static', filename='js/configuration.js') }}"></script>
+
 <!-- TEMPLATES FOR DYNAMIC ROWS -->
 
 {% macro attrib_row(index, av=None, all_attribs=[]) %}
@@ -39,7 +41,7 @@
             <input type="text" name="attribs[{{ index }}][value]" value="{{ val }}" placeholder="Value">
         {% endif %}
         <button type="button" class="btn-sm dangerous-button" 
-                onclick="removeRow(this, 'attrib-list')">×</button>
+                onclick="ConfigEditor.removeRow(this, 'attrib-list')">×</button>
     </div>
 {% endmacro %}
 
@@ -70,7 +72,7 @@
         </select>
 
         <button type="button" class="btn-sm dangerous-button" 
-                onclick="removeRow(this, 'inv-list')">×</button>
+                onclick="ConfigEditor.removeRow(this, 'inv-list')">×</button>
     </div>
 {% endmacro %}
 
@@ -85,7 +87,7 @@
             {% endfor %}
         </select>
         <button type="button" class="btn-sm dangerous-button" 
-                onclick="removeRow(this, 'ability-list')">×</button>
+                onclick="ConfigEditor.removeRow(this, 'ability-list')">×</button>
     </div>
 {% endmacro %}
 
@@ -165,7 +167,7 @@
             <div class="flex-between">
                 <h3>Attributes</h3>
                 {% if all_attribs %}
-                    <button type="button" class="btn-sm" onclick="addRow('attrib-list', 'attrib-template')">+ Add Attribute</button>
+                    <button type="button" class="btn-sm" onclick="ConfigEditor.addRow('attrib-list', 'attrib-template')">+ Add Attribute</button>
                 {% endif %}
             </div>
             <div id="attrib-list" class="col-list spacious-top {{ 'hidden' if not character.attrib_values }}">
@@ -191,7 +193,7 @@
             <div class="flex-between">
                 <h3>Inventory</h3>
                 {% if all_items %}
-                    <button type="button" class="btn-sm" onclick="addRow('inv-list', 'inv-template')">+ Add Item</button>
+                    <button type="button" class="btn-sm" onclick="ConfigEditor.addRow('inv-list', 'inv-template')">+ Add Item</button>
                 {% endif %}
             </div>
             <style>
@@ -218,7 +220,7 @@
             <div class="flex-between">
                 <h3>Abilities</h3>
                 {% if all_events %}
-                    <button type="button" class="btn-sm" onclick="addRow('ability-list', 'ability-template')">+ Add Ability</button>
+                    <button type="button" class="btn-sm" onclick="ConfigEditor.addRow('ability-list', 'ability-template')">+ Add Ability</button>
                 {% endif %}
             </div>
             <div id="ability-list" class="col-list spacious-top {{ 'hidden' if not character.abilities }}" style="--col-list-max-width: 300px;">
@@ -245,41 +247,6 @@
 <!-- JAVASCRIPT AND STYLES -->
 
 <script>
-    function addRow(containerId, templateId) {
-        const list = document.getElementById(containerId);
-        list.classList.remove('hidden');
-
-        const emptyMsg = document.getElementById(containerId + '-empty');
-        if (emptyMsg) emptyMsg.classList.add('hidden');
-
-        const template = document.getElementById(templateId).innerHTML;
-        const index = Date.now(); 
-        const html = template.replace(/__INDEX__/g, index);
-        list.insertAdjacentHTML('beforeend', html);
-        
-        // Initialize attribute row UI if it's a new attribute
-        if (templateId === 'attrib-template') {
-            const newRow = list.lastElementChild;
-            const selectElement = newRow.querySelector('select');
-            if (selectElement) {
-                updateAttribInput(selectElement);
-            }
-        }
-    }
-
-    function removeRow(btn, listId) {
-        const list = document.getElementById(listId);
-        const row = btn.parentElement;
-        row.remove();
-
-        const remainingRows = list.querySelectorAll('.col-row:not(.header-style)');
-        if (remainingRows.length === 0) {
-            list.classList.add('hidden');
-            const emptyMsg = document.getElementById(listId + '-empty');
-            if (emptyMsg) emptyMsg.classList.remove('hidden');
-        }
-    }
-
     function updateBinaryValue(checkbox, index) {
         const hiddenInput = document.getElementById(`attrib-value-${index}`);
         hiddenInput.value = checkbox.checked ? '1' : '0';

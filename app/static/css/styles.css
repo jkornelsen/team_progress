@@ -5,6 +5,7 @@
 :root {
     --bg-dark: #1a1a1a;
     --bg-panel: #2a2a2a;
+    --bg-input: #000000;
     --text-main: #e0e0e0;
     --text-dim: #a0a0a0;
     --accent: #00bcd4;
@@ -153,15 +154,18 @@ button:hover {
 .btn-sm { font-size: 0.8em; padding: 4px 8px; }
 
 input, select, textarea {
+    box-sizing: border-box;
     background: var(--bg-input);
     color: #fff;
     border: 1px solid var(--border);
     border-radius: 2px;
+    padding: 6px 10px; 
+    font-size: 14px; 
+    line-height: 1.4;
 }
 
-select option {
-    background-color: var(--bg-input, #222);
-    color: #fff;
+select {
+    height: 34px; 
 }
 
 /* Primary style for inputs and selects */
