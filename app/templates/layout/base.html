@@ -14,10 +14,7 @@
         const isMobile = /Mobi|Android/i.test(navigator.userAgent);
 
         // Global registry for hotkeys
-        window.linkForKey = {
-            'o': "{{ url_for('play.overview') }}",
-            'm': "{{ url_for('configure.index') }}"
-        };
+        window.linkForKey = {}
 
         document.addEventListener('keypress', (event) => {
             if (isMobile) return;
@@ -38,6 +35,8 @@
                     const el = document.querySelector(target);
                     if (el) el.click();
                 }
+            } else {
+                console.warn(`No action bound to [${key}]`);
             }
         });
 

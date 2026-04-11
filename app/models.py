@@ -76,7 +76,9 @@ class DictHydrator:
 class Entity(db.Model, DictHydrator):
     """Base table for all primary game objects."""
     TYPENAME = 'entity'
-    __tablename__ = 'entities'
+    PLURAL = f'entities'
+    SHORT = 'ent'
+    __tablename__ = PLURAL
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
     entity_type = db.Column(db.String(20), nullable=False)
@@ -131,6 +133,10 @@ class Entity(db.Model, DictHydrator):
     def abilities(self):
         return [link.event for link in self._ability_links]
 
+    @property
+    def DISPLAY(self):
+        return self.TYPENAME.capitalize()
+
     piles = db.relationship(
         'Pile', 
         back_populates='owner', 
@@ -170,7 +176,9 @@ class Item(Entity):
     Instance data (quantity, position) is managed by the Pile model.
     """
     TYPENAME = 'item'
-    __tablename__ = f'{TYPENAME}s'
+    PLURAL = f'{TYPENAME}s'
+    SHORT = TYPENAME
+    __tablename__ = PLURAL
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
     storage_type = db.Column(
@@ -246,7 +254,9 @@ class Location(Entity):
     SINGLETON: Each is a unique container for Piles and ItemRefs.
     """
     TYPENAME = 'location'
-    __tablename__ = f'{TYPENAME}s'
+    PLURAL = f'{TYPENAME}s'
+    SHORT = 'loc'
+    __tablename__ = PLURAL
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
     toplevel = db.Column(db.Boolean, default=False)
@@ -338,7 +348,9 @@ class Character(Entity):
     SINGLETON: Each is a unique actor and container for Piles.
     """
     TYPENAME = 'character'
-    __tablename__ = f'{TYPENAME}s'
+    PLURAL = f'{TYPENAME}s'
+    SHORT = 'char'
+    __tablename__ = PLURAL
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
     toplevel = db.Column(db.Boolean, default=False)
@@ -399,7 +411,9 @@ class Attrib(Entity):
     Actual values for entities are stored in 'AttribVal' instances.
     """
     TYPENAME = 'attrib'
-    __tablename__ = f'{TYPENAME}s'
+    PLURAL = f'{TYPENAME}s'
+    SHORT = 'attr'
+    __tablename__ = PLURAL
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
     enum_list = db.Column(ARRAY(db.Text))
@@ -418,6 +432,10 @@ class Attrib(Entity):
     @classmethod
     def from_dict(cls, data, game_token):
         return super().from_dict(data, game_token)
+
+    @property
+    def DISPLAY(self):
+        return 'Attribute'
 
     attrib_values = db.relationship(
         'AttribVal',

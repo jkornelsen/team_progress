@@ -1,23 +1,29 @@
 {% extends 'layout/base.html' %}
-{% from 'layout/hotkey_macros.html' import hotkey_link, render_attr %}
+{% import 'macros/hotkeys.html' as hk %}
 
 {% block upper_left %}
     <nav class="nav-container">
-        <a href="{{ url_for('play.overview') }}">[o]verview</a>
+        {{ hk.page_overview() }}
         <span class="separator">|</span>
-        <a href="{{ url_for('configure.index') }}">[m]ain setup</a>
+        {{ hk.page_main_setup() }}
         <span class="separator">|</span>
-        <a href="{{ url_for('configure.edit_item', id=item.id) }}">item s[e]tup</a>
+        {{ hk.fixed_text(
+            url_for('configure.edit_item', id=item.id),
+            hk.bracket('e') ~ "dit item", 'e') }}
+        {% if owner.id != 1 %}
+            <span class="separator">|</span>
+            {% set target_url = url_for('configure.edit_' ~ owner.entity_type, id=owner.id) %}
+            {% set text = "e" ~ hk.bracket('d') ~ "it " ~ owner.SHORT %}
+            {{ hk.fixed_text(target_url, text, 'd') }}
+        {% endif %}
     </nav>
 {% endblock %}
 
 {% block content %}
 
 <script>
-    window.linkForKey['e'] = "{{ url_for('configure.edit_item', id=item.id) }}";
-    window.linkForKey['d'] = "#drop-btn";
+    window.linkForKey['r'] = "#drop-btn";
     window.linkForKey['p'] = "#pickup-btn";
-    
     {% if pile.slot %}
         window.linkForKey['q'] = "#unequip-btn";
     {% else %}
@@ -33,13 +39,13 @@
             {% elif owner.entity_type == 'character' %}
                 🎒 Carried by
                 {% set target_url = url_for('play.play_character', id=owner.id) %}
-                {% call hotkey_link(target_url, link_letters) %}
+                {% call hk.hotlink(target_url, link_letters) %}
                     {{ owner.name }}
                 {% endcall %}
             {% elif owner.entity_type == 'location' %}
                 📍 At 
                 {% set target_url = url_for('play.play_location', id=owner.id) %}
-                {% call hotkey_link(target_url, link_letters, brackets=True) %}
+                {% call hk.hotlink(target_url, link_letters, brackets=True) %}
                     {{ owner.name }}
                 {% endcall %}
                 {% if pile.position %}
@@ -49,7 +55,7 @@
             {% if ctx_entity %}
                 , active {{ ctx_entity.TYPENAME }}
                 {% set target_url = url_for('play.play_' ~ ctx_entity.TYPENAME, id=ctx_entity.id) %}
-                {% call hotkey_link(target_url, link_letters, brackets=True) %}
+                {% call hk.hotlink(target_url, link_letters, brackets=True) %}
                     {{ ctx_entity.name }}
                 {% endcall %}
             {% endif %}
@@ -102,7 +108,7 @@
                                     {% else %}
                                         {% set target_url = url_for('play.play_item', 
                                             id=s.ingredient.id, **s.url_params) %}
-                                        {% call hotkey_link(target_url, link_letters) %}
+                                        {% call hk.hotlink(target_url, link_letters) %}
                                             {{ s.ingredient.name }}
                                         {% endcall %}:
                                     {% endif %}
@@ -124,12 +130,12 @@
                                         {% set link_entity = entities[req.link_entity_id] %}
                                         {% if link_entity.entity_type == 'character' %}
                                             {% set target_url = url_for('play.play_character', id=req.link_entity_id) %}
-                                            {% call hotkey_link(target_url, link_letters) %}
+                                            {% call hk.hotlink(target_url, link_letters) %}
                                                 {{ req.attrib.name }}
                                             {% endcall %}
                                         {% elif link_entity.entity_type == 'location' %}
                                             {% set target_url = url_for('play.play_location', id=req.link_entity_id) %}
-                                            {% call hotkey_link(target_url, link_letters, brackets=True) %}
+                                            {% call hk.hotlink(target_url, link_letters, brackets=True) %}
                                                 {{ req.attrib.name }}
                                             {% endcall %}
                                         {% else %}
@@ -243,7 +249,7 @@
                         <div class="col-row used-for-row">
                             {% set target_url = url_for('play.play_item',
                                 id=entry.item.id, **entry.url_params) %}
-                            {% call hotkey_link(target_url, link_letters) %}
+                            {% call hk.hotlink(target_url, link_letters) %}
                                 {{ entry.item.name if not entry.item.masked else (entry.item.name | mask_string) }}
                             {% endcall %}
 
@@ -270,7 +276,7 @@
                         <div class="col-row byproduct-of-row">
                             {% set target_url = url_for('play.play_item',
                                 id=entry.item.id, **entry.url_params) %}
-                            {% call hotkey_link(target_url, link_letters) %}
+                            {% call hk.hotlink(target_url, link_letters) %}
                                 {{ entry.item.name if not entry.item.masked else (entry.item.name | mask_string) }}
                             {% endcall %}
                         </div>
@@ -282,21 +288,24 @@
 
         <!-- COLUMN: Inventory -->
         <div class="info-column">
-            {% if item.storage_type == StorageType.CARRIED %}
+            {% if item.storage_type == StorageType.CARRIED and pile.quantity != 0 %}
             <section class="outer-border">
                 <h3>Inventory Actions</h3>
                 <div class="button-group">
+                    {% set has_controls = false %}
 
                     <!-- Equipment -->
                     {% if owner.entity_type == 'character' %}
                         <div class="action-box border-top-dim spacious-top" style="padding-top: 15px;">
                             {% if pile.slot %}
+                                {% set has_controls = true %}
                                 <div class="action-box">
                                     <span class="label-like">Slot: <strong>{{ pile.slot }}</strong></span>
                                     <button id="unequip-btn" class="go-button">une[q]uip</button>
                                 </div>
                             {% else %}
                                 {% if available_slots %}
+                                    {% set has_controls = true %}
                                     <div class="action-box">
                                         <select id="equip-slot" class="full-width">
                                             {% for slot in available_slots %}
@@ -314,24 +323,41 @@
 
                     {# Carried -> Location (Drop) #}
                     {% if owner.entity_type == 'character' and owner.location_id %}
+                        {% set has_controls = true %}
                         <div class="action-box">
                             <input type="number" id="drop-qty" value="{{ pile.quantity | formatNum }}" max="{{ pile.quantity }}" step="any" class="mini-input">
-                            <button id="drop-btn" class="go-button">[d]rop at location</button>
+                            <button id="drop-btn" class="go-button">d[r]op at location</button>
                         </div>
                     {% endif %}
 
                     {# Location -> Character (Pickup) #}
-                    {% if chars_here %}
+                    {% if owner.entity_type == 'location' and ctx_entity.TYPENAME == 'character' %}
+                        {% set has_controls = true %}
                         <div class="action-box">
-                            <select id="pickup-char-id" class="mini-select">
-                                {% for c in chars_here %}
+                            <span class="target-name">{{ ctx_entity.name }}</span>
+                            <input type="hidden" id="pickup-char-id" value="{{ ctx_entity.id }}">
+                            <button id="pickup-btn" class="go-button">[p]ick Up</button>
+                        </div>
+                    {% endif %}
+
+                    {# Character -> Character (Give) #}
+                    {% if owner.entity_type == 'character' and other_chars_here %}
+                        {% set has_controls = true %}
+                        <div class="action-box">
+                            <select id="give-char-id" class="mini-select">
+                                {% for c in other_chars_here %}
                                     <option value="{{ c.id }}">{{ c.name }}</option>
                                 {% endfor %}
                             </select>
-                            <button id="pickup-btn" class="go-button">[P]ick Up</button>
+                            <button id="give-btn" class="go-button">[g]ive to</button>
                         </div>
                     {% endif %}
                 </div>
+                {% if not has_controls %}
+                    <div class="action-box">
+                        <i class="dim-text">Navigate to a character first to show actions</i>
+                    </div>
+                {% endif %}
             </section>
             {% endif %}
         </div>
@@ -535,6 +561,19 @@
             body: fd 
         });
         if (res.ok) window.location.href = "{{ url_for('play.play_location', id=owner.id) }}";
+    });
+
+    document.getElementById('give-btn')?.addEventListener('click', async () => {
+        const targetCharId = document.getElementById('give-char-id').value;
+        const fd = new FormData();
+        fd.append('item_id', itemId);
+        fd.append('target_char_id', targetCharId);
+        fd.append('quantity', {{ pile.quantity }});
+        const res = await fetch(`/char/${ownerId}/give`, { 
+            method: 'POST', 
+            body: fd 
+        });
+        if (res.ok) window.location.href = "{{ url_for('play.play_character', id=owner.id) }}";
     });
 
     document.getElementById('equip-btn')?.addEventListener('click', async () => {

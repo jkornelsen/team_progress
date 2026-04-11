@@ -1,5 +1,13 @@
 #------------------------------------------------------------------------------
+#
 # Open all code in a text editor, with each type of file in a separate window.
+#
+# Convenient for a split-screen setup -- code on one side, various windows on
+# the other side including copy/paste ai, powershell, file explorer, winmerge,
+# and a web browser with the game open.
+#
+# May also want to keep VS Code open for debugging or agent ai.
+#
 #------------------------------------------------------------------------------
 Add-Type @"
 using System;

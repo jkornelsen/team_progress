@@ -1,15 +1,15 @@
+## Goals
 
-## Overview
+- How to get results grounded in source of truth
 
-how to get results grounded in source of truth
+- Provide a bit of stable guidance along with fresh, task-specific context
 
-provide a bit of stable guidance along with fresh, task-specific context
-
-bundle new code, old code, json data files
+- Bundle new code, old code, json data files
 
 ## Repeatable Mini-Template
 
 Context:
+
 - This project is a rewrite.
 - Old code defines intended behavior.
 - New code is the target architecture.
@@ -19,4 +19,5 @@ Task:
 <what you want>
 
 Focus:
+
 - preserve behavior, not structure

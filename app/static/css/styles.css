@@ -35,12 +35,12 @@ a:hover {
 
 /* --- Desktop State (Default) --- */
 .mobile-only { display: none !important; }
-.desktop-only { display: block; }
+.desktop-only { display: inline; }
 
 /* --- Mobile State (Small Screens) --- */
 @media (max-width: 768px) {
     .mobile-only {
-        display: flex !important; /* or block, depending on your layout */
+        display: inline !important;
         flex-direction: column;
         align-items: center;
     }

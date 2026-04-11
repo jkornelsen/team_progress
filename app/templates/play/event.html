@@ -1,13 +1,15 @@
 {% extends 'layout/base.html' %}
-{% from 'layout/hotkey_macros.html' import hotkey_link %}
+{% import 'macros/hotkeys.html' as hk %}
 
 {% block upper_left %}
     <nav class="nav-container">
-        <a href="{{ url_for('play.overview') }}">[o]verview</a>
+        {{ hk.page_overview() }}
         <span class="separator">|</span>
-        <a href="{{ url_for('configure.index') }}">[m]ain setup</a>
+        {{ hk.page_main_setup() }}
         <span class="separator">|</span>
-        <a href="{{ url_for('configure.edit_event', id=event.id) }}">event s[e]tup</a>
+        {{ hk.fixed_text(
+            url_for('configure.edit_event', id=event.id),
+            hk.bracket('e') ~ "dit event", 'e') }}
     </nav>
 {% endblock %}
 
@@ -18,7 +20,7 @@
             Called by 
             {{ '👤' if subject.entity_type == 'character' else '📍' if subject.entity_type == 'location' else '📦' }} 
             {% set target_url = url_for('play.play_' + subject.entity_type, id=subject.id) %}
-            {% call hotkey_link(target_url, link_letters) %}
+            {% call hk.hotlink(target_url, link_letters) %}
                 {{ subject.name }}
             {% endcall %}
         </span>

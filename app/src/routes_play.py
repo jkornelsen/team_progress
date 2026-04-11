@@ -263,6 +263,27 @@ def pickup_item(id):
         return jsonify({"status": "success"})
     return jsonify({"status": "error"}), 400
 
+@play_bp.route('/char/<int:id>/give', methods=['POST'])
+def give_item(id):
+    req = RequestHelper('form')
+    item_id = req.get_int('item_id')
+    target_char_id = req.get_int('target_char_id')
+    qty = req.get_float('quantity')
+    
+    char = Character.query.get((g.game_token, id))
+    target_char = Character.query.get((g.game_token, target_char_id))
+    
+    # Transfer from Char to Target Char
+    success = transfer_item(
+        item_id, from_owner_id=id, to_owner_id=target_char_id,
+        quantity=qty
+    )
+    
+    if success:
+        db.session.commit()
+        return jsonify({"status": "success"})
+    return jsonify({"status": "error"}), 400
+
 @play_bp.route('/char/<int:id>/equip', methods=['POST'])
 def equip_item(id):
     """Assigns an item pile to a specific equipment slot."""
@@ -384,10 +405,10 @@ def play_item(id):
     # Context args
     ctx_entity = None
     ctx_values = {}
-    for param_key, session_key, var_name in [
-                ('char_id', 'old_char_id', 'ctx_char_id'),
-                ('loc_id',  'old_loc_id',  'ctx_loc_id')
-            ]:
+    for short in [Character.SHORT, Location.SHORT]:
+        param_key = f"{short}_id"
+        session_key = f"old_{short}_id"
+        ctx_key = f"ctx_{short}_id"
         param_id = req.get_int(param_key)
         if param_id:
             session[session_key] = param_id
@@ -395,16 +416,16 @@ def play_item(id):
         if entity_id:
             found_entity = Entity.query.get((game_token, entity_id))
             if found_entity:
-                ctx_values[var_name] = entity_id
+                ctx_values[ctx_key] = entity_id
                 # First valid entity (Character first) becomes ctx_entity
                 if not ctx_entity:
                     ctx_entity = found_entity
             else:
                 # ID is stale/invalid
                 session.pop(session_key, None)
-                ctx_values[var_name] = None
+                ctx_values[ctx_key] = None
         else:
-            ctx_values[var_name] = None
+            ctx_values[ctx_key] = None
     ctx_char_id = ctx_values['ctx_char_id']
     ctx_loc_id = ctx_values['ctx_loc_id']
 
@@ -611,11 +632,14 @@ def play_item(id):
         game_token=game_token, host_id=host_id
     ).first()
 
-    # UI Context: Characters nearby (for the "Pick Up" button)
-    chars_here = []
-    if ctx_loc_id:
-        chars_here = Character.query.filter_by(
-            game_token=game_token, location_id=ctx_loc_id).all()
+    # Characters nearby (for the "Give" button)
+    other_chars_here = []
+    if owner.location_id:
+        other_chars_here = Character.query.filter(
+            Character.game_token == game_token,
+            Character.location_id == owner.location_id,
+            Character.id != owner.id
+        ).all()
     overall = Overall.query.get(game_token)
 
     # Create entities lookup for attribute requirement links
@@ -640,9 +664,9 @@ def play_item(id):
         ctx_entity=ctx_entity,
         progress=current_progress,
         available_slots=overall.slots,
-        chars_here=chars_here,
+        other_chars_here=other_chars_here,
         entities=entities,
-        link_letters=LinkLetters(excluded='moe')
+        link_letters=LinkLetters(excluded='moedpqrg')
     )
 
 # ------------------------------------------------------------------------

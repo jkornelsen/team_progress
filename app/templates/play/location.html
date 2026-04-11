@@ -1,21 +1,20 @@
 {% extends 'layout/base.html' %}
-{% from 'layout/hotkey_macros.html' import hotkey_link, render_attr %}
+{% import 'macros/hotkeys.html' as hk %}
+{% import 'macros/render.html' as render %}
 
 {% block upper_left %}
     <nav class="nav-container">
-        <a href="{{ url_for('play.overview') }}">[o]verview</a>
+        {{ hk.page_overview() }}
         <span class="separator">|</span>
-        <a href="{{ url_for('configure.index') }}">[m]ain setup</a>
+        {{ hk.page_main_setup() }}
         <span class="separator">|</span>
-        <a href="{{ url_for('configure.edit_location', id=location.id) }}">location s[e]tup</a>
+        {{ hk.fixed_text(
+            url_for('configure.edit_location', id=location.id),
+            hk.bracket('e') ~ "dit location", 'e') }}
     </nav>
 {% endblock %}
 
 {% block content %}
-
-<script>
-    window.linkForKey['e'] = "{{ url_for('configure.edit_location', id=location.id) }}";
-</script>
 
 <div class="location-container">
     <header class="entity-header">
@@ -23,7 +22,7 @@
             {% if context_char %}
                 <span class="label-like">Active:</span>
                 {% set target_url = url_for('play.play_character', id=context_char.id) %}
-                {% call hotkey_link(target_url, link_letters) %}
+                {% call hk.hotlink(target_url, link_letters) %}
                     {{ context_char.name }}
                 {% endcall %}
             {% endif %}
@@ -47,7 +46,7 @@
                 {% for char in characters_here %}
                     <li>
                         {% set target_url = url_for('play.play_character', id=char.id) %}
-                        {% call hotkey_link(target_url, link_letters) %}
+                        {% call hk.hotlink(target_url, link_letters) %}
                             {{ char.name }}
                             {% if has_grid and char.position %}
                                 <span class="label-like char-pos-display"
@@ -81,7 +80,7 @@
                     <div class="col-row item-ref-row" style="--grid-cols: 1fr auto;">
                         {% set target_url = url_for('play.play_item',
                             id=pile.item_id, owner_id=location.id, pos=pile.position) %}
-                        {% call hotkey_link(target_url, link_letters) %}
+                        {% call hk.hotlink(target_url, link_letters) %}
                             {{ pile.item.name if not pile.item.masked else (pile.item.name | mask_string) }}
                         {% endcall %}
                         
@@ -105,7 +104,7 @@
                     <div class="col-row twocol-row">
                         {% set target_url = url_for('play.play_item',
                             id=ref.item.id, owner_id=GENERAL_ID) %}
-                        {% call hotkey_link(target_url, link_letters) %}
+                        {% call hk.hotlink(target_url, link_letters) %}
                             {{ ref.item.name }}
                         {% endcall %}
                         {% if not (ref.item.q_limit == 1 and ref.quantity == 1) %}
@@ -125,7 +124,7 @@
                         <div class="col-row" style="--grid-cols: 1fr auto;">
                             {% set event_url = url_for('play.play_event', id=event.id, subject_id=location.id) %}
                             
-                            {% call hotkey_link(event_url, link_letters) %}
+                            {% call hk.hotlink(event_url, link_letters) %}
                                 {{ event.name }} 
                             {% endcall %}
                         </div>
@@ -141,10 +140,10 @@
                     {% for av in attrib_values %}
                         <div class="col-row" style="--grid-cols: 1fr auto;">
                             {% set attr_url = url_for('play.play_attrib', attrib_id=av.attrib_id, subject_id=location.id) %}
-                            {% call hotkey_link(attr_url, link_letters) %}
+                            {% call hk.hotlink(attr_url, link_letters) %}
                                 {{ av.attrib.name }}
                             {% endcall %}
-                            <span>{{ render_attr(av, av.attrib) }}</span>
+                            <span>{{ render.attrib(av, av.attrib) }}</span>
                         </div>
                     {% endfor %}
                 </div>
@@ -164,7 +163,7 @@
                         (not yet visited)
                     {% else %}
                         {% set target_url = url_for('play.play_location', id=target.id) %}
-                        {% call hotkey_link(target_url, link_letters) %}
+                        {% call hk.hotlink(target_url, link_letters) %}
                             {{ target.name }}
                         {% endcall %}
                         {% if door %}

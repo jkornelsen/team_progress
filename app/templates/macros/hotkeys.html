@@ -1,21 +1,14 @@
+{% macro bracket(key) -%}
+    <span class="desktop-only">[{{ key }}]</span><span class="mobile-only">{{ key }}</span>
+{%- endmacro %}
+
 {% macro hotkey(key, label, url) %}
 <a href="{{ url }}" class="hotkey-link" data-key="{{ key }}">
     <span class="key-indicator">[{{ key }}]</span> {{ label }}
 </a>
 {% endmacro %}
 
-{% macro render_attr(attrib_val, attrib_def) %}
-    {% if attrib_def.is_binary %}
-        {{ '✅' if attrib_val.value else '❌' }}
-    {% elif attrib_def.enum_list %}
-        {# Map numeric value to string in enum list #}
-        {{ attrib_def.enum_list[attrib_val.value | int] if attrib_def.enum_list[attrib_val.value | int] else '?' }}
-    {% else %}
-        {{ attrib_val.value | formatNum }}
-    {% endif %}
-{% endmacro %}
-
-{% macro hotkey_link(url, link_letters, brackets=False, forced_key=None) -%}
+{% macro hotlink(url, link_letters, brackets=False, forced_key=None) -%}
     {% if forced_key %}
         {% set key = forced_key %}
     {% else %}
@@ -34,17 +27,27 @@
     {%- endif %}
 {%- endmacro %}
 
-{% macro hotkey_submit(index, link_letters, label="Submit", forced_key=None) -%}
+{% macro fixed_text(url, text, key) -%}
+    <a href="{{ url }}">{{ text }}</a>
+    <script>linkForKey["{{ key }}"] = "{{ url|safe }}";</script>
+{%- endmacro %}
+
+{% macro page_overview() -%}
+    {{ fixed_text(url_for('play.overview'), bracket('o') ~ 'verview', 'o') }}
+{%- endmacro %}
+{% macro page_main_setup() -%}
+    {{ fixed_text(url_for('configure.index'), bracket('m') ~ 'ain setup', 'm') }}
+{%- endmacro %}
+
+{% macro submit(index, link_letters, label="Submit", forced_key=None) -%}
     {% if forced_key %}
         {% set key = forced_key %}
     {% else %}
         {% set key = link_letters.next() %}
     {% endif %}
-
     {% if key -%}
         {# Map the key to the specific ID generated in the loop #}
         <script>linkForKey["{{ key }}"] = "#submit-{{ index }}";</script>
-        
         <button type="submit" id="submit-{{ index }}" class="go-button">
             <span class="hotkey-indicator">{{ key }}</span>
             {{ label }}

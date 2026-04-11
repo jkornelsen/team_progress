@@ -1,17 +1,20 @@
 {% extends 'layout/base.html' %}
-{% from 'layout/hotkey_macros.html' import hotkey_link, render_attr %}
+{% import 'macros/hotkeys.html' as hk %}
+{% import 'macros/render.html' as render %}
 
 {% block upper_left %}
     <nav class="nav-container">
-        <a href="{{ url_for('play.overview') }}">[o]verview</a>
+        {{ hk.page_overview() }}
         <span class="separator">|</span>
-        <a href="{{ url_for('configure.index') }}">[m]ain setup</a>
+        {{ hk.page_main_setup() }}
         <span class="separator">|</span>
-        <a href="{{ url_for('configure.edit_attrib', id=attribute.id) }}">attrib s[e]tup</a>
+        {{ hk.fixed_text(
+            url_for('configure.edit_attrib', id=attribute.id),
+            hk.bracket('e') ~ "dit attrib", 'e') }}
         <span class="separator">|</span>
-        <a href="#" onclick="window.history.back(); return false;">
-            &larr; [b]ack to {{ session.get('origin_name', 'previous') }}
-        </a>
+        {% set target_url = url_for('configure.edit_' ~ subject.entity_type, id=subject.id) %}
+        {% set text = "e" ~ hk.bracket('d') ~ "it " ~ subject.SHORT %}
+        {{ hk.fixed_text(target_url, text, 'd') }}
     </nav>
 {% endblock %}
 
@@ -22,7 +25,7 @@
             Attribute of 
             {{ '👤' if subject.entity_type == 'character' else '📍' if subject.entity_type == 'location' else '📦' }} 
             {% set target_url = url_for('play.play_' + subject.entity_type, id=subject.id) %}
-            {% call hotkey_link(target_url, link_letters) %}
+            {% call hk.hotlink(target_url, link_letters) %}
                 {{ subject.name }}
             {% endcall %}
         </span>
@@ -37,7 +40,7 @@
         <div class="current-val-display">
             <span class="label-like">Value:</span>
             <span class="text-accent large-text">
-                {{ render_attr(attrib_value, attribute) }}
+                {{ render.attrib(attrib_value, attribute) }}
             </span>
             <span class="label-like">({{ attrib_value.value | formatNum }} raw)</span>
         </div>

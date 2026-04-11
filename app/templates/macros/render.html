@@ -1,0 +1,12 @@
+
+{% macro attrib(attrib_val, attrib_def) %}
+    {% if attrib_def.is_binary %}
+        {{ '✅' if attrib_val.value else '❌' }}
+    {% elif attrib_def.enum_list %}
+        {# Map numeric value to string in enum list #}
+        {{ attrib_def.enum_list[attrib_val.value | int] if attrib_def.enum_list[attrib_val.value | int] else '?' }}
+    {% else %}
+        {{ attrib_val.value | formatNum }}
+    {% endif %}
+{% endmacro %}
+
