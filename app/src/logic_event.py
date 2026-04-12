@@ -3,7 +3,7 @@ import math
 import logging
 from flask import g, request
 from app.models import (
-    db, Entity, Event, Location, Character, Item,
+    db, Entity, Item, Location, Character, Attrib, Event,
     Operation, OutcomeType, RollerType, Participant,
     AttribVal, Pile, LocDest)
 from app.src.logic_piles import set_quantity
@@ -16,13 +16,14 @@ logger = logging.getLogger(__name__)
 # Determinant Logic (Modifiers)
 # ------------------------------------------------------------------------
 
-def get_entity_value(game_token, anchor_id, det):
+def get_entity_value(anchor_id, det):
     """
     The Core Resolver. 
     Handles Base vs Child and Attr vs Qty logic.
     """
     # 1. Determine the Target Entity (The Base or the Selected Child)
     target_id = anchor_id
+    game_token=g.game_token
     
     if det.child_of_anchor:
         # If it's a child, we need the specific item instance ID from the request/context
@@ -62,31 +63,53 @@ def resolve_anchor_id(who, context):
 def calculate_determinants(event, context_ids):
     """
     Returns a list of calculated modifiers based on selected participants.
-    context_ids: {'actor_id', 'target_id', 'actor_item_id', 'target_item_id', 'location_id'}
     """
     modifiers = []
-    for det in event.determinants:
-        owner_id = resolve_role_id(
-            det.source_role, 
-            context_ids.get('actor_id'),
-            context_ids.get('target_id'),
-            context_ids.get('actor_item_id'),
-            context_ids.get('target_item_id'),
-            context_ids.get('location_id')
-        )
-        
-        if not owner_id:
-            continue
+    game_token = g.game_token
 
-        raw_val = get_entity_value(game_token, owner_id, det)
-        # Apply mode (log, half) logic here
-        effective_val = apply_modifier_mode(raw_val, det.mode)
+    for det in event.determinants:
+        # 1. Identify the Anchor (Suzy, Location, etc.)
+        anchor_id = resolve_anchor_id(det.role, context_ids)
+        if not anchor_id:
+            continue
+            
+        anchor = Entity.query.get((game_token, anchor_id))
+        anchor_name = anchor.name if anchor else "Unknown"
+
+        # 2. Identify the Field Name (Pathfinding, Iron Ore, etc.)
+        field_name = "Value"
+        if det.field == Participant.ATTR:
+            attr = Attrib.query.get((game_token, det.attrib_id))
+            field_name = attr.name if attr else "Attribute"
+        elif det.field == Participant.QTY:
+            item = Item.query.get((game_token, det.item_id))
+            field_name = f"{item.name} Qty" if item else "Quantity"
+
+        # 3. Handle Depth (Is it a child item inside the anchor?)
+        source_display = anchor_name
+        if det.child_of_anchor:
+            # If looking at an item instance inside Suzy, we need the item name
+            instance_id = context_ids.get(f"{det.role}_item_id")
+            if instance_id:
+                pile = Pile.query.get((game_token, instance_id))
+                if pile:
+                    source_display = f"{anchor_name}'s {pile.item.name}"
+            else:
+                source_display = f"{anchor_name}'s Item"
+
+        # 4. Calculate the numeric value
+        raw_val = get_entity_value(anchor_id, det)
+        effective_val = apply_scaling(raw_val, det.scaling)
         
+        # 5. Assemble the enriched dictionary
         modifiers.append({
-            'label': det.label,
+            'label': det.label or "",
+            'source_name': source_display,
+            'field_name': field_name,
             'value': effective_val,
             'op': det.operation
         })
+        
     return modifiers
 
 def apply_scaling(val, mode):

@@ -2,31 +2,6 @@
     "entities": {
         "items": [
             {
-                "id": 8,
-                "name": "Cooked Bacon",
-                "description": "Cooked on the wood stove in a cast iron skillet at home.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "c",
-                "q_limit": 20.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": [
-                    {
-                        "id": 3,
-                        "rate_amount": 1.0,
-                        "rate_duration": 2.0,
-                        "instant": false,
-                        "sources": [
-                            {"item_id": 12, "q_required": 1.0, "preserve": false},
-                            {"item_id": 13, "q_required": 1.0, "preserve": true}
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
-                    }
-                ]
-            },
-            {
                 "id": 5,
                 "name": "Barn",
                 "description": "Where chores are done.",
@@ -95,6 +70,31 @@
                                 "range_inclusive": [true, true]
                             }
                         ]
+                    }
+                ]
+            },
+            {
+                "id": 8,
+                "name": "Cooked Bacon",
+                "description": "Cooked on the wood stove in a cast iron skillet at home.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "c",
+                "q_limit": 20.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 3,
+                        "rate_amount": 1.0,
+                        "rate_duration": 2.0,
+                        "instant": false,
+                        "sources": [
+                            {"item_id": 12, "q_required": 1.0, "preserve": false},
+                            {"item_id": 13, "q_required": 1.0, "preserve": true}
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
                     }
                 ]
             },
@@ -244,9 +244,9 @@
             {
                 "id": 16,
                 "name": "Sketchy-Path Forest",
-                "description": "Easy to get lost in. After the sun goes down, do a *Travel Danger* check.",
+                "description": "Easy to get lost in. Any character that attempts to cross the forest should do a *Navigate Woods* check.",
                 "attribs": [],
-                "abilities": [20],
+                "abilities": [],
                 "dimensions": [12, 5],
                 "excluded": [5, 4, 9, 5],
                 "toplevel": false,
@@ -304,7 +304,7 @@
                     [2, 1.0],
                     [4, 1.0]
                 ],
-                "abilities": [21],
+                "abilities": [21, 25],
                 "toplevel": true,
                 "location_id": 15,
                 "position": null,
@@ -322,7 +322,7 @@
                 "attribs": [
                     [2, 6.0]
                 ],
-                "abilities": [],
+                "abilities": [25],
                 "toplevel": true,
                 "location_id": 15,
                 "position": null,
@@ -416,6 +416,35 @@
                 "single_number": 0.0,
                 "selection_strings": "",
                 "determinants": [],
+                "effects": []
+            },
+            {
+                "id": 25,
+                "name": "Navigate Woods",
+                "description": "- Set **Difficulty:** *Very Easy* during the day, *Hard* at night (after working at the farm).\r\n- On **Minor failure:** Lost \u2014 [Call for Help](/play/event/21?subject_id=17)\r\n- On **Major failure:** [Enemy](/configure/character/23) appears",
+                "attribs": [],
+                "abilities": [],
+                "toplevel": false,
+                "outcome_type": "fourway",
+                "roller_type": "dnd",
+                "trigger_chance": 0.0,
+                "numeric_range": [1, 20],
+                "single_number": 0.0,
+                "selection_strings": "",
+                "determinants": [
+                    {
+                        "usage_type": "in",
+                        "label": null,
+                        "role": "subj",
+                        "field": "attr",
+                        "child_of_anchor": false,
+                        "item_id": null,
+                        "attrib_id": 2,
+                        "operation": "+",
+                        "modifier": 1.0,
+                        "scaling": null
+                    }
+                ],
                 "effects": []
             }
         ]

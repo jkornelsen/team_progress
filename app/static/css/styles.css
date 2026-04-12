@@ -169,9 +169,7 @@ select {
 }
 
 /* Primary style for inputs and selects */
-.full-width {
-    width: 100%;
-    box-sizing: border-box;
+.themed-input {
     background: #000;
     color: #fff;
     border: 1px solid var(--border);
@@ -329,6 +327,11 @@ progress::-moz-progress-bar {
 /* ==========================================================================
    6. UTILITIES (Margins, Colors, Display)
    ========================================================================== */
+
+.full-width {
+    width: 100%;
+    box-sizing: border-box; 
+}
 
 /* Margin utilities */
 .spacious-top { margin-top: 20px; }

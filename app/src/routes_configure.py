@@ -546,19 +546,20 @@ def edit_event(id):
 
         # 2. Process Determinants (Inputs)
         for row in req.get_list('dets'):
-            # Map the HTML 'source_role' to the DB 'role'
-            role = row.get_str('source_role')
-            if role:
-                new_factor = EventFactor(
-                    game_token=game_token,
-                    event_id=event.id,
-                    usage_type=Participant.IN, # Mark as Input
-                    role=role,
-                    attrib_id=row.get_int('attrib_id'),
-                    operation=row.get_str('operation', '+'),
-                    # You can add more fields here like 'scaling' later
-                )
-                event.factors.append(new_factor)
+            new_factor = EventFactor(
+                game_token=game_token,
+                event_id=event.id,
+                usage_type=Participant.IN,
+                label=row.get_str('label'),
+                role=row.get_str('role'),
+                field=row.get_str('field'),
+                attrib_id=row.get_int('attrib_id'),
+                item_id=row.get_int('item_id'),
+                operation=row.get_str('operation'),
+                scaling=row.get_str('scaling'),
+                modifier=row.get_float('modifier'),
+            )
+            event.factors.append(new_factor)
 
         # 3. Process Effects (Changes)
         for row in req.get_list('changes'):

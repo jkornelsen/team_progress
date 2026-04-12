@@ -116,11 +116,11 @@
         <section class="outer-border">
             <div class="form-group">
                 <label for="name">Character Name:</label>
-                <input type="text" id="name" name="name" value="{{ character.name or '' }}" required class="full-width" placeholder="@Player">
+                <input type="text" id="name" name="name" value="{{ character.name or '' }}" required class="full-width themed-input" placeholder="@Player">
             </div>
             <div class="form-group spacious-top">
                 <label for="description">Biography / Description:</label>
-                <textarea id="description" name="description" rows="4" class="full-width">{{ character.description or '' }}</textarea>
+                <textarea id="description" name="description" rows="4" class="full-width themed-input">{{ character.description or '' }}</textarea>
             </div>
         </section>
 
@@ -129,7 +129,7 @@
             <div class="grid-2-col">
                 <div>
                     <label for="location_id">Current Location:</label>
-                    <select id="location_id" name="location_id" class="full-width">
+                    <select id="location_id" name="location_id" class="full-width themed-input">
                         <option value="">(Nowhere / Inactive)</option>
                         {% for loc in all_locs %}
                             <option value="{{ loc.id }}" {{ 'selected' if character.location_id == loc.id }}>
@@ -142,7 +142,7 @@
                     <label for="pos_str">Grid Position (x, y):</label>
                     <input type="text" id="pos_str" name="pos_str" 
                            value="{{ character.position | join(',') if character.position else '' }}" 
-                           placeholder="1,1" class="full-width">
+                           placeholder="1,1" class="full-width themed-input">
                 </div>
             </div>
 
@@ -150,7 +150,7 @@
                 <div class="form-group">
                     <label for="travel_party">Travel Party:</label>
                     <input type="text" id="travel_party" name="travel_party" value="{{ character.travel_party or '' }}" 
-                           placeholder="Party A" class="full-width">
+                           placeholder="Party A" class="full-width themed-input">
                     <small class="label-like">Characters in the same party can move together.</small>
                 </div>
                 <div class="flex-column" style="padding-top: 30px;">

@@ -9,186 +9,10 @@ from bleach.css_sanitizer import CSSSanitizer
 
 logger = logging.getLogger(__name__)
 
-# Constants for Abbreviated format
-SUFFIXES = [
+BIGNUM_SUFFIXES = [
     '', 'k', 'm', 'b', 't', 'q', 'Q', 's', 'S', 'o', 'n', 'd',
     'u', 'U', 'v', 'V', 'w', 'W', 'x', 'X', 'y', 'Y', 'z', 'Z'
 ]
-
-# ------------------------------------------------------------------------
-# Number Formatting logic
-# ------------------------------------------------------------------------
-
-def format_num(value, nformat='en_US'):
-    """
-    Formats a number based on the session's 'number_format' setting.
-    Supports: 'sci', 'abbr', and standard locales like 'en_US' or 'de_DE'.
-    """
-    if value is None or value == '':
-        return ''
-    
-    try:
-        value = float(value)
-    except (ValueError, TypeError):
-        return str(value)
-
-    # Handle small integers cleanly
-    if abs(value) < 1000 and int(value) == value:
-        return str(int(value))
-
-    if nformat == "sci":  # Scientific: 1.23e6
-        formatted = "{:.2e}".format(value)
-        # Clean up leading zeros in exponent for readability
-        formatted = re.sub(r'e\+0?(\d)', r'e\1', formatted)
-        formatted = re.sub(r'e-0?(\d)', r'e-\1', formatted)
-        return formatted
-
-    if nformat == "abbr":  # Abbreviated: 1.23m
-        chunk = 0
-        abs_val = abs(value)
-        while abs_val >= 1000 and chunk < len(SUFFIXES) - 1:
-            abs_val /= 1000.0
-            chunk += 1
-        # Use 2 decimal places for abbreviated chunks
-        return f"{abs_val if value >=0 else -abs_val:.2f}{SUFFIXES[chunk]}"
-
-    # Standard Locale Formatting
-    try:
-        # Fallback to C if locale is invalid
-        current_locale = nformat if '.' in nformat else f"{nformat}.UTF-8"
-        locale.setlocale(locale.LC_ALL, current_locale)
-    except locale.Error:
-        locale.setlocale(locale.LC_ALL, 'C')
-
-    # Determine precision: show up to 7 significant digits
-    try:
-        val_str = locale.format_string("%.7f", value, grouping=True)
-        # Strip trailing zeros and the decimal point if it becomes empty
-        val_str = val_str.rstrip('0').rstrip(locale.localeconv()['decimal_point'])
-        return val_str
-    except Exception:
-        return str(value)
-
-def unformat_num(value_str):
-    """Remove formatting from a string. Returns a float."""
-    if not value_str or not isinstance(value_str, str):
-        return 0.0
-    value_str = value_str.strip()
-    if value_str == '':
-        return 0.0
-
-    # Scientific notation "1.23e6"
-    if re.match(r'^[-+]?\d+(\.\d+)?e[+-]?\d+$', value_str, re.IGNORECASE):
-        try:
-            return float(value_str)
-        except ValueError:
-            return 0.0
-
-    # Abbreviated format like "1.23m"
-    abbr_map = {
-        suffix: 10 ** (3 * chunk)
-        for chunk, suffix in enumerate(SUFFIXES[1:])}
-    match = re.match(
-        rf'^(\d+(\.\d+)?)([{ "".join(SUFFIXES[1:]) }])$', value_str)
-    if match:
-        number = float(match.group(1))
-        suffix = match.group(3)
-        return number * abbr_map[suffix]
-
-    # Remove grouping characters like commas or periods
-    try:
-        normalized_value_str = re.sub(r'[^\d.-]', '', value_str)
-        return float(normalized_value_str)
-    except (ValueError, TypeError):
-        return 0.0
-
-
-# ------------------------------------------------------------------------
-# Coordinate & Grid Parsing
-# ------------------------------------------------------------------------
-
-def parse_coords(coord_str, required_len=2):
-    """
-    For example '1x2' becomes (1, 2) and '1,1,3,3' becomes (1, 1, 3, 3).
-    Returns None if required_len numbers are not found.
-    """
-    if not coord_str:
-        return None
-    try:
-        # Find all numbers (including negatives) in the string
-        nums = [int(n) for n in re.findall(r'-?\d+', coord_str)]
-        if len(nums) == required_len:
-            return tuple(nums)
-        return None
-    except (ValueError, TypeError):
-        return None
-
-# ------------------------------------------------------------------------
-# Discovery
-# ------------------------------------------------------------------------
-
-def mask_string(s):
-    """Replaces letters and numbers with bullets."""
-    return ''.join('•' if c.isalnum() else c for c in s)
-
-# ------------------------------------------------------------------------
-# HTML Sanitization Filter
-# ------------------------------------------------------------------------
-
-def htmlify_filter(text):
-    """
-    Converts newline to <br> and handles custom <c=color> tags safely.
-    Uses Bleach for security.
-    """
-    if not text: return ""
-
-    # 1. Convert Markdown (Standard Links: [Text](/url))
-    html = markdown.markdown(text, extensions=['extra', 'nl2br'])
-
-    # 2. Modern Color Syntax: {color|content}
-    def color_replacer(match):
-        color = match.group(1)
-        content = match.group(2)
-        if '<code>' in content or '<pre>' in content or '\n' in content:
-            return f'<div style="color:{color}">{content}</div>'
-        return f'<span style="color:{color}">{content}</span>'
-
-    html = re.sub(r'\{([\w#]+)\|(.*?)\}', color_replacer, html, flags=re.DOTALL)
-
-    # 3. Security: Force links to be internal-only
-    # This prevents links to http://bad-site.com
-    def sanitize_href(match):
-        href = match.group(2).strip()
-        # Only allow links starting with / (internal routes)
-        if not re.match(r'^/[a-zA-Z0-9/=?&_]*$', href):
-            return 'href="#"'
-        return match.group(0)
-
-    html = re.sub(r'href\s*=\s*(["\']?)([^>]+)', sanitize_href, html)
-
-    # 3.5 Remove empty paragraphs generated by Markdown's block-ejection
-    html = html.replace('<p></p>', '')
-    html = re.sub(r'<p>\s*</p>', '', html)
-
-    # 4. Sanitize with Bleach
-    css_sanitizer = CSSSanitizer(allowed_css_properties=['color'])
-    allowed_tags = {
-        'a', 'b', 'i', 'span', 'div', 'pre', 'code', 'br', 'strong', 'em',
-        'u', 'p', 'ul', 'ol', 'li', 'h1', 'h2', 'h3'}
-    allowed_attrs = {
-        'a': ['href', 'title'],
-        'span': ['style', 'class'], 
-        'div': ['style'], 
-        'code': ['class']
-    }
-    clean_html = bleach.clean(
-        html, 
-        tags=allowed_tags, 
-        attributes=allowed_attrs,
-        css_sanitizer=css_sanitizer
-    )
-
-    return Markup(clean_html)
 
 # ------------------------------------------------------------------------
 # Request Handling
@@ -390,3 +214,172 @@ class LinkLetters:
                 self.links[link] = letter
             return letter
         return ""
+
+# ------------------------------------------------------------------------
+# Number Formatting
+# ------------------------------------------------------------------------
+
+def format_num(value, nformat='en_US'):
+    """
+    Formats a number based on the session's 'number_format' setting.
+    Supports: 'sci', 'abbr', and standard locales like 'en_US' or 'de_DE'.
+    """
+    if value is None or value == '':
+        return ''
+    
+    try:
+        value = float(value)
+    except (ValueError, TypeError):
+        return str(value)
+
+    # Handle small integers cleanly
+    if abs(value) < 1000 and int(value) == value:
+        return str(int(value))
+
+    if nformat == "sci":  # Scientific: 1.23e6
+        formatted = "{:.2e}".format(value)
+        # Clean up leading zeros in exponent for readability
+        formatted = re.sub(r'e\+0?(\d)', r'e\1', formatted)
+        formatted = re.sub(r'e-0?(\d)', r'e-\1', formatted)
+        return formatted
+
+    if nformat == "abbr":  # Abbreviated: 1.23m
+        chunk = 0
+        abs_val = abs(value)
+        while abs_val >= 1000 and chunk < len(BIGNUM_SUFFIXES) - 1:
+            abs_val /= 1000.0
+            chunk += 1
+        # Use 2 decimal places for abbreviated chunks
+        return f"{abs_val if value >=0 else -abs_val:.2f}{BIGNUM_SUFFIXES[chunk]}"
+
+    # Standard Locale Formatting
+    try:
+        # Fallback to C if locale is invalid
+        current_locale = nformat if '.' in nformat else f"{nformat}.UTF-8"
+        locale.setlocale(locale.LC_ALL, current_locale)
+    except locale.Error:
+        locale.setlocale(locale.LC_ALL, 'C')
+
+    # Determine precision: show up to 7 significant digits
+    try:
+        val_str = locale.format_string("%.7f", value, grouping=True)
+        # Strip trailing zeros and the decimal point if it becomes empty
+        val_str = val_str.rstrip('0').rstrip(locale.localeconv()['decimal_point'])
+        return val_str
+    except Exception:
+        return str(value)
+
+def unformat_num(value_str):
+    """Remove formatting from a string. Returns a float."""
+    if not value_str or not isinstance(value_str, str):
+        return 0.0
+    value_str = value_str.strip()
+    if value_str == '':
+        return 0.0
+
+    # Scientific notation "1.23e6"
+    if re.match(r'^[-+]?\d+(\.\d+)?e[+-]?\d+$', value_str, re.IGNORECASE):
+        try:
+            return float(value_str)
+        except ValueError:
+            return 0.0
+
+    # Abbreviated format like "1.23m"
+    abbr_map = {
+        suffix: 10 ** (3 * chunk)
+        for chunk, suffix in enumerate(BIGNUM_SUFFIXES[1:])}
+    match = re.match(
+        rf'^(\d+(\.\d+)?)([{ "".join(BIGNUM_SUFFIXES[1:]) }])$', value_str)
+    if match:
+        number = float(match.group(1))
+        suffix = match.group(3)
+        return number * abbr_map[suffix]
+
+    # Remove grouping characters like commas or periods
+    try:
+        normalized_value_str = re.sub(r'[^\d.-]', '', value_str)
+        return float(normalized_value_str)
+    except (ValueError, TypeError):
+        return 0.0
+
+
+def parse_coords(coord_str, required_len=2):
+    """
+    For example '1x2' becomes (1, 2) and '1,1,3,3' becomes (1, 1, 3, 3).
+    Returns None if required_len numbers are not found.
+    """
+    if not coord_str:
+        return None
+    try:
+        # Find all numbers (including negatives) in the string
+        nums = [int(n) for n in re.findall(r'-?\d+', coord_str)]
+        if len(nums) == required_len:
+            return tuple(nums)
+        return None
+    except (ValueError, TypeError):
+        return None
+
+def mask_string(s):
+    """Replaces letters and numbers with bullets."""
+    return ''.join('•' if c.isalnum() else c for c in s)
+
+# ------------------------------------------------------------------------
+# HTML Sanitization Filter
+# ------------------------------------------------------------------------
+
+def htmlify_filter(text):
+    """
+    Converts newline to <br> and handles custom <c=color> tags safely.
+    Uses Bleach for security.
+    """
+    if not text: return ""
+
+    # 1. Convert Markdown (Standard Links: [Text](/url))
+    html = markdown.markdown(text, extensions=['extra', 'nl2br'])
+
+    # 2. Modern Color Syntax: {color|content}
+    def color_replacer(match):
+        color = match.group(1)
+        content = match.group(2)
+        if '<code>' in content or '<pre>' in content or '\n' in content:
+            return f'<div style="color:{color}">{content}</div>'
+        return f'<span style="color:{color}">{content}</span>'
+
+    html = re.sub(r'\{([\w#]+)\|(.*?)\}', color_replacer, html, flags=re.DOTALL)
+
+    # 3. Security: Force links to be internal-only
+    # This prevents links with external protocols such as http://bad-site.com
+    def sanitize_href(match):
+        href = match.group(2).strip().rstrip('"').rstrip("'")
+        if not href.startswith('/'):
+            href = '/' + href
+        if not re.match(r'^/[a-zA-Z0-9/=?&_.-]*$', href):
+            logger.warning(f"Preventing link to '{href}'")
+            return 'href="#"'
+        return match.group(0)
+
+    html = re.sub(r'href\s*=\s*(["\']?)([^>]+)', sanitize_href, html)
+
+    # 3.5 Remove empty paragraphs generated by Markdown's block-ejection
+    html = html.replace('<p></p>', '')
+    html = re.sub(r'<p>\s*</p>', '', html)
+
+    # 4. Sanitize with Bleach
+    css_sanitizer = CSSSanitizer(allowed_css_properties=['color'])
+    allowed_tags = {
+        'a', 'b', 'i', 'span', 'div', 'pre', 'code', 'br', 'strong', 'em',
+        'u', 'p', 'ul', 'ol', 'li', 'h1', 'h2', 'h3'}
+    allowed_attrs = {
+        'a': ['href', 'title'],
+        'span': ['style', 'class'], 
+        'div': ['style'], 
+        'code': ['class']
+    }
+    clean_html = bleach.clean(
+        html, 
+        tags=allowed_tags, 
+        attributes=allowed_attrs,
+        css_sanitizer=css_sanitizer
+    )
+
+    return Markup(clean_html)

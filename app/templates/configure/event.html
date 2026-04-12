@@ -15,35 +15,6 @@
 
 <script src="{{ url_for('static', filename='js/configuration.js') }}"></script>
 
-{% macro det_row(index, det=None, all_attribs=[]) %}
-<div class="col-row det-row">
-    <select name="dets[{{ index }}][source_role]">
-        {% for val, label in [
-            ('subj', 'Actor (Self)'),
-            ('2nd', 'Target'),
-            ('3rd', 'Location / Environment'),
-            ('univ', 'Universal Storage')] %}
-            <option value="{{ val }}" {{ 'selected' if det and det.source_role == val }}>{{ label }}</option>
-        {% endfor %}
-    </select>
-    
-    <select name="dets[{{ index }}][attrib_id]">
-        {% for a in all_attribs %}
-            <option value="{{ a.id }}" {{ 'selected' if det and a.id == det.attrib_id }}>{{ a.name }}</option>
-        {% endfor %}
-    </select>
-    
-    <select name="dets[{{ index }}][operation]">
-        {% for op in ['+', '-', '*', '/', '^x', 'x^'] %}
-            <option value="{{ op }}" {{ 'selected' if det and det.operation == op }}>{{ op }}</option>
-        {% endfor %}
-    </select>
-    
-        <button type="button" class="btn-sm dangerous-button" 
-                onclick="ConfigEditor.removeRow(this, 'det-list')">×</button>
-</div>
-{% endmacro %}
-
 <div class="configure-event">
     <h1>Event Setup</h1>
     <p class="info">
@@ -51,25 +22,10 @@
         landing a certain type of attack.
     </p>
     <p class="info">
-        An example of a four-outcome roll is a 20-sided die,
-        meaning -9 to +10, that comes up as 10.
-        With easy difficulty selected, the major/minor threshold is
-        increased by 25%, from 9 to 12.
-    </p>
-    <p class="info">
         An example of a four-outcome roll is a 20-sided die
-        that comes up as 16.
-        With easy difficulty selected, the roll is reduced by 25%,
-        giving a modified value of 12.
-        Since 12 is greater than the major/minor threshold of 9,
-        the outcome is a major success.
-    </p>
-    <p class="info">
-        An example of a four-outcome roll is a 20-sided die
-        that comes up as 15,
-        with easy difficulty selected (-5).
-        Since 15 - 5 is greater than the major/minor threshold of 9,
-        the outcome is a major success.
+        that comes up as 10.
+        For easy difficulty and no other modifiers,
+        the outcome is a minor success because the die is 9 or higher.
     </p>
     
     <form method="POST">
@@ -77,11 +33,11 @@
         <section class="outer-border">
             <div>
                 <label for="name">Event Name:</label>
-                <input type="text" id="name" name="name" value="{{ event.name or '' }}" required class="full-width">
+                <input type="text" id="name" name="name" value="{{ event.name or '' }}" required class="full-width themed-input">
             </div>
             <div class="spacious-top">
                 <label for="description">Description:</label>
-                <textarea id="description" name="description" rows="3" class="full-width">{{ event.description or '' }}</textarea>
+                <textarea id="description" name="description" rows="3" class="full-width themed-input">{{ event.description or '' }}</textarea>
             </div>
         </section>
 
@@ -90,7 +46,7 @@
             <div class="grid-2-col">
                 <div>
                     <label for="outcome_type">Outcome Type:</label>
-                    <select id="outcome_type" name="outcome_type" class="full-width" onchange="toggleOutcomeFields()">
+                    <select id="outcome_type" name="outcome_type" class="full-width themed-input" onchange="toggleOutcomeFields()">
                         <option value="fourway" {{ 'selected' if event.outcome_type == 'fourway' }}>Four-Way (Success/Fail)</option>
                         <option value="numeric" {{ 'selected' if event.outcome_type == 'numeric' }}>Numeric Roll</option>
                         <option value="determined" {{ 'selected' if event.outcome_type == 'determined' }}>Determined (Calculated)</option>
@@ -104,12 +60,12 @@
 
             <div id="fields-selection" class="spacious-top hidden">
                 <label>Choices (One per line):</label>
-                <textarea name="selection_strings" rows="4" class="full-width" placeholder="Critical Hit&#10;Glancing Blow&#10;Fumble">{{ event.selection_strings or '' }}</textarea>
+                <textarea name="selection_strings" rows="4" class="full-width themed-input" placeholder="Critical Hit&#10;Glancing Blow&#10;Fumble">{{ event.selection_strings or '' }}</textarea>
             </div>
             <div id="fields-dice" class="grid-2-col spacious-top hidden">
                 <div>
                     <label>System:</label>
-                    <select name="roller_type" class="full-width">
+                    <select name="roller_type" class="full-width themed-input">
                         <option value="dnd" {{ 'selected' if event.roller_type == 'dnd' }}>D&D: XdY + Z</option>
                         <option value="ironsworn" {{ 'selected' if event.roller_type == 'ironsworn' }}>Ironsworn: d6 + X vs 2d10</option>
                     </select>
@@ -155,30 +111,25 @@
         <section id="determinants" class="outer-border">
             <div class="flex-between">
                 <h3>Determining Values (Inputs)</h3>
-                <button type="button" class="btn-sm" onclick="ConfigEditor.addRow('det-list', 'det-template')">+ Add Input</button>
+                <button type="button" class="btn-sm" onclick="addFactor()">+ Add Input</button>
             </div>
-            <style>
-                .det-row { --grid-cols: 6fr 3fr 4fr 1fr; }
-            </style>
-            <div id="det-list" class="col-list spacious-top {{ 'hidden' if not event.determinants }}">
-                <div class="col-row det-row header-style">
-                    <span>Role</span>
-                    <span>Field</span>
-                    <span>Operation</span>
-                    <span></span>
-                </div>
-
-                {% for det in event.determinants %}
-                    {{ det_row(loop.index0, det, all_attribs) }}
+            <div id="det-list" class="spacious-top">
+                {% for factor in event.determinants %}
+                    {% set index = loop.index0 %}
+                    {% include 'configure/partials/event_factor_card.html' %}
                 {% endfor %}
             </div>
             <div id="det-list-empty" class="no-entities {{ 'hidden' if event.determinants }}">
-                (No determinants added)
+                (No modifiers set for this event)
             </div>
-            <template id="det-template">
-                {{ det_row('__INDEX__', None, all_attribs) }}
-            </template>
         </section>
+
+        <!-- Template for JS -->
+        <template id="factor-template">
+            {% set index = 'INDEX' %}
+            {% set factor = None %}
+            {% include 'configure/partials/event_factor_card.html' %}
+        </template>
 
         <!-- 4. Values Changed -->
         <section id="effects" class="outer-border">
@@ -223,6 +174,32 @@
 </template>
 
 <script>
+    function addFactor() {
+        const list = document.getElementById('det-list');
+        const emptyMsg = document.getElementById('det-list-empty');
+        const template = document.getElementById('factor-template').innerHTML;
+        
+        const index = list.querySelectorAll('.factor-card').length;
+        const html = template.replace(/INDEX/g, index);
+        
+        list.insertAdjacentHTML('beforeend', html);
+        emptyMsg.classList.add('hidden');
+    }
+
+    function toggleFieldTarget(select, index) {
+        const card = select.closest('.factor-card');
+        const attrSelect = card.querySelector('.target-attr');
+        const itemSelect = card.querySelector('.target-item');
+
+        if (select.value === 'attr') {
+            attrSelect.classList.remove('hidden');
+            itemSelect.classList.add('hidden');
+        } else {
+            attrSelect.classList.add('hidden');
+            itemSelect.classList.remove('hidden');
+        }
+    }
+
     function toggleOutcomeFields() {
         const type = document.getElementById('outcome_type').value;
         document.getElementById('fields-range').classList.toggle('hidden', !['fourway', 'numeric'].includes(type));

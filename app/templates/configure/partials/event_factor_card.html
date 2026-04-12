@@ -1,0 +1,138 @@
+<div class="factor-card outer-border" data-index="{{ index }}">
+    <div class="flex-between align-center card-header">
+        <div class="flex-row align-center gap-10 full-width" style="max-width: 45ch;">
+    
+            <span class="label-like">#{{ index|int + 1 }}</span>
+            <input type="text" 
+                   name="dets[{{ index }}][label]" 
+                   class="input-header full-width" 
+                   value="{{ factor.label or '' }}" 
+                   placeholder="Label e.g. Evasion (optional)">
+        </div>
+        <button type="button" class="btn-sm dangerous-button" onclick="this.closest('.factor-card').remove()">×</button>
+    </div>
+
+    <div class="card-body">
+        <!-- 1. THE WHO (Source) -->
+        <div class="sub-section">
+            <div class="flex-row align-center gap-10">
+                <span style="margin-top: 4px">👤 Source Role:</span>
+                <select name="dets[{{ index }}][role]">
+                    <option value="subj" {{ 'selected' if factor.role == 'subj' }}>Actor (Subject)</option>
+                    <option value="2nd" {{ 'selected' if factor.role == '2nd' }}>Target (Other 1)</option>
+                    <option value="3rd" {{ 'selected' if factor.role == '3rd' }}>Env (Other 2)</option>
+                    <option value="univ" {{ 'selected' if factor.role == 'univ' }}>Universal Storage</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 2. THE WHAT (Field) -->
+        <h5>📊 Value to Fetch</h5>
+        <div class="sub-section">
+            <div class="flex-row align-center gap-10">
+                <select name="dets[{{ index }}][field]" class="full-width" style="max-width: 30ch;" onchange="toggleFieldTarget(this, {{ index }})">
+                    <option value="attr" {{ 'selected' if factor.field == 'attr' }}>Attribute Value</option>
+                    <option value="qty" {{ 'selected' if factor.field == 'qty' }}>Item Quantity</option>
+                </select>
+
+                <!-- Attribute Dropdown -->
+                <select name="dets[{{ index }}][attrib_id]" 
+                        class="target-attr full-width {{ 'hidden' if factor.field == 'qty' }}" style="max-width: 30ch;">
+                    <option value="">-- Select Attribute --</option>
+                    {% for a in all_attribs %}
+                        <option value="{{ a.id }}" {{ 'selected' if factor.attrib_id == a.id }}>{{ a.name }}</option>
+                    {% endfor %}
+                </select>
+
+                <!-- Item Dropdown -->
+                <select name="dets[{{ index }}][item_id]" 
+                        class="target-item full-width {{ 'hidden' if factor.field != 'qty' }}" style="max-width: 30ch;">
+                    <option value="">-- Select Item --</option>
+                    {% for i in all_items %}
+                        <option value="{{ i.id }}" {{ 'selected' if factor.item_id == i.id }}>{{ i.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <label class="checkbox-label spacious-top">
+                <input type="checkbox" name="dets[{{ index }}][child_of_anchor]" {{ 'checked' if factor.child_of_anchor }}>
+                An item in source's inventory
+            </label>
+        </div>
+
+        <!-- 3. THE HOW (Math) -->
+        <h5>🧮 Calculation</h5>
+        <div class="sub-section">
+            <div class="flex-row align-center gap-10">
+                <select name="dets[{{ index }}][operation]" class="op-selector full-width" style="max-width: 8ch;">
+                    {% for op in ['+', '-', '*', '/', '^x', 'x^', '* ^x', '* x^', '+ ^x', '+ x^'] %}
+                        <option value="{{ op }}" {{ 'selected' if factor.operation == op }}>{{ op }}</option>
+                    {% endfor %}
+                </select>
+                <select name="dets[{{ index }}][scaling]" class="full-width" style="max-width: 30ch;">
+                    <option value="">No Scaling</option>
+                    <option value="log" {{ 'selected' if factor.scaling == 'log' }}>Soft Capped (Log)</option>
+                    <option value="half" {{ 'selected' if factor.scaling == 'half' }}>Reduced (Half)</option>
+                </select>
+            </div>
+            <label class="label-like" data-dynamic-label>Constant Factor:</label>
+            <input type="number" 
+               name="dets[{{ index }}][modifier]" 
+               class="full-width" 
+               data-dynamic-input
+               value="{{ factor.modifier or 1.0 }}" 
+               step="any" 
+               style="max-width: 10ch;">
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 1. Define the logic function
+        function updateVisibility(select) {
+            const val = select.value;
+            const card = select.closest('.factor-card');
+            if (!card) return;
+
+            const label = card.querySelector('[data-dynamic-label]');
+            const input = card.querySelector('[data-dynamic-input]');
+
+            if (val.includes('x^')) {
+                label.textContent = "Base:";
+                label.classList.remove('hidden');
+                input.classList.remove('hidden');
+            } 
+            else if (val.includes('^x')) {
+                label.textContent = "Exponent:";
+                label.classList.remove('hidden');
+                input.classList.remove('hidden');
+            } 
+            else {
+                label.classList.add('hidden');
+                input.classList.add('hidden');
+            }
+        }
+
+        // 2. Initialize existing cards on load
+        document.querySelectorAll('.op-selector').forEach(select => {
+            updateVisibility(select);
+        });
+
+        // 3. Listen for future changes
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('op-selector')) {
+                updateVisibility(e.target);
+            }
+        });
+    });
+</script>
+
+<style>
+    .factor-card { background: #1a1a1a; margin-bottom: 15px; border-left: 4px solid var(--accent); }
+    .card-header { padding: 8px 12px; }
+    .card-body { padding: 12px; gap: 15px; }
+    .input-header { background: transparent; border: none; border-bottom: 1px solid #444; color: var(--accent); font-weight: bold; font-size: 1.1em; }
+    .input-header:focus { border-bottom-color: var(--accent); outline: none; }
+    .sub-section { background: #333; padding: 10px; border-radius: 4px; }
+    h5 { margin-bottom: 8px; font-size: 0.8em; color: var(--text-dim); text-transform: uppercase; }
+</style>

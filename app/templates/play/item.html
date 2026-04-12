@@ -307,7 +307,7 @@
                                 {% if available_slots %}
                                     {% set has_controls = true %}
                                     <div class="action-box">
-                                        <select id="equip-slot" class="full-width">
+                                        <select id="equip-slot" class="full-width themed-input">
                                             {% for slot in available_slots %}
                                                 <option value="{{ slot }}" {{ 'selected' if slot == session.get('default_slot') }}>
                                                     {{ slot }}

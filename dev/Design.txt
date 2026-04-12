@@ -1,5 +1,7 @@
 ---- issues and proposed changes ----
 
+start out with a branch on ground in forest, limit 1
+
 ajax to keep updating source quantities on item play
     get complex dict of all values needed in a single ajax call
     also update start button usability -- call can_do_recipe() each time
@@ -7,6 +9,17 @@ ajax to keep updating source quantities on item play
 tightened subject-based events
     a determinant can be flagged as informational only
     otherwise they get calculated directly, not modifying the die fields
+application modifiers
+    so determiners are kept to intuitive roll outcomes
+    put a single set of select boxes on play screen that
+    can be adjusted before applying each value
+    or include this information for each applicator record?
+    that would be answering a different question, i.e. do different
+    applicators affect different types of values, or do they usually
+    find the same types of values but in different places
+    I think the latter might be more practical,
+    so it seems like having a single system of application modifers
+    would be better
 
 disable "show in overview" if item storage type is not universal
 disable recipe duration if instant
@@ -22,6 +35,20 @@ Fission Plant: no more than a certain amount of pollution
 bacon for dinner is a good but minimalist quest
 consider adding a complex quest scenario with production, travel and combat
 maybe a set of tasks to enter guild or save village from invasion
+
+we're pretty close to dynamic idle increases
+    an event can calculate the increase and
+    set the value of a built-in field such as quantity
+    all we would need is for it to be able to set the value of
+    rate duration or rate amount
+    however those fields are inside a specific recipe
+    recipes aren't easy to list readably in a selectbox
+    would such a selectbox be in configure or play?
+    maybe recipe #1, recipe #2, recipe #3 would be readable enough
+    possibly if recipes are added or deleted, this "#1" syntax would
+    be a kind of pointer that would adjust automatically
+    it could do that if we link to actual recipe ids that persist in json
+    maybe start by expecting if recipes are deleted then user must adjust
 
 saving grandfather clock resets hour, an enumerated attrib, to 12am
 

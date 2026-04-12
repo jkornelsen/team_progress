@@ -12,7 +12,8 @@ from app.utils import (
     RequestHelper, parse_coords, LinkLetters, capture_origin, redirect_back)
 from .logic_piles import transfer_item
 from .logic_event import (
-    roll_for_outcome, roll_for_system_outcome, TriggerException, calculate_determinants)
+    roll_for_outcome, roll_for_system_outcome, TriggerException, calculate_determinants,
+    get_entity_value)
 from .logic_progress import (
     start_production, stop_production, update_progress)
 from .logic_production import (
@@ -846,8 +847,7 @@ def play_event(id):
     determinants = []
     if subject_id:
         for det in getattr(event, 'determinants', []):
-            from .logic_event import get_entity_value
-            val = get_entity_value(game_token, subject_id, det)
+            val = get_entity_value(subject_id, det)
             determinants.append({
                 'label': det.label,
                 'operation': det.operation,
@@ -875,12 +875,12 @@ def event_preview(id):
     """AJAX helper to set up determinants."""
     game_token = g.game_token
     event = Event.query.get((game_token, id))
+    
     context = {
-        'actor_id': request.args.get('actor_id', type=int),
-        'target_id': request.args.get('target_id', type=int),
-        'actor_item_id': request.args.get('actor_item_id', type=int),
-        'target_item_id': request.args.get('target_item_id', type=int),
-        'location_id': request.args.get('location_id', type=int)
+        'subj_id': request.args.get('subj_id', type=int),
+        '2nd_id': request.args.get('sec_id', type=int),
+        '3rd_id': request.args.get('tert_id', type=int),
+        'univ_id': GENERAL_ID
     }
     
     modifiers = calculate_determinants(event, context)

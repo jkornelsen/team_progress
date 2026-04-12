@@ -19,11 +19,11 @@
             <h3>Scenario Identity</h3>
             <div class="form-group">
                 <label for="title">Scenario Title:</label>
-                <input type="text" id="title" name="title" value="{{ overall.title }}" required class="full-width">
+                <input type="text" id="title" name="title" value="{{ overall.title }}" required class="full-width themed-input">
             </div>
             <div class="form-group spacious-top">
                 <label for="description">Introductory Description:</label>
-                <textarea id="description" name="description" rows="5" class="full-width">{{ overall.description }}</textarea>
+                <textarea id="description" name="description" rows="5" class="full-width themed-input">{{ overall.description }}</textarea>
             </div>
         </section>
 
@@ -33,7 +33,7 @@
             <div class="grid-2-col">
                 <div class="form-group">
                     <label for="number_format">Display Number Format:</label>
-                    <select id="number_format" name="number_format" class="full-width">
+                    <select id="number_format" name="number_format" class="full-width themed-input">
                         <option value="en_US" {{ 'selected' if overall.number_format == 'en_US' }}>International (1,234.56)</option>
                         <option value="de_DE" {{ 'selected' if overall.number_format == 'de_DE' }}>European (1.234,56)</option>
                         <option value="abbr" {{ 'selected' if overall.number_format == 'abbr' }}>Abbreviated (1.2k, 1.5m)</option>
@@ -42,7 +42,7 @@
                 </div>
                 <div class="form-group">
                     <label for="slots">Equipment Slots (One per line):</label>
-                    <textarea id="slots" name="slots" rows="4" class="full-width" 
+                    <textarea id="slots" name="slots" rows="4" class="full-width themed-input" 
                               placeholder="Main Hand&#10;Off Hand&#10;Body">{{ overall.slots | join('\n') }}</textarea>
                     <small class="label-like">These appear in the Character and Item editors.</small>
                 </div>
@@ -166,7 +166,9 @@
     .winreq-card { background: #111; padding: 15px; border-left: 4px solid var(--border); }
     .winreq-card:hover { border-left-color: var(--accent); }
     .grid-3-col { display: grid; grid-template-columns: 1.5fr 1.5fr 2fr; gap: 15px; }
+/*
     .full-width { width: 100%; box-sizing: border-box; background: #000; color: #fff; border: 1px solid var(--border); padding: 10px; }
+*/
     .footer-actions { margin-top: 40px; padding: 20px; border-top: 1px solid var(--border); }
 </style>
 {% endblock %}

@@ -20,11 +20,11 @@
             <h3>General Info</h3>
             <div class="form-group">
                 <label for="name">Attribute Name:</label>
-                <input type="text" id="name" name="name" value="{{ attrib.name or '' }}" required class="full-width">
+                <input type="text" id="name" name="name" value="{{ attrib.name or '' }}" required class="full-width themed-input">
             </div>
             <div class="form-group spacious-top">
                 <label for="description">Description:</label>
-                <textarea id="description" name="description" rows="3" class="full-width">{{ attrib.description or '' }}</textarea>
+                <textarea id="description" name="description" rows="3" class="full-width themed-input">{{ attrib.description or '' }}</textarea>
             </div>
         </section>
 
@@ -53,7 +53,7 @@
 
                 <div id="enum-container" class="flex-grow {{ 'hidden' if not attrib or not attrib.enum_list }}">
                     <label for="enum_values">State Labels (One per line):</label>
-                    <textarea id="enum_values" name="enum_values" rows="5" class="full-width" 
+                    <textarea id="enum_values" name="enum_values" rows="5" class="full-width themed-input" 
                               placeholder="Empty&#10;Low&#10;Medium&#10;High&#10;Full">{{ attrib.enum_list | join('\n') if attrib.enum_list }}</textarea>
                     <small class="label-like">Stored as 0, 1, 2... based on line index.</small>
                 </div>
@@ -129,7 +129,9 @@
 
 <style>
     .type-selection { min-width: 250px; }
+/*
     .full-width { width: 100%; box-sizing: border-box; background: #000; color: #fff; border: 1px solid var(--border); padding: 8px; font-family: inherit; }
+*/
     .radio-label { display: block; cursor: pointer; font-size: 0.9em; margin: 5px 0; }
     .footer-actions { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); }
     .hidden { display: none; }

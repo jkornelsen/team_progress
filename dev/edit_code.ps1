@@ -66,13 +66,13 @@ $txtFiles = Get-ChildItem -Path $PSScriptRoot -Filter "*.txt" -File
 $jsonFiles = Get-ChildItem -Path (Join-Path $appdir "data_files") -Filter "*.json" -File
 
 # Quote each file path individually
-$htmlFilePaths = $htmlFiles.FullName | ForEach-Object { "`"$_`"" }
-$cssFilePaths = $cssFiles.FullName | ForEach-Object { "`"$_`"" }
-$pyFilePaths = $pyFiles.FullName | ForEach-Object { "`"$_`"" }
-$pyTopFilePaths = $pyTopFiles.FullName | ForEach-Object { "`"$_`"" }
-$txtFilePaths = $txtFiles.FullName | ForEach-Object { "`"$_`"" }
-$mdFilePaths = $mdFiles.FullName | ForEach-Object { "`"$_`"" }
-$jsonFilePaths = $jsonFiles.FullName | ForEach-Object { "`"$_`"" }
+$htmlFilePaths = @($htmlFiles.FullName | ForEach-Object { "`"$_`"" })
+$cssFilePaths = @($cssFiles.FullName | ForEach-Object { "`"$_`"" })
+$pyFilePaths = @($pyFiles.FullName | ForEach-Object { "`"$_`"" })
+$pyTopFilePaths = @($pyTopFiles.FullName | ForEach-Object { "`"$_`"" })
+$txtFilePaths = @($txtFiles.FullName | ForEach-Object { "`"$_`"" })
+$mdFilePaths = @($mdFiles.FullName | ForEach-Object { "`"$_`"" })
+$jsonFilePaths = @($jsonFiles.FullName | ForEach-Object { "`"$_`"" })
 
 OpenAndSnap ($htmlFilePaths + $cssFilePaths)
 OpenAndSnap ($pyFilePaths + $pyTopFilePaths)

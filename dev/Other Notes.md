@@ -11,6 +11,7 @@ pip show flask
 ## psql queries
 
 ```
+\d
 \pset pager off
 SET client_encoding TO 'UTF8';
 

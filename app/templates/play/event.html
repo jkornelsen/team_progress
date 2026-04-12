@@ -44,7 +44,7 @@
                 {% if needs_other1 %}
                 <div class="form-group">
                     <label>Target:</label>
-                    <select name="sec_id" class="full-width participant-trigger">
+                    <select name="sec_id" class="full-width themed-input participant-trigger">
                         <option value="">-- Select Target --</option>
                         {% for ent in nearby_entities %}
                             <option value="{{ ent.id }}">{{ ent.name }}</option>
@@ -56,7 +56,7 @@
                 {% if needs_other2 %}
                 <div class="form-group">
                     <label>Environment:</label>
-                    <select name="tert_id" class="full-width participant-trigger">
+                    <select name="tert_id" class="full-width themed-input participant-trigger">
                         <option value="{{ current_loc.id }}">{{ current_loc.name }} (Current)</option>
                     </select>
                 </div>
@@ -65,7 +65,7 @@
                 {% if needs_target %}
                 <div class="form-group">
                     <label>Target:</label>
-                    <select id="target-id" class="full-width participant-trigger">
+                    <select id="target-id" class="full-width themed-input participant-trigger">
                         <option value="">-- Select Target --</option>
                         {% for char in nearby_characters %}
                             <option value="{{ char.id }}">{{ char.name }}</option>
@@ -77,7 +77,7 @@
                 {% for role_name, config in item_selectors.items() %}
                     <div class="form-group">
                         <label>Select {{ config.label }} for {{ role_name }}:</label>
-                        <select name="{{ role_name }}_item_id" class="full-width participant-trigger">
+                        <select name="{{ role_name }}_item_id" class="full-width themed-input participant-trigger">
                             <option value="">-- Select Item --</option>
                             {% for pile in config.options %}
                                 <option value="{{ pile.id }}">{{ pile.item_blueprint.name }} (Qty: {{ pile.quantity }})</option>
@@ -114,7 +114,7 @@
             </div>
             {% endif %}
         {% else %}
-            <h3>Calculated Modifiers</h3>
+            <h3>Modifiers</h3>
             <div id="modifier-preview" class="label-like">
                 <!-- JS will populate this when participants change -->
                 Select participants to calculate modifiers...
@@ -125,7 +125,7 @@
         <!-- LEFT COLUMN: Execution Setup -->
         <div class="setup-column">
             <section class="outer-border">
-                <h3>Dice Setup</h3>
+                <h3>Dice</h3>
                 <form id="event-form">
                     {% if event.outcome_type in ['fourway', 'numeric'] %}
                     <div class="die-adjustment-grid">
@@ -141,17 +141,17 @@
                         <select id="difficulty-select">
                             <option value="0.15">Very Easy</option>
                             <option value="0.35">Easy</option>
-                            <option value="0.55" selected>Medium</option>
+                            <option value="0.55" selected>Moderate</option>
                             <option value="0.75">Hard</option>
                             <option value="0.95">Very Hard</option>
-                            <option value="1.05">Almost Impossible</option>
+                            <option value="1.05">Extreme</option>
                         </select>
                     </div>
                     
                     {% if event.outcome_type == 'fourway' %}
                     <div class="threshold-info label-like text-dim spacious-top">
-                        Minor Success: <span id="minor-threshold-display" class="text-accent">--</span>,
-                        Major Success: <span id="major-threshold-display" class="text-accent">--</span>
+                        Minor Success <span id="minor-threshold-display" class="text-accent">--</span>,
+                        Major Success <span id="major-threshold-display" class="text-accent">--</span>
                     </div>
                     {% endif %}
                     {% endif %}
@@ -436,6 +436,68 @@
     document.querySelectorAll('.container-select').forEach(s => {
         s.onchange = updateApplyPreviews;
     });
+
+    /**
+     * Fetches calculated modifiers from the server and updates the UI
+     */
+    async function refreshModifiers() {
+        const previewDiv = document.getElementById('modifier-preview');
+        
+        // 1. Gather selected IDs from the dropdowns
+        const params = new URLSearchParams();
+        params.append('subj_id', document.querySelector('input[name="subj_id"]')?.value || '');
+        params.append('sec_id', document.querySelector('select[name="sec_id"]')?.value || '');
+        params.append('tert_id', document.querySelector('select[name="tert_id"]')?.value || '');
+        // Add item instance selectors if they exist
+        document.querySelectorAll('select[name*="_item_id"]').forEach(sel => {
+            params.append(sel.name, sel.value);
+        });
+
+        // 2. Hit the API
+        try {
+            const response = await fetch(`/event/preview/${eventId}?${params.toString()}`);
+            const modifiers = await response.json();
+
+            // 3. Render the results
+            if (modifiers.length === 0) {
+                previewDiv.innerHTML = '<span class="text-dim">No modifiers applied.</span>';
+                return;
+            }
+
+            // Construct: "Label: Source Field OpValue"
+            // e.g. "Nav Skill: Suzy Pathfinding +1"
+            let html = '<ul class="modifier-list" style="list-style: none; padding: 0;">';
+            modifiers.forEach(m => {
+                const colorClass = m.value >= 0 ? 'text-success' : 'text-danger';
+                const labelHtml = (m.label && m.label.trim() !== "") 
+                    ? `<span class="label-like">${m.label}:</span>` 
+                    : "";
+                let opDisplay = m.op;
+                if (opDisplay === '*') opDisplay = '×';
+                if (opDisplay === '/') opDisplay = '÷';
+                html += `
+                    <li class="spacious-bottom" style="display: flex; align-items: baseline; gap: 4px;">
+                        ${labelHtml}
+                        <strong>${m.source_name}</strong> 
+                        <span class="text-dim">${m.field_name}</span> 
+                        <strong class="${colorClass}">${opDisplay}${Math.abs(m.value)}</strong>
+                    </li>`;
+            });
+            html += '</ul>';
+            previewDiv.innerHTML = html;
+
+        } catch (e) {
+            console.error("Failed to load modifiers", e);
+        }
+    }
+
+    // Attach listeners to all participant dropdowns
+    document.querySelectorAll('.participant-trigger').forEach(el => {
+        el.addEventListener('change', refreshModifiers);
+    });
+
+    // Run once on load to show Suzy's initial Pathfinding bonus
+    document.addEventListener('DOMContentLoaded', refreshModifiers);
 </script>
 
 <style>
