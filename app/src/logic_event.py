@@ -123,70 +123,99 @@ def apply_scaling(val, mode):
         return val / 2.0
     return val
 
-def apply_modifier(base_val, mod_val, operation, mode):
-    """
-    Applies mathematical transformation including exponents.
-    base_val: The current die bound or calculated outcome.
-    mod_val: The value retrieved from the attribute/item.
-    """
-    # ... existing mode logic (log, half) ...
-
-    if operation == '+': return base_val + mod_val
-    if operation == '-': return base_val - mod_val
-    if operation == '*': return base_val * mod_val
-    if operation == '/': return base_val / mod_val if mod_val != 0 else base_val
-    if operation == '^x': return base_val ** mod_val
-    if operation == 'x^': return mod_val ** base_val
-    return base_val
+def apply_operation(current_val, mod_val, op):
+    """Applies the specific operation and returns the new value."""
+    if op == '+': return current_val + mod_val
+    if op == '-': return current_val - mod_val
+    if op == '*': return current_val * mod_val
+    if op == '/': return current_val / mod_val if mod_val != 0 else current_val
+    if op == '^x': return current_val ** mod_val
+    if op == 'x^': return mod_val ** current_val
+    return current_val
 
 # ------------------------------------------------------------------------
 # Outcome Resolution
 # ------------------------------------------------------------------------
 
-def roll_for_outcome(event_id, die_min, die_max, loc_id=None, difficulty=0.0):
+def roll_for_outcome(event_id, context_ids, difficulty=0.0):
     """
-    Performs the random roll based on user-provided bounds and Event rules.
+    Performs the random roll based on user-provided difficulty and Event rules.
     Returns: (numeric_result, string_display)
     """
+    game_token = g.game_token
     event = Event.query.get((g.game_token, event_id))
-    die_min = int(round(float(die_min)))
-    die_max = int(round(float(die_max)))
-    numeric_val = 0.0
-    display_str = f""
     
-    if event.outcome_type == 'fourway':
-        roll = random.randint(die_min, die_max)
-        range_size = abs(die_max - die_min) + 1
-        crit_threshold = round(range_size * 0.10)
-        shift = round(crit_threshold * difficulty)
-        crit_threshold = crit_threshold + shift
-        if roll <= die_min + crit_threshold:
-            res = "Strong Failure"
-        elif roll <= 0:
-            res = "Minor Failure"
-        elif roll < die_max - crit_threshold:
-            res = "Minor Success"
-        else:
-            res = "Strong Success"
-        numeric_val = float(roll)
-        display_str = f"{res} (Rolled {roll})"
+    # 1. Start with the Base Roll
+    base_min = event.numeric_range[0] if event.numeric_range else 1
+    base_max = event.numeric_range[1] if event.numeric_range else 20
 
-    elif event.outcome_type == 'numeric':
-        roll = random.randint(die_min, die_max)
-        numeric_val = float(roll)
-        display_str = f"Rolled {roll}"
+    # "Determined" events don't roll; they use the single_number as the start.
+    if event.outcome_type == 'determined':
+        total = event.single_number
+        breakdown_parts = [f"{total:g}"]
 
     elif event.outcome_type == 'selection':
         options = [s.strip() for s in event.selection_strings.split('\n') if s.strip()]
         choice = random.choice(options) if options else "Nothing"
-        numeric_val = 0
-        display_str = f"Selection: {choice}"
+        breakdown_parts = [f"Selection: <b>{choice}</b>"]
 
     elif event.outcome_type == 'coordinates':
-        numeric_val, display_str = roll_coordinate(loc_id)
+        loc_id = context_ids.get(f"{Participant.SUBJ}_id")
+        _, coord_str = roll_coordinate(loc_id)
+        breakdown_parts = [coord_str]
 
-    add_message(g.game_token, f"{event.name} — {display_str}")
-    return numeric_val, display_str
+    else:
+        base_roll = random.randint(base_min, base_max)
+        total = float(base_roll)
+        breakdown_parts = [f"d{base_max - base_min + 1}(🎲{base_roll})"]
+
+    # 2. Resolve and Apply every Determinant individually
+    # calculate_determinants returns list: [{label, source_name, field_name, value, op}, ...]
+    modifiers = calculate_determinants(event, context_ids)
+    
+    for m in modifiers:
+        val = m['value']
+        op = m['op']
+        
+        # Update Total
+        total = apply_operation(total, val, op)
+        
+        # Update Breakdown String
+        # e.g., " + 1 (Suzy Pathfinding)"
+        symbol = op if op not in ['*','/'] else ('×' if op == '*' else '÷')
+        label = f"{m['source_name']} {m['field_name']}"
+        if m['label']: label = m['label']
+        
+        breakdown_parts.append(f"{symbol} {val:g} <small>({label})</small>")
+
+    # 3. Final Formatting
+    breakdown_str = " ".join(breakdown_parts) + f" = <b>{total:g}</b>"
+    
+    display_str = ""
+    if event.outcome_type == 'fourway':
+        span = abs(base_max - base_min) + 1
+        shift = round(span * difficulty)
+
+        major_failure_max = base_min + math.floor(shift * 0.20)
+        minor_success_min = round(span * 0.10) + shift
+        major_success_min = (
+            base_max - math.floor(span * 0.20)) + math.floor(shift * 0.5)
+
+        if total >= major_success_min:
+            res = "Strong Success"
+        elif total >= minor_success_min:
+            res = "Minor Success"
+        elif total <= major_failure_max:
+            res = "Strong Failure"
+        else:
+            res = "Minor Failure"
+
+        display_str = f"<b>{res}</b><br><small>{breakdown_str}</small>"
+    else:
+        display_str = breakdown_str
+
+    add_message(game_token, f"{event.name}: {display_str.replace('<br>', ' ')}")
+    return total, display_str
 
 def roll_coordinate(loc_id):
     """Pick a random available square at a location."""
@@ -247,15 +276,13 @@ def roll_for_system_outcome(event_id, num_dice=1, sides=20, bonus=0):
         rolls = [random.randint(1, sides) for _ in range(num_dice)]
         total = sum(rolls) + bonus
         
-        # d20(🎲18) + 2 formatting from your scales.py
         rolls_details = " + ".join([f"d{sides}(🎲{r})" for r in rolls])
-        bonus_str = f" + {bonus}" if bonus != 0 else ""
+        bonus_str = f" {'+' if bonus >= 0 else '-'} {abs(bonus)}" if bonus != 0 else ""
         
         display_str = f"{rolls_details}{bonus_str} = <b>{total}</b>"
         numeric_val = float(total)
 
     elif event.roller_type == RollerType.IRONSWORN:
-        # Action: d6 + bonus vs two d10s
         action_die = random.randint(1, 6)
         challenge_dice = [random.randint(1, 10), random.randint(1, 10)]
         total = action_die + bonus
@@ -263,15 +290,15 @@ def roll_for_system_outcome(event_id, num_dice=1, sides=20, bonus=0):
         hits = sum(1 for die in challenge_dice if total > die)
         res_text = "Strong Hit" if hits == 2 else "Weak Hit" if hits == 1 else "Miss"
         
-        display_str = f"Action: {total} (🎲{action_die}+{bonus}) vs [🎲{challenge_dice[0]}][🎲{challenge_dice[1]}] -> <b>{res_text}</b>"
-        numeric_val = float(hits) # Use hits as the numeric result for potential triggers
+        display_str = (
+            f"{res_text} <br>"
+            f"<small>Action: d6(🎲{action_die}) + {bonus} = {total} vs "
+            f"[🎲{challenge_dice[0]}][🎲{challenge_dice[1]}]</small>"
+        )
+        numeric_val = float(hits)
 
-    add_message(g.game_token, f"{event.name}: {display_str}")
+    add_message(g.game_token, f"{event.name}: {display_str.replace('<br>', ' ')}")
     return numeric_val, display_str
-
-    event = Event.query.get((g.game_token, event_id))
-    display_str = ""
-    numeric_val = 0.0
 
 # ------------------------------------------------------------------------
 # Applying Changes

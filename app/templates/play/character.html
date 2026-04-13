@@ -259,7 +259,7 @@
             }
             return;
         }
-        location.reload();
+        window.location.href = `/play/location/${destId}?active_char_id={{ character.id }}`;
     });
 
     // Hotkey Support

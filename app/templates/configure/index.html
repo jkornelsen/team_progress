@@ -1,8 +1,9 @@
 {% extends 'layout/base.html' %}
+{% import 'macros/hotkeys.html' as hk %}
 
 {% block upper_left %}
     <div class="nav-container">
-        <a class="upper-left" href="{{ url_for('play.overview') }}">[o]verview</a>
+        {{ hk.page_overview() }}
         <span class="separator">|</span>
         <span class="text-dim">main setup</span>
     </div>

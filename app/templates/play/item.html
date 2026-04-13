@@ -294,63 +294,72 @@
                 <div class="button-group">
                     {% set has_controls = false %}
 
-                    <!-- Equipment -->
-                    {% if owner.entity_type == 'character' %}
-                        <div class="action-box border-top-dim spacious-top" style="padding-top: 15px;">
-                            {% if pile.slot %}
-                                {% set has_controls = true %}
-                                <div class="action-box">
-                                    <span class="label-like">Slot: <strong>{{ pile.slot }}</strong></span>
-                                    <button id="unequip-btn" class="go-button">une[q]uip</button>
-                                </div>
+                    {% if owner.entity_type == 'location' and ctx_entity.TYPENAME == 'character' %}
+                        {# Location -> Character (Pickup) #}
+                        {% set has_controls = true %}
+                        <div class="action-box">
+                            {% if is_reachable %}
+                                <span class="target-name">{{ ctx_entity.name }}</span>
+                                <input type="hidden" id="pickup-char-id" value="{{ ctx_entity.id }}">
+                                <button id="pickup-btn" class="go-button">[p]ick Up</button>
                             {% else %}
-                                {% if available_slots %}
-                                    {% set has_controls = true %}
-                                    <div class="action-box">
-                                        <select id="equip-slot" class="full-width themed-input">
-                                            {% for slot in available_slots %}
-                                                <option value="{{ slot }}" {{ 'selected' if slot == session.get('default_slot') }}>
-                                                    {{ slot }}
-                                                </option>
-                                            {% endfor %}
-                                        </select>
-                                        <button id="equip-btn" class="go-button">e[q]uip</button>
-                                    </div>
-                                {% endif %}
+                                <i class="text-dim small">🚫 {{ reach_error or "Too far to reach" }}</i>
                             {% endif %}
                         </div>
-                    {% endif %}
 
-                    {# Carried -> Location (Drop) #}
-                    {% if owner.entity_type == 'character' and owner.location_id %}
-                        {% set has_controls = true %}
-                        <div class="action-box">
-                            <input type="number" id="drop-qty" value="{{ pile.quantity | formatNum }}" max="{{ pile.quantity }}" step="any" class="mini-input">
-                            <button id="drop-btn" class="go-button">d[r]op at location</button>
-                        </div>
-                    {% endif %}
+                    {% elif owner.entity_type == 'character' %}
+                        {% if owner.location_id %}
+                            {# Carried -> Location (Drop) #}
+                            {% set has_controls = true %}
+                            <div class="action-box">
+                                <input type="number" id="drop-qty" value="{{ pile.quantity | formatNum }}" max="{{ pile.quantity }}" step="any" class="mini-input">
+                                <button id="drop-btn" class="go-button">d[r]op at location</button>
+                            </div>
+                        {% endif %}
 
-                    {# Location -> Character (Pickup) #}
-                    {% if owner.entity_type == 'location' and ctx_entity.TYPENAME == 'character' %}
-                        {% set has_controls = true %}
-                        <div class="action-box">
-                            <span class="target-name">{{ ctx_entity.name }}</span>
-                            <input type="hidden" id="pickup-char-id" value="{{ ctx_entity.id }}">
-                            <button id="pickup-btn" class="go-button">[p]ick Up</button>
-                        </div>
-                    {% endif %}
+                        {# Character -> Character (Give) #}
+                        {% if other_chars_here %}
+                            {% set has_controls = true %}
+                            <div class="action-box">
+                                <select id="give-char-id" class="mini-select">
+                                    {% for c in other_chars_here %}
+                                        <option value="{{ c.id }}" {% if not c.is_reachable %}disabled{% endif %}>
+                                            {{ c.name }} {{ '(Too far)' if not c.is_reachable else '' }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <button id="give-btn" class="go-button" {% if not other_chars_here|selectattr('is_reachable')|list %}disabled{% endif %}>
+                                    [g]ive to
+                                </button>
+                            </div>
+                        {% endif %}
 
-                    {# Character -> Character (Give) #}
-                    {% if owner.entity_type == 'character' and other_chars_here %}
-                        {% set has_controls = true %}
-                        <div class="action-box">
-                            <select id="give-char-id" class="mini-select">
-                                {% for c in other_chars_here %}
-                                    <option value="{{ c.id }}">{{ c.name }}</option>
-                                {% endfor %}
-                            </select>
-                            <button id="give-btn" class="go-button">[g]ive to</button>
-                        </div>
+                        <!-- Equipment -->
+                        {% if pile.slot or available_slots %}
+                            <div class="action-box border-top-dim spacious-top" style="padding-top: 15px;">
+                                {% if pile.slot %}
+                                    {% set has_controls = true %}
+                                    <div class="action-box">
+                                        <span class="label-like">Slot: <strong>{{ pile.slot }}</strong></span>
+                                        <button id="unequip-btn" class="go-button">une[q]uip</button>
+                                    </div>
+                                {% else %}
+                                    {% if available_slots %}
+                                        {% set has_controls = true %}
+                                        <div class="action-box">
+                                            <select id="equip-slot" class="full-width themed-input">
+                                                {% for slot in available_slots %}
+                                                    <option value="{{ slot }}" {{ 'selected' if slot == session.get('default_slot') }}>
+                                                        {{ slot }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                            <button id="equip-btn" class="go-button">e[q]uip</button>
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        {% endif %}
                     {% endif %}
                 </div>
                 {% if not has_controls %}
@@ -521,6 +530,9 @@
         });
         if (res.ok) {
             location.reload();
+        } else {
+            const errorData = await res.json().catch(() => ({}));
+            alert("Failed to gain: " + (errorData.message || "Unknown error"));
         }
     }
 
@@ -560,7 +572,12 @@
             method: 'POST', 
             body: fd 
         });
-        if (res.ok) window.location.href = "{{ url_for('play.play_location', id=owner.id) }}";
+        if (res.ok) {
+            window.location.href = "{{ url_for('play.play_location', id=owner.id) }}";
+        } else {
+            const errorData = await res.json().catch(() => ({}));
+            alert("Failed to pick up: " + (errorData.message || "Unknown error"));
+        }
     });
 
     document.getElementById('give-btn')?.addEventListener('click', async () => {
@@ -573,7 +590,12 @@
             method: 'POST', 
             body: fd 
         });
-        if (res.ok) window.location.href = "{{ url_for('play.play_character', id=owner.id) }}";
+        if (res.ok) {
+            window.location.href = "{{ url_for('play.play_character', id=owner.id) }}";
+        } else {
+            const errorData = await res.json().catch(() => ({}));
+            alert("Failed to give: " + (errorData.message || "Unknown error"));
+        }
     });
 
     document.getElementById('equip-btn')?.addEventListener('click', async () => {

@@ -27,6 +27,13 @@ class BaseFieldMap:
         """Support 'key' in basefieldmap."""
         return key in self.data
 
+    def __iter__(self):
+        """Support 'for key in basefieldmap'."""
+        return iter(self.data)
+
+    def keys(self):
+        return self.data.keys()
+
     def _get_raw(self, key):
         return self.data.get(key, '')
 

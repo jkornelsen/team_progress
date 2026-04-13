@@ -139,7 +139,7 @@
                     <div class="flex-row spacious-bottom">
                         <label for="difficulty-select">Difficulty:</label>
                         <select id="difficulty-select">
-                            <option value="0.15">Very Easy</option>
+                            <option value="0.10">Very Easy</option>
                             <option value="0.35">Easy</option>
                             <option value="0.55" selected>Moderate</option>
                             <option value="0.75">Hard</option>
@@ -150,33 +150,18 @@
                     
                     {% if event.outcome_type == 'fourway' %}
                     <div class="threshold-info label-like text-dim spacious-top">
-                        Minor Success <span id="minor-threshold-display" class="text-accent">--</span>,
-                        Major Success <span id="major-threshold-display" class="text-accent">--</span>
+                        Minor Success <span id="minor-success-threshold" class="text-accent">--</span>,
+                        Major Success <span id="major-success-threshold" class="text-accent">--</span>,
+                        Major Failure <span id="major-failure-threshold" class="text-accent">--</span>
                     </div>
                     {% endif %}
                     {% endif %}
                 </form>
-{#
-                <p class="label-like">Click to Apply Modifiers to Dice:</p>
-                {% for det in event.determinants %}
-                <div class="modifier-row outer-border">
-                    <span>{{ det.label or det.entity.name }}</span>
-                    <select class="det-source-select" 
-                            data-op="{{ det.operation }}" 
-                            data-mode="{{ det.mode }}">
-                        <option value="0">-- Select Entity --</option>
-                        {% for ent in eligible_entities %}
-                            <option value="{{ get_val(ent, det) }}">{{ ent.name }} ({{ get_val(ent, det) }})</option>
-                        {% endfor %}
-                    </select>
-                    <button type="button" class="btn-sm fill-btn">Add Mod</button>
-                </div>
-                {% endfor %}
-#}
                 <div class="spacious-top text-center">
                     <button id="roll-btn" class="go-button" style="width: 100%; font-size: 1.2em;">
                         [R]oll for Outcome
                     </button>
+                    <script>linkForKey["r"] = "#roll-btn";</script>
                 </div>
             </section>
         </div>
@@ -184,9 +169,9 @@
         <!-- RIGHT COLUMN: Results & Application -->
         <div class="results-column">
             <section class="outer-border result-box" id="result-display">
-                <h3 class="text-dim">Outcome</h3>
-                <div id="outcome-text" class="outcome-placeholder">
-                    Roll to see result...
+                <h3>Outcome</h3>
+                <div id="outcome-text" style="text-align: center;">
+                     <div class="outcome-placeholder">Roll to see result...</div>
                 </div>
             </section>
                 
@@ -258,31 +243,24 @@
         if (!diffSelect) return;
 
         const difficulty = parseFloat(diffSelect.value);
-        const min = baseMin;
-        const max = baseMax;
-        const span = max - min + 1;
+        const min = baseMin; // 1
+        const max = baseMax; // 20
+        const span = max - min + 1; // 20
 
-        // Minor Success Logic (Your existing "Good" feeling numbers)
-        const baseThreshold = Math.round(span * 0.10);
-        const difficultyShift = Math.round(span * difficulty);
-        const minorThreshold = baseThreshold + difficultyShift;
+        const shift = Math.round(span * difficulty);
+        
+        const majorFailureMax = min + Math.floor(shift * 0.20);
+        const minorSuccessMin = Math.round(span * 0.10) + shift;
+        const majorSuccessMin = (max - Math.floor(span * 0.20)) + Math.floor(shift * 0.5);
 
-        // Major Success Logic
-        // We can add a "Major Gap" (e.g., 20% of the total span)
-        const majorGap = Math.round(span * 0.20); 
-        const majorThreshold = minorThreshold + majorGap;
-
-        const minorSpan = document.getElementById('minor-threshold-display');
-        const majorSpan = document.getElementById('major-threshold-display');
-        minorSpan.innerText = `≥ ${minorThreshold}`;
-        majorSpan.innerText = `≥ ${majorThreshold}`;
+        // Display updates
+        document.getElementById('minor-success-threshold').innerText = `≥ ${minorSuccessMin}`;
+        document.getElementById('major-success-threshold').innerText = `≥ ${majorSuccessMin}`;
+        document.getElementById('major-failure-threshold').innerText = `≤ ${majorFailureMax}`;
     }
 
     if (diffSelect) {
         diffSelect.addEventListener('change', updateDieLogic);
-        // Also update if min/max are edited manually
-        //minInput.addEventListener('input', updateDieLogic); 
-        //maxInput.addEventListener('input', updateDieLogic);
         
         // Initial run
         updateDieLogic();
@@ -359,31 +337,26 @@
     document.getElementById('roll-btn').onclick = async () => {
         const fd = new FormData();
 
-        const dieMin = document.getElementById('die-min')?.value;
-        const dieMax = document.getElementById('die-max')?.value;
-        const nDice = document.getElementById('num-dice')?.value;
-        const nSides = document.getElementById('num-sides')?.value;
-        const nBonus = document.getElementById('num-bonus')?.value;
-
-        console.log("Rolling with:", { nDice, nSides, nBonus });
-
-        if (dieMin !== undefined) fd.append('die_min', dieMin);
-        if (dieMax !== undefined) fd.append('die_max', dieMax);
-        if (nDice !== undefined) fd.append('num_dice', nDice);
-        if (nSides !== undefined) fd.append('sides', nSides);
-        if (nBonus !== undefined) fd.append('bonus', nBonus);
-
-        const res = await fetch(`/event/roll/{{ event.id }}`, { 
-            method: 'POST', 
-            body: fd 
-        });
+        // 1. Gather Context IDs
+        fd.append('subj_id', document.querySelector('input[name="subj_id"]')?.value || '');
+        fd.append('sec_id', document.querySelector('select[name="sec_id"]')?.value || '');
+        fd.append('tert_id', document.querySelector('select[name="tert_id"]')?.value || '');
         
+        // Gather dynamic item selectors (Suzy's Axe, etc)
+        document.querySelectorAll('select[name*="_item_id"]').forEach(sel => {
+            fd.append(sel.name, sel.value);
+        });
+
+        // 2. Add System/Difficulty fields
+        const diff = document.getElementById('difficulty-select')?.value;
+        if (diff) fd.append('difficulty', diff);
+
+        const res = await fetch(`/event/roll/${eventId}`, { method: 'POST', body: fd });
         const data = await res.json();
         
         lastRollValue = data.result_value;
         document.getElementById('outcome-text').innerHTML = data.display;
         document.getElementById('apply-section').classList.remove('hidden');
-        
         updateApplyPreviews();
     };
 
@@ -501,11 +474,25 @@
 </script>
 
 <style>
+    .outcome-text b {
+        font-size: 1.4em;
+        color: var(--accent);
+        margin-left: 5px;
+    }
+
+    .outcome-text small {
+        display: block;
+        margin-top: 5px;
+        color: var(--text-dim);
+        font-family: monospace;
+        font-size: 0.9em;
+    }
+
     .form-group { display: flex; flex-direction: column; gap: 5px; }
     .spacious-top { margin-top: 15px; }
     .modifier-list { list-style: none; padding: 0; }
     .modifier-list li { margin-bottom: 5px; border-bottom: 1px solid #333; padding-bottom: 3px; }
-    .outcome-placeholder { padding: 40px 20px; text-align: center; color: var(--text-dim); font-style: italic; border: 2px dashed #444; }
+    .outcome-placeholder { padding: 40px 20px; color: var(--text-dim); font-style: italic; border: 2px dashed #444; }
     .active-result { border: 2px solid var(--accent); background: #111; color: white; font-style: normal; font-size: 1.2em; font-weight: bold; }
     .outcome-final { animation: fadeIn 0.5s; }
     .dim-hr { border: 0; border-top: 1px solid #333; margin: 15px 0; }

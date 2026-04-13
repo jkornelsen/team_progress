@@ -492,8 +492,7 @@ class Event(Entity):
     toplevel = db.Column(db.Boolean, default=False)
     outcome_type = db.Column(
         db.String(20), nullable=False, default=OutcomeType.FOURWAY)
-    roller_type = db.Column(
-        db.String(20), nullable=False, default=RollerType.DND)
+    roller_type = db.Column(db.String(20))
     trigger_chance = db.Column(db.Float, default=0.0)
     numeric_range = db.Column(ARRAY(db.Integer)) # [min, max]
     single_number = db.Column(db.Float, default=0.0)

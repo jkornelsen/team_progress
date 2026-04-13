@@ -8,6 +8,7 @@ from app.models import (
     GENERAL_ID, StorageType)
 from app.utils import format_num
 from app.src.logic_piles import adjust_quantity
+from app.src.logic_navigation import is_adjacent
 from app.src.logic_user_interaction import add_message
 from app.src.logic_event import check_triggers, TriggerException
 
@@ -52,6 +53,12 @@ def resolve_recipe_sources(game_token, host_id, recipe, context_id=None):
     eff_host_ent = Entity.query.get((game_token, effective_host_id))
     eff_host_type = eff_host_ent.entity_type if eff_host_ent else Entity.TYPENAME
 
+    char_pos = None
+    if effective_host_id != GENERAL_ID:
+        char = Character.query.get((game_token, effective_host_id))
+        if char:
+            char_pos = char.position
+
     for source in recipe.sources:
         item = source.ingredient
         potential_owner_ids = []
@@ -67,8 +74,21 @@ def resolve_recipe_sources(game_token, host_id, recipe, context_id=None):
             if location_id and location_id != effective_host_id:
                 potential_owner_ids.append(location_id)
 
+        # Position Dependency Filter
+        # If the location has a grid, and the pile has a position, 
+        # and the host is a character, they must be adjacent.
+        valid_piles = []
+        for p in all_piles:
+            # Piles in a character's backpack (no position) are always valid.
+            # If the pile is on the ground (has position), check adjacency.
+            if p.position and char_pos:
+                if is_adjacent(char_pos, p.position):
+                    valid_piles.append(p)
+            else:
+                valid_piles.append(p)
+
         # Query existing piles
-        valid_piles = Pile.query.filter(
+        all_piles = Pile.query.filter(
             Pile.game_token == game_token,
             Pile.item_id == item.id,
             Pile.owner_id.in_(potential_owner_ids)

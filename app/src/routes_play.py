@@ -20,7 +20,7 @@ from .logic_production import (
     resolve_recipe_sources, can_perform_recipe, execute_production)
 from .logic_navigation import (
     move_group, get_available_destinations, arrive_at_destination,
-    is_in_grid, get_default_position)
+    is_in_grid, get_default_position, is_adjacent)
 from .logic_objectives import validate_requirements
 from .logic_user_interaction import add_message
 
@@ -253,7 +253,16 @@ def pickup_item(id):
     pos = parse_coords(req.get_str('pos'))
     
     char = Character.query.get((g.game_token, id))
+    loc = char.location
     
+    # Position Dependency Check
+    if loc.dimensions and loc.dimensions[0] > 0:
+        if not is_adjacent(char.position, pos):
+            return jsonify({
+                "status": "error", 
+                "message": "You are too far away to pick that up."
+            }), 400
+
     # Transfer from Location to Char
     success = transfer_item(
         item_id, from_owner_id=char.location_id, to_owner_id=id,
@@ -274,13 +283,22 @@ def give_item(id):
     
     char = Character.query.get((g.game_token, id))
     target_char = Character.query.get((g.game_token, target_char_id))
+    loc = char.location
     
+    # Position Dependency Check
+    if loc.dimensions and loc.dimensions[0] > 0:
+        if not is_adjacent(char.position, target_char.position):
+            return jsonify({
+                "status": "error", 
+                "message": f"Must be next to {target_char.name} to give items."
+            }), 400
+
     # Transfer from Char to Target Char
     success = transfer_item(
         item_id, from_owner_id=id, to_owner_id=target_char_id,
         quantity=qty
     )
-    
+
     if success:
         db.session.commit()
         return jsonify({"status": "success"})
@@ -634,14 +652,48 @@ def play_item(id):
         game_token=game_token, host_id=host_id
     ).first()
 
-     # Characters nearby (for the "Give" button)
+    # Characters nearby (for the "Give" button)
     other_chars_here = []
-    if owner.location_id:
-        other_chars_here = Character.query.filter(
+    if isinstance(owner, Character) and owner.location_id:
+        raw_chars = Character.query.filter(
             Character.game_token == game_token,
             Character.location_id == owner.location_id,
             Character.id != owner.id
         ).all()
+        
+        # Enrich the character objects with proximity data for the UI
+        for c in raw_chars:
+            c.is_reachable = is_adjacent(
+                owner.position, c.position) if owner.position else True
+            other_chars_here.append(c)
+
+    # Determine if the item is physically reachable by the context character
+    is_reachable = True
+    reach_error = None
+    if ctx_entity and ctx_entity.entity_type == 'character':
+        # If the item is on the ground at a location with a grid
+        if owner.entity_type == 'location' and owner.dimensions and owner.dimensions[0] > 0:
+            if pile.position:
+                if not is_adjacent(ctx_entity.position, pile.position):
+                    is_reachable = False
+                    reach_error = "Must be next to item to pick up."
+            else:
+                # Item is at location but has no position (internal storage/unplaced)
+                # In a strict grid game, unplaced items might be unreachable
+                is_reachable = False
+                reach_error = "This item is not currently placed on the grid."
+        
+        # If the item is carried by another character
+        elif owner.entity_type == 'character' and owner.id != ctx_entity.id:
+            if owner.location_id == ctx_entity.location_id:
+                if not is_adjacent(ctx_entity.position, owner.position):
+                    is_reachable = False
+                    reach_error = f"Must be next to {owner.name} to trade."
+            else:
+                is_reachable = False
+                reach_error = f"{owner.name} is in a different location."
+
+    # For equipping to a slot
     overall = Overall.query.get(game_token)
 
     # Create entities lookup for attribute requirement links
@@ -667,6 +719,8 @@ def play_item(id):
         progress=current_progress,
         available_slots=overall.slots,
         other_chars_here=other_chars_here,
+        is_reachable=is_reachable,
+        reach_error=reach_error,
         entities=entities,
         link_letters=LinkLetters(excluded='moedpqrg')
     )
@@ -867,7 +921,7 @@ def play_event(id):
         eligible_targets=eligible_targets,
         determinants=determinants,
         operation=Operation,
-        link_letters=LinkLetters(excluded='moe')
+        link_letters=LinkLetters(excluded='moer')
     )
 
 @play_bp.route('/event/preview/<int:id>')
@@ -890,24 +944,31 @@ def event_preview(id):
 def roll_event(id):
     game_token = g.game_token
     event = Event.query.get_or_404((game_token, id))
-
     req = RequestHelper('form')
+
+    # Gather context IDs
+    context_ids = {
+        'subj_id': req.get_int('subj_id'),
+        '2nd_id': req.get_int('sec_id'),
+        '3rd_id': req.get_int('tert_id'),
+        'univ_id': GENERAL_ID
+    }
+    
+    # Add any item instance selections
+    for key in req:
+        if key.endswith('_item_id'):
+            context_ids[key] = req.get_int(key)
+
     if event.outcome_type == OutcomeType.ROLLER:
         n_dice = request.form.get('num_dice', 1, type=int)
         sides = request.form.get('sides', 20, type=int)
         bonus = request.form.get('bonus', 0, type=int)
         result_num, result_str = roll_for_system_outcome(
-            event_id=id, 
-            num_dice=n_dice, 
-            sides=sides, 
-            bonus=bonus)
+            id, n_dice, sides, bonus)
     else:
-        die_min = req.get_float('die_min', 1.0)
-        die_max = req.get_float('die_max', 20.0)
-        loc_id = req.get_int('location_id')
-
+        difficulty = request.form.get('difficulty', 0.55, type=float)
         result_num, result_str = roll_for_outcome(
-            id, die_min, die_max, loc_id)
+            id, context_ids, difficulty)
     
     return jsonify({
         "result_value": result_num,
