@@ -267,8 +267,8 @@
         {% for char in characters_here %}
         "{{ char.id }}": { 
             name: "{{ char.name }}", 
-            x: {{ char.position[0] }}, 
-            y: {{ char.position[1] }}, 
+            x: {{ char.position[0] if char.position else 0 }}, 
+            y: {{ char.position[1] if char.position else 0 }},
             travel_party: "{{ char.travel_party or '' }}",
             icon: getFirstGrapheme("{{ char.name }}"),
             link: "{{ url_for('play.play_character', id=char.id) }}"
@@ -280,8 +280,8 @@
         {% for pile in inventory_piles %}
         { 
             name: "{{ pile.item.name }}", 
-            x: {{ pile.position[0] }}, 
-            y: {{ pile.position[1] }}, 
+            x: {{ pile.position[0] if pile.position else 0 }}, 
+            y: {{ pile.position[1] if pile.position else 0 }},
             icon: getFirstGrapheme("{{ pile.item.name }}"),
             link: "{{ url_for('play.play_item',
                 id=pile.item_id, owner_id=location.id, pos=pile.position) }}"
@@ -374,6 +374,7 @@
     function updatePartyUI() {
         const active = getActiveChar();
         const container = document.getElementById('party-move-container');
+        if (!container) return;
         
         if (!active || !active.char.travel_party) {
             container.style.display = 'none';

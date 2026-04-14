@@ -41,6 +41,10 @@
         });
 
         function flashMessage(message) {
+            console.log(`[UI Flash]: ${message}`);
+            let pending = JSON.parse(sessionStorage.getItem('pending_logs') || "[]");
+            pending.push(message);
+            sessionStorage.setItem('pending_logs', JSON.stringify(pending));
             let $container = $('.flash-messages');
             if ($container.length === 0) {
                 $container = $('<div class="flash-messages"></div>');
@@ -52,6 +56,14 @@
                 $item.fadeOut(500, function() { $(this).remove(); });
             }, 5000);
         }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            let pending = JSON.parse(sessionStorage.getItem('pending_logs') || "[]");
+            if (pending.length > 0) {
+                pending.forEach(msg => console.log(`[Persisted UI Flash]: ${msg}`));
+                sessionStorage.removeItem('pending_logs');
+            }
+        });
     </script>
 </head>
 <body>

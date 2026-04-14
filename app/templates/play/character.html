@@ -18,7 +18,7 @@
 
 <script>
     window.linkForKey['e'] = "{{ url_for('configure.edit_character', id=character.id) }}";
-    window.linkForKey['g'] = "#start-travel-btn";
+    window.linkForKey['g'] = "#do-travel-btn";
     
     // Note: 't' and 'w' are better handled via focus listeners 
     // because they require user interaction with the select boxes
@@ -75,7 +75,7 @@
                                 </option>
                             {% endfor %}
                         </select>
-                        <button id="start-travel-btn" class="go-button">[G]o</button>
+                        <button id="do-travel-btn" class="go-button">[G]o</button>
                     </div>
 
                     {% if party_members %}
@@ -236,8 +236,8 @@
         }
     }
 
-    // Start Travel
-    document.getElementById('start-travel-btn')?.addEventListener('click', async () => {
+    // Travel
+    document.getElementById('do-travel-btn')?.addEventListener('click', async () => {
         const destId = document.getElementById('dest-select').value;
         if (!destId) return;
         const moveParty = document.getElementById('travel-with-party-chk')?.checked || false;
@@ -266,7 +266,7 @@
     document.addEventListener('keypress', (e) => {
         if (e.key === 'o') window.location.href = "{{ url_for('play.overview') }}";
         if (e.key === 't') document.getElementById('dest-select').focus();
-        if (e.key === 'g') document.getElementById('start-travel-btn').click();
+        if (e.key === 'g') document.getElementById('do-travel-btn').click();
     });
 
     //setInterval(checkStatus, 2000);

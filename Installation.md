@@ -57,7 +57,7 @@ create database app with encoding 'UTF8';
 chdir team_progress
 venv/Scripts/activate
 python database_setup.py --wipe
-python run.py
+python run.py --nodebug
 ```
 Open a web browser to http://localhost:5000. 
 If it works, you're ready to play!

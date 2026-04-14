@@ -22,8 +22,9 @@
 {% block content %}
 
 <script>
-    window.linkForKey['r'] = "#drop-btn";
     window.linkForKey['p'] = "#pickup-btn";
+    window.linkForKey['r'] = "#drop-btn";
+    window.linkForKey['g'] = "#give-btn";
     {% if pile.slot %}
         window.linkForKey['q'] = "#unequip-btn";
     {% else %}
@@ -113,7 +114,9 @@
                                         {% endcall %}:
                                     {% endif %}
                                     {{ s.q_required | formatNum }}
-                                    (Have <span class="{{ 'text-danger' if s.current_stock < s.q_required else '' }}">{{ s.current_stock | formatNum }}</span>)
+                                    (Have <span id="source-qty-{{ s.ingredient.id }}"
+                                        class="{{ 'text-danger' if s.current_stock < s.q_required else '' }}"
+                                        >{{ s.current_stock | formatNum }}</span>)
                                 </li>
                             {% endfor %}
                         </ul>
@@ -122,7 +125,8 @@
                         {% if r.attrib_reqs %}
                         <ul class="attrib-req-list label-like">
                             {% for req in r.attrib_reqs %}
-                                <li class="{{ 'text-danger' if not req.is_satisfied else '' }}">
+                                <li id="attrib-row-{{ req.attrib.id }}-{{ req.link_entity_id }}"
+                                    class="{{ 'text-danger' if not req.is_satisfied else '' }}">
                                     {% if not req.attrib.is_binary %}
                                         📊
                                     {% endif %}
@@ -153,11 +157,13 @@
                                         {{ req.attrib.range_display }}
                                     {% endif %}
                                     {% if not req.is_satisfied %}
+                                        <span class="curr-val">
                                         {% if req.attrib.is_binary %}
                                             (currently {{ '✓' if req.current_val > 0 else '✗' }})
                                         {% else %}
                                             (currently {{ req.current_val | formatNum }})
                                         {% endif %}
+                                        </span>
                                     {% endif %}
                                 </li>
                             {% endfor %}
@@ -195,9 +201,14 @@
                                 {% else %}
                                     {# INTEGRATION: The 🚫 Info Icon with specific reason tooltip #}
                                     <div class="flex-row align-center">
+                                    {% if "Storage limit reached" in r.reason %}
+                                        <span class="info-icon" style="cursor: help; font-size: 1.5em;"></span>
+                                        <small class="text-dim" style="margin-left: 5px;" title="{{ r.reason }}">Storage full</small>
+                                    {% else %}
                                         <span class="info-icon" style="cursor: help; font-size: 1.5em;" 
                                               title="{{ r.reason }}">🚫</span>
                                         <small class="text-dim" style="margin-left: 5px;">Requirements not met</small>
+                                    {% endif %}
                                     </div>
                                 {% endif %}
 
@@ -243,6 +254,9 @@
 
             {% if used_for_production %}
             <section class="outer-border">
+                <style>
+                    .used-for-row { --grid-cols: 1fr auto; }
+                </style>
                 <h3>Used To Produce</h3>
                 <div class="col-list reverse-lookup-list">
                     {% for entry in used_for_production | sort(attribute='item.name') %}
@@ -253,11 +267,22 @@
                                 {{ entry.item.name if not entry.item.masked else (entry.item.name | mask_string) }}
                             {% endcall %}
 
-                            <span class="label-like">
+                            <span class="label-like used-yield-box" 
+                                  id="used-yield-{{ entry.item.id }}" 
+                                  data-q-req="{{ entry.q_required }}" 
+                                  data-preserve="{{ 'true' if entry.preserve else 'false' }}">
+                                
                                 {% if entry.preserve %}
-                                    ({{ entry.q_required | formatNum }})
+                                    {# Preserved items (Tools) #}
+                                    Requires {{ entry.q_required | formatNum }}
                                 {% else %}
-                                    {{ entry.q_required | formatNum }}
+                                    {# Consumables: [Cost] | [Potential Yield] #}
+                                    <span class="q-req-display">Takes {{ entry.q_required | formatNum }} Each</span>
+                                    {% if entry.q_required != 1 %}
+                                    <small class="text-dim">
+                                        (Max <span class="yield-value">{{ (pile.quantity / entry.q_required) | int }}</span>)
+                                    </small>
+                                    {% endif %}
                                 {% endif %}
                             </span>
                         </div>
@@ -301,7 +326,7 @@
                             {% if is_reachable %}
                                 <span class="target-name">{{ ctx_entity.name }}</span>
                                 <input type="hidden" id="pickup-char-id" value="{{ ctx_entity.id }}">
-                                <button id="pickup-btn" class="go-button">[p]ick Up</button>
+                                <button id="pickup-btn" class="go-button">{{ hk.bracket('p') }}ick up</button>
                             {% else %}
                                 <i class="text-dim small">🚫 {{ reach_error or "Too far to reach" }}</i>
                             {% endif %}
@@ -313,7 +338,7 @@
                             {% set has_controls = true %}
                             <div class="action-box">
                                 <input type="number" id="drop-qty" value="{{ pile.quantity | formatNum }}" max="{{ pile.quantity }}" step="any" class="mini-input">
-                                <button id="drop-btn" class="go-button">d[r]op at location</button>
+                                <button id="drop-btn" class="go-button">d{{ hk.bracket('r') }}op at location</button>
                             </div>
                         {% endif %}
 
@@ -329,7 +354,7 @@
                                     {% endfor %}
                                 </select>
                                 <button id="give-btn" class="go-button" {% if not other_chars_here|selectattr('is_reachable')|list %}disabled{% endif %}>
-                                    [g]ive to
+                                    {{ hk.bracket('g') }}ive to
                                 </button>
                             </div>
                         {% endif %}
@@ -341,7 +366,7 @@
                                     {% set has_controls = true %}
                                     <div class="action-box">
                                         <span class="label-like">Slot: <strong>{{ pile.slot }}</strong></span>
-                                        <button id="unequip-btn" class="go-button">une[q]uip</button>
+                                        <button id="unequip-btn" class="go-button">une{{ hk.bracket('q') }}uip</button>
                                     </div>
                                 {% else %}
                                     {% if available_slots %}
@@ -354,7 +379,7 @@
                                                     </option>
                                                 {% endfor %}
                                             </select>
-                                            <button id="equip-btn" class="go-button">e[q]uip</button>
+                                            <button id="equip-btn" class="go-button">e[{{ hk.bracket('q') }}uip</button>
                                         </div>
                                     {% endif %}
                                 {% endif %}
@@ -390,112 +415,153 @@
             return;
         }
 
-        if (data.halt_message) {
-            flashMessage(`Production Halted: ${data.halt_message}`);
-        }
-
-        // UPDATE QUANTITY DISPLAY (if available in response)
-        if (data.current_quantity !== undefined) {
-            const qtyDisplay = document.getElementById('main-qty-display');
-            if (qtyDisplay) {
-                qtyDisplay.textContent = Math.floor(data.current_quantity).toLocaleString();
-            }
-        }
-
-        // UPDATE PROGRESS BAR if ongoing
-        document.querySelectorAll('.progress-container').forEach(
-            el => el.classList.add('hidden'));
-        if (data.is_ongoing && data.active_recipe_id) {
-            const recipeId = data.active_recipe_id;
-            const container = document.getElementById(`prog-container-${recipeId}`);
-            const progBar = document.getElementById(`prog-bar-${recipeId}`);
-            const progLabel = document.getElementById(`prog-label-${recipeId}`);
-        
-            if (container) container.classList.remove('hidden');
-
-            if (progBar && data.start_time && data.rate_duration) {
-                const startTime = new Date(data.start_time);
-                const now = new Date();
-                const elapsedMs = now - startTime;
-                
-                const durationMs = data.rate_duration * 1000;
-                
-                // Calculate progress within the CURRENT batch
-                // elapsed time attributable to completed batches
-                const completedBatchesMs = (data.batches || 0) * durationMs;
-                const elapsedInCurrentBatch = Math.max(0, elapsedMs - completedBatchesMs);
-                const progressPercent = Math.min((elapsedInCurrentBatch / durationMs) * 100, 100);
-                
-                progBar.value = progressPercent;
-                if (progLabel) {
-                    progLabel.textContent = Math.floor(progressPercent) + '%';
+        // Handle halt messages
+        if (data.halt_messages && data.halt_messages.length > 0) {
+            data.halt_messages.forEach(msg => {
+                if (!msg.toLowerCase().includes("limit reached")) {
+                    flashMessage(msg);
                 }
-
-                const startBtn = document.getElementById(`start-${recipeId}`);
-                const stopBtn = document.getElementById(`stop-${recipeId}`);
-                if (startBtn) startBtn.classList.add('hidden');
-                if (stopBtn) stopBtn.classList.remove('hidden');
-            }
-        } else {
-            // Production is NOT ongoing - hide progress bar and show start button
-            const progContainer = document.querySelector('.progress-container:not(.hidden)');
-            
-            if (progContainer) {
-                progContainer.classList.add('hidden');
-            }
+            });
         }
 
-        // UPDATE BUTTONS AND RECIPE AVAILABILITY
-        if (data.recipes) {
-            data.recipes.forEach(r => {
-                const startBtn = document.getElementById(`start-${r.recipe_id}`);
-                const stopBtn = document.getElementById(`stop-${r.recipe_id}`);
-                const controlsDiv = document.getElementById(`controls-${r.recipe_id}`);
-                const letter = controlsDiv?.getAttribute('data-recipe-hotkey');
-                
-                // Show/hide stop button based on whether this recipe is active
-                if (data.is_ongoing && data.active_recipe_id === r.recipe_id) {
-                    if (startBtn) startBtn.classList.add('hidden');
-                    if (stopBtn) stopBtn.classList.remove('hidden');
-                    if (letter) window.linkForKey[letter] = `#stop-${r.recipe_id}`;
-                } else {
-                    if (startBtn) startBtn.classList.remove('hidden');
-                    if (stopBtn) stopBtn.classList.add('hidden');
-                    if (letter) {
-                        if (r.instant) {
-                            window.linkForKey[letter] = `#gain-${r.recipe_id}`;
-                        } else {
-                            window.linkForKey[letter] = `#start-${r.recipe_id}`;
-                        }
+        const main = data.main;
+        const currentStock = parseFloat(main.quantity.replace(/,/g, '')) || 0;
+
+        // UPDATE QUANTITY DISPLAY
+        if (main.quantity !== undefined) {
+            const qtyDisplay = document.getElementById('main-qty-display');
+            if (qtyDisplay) qtyDisplay.textContent = main.quantity;
+        }
+
+        // UPDATE INGREDIENT QUANTITIES
+        if (data.sources) {
+            data.sources.forEach(s => {
+                const el = document.getElementById(`source-qty-${s.id}`);
+                if (el) el.textContent = s.quantity;
+            });
+        }
+
+        // UPDATE "USED FOR" QUANTITIES
+        if (data.used_for) {
+            data.used_for.forEach(u => {
+                const box = document.getElementById(`used-yield-${u.id}`);
+                if (!box) return;
+
+                const isPreserve = box.getAttribute('data-preserve') === 'true';
+                const qReq = parseFloat(box.getAttribute('data-q-req'));
+
+                if (!isPreserve && qReq > 0) {
+                    const yieldValue = box.querySelector('.yield-value');
+                    if (yieldValue) {
+                        const potential = Math.floor(currentStock / qReq);
+                        yieldValue.textContent = potential.toLocaleString();
                     }
                 }
-                
-                // Update can_produce reason in tooltip if icon exists
-                const icon = controlsDiv?.querySelector('.info-icon');
-                if (icon) icon.setAttribute('title', r.reason);
+            });
+        }
+
+        // UPDATE ATTRIBUTES
+        if (data.attribs) {
+            data.attribs.forEach(a => {
+                const row = document.getElementById(`attrib-row-${a.attrib_id}-${a.subject_id}`);
+                if (row) {
+                    const valSpan = row.querySelector('.curr-val');
+                    if (valSpan) valSpan.textContent = `(currently ${a.value})`;
+                }
+            });
+        }
+
+        // UPDATE RECIPES & BUTTONS
+        if (data.recipes) {
+            data.recipes.forEach(r => {
+                const container = document.getElementById(`controls-${r.recipe_id}`);
+                if (!container) return;
+
+                const startBtn = document.getElementById(`start-${r.recipe_id}`);
+                const stopBtn = document.getElementById(`stop-${r.recipe_id}`);
+                const gainBtn = document.getElementById(`gain-${r.recipe_id}`);
+                const letter = container.getAttribute('data-recipe-hotkey');
+
+                // Toggle visibility based on viability
+                if (!r.can_produce && !(main.is_ongoing && main.active_recipe_id === r.recipe_id)) {
+                    // Show 🚫 icon, hide all buttons
+                    if (!container.querySelector('.info-icon')) {
+                        container.innerHTML = `
+                            <div class="flex-row align-center">
+                                <span class="info-icon" style="cursor: help; font-size: 1.5em;" title="${r.reason}">🚫</span>
+                                <small class="text-dim" style="margin-left: 5px;">Requirements not met</small>
+                            </div>`;
+                    } else {
+                        container.querySelector('.info-icon').setAttribute('title', r.reason);
+                    }
+                    if (letter) delete window.linkForKey[letter];
+                } 
+                else if (r.can_produce || (main.is_ongoing && main.active_recipe_id === r.recipe_id)) {
+                    // We need buttons. If the 🚫 icon is there, we need to rebuild the buttons.
+                    // To keep it simple, if the icon exists, we just reload the page once 
+                    // or surgically re-insert the buttons. 
+                    // For now, let's just update visibility if buttons already exist.
+                    
+                    if (container.querySelector('.info-icon')) {
+                        // SURGICAL REPAIR: If we were blocked and now aren't, 
+                        // a full page reload is safest to get the Jinja macros back.
+                        location.reload(); 
+                        return;
+                    }
+
+                    if (main.is_ongoing && main.active_recipe_id === r.recipe_id) {
+                        if (startBtn) startBtn.classList.add('hidden');
+                        if (stopBtn) stopBtn.classList.remove('hidden');
+                        if (letter) window.linkForKey[letter] = `#stop-${r.recipe_id}`;
+                    } else {
+                        if (startBtn) startBtn.classList.remove('hidden');
+                        if (stopBtn) stopBtn.classList.add('hidden');
+                        if (gainBtn) gainBtn.classList.remove('hidden');
+                        if (letter) window.linkForKey[letter] = gainBtn ? `#gain-${r.recipe_id}` : `#start-${r.recipe_id}`;
+                    }
+                }
+
+                // PROGRESS BAR
+                const progContainer = document.getElementById(`prog-container-${r.recipe_id}`);
+                const progBar = document.getElementById(`prog-bar-${r.recipe_id}`);
+                const progLabel = document.getElementById(`prog-label-${r.recipe_id}`);
+
+                // If THIS recipe is the one currently running
+                if (main.is_ongoing && main.active_recipe_id === r.recipe_id) {
+                    if (progContainer) {
+                        progContainer.classList.remove('hidden');
+                        // Calculate %
+                        if (main.start_time && main.rate_duration) {
+                            const startTime = new Date(main.start_time);
+                            const now = new Date();
+                            const elapsedMs = now - startTime;
+                            const durationMs = main.rate_duration * 1000;
+                            const completedBatchesMs = (main.batches || 0) * durationMs;
+                            const elapsedInCurrentBatch = Math.max(0, elapsedMs - completedBatchesMs);
+                            const percent = Math.min((elapsedInCurrentBatch / durationMs) * 100, 100);
+                            progBar.value = percent;
+                            if (progLabel) progLabel.textContent = Math.floor(percent) + '%';
+                        }
+                    }
+                } else {
+                    if (progContainer) {
+                        progContainer.classList.add('hidden');
+                        if (progBar) progBar.value = 0;
+                    }
+                }
             });
         }
     }
     setInterval(updateStatus, 2000);
 
-    // Production AJAX Logic
     async function startProd(recipeId) {
         const fd = new FormData();
         fd.append('recipe_id', recipeId);
         fd.append('owner_id', ownerId);
-        const res = await fetch(`/production/start/host/${hostId}`, { 
-            method: 'POST', 
-            body: fd 
-        });
+        const res = await fetch(`/production/start/host/${hostId}`, { method: 'POST', body: fd });
         if (res.ok) {
-            // Update UI dynamically instead of reloading
-            const startBtn = document.getElementById(`start-${recipeId}`);
-            const stopBtn = document.getElementById(`stop-${recipeId}`);
-            const progContainer = document.getElementById(`prog-container-${recipeId}`);
-            
-            if (startBtn) startBtn.classList.add('hidden');
-            if (stopBtn) stopBtn.classList.remove('hidden');
-            if (progContainer) progContainer.classList.remove('hidden');
+            // Trigger update immediately so buttons flip without delay
+            updateStatus();
         } else {
             const err = await res.json();
             flashMessage(err.message || "Could not start production.");
@@ -503,17 +569,10 @@
     }
 
     async function stopProd() {
-        const res = await fetch(`/production/stop/host/${hostId}`, { 
-            method: 'POST' 
-        });
-        
+        const res = await fetch(`/production/stop/host/${hostId}`, { method: 'POST' });
         if (res.ok) {
-            // Update UI dynamically - find the active recipe's buttons
-            const stopBtn = document.querySelector('button.dangerous-button:not(.hidden)');
-            const startBtn = document.querySelector('button.go-button[id^="start-"]:not(.hidden)');
-            
-            if (stopBtn) stopBtn.classList.add('hidden');
-            // The matching start button will be shown when updateStatus runs
+            // Trigger update immediately so "Start" reappears
+            updateStatus();
         } else {
             flashMessage("Could not stop production.");
         }
@@ -644,7 +703,6 @@
     .recipe-list { display: flex; flex-direction: column; gap: 15px; }
     .source-list { list-style: none; padding: 5px 0; margin: 0; font-size: 0.85em; }
     .attrib-req-list { list-style: none; padding: 5px 0; margin: 0; font-size: 0.85em; }
-    .used-for-row { --grid-cols: 1fr auto; }
     .byproduct-of-row { --grid-cols: 1fr; }
     .reverse-lookup-list { --col-list-max-width: 350px; }
 

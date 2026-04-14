@@ -1,7 +1,6 @@
 import logging
 from flask import (
-    Blueprint, render_template, request, jsonify, g, session, current_app,
-    abort)
+    Blueprint, render_template, request, jsonify, g, session, current_app)
 from app.models import (
     db, Entity, Item, Character, Location, Attrib, Event,
     Pile, AttribVal, Operation, OutcomeType,
@@ -457,18 +456,27 @@ def play_item(id):
         if item.storage_type == StorageType.UNIVERSAL:
             owner_id = GENERAL_ID
         elif item.storage_type == StorageType.LOCAL:
-            owner_id = ctx_loc_id
+            if ctx_loc_id:
+                owner_id = ctx_loc_id
+            elif ctx_entity and ctx_entity.entity_type == Character.TYPENAME:
+                owner_id = ctx_entity.location_id
         else:
             owner_id = ctx_char_id or ctx_loc_id
     if not owner_id:
-        abort(400, description="No valid owner (character or location) provided.")
+        return jsonify({
+            "status": "error", 
+            "message": "No valid owner (character or location) provided."
+        }), 400
 
     if ctx_entity and ctx_entity.id == owner_id:
         owner = ctx_entity
     else:
         owner = Entity.query.get((game_token, owner_id))
     if not owner:
-        abort(404, description="Item owner not found.")
+        return jsonify({
+            "status": "error", 
+            "message": "Item owner not found."
+        }), 400
     if isinstance(owner, Character):
         ctx_char_id = owner.id
         session['old_char_id'] = ctx_char_id
@@ -737,61 +745,82 @@ def production_status(host_id):
     item_id = req.get_int('item_id')
     owner_id = req.get_int('owner_id')
 
-    try:
-        # 1. TICK THE WORLD
-        # This keeps all hosts (System, Suzy, Bob) in sync.
-        halt_messages = tick_all_active(host_id)
+    # 1. TICK THE WORLD
+    # This keeps all hosts (System, Suzy, Bob) in sync.
+    halt_messages = tick_all_active(host_id)
 
-        # 2. GATHER PAGE DATA
-        # Resolve main item and focus progress
-        main_item = Item.query.get((game_token, item_id))
-        if not main_item:
-            return jsonify({"error": "Item not found"}), 404
+    # 2. GATHER PAGE DATA
+    # Resolve main item and focus progress
+    main_item = Item.query.get((game_token, item_id))
+    if not main_item:
+        return jsonify({"error": "Item not found"}), 404
 
-        main_pile = Pile.query.filter_by(
-            game_token=game_token, owner_id=owner_id, item_id=item_id).first()
-        
-        host_prog = Progress.query.filter_by(
-            game_token=game_token, host_id=host_id).first()
+    main_pile = Pile.query.filter_by(
+        game_token=game_token, owner_id=owner_id, item_id=item_id).first()
+    
+    host_prog = Progress.query.filter_by(
+        game_token=game_token, host_id=host_id).first()
 
-        # 3. GATHER RECIPES & INGREDIENT TOTALS
-        recipe_data = []
-        source_quantities = {}
+    # 3. GATHER RECIPES & INGREDIENT TOTALS
+    recipe_data = []
+    source_quantities = {}
+    attrib_data = []
 
-        for r in main_item.recipes:
-            # Can this specific worker produce this at this location?
-            can_do, reason = can_perform_recipe(host_id, r, 1, owner_id)
-            
-            recipe_data.append({
-                "recipe_id": r.id, "can_produce": can_do, "reason": reason
-            })
-
-            # Where are the ingredients relative to this worker and location?
-            resolved = resolve_recipe_sources(host_id, r, owner_id)
-            for res in resolved:
-                s_item = res['item']
-                source_quantities[s_item.id] = format_num(res['total_available'])
-
-        return jsonify({
-            "main": {
-                "is_ongoing": bool(host_prog and host_prog.is_ongoing),
-                "active_recipe_id": host_prog.recipe_id if host_prog else None,
-                "batches": host_prog.batches_processed if host_prog else 0,
-                "quantity": format_num(main_pile.quantity if main_pile else 0),
-                "start_time": host_prog.start_time.isoformat() if (
-                    host_prog and host_prog.start_time) else None,
-                "rate_duration": host_prog.recipe.rate_duration if (
-                    host_prog and host_prog.is_ongoing and host_prog.recipe) else None
-            },
-            "sources": [
-                {"id": sid, "quantity": sqty} for sid, sqty in source_quantities.items()
-            ],
-            "recipes": recipe_data,
-            "halt_messages": halt_messages
+    for r in main_item.recipes:
+        # Can this specific worker produce this at this location?
+        can_do, reason = can_perform_recipe(host_id, r, 1, owner_id)
+        recipe_data.append({
+            "recipe_id": r.id, "can_produce": can_do, "reason": reason
         })
 
-    except TriggerException as e:
-        return jsonify({"status": "interrupt", "message": e.message, "event_id": e.event_id})
+        # Where are the ingredients relative to this worker and location?
+        resolved = resolve_recipe_sources(host_id, r, owner_id)
+        for res in resolved:
+            s_item = res['item']
+            source_quantities[s_item.id] = format_num(res['total_available'])
+
+        # Collect attribute values used in these recipes
+        for req_attr in r.attrib_reqs:
+            # Check host, owner, and context for this attribute
+            for eid in set([host_id, owner_id, GENERAL_ID]):
+                av = AttribVal.query.filter_by(game_token=game_token, subject_id=eid, attrib_id=req_attr.attrib_id).first()
+                if av:
+                    attrib_data.append({
+                        "attrib_id": av.attrib_id, 
+                        "subject_id": av.subject_id, 
+                        "value": format_num(av.value)
+                    })
+
+    # 4. GATHER "USED TO PRODUCE" DATA
+    # Assume same owner/context as current page.
+    used_for_data = []
+    for source_link in main_item.as_ingredient:
+        product = source_link.recipe.product
+        used_for_data.append({
+            "id": product.id,
+            "q_required": source_link.q_required,
+            "preserve": source_link.preserve
+        })
+
+    return jsonify({
+        "main": {
+            "quantity": format_num(main_pile.quantity if main_pile else 0),
+            "is_ongoing": bool(host_prog and host_prog.is_ongoing),
+            "active_recipe_id": host_prog.recipe_id if host_prog else None,
+            "batches": host_prog.batches_processed if host_prog else 0,
+            "start_time": host_prog.start_time.isoformat() if (
+                host_prog and host_prog.start_time) else None,
+            "rate_duration": host_prog.recipe.rate_duration if (
+                host_prog and host_prog.is_ongoing) else None
+        },
+        "sources": [
+            {"id": sid, "quantity": sqty}
+            for sid, sqty in source_quantities.items()],
+        "used_for": used_for_data,
+        "attribs": attrib_data,
+        "recipes": recipe_data,
+        "halt_messages": halt_messages
+    })
 
 @play_bp.route('/production/start/host/<int:host_id>', methods=['POST'])
 def start_item_production(host_id):

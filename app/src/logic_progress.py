@@ -47,47 +47,58 @@ def update_progress(progress_id):
     recipe = Recipe.query.get((game_token, progress.recipe_id))
     if not recipe:
         return
-
-    # 1. Calculate timing
     if recipe.instant:
         raise Exception("Expected a recipe that uses duration.")
-    elapsed = get_elapsed_seconds(progress)
-    total_potential_batches = math.floor(elapsed / recipe.rate_duration)
-    new_batches = total_potential_batches - progress.batches_processed
-    
-    if new_batches <= 0:
-        return
 
-    # 2. Check for random interrupts
-    try:
-        check_triggers(progress.host, batches=new_batches)
-    except TriggerException as e:
-        progress.is_ongoing = False
-        db.session.commit()
-        raise e 
-
-    # 3. Determine Context
+    # 1. Determine Context (For ingredient/attribute lookups)
     ctx_id = None
     host_ent = Entity.query.get((game_token, progress.host_id))
-    if host_ent.entity_type == 'character':
+    if host_ent.entity_type == Character.TYPENAME:
         char = Character.query.get((game_token, progress.host_id))
         ctx_id = char.location_id
-    elif host_ent.entity_type == 'location':
+    elif host_ent.entity_type == Location.TYPENAME:
         ctx_id = host_ent.id
     elif progress.host_id == GENERAL_ID:
         ctx_id = session.get('old_loc_id')
 
-    # 4. Delegate physical production
-    logger.info(f"[TICK] Host:{progress.host_id} Recipe:{recipe.id} batches:{new_batches}")
-    actual_done, halt_reason = execute_production(
-        progress.host_id, recipe, new_batches, ctx_id)
+    # 2. Timing Calculation
+    elapsed = get_elapsed_seconds(progress)
+    total_potential_batches = math.floor(elapsed / recipe.rate_duration)
+    new_batches = total_potential_batches - progress.batches_processed
+    
+    actual_done = 0
+    halt_reason = None
 
-    # 5. Update Progress State
-    progress.batches_processed += actual_done
+    # 3. Process time-elapsed batches
+    if new_batches > 0:
+        try:
+            check_triggers(progress.host, batches=new_batches)
+        except TriggerException as e:
+            progress.is_ongoing = False
+            db.session.commit()
+            raise e 
+
+        logger.debug(
+            f"[TICK] Host:{progress.host_id} Recipe:{recipe.id} batches:{new_batches}")
+        actual_done, halt_reason = execute_production(
+            progress.host_id, recipe, new_batches, ctx_id)
+        
+        progress.batches_processed += actual_done
+
+    # 4. Check future viability
+    # If we didn't already halt due to execute_production,
+    # check if the NEXT batch is possible.
+    if not halt_reason:
+        possible, reason = can_perform_recipe(progress.host_id, recipe, 1, ctx_id)
+        if not possible:
+            halt_reason = reason
+
+    # 5. Handle Haltung
     if halt_reason:
+        logger.info(f"[HALT] Stopping Recipe {recipe.id}: {halt_reason}")
         progress.is_ongoing = False
         progress.stop_time = datetime.now()
-        add_message(game_token, f"Production stopped: {halt_reason}")
+        add_message(game_token, f"Production of {recipe.product.name} stopped: {halt_reason}")
 
     db.session.commit()
     return halt_reason
