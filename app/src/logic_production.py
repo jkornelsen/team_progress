@@ -199,7 +199,9 @@ def can_perform_recipe(host_id, recipe, batches=1, context_id=None):
                 False,
                 "Storage limit reached"
                 f" ({format_num(item_def.q_limit)} {item_def.name})")
-    logger.debug(f"{current_qty} within limit")
+        logger.debug(f"{item_def.name} {current_qty} within limit")
+    else:
+        logger.debug(f"No current quantity.")
 
     # 2. Check Sources (Ingredients)
     resolved = resolve_recipe_sources(host_id, recipe, context_id)

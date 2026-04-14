@@ -3,7 +3,7 @@ import logging
 from datetime import datetime, timezone
 from flask import g, session
 from app.models import (
-    db, Entity, Item, Character, Pile, Progress,
+    db, Entity, Item, Location, Character, Pile, Progress,
     Recipe, RecipeSource, RecipeByproduct, AttribVal,
     GENERAL_ID, StorageType)
 from app.utils import format_num
@@ -135,13 +135,23 @@ def start_production(host_id, recipe_id, context_id=None):
     if not possible:
         return False, reason
 
-    # Find or create progress record
+    # SERIAL LOGIC: If it's a character, stop everything else they are doing
+    if host_entity.entity_type == Character.TYPENAME:
+        existing_jobs = Progress.query.filter_by(
+            game_token=game_token, host_id=host_id, is_ongoing=True).all()
+        for job in existing_jobs:
+            stop_production(host_id, job.product_id)
+
+    # PRODUCT-BASED UNIQUENESS: Find or create record for this specific product
     progress = Progress.query.filter_by(
-        game_token=game_token, host_id=host_id
+        game_token=game_token, host_id=host_id, product_id=recipe.product_id
     ).first()
 
     if not progress:
-        progress = Progress(game_token=game_token, host_id=host_id)
+        progress = Progress(
+            game_token=game_token,
+            host_id=host_id, 
+            product_id=recipe.product_id)
         db.session.add(progress)
 
     progress.recipe_id = recipe_id

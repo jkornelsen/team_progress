@@ -1,11 +1,23 @@
 ---- issues and proposed changes ----
 
-general id should support multiple item progress records
+three host types
+    1. general storage: multi-job
+        Progress.filter_by(host_id=host_id, product_id=recipe.product_id)
+    2. character: single job per character
+    3. location: multi-job, can require character by setting e.g. attrib reqs
+general storage host should support multiple item progress records
     although only one progress per produced item
     whereas only one progress per character
     but different characters could
     work on different piles of the same item
     on play char show currently working on
+local production hosting
+    in addition to multi-task general storage production and single-task character
+    production, give locaations the ability to be hosts
+    this seems good like you go to a room, start a process, then leave and
+    come back to see if it's finished
+    needed for helium-3 mine
+    ui should clarify operator vs host
 
 tightened subject-based events
     a determinant can be flagged as informational only

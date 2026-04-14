@@ -1213,6 +1213,7 @@ class Progress(db.Model, DictHydrator):
     
     host_id = db.Column(db.Integer, nullable=False)
     recipe_id = db.Column(db.Integer, nullable=False)
+    product_id = db.Column(db.Integer, nullable=False) # copy recipe.product_id
     
     start_time = db.Column(db.DateTime)
     stop_time = db.Column(db.DateTime)
@@ -1250,6 +1251,8 @@ class Progress(db.Model, DictHydrator):
         db.ForeignKeyConstraint(
             ['game_token', 'recipe_id'],
             ['recipes.game_token', 'recipes.id'], ondelete='CASCADE'),
+         db.UniqueConstraint(
+            'game_token', 'host_id', 'product_id', name='_host_product_uc'),
     )
 
 # ------------------------------------------------------------------------

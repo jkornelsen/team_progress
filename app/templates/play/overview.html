@@ -16,8 +16,6 @@
         {{ overall.title }}
         {% if all_requirements_met %}
             <span title="Goal Achieved!" class="text-success">✅</span>
-        {% elif win_reqs %}
-            <span title="Win Conditions" style="color: #888; font-size: 0.5em;">🚩</span>
         {% endif %}
     </h1>
 
@@ -87,7 +85,6 @@
             </div>
         </section>
         {% endif %}
-    </div>
 
         <!-- General Storage (Universal Items) -->
         {% if items %}
@@ -121,6 +118,7 @@
             </table>
         </section>
         {% endif %}
+    </div>
 
     <!-- RIGHT COLUMN: Feedback & Logs -->
     <div class="log-column">

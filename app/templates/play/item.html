@@ -59,6 +59,7 @@
                 {% call hk.hotlink(target_url, link_letters, brackets=True) %}
                     {{ ctx_entity.name }}
                 {% endcall %}
+                <a href="{{ url_for(request.endpoint, id=item.id, char_id=0) }}" class="label-like" title="Clear Character Context"> [x] </a>
             {% endif %}
         </span>
         

@@ -679,7 +679,7 @@ def browse_scenarios():
 
     # GET logic: List files
     scenarios = []
-    sort_by = request.args.get('sort_by', 'title')
+    sort_by = request.args.get('sort_by', 'filename')
 
     for filename in os.listdir(data_dir):
         if filename == DEFAULT_SCENARIO_FILE:
