@@ -64,20 +64,20 @@
             {% endif %}
 
             <style>
-                .twocol-row, .item-ref-row { --grid-cols: 1fr auto; }
-                .twocol-list, .item-ref-list { --col-list-max-width: 300px; }
+                .twocol-row, .item-here-row { --grid-cols: 1fr auto; }
+                .twocol-list, .item-here-list { --col-list-max-width: 300px; }
                 {% if has_grid %}
-                .item-ref-row { --grid-cols: 4fr 1fr 1fr; }
-                .item-ref-list { --col-list-max-width: 350px; }
+                .item-here-row { --grid-cols: 4fr 1fr 1fr; }
+                .item-here-list { --col-list-max-width: 350px; }
                 {% endif %}
             </style>
 
             {% if inventory_piles %}
             <section class="outer-border">
                 <h3>Items Here</h3>
-                <div class="col-list item-ref-list">
+                <div class="col-list item-here-list">
                 {% for pile in inventory_piles %}
-                    <div class="col-row item-ref-row" style="--grid-cols: 1fr auto;">
+                    <div class="col-row item-here-row">
                         {% set target_url = url_for('play.play_item',
                             id=pile.item_id, owner_id=location.id, pos=pile.position) %}
                         {% call hk.hotlink(target_url, link_letters) %}
@@ -166,9 +166,9 @@
                         {% call hk.hotlink(target_url, link_letters) %}
                             {{ target.name }}
                         {% endcall %}
-                        {% if door %}
-                            <span class="label-like">[{{ door | join(",") }}]</span>
-                        {% endif %}
+                    {% endif %}
+                    {% if door %}
+                        <span class="label-like">[{{ door | join(",") }}]</span>
                     {% endif %}
                     </div>
                 {% endfor %}
@@ -178,8 +178,8 @@
         </div>
 
         <!-- RIGHT COLUMN: Tactical Grid & Navigation Controls -->
-        {% if has_grid %}
-            <div class="tactgrid-column">
+        <div class="tactgrid-column">
+            {% if has_grid %}
                 <section class="outer-border tactgrid-wrapper">
                     <div class="tactgrid-layout" id="location-grid" 
                          style="grid-template-columns: repeat({{ location.dimensions[0] }}, 32px); 
@@ -245,8 +245,8 @@
                     </div>
                     {% endif %}
                 </section>
-            </div>
-        {% endif %}
+            {% endif %}
+        </div>
     </div>
 </div>
 

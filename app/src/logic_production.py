@@ -12,7 +12,38 @@ from app.src.logic_navigation import is_adjacent
 from app.src.logic_user_interaction import add_message
 from app.src.logic_event import check_triggers, TriggerException
 
-def resolve_recipe_sources(game_token, host_id, recipe, context_id=None):
+logger = logging.getLogger(__name__)
+
+def get_production_target(item, host_id, context_id=None):
+    """
+    Determines where a produced item should be placed based on its StorageType.
+    """
+    game_token = g.game_token
+
+    if item.storage_type == StorageType.UNIVERSAL:
+        return GENERAL_ID
+    
+    if item.storage_type == StorageType.LOCAL:
+        # 1. Try to find the location via the Host (e.g., if Suzy is the host)
+        host = Entity.query.get((game_token, host_id))
+        if host and host.entity_type == Character.TYPENAME:
+            char = Character.query.get((game_token, host_id))
+            if char.location_id:
+                return char.location_id
+        
+        # 2. If the Host is already a location, use it
+        if host and host.entity_type == Location.TYPENAME:
+            raise Exception(
+                f"Logical Error: {host.name} cannot be a production host.")
+
+        # 3. Fallback to context_id (usually the 'old_loc_id' from session)
+        if context_id:
+            return context_id
+        
+    # Default for CARRIED items: they land in the Host's inventory
+    return host_id
+
+def resolve_recipe_sources(host_id, recipe, context_id=None):
     """
     Find where ingredients are located.
 
@@ -21,6 +52,7 @@ def resolve_recipe_sources(game_token, host_id, recipe, context_id=None):
     'context_id' allows looking up local/carried items relative to a 
     specific actor, even if the 'host_id' is General Storage.
     """
+    game_token = g.game_token
     resolved_sources = []
     
     # 1. Determine Context
@@ -51,7 +83,7 @@ def resolve_recipe_sources(game_token, host_id, recipe, context_id=None):
                 effective_host_id = ent.id
 
     eff_host_ent = Entity.query.get((game_token, effective_host_id))
-    eff_host_type = eff_host_ent.entity_type if eff_host_ent else Entity.TYPENAME
+    eff_host_type = eff_host_ent.entity_type if eff_host_ent else Entity.entity_type
 
     char_pos = None
     if effective_host_id != GENERAL_ID:
@@ -74,6 +106,13 @@ def resolve_recipe_sources(game_token, host_id, recipe, context_id=None):
             if location_id and location_id != effective_host_id:
                 potential_owner_ids.append(location_id)
 
+        # Query existing piles
+        all_piles = Pile.query.filter(
+            Pile.game_token == game_token,
+            Pile.item_id == item.id,
+            Pile.owner_id.in_(potential_owner_ids)
+        ).all()
+
         # Position Dependency Filter
         # If the location has a grid, and the pile has a position, 
         # and the host is a character, they must be adjacent.
@@ -86,13 +125,6 @@ def resolve_recipe_sources(game_token, host_id, recipe, context_id=None):
                     valid_piles.append(p)
             else:
                 valid_piles.append(p)
-
-        # Query existing piles
-        all_piles = Pile.query.filter(
-            Pile.game_token == game_token,
-            Pile.item_id == item.id,
-            Pile.owner_id.in_(potential_owner_ids)
-        ).all()
 
         total_qty = sum(p.quantity for p in valid_piles)
         
@@ -113,12 +145,12 @@ def resolve_recipe_sources(game_token, host_id, recipe, context_id=None):
 
             # Fetch type for the URL builder
             ent = Entity.query.get((game_token, anticipated_owner_id))
-            anticipated_owner_type = ent.entity_type if ent else Entity.TYPENAME
+            anticipated_owner_type = ent.entity_type if ent else Entity.entity_type
         else:
             # --- ANTICIPATED PILE LOGIC (No piles found) ---
             if item.storage_type == StorageType.UNIVERSAL:
                 anticipated_owner_id = GENERAL_ID
-                anticipated_owner_type = Entity.TYPENAME
+                anticipated_owner_type = Entity.entity_type
             elif item.storage_type == StorageType.LOCAL:
                 anticipated_owner_id = location_id
                 anticipated_owner_type = Location.TYPENAME
@@ -140,35 +172,43 @@ def resolve_recipe_sources(game_token, host_id, recipe, context_id=None):
 
     return resolved_sources
 
-def can_perform_recipe(game_token, host_id, recipe, batches=1, context_id=None):
+def can_perform_recipe(host_id, recipe, batches=1, context_id=None):
     """
     Checks if the host has enough ingredients and meets attribute requirements,
     and hasn't hit item limits.
     Returns (bool, reason_string)
     """
-    # 1. Check Output Limit
+    game_token = g.game_token
+
+    # Where the item is going
     item_def = Item.query.get((game_token, recipe.product_id))
+    target_id = get_production_target(item_def, host_id, context_id)
+    if not target_id:
+        return False, "No valid storage target found."
+
+    # 1. Check Output Limit
     if item_def and item_def.q_limit > 0:
-        # Get current quantity in target pile
-        target_id = get_production_target(item_def, host_id, context_id)
         current_pile = Pile.query.filter_by(
             game_token=game_token, owner_id=target_id, item_id=recipe.product_id
         ).first()
         current_qty = current_pile.quantity if current_pile else 0.0
         
         if current_qty >= item_def.q_limit:
+            logger.debug(f"{current_qty} above storage limit")
             return (
                 False,
                 "Storage limit reached"
                 f" ({format_num(item_def.q_limit)} {item_def.name})")
+    logger.debug(f"{current_qty} within limit")
 
     # 2. Check Sources (Ingredients)
-    resolved = resolve_recipe_sources(game_token, host_id, recipe, context_id)
+    resolved = resolve_recipe_sources(host_id, recipe, context_id)
     for res in resolved:
         required = res['source_def'].q_required * batches
         if res['total_available'] < required:
             source_item = res['item']
             needed = required - res['total_available']
+            logger.debug(f"Missing {needed} {source_item.name}")
             return False, f"Missing {format_num(needed)} {source_item.name} (Need {format_num(required)})"
 
     # 3. Check Attribute Requirements
@@ -207,10 +247,11 @@ def can_perform_recipe(game_token, host_id, recipe, batches=1, context_id=None):
             else:
                 return False, f"{req.attrib.name} {req.range_display} required"
 
+    logger.debug(f"Can produce recipe")
     return True, ""
 
 
-def execute_production(game_token, host_id, recipe, batches=1, context_id=None):
+def execute_production(host_id, recipe, batches=1, context_id=None):
     """
     The core 'Mechanical' function. 
     Runs up to 'batches' times. Halts early if resources run out.
@@ -219,6 +260,7 @@ def execute_production(game_token, host_id, recipe, batches=1, context_id=None):
     Returns: (actual_batches_done, halt_reason)
     """
     from .logic_piles import adjust_quantity
+    game_token = g.game_token
 
     actual_batches_done = 0
     halt_reason = None
@@ -226,14 +268,14 @@ def execute_production(game_token, host_id, recipe, batches=1, context_id=None):
     for _ in range(batches):
         # 1. Check if this specific batch can be performed
         possible, reason = can_perform_recipe(
-            game_token, host_id, recipe, context_id=context_id)
+            host_id, recipe, context_id=context_id)
         
         if not possible:
             halt_reason = reason
             break
 
         # 2. Consume Sources
-        resolved = resolve_recipe_sources(game_token, host_id, recipe, context_id=context_id)
+        resolved = resolve_recipe_sources(host_id, recipe, context_id=context_id)
         for res in resolved:
             source_def = res['source_def']
             if not source_def.preserve:
@@ -254,17 +296,3 @@ def execute_production(game_token, host_id, recipe, batches=1, context_id=None):
         actual_batches_done += 1
 
     return actual_batches_done, halt_reason
-
-def get_production_target(item, host_id, context_id=None):
-    """
-    Determines where a produced item should be placed based on its StorageType.
-    """
-    if item.storage_type == StorageType.UNIVERSAL:
-        return GENERAL_ID
-    
-    if item.storage_type == StorageType.LOCAL:
-        # If a character is producing it, it stays at their current location.
-        # Otherwise, it stays with the host (e.g. the location itself).
-        return context_id if context_id else host_id
-        
-    return host_id # CARRIED

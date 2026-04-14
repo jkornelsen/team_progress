@@ -165,9 +165,9 @@ def roll_for_outcome(event_id, context_ids, difficulty=0.0):
         breakdown_parts = [coord_str]
 
     else:
-        base_roll = random.randint(base_min, base_max)
-        total = float(base_roll)
-        breakdown_parts = [f"d{base_max - base_min + 1}(🎲{base_roll})"]
+        die_roll = random.randint(base_min, base_max)
+        total = float(die_roll)
+        breakdown_parts = [f"d{base_max - base_min + 1}(🎲{die_roll})"]
 
     # 2. Resolve and Apply every Determinant individually
     # calculate_determinants returns list: [{label, source_name, field_name, value, op}, ...]
@@ -199,22 +199,28 @@ def roll_for_outcome(event_id, context_ids, difficulty=0.0):
         major_failure_max = base_min + math.floor(shift * 0.20)
         minor_success_min = round(span * 0.10) + shift
         major_success_min = (
-            base_max - math.floor(span * 0.20)) + math.floor(shift * 0.5)
+            base_max - math.floor(span * 0.15)) + math.floor(shift * 0.40)
 
-        if total >= major_success_min:
-            res = "Strong Success"
+        if die_roll == base_max:
+            res = "Major Success (Natural)"
+        elif die_roll == base_min:
+            res = "Major Failure (Natural)"
+        elif total >= major_success_min:
+            res = "Major Success"
         elif total >= minor_success_min:
             res = "Minor Success"
         elif total <= major_failure_max:
-            res = "Strong Failure"
+            res = "Major Failure"
         else:
             res = "Minor Failure"
 
         display_str = f"<b>{res}</b><br><small>{breakdown_str}</small>"
+        message_str = f"{total:g} — {res}"
     else:
         display_str = breakdown_str
+        message_str = display_str.replace('<br>', ' ')
 
-    add_message(game_token, f"{event.name}: {display_str.replace('<br>', ' ')}")
+    add_message(game_token, f"{event.name}: {message_str}")
     return total, display_str
 
 def roll_coordinate(loc_id):

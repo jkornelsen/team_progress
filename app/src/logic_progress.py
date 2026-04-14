@@ -11,8 +11,7 @@ from app.src.logic_piles import adjust_quantity
 from app.src.logic_user_interaction import add_message
 from app.src.logic_event import check_triggers, TriggerException
 from app.src.logic_production import (
-    can_perform_recipe, resolve_recipe_sources,
-    get_production_target, execute_production)
+    can_perform_recipe, execute_production)
 
 logger = logging.getLogger(__name__)
 
@@ -81,8 +80,7 @@ def update_progress(progress_id):
     # 4. Delegate physical production
     logger.info(f"[TICK] Host:{progress.host_id} Recipe:{recipe.id} batches:{new_batches}")
     actual_done, halt_reason = execute_production(
-        game_token, progress.host_id, recipe, batches=new_batches, context_id=ctx_id
-    )
+        progress.host_id, recipe, new_batches, ctx_id)
 
     # 5. Update Progress State
     progress.batches_processed += actual_done
@@ -94,6 +92,27 @@ def update_progress(progress_id):
     db.session.commit()
     return halt_reason
 
+def tick_all_active(focus_host_id=None):
+    """
+    Ticks every active production record in the current game session.
+    
+    - focus_host_id: (Optional) If provided, returns a list of halt 
+      reasons specifically for this host.
+    """
+    game_token = g.game_token
+
+    # Query all records that are currently marked as ongoing
+    all_active = Progress.query.filter_by(
+        game_token=game_token, is_ongoing=True).all()
+    
+    halt_messages = []
+    for p in all_active:
+        reason = update_progress(p.id)
+        if reason and focus_host_id and p.host_id == focus_host_id:
+            halt_messages.append(reason)
+            
+    return halt_messages
+
 def start_production(host_id, recipe_id, context_id=None):
     """Initializes a Progress record for an Entity."""
     game_token = g.game_token
@@ -101,7 +120,7 @@ def start_production(host_id, recipe_id, context_id=None):
     
     # Check if we can even start the first batch
     possible, reason = can_perform_recipe(
-        game_token, host_id, recipe, context_id=context_id)
+        host_id, recipe, context_id=context_id)
     if not possible:
         return False, reason
 

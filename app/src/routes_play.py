@@ -9,13 +9,14 @@ from app.models import (
     Progress, Overall, WinRequirement, GameMessage,
     GENERAL_ID, StorageType, Participant)
 from app.utils import (
-    RequestHelper, parse_coords, LinkLetters, capture_origin, redirect_back)
+    RequestHelper, format_num, parse_coords, LinkLetters,
+    capture_origin, redirect_back)
 from .logic_piles import transfer_item
 from .logic_event import (
     roll_for_outcome, roll_for_system_outcome, TriggerException, calculate_determinants,
     get_entity_value)
 from .logic_progress import (
-    start_production, stop_production, update_progress)
+    update_progress, tick_all_active, start_production, stop_production)
 from .logic_production import (
     resolve_recipe_sources, can_perform_recipe, execute_production)
 from .logic_navigation import (
@@ -51,7 +52,8 @@ def overview():
     
     # 3. Recent Messages
     messages = GameMessage.query.filter_by(game_token=game_token)\
-                .order_by(GameMessage.timestamp.asc()).limit(20).all()
+                .order_by(GameMessage.timestamp.desc()).limit(30).all()
+    messages.reverse()
 
     return render_template(
         'play/overview.html',
@@ -499,6 +501,10 @@ def play_item(id):
     if not pile:
         pile = Pile(item_id=id, owner_id=owner.id, quantity=0.0, position=pos)
 
+    # Determine the Host for production
+    # If a character is present, they host the work even for universal items.
+    host_id = ctx_char_id if ctx_char_id else GENERAL_ID
+
     # Collect all relevant entities for attribute checking
     all_relevant_entities = set()
     if owner.id != GENERAL_ID:
@@ -517,13 +523,9 @@ def play_item(id):
     enriched_recipes = []
     for r in item.recipes:
         can_do, reason = can_perform_recipe(
-            game_token, owner.id, r, context_id=ctx_id)
+            host_id, r, context_id=ctx_id)
         resolved_ingredients = resolve_recipe_sources(
-            game_token, 
-            host_id=owner.id, 
-            recipe=r,
-            context_id=ctx_id
-        )
+            host_id, r, context_id=ctx_id)
         
         sources_ui_data = []
         for res in resolved_ingredients:
@@ -643,10 +645,6 @@ def play_item(id):
             'url_params': url_params
         })
 
-    # Determine the Host for production
-    # If a character is present, they host the work even for universal items.
-    host_id = ctx_char_id if ctx_char_id else owner.id
-
     # Check for active progress
     current_progress = Progress.query.filter_by(
         game_token=game_token, host_id=host_id
@@ -729,35 +727,96 @@ def play_item(id):
 # Production Routes
 # ------------------------------------------------------------------------
 
-@play_bp.route('/production/start/owner/<int:id>', methods=['POST'])
-def start_item_production(id):
+@play_bp.route('/production/status/host/<int:host_id>')
+def production_status(host_id):
+    """
+    Heartbeat endpoint to calculate current progress and refresh recipe availability.
+    """
+    game_token = g.game_token
+    req = RequestHelper('args')
+    item_id = req.get_int('item_id')
+    owner_id = req.get_int('owner_id')
+
+    try:
+        # 1. TICK THE WORLD
+        # This keeps all hosts (System, Suzy, Bob) in sync.
+        halt_messages = tick_all_active(host_id)
+
+        # 2. GATHER PAGE DATA
+        # Resolve main item and focus progress
+        main_item = Item.query.get((game_token, item_id))
+        if not main_item:
+            return jsonify({"error": "Item not found"}), 404
+
+        main_pile = Pile.query.filter_by(
+            game_token=game_token, owner_id=owner_id, item_id=item_id).first()
+        
+        host_prog = Progress.query.filter_by(
+            game_token=game_token, host_id=host_id).first()
+
+        # 3. GATHER RECIPES & INGREDIENT TOTALS
+        recipe_data = []
+        source_quantities = {}
+
+        for r in main_item.recipes:
+            # Can this specific worker produce this at this location?
+            can_do, reason = can_perform_recipe(host_id, r, 1, owner_id)
+            
+            recipe_data.append({
+                "recipe_id": r.id, "can_produce": can_do, "reason": reason
+            })
+
+            # Where are the ingredients relative to this worker and location?
+            resolved = resolve_recipe_sources(host_id, r, owner_id)
+            for res in resolved:
+                s_item = res['item']
+                source_quantities[s_item.id] = format_num(res['total_available'])
+
+        return jsonify({
+            "main": {
+                "is_ongoing": bool(host_prog and host_prog.is_ongoing),
+                "active_recipe_id": host_prog.recipe_id if host_prog else None,
+                "batches": host_prog.batches_processed if host_prog else 0,
+                "quantity": format_num(main_pile.quantity if main_pile else 0),
+                "start_time": host_prog.start_time.isoformat() if (
+                    host_prog and host_prog.start_time) else None,
+                "rate_duration": host_prog.recipe.rate_duration if (
+                    host_prog and host_prog.is_ongoing and host_prog.recipe) else None
+            },
+            "sources": [
+                {"id": sid, "quantity": sqty} for sid, sqty in source_quantities.items()
+            ],
+            "recipes": recipe_data,
+            "halt_messages": halt_messages
+        })
+
+    except TriggerException as e:
+        return jsonify({"status": "interrupt", "message": e.message, "event_id": e.event_id})
+
+@play_bp.route('/production/start/host/<int:host_id>', methods=['POST'])
+def start_item_production(host_id):
     req = RequestHelper('form')
     recipe_id = req.get_int('recipe_id')
-    host_id = determine_host_id(id)
+    owner_id = req.get_int('owner_id')
 
-    ctx_id = session.get('old_char_id') or session.get('old_loc_id')
-    success, message = start_production(host_id, recipe_id, context_id=ctx_id)
+    success, message = start_production(host_id, recipe_id, context_id=owner_id)
     return jsonify({
         "status": "success" if success else "error", 
-        "message": message,
-        "host_id": host_id # Return the actual host for JS to update
+        "message": message
     })
 
-@play_bp.route('/production/stop/owner/<int:id>', methods=['POST'])
-def stop_item_production(id):
-    host_id = determine_host_id(id)
-
+@play_bp.route('/production/stop/host/<int:host_id>', methods=['POST'])
+def stop_item_production(host_id):
     if stop_production(host_id):
         return jsonify({"status": "success"})
     return jsonify({"status": "error"}), 400
 
-@play_bp.route('/production/instant/owner/<int:id>', methods=['POST'])
-def instant_item_production(id):
+@play_bp.route('/production/instant/host/<int:host_id>', methods=['POST'])
+def instant_item_production(host_id):
     req = RequestHelper('form')
+    owner_id = req.get_int('owner_id')
     recipe_id = req.get_int('recipe_id')
     num_batches = req.get_int('batches')
-    host_id = determine_host_id(id)
-    ctx_id = session.get('old_char_id') or session.get('old_loc_id')
 
     recipe = Recipe.query.get((g.game_token, recipe_id))
     if not recipe:
@@ -765,8 +824,7 @@ def instant_item_production(id):
 
     # Perform production
     actual_done, halt_reason = execute_production(
-        g.game_token, host_id, recipe, batches=num_batches, context_id=ctx_id
-    )
+        host_id, recipe, num_batches, owner_id)
     
     if actual_done > 0:
         db.session.commit()
@@ -776,86 +834,6 @@ def instant_item_production(id):
         return jsonify({"status": "success", "message": msg})
     
     return jsonify({"status": "error", "message": halt_reason or "Production failed."})
-
-@play_bp.route('/production/status/owner/<int:id>')
-def production_status(id):
-    """Heartbeat endpoint to calculate current progress and refresh recipe availability."""
-    game_token = g.game_token
-    item_id = request.args.get('item_id', type=int)
-    host_id = determine_host_id(id)
-
-    try:
-        # 1. Tick the logic
-        prog = Progress.query.filter_by(
-            game_token=game_token, host_id=host_id).first()
-        halt_message = None
-        if prog and prog.is_ongoing:
-            # DEBUG: Log before update
-            logger.info(f"Before update_progress: start_time={prog.start_time}, batches_processed={prog.batches_processed}")
-            halt_message = update_progress(prog.id)
-            # DEBUG: Log after update
-            logger.info(f"After update_progress: batches_processed={prog.batches_processed}, is_ongoing={prog.is_ongoing}")
-        
-        # 2. Build Response Base
-        start_time_iso = None
-        rate_duration = None
-        if prog and prog.start_time:
-            start_time_iso = prog.start_time.isoformat()
-        
-        # Get rate_duration from active recipe if ongoing
-        if prog and prog.is_ongoing and prog.recipe_id:
-            recipe = Recipe.query.get((game_token, prog.recipe_id))
-            if recipe:
-                rate_duration = recipe.rate_duration
-                logger.info(f"Active recipe: id={recipe.id}, rate_duration={rate_duration}")
-
-        res = {
-            "is_ongoing": bool(prog and prog.is_ongoing),
-            "batches": prog.batches_processed if prog else 0,
-            "halt_message": halt_message,
-            "start_time": start_time_iso,
-            "active_recipe_id": prog.recipe_id if prog else None,
-            "rate_duration": rate_duration,
-            "recipes": []
-        }
-
-        # 3. Get current quantity of the item being viewed (if item_id provided)
-        if item_id:
-            pile = Pile.query.filter_by(
-                game_token=game_token, owner_id=id, item_id=item_id).first()
-            if pile:
-                res["current_quantity"] = pile.quantity
-            
-            # Also get recipe validation for 🚫 icons
-            recipes = Recipe.query.filter_by(game_token=game_token, product_id=item_id).all()
-            for r in recipes:
-                can_do, reason = can_perform_recipe(game_token, host_id, r)
-                res["recipes"].append({
-                    "recipe_id": r.id,
-                    "can_produce": can_do,
-                    "reason": reason
-                })
-
-        return jsonify(res)
-
-    except TriggerException as e:
-        return jsonify({
-            "status": "interrupt",
-            "message": e.message,
-            "event_id": e.event_id
-        })
-
-def determine_host_id(owner_id):
-    """
-    If we are trying to start a universal item from the General page (id 1),
-    but the session knows we are "Suzy", switch the host to Suzy.
-    """
-    host_id = owner_id
-    active_char_id = session.get('old_char_id')
-    if host_id == GENERAL_ID and active_char_id:
-        host_id = active_char_id
-    return host_id
-
 
 # ------------------------------------------------------------------------
 # Events & Dice

@@ -140,11 +140,11 @@
                         <label for="difficulty-select">Difficulty:</label>
                         <select id="difficulty-select">
                             <option value="0.10">Very Easy</option>
-                            <option value="0.35">Easy</option>
-                            <option value="0.55" selected>Moderate</option>
-                            <option value="0.75">Hard</option>
-                            <option value="0.95">Very Hard</option>
-                            <option value="1.05">Extreme</option>
+                            <option value="0.30">Easy</option>
+                            <option value="0.50" selected>Moderate</option>
+                            <option value="0.65">Hard</option>
+                            <option value="0.80">Very Hard</option>
+                            <option value="0.95">Extreme</option>
                         </select>
                     </div>
                     
@@ -243,20 +243,23 @@
         if (!diffSelect) return;
 
         const difficulty = parseFloat(diffSelect.value);
-        const min = baseMin; // 1
-        const max = baseMax; // 20
-        const span = max - min + 1; // 20
+        const min = baseMin; 
+        const max = baseMax; 
+        const span = max - min + 1;
 
         const shift = Math.round(span * difficulty);
         
         const majorFailureMax = min + Math.floor(shift * 0.20);
         const minorSuccessMin = Math.round(span * 0.10) + shift;
-        const majorSuccessMin = (max - Math.floor(span * 0.20)) + Math.floor(shift * 0.5);
+        const majorSuccessMin = (max - Math.floor(span * 0.15)) + Math.floor(shift * 0.40);
 
-        // Display updates
-        document.getElementById('minor-success-threshold').innerText = `≥ ${minorSuccessMin}`;
-        document.getElementById('major-success-threshold').innerText = `≥ ${majorSuccessMin}`;
-        document.getElementById('major-failure-threshold').innerText = `≤ ${majorFailureMax}`;
+        const minorSuccessDisplay = `≥ ${minorSuccessMin}`;
+        const majorSuccessDisplay = `≥ ${majorSuccessMin}`;
+        const majorFailureDisplay = `≤ ${majorFailureMax}`;
+
+        document.getElementById('minor-success-threshold').innerText = minorSuccessDisplay;
+        document.getElementById('major-success-threshold').innerText = majorSuccessDisplay;
+        document.getElementById('major-failure-threshold').innerText = majorFailureDisplay;
     }
 
     if (diffSelect) {

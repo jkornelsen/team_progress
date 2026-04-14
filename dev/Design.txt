@@ -4,9 +4,17 @@ ajax to keep updating source quantities on item play
     get complex dict of all values needed in a single ajax call
     also update start button usability -- call can_do_recipe() each time
 
+general id should support multiple item progress records
+    although only one progress per produced item
+    whereas only one progress per character
+    but different characters could
+    work on different piles of the same item
+    on play char show currently working on
+
 tightened subject-based events
     a determinant can be flagged as informational only
     otherwise they get calculated directly, not modifying the die fields
+
 application modifiers
     so determiners are kept to intuitive roll outcomes
     put a single set of select boxes on play screen that
@@ -33,6 +41,9 @@ Fission Plant: no more than a certain amount of pollution
 bacon for dinner is a good but minimalist quest
 consider adding a complex quest scenario with production, travel and combat
 maybe a set of tasks to enter guild or save village from invasion
+
+other scenarios could benefit from a goal
+maybe build a wooden bridge in lumber to win
 
 we're pretty close to dynamic idle increases
     an event can calculate the increase and
