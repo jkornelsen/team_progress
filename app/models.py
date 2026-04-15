@@ -1167,6 +1167,9 @@ class RecipeAttribReq(db.Model, DictHydrator):
 
     @property
     def range_display(self):
+        if self.attrib.is_binary:
+            return ' enabled' if self.min_val > 0 else ' disabled'
+
         low = "-∞" if self.min_val == float('-inf') else f"{self.min_val:g}"
         high = "∞" if self.max_val == float('inf') else f"{self.max_val:g}"
         

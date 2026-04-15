@@ -176,6 +176,24 @@
                 </div>
             </section>
             {% endif %}
+
+            {% set local_jobs = location.progress_records | selectattr('is_ongoing', 'equalto', True) | list %}
+            {% if local_jobs %}
+            <section class="outer-border">
+                <h3>Local Production</h3>
+                <ul class="clean-list">
+                    {% for job in local_jobs %}
+                    <li class="spacious-bottom">
+                        <div class="flex-between">
+                            {% set target_url = url_for('play.play_item', id=job.product_id, owner_id=location.id) %}
+                            <a href="{{ target_url }}"><strong>{{ job.product.name }}</strong></a>
+                            <span class="label-like">In Progress</span>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </section>
+            {% endif %}
         </div>
 
         <!-- RIGHT COLUMN: Tactical Grid & Navigation Controls -->

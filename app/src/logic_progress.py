@@ -51,15 +51,16 @@ def update_progress(progress_id):
         raise Exception("Expected a recipe that uses duration.")
 
     # 1. Determine Context (For ingredient/attribute lookups)
-    ctx_id = None
+    char_id = None
+    loc_id = None
     host_ent = Entity.query.get((game_token, progress.host_id))
     if host_ent.entity_type == Character.TYPENAME:
         char = Character.query.get((game_token, progress.host_id))
-        ctx_id = char.location_id
+        loc_id = char.location_id
     elif host_ent.entity_type == Location.TYPENAME:
-        ctx_id = host_ent.id
+        loc_id = host_ent.id
     elif progress.host_id == GENERAL_ID:
-        ctx_id = session.get('old_loc_id')
+        loc_id = session.get('old_loc_id')
 
     # 2. Timing Calculation
     elapsed = get_elapsed_seconds(progress)
@@ -81,7 +82,7 @@ def update_progress(progress_id):
         logger.debug(
             f"[TICK] Host:{progress.host_id} Recipe:{recipe.id} batches:{new_batches}")
         actual_done, halt_reason = execute_production(
-            progress.host_id, recipe, new_batches, ctx_id)
+            progress.host_id, recipe, new_batches, loc_id=loc_id)
         
         progress.batches_processed += actual_done
 
@@ -89,7 +90,8 @@ def update_progress(progress_id):
     # If we didn't already halt due to execute_production,
     # check if the NEXT batch is possible.
     if not halt_reason:
-        possible, reason = can_perform_recipe(progress.host_id, recipe, 1, ctx_id)
+        possible, reason = can_perform_recipe(
+            progress.host_id, recipe, 1, loc_id=loc_id)
         if not possible:
             halt_reason = reason
 
@@ -124,25 +126,39 @@ def tick_all_active(focus_host_id=None):
             
     return halt_messages
 
-def start_production(host_id, recipe_id, context_id=None):
+def start_production(host_id, recipe_id, char_id=None, loc_id=None):
     """Initializes a Progress record for an Entity."""
     game_token = g.game_token
     recipe = Recipe.query.get((game_token, recipe_id))
+    host_entity = Entity.query.get((game_token, host_id))
     
     # Check if we can even start the first batch
     possible, reason = can_perform_recipe(
-        host_id, recipe, context_id=context_id)
+        host_id, recipe, char_id=char_id, loc_id=loc_id)
     if not possible:
         return False, reason
 
-    # SERIAL LOGIC: If it's a character, stop everything else they are doing
+    # Concurrency Checks
     if host_entity.entity_type == Character.TYPENAME:
-        existing_jobs = Progress.query.filter_by(
-            game_token=game_token, host_id=host_id, is_ongoing=True).all()
-        for job in existing_jobs:
-            stop_production(host_id, job.product_id)
+        # Singleton: Characters can only do one thing at a time
+        active_job = Progress.query.filter_by(
+            game_token=game_token, host_id=host_id, is_ongoing=True
+        ).first()
+        if active_job:
+            if active_job.product_id == recipe.product_id:
+                return False, f"{host_entity.name} is already working on this."
+            return False, f"{host_entity.name} is busy working on {active_job.product.name}."
+    else:
+        # Concurrent: General and Location can host one job per product
+        active_job = Progress.query.filter_by(
+            game_token=game_token, host_id=host_id, 
+            product_id=recipe.product_id, is_ongoing=True
+        ).first()
+        if active_job:
+            here = ' here' if host_entity.entity_type == Location.TYPENAME else ''
+            return False, f"{active_job.product.name} is already being produced{here}."
 
-    # PRODUCT-BASED UNIQUENESS: Find or create record for this specific product
+    # Find or Create Record
     progress = Progress.query.filter_by(
         game_token=game_token, host_id=host_id, product_id=recipe.product_id
     ).first()

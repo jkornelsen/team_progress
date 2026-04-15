@@ -1,23 +1,46 @@
 ---- issues and proposed changes ----
 
+producing logs from infinite tree
+    isn't showing progress bar
+    going to char inv even though there's a pile on the ground
+
+design says should be location hosted since char not needed
+    i'm not sure this is really right though -- seems like default char is better
+    maybe not worry about this for now and just get it working
+    later we can think about how better to disambiguate in the ui
+what about an "add job" button under Local Production with item selectbox
+    that would bring up the item page with a "host_by_loc" param set
+    or add locally producible items in location config
+
 three host types
-    1. general storage: multi-job
+    1. general/universal production:
+        per-product singleton progress, concurrent across products
+        e.g. Logs and bars can both run, but logs can’t run twice at once.
         Progress.filter_by(host_id=host_id, product_id=recipe.product_id)
-    2. character: single job per character
-    3. location: multi-job, can require character by setting e.g. attrib reqs
-general storage host should support multiple item progress records
-    although only one progress per produced item
-    whereas only one progress per character
-    but different characters could
-    work on different piles of the same item
-    on play char show currently working on
-local production hosting
-    in addition to multi-task general storage production and single-task character
-    production, give locaations the ability to be hosts
-    this seems good like you go to a room, start a process, then leave and
-    come back to see if it's finished
-    needed for helium-3 mine
-    ui should clarify operator vs host
+    2. character:
+        per-character singleton job
+        e.g. Alice and Bob can both work, but Alice can’t do two things.
+    3. location:
+        multi-job, independent progress per job
+how to choose host
+    Select the simplest host that satisfies all recipe requirements,
+    the first valid option in a storage-type-specific priority list.
+    UNIVERSAL item product:
+        1. general if all requirements are met from universal storage
+        2. character if required for at least one unmet requirement
+           (salience override so it feels like the action is done by someone)
+        3. location if required
+    CARRIED or LOCAL item product:
+        1. character if they meet all requirements or no location can
+            fully satisfy requirements
+        2. location if required
+        3. (never general host as there's no place to go)
+converting
+    we already do this correctly with universal chores -- require carried items
+    or char attributes in the recipe
+location production examples
+    loc mine helium-3, then char converts to cannisters
+    lumber mill: logs > boards
 
 tightened subject-based events
     a determinant can be flagged as informational only

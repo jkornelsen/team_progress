@@ -53,14 +53,19 @@
                     <span class="label-like">[{{ pile.position | join(",") }}]</span>
                 {% endif %}
             {% endif %}
-            {% if ctx_entity %}
-                , active {{ ctx_entity.entity_type }}
+            {% for ctx_entity in [char, loc] if ctx_entity and ctx_entity.id != owner.id %}
+                , active {{ ctx_entity.SHORT }}
                 {% set target_url = url_for('play.play_' ~ ctx_entity.entity_type, id=ctx_entity.id) %}
                 {% call hk.hotlink(target_url, link_letters, brackets=True) %}
                     {{ ctx_entity.name }}
                 {% endcall %}
-                <a href="{{ url_for(request.endpoint, id=item.id, char_id=0) }}" class="label-like" title="Clear Character Context"> [x] </a>
-            {% endif %}
+                <!--
+                (Doesn't work and maybe not needed anyway)
+                <a href="{{ url_for(request.endpoint, id=item.id, char_id=0) }}" 
+                   class="label-like" 
+                   title="Clear {{ ctx_entity.TYPENAME.capitalize() }} Context"> [x] </a>
+                -->
+            {% endfor %}
         </span>
         
         <h1>
@@ -132,7 +137,7 @@
                                         📊
                                     {% endif %}
                                     {% if req.link_entity_id %}
-                                        {% set link_entity = entities[req.link_entity_id] %}
+                                        {% set link_entity = attribreq_entities[req.link_entity_id] %}
                                         {% if link_entity.entity_type == 'character' %}
                                             {% set target_url = url_for('play.play_character', id=req.link_entity_id) %}
                                             {% call hk.hotlink(target_url, link_letters) %}
@@ -188,12 +193,13 @@
                                                 <button type="button" class="tag-button" onclick="setBatch({{ r.id }}, {{ r.max_batches }})">Max</button>
                                             </div>
                                         </div>
-                                        <button id="gain-{{ r.id }}" onclick="gainItem({{ r.id }})" class="go-button">
+                                        <button id="gain-{{ r.id }}" onclick="gainItem({{ r.id }}, {{ r.host_id }})" class="go-button">
                                             <span class="hotkey-indicator">{{ letter }}</span>
                                             Gain Instant
                                         </button>
                                     {% else %}
-                                        <button id="start-{{ r.id }}" onclick="startProd({{ r.id }})" 
+                                        <button id="start-{{ r.id }}"
+                                                onclick="startProd({{ r.id }}, {{ r.host_id }})"
                                                 class="go-button {{ 'hidden' if progress and progress.is_ongoing and progress.recipe_id == r.id }}">
                                             <span class="hotkey-indicator">{{ letter }}</span>
                                             Start
@@ -215,7 +221,8 @@
 
                                 {# Always show Stop if it IS ongoing, even if it can't start another batch right now #}
                                 {% if not r.instant %}
-                                    <button id="stop-{{ r.id }}" onclick="stopProd()" 
+                                    <button id="stop-{{ r.id }}"
+                                            onclick="stopProd({{ r.host_id }})"
                                             class="dangerous-button {{ 'hidden' if not (progress and progress.is_ongoing and progress.recipe_id == r.id) }}">
                                         <span class="hotkey-indicator">{{ letter if letter else '' }}</span> Stop
                                     </button>
@@ -320,13 +327,13 @@
                 <div class="button-group">
                     {% set has_controls = false %}
 
-                    {% if owner.entity_type == 'location' and ctx_entity.entity_type == 'character' %}
+                    {% if owner.entity_type == 'location' and char %}
                         {# Location -> Character (Pickup) #}
                         {% set has_controls = true %}
                         <div class="action-box">
                             {% if is_reachable %}
-                                <span class="target-name">{{ ctx_entity.name }}</span>
-                                <input type="hidden" id="pickup-char-id" value="{{ ctx_entity.id }}">
+                                <span class="target-name">{{ char.name }}</span>
+                                <input type="hidden" id="pickup-char-id" value="{{ char.id }}">
                                 <button id="pickup-btn" class="go-button">{{ hk.bracket('p') }}ick up</button>
                             {% else %}
                                 <i class="text-dim small">🚫 {{ reach_error or "Too far to reach" }}</i>
@@ -403,11 +410,41 @@
 
 <script>
     const itemId = {{ item.id }};
-    const hostId = {{ host_id }}; // character or general
     const ownerId = {{ owner.id }}; // owner of pile that this page is viewing
 
     // Heartbeat for Progress Bar
     async function updateStatus() {
+        const res = await fetch(`/production/status/item/${itemId}`);
+        const hostData = await res.json();
+        // Iterate through recipes on page
+        {% for r in recipes %}
+            (function() {
+                const recipeId = {{ r.id }};
+                const hostId = {{ r.host_id or 0 }};
+                const prog = hostData[hostId];
+                
+                const startBtn = document.getElementById(`start-${recipeId}`);
+                const stopBtn = document.getElementById(`stop-${recipeId}`);
+                const progBar = document.getElementById(`prog-container-${recipeId}`);
+
+                if (prog && prog.recipe_id === recipeId) {
+                    // This host is busy with THIS recipe
+                    if (startBtn) startBtn.classList.add('hidden');
+                    if (stopBtn) stopBtn.classList.remove('hidden');
+                    if (progBar) {
+                        progBar.classList.remove('hidden');
+                        // Calculate % logic...
+                    }
+                } else {
+                    if (startBtn) startBtn.classList.remove('hidden');
+                    if (stopBtn) stopBtn.classList.add('hidden');
+                    if (progBar) progBar.classList.add('hidden');
+                }
+            })();
+        {% endfor %}
+        return;
+
+/*
         const res = await fetch(`/production/status/host/${hostId}?item_id=${itemId}&owner_id=${ownerId}`);
         const data = await res.json();
 
@@ -552,14 +589,15 @@
                 }
             });
         }
+*/
     }
     setInterval(updateStatus, 2000);
 
-    async function startProd(recipeId) {
+    async function startProd(recipeId, targetHostId) {
         const fd = new FormData();
         fd.append('recipe_id', recipeId);
         fd.append('owner_id', ownerId);
-        const res = await fetch(`/production/start/host/${hostId}`, { method: 'POST', body: fd });
+        const res = await fetch(`/production/start/host/${targetHostId}`, { method: 'POST', body: fd });
         if (res.ok) {
             // Trigger update immediately so buttons flip without delay
             updateStatus();
@@ -569,8 +607,8 @@
         }
     }
 
-    async function stopProd() {
-        const res = await fetch(`/production/stop/host/${hostId}`, { method: 'POST' });
+    async function stopProd(targetHostId) {
+        const res = await fetch(`/production/stop/host/${targetHostId}`, { method: 'POST' });
         if (res.ok) {
             // Trigger update immediately so "Start" reappears
             updateStatus();
@@ -579,7 +617,7 @@
         }
     }
 
-    async function gainItem(recipeId) {
+    async function gainItem(recipeId, targetHostId) {
         // Instant gain (one-off execution)
         const batchInput = document.getElementById(`batches-${recipeId}`);
         const batches = batchInput ? batchInput.value : 1;
@@ -588,7 +626,7 @@
         fd.append('recipe_id', recipeId);
         fd.append('batches', batches);
         const res = await fetch(
-            `/production/instant/host/${hostId}`, {
+            `/production/instant/host/${targetHostId}`, {
             method: 'POST', body: fd
         });
         if (res.ok) {
