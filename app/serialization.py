@@ -45,8 +45,6 @@ def init_game_session():
             db.session.add(reserved_entity)
             
         db.session.commit()
-    else:
-        logger.debug(f"Session {game_token} already initialized.")
 
 def load_scenario_from_path(filename):
     """

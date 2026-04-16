@@ -30,7 +30,7 @@ def main():
 
     logging.basicConfig(
         level=numeric_level,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        format='[%(filename)s:%(lineno)d] - %(message)s'
     )
 
     # Silence noisy library logs

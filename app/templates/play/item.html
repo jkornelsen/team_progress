@@ -87,6 +87,15 @@
         {% elif item.description %}
             <div class="description-box">{{ item.description | htmlify }}</div>
         {% endif %}
+        
+        {% set manualtick = False %} {# set to True for debugging one call at a time #}
+        {% if manualtick %}
+        <button id="debug-tick-btn" 
+                onclick="manualTick()" 
+                style="background-color: gray; color: white; padding: 10px 20px; border: none; cursor: not-allowed; font-weight: bold;">
+            Waiting...
+        </button>
+        {% endif %}
     </header>
 
     <div class="column-container">
@@ -410,50 +419,28 @@
 
 <script>
     const itemId = {{ item.id }};
-    const ownerId = {{ owner.id }}; // owner of pile that this page is viewing
+    const ownerId = {{ owner.id }}; 
+    const charId = {{ char.id if char else 'null' }};
+    const locId = {{ loc.id if loc else 'null' }};
 
-    // Heartbeat for Progress Bar
     async function updateStatus() {
-        const res = await fetch(`/production/status/item/${itemId}`);
-        const hostData = await res.json();
-        // Iterate through recipes on page
-        {% for r in recipes %}
-            (function() {
-                const recipeId = {{ r.id }};
-                const hostId = {{ r.host_id or 0 }};
-                const prog = hostData[hostId];
-                
-                const startBtn = document.getElementById(`start-${recipeId}`);
-                const stopBtn = document.getElementById(`stop-${recipeId}`);
-                const progBar = document.getElementById(`prog-container-${recipeId}`);
-
-                if (prog && prog.recipe_id === recipeId) {
-                    // This host is busy with THIS recipe
-                    if (startBtn) startBtn.classList.add('hidden');
-                    if (stopBtn) stopBtn.classList.remove('hidden');
-                    if (progBar) {
-                        progBar.classList.remove('hidden');
-                        // Calculate % logic...
-                    }
-                } else {
-                    if (startBtn) startBtn.classList.remove('hidden');
-                    if (stopBtn) stopBtn.classList.add('hidden');
-                    if (progBar) progBar.classList.add('hidden');
-                }
-            })();
-        {% endfor %}
-        return;
-
-/*
-        const res = await fetch(`/production/status/host/${hostId}?item_id=${itemId}&owner_id=${ownerId}`);
+        // 1. Fetch the complete state snapshot for this context
+        const fd = new FormData();
+        fd.append('char_id', charId);
+        fd.append('loc_id', locId);
+        const res = await fetch(
+            `/production/status/item/${itemId}/owner/${ownerId}`,
+            { method: 'POST', body: fd });
+        if (!res.ok) return;
         const data = await res.json();
 
+        // 2. Handle "Interrupts" (Triggers/Random Events)
         if (data.status === 'interrupt') {
             showInterruptModal(data);
             return;
         }
 
-        // Handle halt messages
+        // 3. Handle Flash Messages (e.g., "Storage Full")
         if (data.halt_messages && data.halt_messages.length > 0) {
             data.halt_messages.forEach(msg => {
                 if (!msg.toLowerCase().includes("limit reached")) {
@@ -463,31 +450,35 @@
         }
 
         const main = data.main;
-        const currentStock = parseFloat(main.quantity.replace(/,/g, '')) || 0;
 
-        // UPDATE QUANTITY DISPLAY
+        // 4. Update Main Quantity Display
         if (main.quantity !== undefined) {
             const qtyDisplay = document.getElementById('main-qty-display');
             if (qtyDisplay) qtyDisplay.textContent = main.quantity;
         }
 
-        // UPDATE INGREDIENT QUANTITIES
+        // 5. Update Ingredient/Source Stock Labels
         if (data.sources) {
             data.sources.forEach(s => {
                 const el = document.getElementById(`source-qty-${s.id}`);
-                if (el) el.textContent = s.quantity;
+                if (el) {
+                    el.textContent = s.quantity;
+                    // Visually flag if we run out
+                    const val = parseFloat(s.quantity.replace(/,/g, ''));
+                    // Note: This simple logic might need the recipe's requirement to be truly accurate
+                    // but it helps the UI feel reactive.
+                }
             });
         }
 
-        // UPDATE "USED FOR" QUANTITIES
+        // 6. Update "Used For" Potential Yields
         if (data.used_for) {
+            const currentStock = parseFloat(main.quantity.replace(/,/g, '')) || 0;
             data.used_for.forEach(u => {
                 const box = document.getElementById(`used-yield-${u.id}`);
                 if (!box) return;
-
                 const isPreserve = box.getAttribute('data-preserve') === 'true';
                 const qReq = parseFloat(box.getAttribute('data-q-req'));
-
                 if (!isPreserve && qReq > 0) {
                     const yieldValue = box.querySelector('.yield-value');
                     if (yieldValue) {
@@ -498,7 +489,7 @@
             });
         }
 
-        // UPDATE ATTRIBUTES
+        // 7. Update Attribute Requirements (if they change during play)
         if (data.attribs) {
             data.attribs.forEach(a => {
                 const row = document.getElementById(`attrib-row-${a.attrib_id}-${a.subject_id}`);
@@ -509,7 +500,7 @@
             });
         }
 
-        // UPDATE RECIPES & BUTTONS
+        // 8. Update Recipes & Progress Bars
         if (data.recipes) {
             data.recipes.forEach(r => {
                 const container = document.getElementById(`controls-${r.recipe_id}`);
@@ -518,80 +509,136 @@
                 const startBtn = document.getElementById(`start-${r.recipe_id}`);
                 const stopBtn = document.getElementById(`stop-${r.recipe_id}`);
                 const gainBtn = document.getElementById(`gain-${r.recipe_id}`);
-                const letter = container.getAttribute('data-recipe-hotkey');
-
-                // Toggle visibility based on viability
-                if (!r.can_produce && !(main.is_ongoing && main.active_recipe_id === r.recipe_id)) {
-                    // Show 🚫 icon, hide all buttons
-                    if (!container.querySelector('.info-icon')) {
-                        container.innerHTML = `
-                            <div class="flex-row align-center">
-                                <span class="info-icon" style="cursor: help; font-size: 1.5em;" title="${r.reason}">🚫</span>
-                                <small class="text-dim" style="margin-left: 5px;">Requirements not met</small>
-                            </div>`;
-                    } else {
-                        container.querySelector('.info-icon').setAttribute('title', r.reason);
-                    }
-                    if (letter) delete window.linkForKey[letter];
-                } 
-                else if (r.can_produce || (main.is_ongoing && main.active_recipe_id === r.recipe_id)) {
-                    // We need buttons. If the 🚫 icon is there, we need to rebuild the buttons.
-                    // To keep it simple, if the icon exists, we just reload the page once 
-                    // or surgically re-insert the buttons. 
-                    // For now, let's just update visibility if buttons already exist.
-                    
-                    if (container.querySelector('.info-icon')) {
-                        // SURGICAL REPAIR: If we were blocked and now aren't, 
-                        // a full page reload is safest to get the Jinja macros back.
-                        location.reload(); 
-                        return;
-                    }
-
-                    if (main.is_ongoing && main.active_recipe_id === r.recipe_id) {
-                        if (startBtn) startBtn.classList.add('hidden');
-                        if (stopBtn) stopBtn.classList.remove('hidden');
-                        if (letter) window.linkForKey[letter] = `#stop-${r.recipe_id}`;
-                    } else {
-                        if (startBtn) startBtn.classList.remove('hidden');
-                        if (stopBtn) stopBtn.classList.add('hidden');
-                        if (gainBtn) gainBtn.classList.remove('hidden');
-                        if (letter) window.linkForKey[letter] = gainBtn ? `#gain-${r.recipe_id}` : `#start-${r.recipe_id}`;
-                    }
-                }
-
-                // PROGRESS BAR
                 const progContainer = document.getElementById(`prog-container-${r.recipe_id}`);
                 const progBar = document.getElementById(`prog-bar-${r.recipe_id}`);
                 const progLabel = document.getElementById(`prog-label-${r.recipe_id}`);
 
-                // If THIS recipe is the one currently running
-                if (main.is_ongoing && main.active_recipe_id === r.recipe_id) {
+                // Check if this recipe is the one currently running
+                const isRunning = (
+                    main.is_ongoing && main.active_recipe_id === r.recipe_id);
+
+                if (isRunning) {
+                    if (startBtn) startBtn.classList.add('hidden');
+                    if (gainBtn) gainBtn.classList.add('hidden');
+                    if (stopBtn) stopBtn.classList.remove('hidden');
                     if (progContainer) {
                         progContainer.classList.remove('hidden');
-                        // Calculate %
+                        // Percent calculation
                         if (main.start_time && main.rate_duration) {
                             const startTime = new Date(main.start_time);
                             const now = new Date();
                             const elapsedMs = now - startTime;
                             const durationMs = main.rate_duration * 1000;
-                            const completedBatchesMs = (main.batches || 0) * durationMs;
-                            const elapsedInCurrentBatch = Math.max(0, elapsedMs - completedBatchesMs);
+                            const elapsedInCurrentBatch = elapsedMs % durationMs;
                             const percent = Math.min((elapsedInCurrentBatch / durationMs) * 100, 100);
-                            progBar.value = percent;
+                            if (progBar) progBar.value = percent;
                             if (progLabel) progLabel.textContent = Math.floor(percent) + '%';
                         }
                     }
                 } else {
-                    if (progContainer) {
-                        progContainer.classList.add('hidden');
-                        if (progBar) progBar.value = 0;
+                    // --- INACTIVE STATE ---
+                    if (progContainer) progContainer.classList.add('hidden');
+                    
+                    if (!r.can_produce) {
+                        // If we can't produce, hide buttons and show a message
+                        if (startBtn) startBtn.classList.add('hidden');
+                        if (gainBtn) gainBtn.classList.add('hidden');
+                        if (stopBtn) stopBtn.classList.add('hidden');
+                        
+                        // Check if we already added the 'blocked' message
+                        let msg = container.querySelector('.blocked-msg');
+                        if (!msg) {
+                            msg = document.createElement('small');
+                            msg.className = 'blocked-msg text-dim';
+                            msg.innerHTML = `🚫 Requirements not met`;
+                            msg.title = r.reason;
+                            container.appendChild(msg);
+                        } else {
+                            msg.title = r.reason; // Update reason tooltip
+                        }
+                    } else {
+                        // WE CAN PRODUCE: Restore buttons, remove blocked message
+                        if (startBtn) startBtn.classList.remove('hidden');
+                        if (gainBtn) gainBtn.classList.remove('hidden');
+                        if (stopBtn) stopBtn.classList.add('hidden');
+                        
+                        const msg = container.querySelector('.blocked-msg');
+                        if (msg) msg.remove();
+
+                        // Restore hotkeys
+                        const letter = container.getAttribute('data-recipe-hotkey');
+                        if (letter) {
+                            window.linkForKey[letter] = gainBtn ? `#gain-${r.recipe_id}` : `#start-${r.recipe_id}`;
+                        }
                     }
                 }
             });
         }
-*/
+        {% if not manualtick %}
+            window.productionTimeout = setTimeout(updateStatus, 1500);
+        {% endif %}
     }
-    setInterval(updateStatus, 2000);
+
+    // Heartbeat tick
+
+    {% if manualtick %}
+        let isProcessing = false;
+        let cooldownActive = false;
+        const tickBtn = document.getElementById('debug-tick-btn');
+        function setButtonState(state) {
+            switch (state) {
+                case 'ready':
+                    isProcessing = false;
+                    cooldownActive = false;
+                    tickBtn.style.backgroundColor = "green";
+                    tickBtn.style.cursor = "pointer";
+                    tickBtn.innerText = "RUN TICK [Space]";
+                    break;
+                case 'processing':
+                    isProcessing = true;
+                    tickBtn.style.backgroundColor = "gray";
+                    tickBtn.style.cursor = "not-allowed";
+                    tickBtn.innerText = "Processing...";
+                    break;
+                case 'waiting':
+                    isProcessing = false;
+                    cooldownActive = true;
+                    tickBtn.style.backgroundColor = "gray";
+                    tickBtn.style.cursor = "not-allowed";
+                    tickBtn.innerText = "Waiting...";
+                    break;
+            }
+        }
+        async function manualTick() {
+            // Prevent execution if already running or in cooldown
+            if (isProcessing || cooldownActive) return;
+            setButtonState('processing');
+            try {
+                await updateStatus();
+            } catch (err) {
+                console.error("Tick failed:", err);
+            }
+            // Enter cooldown phase
+            setButtonState('waiting');
+            setTimeout(() => {
+                setButtonState('ready');
+            }, 2000);
+        }
+        document.addEventListener('keydown', (e) => {
+            if (e.code === "Space" && !isProcessing && !cooldownActive) {
+                const active = document.activeElement.tagName;
+                if (!['INPUT', 'TEXTAREA'].includes(active)) {
+                    e.preventDefault();
+                    manualTick();
+                }
+            }
+        });
+        // Initialize state on load
+        setButtonState('ready');
+    {% else %}
+        // Initial call on load
+        updateStatus();
+    {% endif %}
 
     async function startProd(recipeId, targetHostId) {
         const fd = new FormData();

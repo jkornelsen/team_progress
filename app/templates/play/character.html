@@ -40,12 +40,6 @@
         <!-- Navigation & Travel -->
         <section class="outer-border">
             <h3>Status</h3>
-            {% set active_job = character.progress_records | selectattr('is_ongoing', 'equalto', True) | first %}
-            {% if active_job %}
-                <span class="text-accent">Working: {{ active_job.product.name }}</span>
-            {% else %}
-                <span class="label-like">(No ongoing production)</span>
-            {% endif %}
             <div class="status-row">
                 {% if character.location %}
                     {% set target_url = url_for('play.play_location', id=character.location.id, active_char_id=character.id) %}
@@ -111,6 +105,14 @@
                     <progress id="travel-bar" value="0" max="100"></progress>
                     <span id="travel-label" class="progress-label">0%</span>
                 </div>
+            </div>
+            <div>
+                {% set active_job = character.progress_records | selectattr('is_ongoing', 'equalto', True) | first %}
+                {% if active_job %}
+                    <span class="text-accent">Working: {{ active_job.product.name }}</span>
+                {% else %}
+                    <span class="label-like">(No ongoing production)</span>
+                {% endif %}
             </div>
         </section>
 

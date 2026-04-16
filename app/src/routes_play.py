@@ -464,6 +464,10 @@ def play_item(id):
         char_id = req.get_int('char_id') or session.get('old_char_id')
         loc_id = req.get_int('loc_id') or session.get('old_loc_id')
 
+    logger.debug(
+        f"play_item() | Item:{item.id}"
+        f" | Owner:{owner_id} | Char:{char_id} | Loc:{loc_id}")
+
     char = Character.query.get((game_token, char_id)) if char_id else None
     loc = Location.query.get((game_token, loc_id)) if loc_id else None
 
@@ -504,6 +508,7 @@ def play_item(id):
     enriched_recipes = []
     for r in item.recipes:
         best_host_id = find_best_host(r, char_id, loc_id)
+        logger.debug(f'best host {best_host_id}')
         
         # Determine viability for the UI (Greedy check)
         # We check the 'best_host_id' if found, otherwise we check the active character
@@ -721,23 +726,27 @@ def play_item(id):
 # Production Routes
 # ------------------------------------------------------------------------
 
-@play_bp.route('/production/status/host/<int:host_id>')
-def production_status(host_id):
+@play_bp.route('/production/status/item/<int:item_id>/owner/<int:owner_id>', methods=['POST'])
+def item_production_status(item_id, owner_id):
     """
     Heartbeat endpoint to calculate current progress and refresh recipe availability.
-    Returns status for ALL possible hosts of this item (General, Character, Location).
     """
     game_token = g.game_token
-    req = RequestHelper('args')
-    item_id = req.get_int('item_id')
-    owner_id = req.get_int('owner_id')
+    req = RequestHelper('form')
+    
+    # Contextual IDs
+    char_id = req.get_int('char_id')
+    loc_id = req.get_int('loc_id')
+
+    logger.debug(
+        f"[TICK DEBUG] Item:{item_id} | Owner:{owner_id} | "
+        f"Char:{char_id} | Loc:{loc_id}")
 
     # 1. TICK THE WORLD
     # This keeps all hosts (System, Suzy, Bob) in sync.
-    halt_messages = tick_all_active(host_id)
+    tick_all_active()
 
-    # 2. GATHER PAGE DATA
-    # Resolve main item and focus progress
+    # 2. GATHER DATA FOR THE SPECIFIC PILE WE ARE VIEWING
     main_item = Item.query.get((game_token, item_id))
     if not main_item:
         return jsonify({"error": "Item not found"}), 404
@@ -745,23 +754,43 @@ def production_status(host_id):
     main_pile = Pile.query.filter_by(
         game_token=game_token, owner_id=owner_id, item_id=item_id).first()
     
-    host_prog = Progress.query.filter_by(
-        game_token=game_token, host_id=host_id).first()
+    # 3. GATHER PROGRESS FOR ALL POSSIBLE HOSTS
+    # We check if any of our context entities are currently making this item
+    potential_hosts = [GENERAL_ID, char_id, loc_id]
+    all_progs = Progress.query.filter(
+        Progress.game_token == game_token,
+        Progress.product_id == item_id,
+        Progress.host_id.in_([h for h in potential_hosts if h]),
+        Progress.is_ongoing == True
+    ).all()
 
-    # 3. GATHER RECIPES & INGREDIENT TOTALS
+    # Find the 'primary' progress to show the main bar (usually the first one found)
+    active_prog = all_progs[0] if all_progs else None
+    
+    # Create a map so the UI knows which recipe is running on which host
+    prog_map = {p.host_id: p for p in all_progs}
+
+    # 4. GATHER RECIPES & INGREDIENT TOTALS
     recipe_data = []
     source_quantities = {}
     attrib_data = []
 
     for r in main_item.recipes:
-        # Can this specific worker produce this at this location?
-        can_do, reason = can_perform_recipe(host_id, r, 1, owner_id)
+        best_host_id = find_best_host(r, char_id, loc_id)
+        host_id = best_host_id or char_id or loc_id or GENERAL_ID
+
+        can_do, reason = can_perform_recipe(
+            host_id, r, 1, char_id, loc_id)
         recipe_data.append({
-            "recipe_id": r.id, "can_produce": can_do, "reason": reason
+            "recipe_id": r.id, 
+            "host_id": best_host_id,
+            "can_produce": can_do, 
+            "reason": reason
         })
 
         # Where are the ingredients relative to this worker and location?
-        resolved = resolve_recipe_sources(host_id, r, owner_id)
+        resolved = resolve_recipe_sources(
+            host_id, r, char_id=char_id, loc_id=loc_id)
         for res in resolved:
             s_item = res['item']
             source_quantities[s_item.id] = format_num(res['total_available'])
@@ -778,7 +807,7 @@ def production_status(host_id):
                         "value": format_num(av.value)
                     })
 
-    # 4. GATHER "USED TO PRODUCE" DATA
+    # 5. GATHER "USED TO PRODUCE" DATA
     # Assume same owner/context as current page.
     used_for_data = []
     for source_link in main_item.as_ingredient:
@@ -792,13 +821,11 @@ def production_status(host_id):
     return jsonify({
         "main": {
             "quantity": format_num(main_pile.quantity if main_pile else 0),
-            "is_ongoing": bool(host_prog and host_prog.is_ongoing),
-            "active_recipe_id": host_prog.recipe_id if host_prog else None,
-            "batches": host_prog.batches_processed if host_prog else 0,
-            "start_time": host_prog.start_time.isoformat() if (
-                host_prog and host_prog.start_time) else None,
-            "rate_duration": host_prog.recipe.rate_duration if (
-                host_prog and host_prog.is_ongoing) else None
+            "is_ongoing": len(all_progs) > 0,
+            "active_recipe_id": active_prog.recipe_id if active_prog else None,
+            "active_host_id": active_prog.host_id if active_prog else None,
+            "start_time": active_prog.start_time.isoformat() if active_prog else None,
+            "rate_duration": active_prog.recipe.rate_duration if active_prog else None
         },
         "sources": [
             {"id": sid, "quantity": sqty}
@@ -806,34 +833,8 @@ def production_status(host_id):
         "used_for": used_for_data,
         "attribs": attrib_data,
         "recipes": recipe_data,
-        "halt_messages": halt_messages
+        "all_active_hosts": list(prog_map.keys())
     })
-
-@play_bp.route('/production/status/item/<int:item_id>')
-def item_production_status(item_id):
-    """
-    Heartbeat for the item page. 
-    Returns status for ALL possible hosts of this item (General, Character, Location).
-    """
-    game_token = g.game_token
-    # Tick everything to ensure numbers are fresh
-    tick_all_active()
-
-    # Find all ongoing progress for this specific product
-    progress_records = Progress.query.filter_by(
-        game_token=game_token, product_id=item_id, is_ongoing=True).all()
-
-    # Format for JS consumption
-    status_map = {}
-    for p in progress_records:
-        status_map[p.host_id] = {
-            "recipe_id": p.recipe_id,
-            "batches": p.batches_processed,
-            "start_time": p.start_time.isoformat() if p.start_time else None,
-            "rate_duration": p.recipe.rate_duration
-        }
-
-    return jsonify(status_map)
 
 @play_bp.route('/production/start/host/<int:host_id>', methods=['POST'])
 def start_item_production(host_id):

@@ -20,6 +20,10 @@ def find_best_host(recipe, char_id=None, loc_id=None):
     Enforces Storage-Type-Specific Priority to prevent General host 
     from splitting wood or crafting local items.
     """
+    logger.debug(
+        f"find_best_host() | Recipe:{recipe.id}"
+        f" | Char:{char_id} | Loc:{loc_id}")
+
     game_token = g.game_token
     product = Item.query.get((game_token, recipe.product_id))
     if not product:
@@ -111,7 +115,7 @@ def resolve_recipe_sources(
     game_token = g.game_token
     resolved_sources = []
     
-    # Determine Search Horizon
+    # Determine Search IDs
     search_ids = []
     
     if limit_to_channel == GENERAL_ID:
@@ -128,6 +132,8 @@ def resolve_recipe_sources(
         if char_id: search_set.add(char_id)
         if loc_id: search_set.add(loc_id)
         search_ids = list(search_set)
+
+    logger.debug(f"Search IDs: {search_ids}")
 
     char_pos = None
     if host_id != GENERAL_ID:
@@ -155,6 +161,8 @@ def resolve_recipe_sources(
 
         potential_owner_ids = [
             eid for eid in potential_owner_ids if eid in search_ids]
+
+        logger.debug(f"Checking Item:{item.name} (Type:{item.storage_type}) in Owners:{potential_owner_ids}")
 
         # Query existing piles
         all_piles = Pile.query.filter(
@@ -208,6 +216,10 @@ def can_perform_recipe(
     This is now the primary gatekeeper for the General Host restriction.
     """
     game_token = g.game_token
+
+    logger.debug(
+        f"can_perform_recipe() | Recipe:{recipe.id}"
+        f" | Char:{char_id} | Loc:{loc_id}")
 
     # 0. Storage Channel Check
     item_def = Item.query.get((game_token, recipe.product_id))
