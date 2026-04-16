@@ -6,7 +6,7 @@ from app.models import (
     db, Entity, Item, Location, Character, Pile, Progress,
     Recipe, RecipeSource, RecipeByproduct, AttribVal,
     GENERAL_ID, StorageType)
-from app.utils import format_num
+from app.utils import ContextIds
 from app.src.logic_piles import adjust_quantity
 from app.src.logic_user_interaction import add_message
 from app.src.logic_event import check_triggers, TriggerException
@@ -14,25 +14,6 @@ from app.src.logic_production import (
     can_perform_recipe, execute_production)
 
 logger = logging.getLogger(__name__)
-
-def get_elapsed_seconds(progress):
-    """Calculates seconds since production started or last update."""
-    if not progress.start_time:
-        return 0.0
-    
-    # Use naive datetime for comparison (consistent with DB storage)
-    now = datetime.now()
-    start = progress.start_time
-    
-    # Handle both naive and timezone-aware start times by stripping timezone if present
-    if start.tzinfo is not None:
-        start = start.replace(tzinfo=None)
-    if now.tzinfo is not None:
-        now = now.replace(tzinfo=None)
-    
-    elapsed_seconds = (now - start).total_seconds()
-    logger.debug(f"get_elapsed_seconds: now={now}, start={start}, elapsed={elapsed_seconds}s")
-    return elapsed_seconds
 
 def update_progress(progress_id):
     """
@@ -51,16 +32,12 @@ def update_progress(progress_id):
         raise Exception("Expected a recipe that uses duration.")
 
     # 1. Determine Context (For ingredient/attribute lookups)
-    char_id = None
-    loc_id = None
-    host_ent = Entity.query.get((game_token, progress.host_id))
-    if host_ent.entity_type == Character.TYPENAME:
-        char = Character.query.get((game_token, progress.host_id))
-        loc_id = char.location_id
-    elif host_ent.entity_type == Location.TYPENAME:
-        loc_id = host_ent.id
-    elif progress.host_id == GENERAL_ID:
-        loc_id = session.get('old_loc_id')
+    ctx_ids = ContextIds(
+        owner_id=progress.owner_id, 
+        host_id=progress.host_id, 
+        char_id=progress.char_id, 
+        loc_id=progress.loc_id
+    )
 
     # 2. Timing Calculation
     elapsed = get_elapsed_seconds(progress)
@@ -82,7 +59,7 @@ def update_progress(progress_id):
         logger.debug(
             f"[TICK] Host:{progress.host_id} Recipe:{recipe.id} batches:{new_batches}")
         actual_done, halt_reason = execute_production(
-            progress.host_id, recipe, new_batches, loc_id=loc_id)
+            progress.host_id, recipe, progress.owner_id, ctx_ids, new_batches)
         
         progress.batches_processed += actual_done
 
@@ -91,7 +68,7 @@ def update_progress(progress_id):
     # check if the NEXT batch is possible.
     if not halt_reason:
         possible, reason = can_perform_recipe(
-            progress.host_id, recipe, 1, loc_id=loc_id)
+            progress.host_id, recipe, progress.owner_id, ctx_ids)
         if not possible:
             halt_reason = reason
 
@@ -105,11 +82,30 @@ def update_progress(progress_id):
     db.session.commit()
     return halt_reason
 
-def tick_all_active(focus_host_id=None):
+def get_elapsed_seconds(progress):
+    """Calculates seconds since production started or last update."""
+    if not progress.start_time:
+        return 0.0
+    
+    # Use naive datetime for comparison (consistent with DB storage)
+    now = datetime.now()
+    start = progress.start_time
+    
+    # Handle both naive and timezone-aware start times by stripping timezone if present
+    if start.tzinfo is not None:
+        start = start.replace(tzinfo=None)
+    if now.tzinfo is not None:
+        now = now.replace(tzinfo=None)
+    
+    elapsed_seconds = (now - start).total_seconds()
+    logger.debug(f"get_elapsed_seconds: now={now}, start={start}, elapsed={elapsed_seconds}s")
+    return elapsed_seconds
+
+def tick_all_active(messages_host_id=None):
     """
     Ticks every active production record in the current game session.
     
-    - focus_host_id: (Optional) If provided, returns a list of halt 
+    - messages_host_id: If provided, returns a list of halt 
       reasons specifically for this host.
     """
     game_token = g.game_token
@@ -121,12 +117,12 @@ def tick_all_active(focus_host_id=None):
     halt_messages = []
     for p in all_active:
         reason = update_progress(p.id)
-        if reason and focus_host_id and p.host_id == focus_host_id:
+        if reason and messages_host_id and p.host_id == messages_host_id:
             halt_messages.append(reason)
             
     return halt_messages
 
-def start_production(host_id, recipe_id, char_id=None, loc_id=None):
+def start_production(host_id, recipe_id, owner_id, ctx):
     """Initializes a Progress record for an Entity."""
     game_token = g.game_token
     recipe = Recipe.query.get((game_token, recipe_id))
@@ -134,7 +130,7 @@ def start_production(host_id, recipe_id, char_id=None, loc_id=None):
     
     # Check if we can even start the first batch
     possible, reason = can_perform_recipe(
-        host_id, recipe, char_id=char_id, loc_id=loc_id)
+        host_id, recipe, owner_id, ctx)
     if not possible:
         return False, reason
 
@@ -166,12 +162,15 @@ def start_production(host_id, recipe_id, char_id=None, loc_id=None):
     if not progress:
         progress = Progress(
             game_token=game_token,
-            host_id=host_id, 
-            product_id=recipe.product_id)
+            recipe_id=recipe.id,
+            product_id=recipe.product_id,
+            owner_id=owner_id,
+            host_id=host_id,
+            char_id=ctx.char_id,
+            loc_id=ctx.loc_id)
         db.session.add(progress)
 
-    progress.recipe_id = recipe_id
-    progress.start_time = datetime.now()  # Naive datetime, consistent with DB storage
+    progress.start_time = datetime.now()
     progress.batches_processed = 0
     progress.is_ongoing = True
     progress.stop_time = None

@@ -583,8 +583,8 @@ class Pile(db.Model, DictHydrator):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     # Still important for foreign keys
     game_token = db.Column(db.String(50), index=True, nullable=False)
-    owner_id = db.Column(db.Integer)
-    item_id = db.Column(db.Integer)
+    owner_id = db.Column(db.Integer, nullable=False)
+    item_id = db.Column(db.Integer, nullable=False)
     # not relevant for universal storage
     position = db.Column(ARRAY(db.Integer), default=None)
     quantity = db.Column(db.Float, nullable=False, default=0.0)
@@ -1214,10 +1214,17 @@ class Progress(db.Model, DictHydrator):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     game_token = db.Column(db.String(50), index=True, nullable=False)
     
-    host_id = db.Column(db.Integer, nullable=False)
+    # what we're making
     recipe_id = db.Column(db.Integer, nullable=False)
-    product_id = db.Column(db.Integer, nullable=False) # copy recipe.product_id
+    product_id = db.Column(db.Integer, nullable=False) # recipe.product_id copy
+    owner_id = db.Column(db.Integer, nullable=False)
+
+    # who is involved -- they must still be present and have ingredients
+    host_id = db.Column(db.Integer, nullable=False)
+    char_id = db.Column(db.Integer)
+    loc_id = db.Column(db.Integer)
     
+    # status
     start_time = db.Column(db.DateTime)
     stop_time = db.Column(db.DateTime)
     batches_processed = db.Column(db.Integer, default=0)
@@ -1225,8 +1232,11 @@ class Progress(db.Model, DictHydrator):
 
     def to_dict(self):
         return {
-            "host_id": self.host_id,
             "recipe_id": self.recipe_id,
+            "owner_id": self.owner_id,
+            "host_id": self.host_id,
+            "char_id": self.char_id,
+            "loc_id": self.loc_id,
             "start_time": self.start_time,
             "stop_time": self.stop_time,
             "batches_processed": self.batches_processed,
@@ -1249,11 +1259,14 @@ class Progress(db.Model, DictHydrator):
 
     __table_args__ = (
         db.ForeignKeyConstraint(
-            ['game_token', 'host_id'],
-            ['entities.game_token', 'entities.id'], ondelete='CASCADE'),
-        db.ForeignKeyConstraint(
             ['game_token', 'recipe_id'],
             ['recipes.game_token', 'recipes.id'], ondelete='CASCADE'),
+        db.ForeignKeyConstraint(
+            ['game_token', 'product_id'],
+            ['items.game_token', 'items.id'], ondelete='CASCADE'),
+        db.ForeignKeyConstraint(
+            ['game_token', 'host_id'],
+            ['entities.game_token', 'entities.id'], ondelete='CASCADE'),
          db.UniqueConstraint(
             'game_token', 'host_id', 'product_id', name='_host_product_uc'),
     )

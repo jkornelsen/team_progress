@@ -8,7 +8,7 @@ from app.models import (
     Progress, Overall, WinRequirement, GameMessage,
     GENERAL_ID, StorageType, Participant)
 from app.utils import (
-    RequestHelper, format_num, parse_coords, LinkLetters,
+    RequestHelper, ContextIds, format_num, parse_coords, LinkLetters,
     capture_origin, redirect_back)
 from .logic_piles import transfer_item
 from .logic_event import (
@@ -420,12 +420,13 @@ def char_travel(id):
 def play_item(id):
     req = RequestHelper('args')
     game_token = g.game_token
-    
+
     item = Item.query.get_or_404((game_token, id))
     capture_origin(name=item.name)
 
-    # RESOLVE THE OWNER (The viewed pile)
-    owner_id = request.args.get('owner_id', type=int)
+    # Determine Viewed Pile Owner
+    # This is the pile displayed at the top of the page.
+    owner_id = req.get_int('owner_id')
     if not owner_id:
         # Default fallback based on how the item is stored
         if item.storage_type == StorageType.UNIVERSAL:
@@ -437,39 +438,33 @@ def play_item(id):
 
     owner = Entity.query.get((game_token, owner_id))
     
-    # INFER ACTIVE CONTEXT FROM OWNER
-    char_id = None
-    loc_id = None
+    # Capture and Clean Context
+    ctx = ContextIds(
+        owner_id,
+        req.get_int('char_id') or session.get('old_char_id'),
+        req.get_int('loc_id') or session.get('old_loc_id')
+    )
     if owner.entity_type == Character.TYPENAME:
-        # If viewing a character, they are the actor.
-        char_id = owner.id
-        # Their environment is where they are standing.
-        loc_id = owner.location_id
-        session['old_char_id'] = char_id
-        session['old_loc_id'] = loc_id
+        ctx.char_id = owner.id
+        ctx.loc_id = owner.location_id
+        session['old_char_id'] = owner.id
+        session['old_loc_id'] = owner.location_id
     elif owner.entity_type == Location.TYPENAME:
-        # If viewing a location, it is the environment.
-        loc_id = owner.id
-        session['old_loc_id'] = loc_id
-        # The actor is whoever was last active or explicitly passed.
-        char_id = req.get_int('char_id') or session.get('old_char_id')
-        
-        # Clear character if they aren't here
-        if char_id:
-            char = Character.query.get((game_token, char_id))
-            if not char or char.location_id != loc_id:
-                char_id = None
-    else: # General Storage (ID 1)
-        # Actor and Loc must come from session/args.
-        char_id = req.get_int('char_id') or session.get('old_char_id')
-        loc_id = req.get_int('loc_id') or session.get('old_loc_id')
+        ctx.loc_id = owner.id
+        session['old_loc_id'] = owner.id
+        if ctx.char_id:
+            # Clear character if they aren't here
+            char = Character.query.get((game_token, ctx.char_id))
+            if not char or char.location_id != owner.id:
+                ctx.char_id = None
+                del session['old_char_id']
 
     logger.debug(
-        f"play_item() | Item:{item.id}"
-        f" | Owner:{owner_id} | Char:{char_id} | Loc:{loc_id}")
+        f"play_item() | Item:{item.id} | Owner:{owner.id}"
+        f" | Char:{ctx.char_id} | Loc:{ctx.loc_id}")
 
-    char = Character.query.get((game_token, char_id)) if char_id else None
-    loc = Location.query.get((game_token, loc_id)) if loc_id else None
+    char = Character.query.get((game_token, ctx.char_id)) if ctx.char_id else None
+    loc = Location.query.get((game_token, ctx.loc_id)) if ctx.loc_id else None
 
     # Fetch the specific Pile record
     query = Pile.query.filter_by(
@@ -484,47 +479,43 @@ def play_item(id):
         query = query.filter_by(position=pos)
     pile = query.first()
 
-    # If no pile exists yet, create a virtual one for the UI
+    # If no pile exists yet, create a virtual one
     if not pile:
         pile = Pile(item_id=id, owner_id=owner.id, quantity=0.0, position=pos)
 
     # Collect all relevant entities for attribute checking
-    all_relevant_entities = set()
+    all_attribreq_entity_ids = set()
     if owner.id != GENERAL_ID:
-        all_relevant_entities.add(owner.id)
-    if char_id:
-        all_relevant_entities.add(char_id)
-    if loc_id:
-        all_relevant_entities.add(loc_id)
+        all_attribreq_entity_ids.add(owner.id)
+    if ctx.addl_char_id:
+        all_attribreq_entity_ids.add(ctx.char_id)
+    if ctx.addl_loc_id:
+        all_attribreq_entity_ids.add(ctx.loc_id)
 
     # Recipes that PRODUCE this item
     # Enriched allows UI to show 🚫 icon and specific reason tooltip.
     all_attrib_vals = AttribVal.query.filter(
         AttribVal.game_token == game_token,
-        AttribVal.subject_id.in_(all_relevant_entities)
+        AttribVal.subject_id.in_(all_attribreq_entity_ids)
     ).all()
     attribval_lookup = {(av.subject_id, av.attrib_id): av for av in all_attrib_vals}
 
     enriched_recipes = []
     for r in item.recipes:
-        best_host_id = find_best_host(r, char_id, loc_id)
-        logger.debug(f'best host {best_host_id}')
+        host_id = find_best_host(r, owner.id, ctx)
+        logger.debug(f'host {host_id}')
         
         # Determine viability for the UI (Greedy check)
-        # We check the 'best_host_id' if found, otherwise we check the active character
-        ui_host_id = best_host_id or char_id or loc_id or GENERAL_ID
-        can_do, reason = can_perform_recipe(ui_host_id, r, loc_id=loc_id)
-
-        resolved_ingredients = resolve_recipe_sources(
-            ui_host_id, r, loc_id=loc_id)
+        can_do, reason = can_perform_recipe(host_id, r, owner.id, ctx)
+        resolved_ingredients = resolve_recipe_sources(host_id, r, ctx)
         
         sources_ui_data = []
         for res in resolved_ingredients:
             url_params = { 'owner_id': res['anticipated_owner_id'] }
-            if char_id and res['anticipated_owner_type'] != Character.TYPENAME:
-                url_params['char_id'] = char_id
-            elif loc_id and res['anticipated_owner_id'] == GENERAL_ID:
-                url_params['loc_id'] = loc_id
+            if ctx.addl_char_id and res['anticipated_owner_type'] != Character.TYPENAME:
+                url_params['char_id'] = ctx.char_id
+            elif ctx.addl_loc_id and res['anticipated_owner_id'] == GENERAL_ID:
+                url_params['loc_id'] = ctx.loc_id
             if res['representative_pile'] and res['representative_pile'].position:
                 url_params['pos[]'] = res['representative_pile'].position
 
@@ -539,19 +530,19 @@ def play_item(id):
             })
 
         # Check attribute requirements against all relevant entities
-        relevant_entities = set()
+        attribreq_entity_ids = set()
         if owner.id != GENERAL_ID:
-            relevant_entities.add(owner.id)
-        if char_id:
-            relevant_entities.add(char_id)
-        if loc_id:
-            relevant_entities.add(loc_id)
+            attribreq_entity_ids.add(owner.id)
+        if ctx.addl_char_id:
+            attribreq_entity_ids.add(ctx.char_id)
+        if ctx.addl_loc_id:
+            attribreq_entity_ids.add(ctx.loc_id)
         
         # Add any entities that provide ingredients
         for res in resolved_ingredients:
             if res['anticipated_owner_id'] != GENERAL_ID:
-                relevant_entities.add(res['anticipated_owner_id'])
-                all_relevant_entities.add(res['anticipated_owner_id'])
+                attribreq_entity_ids.add(res['anticipated_owner_id'])
+                all_attribreq_entity_ids.add(res['anticipated_owner_id'])
         
         attrib_reqs_ui_data = []
         for req in r.attrib_reqs:
@@ -560,7 +551,7 @@ def play_item(id):
             satisfying_entity = None
             entity_with_value = None
             
-            for entity_id in relevant_entities:
+            for entity_id in attribreq_entity_ids:
                 av = attribval_lookup.get((entity_id, req.attrib_id), 0.0)
                 if av:
                     if req.in_range(av.value):
@@ -584,11 +575,11 @@ def play_item(id):
                 'link_entity_id': link_entity_id
             })
 
-        host_ent = Entity.query.get((game_token, best_host_id)) if best_host_id else None
+        host_ent = Entity.query.get((game_token, host_id)) if host_id else None
 
         enriched_recipes.append({
             'id': r.id,
-            'host_id': best_host_id,
+            'host_id': host_id,
             'host_name': host_ent.name if host_ent else "No Host",
             'rate_amount': r.rate_amount,
             'rate_duration': r.rate_duration,
@@ -615,12 +606,6 @@ def play_item(id):
         r_data['max_batches'] = max(1, max_val) if r_data['can_produce'] else 0
 
     # Recipes where this item is a SOURCE (Ingredient)
-    url_params = {}
-    if char_id:
-        url_params['char_id'] = char_id
-    elif loc_id:
-        url_params['loc_id'] = loc_id
-
     used_for_production = []
     for source_link in item.as_ingredient:
         product = source_link.recipe.product
@@ -629,7 +614,7 @@ def play_item(id):
                 'item': product,
                 'q_required': source_link.q_required,
                 'preserve': source_link.preserve,
-                'url_params': url_params
+                'url_params': ctx.get_params()
             })
 
     # Recipes where this item is a BYPRODUCT
@@ -639,7 +624,7 @@ def play_item(id):
         byproduct_of.append({
             'item': product,
             'rate_amount': byproduct_link.rate_amount,
-            'url_params': url_params
+            'url_params': ctx.get_params()
         })
 
     # Check for active progress
@@ -697,7 +682,7 @@ def play_item(id):
         attribreq_entities[char.id] = char
     if loc:
         attribreq_entities[loc.id] = char
-    for entity_id in all_relevant_entities:
+    for entity_id in all_attribreq_entity_ids:
         if entity_id not in attribreq_entities and entity_id != GENERAL_ID:
             entity = Entity.query.get((game_token, entity_id))
             if entity:
@@ -737,6 +722,7 @@ def item_production_status(item_id, owner_id):
     # Contextual IDs
     char_id = req.get_int('char_id')
     loc_id = req.get_int('loc_id')
+    ctx = ContextIds(owner_id, char_id, loc_id)
 
     logger.debug(
         f"[TICK DEBUG] Item:{item_id} | Owner:{owner_id} | "
@@ -776,21 +762,19 @@ def item_production_status(item_id, owner_id):
     attrib_data = []
 
     for r in main_item.recipes:
-        best_host_id = find_best_host(r, char_id, loc_id)
-        host_id = best_host_id or char_id or loc_id or GENERAL_ID
-
+        host_id = find_best_host(r, owner_id, ctx)
         can_do, reason = can_perform_recipe(
-            host_id, r, 1, char_id, loc_id)
+            host_id, r, owner_id, ctx)
         recipe_data.append({
             "recipe_id": r.id, 
-            "host_id": best_host_id,
+            "host_id": host_id,
             "can_produce": can_do, 
             "reason": reason
         })
 
         # Where are the ingredients relative to this worker and location?
         resolved = resolve_recipe_sources(
-            host_id, r, char_id=char_id, loc_id=loc_id)
+            host_id, r, ctx)
         for res in resolved:
             s_item = res['item']
             source_quantities[s_item.id] = format_num(res['total_available'])
@@ -798,8 +782,10 @@ def item_production_status(item_id, owner_id):
         # Collect attribute values used in these recipes
         for req_attr in r.attrib_reqs:
             # Check host, owner, and context for this attribute
-            for eid in set([host_id, owner_id, GENERAL_ID]):
-                av = AttribVal.query.filter_by(game_token=game_token, subject_id=eid, attrib_id=req_attr.attrib_id).first()
+            for eid in ctx.unique_ids(host_id, owner_id, GENERAL_ID):
+                av = AttribVal.query.filter_by(
+                    game_token=game_token, subject_id=eid,
+                    attrib_id=req_attr.attrib_id).first()
                 if av:
                     attrib_data.append({
                         "attrib_id": av.attrib_id, 
@@ -844,10 +830,14 @@ def start_item_production(host_id):
     owner_id = req.get_int('owner_id')
 
     owner = Entity.query.get((game_token, owner_id))
-    char_id = owner_id if owner.entity_type == Character.TYPENAME else None
-    loc_id = owner_id if owner.entity_type == Location.TYPENAME else None
+    ctx = ContextIds(
+        owner.id,
+        owner.id if owner.entity_type == Character.TYPENAME else None,
+        owner.id if owner.entity_type == Location.TYPENAME else None,
+    )
 
-    success, message = start_production(host_id, recipe_id, char_id, loc_id)
+    success, message = start_production(
+        host_id, recipe_id, owner_id, ctx)
     return jsonify({
         "status": "success" if success else "error", 
         "message": message
@@ -866,13 +856,20 @@ def instant_item_production(host_id):
     recipe_id = req.get_int('recipe_id')
     num_batches = req.get_int('batches')
 
+    ctx = ContextIds(
+        owner_id,
+        session.get('old_char_id'),
+        session.get('old_loc_id'),
+        host_id
+    )
+
     recipe = Recipe.query.get((g.game_token, recipe_id))
     if not recipe:
         return jsonify({"status": "error", "message": "Recipe not found."})
 
     # Perform production
     actual_done, halt_reason = execute_production(
-        host_id, recipe, num_batches, owner_id)
+        host_id, recipe, owner_id, ctx, batches=num_batches)
     
     if actual_done > 0:
         db.session.commit()

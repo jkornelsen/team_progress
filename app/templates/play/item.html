@@ -53,18 +53,13 @@
                     <span class="label-like">[{{ pile.position | join(",") }}]</span>
                 {% endif %}
             {% endif %}
-            {% for ctx_entity in [char, loc] if ctx_entity and ctx_entity.id != owner.id %}
+            {% for ctx_entity in [char, loc] if ctx_entity and ctx_entity.id != owner.id
+                    and not (ctx_entity == loc and char) %}
                 , active {{ ctx_entity.SHORT }}
                 {% set target_url = url_for('play.play_' ~ ctx_entity.entity_type, id=ctx_entity.id) %}
                 {% call hk.hotlink(target_url, link_letters, brackets=True) %}
                     {{ ctx_entity.name }}
                 {% endcall %}
-                <!--
-                (Doesn't work and maybe not needed anyway)
-                <a href="{{ url_for(request.endpoint, id=item.id, char_id=0) }}" 
-                   class="label-like" 
-                   title="Clear {{ ctx_entity.TYPENAME.capitalize() }} Context"> [x] </a>
-                -->
             {% endfor %}
         </span>
         

@@ -6,6 +6,7 @@ from flask import g, session, request, url_for, redirect
 from markupsafe import Markup
 import bleach
 from bleach.css_sanitizer import CSSSanitizer
+from .models import GENERAL_ID
 
 logger = logging.getLogger(__name__)
 
@@ -329,6 +330,74 @@ def parse_coords(coord_str, required_len=2):
 def mask_string(s):
     """Replaces letters and numbers with bullets."""
     return ''.join('•' if c.isalnum() else c for c in s)
+
+# ------------------------------------------------------------------------
+# IDs Logic
+# ------------------------------------------------------------------------
+
+class ContextIds:
+    def __init__(self, owner_id=None, char_id=None, loc_id=None, host_id=None):
+        self.owner_id = owner_id
+        self.char_id = char_id
+        self.loc_id = loc_id
+        self.host_id = host_id
+
+    def clone(self, **overrides):
+        params = {
+            'owner_id': self.owner_id,
+            'char_id': self.char_id,
+            'loc_id': self.loc_id,
+            'host_id': self.host_id
+        }
+        params.update(overrides)
+        return ContextIds(**params)
+
+    @property
+    def addl_char_id(self):
+        """Is the char id additional info besides owner id."""
+        return self.char_id and self.char_id != self.owner_id
+
+    @property
+    def addl_loc_id(self):
+        """Is the loc id additional info besides owner id."""
+        return self.loc_id and self.loc_id != self.owner_id
+
+    @property
+    def best_char_id(self):
+        """
+        Priority order for character identity:
+        1. Specific character provided (char_id)
+        2. The host of the current action (host_id)
+        3. The owner of the context (owner_id)
+        This is only a guess because we don't check if host or owner are chars.
+        """
+        return self.char_id or self.host_id or self.owner_id
+
+    def get_params(self):
+        """Returns a dict of non-redundant IDs useful for unpacking
+        in url_for: **ctx_ids.get_params()
+        """
+        params = {}
+        if self.addl_char_id:
+            params['char_id'] = self.char_id
+        if self.addl_loc_id:
+            params['loc_id'] = self.loc_id
+        return params
+
+    @staticmethod
+    def not_general(id):
+        return id if id and id != GENERAL_ID else None
+
+    @staticmethod
+    def unique_ids(*values):
+        """Return unique, non-falsy IDs, preserving order."""
+        seen = set()
+        result = []
+        for v in values:
+            if v and v not in seen:
+                seen.add(v)
+                result.append(v)
+        return result
 
 # ------------------------------------------------------------------------
 # HTML Sanitization Filter

@@ -4,110 +4,72 @@ from datetime import datetime, timezone
 from flask import g, session
 from app.models import (
     db, Entity, Item, Location, Character, Pile, Progress,
-    Recipe, RecipeSource, RecipeByproduct, AttribVal,
-    GENERAL_ID, StorageType)
-from app.utils import format_num
+    Recipe, AttribVal, GENERAL_ID, StorageType)
 from app.src.logic_piles import adjust_quantity
 from app.src.logic_navigation import is_adjacent
-from app.src.logic_user_interaction import add_message
-from app.src.logic_event import check_triggers, TriggerException
 
 logger = logging.getLogger(__name__)
 
-def find_best_host(recipe, char_id=None, loc_id=None):
+def can_perform_recipe(
+        host_id, recipe, target_owner_id, ctx, batches=1,
+        limit_to_channel=None):
     """
-    Determines the host according to priority with strict channel checks.
-    Enforces Storage-Type-Specific Priority to prevent General host 
-    from splitting wood or crafting local items.
+    Validates if a host can perform a recipe. 
+    Checks Storage limits, Ingredients, and Attributes.
     """
+    game_token = g.game_token
+
     logger.debug(
-        f"find_best_host() | Recipe:{recipe.id}"
-        f" | Char:{char_id} | Loc:{loc_id}")
+        f"can_perform_recipe() | Product:{recipe.product_id}"
+        f" | Char:{ctx.char_id} | Loc:{ctx.loc_id}")
 
-    game_token = g.game_token
-    product = Item.query.get((game_token, recipe.product_id))
-    if not product:
-        return None
+    # Character hosts can only use nearby piles
+    host_pos = None
+    if host_id != GENERAL_ID: # slightly more efficient
+        char = Character.query.get((game_token, host_id))
+        if char:
+            host_pos = char.position
 
-    # Pre-calculate viability for each available channel
-    
-    # Character (Local Context)
-    can_char = False
-    if char_id:
-        can_char, _ = can_perform_recipe(
-            char_id, recipe, loc_id=loc_id,
-            limit_to_channel=Character.TYPENAME)
+    # 1. Output Limit
+    if recipe.product.q_limit > 0:
+        query = Pile.query.filter_by(
+            game_token=game_token,
+            item_id=recipe.product_id,
+            owner_id=target_owner_id
+        )
+        if host_pos is not None:
+            query = query.filter_by(position=host_pos)
+        current_pile = query.first()
 
-    # Location (Ground only)
-    can_loc = False
-    if loc_id:
-        can_loc, _ = can_perform_recipe(
-            loc_id, recipe, limit_to_channel=Location.TYPENAME)
+        if current_pile and current_pile.quantity >= recipe.product.q_limit:
+            return False, "Storage limit reached."
 
-    # PRIORITY LOGIC
-    # Branch 1: Product is Universal (Currency, Global Upgrades, etc.)
-    if product.storage_type == StorageType.UNIVERSAL:
-        # General (Universal only)
-        # We only check this for universal products.
-        can_gen, _ = can_perform_recipe(
-            GENERAL_ID, recipe, limit_to_channel=GENERAL_ID)
-        
-        # Priority: System Efficiency (General Storage) -> Salience (Active Character)
-        if can_gen: return GENERAL_ID
-        if can_char: return char_id
-        if can_loc: return loc_id
-    
-    # Branch 2: Product is Carried or Local (Tools, Resources, Structures)
-    else:
-        # Priority: Actor Presence -> Workshop Presence
-        # General host (Host ID 1) is STRICTLY FORBIDDEN for non-universal items.
-        if can_char: return char_id
-        if can_loc: return loc_id
+    # 2. Ingredient Availability
+    resolved = resolve_recipe_sources(
+        host_id, recipe, ctx, limit_to_channel)
+    for res in resolved:
+        required = res['source_def'].q_required * batches
+        if res['total_available'] < required:
+            return False, f"Missing {res['item'].name}."
 
-    return None
-    
-def get_production_target(item, host_id, char_id=None, loc_id=None):
-    """
-    Determines where a produced item should be placed based on its StorageType.
-    
-    Returns: The Entity ID of the container, or None if the combination is invalid.
-    """
-    game_token = g.game_token
+    # 3. Attribute Requirements
+    relevant_ids = ctx.unique_ids(
+        GENERAL_ID, host_id, ctx.owner_id, ctx.char_id, ctx.loc_id)
+    for req in recipe.attrib_reqs:
+        req_met = False
+        for eid in relevant_ids:
+            if not eid: continue
+            av = AttribVal.query.filter_by(
+                game_token=game_token, subject_id=eid, attrib_id=req.attrib_id).first()
+            if av and req.in_range(av.value):
+                req_met = True
+                break
+        if not req_met:
+            return False, f"Requires {req.attrib.name} {req.range_display}"
 
-    # 1. Universal items ALWAYS go to General Storage (ID 1)
-    if item.storage_type == StorageType.UNIVERSAL:
-        return GENERAL_ID
-    
-    # 2. Security Check: The General Storage (Host ID 1) is a singleton logic
-    # runner that only handles Universal products. It cannot "own" local items.
-    # This prevents Host 1 from splitting wood into a specific location.
-    if host_id == GENERAL_ID:
-        logger.warning(
-            f"Blocked General host from producing non-universal item {item.id}")
-        return None
+    return True, ""
 
-    # 3. Handle Local/Stationary Items (Workshops, Chests)
-    if item.storage_type == StorageType.LOCAL:
-        # Context is paramount. If hosted by character, goes to their current floor.
-        ent = Entity.query.get((game_token, host_id))
-        if ent and ent.entity_type == Location.TYPENAME:
-            return host_id
-        if ent and ent.entity_type == Character.TYPENAME:
-            char = Character.query.get((game_token, host_id))
-            return char.location_id
-        return char_id or loc_id
-
-    # 4. Handle Carried/Portable Items (Inventory)
-    # Carried items go to the Host if the host is a character, 
-    # otherwise they land at the location (context).
-    ent = Entity.query.get((game_token, host_id))
-    if ent and ent.entity_type == Character.TYPENAME:
-        return host_id
-
-    return char_id or loc_id or host_id
-
-def resolve_recipe_sources(
-        host_id, recipe, char_id=None, loc_id=None, limit_to_channel=None):
+def resolve_recipe_sources(host_id, recipe, ctx, limit_to_channel=None):
     """
     Find where ingredients are located.
     Respects StorageType restrictions and visibility channels.
@@ -116,30 +78,25 @@ def resolve_recipe_sources(
     resolved_sources = []
     
     # Determine Search IDs
-    search_ids = []
-    
+    search_ids = {}
     if limit_to_channel == GENERAL_ID:
-        search_ids = [GENERAL_ID]
+        search_ids.add(GENERAL_ID)
     elif limit_to_channel == Character.TYPENAME:
-        search_ids = [host_id]
-        if loc_id: search_ids.append(loc_id)
+        search_ids = ctx.unique_ids(host_id, ctx.char_id)
     elif limit_to_channel == Location.TYPENAME:
-        search_ids = [host_id]
+        search_ids = ctx.unique_ids(host_id, ctx.loc_id)
     else:
         # Greedy Mode (Default)
-        search_set = {GENERAL_ID}
-        if host_id: search_set.add(host_id)
-        if char_id: search_set.add(char_id)
-        if loc_id: search_set.add(loc_id)
-        search_ids = list(search_set)
-
+        search_ids = ctx.unique_ids(
+            GENERAL_ID, host_id, ctx.owner_id, ctx.char_id, ctx.loc_id)
     logger.debug(f"Search IDs: {search_ids}")
 
-    char_pos = None
-    if host_id != GENERAL_ID:
+    # Character hosts can only use nearby piles
+    host_pos = None
+    if host_id != GENERAL_ID: # slightly more efficient
         char = Character.query.get((game_token, host_id))
         if char:
-            char_pos = char.position
+            host_pos = char.position
 
     for source in recipe.sources:
         item = source.ingredient
@@ -148,21 +105,20 @@ def resolve_recipe_sources(
         if item.storage_type == StorageType.UNIVERSAL:
             potential_owner_ids = [GENERAL_ID]
         elif item.storage_type == StorageType.LOCAL:
-            potential_owner_ids = [loc_id] if loc_id else []
+            potential_owner_ids = ctx.unique_ids(ctx.loc_id)
         elif item.storage_type == StorageType.CARRIED:
             # Look in the character's bag, or on the ground at the location
-            potential_owner_ids = []
-            if host_id and host_id != GENERAL_ID:
-                potential_owner_ids.append(host_id)
-            if char_id and char_id not in potential_owner_ids:
-                potential_owner_ids.append(char_id)
-            if loc_id and loc_id not in potential_owner_ids:
-                potential_owner_ids.append(loc_id)
+            potential_owner_ids = ctx.unique_ids(
+                ctx.not_general(host_id),
+                ctx.not_general(ctx.owner_id),
+                ctx.char_id, ctx.loc_id)
 
         potential_owner_ids = [
             eid for eid in potential_owner_ids if eid in search_ids]
 
-        logger.debug(f"Checking Item:{item.name} (Type:{item.storage_type}) in Owners:{potential_owner_ids}")
+        logger.debug(
+            f"Checking Item:{item.name} (Type:{item.storage_type})"
+            f" in Owners:{potential_owner_ids}")
 
         # Query existing piles
         all_piles = Pile.query.filter(
@@ -174,8 +130,8 @@ def resolve_recipe_sources(
         # Adjacency check for grid-based locations
         valid_piles = []
         for p in all_piles:
-            if p.position and char_pos:
-                if is_adjacent(char_pos, p.position):
+            if p.position and host_pos:
+                if is_adjacent(host_pos, p.position):
                     valid_piles.append(p)
             else:
                 valid_piles.append(p)
@@ -187,7 +143,7 @@ def resolve_recipe_sources(
         if valid_piles:
             def sort_priority(p):
                 if p.owner_id == host_id: return 0
-                if p.owner_id == loc_id: return 1
+                if p.owner_id == ctx.loc_id: return 1
                 return 2
             sorted_piles = sorted(valid_piles, key=sort_priority)
             representative_pile = sorted_piles[0]
@@ -209,85 +165,92 @@ def resolve_recipe_sources(
 
     return resolved_sources
 
-def can_perform_recipe(
-        host_id, recipe, batches=1, char_id=None, loc_id=None, limit_to_channel=None):
+def find_best_host(recipe, owner_id, ctx):
     """
-    Validates if a host can perform a recipe. 
-    This is now the primary gatekeeper for the General Host restriction.
+    Determines the host according to priority with strict channel checks.
+    Enforces Storage-Type-Specific Priority to prevent General host 
+    from splitting wood or crafting local items.
     """
-    game_token = g.game_token
-
     logger.debug(
-        f"can_perform_recipe() | Recipe:{recipe.id}"
-        f" | Char:{char_id} | Loc:{loc_id}")
+        f"find_best_host() | Product:{recipe.product_id}"
+        f" | Char:{ctx.char_id} | Loc:{ctx.loc_id}")
 
-    # 0. Storage Channel Check
-    item_def = Item.query.get((game_token, recipe.product_id))
-    target_id = get_production_target(item_def, host_id, char_id, loc_id)
-    if not target_id:
-        return False, "Invalid host for this item type."
+    game_token = g.game_token
+    product = Item.query.get((game_token, recipe.product_id))
+    if not product:
+        return None
 
-    # 1. Output Limit
-    if item_def.q_limit > 0:
-        current_pile = Pile.query.filter_by(
-            game_token=game_token, owner_id=target_id, item_id=recipe.product_id
-        ).first()
-        if current_pile and current_pile.quantity >= item_def.q_limit:
-            return False, "Storage limit reached."
+    # Pre-calculate viability for each available channel
+    
+    # Character (Local Context)
+    can_char = False
+    if ctx.char_id:
+        can_char, _ = can_perform_recipe(
+            ctx.char_id, recipe, owner_id, ctx,
+            limit_to_channel=Character.TYPENAME)
 
-    # 2. Ingredient Availability
-    resolved = resolve_recipe_sources(
-        host_id, recipe, char_id, loc_id, limit_to_channel)
-    for res in resolved:
-        required = res['source_def'].q_required * batches
-        if res['total_available'] < required:
-            return False, f"Missing {res['item'].name}."
+    # Location (Ground only)
+    can_loc = False
+    if ctx.loc_id:
+        can_loc, _ = can_perform_recipe(
+            ctx.loc_id, recipe, owner_id, ctx,
+            limit_to_channel=Location.TYPENAME)
 
-    # 3. Attribute Requirements
-    relevant_entities = {GENERAL_ID, host_id, char_id, loc_id}
-    for req in recipe.attrib_reqs:
-        req_met = False
-        for eid in relevant_entities:
-            if not eid: continue
-            av = AttribVal.query.filter_by(
-                game_token=game_token, subject_id=eid, attrib_id=req.attrib_id).first()
-            if av and req.in_range(av.value):
-                req_met = True
-                break
-        if not req_met:
-            return False, f"Requires {req.attrib.name} {req.range_display}"
+    # PRIORITY LOGIC
+    # Branch 1: Product is Universal (Currency, Global Upgrades, etc.)
+    if product.storage_type == StorageType.UNIVERSAL:
+        # General (Universal only)
+        # We only check this for universal products.
+        can_gen, _ = can_perform_recipe(
+            GENERAL_ID, recipe, owner_id, ctx,
+            limit_to_channel=GENERAL_ID)
+        
+        # Priority: System Efficiency (General Storage) -> Salience (Active Character)
+        if can_gen: return GENERAL_ID
+        if can_char: return ctx.char_id
+        if can_loc: return ctx.loc_id
+        return GENERAL_ID
+    
+    # Branch 2: Product is Carried or Local (Tools, Resources, Structures)
+    else:
+        # Priority: Actor Presence -> Workshop Presence
+        # General host (Host ID 1) is STRICTLY FORBIDDEN for non-universal items.
+        if can_char: return ctx.char_id
+        if can_loc: return ctx.loc_id
+        return ctx.char_id or ctx.loc_id
 
-    return True, ""
+def execute_production(host_id, recipe, target_owner_id, ctx, batches=1):
+    """Executes production batches and applies changes."""
+    logger.debug(
+        f"execute_production() Host:{host_id} | Product:{recipe.product_id}"
+        f" | Char:{ctx.char_id} | Loc:{ctx.loc_id}")
 
-def execute_production(host_id, recipe, batches=1, char_id=None, loc_id=None):
-    """Mechanically executes production batches and applies changes."""
     actual_batches_done = 0
     halt_reason = None
 
     for _ in range(batches):
         possible, reason = can_perform_recipe(
-            host_id, recipe, 1, char_id, loc_id)
+            host_id, recipe, target_owner_id, ctx, 1)
         if not possible:
             halt_reason = reason
             break
 
         # Consume
-        resolved = resolve_recipe_sources(
-            host_id, recipe, char_id=char_id, loc_id=loc_id)
+        resolved = resolve_recipe_sources(host_id, recipe, ctx)
         for res in resolved:
             if not res['source_def'].preserve:
-                adjust_quantity(res['item'].id, res['anticipated_owner_id'], -res['source_def'].q_required)
+                adjust_quantity(
+                    res['item'].id,
+                    res['anticipated_owner_id'],
+                    -res['source_def'].q_required)
 
         # Produce
-        product_item = Item.query.get((g.game_token, recipe.product_id))
-        target_id = get_production_target(
-            product_item, host_id, char_id, loc_id)
-        adjust_quantity(recipe.product_id, target_id, recipe.rate_amount)
+        adjust_quantity(
+            recipe.product_id, target_owner_id, recipe.rate_amount)
         
         for bp in recipe.byproducts:
-            bp_item = Item.query.get((g.game_token, bp.item_id))
-            bp_target_id = get_production_target(
-                bp_item, host_id, char_id, loc_id)
+            bp_target_id = get_byproduct_target(
+                bp.item_id, target_owner_id, host_id, ctx)
             adjust_quantity(bp.item_id, bp_target_id, bp.rate_amount)
 
         actual_batches_done += 1
@@ -309,3 +272,20 @@ def execute_production(host_id, recipe, batches=1, char_id=None, loc_id=None):
         )
 
     return actual_batches_done, halt_reason
+
+def get_byproduct_target(item_id, main_target_id, host_id, ctx):
+    """
+    Determines where secondary items go (the owner) based on StorageType.
+    """
+    game_token = g.game_token
+
+    item = Item.query.get((g.game_token, item_id))
+    if item.storage_type == StorageType.UNIVERSAL:
+        return GENERAL_ID
+    
+    # If it's a tool/carried item, try to give it to the host or character
+    if item.storage_type == StorageType.CARRIED:
+        return ctx.best_char_id or host_id
+        
+    # Otherwise, default to the same place as the main product
+    return main_target_id

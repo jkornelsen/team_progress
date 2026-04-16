@@ -1,7 +1,14 @@
 ---- issues and proposed changes ----
 
-producing logs from infinite tree
-    going to char inv even though there's a pile on the ground
+going to char inv even though there's a pile on the ground
+    both play_item and item_production_status use owner only to
+        get current pile, not much to determine what happens for production
+    what happens is determined by recipe product id,
+        plus char and loc context, and source availability
+    execute_production doesn't use source availability to determine output?
+        maybe that's fine for target id -- host already given
+
+test producing logs from infinite tree
 
 design says should be location hosted since char not needed
     i'm not sure this is really right though -- seems like default char is better
