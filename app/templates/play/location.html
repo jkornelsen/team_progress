@@ -11,6 +11,12 @@
         {{ hk.fixed_text(
             url_for('configure.edit_location', id=location.id),
             hk.bracket('e') ~ "dit location", 'e') }}
+        {% if context_char %}
+            <span class="separator">|</span>
+            {% set target_url = url_for('configure.edit_character', id=context_char.id) %}
+            {% set text = "e" ~ hk.bracket('d') ~ "it char" %}
+            {{ hk.fixed_text(target_url, text, 'd') }}
+        {% endif %}
     </nav>
 {% endblock %}
 
@@ -269,6 +275,8 @@
     </div>
 </div>
 
+<script src="{{ url_for('static', filename='js/api.js') }}"></script>
+
 <script>
     const charSelector = document.getElementById('active-char-select');
 
@@ -427,10 +435,10 @@
 
         const moveParty = document.getElementById('move-with-party-chk').checked;
         
-        const formData = new FormData();
-        formData.append('dx', dx);
-        formData.append('dy', dy);
-        formData.append('move_party', moveParty); // Tell backend to move the whole party
+        const fd = new FormData();
+        fd.append('dx', dx);
+        fd.append('dy', dy);
+        fd.append('move_party', moveParty); // Tell backend to move the whole party
 
         const url = `/char/${active.char_id}/move`;
         const data = await apiPost(url, fd, "Could not move.");

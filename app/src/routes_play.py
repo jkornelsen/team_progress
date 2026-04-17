@@ -176,7 +176,7 @@ def play_location(id):
         attrib_values=attrib_values,
         active_char_id=active_char_id,
         context_char=current_char,
-        link_letters=LinkLetters(excluded='ctmoe')
+        link_letters=LinkLetters(excluded='ctmoed')
     )
 
 @play_bp.route('/play/char/<int:id>')
@@ -438,9 +438,7 @@ def play_item(id):
     )
     if owner.entity_type == Character.TYPENAME:
         ctx.char_id = owner.id
-        ctx.loc_id = owner.location_id
         session['old_char_id'] = owner.id
-        session['old_loc_id'] = owner.location_id
     elif owner.entity_type == Location.TYPENAME:
         ctx.loc_id = owner.id
         session['old_loc_id'] = owner.id
@@ -451,13 +449,16 @@ def play_item(id):
                 ctx.char_id = None
                 del session['old_char_id']
 
+    char = Character.query.get((game_token, ctx.char_id)) if ctx.char_id else None
+    if char:
+        ctx.loc_id = char.location_id
+        session['old_loc_id'] = char.location_id
+    loc = Location.query.get((game_token, ctx.loc_id)) if ctx.loc_id else None
+
     logger.debug(
         f"---- play_item() ----\n"
         f"Item:{item.id} | Owner:{owner.id}"
         f" | Char:{ctx.char_id} | Loc:{ctx.loc_id}")
-
-    char = Character.query.get((game_token, ctx.char_id)) if ctx.char_id else None
-    loc = Location.query.get((game_token, ctx.loc_id)) if ctx.loc_id else None
 
     # Fetch the specific Pile record
     query = Pile.query.filter_by(

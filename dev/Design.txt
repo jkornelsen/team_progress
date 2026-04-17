@@ -1,5 +1,11 @@
 ---- issues and proposed changes ----
 
+production gain messages
+    handle all known batches in one message which should help for instant production
+    for duration will only report 1 at a time so they get "x3" grouped
+remove from log:
+    Production of Raw Bacon stopped: Storage limit reached.
+
 three host types
     1. general/universal production:
         per-product singleton progress, concurrent across products
@@ -57,7 +63,7 @@ application modifiers
 disable "show in overview" if item storage type is not universal
 disable recipe duration if instant
 
-show item progress in locations like overview and sources do
+show updated item quantities in locations like overview and sources do
 
 changing an enumerated attrib should display the text in the log
 

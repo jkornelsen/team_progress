@@ -78,9 +78,8 @@ def resolve_recipe_sources(host_id, recipe, ctx, limit_to_channel=None):
     resolved_sources = []
     
     # Determine Search IDs
-    search_ids = {}
     if limit_to_channel == GENERAL_ID:
-        search_ids.add(GENERAL_ID)
+        search_ids = [GENERAL_ID]
     elif limit_to_channel == Character.TYPENAME:
         search_ids = ctx.unique_ids(host_id, ctx.char_id)
     elif limit_to_channel == Location.TYPENAME:
@@ -112,7 +111,6 @@ def resolve_recipe_sources(host_id, recipe, ctx, limit_to_channel=None):
                 ctx.not_general(host_id),
                 ctx.not_general(ctx.owner_id),
                 ctx.char_id, ctx.loc_id)
-
         potential_owner_ids = [
             eid for eid in potential_owner_ids if eid in search_ids]
 

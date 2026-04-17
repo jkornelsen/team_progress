@@ -130,9 +130,9 @@
                 <div class="reload-controls">
                     <label class="label-like">Refresh:</label>
                     <select id="reload-interval" class="mini-select">
-                        <option value="0">Off</option>
+                        <option value="0" selected>Off</option>
                         <option value="5000">5s</option>
-                        <option value="15000" selected>15s</option>
+                        <option value="15000">15s</option>
                         <option value="60000">1m</option>
                     </select>
                 </div>
@@ -170,21 +170,56 @@
     // Handle Auto-Reload Logic
     let reloadTimer = null;
     const reloadSelect = document.getElementById('reload-interval');
+    const STORAGE_KEY = 'game_reload_interval';
 
     function startTimer() {
         const ms = parseInt(reloadSelect.value);
+        
+        // 1. Save the choice to localStorage
+        localStorage.setItem(STORAGE_KEY, ms);
+
+        // 2. Manage the interval
         if (reloadTimer) clearInterval(reloadTimer);
         if (ms > 0) {
             reloadTimer = setInterval(() => location.reload(), ms);
         }
     }
 
-    reloadSelect.addEventListener('change', startTimer);
-    startTimer();
+    // Initialization: Run this on page load
+    function initReload() {
+        // 3. Retrieve the saved value
+        const savedValue = localStorage.getItem(STORAGE_KEY);
+        
+        if (savedValue !== null) {
+            reloadSelect.value = savedValue;
+        }
+        
+        // 4. Start the timer based on the restored value
+        startTimer();
+    }
 
-    // Keep log scrolled to bottom
+    reloadSelect.addEventListener('change', startTimer);
+    initReload(); // Initialize instead of just calling startTimer()
+
+    // Log scroll position
     const log = document.getElementById('game-log');
-    log.scrollTop = log.scrollHeight;
+    const SCROLL_KEY = 'game_log_scroll';
+
+    if (log) {
+        // 1. On load, check if we have a saved position
+        const savedScroll = localStorage.getItem(SCROLL_KEY);
+        if (savedScroll !== null) {
+            log.scrollTop = parseInt(savedScroll);
+        } else {
+            // Default to bottom if no saved position exists
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // 2. Save the scroll position whenever the user scrolls
+        log.addEventListener('scroll', () => {
+            localStorage.setItem(SCROLL_KEY, log.scrollTop);
+        });
+    }
 </script>
 
 <style>

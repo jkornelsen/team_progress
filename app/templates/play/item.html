@@ -53,16 +53,24 @@
                     <span class="label-like">[{{ pile.position | join(",") }}]</span>
                 {% endif %}
             {% endif %}
-            {% for ctx_entity in [char, loc] if ctx_entity and ctx_entity.id != owner.id
-                    and not (ctx_entity == loc and char) %}
+            {% if char and char.id != owner.id %}
                 <span style="margin-left: 5px; margin-right: 5px">|</span>
-                <span class="label-like">{{ '👤' if ctx_entity == char else '📍' }}</span>
-                {% set target_url = url_for('play.play_' ~ ctx_entity.entity_type, id=ctx_entity.id) %}
-                {% call hk.hotlink(target_url, link_letters) %}
-                    {{ ctx_entity.name }}
+                <span class="label-like">👤</span>
+                {% set char_url = url_for('play.play_character', id=char.id) %}
+                {% call hk.hotlink(char_url, link_letters, brackets=True) %}
+                    {{ char.name }}
                 {% endcall %}
-                {{ 'active' if ctx_entity == char else 'current' }}
-            {% endfor %}
+                active
+            {% endif %}
+            {% if loc and loc.id != owner.id %}
+                <span style="margin-left: 5px; margin-right: 5px">|</span>
+                <span class="label-like">📍</span>
+                at
+                {% set loc_url = url_for('play.play_location', id=loc.id) %}
+                {% call hk.hotlink(loc_url, link_letters, brackets=True) %}
+                    {{ loc.name }}
+                {% endcall %}
+            {% endif %}
         </span>
         
         <h1>
@@ -194,9 +202,12 @@
                                                    class="mini-input">
                                             
                                             <div class="batch-presets">
-                                                <button type="button" class="tag-button" onclick="setBatch({{ r.id }}, 1)">1</button>
-                                                <button type="button" class="tag-button" onclick="setBatch({{ r.id }}, {{ (r.max_batches / 2) | int }})">½</button>
-                                                <button type="button" class="tag-button" onclick="setBatch({{ r.id }}, {{ r.max_batches }})">Max</button>
+                                                <button type="button" class="tag-button" 
+                                                        onclick="setQty('batches-{{ r.id }}', 1)">1</button>
+                                                <button type="button" class="tag-button" 
+                                                        onclick="setQty('batches-{{ r.id }}', {{ (r.max_batches / 2) | int }})">½</button>
+                                                <button type="button" class="tag-button" 
+                                                        onclick="setQty('batches-{{ r.id }}', {{ r.max_batches }})">Max</button>
                                             </div>
                                         </div>
                                         <button id="gain-{{ r.id }}" onclick="gainItem({{ r.id }}, {{ r.host_id }})" class="go-button">
@@ -213,15 +224,17 @@
                                     {% endif %}
                                 {% else %}
                                     {# INTEGRATION: The 🚫 Info Icon with specific reason tooltip #}
-                                    <div class="flex-row align-center">
-                                    {% if "Storage limit reached" in r.reason %}
-                                        <span class="info-icon" style="cursor: help; font-size: 1.5em;"></span>
-                                        <small class="text-dim" style="margin-left: 5px;" title="{{ r.reason }}">Storage full</small>
-                                    {% else %}
-                                        <span class="info-icon" style="cursor: help; font-size: 1.5em;" 
-                                              title="{{ r.reason }}">🚫</span>
-                                        <small class="blocked-msg text-dim" style="margin-left: 5px;">Requirements not met</small>
-                                    {% endif %}
+                                    <div class="blocked-container flex-row align-center">
+                                        {% if "Storage limit reached" in r.reason %}
+                                            <small class="text-dim"
+                                                style="margin-left: 5px;">Storage full</small>
+                                        {% else %}
+                                            <span class="info-icon"
+                                                style="cursor: help; font-size: 1.5em;"
+                                                title="{{ r.reason }}">🚫</span>
+                                            <small class="text-dim"
+                                                style="margin-left: 5px;">Requirements not met</small>
+                                        {% endif %}
                                     </div>
                                 {% endif %}
 
@@ -333,6 +346,23 @@
                 <div class="button-group">
                     {% set has_controls = false %}
 
+                    <div class="action-box border-bottom-dim" style="padding-bottom: 10px; margin-bottom: 15px;">
+                        <label for="action-qty" class="label-like">Quantity:</label>
+                        <input type="number" id="action-qty" 
+                               value="{{ pile.quantity | formatNum }}" 
+                               max="{{ pile.quantity }}" 
+                               step="any" 
+                               class="mini-input" style="flex-grow: 1;">
+                        <div class="action-qty-presets">
+                            <button type="button" class="tag-button"
+                                onclick="setQty('action-qty', 1)">1</button>
+                            <button type="button" class="tag-button"
+                                onclick="setQtyRatio('action-qty', 0.5)">½</button>
+                            <button type="button" class="tag-button"
+                                onclick="setQtyRatio('action-qty', 1)">Max</button>
+                        </div>
+                    </div>
+
                     {% if owner.entity_type == 'location' and char %}
                         {# Location -> Character (Pickup) #}
                         {% set has_controls = true %}
@@ -351,7 +381,6 @@
                             {# Carried -> Location (Drop) #}
                             {% set has_controls = true %}
                             <div class="action-box">
-                                <input type="number" id="drop-qty" value="{{ pile.quantity | formatNum }}" max="{{ pile.quantity }}" step="any" class="mini-input">
                                 <button id="drop-btn" class="go-button">d{{ hk.bracket('r') }}op at location</button>
                             </div>
                         {% endif %}
@@ -420,6 +449,7 @@
     const ownerId = {{ owner.id }}; 
     const charId = {{ char.id if char else 'null' }};
     const locId = {{ loc.id if loc else 'null' }};
+    const startedAtZero = (parseFloat("{{ pile.quantity }}".replace(/,/g, '')) || 0) === 0;
 
     // Heartbeat tick
 
@@ -454,6 +484,14 @@
         if (main.quantity !== undefined) {
             const qtyDisplay = document.getElementById('main-qty-display');
             if (qtyDisplay) qtyDisplay.textContent = main.quantity;
+
+            const isCurrentlyZero = (
+                parseFloat(main.quantity.replace(/,/g, '')) || 0) === 0;
+            if (isCurrentlyZero !== startedAtZero) {
+                // Show or hide inventory actions
+                window.location.reload();
+                return;
+            }
         }
 
         // 5. Update Ingredient/Source Stock Labels
@@ -542,6 +580,7 @@
                     // --- INACTIVE STATE ---
                     if (progContainer) progContainer.classList.add('hidden');
                     
+                    let blockedMsg = container.querySelector('.blocked-container');
                     if (!r.can_produce) {
                         // If we can't produce, hide buttons and show a message
                         if (startBtn) startBtn.classList.add('hidden');
@@ -549,15 +588,21 @@
                         if (stopBtn) stopBtn.classList.add('hidden');
                         if (letter) delete window.linkForKey[letter];
                         
-                        let msg = container.querySelector('.blocked-msg');
-                        if (!msg) {
-                            msg = document.createElement('small');
-                            msg.className = 'blocked-msg text-dim';
-                            msg.innerHTML = `🚫 Requirements not met`;
-                            msg.title = r.reason;
-                            container.appendChild(msg);
+                        const isStorageFull = r.reason.includes("Storage limit reached");
+                        const icon = isStorageFull ? '' : '🚫';
+                        const text = isStorageFull ? 'Storage full' : 'Requirements not met';
+
+                        const content = `
+                            <span class="info-icon" style="cursor: help; font-size: 1.5em;" title="${r.reason}">${icon}</span>
+                            <small class="blocked-msg text-dim" style="margin-left: 5px;">${text}</small>
+                        `;
+                        if (!blockedMsg) {
+                            blockedMsg = document.createElement('div');
+                            blockedMsg.className = 'blocked-container flex-row align-center';
+                            blockedMsg.innerHTML = content;
+                            container.appendChild(blockedMsg);
                         } else {
-                            msg.title = r.reason;
+                            blockedMsg.innerHTML = content;
                         }
                     } else {
                         // WE CAN PRODUCE: Restore buttons, remove blocked message
@@ -565,8 +610,7 @@
                         if (gainBtn) gainBtn.classList.remove('hidden');
                         if (stopBtn) stopBtn.classList.add('hidden');
                         
-                        const msg = container.querySelector('.blocked-msg');
-                        if (msg) msg.remove();
+                        if (blockedMsg) blockedMsg.remove();
 
                         // Restore hotkeys
                         if (letter) {
@@ -681,18 +725,34 @@
         updateStatus();
     }
 
-    function setBatch(recipeId, val) {
-        const input = document.getElementById(`batches-${recipeId}`);
-        if (input) input.value = Math.max(1, val);
+    // Inventory AJAX Logic
+
+    function setQty(inputId, val) {
+        const input = document.getElementById(inputId);
+        if (input) {
+            // Ensure we don't go below 1, and format to a clean number
+            input.value = Math.max(1, Math.floor(val));
+        }
     }
 
+    function setQtyRatio(inputId, ratio) {
+        // Set by ratio of main quantity
+        const el = document.getElementById('main-qty-display');
+        if (!el) return 0;
+        const max = parseFloat(el.textContent.replace(/,/g, '')) || 0;
+        const val = max * ratio;
+        const finalVal = max > 0 ? Math.max(1, Math.floor(val)) : 0;
+        
+        const input = document.getElementById(inputId);
+        if (input) input.value = finalVal;
+    }
 
-    // Inventory AJAX Logic
+    const getActionQty = () => document.getElementById('action-qty')?.value || 0;
+
     document.getElementById('drop-btn')?.addEventListener('click', async () => {
-        const qtyInput = document.getElementById('drop-qty');
         const fd = new FormData();
         fd.append('item_id', itemId);
-        fd.append('quantity', qtyInput.value);
+        fd.append('quantity', getActionQty());
 
         const url = `/char/${ownerId}/drop`;
         const data = await apiPost(url, fd, "Could not drop.");
@@ -705,7 +765,7 @@
         const charId = document.getElementById('pickup-char-id').value;
         const fd = new FormData();
         fd.append('item_id', itemId);
-        fd.append('quantity', {{ pile.quantity }});
+        fd.append('quantity', getActionQty());
         {% if pile.position %}
             fd.append('pos', "{{ pile.position | join(',') }}");
         {% endif %}
@@ -722,7 +782,7 @@
         const fd = new FormData();
         fd.append('item_id', itemId);
         fd.append('target_char_id', targetCharId);
-        fd.append('quantity', {{ pile.quantity }});
+        fd.append('quantity', getActionQty());
 
         const url = `/char/${ownerId}/give`;
         const data = await apiPost(url, fd, "Could not give.");

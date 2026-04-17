@@ -390,7 +390,7 @@ class ContextIds:
 
     @staticmethod
     def unique_ids(*values):
-        """Return unique, non-falsy IDs, preserving order."""
+        """Return list of unique, non-falsy IDs, preserving order."""
         seen = set()
         result = []
         for v in values:
