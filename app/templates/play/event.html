@@ -14,6 +14,7 @@
 {% endblock %}
 
 {% block content %}
+
 <div class="event-play-container">
     <header class="entity-header">
         <span class="label-like">
@@ -224,6 +225,8 @@
     </div>
 </div>
 
+<script src="{{ url_for('static', filename='js/api.js') }}"></script>
+
 <script>
     const baseMin = {{ event.numeric_range[0] if event.numeric_range else 1 }};
     const baseMax = {{ event.numeric_range[1] if event.numeric_range else 20 }};
@@ -354,22 +357,10 @@
         const diff = document.getElementById('difficulty-select')?.value;
         if (diff) fd.append('difficulty', diff);
 
-        let data;
-        try {
-            const res = await fetch(
-                `/event/roll/${eventId}`,
-                { method: 'POST', body: fd }
-            );
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.message || "Could not roll.");
-            }
-            data = await res.json();
-        } catch (err) {
-            flashMessage(err.message);
-            return;
-        }
-        
+        const url = `/event/roll/${eventId}`;
+        const data = await apiPost(url, fd, "Could not roll.");
+        if (!data) return;
+
         lastRollValue = data.result_value;
         document.getElementById('outcome-text').innerHTML = data.display;
         document.getElementById('apply-section').classList.remove('hidden');
@@ -413,19 +404,9 @@
             fd.append('container_id', containerId);
             fd.append('new_value', newValue);
 
-            try {
-                const res = await fetch(
-                    `/event/apply/{{ event.id }}`,
-                    { method: 'POST', body: fd }
-                );
-                if (!res.ok) {
-                    const errorData = await res.json();
-                    throw new Error(errorData.message || "Could not move.");
-                }
-            } catch (err) {
-                flashMessage(err.message);
-                return;
-            }
+            const url = `/event/apply/{{ event.id }}`;
+            const data = await apiPost(url, fd, "Could not move.");
+            if (!data) return;
 
             btn.innerText = "Applied! ✅";
             btn.disabled = true;
@@ -454,21 +435,9 @@
         });
 
         // 2. Hit the API
-        let data;
-        try {
-            const res = await fetch(
-                `/event/preview/${eventId}?${params.toString()}`,
-                { method: 'POST', body: fd }
-            );
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.message || "Could not load modifiers.");
-            }
-            data = await res.json();
-        } catch (err) {
-            flashMessage(err.message);
-            return;
-        }
+        const url = `/event/preview/${eventId}?${params.toString()}`;
+        const data = await apiGet(url, "Could not load modifiers");
+        if (!data) return;
 
         // 3. Render the results
         const modifiers = data;

@@ -21,17 +21,24 @@
             
             // Ignore if typing in a form field
             const active = document.activeElement.tagName;
-            if (['INPUT', 'TEXTAREA', 'SELECT'].includes(active)) return;
+            if (['INPUT', 'TEXTAREA'].includes(active)) return;
 
             const key = event.key; // Case sensitive for mapping
             const target = window.linkForKey[key];
+
             if (target) {
-                event.preventDefault();
-                // If it's a relative/absolute URL
-                if (target.startsWith('/') || target.startsWith('http')) {
+                event.preventDefault(); // Prevent default browser behavior
+
+                // If it's a function then call it
+                if (typeof target === 'function') {
+                    target(event);
+                }
+                // If it's a relative/absolute URL then go there
+                else if (target.startsWith('/') || target.startsWith('http')) {
                     window.location.href = target;
-                } else {
-                    // Otherwise assume it is a CSS selector for a button/link
+                }
+                // Otherwise assume it is a CSS selector for a button/link
+                else {
                     const el = document.querySelector(target);
                     if (el) el.click();
                 }

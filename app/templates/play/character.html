@@ -19,13 +19,12 @@
 <script>
     window.linkForKey['e'] = "{{ url_for('configure.edit_character', id=character.id) }}";
     window.linkForKey['g'] = "#do-travel-btn";
-    
-    // Handle these via focus listeners 
-    // because they require user interaction with select boxes
-    document.addEventListener('keypress', (e) => {
-        if (e.key === 't') document.getElementById('dest-select')?.focus();
-        if (e.key === 'w') document.getElementById('travel-with-select')?.focus();
-    });
+    window.linkForKey['t'] = () => {
+        document.getElementById('dest-select')?.focus();
+    };
+    window.linkForKey['w'] = () => {
+        document.getElementById('travel-with-select')?.focus();
+    };
 </script>
 
 <div class="play-container">
@@ -202,6 +201,7 @@
 </div>
 
 {% include 'play/partials/modal_interrupt.html' %}
+<script src="{{ url_for('static', filename='js/api.js') }}"></script>
 
 <script>
     const charId = {{ character.id }};
@@ -212,23 +212,13 @@
         if (!destId) return;
         const moveParty = document.getElementById('travel-with-party-chk')?.checked || false;
 
-        const formData = new FormData();
-        formData.append('dest_id', destId);
-        formData.append('move_party', moveParty);
+        const fd = new FormData();
+        fd.append('dest_id', destId);
+        fd.append('move_party', moveParty);
         
-        try {
-            const res = await fetch(
-                `/char/${charId}/go`
-                { method: 'POST', body: fd }
-            );
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.message || "Could not travel.");
-            }
-        } catch (err) {
-            flashMessage(err.message);
-            return;
-        }
+        const url = `/char/${charId}/go`;
+        const data = await apiPost(url, fd, "Could not travel.");
+        if (!data) return;
 
         window.location.href = `/play/location/${destId}?active_char_id={{ character.id }}`;
     });

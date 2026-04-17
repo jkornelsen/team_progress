@@ -1,13 +1,5 @@
 ---- issues and proposed changes ----
 
-design says should be location hosted since char not needed
-    i'm not sure this is really right though -- seems like default char is better
-    maybe not worry about this for now and just get it working
-    later we can think about how better to disambiguate in the ui
-what about an "add job" button under Local Production with item selectbox
-    that would bring up the item page with a "host_by_loc" param set
-    or add locally producible items in location config
-
 three host types
     1. general/universal production:
         per-product singleton progress, concurrent across products
@@ -37,6 +29,14 @@ converting
 location production examples
     loc mine helium-3, then char converts to cannisters
     lumber mill: logs > boards
+
+design says should be location hosted since char not needed
+    i'm not sure this is really right though -- seems like default char is better
+    maybe not worry about this for now and just get it working
+    later we can think about how better to disambiguate in the ui
+what about an "add job" button under Local Production with item selectbox
+    that would bring up the item page with a "host_by_loc" param set
+    or add locally producible items in location config
 
 tightened subject-based events
     a determinant can be flagged as informational only

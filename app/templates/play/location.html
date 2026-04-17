@@ -20,12 +20,12 @@
     <header class="entity-header">
         <span id="context-list" class="label-like">
             {% if context_char %}
-                <span class="label-like">Active:</span>
+                <span class="label-like">👤</span>
                 {% set target_url = url_for('play.play_character', id=context_char.id) %}
                 {% call hk.hotlink(target_url, link_letters) %}
                     {{ context_char.name }}
                 {% endcall %}
-                <a href="{{ url_for(request.endpoint, id=location.id, char_id=0) }}" class="label-like" title="Clear Character Context"> [x] </a>
+                active
             {% endif %}
         </span>
 
@@ -432,21 +432,9 @@
         formData.append('dy', dy);
         formData.append('move_party', moveParty); // Tell backend to move the whole party
 
-        let data;
-        try {
-            const res = await fetch(
-                `/char/${active.char_id}/move`,
-                { method: 'POST', body: fd }
-            );
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.message || "Could not move.");
-            }
-            data = await res.json();
-        } catch (err) {
-            flashMessage(err.message);
-            return;
-        }
+        const url = `/char/${active.char_id}/move`;
+        const data = await apiPost(url, fd, "Could not move.");
+        if (!data) return;
 
         for (const [id, pos] of Object.entries(data.positions)) {
             if (chars[id]) {

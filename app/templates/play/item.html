@@ -40,7 +40,7 @@
             {% elif owner.entity_type == 'character' %}
                 🎒 Carried by
                 {% set target_url = url_for('play.play_character', id=owner.id) %}
-                {% call hk.hotlink(target_url, link_letters) %}
+                {% call hk.hotlink(target_url, link_letters, brackets=True) %}
                     {{ owner.name }}
                 {% endcall %}
             {% elif owner.entity_type == 'location' %}
@@ -55,11 +55,13 @@
             {% endif %}
             {% for ctx_entity in [char, loc] if ctx_entity and ctx_entity.id != owner.id
                     and not (ctx_entity == loc and char) %}
-                , active {{ ctx_entity.SHORT }}
+                <span style="margin-left: 5px; margin-right: 5px">|</span>
+                <span class="label-like">{{ '👤' if ctx_entity == char else '📍' }}</span>
                 {% set target_url = url_for('play.play_' ~ ctx_entity.entity_type, id=ctx_entity.id) %}
-                {% call hk.hotlink(target_url, link_letters, brackets=True) %}
+                {% call hk.hotlink(target_url, link_letters) %}
                     {{ ctx_entity.name }}
                 {% endcall %}
+                {{ 'active' if ctx_entity == char else 'current' }}
             {% endfor %}
         </span>
         
@@ -218,7 +220,7 @@
                                     {% else %}
                                         <span class="info-icon" style="cursor: help; font-size: 1.5em;" 
                                               title="{{ r.reason }}">🚫</span>
-                                        <small class="text-dim" style="margin-left: 5px;">Requirements not met</small>
+                                        <small class="blocked-msg text-dim" style="margin-left: 5px;">Requirements not met</small>
                                     {% endif %}
                                     </div>
                                 {% endif %}
@@ -411,6 +413,7 @@
 </div>
 
 {% include 'play/partials/modal_interrupt.html' %}
+<script src="{{ url_for('static', filename='js/api.js') }}"></script>
 
 <script>
     const itemId = {{ item.id }};
@@ -426,20 +429,9 @@
         fd.append('char_id', charId);
         fd.append('loc_id', locId);
 
-        let data;
-        try {
-            const res = await fetch(
-                `/production/status/item/${itemId}/owner/${ownerId}`,
-                { method: 'POST', body: fd });
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.message || "Could not update status.");
-            }
-            data = await res.json();
-        } catch (err) {
-            console.log(err.message);
-            return
-        }
+        const url = `/production/status/item/${itemId}/owner/${ownerId}`;
+        const data = await apiPost(url, fd, "Could not update status.");
+        if (!data) return;
 
         // 2. Handle "Interrupts" (Triggers/Random Events)
         if (data.status === 'interrupt') {
@@ -557,7 +549,6 @@
                         if (stopBtn) stopBtn.classList.add('hidden');
                         if (letter) delete window.linkForKey[letter];
                         
-                        // Check if we already added the 'blocked' message
                         let msg = container.querySelector('.blocked-msg');
                         if (!msg) {
                             msg = document.createElement('small');
@@ -566,7 +557,7 @@
                             msg.title = r.reason;
                             container.appendChild(msg);
                         } else {
-                            msg.title = r.reason; // Update reason tooltip
+                            msg.title = r.reason;
                         }
                     } else {
                         // WE CAN PRODUCE: Restore buttons, remove blocked message
@@ -655,34 +646,20 @@
         fd.append('owner_id', ownerId);
         fd.append('char_id', charId);
         fd.append('loc_id', locId);
-        try {
-            const res = await fetch(
-                `/production/start/host/${targetHostId}`,
-                { method: 'POST', body: fd });
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.message || "Could not start.");
-            }
-        } catch (err) {
-            // Catch Network errors AND the Error we threw above
-            flashMessage(err.message);
-        }
+
+        const url = `/production/start/host/${targetHostId}`;
+        const data = await apiPost(url, fd, "Could not start.");
+        if (!data) return;
+
         // Trigger update immediately so buttons flip without delay
         updateStatus();
     }
 
     async function stopProd(targetHostId) {
-        try {
-            const res = await fetch(
-                `/production/stop/host/${targetHostId}`,
-                { method: 'POST' });
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.message || "Could not stop properly.");
-            }
-        } catch (err) {
-            flashMessage(err.message);
-        }
+        const url = `/production/stop/host/${targetHostId}`;
+        const data = await apiPost(url, null, "Could not stop properly.");
+        if (!data) return;
+
         // Trigger update immediately so buttons flip without delay
         updateStatus();
     }
@@ -696,19 +673,9 @@
         fd.append('recipe_id', recipeId);
         fd.append('batches', batches);
 
-        try {
-            const res = await fetch(
-                `/production/instant/host/${targetHostId}`,
-                { method: 'POST', body: fd }
-            );
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.message || "Could not gain.");
-            }
-        } catch (err) {
-            flashMessage(err.message);
-            return;
-        }
+        const url = `/production/instant/host/${targetHostId}`;
+        const data = await apiPost(url, fd, "Could not gain.");
+        if (!data) return;
 
         // Get new values immediately
         updateStatus();
@@ -727,19 +694,9 @@
         fd.append('item_id', itemId);
         fd.append('quantity', qtyInput.value);
 
-        try {
-            const res = await fetch(
-                `/char/${ownerId}/drop`,
-                { method: 'POST', body: fd }
-            );
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.message || "Could not drop.");
-            }
-        } catch (err) {
-            flashMessage(err.message);
-            return;
-        }
+        const url = `/char/${ownerId}/drop`;
+        const data = await apiPost(url, fd, "Could not drop.");
+        if (!data) return;
 
         window.location.href = "{{ url_for('play.play_character', id=owner.id) }}";
     });
@@ -753,21 +710,9 @@
             fd.append('pos', "{{ pile.position | join(',') }}");
         {% endif %}
 
-
-        try {
-            const res = await fetch(
-                `/char/${charId}/pickup`,
-                { method: 'POST', body: fd }
-            );
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.message || "Could not pick up.");
-            }
-            data = await res.json();
-        } catch (err) {
-            flashMessage(err.message);
-            return;
-        }
+        const url = `/char/${charId}/pickup`;
+        const data = await apiPost(url, fd, "Could not pick up.");
+        if (!data) return;
 
         window.location.href = "{{ url_for('play.play_location', id=owner.id) }}";
     });
@@ -779,21 +724,9 @@
         fd.append('target_char_id', targetCharId);
         fd.append('quantity', {{ pile.quantity }});
 
-
-        try {
-            const res = await fetch(
-                `/char/${ownerId}/give`,
-                { method: 'POST', body: fd }
-            );
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.message || "Could not give.");
-            }
-            data = await res.json();
-        } catch (err) {
-            flashMessage(err.message);
-            return;
-        }
+        const url = `/char/${ownerId}/give`;
+        const data = await apiPost(url, fd, "Could not give.");
+        if (!data) return;
 
         window.location.href = "{{ url_for('play.play_character', id=owner.id) }}";
     });
@@ -804,20 +737,9 @@
         fd.append('item_id', itemId); // itemId should be globally defined in your template
         fd.append('slot', slotInput.value);
 
-        try {
-            const res = await fetch(
-                `/char/${ownerId}/equip`,
-                { method: 'POST', body: fd }
-            );
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.message || "Could not equip.");
-            }
-            data = await res.json();
-        } catch (err) {
-            flashMessage(err.message);
-            return;
-        }
+        const url = `/char/${ownerId}/equip`;
+        const data = await apiPost(url, fd, "Could not equip.");
+        if (!data) return;
 
         window.location.reload(); 
     });
@@ -826,21 +748,9 @@
         const fd = new FormData();
         fd.append('item_id', itemId);
 
-        let data;
-        try {
-            const res = await fetch(
-                `/char/${ownerId}/unequip`,
-                { method: 'POST', body: fd }
-            );
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.message || "Could not unequip.");
-            }
-            data = await res.json();
-        } catch (err) {
-            flashMessage(err.message);
-            return;
-        }
+        const url = `/char/${ownerId}/unequip`;
+        const data = await apiPost(url, fd, "Could not unequip.");
+        if (!data) return;
 
         window.location.reload();
     });
