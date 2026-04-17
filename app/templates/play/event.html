@@ -354,8 +354,21 @@
         const diff = document.getElementById('difficulty-select')?.value;
         if (diff) fd.append('difficulty', diff);
 
-        const res = await fetch(`/event/roll/${eventId}`, { method: 'POST', body: fd });
-        const data = await res.json();
+        let data;
+        try {
+            const res = await fetch(
+                `/event/roll/${eventId}`,
+                { method: 'POST', body: fd }
+            );
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || "Could not roll.");
+            }
+            data = await res.json();
+        } catch (err) {
+            flashMessage(err.message);
+            return;
+        }
         
         lastRollValue = data.result_value;
         document.getElementById('outcome-text').innerHTML = data.display;
@@ -400,11 +413,22 @@
             fd.append('container_id', containerId);
             fd.append('new_value', newValue);
 
-            const res = await fetch(`/event/apply/{{ event.id }}`, { method: 'POST', body: fd });
-            if (res.ok) {
-                btn.innerText = "Applied! ✅";
-                btn.disabled = true;
+            try {
+                const res = await fetch(
+                    `/event/apply/{{ event.id }}`,
+                    { method: 'POST', body: fd }
+                );
+                if (!res.ok) {
+                    const errorData = await res.json();
+                    throw new Error(errorData.message || "Could not move.");
+                }
+            } catch (err) {
+                flashMessage(err.message);
+                return;
             }
+
+            btn.innerText = "Applied! ✅";
+            btn.disabled = true;
         };
     });
 
@@ -430,41 +454,50 @@
         });
 
         // 2. Hit the API
+        let data;
         try {
-            const response = await fetch(`/event/preview/${eventId}?${params.toString()}`);
-            const modifiers = await response.json();
-
-            // 3. Render the results
-            if (modifiers.length === 0) {
-                previewDiv.innerHTML = '<span class="text-dim">No modifiers applied.</span>';
-                return;
+            const res = await fetch(
+                `/event/preview/${eventId}?${params.toString()}`,
+                { method: 'POST', body: fd }
+            );
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || "Could not load modifiers.");
             }
-
-            // Construct: "Label: Source Field OpValue"
-            // e.g. "Nav Skill: Suzy Pathfinding +1"
-            let html = '<ul class="modifier-list" style="list-style: none; padding: 0;">';
-            modifiers.forEach(m => {
-                const colorClass = m.value >= 0 ? 'text-success' : 'text-danger';
-                const labelHtml = (m.label && m.label.trim() !== "") 
-                    ? `<span class="label-like">${m.label}:</span>` 
-                    : "";
-                let opDisplay = m.op;
-                if (opDisplay === '*') opDisplay = '×';
-                if (opDisplay === '/') opDisplay = '÷';
-                html += `
-                    <li class="spacious-bottom" style="display: flex; align-items: baseline; gap: 4px;">
-                        ${labelHtml}
-                        <strong>${m.source_name}</strong> 
-                        <span class="text-dim">${m.field_name}</span> 
-                        <strong class="${colorClass}">${opDisplay}${Math.abs(m.value)}</strong>
-                    </li>`;
-            });
-            html += '</ul>';
-            previewDiv.innerHTML = html;
-
-        } catch (e) {
-            console.error("Failed to load modifiers", e);
+            data = await res.json();
+        } catch (err) {
+            flashMessage(err.message);
+            return;
         }
+
+        // 3. Render the results
+        const modifiers = data;
+        if (modifiers.length === 0) {
+            previewDiv.innerHTML = '<span class="text-dim">No modifiers applied.</span>';
+            return;
+        }
+
+        // Construct: "Label: Source Field OpValue"
+        // e.g. "Nav Skill: Suzy Pathfinding +1"
+        let html = '<ul class="modifier-list" style="list-style: none; padding: 0;">';
+        modifiers.forEach(m => {
+            const colorClass = m.value >= 0 ? 'text-success' : 'text-danger';
+            const labelHtml = (m.label && m.label.trim() !== "") 
+                ? `<span class="label-like">${m.label}:</span>` 
+                : "";
+            let opDisplay = m.op;
+            if (opDisplay === '*') opDisplay = '×';
+            if (opDisplay === '/') opDisplay = '÷';
+            html += `
+                <li class="spacious-bottom" style="display: flex; align-items: baseline; gap: 4px;">
+                    ${labelHtml}
+                    <strong>${m.source_name}</strong> 
+                    <span class="text-dim">${m.field_name}</span> 
+                    <strong class="${colorClass}">${opDisplay}${Math.abs(m.value)}</strong>
+                </li>`;
+        });
+        html += '</ul>';
+        previewDiv.innerHTML = html;
     }
 
     // Attach listeners to all participant dropdowns

@@ -1,6 +1,7 @@
 import logging
 from flask import (
     Blueprint, render_template, request, jsonify, g, session, current_app)
+from http import HTTPStatus
 from app.models import (
     db, Entity, Item, Character, Location, Attrib, Event,
     Pile, AttribVal, Operation, OutcomeType,
@@ -244,8 +245,8 @@ def drop_item(id):
     
     if success:
         db.session.commit()
-        return jsonify({"status": "success"})
-    return jsonify({"status": "error"}), 400
+        return '', HTTPStatus.NO_CONTENT
+    return jsonify({"message": "Could not drop."}), HTTPStatus.BAD_REQUEST
 
 @play_bp.route('/char/<int:id>/pickup', methods=['POST'])
 def pickup_item(id):
@@ -261,9 +262,8 @@ def pickup_item(id):
     if loc.dimensions and loc.dimensions[0] > 0:
         if not is_adjacent(char.position, pos):
             return jsonify({
-                "status": "error", 
                 "message": "You are too far away to pick that up."
-            }), 400
+            }), HTTPStatus.BAD_REQUEST
 
     # Transfer from Location to Char
     success = transfer_item(
@@ -273,8 +273,8 @@ def pickup_item(id):
     
     if success:
         db.session.commit()
-        return jsonify({"status": "success"})
-    return jsonify({"status": "error"}), 400
+        return '', HTTPStatus.NO_CONTENT
+    return jsonify({"message": "Could not pick up."}), HTTPStatus.BAD_REQUEST
 
 @play_bp.route('/char/<int:id>/give', methods=['POST'])
 def give_item(id):
@@ -291,9 +291,8 @@ def give_item(id):
     if loc.dimensions and loc.dimensions[0] > 0:
         if not is_adjacent(char.position, target_char.position):
             return jsonify({
-                "status": "error", 
                 "message": f"Must be next to {target_char.name} to give items."
-            }), 400
+            }), HTTPStatus.BAD_REQUEST
 
     # Transfer from Char to Target Char
     success = transfer_item(
@@ -303,8 +302,8 @@ def give_item(id):
 
     if success:
         db.session.commit()
-        return jsonify({"status": "success"})
-    return jsonify({"status": "error"}), 400
+        return '', HTTPStatus.NO_CONTENT
+    return jsonify({"message": "Could not transfer."}), HTTPStatus.BAD_REQUEST
 
 @play_bp.route('/char/<int:id>/equip', methods=['POST'])
 def equip_item(id):
@@ -322,7 +321,8 @@ def equip_item(id):
     item = Item.query.get((game_token, item_id))
     
     if not char or not item:
-        return jsonify({'status': 'error', 'message': 'Character or Item not found.'}), 404
+        return jsonify(
+            {'message': 'Character or Item not found.'}), HTTPStatus.NOT_FOUND
 
     # 2. Find the specific pile in the character's inventory
     pile = Pile.query.filter_by(
@@ -333,9 +333,8 @@ def equip_item(id):
 
     if not pile:
         return jsonify({
-            'status': 'error',
             'message': f"No {item.name} found in {char.name}'s inventory."
-        }), 400
+        }), HTTPStatus.BAD_REQUEST
 
     # 3. Update the slot
     pile.slot = slot
@@ -345,10 +344,7 @@ def equip_item(id):
     msg = f"{char.name} equipped {item.name} to {slot}."
     add_message(game_token, msg)
 
-    return jsonify({
-        'status': 'success',
-        'message': msg
-    })
+    return '', HTTPStatus.NO_CONTENT
 
 @play_bp.route('/char/<int:id>/unequip', methods=['POST'])
 def unequip_item(id):
@@ -361,7 +357,8 @@ def unequip_item(id):
     item = Item.query.get((game_token, item_id))
 
     if not char or not item:
-        return jsonify({'status': 'error', 'message': 'Character or Item not found.'}), 404
+        return jsonify(
+            {'message': 'Character or Item not found.'}), HTTPStatus.NOT_FOUND
 
     # Find the pile
     pile = Pile.query.filter_by(
@@ -372,9 +369,8 @@ def unequip_item(id):
 
     if not pile:
         return jsonify({
-            'status': 'error',
             'message': f"No {item.name} found in {char.name}'s inventory."
-        }), 400
+        }), HTTPStatus.BAD_REQUEST
 
     # Remove the slot assignment (set to None/NULL)
     pile.slot = None
@@ -384,12 +380,9 @@ def unequip_item(id):
     msg = f"{char.name} unequipped {item.name}."
     add_message(game_token, msg)
 
-    return jsonify({
-        'status': 'success',
-        'message': msg
-    })
+    return '', HTTPStatus.NO_CONTENT
 
-@play_bp.route('/char/move/<int:id>', methods=['POST'])
+@play_bp.route('/char/<int:id>/move', methods=['POST'])
 def char_move(id):
     req = RequestHelper('form')
     dx = req.get_int('dx')
@@ -398,19 +391,18 @@ def char_move(id):
     
     success, results = move_group(id, dx, dy, move_party)
     if success:
-        return jsonify({"status": "success", "positions": results})
-    return jsonify({"status": "error", "message": results}), 400
+        return jsonify({"positions": results}), HTTPStatus.OK
+    return jsonify({"message": results}), HTTPStatus.BAD_REQUEST
 
-@play_bp.route('/char/go/<int:id>', methods=['POST'])
+@play_bp.route('/char/<int:id>/go', methods=['POST'])
 def char_travel(id):
     req = RequestHelper('form')
     dest_loc_id = req.get_int('dest_id')
     move_party = req.get_bool('move_party')
     success, message = arrive_at_destination(id, dest_loc_id, move_party)
     if success:
-        return jsonify({"status": "arrived"})
-    else:
-        return jsonify({"status": "error", "message": message}), 400
+        return '', HTTPStatus.NO_CONTENT
+    return jsonify({"message": message}), HTTPStatus.BAD_REQUEST
 
 # ------------------------------------------------------------------------
 # Item & Pile Routes
@@ -460,7 +452,8 @@ def play_item(id):
                 del session['old_char_id']
 
     logger.debug(
-        f"play_item() | Item:{item.id} | Owner:{owner.id}"
+        f"---- play_item() ----\n"
+        f"Item:{item.id} | Owner:{owner.id}"
         f" | Char:{ctx.char_id} | Loc:{ctx.loc_id}")
 
     char = Character.query.get((game_token, ctx.char_id)) if ctx.char_id else None
@@ -725,8 +718,9 @@ def item_production_status(item_id, owner_id):
     ctx = ContextIds(owner_id, char_id, loc_id)
 
     logger.debug(
-        f"[TICK DEBUG] Item:{item_id} | Owner:{owner_id} | "
-        f"Char:{char_id} | Loc:{loc_id}")
+        f"---- item_production_status() ----\n"
+        f"Item:{item_id} | Owner:{owner_id}"
+        f" | Char:{ctx.char_id} | Loc:{ctx.loc_id}")
 
     # 1. TICK THE WORLD
     # This keeps all hosts (System, Suzy, Bob) in sync.
@@ -735,7 +729,7 @@ def item_production_status(item_id, owner_id):
     # 2. GATHER DATA FOR THE SPECIFIC PILE WE ARE VIEWING
     main_item = Item.query.get((game_token, item_id))
     if not main_item:
-        return jsonify({"error": "Item not found"}), 404
+        return jsonify({"message": "Item not found"}), HTTPStatus.NOT_FOUND
 
     main_pile = Pile.query.filter_by(
         game_token=game_token, owner_id=owner_id, item_id=item_id).first()
@@ -832,22 +826,27 @@ def start_item_production(host_id):
     owner = Entity.query.get((game_token, owner_id))
     ctx = ContextIds(
         owner.id,
-        owner.id if owner.entity_type == Character.TYPENAME else None,
-        owner.id if owner.entity_type == Location.TYPENAME else None,
+        req.get_int('char_id'),
+        req.get_int('loc_id'),
     )
+
+    logger.debug(
+        f"---- start_item_production() ----"
+        f"\nHost:{host_id} | Owner:{owner_id} | Recipe:{recipe_id}"
+        f" | Char:{ctx.char_id} | Loc:{ctx.loc_id}")
 
     success, message = start_production(
         host_id, recipe_id, owner_id, ctx)
-    return jsonify({
-        "status": "success" if success else "error", 
-        "message": message
-    })
+    if success:
+        return '', HTTPStatus.NO_CONTENT
+    # BAD_REQUEST causes res.ok to be false in JS
+    return jsonify({"message": message}), HTTPStatus.BAD_REQUEST
 
 @play_bp.route('/production/stop/host/<int:host_id>', methods=['POST'])
 def stop_item_production(host_id):
     if stop_production(host_id):
-        return jsonify({"status": "success"})
-    return jsonify({"status": "error"}), 400
+        return '', HTTPStatus.NO_CONTENT
+    return jsonify({"message": "Could not stop."}), HTTPStatus.BAD_REQUEST
 
 @play_bp.route('/production/instant/host/<int:host_id>', methods=['POST'])
 def instant_item_production(host_id):
@@ -865,7 +864,7 @@ def instant_item_production(host_id):
 
     recipe = Recipe.query.get((g.game_token, recipe_id))
     if not recipe:
-        return jsonify({"status": "error", "message": "Recipe not found."})
+        return jsonify({"message": "Recipe not found."}), HTTPStatus.BAD_REQUEST
 
     # Perform production
     actual_done, halt_reason = execute_production(
@@ -876,9 +875,11 @@ def instant_item_production(host_id):
         msg = f"Obtained {actual_done} batch{'es' if actual_done > 1 else ''}."
         if halt_reason:
             msg += f" Stopped early: {halt_reason}"
-        return jsonify({"status": "success", "message": msg})
+        return jsonify({"message": msg}), HTTPStatus.OK
     
-    return jsonify({"status": "error", "message": halt_reason or "Production failed."})
+    return jsonify({
+            "message": halt_reason or "Production failed."
+        }), HTTPStatus.BAD_REQUEST
 
 # ------------------------------------------------------------------------
 # Events & Dice
@@ -1013,7 +1014,8 @@ def apply_event(id):
     new_value = req.get_float('new_value')
 
     if not key_id or not container_id:
-        return jsonify({"status": "error", "message": "Missing target info"}), 400
+        return jsonify(
+            {"message": "Missing target info"}), HTTPStatus.BAD_REQUEST
 
     from .logic_event import apply_event_change
     apply_event_change(key_id, key_type, container_id, new_value)
@@ -1023,7 +1025,7 @@ def apply_event(id):
     key_def = Entity.query.get((g.game_token, key_id))
     add_message(g.game_token, f"Updated {key_def.name} on {container.name} to {new_value}")
 
-    return jsonify({"status": "success"})
+    return '', HTTPStatus.NO_CONTENT
 
 @play_bp.route('/play/attrib/<int:attrib_id>/<int:subject_id>', methods=['GET', 'POST'])
 def play_attrib(attrib_id, subject_id):

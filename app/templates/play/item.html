@@ -418,16 +418,28 @@
     const charId = {{ char.id if char else 'null' }};
     const locId = {{ loc.id if loc else 'null' }};
 
+    // Heartbeat tick
+
     async function updateStatus() {
         // 1. Fetch the complete state snapshot for this context
         const fd = new FormData();
         fd.append('char_id', charId);
         fd.append('loc_id', locId);
-        const res = await fetch(
-            `/production/status/item/${itemId}/owner/${ownerId}`,
-            { method: 'POST', body: fd });
-        if (!res.ok) return;
-        const data = await res.json();
+
+        let data;
+        try {
+            const res = await fetch(
+                `/production/status/item/${itemId}/owner/${ownerId}`,
+                { method: 'POST', body: fd });
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || "Could not update status.");
+            }
+            data = await res.json();
+        } catch (err) {
+            console.log(err.message);
+            return
+        }
 
         // 2. Handle "Interrupts" (Triggers/Random Events)
         if (data.status === 'interrupt') {
@@ -504,6 +516,7 @@
                 const startBtn = document.getElementById(`start-${r.recipe_id}`);
                 const stopBtn = document.getElementById(`stop-${r.recipe_id}`);
                 const gainBtn = document.getElementById(`gain-${r.recipe_id}`);
+                const letter = container.getAttribute('data-recipe-hotkey');
                 const progContainer = document.getElementById(`prog-container-${r.recipe_id}`);
                 const progBar = document.getElementById(`prog-bar-${r.recipe_id}`);
                 const progLabel = document.getElementById(`prog-label-${r.recipe_id}`);
@@ -516,6 +529,9 @@
                     if (startBtn) startBtn.classList.add('hidden');
                     if (gainBtn) gainBtn.classList.add('hidden');
                     if (stopBtn) stopBtn.classList.remove('hidden');
+                    if (letter) {
+                        window.linkForKey[letter] = `#stop-${r.recipe_id}`;
+                    }
                     if (progContainer) {
                         progContainer.classList.remove('hidden');
                         // Percent calculation
@@ -539,6 +555,7 @@
                         if (startBtn) startBtn.classList.add('hidden');
                         if (gainBtn) gainBtn.classList.add('hidden');
                         if (stopBtn) stopBtn.classList.add('hidden');
+                        if (letter) delete window.linkForKey[letter];
                         
                         // Check if we already added the 'blocked' message
                         let msg = container.querySelector('.blocked-msg');
@@ -561,7 +578,6 @@
                         if (msg) msg.remove();
 
                         // Restore hotkeys
-                        const letter = container.getAttribute('data-recipe-hotkey');
                         if (letter) {
                             window.linkForKey[letter] = gainBtn ? `#gain-${r.recipe_id}` : `#start-${r.recipe_id}`;
                         }
@@ -570,11 +586,9 @@
             });
         }
         {% if not manualtick %}
-            window.productionTimeout = setTimeout(updateStatus, 1500);
+            window.productionTimeout = setTimeout(updateStatus, 3000);
         {% endif %}
     }
-
-    // Heartbeat tick
 
     {% if manualtick %}
         let isProcessing = false;
@@ -639,24 +653,38 @@
         const fd = new FormData();
         fd.append('recipe_id', recipeId);
         fd.append('owner_id', ownerId);
-        const res = await fetch(`/production/start/host/${targetHostId}`, { method: 'POST', body: fd });
-        if (res.ok) {
-            // Trigger update immediately so buttons flip without delay
-            updateStatus();
-        } else {
-            const err = await res.json();
-            flashMessage(err.message || "Could not start production.");
+        fd.append('char_id', charId);
+        fd.append('loc_id', locId);
+        try {
+            const res = await fetch(
+                `/production/start/host/${targetHostId}`,
+                { method: 'POST', body: fd });
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || "Could not start.");
+            }
+        } catch (err) {
+            // Catch Network errors AND the Error we threw above
+            flashMessage(err.message);
         }
+        // Trigger update immediately so buttons flip without delay
+        updateStatus();
     }
 
     async function stopProd(targetHostId) {
-        const res = await fetch(`/production/stop/host/${targetHostId}`, { method: 'POST' });
-        if (res.ok) {
-            // Trigger update immediately so "Start" reappears
-            updateStatus();
-        } else {
-            flashMessage("Could not stop production.");
+        try {
+            const res = await fetch(
+                `/production/stop/host/${targetHostId}`,
+                { method: 'POST' });
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || "Could not stop properly.");
+            }
+        } catch (err) {
+            flashMessage(err.message);
         }
+        // Trigger update immediately so buttons flip without delay
+        updateStatus();
     }
 
     async function gainItem(recipeId, targetHostId) {
@@ -667,16 +695,23 @@
         fd.append('owner_id', ownerId);
         fd.append('recipe_id', recipeId);
         fd.append('batches', batches);
-        const res = await fetch(
-            `/production/instant/host/${targetHostId}`, {
-            method: 'POST', body: fd
-        });
-        if (res.ok) {
-            location.reload();
-        } else {
-            const errorData = await res.json().catch(() => ({}));
-            alert("Failed to gain: " + (errorData.message || "Unknown error"));
+
+        try {
+            const res = await fetch(
+                `/production/instant/host/${targetHostId}`,
+                { method: 'POST', body: fd }
+            );
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || "Could not gain.");
+            }
+        } catch (err) {
+            flashMessage(err.message);
+            return;
         }
+
+        // Get new values immediately
+        updateStatus();
     }
 
     function setBatch(recipeId, val) {
@@ -691,16 +726,22 @@
         const fd = new FormData();
         fd.append('item_id', itemId);
         fd.append('quantity', qtyInput.value);
-        const res = await fetch(`/char/${ownerId}/drop`, { 
-            method: 'POST', 
-            body: fd 
-        });
-        if (res.ok) {
-            window.location.href = "{{ url_for('play.play_character', id=owner.id) }}";
-        } else {
-            const errorData = await res.json().catch(() => ({}));
-            console.error("Drop failed:", errorData.message || res.statusText);
+
+        try {
+            const res = await fetch(
+                `/char/${ownerId}/drop`,
+                { method: 'POST', body: fd }
+            );
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || "Could not drop.");
+            }
+        } catch (err) {
+            flashMessage(err.message);
+            return;
         }
+
+        window.location.href = "{{ url_for('play.play_character', id=owner.id) }}";
     });
 
     document.getElementById('pickup-btn')?.addEventListener('click', async () => {
@@ -711,16 +752,24 @@
         {% if pile.position %}
             fd.append('pos', "{{ pile.position | join(',') }}");
         {% endif %}
-        const res = await fetch(`/char/${charId}/pickup`, { 
-            method: 'POST', 
-            body: fd 
-        });
-        if (res.ok) {
-            window.location.href = "{{ url_for('play.play_location', id=owner.id) }}";
-        } else {
-            const errorData = await res.json().catch(() => ({}));
-            alert("Failed to pick up: " + (errorData.message || "Unknown error"));
+
+
+        try {
+            const res = await fetch(
+                `/char/${charId}/pickup`,
+                { method: 'POST', body: fd }
+            );
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || "Could not pick up.");
+            }
+            data = await res.json();
+        } catch (err) {
+            flashMessage(err.message);
+            return;
         }
+
+        window.location.href = "{{ url_for('play.play_location', id=owner.id) }}";
     });
 
     document.getElementById('give-btn')?.addEventListener('click', async () => {
@@ -729,53 +778,71 @@
         fd.append('item_id', itemId);
         fd.append('target_char_id', targetCharId);
         fd.append('quantity', {{ pile.quantity }});
-        const res = await fetch(`/char/${ownerId}/give`, { 
-            method: 'POST', 
-            body: fd 
-        });
-        if (res.ok) {
-            window.location.href = "{{ url_for('play.play_character', id=owner.id) }}";
-        } else {
-            const errorData = await res.json().catch(() => ({}));
-            alert("Failed to give: " + (errorData.message || "Unknown error"));
+
+
+        try {
+            const res = await fetch(
+                `/char/${ownerId}/give`,
+                { method: 'POST', body: fd }
+            );
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || "Could not give.");
+            }
+            data = await res.json();
+        } catch (err) {
+            flashMessage(err.message);
+            return;
         }
+
+        window.location.href = "{{ url_for('play.play_character', id=owner.id) }}";
     });
 
     document.getElementById('equip-btn')?.addEventListener('click', async () => {
         const slotInput = document.getElementById('equip-slot');
         const fd = new FormData();
-        
         fd.append('item_id', itemId); // itemId should be globally defined in your template
         fd.append('slot', slotInput.value);
 
-        const res = await fetch(`/char/${ownerId}/equip`, { 
-            method: 'POST', 
-            body: fd 
-        });
-
-        if (res.ok) {
-            window.location.reload(); 
-        } else {
-            const errorData = await res.json().catch(() => ({}));
-            alert("Equip failed: " + (errorData.message || "Unknown error"));
+        try {
+            const res = await fetch(
+                `/char/${ownerId}/equip`,
+                { method: 'POST', body: fd }
+            );
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || "Could not equip.");
+            }
+            data = await res.json();
+        } catch (err) {
+            flashMessage(err.message);
+            return;
         }
+
+        window.location.reload(); 
     });
 
     document.getElementById('unequip-btn')?.addEventListener('click', async () => {
         const fd = new FormData();
         fd.append('item_id', itemId);
 
-        const res = await fetch(`/char/${ownerId}/unequip`, { 
-            method: 'POST', 
-            body: fd 
-        });
-
-        if (res.ok) {
-            window.location.reload();
-        } else {
-            const errorData = await res.json().catch(() => ({}));
-            alert("Unequip failed: " + (errorData.message || "Unknown error"));
+        let data;
+        try {
+            const res = await fetch(
+                `/char/${ownerId}/unequip`,
+                { method: 'POST', body: fd }
+            );
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || "Could not unequip.");
+            }
+            data = await res.json();
+        } catch (err) {
+            flashMessage(err.message);
+            return;
         }
+
+        window.location.reload();
     });
 </script>
 

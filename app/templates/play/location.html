@@ -432,22 +432,30 @@
         formData.append('dy', dy);
         formData.append('move_party', moveParty); // Tell backend to move the whole party
 
-        const response = await fetch(`/char/move/${active.char_id}`, {
-            method: 'POST',
-            body: formData
-        });
-
-        const data = await response.json();
-        if (data.status === 'success') {
-            for (const [id, pos] of Object.entries(data.positions)) {
-                if (chars[id]) {
-                    chars[id].x = pos[0];
-                    chars[id].y = pos[1];
-                }
-                updateCharListCoords(id, pos);
+        let data;
+        try {
+            const res = await fetch(
+                `/char/${active.char_id}/move`,
+                { method: 'POST', body: fd }
+            );
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || "Could not move.");
             }
-            fillGrid();
+            data = await res.json();
+        } catch (err) {
+            flashMessage(err.message);
+            return;
         }
+
+        for (const [id, pos] of Object.entries(data.positions)) {
+            if (chars[id]) {
+                chars[id].x = pos[0];
+                chars[id].y = pos[1];
+            }
+            updateCharListCoords(id, pos);
+        }
+        fillGrid();
     }
 
     // Keyboard Listeners

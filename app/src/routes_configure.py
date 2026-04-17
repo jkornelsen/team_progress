@@ -5,6 +5,7 @@ import tempfile
 from flask import (
     Blueprint, request, session, flash, redirect, url_for, render_template,
     g, send_file, jsonify, current_app)
+from http import HTTPStatus
 from app.models import (
     GENERAL_ID, StorageType, JsonKeys, ENTITIES, db,
     Entity, Item, Character, Location, Attrib, Event, 
@@ -675,7 +676,7 @@ def browse_scenarios():
         return render_template(
             'error.html',
             message="Error loading scenario.",
-        ), 500
+            ), HTTPStatus.INTERNAL_SERVER_ERROR
 
     # GET logic: List files
     scenarios = []
@@ -748,7 +749,8 @@ def upload():
             return render_template(
                 'error.html',
                 message="Couldn't Import",
-                details=str(ex))
+                details=str(ex)
+                ), HTTPStatus.INTERNAL_SERVER_ERROR
 
     return render_template(
         'configure/upload.html', 

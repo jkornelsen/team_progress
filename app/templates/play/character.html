@@ -20,8 +20,8 @@
     window.linkForKey['e'] = "{{ url_for('configure.edit_character', id=character.id) }}";
     window.linkForKey['g'] = "#do-travel-btn";
     
-    // Note: 't' and 'w' are better handled via focus listeners 
-    // because they require user interaction with the select boxes
+    // Handle these via focus listeners 
+    // because they require user interaction with select boxes
     document.addEventListener('keypress', (e) => {
         if (e.key === 't') document.getElementById('dest-select')?.focus();
         if (e.key === 'w') document.getElementById('travel-with-select')?.focus();
@@ -95,17 +95,6 @@
                 {% endif %}
             </div>
 
-            <!-- Travel Progress Bar (Hidden by default) -->
-            <div id="travel-progress-container" class="progress-section hidden">
-                <div class="flex-between">
-                    <span id="travel-status-text">Traveling...</span>
-                    <button id="stop-travel-btn" class="dangerous-button">Halt</button>
-                </div>
-                <div class="progress-container">
-                    <progress id="travel-bar" value="0" max="100"></progress>
-                    <span id="travel-label" class="progress-label">0%</span>
-                </div>
-            </div>
             <div>
                 {% set active_job = character.progress_records | selectattr('is_ongoing', 'equalto', True) | first %}
                 {% if active_job %}
@@ -217,33 +206,6 @@
 <script>
     const charId = {{ character.id }};
     
-    // Heartbeat Logic for Travel
-    async function checkStatus() {
-        //TODO: don't allow travel if character is currently involved in production
-        const response = await fetch(`/production/status/host/${charId}`);
-        const data = await response.json();
-
-        if (data.status === 'interrupt') {
-            showInterruptModal(data);
-            return; // Stop further UI updates
-        }
-
-        const container = document.getElementById('travel-progress-container');
-        const bar = document.getElementById('travel-bar');
-        const label = document.getElementById('travel-label');
-
-        if (data.is_ongoing) {
-            container.classList.remove('hidden');
-            // In a real app, we'd calculate % based on start_time and duration
-            // For now, we'll trigger a reload if arrived
-            if (data.batches > 0) {
-                location.reload(); 
-            }
-        } else {
-            container.classList.add('hidden');
-        }
-    }
-
     // Travel
     document.getElementById('do-travel-btn')?.addEventListener('click', async () => {
         const destId = document.getElementById('dest-select').value;
@@ -254,30 +216,22 @@
         formData.append('dest_id', destId);
         formData.append('move_party', moveParty);
         
-        const response = await fetch(`/char/go/${charId}`, {
-            method: 'POST',
-            body: formData
-        });
-        if (!response.ok) {
-            try {
-                const errorData = await response.json();
-                flashMessage(errorData.message || "Action failed.");
-            } catch (e) {
-                flashMessage("Server error. Please try again.");
+        try {
+            const res = await fetch(
+                `/char/${charId}/go`
+                { method: 'POST', body: fd }
+            );
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || "Could not travel.");
             }
+        } catch (err) {
+            flashMessage(err.message);
             return;
         }
+
         window.location.href = `/play/location/${destId}?active_char_id={{ character.id }}`;
     });
-
-    // Hotkey Support
-    document.addEventListener('keypress', (e) => {
-        if (e.key === 'o') window.location.href = "{{ url_for('play.overview') }}";
-        if (e.key === 't') document.getElementById('dest-select').focus();
-        if (e.key === 'g') document.getElementById('do-travel-btn').click();
-    });
-
-    //setInterval(checkStatus, 2000);
 </script>
 
 <style>
