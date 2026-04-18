@@ -1,6 +1,8 @@
 {% extends 'layout/base.html' %}
 {% import 'macros/hotkeys.html' as hk %}
 
+{% set manualtick = False %} {# set to True to call one update at a time for debugging #}
+
 {% block upper_left %}
     <nav class="nav-container">
         {{ hk.page_overview() }}
@@ -93,7 +95,6 @@
             <div class="description-box">{{ item.description | htmlify }}</div>
         {% endif %}
         
-        {% set manualtick = False %} {# set to True for debugging one call at a time #}
         {% if manualtick %}
         <button id="debug-tick-btn" 
                 onclick="manualTick()" 
@@ -241,7 +242,7 @@
                                 {# Always show Stop if it IS ongoing, even if it can't start another batch right now #}
                                 {% if not r.instant %}
                                     <button id="stop-{{ r.id }}"
-                                            onclick="stopProd({{ r.host_id }})"
+                                            onclick="stopProd({{ r.host_id }}, {{ r.product_id }})"
                                             class="dangerous-button {{ 'hidden' if not (progress and progress.is_ongoing and progress.recipe_id == r.id) }}">
                                         <span class="hotkey-indicator">{{ letter if letter else '' }}</span> Stop
                                     </button>
@@ -621,7 +622,7 @@
             });
         }
         {% if not manualtick %}
-            window.productionTimeout = setTimeout(updateStatus, 3000);
+            window.productionTimeout = setTimeout(updateStatus, 2000);
         {% endif %}
     }
 
@@ -699,8 +700,8 @@
         updateStatus();
     }
 
-    async function stopProd(targetHostId) {
-        const url = `/production/stop/host/${targetHostId}`;
+    async function stopProd(targetHostId, productId) {
+        const url = `/production/stop/host/${targetHostId}/item/${productId}`;
         const data = await apiPost(url, null, "Could not stop properly.");
         if (!data) return;
 

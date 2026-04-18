@@ -5,8 +5,9 @@ from flask import g, session
 from app.models import (
     db, Entity, Item, Location, Character, Pile, Progress,
     Recipe, AttribVal, GENERAL_ID, StorageType)
-from app.src.logic_piles import adjust_quantity
-from app.src.logic_navigation import is_adjacent
+from .logic_piles import adjust_quantity
+from .logic_navigation import is_adjacent
+from .logic_user_interaction import add_message
 
 logger = logging.getLogger(__name__)
 
@@ -256,16 +257,24 @@ def execute_production(host_id, recipe, target_owner_id, ctx, batches=1):
     # Log who did the production
     if actual_batches_done > 0:
         game_token = g.game_token
+        gain_qty = recipe.rate_amount * actual_batches_done
         host_ent = Entity.query.get((game_token, host_id))
+        log_msg = f"{gain_qty} {recipe.product.name}"
         if host_id == GENERAL_ID:
             host_info = "GENERAL/SYSTEM"
+            log_msg = f"{log_msg} gained."
         elif host_ent:
             host_info = f"{host_ent.entity_type.upper()} '{host_ent.name}' (ID:{host_id})"
+            if host_ent.entity_type == Character.TYPENAME:
+                log_msg = f"{host_end.name} produced {log_msg}."
+            elif host_ent.entity_type == Location.TYPENAME:
+                log_msg = f"{log_msg} produced at {host_end.name}."
         else:
             host_info = f"UNKNOWN ID:{host_id}"
+        add_message(log_msg)
         logger.info(
             f"[PRODUCTION] Host: {host_info} | "
-            f"Result: +{recipe.rate_amount * actual_batches_done:g} {recipe.product.name} "
+            f"Result: +{gain_qty:g} {recipe.product.name} "
             f"({actual_batches_done} batches)"
         )
 

@@ -44,21 +44,28 @@
                 <div>
                     <label>Storage Type:</label><br>
                     <label class="radio-label">
-                        <input type="radio" name="storage_type" value="{{ StorageType.UNIVERSAL }}" {{ 'checked' if item.storage_type == StorageType.UNIVERSAL }}> 
+                        <input type="radio" name="storage_type"
+                            value="{{ StorageType.UNIVERSAL }}"
+                            {{ 'checked' if item.storage_type == StorageType.UNIVERSAL }}> 
                         Universal &mdash; Accessible Anywhere
                     </label><br>
                     <label class="radio-label">
-                        <input type="radio" name="storage_type" value="{{ StorageType.CARRIED }}" {{ 'checked' if item.storage_type == StorageType.CARRIED }}> 
+                        <input type="radio" name="storage_type"
+                            value="{{ StorageType.CARRIED }}"
+                            {{ 'checked' if item.storage_type == StorageType.CARRIED }}> 
                         Carried &mdash; Inventory Based
                     </label><br>
                     <label class="radio-label">
-                        <input type="radio" name="storage_type" value="{{ StorageType.LOCAL }}" {{ 'checked' if item.storage_type == StorageType.LOCAL }}> 
+                        <input type="radio" name="storage_type"
+                            value="{{ StorageType.LOCAL }}"
+                            {{ 'checked' if item.storage_type == StorageType.LOCAL }}> 
                         Local &mdash; Fixed to a Location
                     </label>
                 </div>
                 <div>
-                    <label class="checkbox-label">
-                        <input type="checkbox" name="toplevel" {{ 'checked' if item.toplevel }}> 
+                    <label id="toplevel-label" class="checkbox-label">
+                        <input type="checkbox" id="toplevel" name="toplevel"
+                            {{ 'checked' if item.toplevel }}> 
                         Show in Overview
                     </label><br>
                     <label class="checkbox-label">
@@ -68,16 +75,15 @@
                 </div>
             </div>
 
-            <div class="spacious-top flex-row gap-20">
+            <div class="column-container">
                 <div class="form-group">
                     <label for="q_limit">Limit per Pile:</label>
-                    <input type="number" id="q_limit" name="q_limit" value="{{ item.q_limit }}" step="any">
-                    <small class="label-like">0 for unlimited</small>
+                    <input type="number" id="q_limit" name="q_limit" value="{{ item.q_limit }}" step="any" placeholder="0 for unlimited" style="max-width: 20ch;">
                 </div>
                 
-                <div id="universal-qty-box" class="form-group {{ 'hidden' if item.storage_type != StorageType.UNIVERSAL }}">
-                    <label for="quantity">Quantity in Universal Storage:</label>
-                    <input type="number" id="quantity" name="quantity" value="{{ initial_qty or 0 }}" step="any">
+                <div id="universal-qty-box" class="form-group">
+                    <label id="quantity-label" for="quantity">Quantity:</label>
+                    <input type="number" id="quantity-input" name="quantity" value="{{ initial_qty or 0 }}" step="any" style="max-width: 20ch;">
                 </div>
             </div>
         </section>
@@ -159,19 +165,40 @@
 
 <script>
     // Handle UI toggles for storage types
+
+    function updateStorageControls() {
+        const quantityInput = document.getElementById('quantity-input');
+        const quantityLabel = document.getElementById('quantity-label');
+        const topLevelCheckbox = document.getElementById('toplevel');
+        const topLevelLabel = document.getElementById('toplevel-label');
+        
+        const selectedType = document.querySelector('input[name="storage_type"]:checked').value;
+        const isUniversal = (selectedType === '{{ StorageType.UNIVERSAL }}');
+
+        if (isUniversal) {
+            // Enable and Show
+            quantityInput.disabled = false;
+            quantityLabel.classList.remove('disabled');
+            topLevelCheckbox.disabled = false;
+            topLevelLabel.classList.remove('disabled');
+        } else {
+            // Disable and Hide/Reset
+            quantityInput.disabled = true;
+            quantityInput.value = 0;
+            quantityLabel.classList.add('disabled');
+            topLevelCheckbox.disabled = true;
+            topLevelCheckbox.checked = false;
+            topLevelLabel.classList.add('disabled');
+        }
+    }
+
     document.querySelectorAll('input[name="storage_type"]').forEach(radio => {
-        radio.addEventListener('change', (e) => {
-            const qtyBox = document.getElementById('universal-qty-box');
-            if (e.target.value === '{{ StorageType.UNIVERSAL }}') {
-                qtyBox.classList.remove('hidden');
-            } else {
-                qtyBox.classList.add('hidden');
-            }
-        });
+        radio.addEventListener('change', updateStorageControls);
     });
 
     /**
      * Updates the attribute requirement input based on whether the attribute is binary
+     * This handles the inline attribute requirements in recipe_row.html
      */
     function updateAttribReqInput(selectElement) {
         const row = selectElement.parentElement;
@@ -196,10 +223,10 @@
         };
 
         if (isBinary) {
-            // Hide range label/inputs, show checkbox
-            if (minInput) minInput.style.display = 'none';
-            if (maxInput) maxInput.style.display = 'none';
-            if (rangeLabel) rangeLabel.style.display = 'none';
+            // Hide range inputs, show checkbox
+            if (minInput && minInput.style.display !== 'none') minInput.style.display = 'none';
+            if (maxInput && maxInput.style.display !== 'none') maxInput.style.display = 'none';
+            if (rangeLabel && rangeLabel.style.display !== 'none') rangeLabel.style.display = 'none';
             
             // Find or create checkbox
             let checkbox = row.querySelector('input[type="checkbox"]');
@@ -209,17 +236,20 @@
                 label.style.margin = '0';
                 const checkboxInput = document.createElement('input');
                 checkboxInput.type = 'checkbox';
+                checkboxInput.name = selectElement.name.replace('[attrib_id]', '[is_checked]');
                 checkboxInput.style.marginRight = '5px';
+                syncCheckbox(checkboxInput);
                 label.appendChild(checkboxInput);
-                if (minInput) minInput.parentElement.insertBefore(label, minInput);
+                selectElement.parentElement.insertBefore(label, minInput || maxInput);
                 checkbox = checkboxInput;
+            } else {
+                syncCheckbox(checkbox);
             }
-            syncCheckbox(checkbox);
         } else {
             // Show range inputs, hide checkbox
-            if (minInput) minInput.style.display = 'inline';
-            if (maxInput) maxInput.style.display = 'inline';
-            if (rangeLabel) rangeLabel.style.display = 'inline';
+            if (minInput && minInput.style.display === 'none') minInput.style.display = 'inline';
+            if (maxInput && maxInput.style.display === 'none') maxInput.style.display = 'inline';
+            if (rangeLabel && rangeLabel.style.display === 'none') rangeLabel.style.display = 'inline';
             
             const checkbox = row.querySelector('input[type="checkbox"]');
             if (checkbox && checkbox.parentElement.tagName === 'LABEL') {
@@ -240,6 +270,11 @@
         const html = template.replace(/RECIPE_INDEX/g, newIndex);
         
         container.insertAdjacentHTML('beforeend', html);
+
+        // Get the newly added checkbox and sync it
+        const newCard = container.lastElementChild;
+        const newCheckbox = newCard.querySelector('.instant-checkbox');
+        if (newCheckbox) toggleInstant(newCheckbox);
     }
 
     /**
@@ -272,11 +307,58 @@
         }, 0);
     }
 
+    /**
+     * Toggles the duration input state within a specific recipe card.
+     * @param {HTMLElement} checkbox - The checkbox element that was toggled.
+     */
+    function toggleInstant(checkbox) {
+        // Find the parent card to scope the search for the duration input
+        const card = checkbox.closest('.recipe-card');
+        const durationInput = card.querySelector('.duration-input');
+        const durationLabel = card.querySelector('.duration-group label');
+
+        if (checkbox.checked) {
+            durationInput.disabled = true;
+            durationInput.classList.add('disabled');
+            if (durationLabel) durationLabel.classList.add('disabled');
+            
+            // Save current value and set to 0
+            durationInput.dataset.preInstantValue = durationInput.value;
+            durationInput.value = 0;
+        } else {
+            durationInput.disabled = false;
+            durationInput.classList.remove('disabled');
+            if (durationLabel) durationLabel.classList.remove('disabled');
+            
+            // Restore value if it was saved
+            if (durationInput.dataset.preInstantValue) {
+                durationInput.value = durationInput.dataset.preInstantValue;
+            }
+        }
+    }
+
+    // Run on page load
     document.addEventListener('DOMContentLoaded', () => {
-        const selectElements = document.querySelectorAll('#recipes-container select[name*="[attrib_id]"]');
+        updateStorageControls();
+
+        const selectElements = document.querySelectorAll(
+            '#recipes-container select[name*="[attrib_id]"]');
         selectElements.forEach(selectElement => {
             updateAttribReqInput(selectElement);
         });
+        document.querySelectorAll('.instant-checkbox').forEach(cb => {
+            toggleInstant(cb);
+        });
     });
 </script>
+
+<style>
+    .recipe-card { background: #1a1a1a; margin-top: 20px; border-left: 4px solid var(--accent); }
+    .grid-3-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
+    .sub-section { flex: 1; min-width: 250px; background: #222; padding: 10px; border-radius: 4px; }
+    h5 { margin-top: 0; color: var(--text-dim); }
+    .gap-5 { gap: 5px; }
+    .spacious-bottom { margin-bottom: 8px; }
+</style>
+
 {% endblock %}

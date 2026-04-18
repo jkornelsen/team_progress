@@ -360,6 +360,17 @@ progress::-moz-progress-bar {
 .gap-20 { gap: 20px; }
 
 .hidden { display: none !important; }
+
+.disabled {
+    opacity: 0.5;
+    color: #888;
+    cursor: not-allowed;
+}
+input:disabled {
+    background-color: #111111;
+    cursor: not-allowed;
+}
+
 .no-entities { 
     padding: 10px; 
     color: #888; 

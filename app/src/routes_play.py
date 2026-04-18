@@ -245,6 +245,7 @@ def drop_item(id):
     
     if success:
         db.session.commit()
+        add_message(f"{char.name} dropped {qty} {item.name}")
         return '', HTTPStatus.NO_CONTENT
     return jsonify({"message": "Could not drop."}), HTTPStatus.BAD_REQUEST
 
@@ -271,10 +272,15 @@ def pickup_item(id):
         quantity=qty, from_pos=pos
     )
     
+    item = Item.query.get((g.game_token, item_id))
     if success:
         db.session.commit()
+        add_message(f"{char.name} picked up {qty} {item.name}")
         return '', HTTPStatus.NO_CONTENT
-    return jsonify({"message": "Could not pick up."}), HTTPStatus.BAD_REQUEST
+
+    return jsonify(
+        {"message": "{char.name} could not pick up {item.name}."}
+    ), HTTPStatus.BAD_REQUEST
 
 @play_bp.route('/char/<int:id>/give', methods=['POST'])
 def give_item(id):
@@ -302,7 +308,10 @@ def give_item(id):
 
     if success:
         db.session.commit()
+        item = Item.query.get((g.game_token, item_id))
+        add_message(f"{char.name} gave {qty} {item.name} to {target_char.name}")
         return '', HTTPStatus.NO_CONTENT
+
     return jsonify({"message": "Could not transfer."}), HTTPStatus.BAD_REQUEST
 
 @play_bp.route('/char/<int:id>/equip', methods=['POST'])
@@ -340,10 +349,8 @@ def equip_item(id):
     pile.slot = slot
     db.session.commit()
 
-    # 4. Log to Chronicle
-    msg = f"{char.name} equipped {item.name} to {slot}."
-    add_message(game_token, msg)
-
+    # 4. Log
+    add_message(f"{char.name} equipped {item.name} to {slot}")
     return '', HTTPStatus.NO_CONTENT
 
 @play_bp.route('/char/<int:id>/unequip', methods=['POST'])
@@ -376,10 +383,8 @@ def unequip_item(id):
     pile.slot = None
     db.session.commit()
 
-    # Log to Chronicle
-    msg = f"{char.name} unequipped {item.name}."
-    add_message(game_token, msg)
-
+    # Log
+    add_message(f"{char.name} unequipped {item.name}")
     return '', HTTPStatus.NO_CONTENT
 
 @play_bp.route('/char/<int:id>/move', methods=['POST'])
@@ -575,6 +580,7 @@ def play_item(id):
             'id': r.id,
             'host_id': host_id,
             'host_name': host_ent.name if host_ent else "No Host",
+            'product_id': r.product_id,
             'rate_amount': r.rate_amount,
             'rate_duration': r.rate_duration,
             'instant': r.instant,
@@ -843,11 +849,16 @@ def start_item_production(host_id):
     # BAD_REQUEST causes res.ok to be false in JS
     return jsonify({"message": message}), HTTPStatus.BAD_REQUEST
 
-@play_bp.route('/production/stop/host/<int:host_id>', methods=['POST'])
-def stop_item_production(host_id):
-    if stop_production(host_id):
+@play_bp.route('/production/stop/host/<int:host_id>/item/<int:item_id>', methods=['POST'])
+def stop_item_production(host_id, item_id):
+    if stop_production(host_id, item_id):
         return '', HTTPStatus.NO_CONTENT
-    return jsonify({"message": "Could not stop."}), HTTPStatus.BAD_REQUEST
+    item = Item.query.get((game_token, item_id))
+    if not item:
+        return jsonify(
+            {"message": "Item not found"}), HTTPStatus.NOT_FOUND
+    return jsonify(
+        {"message": f"{item.name} not in progress."}), HTTPStatus.BAD_REQUEST
 
 @play_bp.route('/production/instant/host/<int:host_id>', methods=['POST'])
 def instant_item_production(host_id):
@@ -1021,10 +1032,10 @@ def apply_event(id):
     from .logic_event import apply_event_change
     apply_event_change(key_id, key_type, container_id, new_value)
     
-    # Log to Chronicle
+    # Log
     container = Entity.query.get((g.game_token, container_id))
     key_def = Entity.query.get((g.game_token, key_id))
-    add_message(g.game_token, f"Updated {key_def.name} on {container.name} to {new_value}")
+    add_message(f"Updated {key_def.name} on {container.name} to {new_value}")
 
     return '', HTTPStatus.NO_CONTENT
 
@@ -1059,8 +1070,8 @@ def play_attrib(attrib_id, subject_id):
         val_record.value = new_val
         db.session.commit()
         
-        # Log to Chronicle
-        add_message(game_token, f"Modified {attribute.name} on {subject.name} to {new_val}")
+        # Log
+        add_message(f"Modified {attribute.name} on {subject.name} to {new_val}")
         return redirect_back()
 
     # Get reverse dependencies (items needing this for recipes)

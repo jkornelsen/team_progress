@@ -146,7 +146,7 @@ def get_available_destinations(char):
             
     return reachable, has_nonadjacent
 
-def arrive_at_destination(main_char_id, dest_loc_id, move_with_ids=None):
+def arrive_at_destination(main_char_id, dest_loc_id, move_party=False):
     """
     Teleports a party to a specific location if next to a door.
     Places them at the door coordinate if a link exists, otherwise default.
@@ -177,7 +177,7 @@ def arrive_at_destination(main_char_id, dest_loc_id, move_with_ids=None):
     if not new_pos:
         new_pos = get_default_position(target_loc)
 
-    party = get_moving_party(main_char, move_with_ids)
+    party = get_moving_party(main_char, move_party)
     for member in party:
         member.location_id = dest_loc_id
         member.position = new_pos
@@ -187,7 +187,6 @@ def arrive_at_destination(main_char_id, dest_loc_id, move_with_ids=None):
         target_loc.masked = False
 
     db.session.commit()
-    party = " and party" if main_char.travel_party else ''
-    add_message(
-        game_token, f"{main_char.name}{party} traveled to {target_loc.name}.")
+    party = " and party" if main_char.travel_party and move_party else ''
+    add_message(f"{main_char.name}{party} traveled to {target_loc.name}.")
     return True, "Arrived."

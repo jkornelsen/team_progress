@@ -8,7 +8,6 @@ from app.models import (
     GENERAL_ID, StorageType)
 from app.utils import ContextIds
 from app.src.logic_piles import adjust_quantity
-from app.src.logic_user_interaction import add_message
 from app.src.logic_event import check_triggers, TriggerException
 from app.src.logic_production import (
     can_perform_recipe, execute_production)
@@ -77,7 +76,6 @@ def update_progress(progress_id):
         logger.info(f"[HALT] Stopping Recipe {recipe.id}: {halt_reason}")
         progress.is_ongoing = False
         progress.stop_time = datetime.now()
-        add_message(game_token, f"Production of {recipe.product.name} stopped: {halt_reason}")
 
     db.session.commit()
     return halt_reason
@@ -178,11 +176,11 @@ def start_production(host_id, recipe_id, owner_id, ctx):
     db.session.commit()
     return True, "Production started."
 
-def stop_production(host_id):
+def stop_production(host_id, product_id):
     """Pauses production and performs one last catch-up check."""
     game_token = g.game_token
     progress = Progress.query.filter_by(
-        game_token=game_token, host_id=host_id
+        game_token=game_token, host_id=host_id, product_id=product_id
     ).first()
 
     if progress and progress.is_ongoing:

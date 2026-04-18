@@ -15,14 +15,22 @@
             <input type="number" name="recipes[{{ recipe_index }}][rate_amount]" 
                    value="{{ recipe.rate_amount if recipe else 1.0 }}" step="any" required>
         </div>
-        <div class="form-group">
+        <div class="form-group duration-group">
             <label>Duration (Seconds):</label>
-            <input type="number" name="recipes[{{ recipe_index }}][rate_duration]" 
-                   value="{{ recipe.rate_duration if recipe else 3.0 }}" step="any" required>
+            <input type="number"
+                    name="recipes[{{ recipe_index }}][rate_duration]" 
+                    id="duration-{{ recipe_index }}"
+                    class="duration-input"
+                    value="{{ recipe.rate_duration if recipe else 3.0 }}"
+                    step="any" required>
         </div>
         <div class="form-group align-center flex-row" style="padding-top: 25px;">
-            <input type="checkbox" name="recipes[{{ recipe_index }}][instant]" 
-                   id="instant-{{ recipe_index }}" {{ 'checked' if recipe and recipe.instant }}>
+            <input type="checkbox"
+                    name="recipes[{{ recipe_index }}][instant]" 
+                    id="instant-{{ recipe_index }}"
+                    class="instant-checkbox"
+                    onchange="toggleInstant(this)"
+                    {{ 'checked' if recipe and recipe.instant }}>
             <label for="instant-{{ recipe_index }}">Instant</label>
         </div>
     </div>
@@ -107,76 +115,3 @@
         <button type="button" class="btn-sm" onclick="addAttribReq({{ recipe_index }})">+ Add Requirement</button>
     </div>
 </div>
-
-<style>
-    .recipe-card { background: #1a1a1a; margin-top: 20px; border-left: 4px solid var(--accent); }
-    .grid-3-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
-    .sub-section { flex: 1; min-width: 250px; background: #222; padding: 10px; border-radius: 4px; }
-    h5 { margin-top: 0; color: var(--text-dim); }
-    .gap-5 { gap: 5px; }
-    .spacious-bottom { margin-bottom: 8px; }
-</style>
-
-<script>
-    /**
-     * Updates the attribute requirement input based on whether the attribute is binary
-     * This handles the inline attribute requirements in recipe_row.html
-     */
-    function updateAttribReqInput(selectElement) {
-        const row = selectElement.parentElement;
-        const selectedOption = selectElement.options[selectElement.selectedIndex];
-        const isBinary = selectedOption.dataset.isBinary === 'True' || selectedOption.dataset.isBinary === 'true';
-        
-        const rangeLabel = row.querySelector('.range-label');
-        const minInput = row.querySelector('input[name*="[min]"]');
-        const maxInput = row.querySelector('input[name*="[max]"]');
-        
-        const syncCheckbox = (checkbox) => {
-            if (!checkbox) return;
-            checkbox.onchange = (e) => {
-                if (minInput) minInput.value = e.target.checked ? '1' : '0';
-                if (maxInput) maxInput.value = e.target.checked ? '1' : '0';
-            };
-            if (minInput && maxInput) {
-                const minVal = parseFloat(minInput.value) || 0;
-                const maxVal = parseFloat(maxInput.value) || 0;
-                checkbox.checked = minVal > 0 || maxVal > 0;
-            }
-        };
-
-        if (isBinary) {
-            // Hide range inputs, show checkbox
-            if (minInput && minInput.style.display !== 'none') minInput.style.display = 'none';
-            if (maxInput && maxInput.style.display !== 'none') maxInput.style.display = 'none';
-            if (rangeLabel && rangeLabel.style.display !== 'none') rangeLabel.style.display = 'none';
-            
-            // Find or create checkbox
-            let checkbox = row.querySelector('input[type="checkbox"]');
-            if (!checkbox) {
-                const label = document.createElement('label');
-                label.className = 'checkbox-label';
-                label.style.margin = '0';
-                const checkboxInput = document.createElement('input');
-                checkboxInput.type = 'checkbox';
-                checkboxInput.name = selectElement.name.replace('[attrib_id]', '[is_checked]');
-                checkboxInput.style.marginRight = '5px';
-                syncCheckbox(checkboxInput);
-                label.appendChild(checkboxInput);
-                selectElement.parentElement.insertBefore(label, minInput || maxInput);
-                checkbox = checkboxInput;
-            } else {
-                syncCheckbox(checkbox);
-            }
-        } else {
-            // Show range inputs, hide checkbox
-            if (minInput && minInput.style.display === 'none') minInput.style.display = 'inline';
-            if (maxInput && maxInput.style.display === 'none') maxInput.style.display = 'inline';
-            if (rangeLabel && rangeLabel.style.display === 'none') rangeLabel.style.display = 'inline';
-            
-            const checkbox = row.querySelector('input[type="checkbox"]');
-            if (checkbox && checkbox.parentElement.tagName === 'LABEL') {
-                checkbox.parentElement.remove();
-            }
-        }
-    }
-</script>

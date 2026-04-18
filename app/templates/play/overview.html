@@ -174,11 +174,7 @@
 
     function startTimer() {
         const ms = parseInt(reloadSelect.value);
-        
-        // 1. Save the choice to localStorage
         localStorage.setItem(STORAGE_KEY, ms);
-
-        // 2. Manage the interval
         if (reloadTimer) clearInterval(reloadTimer);
         if (ms > 0) {
             reloadTimer = setInterval(() => location.reload(), ms);
@@ -187,19 +183,15 @@
 
     // Initialization: Run this on page load
     function initReload() {
-        // 3. Retrieve the saved value
         const savedValue = localStorage.getItem(STORAGE_KEY);
-        
         if (savedValue !== null) {
             reloadSelect.value = savedValue;
         }
-        
-        // 4. Start the timer based on the restored value
         startTimer();
     }
 
     reloadSelect.addEventListener('change', startTimer);
-    initReload(); // Initialize instead of just calling startTimer()
+    initReload();
 
     // Log scroll position
     const log = document.getElementById('game-log');

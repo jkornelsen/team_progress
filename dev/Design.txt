@@ -1,46 +1,14 @@
 ---- issues and proposed changes ----
 
-production gain messages
-    handle all known batches in one message which should help for instant production
-    for duration will only report 1 at a time so they get "x3" grouped
-remove from log:
-    Production of Raw Bacon stopped: Storage limit reached.
+smooth progress bars
+    choppy ones kind of look like they don't increase for 3-4 second duration
 
-three host types
-    1. general/universal production:
-        per-product singleton progress, concurrent across products
-        e.g. Logs and bars can both run, but logs can’t run twice at once.
-        Progress.filter_by(host_id=host_id, product_id=recipe.product_id)
-    2. character:
-        per-character singleton job
-        e.g. Alice and Bob can both work, but Alice can’t do two things.
-    3. location:
-        multi-job, independent progress per job
-how to choose host
-    Select the simplest host that satisfies all recipe requirements,
-    the first valid option in a storage-type-specific priority list.
-    UNIVERSAL item product:
-        1. general if all requirements are met from universal storage
-        2. character if required for at least one unmet requirement
-           (salience override so it feels like the action is done by someone)
-        3. location if required
-    CARRIED or LOCAL item product:
-        1. character if they meet all requirements or no location can
-            fully satisfy requirements
-        2. location if required
-        3. (never general host as there's no place to go)
-converting
-    we already do this correctly with universal chores -- require carried items
-    or char attributes in the recipe
 location production examples
     loc mine helium-3, then char converts to cannisters
     lumber mill: logs > boards
-
-design says should be location hosted since char not needed
-    i'm not sure this is really right though -- seems like default char is better
-    maybe not worry about this for now and just get it working
-    later we can think about how better to disambiguate in the ui
-what about an "add job" button under Local Production with item selectbox
+location hosted when char not needed?
+    but seems like default char is better
+    what about an "add job" button under Local Production with item selectbox
     that would bring up the item page with a "host_by_loc" param set
     or add locally producible items in location config
 
@@ -59,9 +27,6 @@ application modifiers
     I think the latter might be more practical,
     so it seems like having a single system of application modifers
     would be better
-
-disable "show in overview" if item storage type is not universal
-disable recipe duration if instant
 
 show updated item quantities in locations like overview and sources do
 

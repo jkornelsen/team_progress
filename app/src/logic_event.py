@@ -220,7 +220,7 @@ def roll_for_outcome(event_id, context_ids, difficulty=0.0):
         display_str = breakdown_str
         message_str = display_str.replace('<br>', ' ')
 
-    add_message(game_token, f"{event.name}: {message_str}")
+    add_message(f"{event.name}: {message_str}")
     return total, display_str
 
 def roll_coordinate(loc_id):
@@ -303,7 +303,7 @@ def roll_for_system_outcome(event_id, num_dice=1, sides=20, bonus=0):
         )
         numeric_val = float(hits)
 
-    add_message(g.game_token, f"{event.name}: {display_str.replace('<br>', ' ')}")
+    add_message(f"{event.name}: {display_str.replace('<br>', ' ')}")
     return numeric_val, display_str
 
 # ------------------------------------------------------------------------

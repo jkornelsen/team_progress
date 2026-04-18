@@ -1,4 +1,5 @@
 import logging
+from flask import g
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import desc
 from app.models import db, GameMessage, UserInteraction, Entity
@@ -9,12 +10,13 @@ logger = logging.getLogger(__name__)
 # 1. Chronicle (Game Message Log)
 # ------------------------------------------------------------------------
 
-def add_message(game_token, text):
+def add_message(text):
     """
     Adds a message to the game log. 
     If the exact same message was sent recently, increments the count 
     instead of spamming the list.
     """
+    game_token = g.game_token
     if not text:
         return
 
