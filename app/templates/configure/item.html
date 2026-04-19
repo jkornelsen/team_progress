@@ -63,15 +63,21 @@
                     </label>
                 </div>
                 <div>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="masked" {{ 'checked' if item.masked }}> 
+                        Masked (Hidden until explored)
+                    </label><br>
                     <label id="toplevel-label" class="checkbox-label">
                         <input type="checkbox" id="toplevel" name="toplevel"
                             {{ 'checked' if item.toplevel }}> 
                         Show in Overview
                     </label><br>
-                    <label class="checkbox-label">
-                        <input type="checkbox" name="masked" {{ 'checked' if item.masked }}> 
-                        Masked (Hidden until explored)
-                    </label>
+                    <label id="loc-hosted-label" class="checkbox-label"
+                        title="Crafting station at a location that hosts automated production.">
+                        <input type="checkbox" id="loc-hosted" name="loc_hosted"
+                            {{ 'checked' if item.loc_hosted }}> 
+                        Local Automation Only 🏭
+                    </label><br>
                 </div>
             </div>
 
@@ -171,9 +177,12 @@
         const quantityLabel = document.getElementById('quantity-label');
         const topLevelCheckbox = document.getElementById('toplevel');
         const topLevelLabel = document.getElementById('toplevel-label');
+        const locHostedCheckbox = document.getElementById('loc-hosted');
+        const locHostedLabel = document.getElementById('loc-hosted-label');
         
         const selectedType = document.querySelector('input[name="storage_type"]:checked').value;
         const isUniversal = (selectedType === '{{ StorageType.UNIVERSAL }}');
+        const isLocal = (selectedType === '{{ StorageType.LOCAL }}');
 
         if (isUniversal) {
             // Enable and Show
@@ -189,6 +198,16 @@
             topLevelCheckbox.disabled = true;
             topLevelCheckbox.checked = false;
             topLevelLabel.classList.add('disabled');
+        }
+        if (isLocal) {
+            // Enable and Show
+            locHostedCheckbox.disabled = false;
+            locHostedLabel.classList.remove('disabled');
+        } else {
+            // Disable and Hide/Reset
+            locHostedCheckbox.disabled = true;
+            locHostedCheckbox.checked = false;
+            locHostedLabel.classList.add('disabled');
         }
     }
 

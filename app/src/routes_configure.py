@@ -109,6 +109,7 @@ def edit_item(id):
             val if val in StorageType.ALL_CODES else StorageType.UNIVERSAL)
         item.q_limit = req.get_float('q_limit')
         item.toplevel = 'toplevel' in request.form
+        item.loc_hosted = 'loc_hosted' in request.form
         item.masked = 'masked' in request.form
         
         if item.storage_type == StorageType.UNIVERSAL:

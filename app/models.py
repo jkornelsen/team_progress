@@ -1,3 +1,4 @@
+from datetime import datetime
 from sqlalchemy import event
 from sqlalchemy.dialects.postgresql import ARRAY, NUMRANGE
 from .database import db
@@ -68,6 +69,14 @@ class DictHydrator:
         # Apply mandatory IDs or overrides
         fields.update(overrides)
         return cls(game_token=game_token, **fields)
+
+def timeToStr(dt_obj):
+    return dt_obj.isoformat() if dt_obj else None
+
+def timeFromStr(date_str):
+    if not date_str:
+        return None
+    return datetime.fromisoformat(date_str)
 
 # ------------------------------------------------------------------------
 # Entity Parent Class
@@ -186,7 +195,8 @@ class Item(Entity):
     storage_type = db.Column(
         db.String(1), nullable=False, default=StorageType.CARRIED)
     q_limit = db.Column(db.Float, default=0.0)
-    toplevel = db.Column(db.Boolean, default=False)
+    loc_hosted = db.Column(db.Boolean, default=False)
+    toplevel = db.Column(db.Boolean, default=False) # i.e. pinned
     masked = db.Column(db.Boolean, default=False)
     counted_for_unmasking = db.Column(db.Boolean, default=False)
 
@@ -195,6 +205,7 @@ class Item(Entity):
         data.update({
             "storage_type": self.storage_type,
             "q_limit": self.q_limit,
+            "loc_hosted": self.loc_hosted,
             "toplevel": self.toplevel,
             "masked": self.masked,
             "attribs": [[v.attrib_id, v.value] for v in self.attrib_values],
@@ -278,6 +289,7 @@ class Location(Entity):
                 {"item_id": p.item_id, "quantity": p.quantity, "position": p.position} 
                 for p in self.piles
             ],
+            "progress": [p.to_dict() for p in self.progress_records],
             "item_refs": [ir.to_dict() for ir in self.item_refs],
             "destinations": [d.to_dict() for d in self.routes_forward],
         })
@@ -291,6 +303,9 @@ class Location(Entity):
         for i_data in data.get('items', []):
             loc.piles.append(
                 Pile.from_dict(i_data, game_token, loc.id))
+        for p_data in data.get('progress', []):
+            loc.progress_records.append(
+                Progress.from_dict(p_data, game_token))
         for ir_data in data.get('item_refs', []):
             loc.item_refs.append(
                 ItemRef.from_dict(ir_data, game_token, loc.id))
@@ -373,9 +388,7 @@ class Character(Entity):
                 {"item_id": p.item_id, "quantity": p.quantity, "slot": p.slot} 
                 for p in self.piles
             ],
-            "progress": [
-                p.to_dict() for p in self.progress_records
-                if p.is_ongoing],
+            "progress": [p.to_dict() for p in self.progress_records],
         })
         return data
 
@@ -1012,6 +1025,14 @@ class Recipe(db.Model, DictHydrator):
     def source_items(self):
         return [src.ingredient for src in self.sources]
 
+    @property
+    def is_location_hosted(self):
+        return any(
+            s.ingredient.storage_type == StorageType.LOCAL and 
+            s.ingredient.loc_hosted 
+            for s in self.sources
+        )
+
     product = db.relationship(
         'Item',
         back_populates='recipes',
@@ -1226,9 +1247,7 @@ class Progress(db.Model, DictHydrator):
     
     # status
     start_time = db.Column(db.DateTime)
-    stop_time = db.Column(db.DateTime)
     batches_processed = db.Column(db.Integer, default=0)
-    is_ongoing = db.Column(db.Boolean, default=False)
 
     def to_dict(self):
         return {
@@ -1237,11 +1256,22 @@ class Progress(db.Model, DictHydrator):
             "host_id": self.host_id,
             "char_id": self.char_id,
             "loc_id": self.loc_id,
-            "start_time": self.start_time,
-            "stop_time": self.stop_time,
+            "start_time": timeToStr(self.start_time),
             "batches_processed": self.batches_processed,
-            "is_ongoing": self.is_ongoing
         }
+
+    @classmethod
+    def from_dict(cls, data, game_token):
+        obj = super().from_dict(data, game_token)
+
+        from app.models import Recipe
+        recipe = Recipe.query.get((game_token, data.get('recipe_id')))
+        if recipe:
+            obj.product_id = recipe.product_id
+
+        obj.start_time = timeFromStr(data.get('start_time'))
+
+        return obj
 
     host = db.relationship(
         'Entity', 

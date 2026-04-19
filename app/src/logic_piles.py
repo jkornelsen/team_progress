@@ -72,8 +72,7 @@ def ensure_owner_up_to_date(owner_id):
     """
     prog = Progress.query.filter_by(
         game_token=g.game_token, 
-        host_id=owner_id, 
-        is_ongoing=True
+        host_id=owner_id
     ).first()
     if prog:
         from .logic_progress import update_progress

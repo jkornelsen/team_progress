@@ -115,6 +115,11 @@
                     <div class="recipe-card {{ 'active' if progress and progress.recipe_id == r.id }}">
                         <div class="recipe-header flex-between">
                             <strong>Output: {{ r.rate_amount | formatNum }} {{ item.name }}</strong>
+                            {% if r.is_location_hosted %}
+                                <span title="Automated production at location.">🏭</span>
+                            {% else %}
+                                <span title="Not location hosted.">/</span>
+                            {% endif %}
                             <span class="label-like">{{ r.rate_duration | formatNum }}s {{ '⚡ Instant' if r.instant }}</span>
                         </div>
                         
@@ -197,10 +202,11 @@
                                 {% if r.can_produce %}
                                     {% if r.instant %}
                                         <div class="batch-selector flex-row align-center">
-                                            <input type="number" id="batches-{{ r.id }}" 
-                                                   value="{{ r.max_batches }}" 
-                                                   min="1" max="{{ r.max_batches }}" 
-                                                   class="mini-input">
+                                            <input type="text" id="batches-{{ r.id }}" 
+                                                    value="{{ r.max_batches }}" 
+                                                    onchange="setQty('batches-{{ r.id }}', this.value)"
+                                                    min="1" max="{{ r.max_batches }}" 
+                                                    class="mini-input">
                                             
                                             <div class="batch-presets">
                                                 <button type="button" class="tag-button" 
@@ -218,7 +224,7 @@
                                     {% else %}
                                         <button id="start-{{ r.id }}"
                                                 onclick="startProd({{ r.id }}, {{ r.host_id }})"
-                                                class="go-button {{ 'hidden' if progress and progress.is_ongoing and progress.recipe_id == r.id }}">
+                                                class="go-button {{ 'hidden' if progress and progress.recipe_id == r.id }}">
                                             <span class="hotkey-indicator">{{ letter }}</span>
                                             Start
                                         </button>
@@ -243,7 +249,7 @@
                                 {% if not r.instant %}
                                     <button id="stop-{{ r.id }}"
                                             onclick="stopProd({{ r.host_id }}, {{ r.product_id }})"
-                                            class="dangerous-button {{ 'hidden' if not (progress and progress.is_ongoing and progress.recipe_id == r.id) }}">
+                                            class="dangerous-button {{ 'hidden' if not (progress and progress.recipe_id == r.id) }}">
                                         <span class="hotkey-indicator">{{ letter if letter else '' }}</span> Stop
                                     </button>
                                 {% endif %}
@@ -253,7 +259,7 @@
                                             const letter = '{{ letter }}';
                                             const recipeId = '{{ r.id }}';
                                             {# Determine state on page load #}
-                                            {% if progress and progress.is_ongoing and progress.recipe_id == r.id %}
+                                            {% if progress and progress.recipe_id == r.id %}
                                                 window.linkForKey[letter] = `#stop-${recipeId}`;
                                             {% elif r.can_produce %}
                                                 {% if r.instant %}
@@ -269,8 +275,8 @@
 
                             <!-- Production Bar -->
                             <div id="prog-container-{{ r.id }}" 
-                                 class="progress-container {{ 'hidden' if not (progress and progress.is_ongoing and progress.recipe_id == r.id) }}">
-                                <progress id="prog-bar-{{ r.id }}" value="0" max="100"></progress>
+                                 class="progress-container {{ 'hidden' if not (progress and progress.recipe_id == r.id) }}">
+                                <progress id="prog-bar-{{ r.id }}" class="progressbar" value="0" max="100"></progress>
                                 <span id="prog-label-{{ r.id }}" class="progress-label">0%</span>
                             </div>
                         </div>
@@ -285,7 +291,12 @@
                 <style>
                     .used-for-row { --grid-cols: 1fr auto; }
                 </style>
-                <h3>Used To Produce</h3>
+                <h3>
+                    Used To Produce
+                    {% if item.loc_hosted %}
+                    <span title="Crafting station automated at a location.">🏭</span>
+                    {% endif %}
+                </h3>
                 <div class="col-list reverse-lookup-list">
                     {% for entry in used_for_production | sort(attribute='item.name') %}
                         <div class="col-row used-for-row">
@@ -349,7 +360,7 @@
 
                     <div class="action-box border-bottom-dim" style="padding-bottom: 10px; margin-bottom: 15px;">
                         <label for="action-qty" class="label-like">Quantity:</label>
-                        <input type="number" id="action-qty" 
+                        <input type="text" id="action-qty" 
                                value="{{ pile.quantity | formatNum }}" 
                                max="{{ pile.quantity }}" 
                                step="any" 
@@ -485,6 +496,7 @@
         if (main.quantity !== undefined) {
             const qtyDisplay = document.getElementById('main-qty-display');
             if (qtyDisplay) qtyDisplay.textContent = main.quantity;
+            //isWaitingForServer = false;
 
             const isCurrentlyZero = (
                 parseFloat(main.quantity.replace(/,/g, '')) || 0) === 0;
@@ -549,9 +561,6 @@
                 const gainBtn = document.getElementById(`gain-${r.recipe_id}`);
                 const letter = container.getAttribute('data-recipe-hotkey');
                 const progContainer = document.getElementById(`prog-container-${r.recipe_id}`);
-                const progBar = document.getElementById(`prog-bar-${r.recipe_id}`);
-                const progLabel = document.getElementById(`prog-label-${r.recipe_id}`);
-
                 // Check if this recipe is the one currently running
                 const isRunning = (
                     main.is_ongoing && main.active_recipe_id === r.recipe_id);
@@ -565,23 +574,27 @@
                     }
                     if (progContainer) {
                         progContainer.classList.remove('hidden');
-                        // Percent calculation
                         if (main.start_time && main.rate_duration) {
-                            const startTime = new Date(main.start_time);
-                            const now = new Date();
-                            const elapsedMs = now - startTime;
-                            const durationMs = main.rate_duration * 1000;
-                            const elapsedInCurrentBatch = elapsedMs % durationMs;
-                            const percent = Math.min((elapsedInCurrentBatch / durationMs) * 100, 100);
-                            if (progBar) progBar.value = percent;
-                            if (progLabel) progLabel.textContent = Math.floor(percent) + '%';
+                            animateProgress(
+                                r.recipe_id, main.start_time, main.rate_duration);
                         }
                     }
                 } else {
                     // --- INACTIVE STATE ---
                     if (progContainer) progContainer.classList.add('hidden');
                     
+                    isWaitingForServer = false;
+                    const progBar = document.getElementById(`prog-bar-${r.recipe_id}`);
+                    if (progBar && progBar.value > 0) {
+                        if (animationFrameId) {
+                            cancelAnimationFrame(animationFrameId);
+                            animationFrameId = null;
+                        }
+                        progBar.value = 0;
+                    }
+
                     let blockedMsg = container.querySelector('.blocked-container');
+
                     if (!r.can_produce) {
                         // If we can't produce, hide buttons and show a message
                         if (startBtn) startBtn.classList.add('hidden');
@@ -622,7 +635,7 @@
             });
         }
         {% if not manualtick %}
-            window.productionTimeout = setTimeout(updateStatus, 2000);
+            window.productionTimeout = setTimeout(updateStatus, 1500);
         {% endif %}
     }
 
@@ -667,7 +680,7 @@
             setButtonState('waiting');
             setTimeout(() => {
                 setButtonState('ready');
-            }, 2000);
+            }, 1500);
         }
         document.addEventListener('keydown', (e) => {
             if (e.code === "Space" && !isProcessing && !cooldownActive) {
@@ -684,6 +697,56 @@
         // Initial call on load
         updateStatus();
     {% endif %}
+
+    // Smooth progress bar
+
+    let animationFrameId = null; 
+    let isWaitingForServer = false;
+
+    function animateProgress(recipeId, serverStart, durationSec) {
+        // If a loop is already running, don't start a second one
+        if (animationFrameId) return;
+
+        const progBar = document.getElementById(`prog-bar-${recipeId}`);
+        const progLabel = document.getElementById(`prog-label-${recipeId}`);
+        const startTimeMs = new Date(serverStart).getTime();
+        const durationMs = durationSec * 1000;
+
+        function frame() {
+            const now = Date.now();
+            const elapsedMs = now - startTimeMs;
+            
+            const elapsedInCurrentBatch = elapsedMs % durationMs;
+            let percent = Math.min((elapsedInCurrentBatch / durationMs) * 100, 100);
+
+            if (percent >= 99) {
+                percent = 100
+                isWaitingForServer = true;
+            }
+
+            if (progBar) progBar.value = percent;
+            if (progLabel) {
+                if (percent == 100) {
+                    progLabel.innerHTML = '<span style="margin-left: 10px;">+</span>';
+                } else {
+                    progLabel.innerText = `${Math.floor(percent)}%`;
+                }
+            }
+
+            if (!isWaitingForServer) {
+                animationFrameId = requestAnimationFrame(frame);
+            } else {
+                animationFrameId = null; 
+            }
+        }
+
+        // Reset the flag and clear old loops whenever we start a fresh animation
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        isWaitingForServer = false; 
+        animationFrameId = requestAnimationFrame(frame);
+    }
+
+    // Production
 
     async function startProd(recipeId, targetHostId) {
         const fd = new FormData();
@@ -726,13 +789,38 @@
         updateStatus();
     }
 
-    // Inventory AJAX Logic
+    // Quantity fields
+
+    (function() {
+        const saved = sessionStorage.getItem('pendingQty');
+        if (saved) {
+            try {
+                const data = JSON.parse(saved);
+                // We use a window listener or a small timeout to ensure 
+                // the DOM elements are fully ready before injecting
+                window.addEventListener('DOMContentLoaded', () => {
+                    const target = document.getElementById(data.targetId);
+                    if (target) {
+                        target.value = data.value;
+                    }
+                    // Burn the evidence so it doesn't persist on manual refreshes
+                    sessionStorage.removeItem('pendingQty');
+                });
+            } catch (e) {
+                sessionStorage.removeItem('pendingQty');
+            }
+        }
+    })();
 
     function setQty(inputId, val) {
         const input = document.getElementById(inputId);
         if (input) {
-            // Ensure we don't go below 1, and format to a clean number
-            input.value = Math.max(1, Math.floor(val));
+            const finalVal = Math.max(1, Math.floor(val));
+            input.value = finalVal;
+            sessionStorage.setItem('pendingQty', JSON.stringify({
+                targetId: inputId,
+                value: finalVal
+            }));
         }
     }
 
@@ -745,10 +833,18 @@
         const finalVal = max > 0 ? Math.max(1, Math.floor(val)) : 0;
         
         const input = document.getElementById(inputId);
-        if (input) input.value = finalVal;
+        if (input) {
+            input.value = finalVal;
+            sessionStorage.setItem('pendingQty', JSON.stringify({
+                targetId: inputId,
+                value: finalVal
+            }));
+        }
     }
 
     const getActionQty = () => document.getElementById('action-qty')?.value || 0;
+
+    // Inventory AJAX Logic
 
     document.getElementById('drop-btn')?.addEventListener('click', async () => {
         const fd = new FormData();
@@ -818,6 +914,14 @@
 </script>
 
 <style>
+    progressbar {
+        transition: value 0.2s ease-out;
+        appearance: none;
+    }
+    progressbar::-webkit-progress-value {
+        transition: width 0.01s linear;
+    }
+
     .action-box { display: flex; gap: 10px; margin-bottom: 10px; }
     .recipe-list { display: flex; flex-direction: column; gap: 15px; }
     .source-list { list-style: none; padding: 5px 0; margin: 0; font-size: 0.85em; }

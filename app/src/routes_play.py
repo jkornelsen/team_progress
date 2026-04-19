@@ -41,17 +41,25 @@ def get_inventory_for_role(entity):
 def overview():
     game_token = g.game_token
     
-    # 1. Fetch Top-Level Entities
+    # Fetch Top-Level Entities
     chars = Character.query.filter_by(game_token=game_token, toplevel=True).all()
     locs = Location.query.filter_by(game_token=game_token, toplevel=True).all()
     items = Item.query.filter_by(game_token=game_token, toplevel=True).all()
     events = Event.query.filter_by(game_token=game_token, toplevel=True).all()
     
-    # 2. Check Win Requirements
+    # Fetch IDs of items currently being produced by the General Host
+    general_production_ids = {
+        p.product_id for p in Progress.query.filter_by(
+            game_token=game_token, 
+            host_id=GENERAL_ID
+        ).all()
+    }
+
+    # Check Win Requirements
     win_reqs, all_met = validate_requirements(game_token)
     overall = Overall.query.get(game_token)
     
-    # 3. Recent Messages
+    # Recent Messages
     messages = GameMessage.query.filter_by(game_token=game_token)\
                 .order_by(GameMessage.timestamp.desc()).limit(30).all()
     messages.reverse()
@@ -61,6 +69,7 @@ def overview():
         characters=chars,
         locations=locs,
         items=items,
+        general_production_ids=general_production_ids,
         events=events,
         overall=overall,
         win_reqs=win_reqs,
@@ -243,11 +252,14 @@ def drop_item(id):
         item_id, from_owner_id=id, to_owner_id=char.location_id,
         quantity=qty, to_pos=char.position)
     
+    item = Item.query.get((g.game_token, item_id))
     if success:
         db.session.commit()
         add_message(f"{char.name} dropped {qty} {item.name}")
         return '', HTTPStatus.NO_CONTENT
-    return jsonify({"message": "Could not drop."}), HTTPStatus.BAD_REQUEST
+    return jsonify(
+        {"message": f"Could not drop {item.name}."}
+    ), HTTPStatus.BAD_REQUEST
 
 @play_bp.route('/char/<int:id>/pickup', methods=['POST'])
 def pickup_item(id):
@@ -306,13 +318,14 @@ def give_item(id):
         quantity=qty
     )
 
+    item = Item.query.get((g.game_token, item_id))
     if success:
         db.session.commit()
-        item = Item.query.get((g.game_token, item_id))
         add_message(f"{char.name} gave {qty} {item.name} to {target_char.name}")
         return '', HTTPStatus.NO_CONTENT
-
-    return jsonify({"message": "Could not transfer."}), HTTPStatus.BAD_REQUEST
+    return jsonify(
+        {"message": "Could not transfer {item.name} to {target_char.name}."}
+    ), HTTPStatus.BAD_REQUEST
 
 @play_bp.route('/char/<int:id>/equip', methods=['POST'])
 def equip_item(id):
@@ -580,6 +593,7 @@ def play_item(id):
             'id': r.id,
             'host_id': host_id,
             'host_name': host_ent.name if host_ent else "No Host",
+            'is_location_hosted': r.is_location_hosted,
             'product_id': r.product_id,
             'rate_amount': r.rate_amount,
             'rate_duration': r.rate_duration,
@@ -744,11 +758,11 @@ def item_production_status(item_id, owner_id):
     # 3. GATHER PROGRESS FOR ALL POSSIBLE HOSTS
     # We check if any of our context entities are currently making this item
     potential_hosts = [GENERAL_ID, char_id, loc_id]
-    all_progs = Progress.query.filter(
-        Progress.game_token == game_token,
-        Progress.product_id == item_id,
-        Progress.host_id.in_([h for h in potential_hosts if h]),
-        Progress.is_ongoing == True
+    all_progs = Progress.query.filter_by(
+        game_token=game_token, 
+        product_id=item_id
+    ).filter(
+        Progress.host_id.in_([h for h in potential_hosts if h])
     ).all()
 
     # Find the 'primary' progress to show the main bar (usually the first one found)

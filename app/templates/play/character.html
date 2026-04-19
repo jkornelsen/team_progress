@@ -95,7 +95,7 @@
             </div>
 
             <div>
-                {% set active_job = character.progress_records | selectattr('is_ongoing', 'equalto', True) | first %}
+                {% set active_job = character.progress_records | first %}
                 {% if active_job %}
                     <span class="text-accent">Working: {{ active_job.product.name }}</span>
                 {% else %}
@@ -117,6 +117,7 @@
                 </style>
                 {% set equipped = inventory | selectattr("slot") | list %}
                 {% set backpack = inventory | rejectattr("slot") | list %}
+                {% set producing_ids = character.progress_records | map(attribute='product_id') | list %}
                 {% if equipped or backpack %}
                 <section class="outer-border">
                     <div class="inventory-section">
@@ -150,6 +151,10 @@
                                         {% call hk.hotlink(item_url, link_letters) %}
                                             {{ pile.item.name }}
                                         {% endcall %}
+
+                                        {% if pile.item_id in producing_ids %}
+                                            <span title="Character Production In Progress" class="spin">🔄</span>
+                                        {% endif %}
                                         
                                         <span>{{ pile.quantity | formatNum }}</span>
                                     </div>

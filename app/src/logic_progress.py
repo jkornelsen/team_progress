@@ -20,7 +20,7 @@ def update_progress(progress_id):
     then delegates work to logic_production.
     """
     progress = Progress.query.get(progress_id)
-    if not progress or not progress.is_ongoing or not progress.recipe_id:
+    if not progress:
         return
 
     game_token = g.game_token
@@ -51,7 +51,7 @@ def update_progress(progress_id):
         try:
             check_triggers(progress.host, batches=new_batches)
         except TriggerException as e:
-            progress.is_ongoing = False
+            db.session.delete(progress)
             db.session.commit()
             raise e 
 
@@ -74,8 +74,7 @@ def update_progress(progress_id):
     # 5. Handle Haltung
     if halt_reason:
         logger.info(f"[HALT] Stopping Recipe {recipe.id}: {halt_reason}")
-        progress.is_ongoing = False
-        progress.stop_time = datetime.now()
+        db.session.delete(progress)
 
     db.session.commit()
     return halt_reason
@@ -108,9 +107,8 @@ def tick_all_active(messages_host_id=None):
     """
     game_token = g.game_token
 
-    # Query all records that are currently marked as ongoing
     all_active = Progress.query.filter_by(
-        game_token=game_token, is_ongoing=True).all()
+        game_token=game_token).all()
     
     halt_messages = []
     for p in all_active:
@@ -136,7 +134,7 @@ def start_production(host_id, recipe_id, owner_id, ctx):
     if host_entity.entity_type == Character.TYPENAME:
         # Singleton: Characters can only do one thing at a time
         active_job = Progress.query.filter_by(
-            game_token=game_token, host_id=host_id, is_ongoing=True
+            game_token=game_token, host_id=host_id
         ).first()
         if active_job:
             if active_job.product_id == recipe.product_id:
@@ -145,8 +143,9 @@ def start_production(host_id, recipe_id, owner_id, ctx):
     else:
         # Concurrent: General and Location can host one job per product
         active_job = Progress.query.filter_by(
-            game_token=game_token, host_id=host_id, 
-            product_id=recipe.product_id, is_ongoing=True
+            game_token=game_token,
+            host_id=host_id, 
+            product_id=recipe.product_id
         ).first()
         if active_job:
             here = ' here' if host_entity.entity_type == Location.TYPENAME else ''
@@ -154,7 +153,9 @@ def start_production(host_id, recipe_id, owner_id, ctx):
 
     # Find or Create Record
     progress = Progress.query.filter_by(
-        game_token=game_token, host_id=host_id, product_id=recipe.product_id
+        game_token=game_token,
+        host_id=host_id,
+        product_id=recipe.product_id
     ).first()
 
     if not progress:
@@ -170,8 +171,6 @@ def start_production(host_id, recipe_id, owner_id, ctx):
 
     progress.start_time = datetime.now()
     progress.batches_processed = 0
-    progress.is_ongoing = True
-    progress.stop_time = None
     
     db.session.commit()
     return True, "Production started."
@@ -183,12 +182,12 @@ def stop_production(host_id, product_id):
         game_token=game_token, host_id=host_id, product_id=product_id
     ).first()
 
-    if progress and progress.is_ongoing:
-        # Final catch up
-        update_progress(progress.id)
-        
-        progress.is_ongoing = False
-        progress.stop_time = datetime.now()  # Naive datetime
+    if progress:
+        update_progress(progress.id) # Final catch up
+        # Check if it survived update_progress
+        still_exists = db.session.query(Progress).filter_by(id=progress.id).first()
+        if still_exists:
+            db.session.delete(still_exists)
         db.session.commit()
         return True
     return False

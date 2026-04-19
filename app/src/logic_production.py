@@ -11,25 +11,66 @@ from .logic_user_interaction import add_message
 
 logger = logging.getLogger(__name__)
 
-def can_perform_recipe(
-        host_id, recipe, target_owner_id, ctx, batches=1,
-        limit_to_channel=None):
+def find_best_host(recipe, owner_id, ctx):
+    """
+    Determines the host according to priority with strict channel checks.
+    Enforces Storage-Type-Specific Priority to prevent General host 
+    from splitting wood or crafting local items.
+    """
+    logger.debug(
+        f"find_best_host() | Product:{recipe.product_id}"
+        f" | Char:{ctx.char_id} | Loc:{ctx.loc_id}")
+
+    game_token = g.game_token
+    product = Item.query.get((game_token, recipe.product_id))
+
+    # 1. THE MACHINE CHECK (Highest Priority)
+    # If the recipe requires a LOCAL crafting station marked as automated, 
+    # the Location must be the host.
+    if recipe.is_location_hosted:
+        return ctx.loc_id
+
+    # 2. UNIVERSAL PRODUCT BRANCH (Currencies, Global Upgrades)
+    if product.storage_type == StorageType.UNIVERSAL:
+        # Priority A: General Host (System)
+        # We use this if ingredients/stats are all in the global bank.
+        if can_perform_recipe(GENERAL_ID, recipe, owner_id, ctx)[0]:
+            return GENERAL_ID
+
+        # Priority B: Character (Personal Trigger)
+        # If the bank is missing ingredients, but the character has them.
+        if ctx.char_id and can_perform_recipe(ctx.char_id, recipe, owner_id, ctx)[0]:
+            return ctx.char_id
+
+        # Priority C: Location (Environment/Passive)
+        # If no character is there.
+        if ctx.loc_id and can_perform_recipe(ctx.loc_id, recipe, owner_id, ctx)[0]:
+            return ctx.loc_id
+
+        # Fallback for UI (Error reporting)
+        return GENERAL_ID
+
+    # 3. PHYSICAL PRODUCT BRANCH (Tools, Resources, Structures)
+    else:
+        return ctx.char_id
+
+def can_perform_recipe(host_id, recipe, target_owner_id, ctx, batches=1):
     """
     Validates if a host can perform a recipe. 
     Checks Storage limits, Ingredients, and Attributes.
     """
-    game_token = g.game_token
-
     logger.debug(
         f"can_perform_recipe() | Product:{recipe.product_id}"
         f" | Char:{ctx.char_id} | Loc:{ctx.loc_id}")
+    game_token = g.game_token
+    if not host_id:
+        return False, "No appropriate host."
 
     # Character hosts can only use nearby piles
     host_pos = None
-    if host_id != GENERAL_ID: # slightly more efficient
-        char = Character.query.get((game_token, host_id))
-        if char:
-            host_pos = char.position
+    host_ent = Entity.query.get((game_token, host_id))
+    if host_ent and host_ent.entity_type == Character.TYPENAME:
+        host_pos = host_ent.position
 
     # 1. Output Limit
     if recipe.product.q_limit > 0:
@@ -46,20 +87,18 @@ def can_perform_recipe(
             return False, "Storage limit reached."
 
     # 2. Ingredient Availability
-    resolved = resolve_recipe_sources(
-        host_id, recipe, ctx, limit_to_channel)
+    resolved = resolve_recipe_sources(host_id, recipe, ctx)
     for res in resolved:
         required = res['source_def'].q_required * batches
         if res['total_available'] < required:
             return False, f"Missing {res['item'].name}."
 
     # 3. Attribute Requirements
-    relevant_ids = ctx.unique_ids(
-        GENERAL_ID, host_id, ctx.owner_id, ctx.char_id, ctx.loc_id)
+    scope = get_host_scope(host_id, ctx)
+
     for req in recipe.attrib_reqs:
         req_met = False
-        for eid in relevant_ids:
-            if not eid: continue
+        for eid in scope:
             av = AttribVal.query.filter_by(
                 game_token=game_token, subject_id=eid, attrib_id=req.attrib_id).first()
             if av and req.in_range(av.value):
@@ -70,33 +109,49 @@ def can_perform_recipe(
 
     return True, ""
 
-def resolve_recipe_sources(host_id, recipe, ctx, limit_to_channel=None):
+def get_host_scope(host_id, ctx):
     """
-    Find where ingredients are located.
-    Respects StorageType restrictions and visibility channels.
+    Returns the list of Entity IDs a host is allowed to interact with.
+    - General Host: Only sees the global bank (GENERAL_ID).
+    - Location Host: Sees the bank + items/stats at that specific location.
+    - Character Host: Sees the bank + the location + their own inventory/stats.
+    """
+    game_token = g.game_token
+    if host_id == GENERAL_ID:
+        return [GENERAL_ID]
+
+    host_ent = Entity.query.get((game_token, host_id))
+    if host_ent and host_ent.entity_type == Character.TYPENAME:
+        # Actor: Greedy scope
+        return ctx.unique_ids(GENERAL_ID, host_id, ctx.loc_id)
+    
+    # Machine/Environment: Local scope
+    return ctx.unique_ids(GENERAL_ID, host_id)
+
+def resolve_recipe_sources(host_id, recipe, ctx):
+    """
+    - General Host (System): Only sees Universal items in General Storage.
+    - Location Host (Machine): Sees Universal items + items on its own floor.
+    - Character Host (Actor): Sees Universal items + items on the floor + their own bag.
     """
     game_token = g.game_token
     resolved_sources = []
     
-    # Determine Search IDs
-    if limit_to_channel == GENERAL_ID:
-        search_ids = [GENERAL_ID]
-    elif limit_to_channel == Character.TYPENAME:
-        search_ids = ctx.unique_ids(host_id, ctx.char_id)
-    elif limit_to_channel == Location.TYPENAME:
-        search_ids = ctx.unique_ids(host_id, ctx.loc_id)
-    else:
-        # Greedy Mode (Default)
-        search_ids = ctx.unique_ids(
-            GENERAL_ID, host_id, ctx.owner_id, ctx.char_id, ctx.loc_id)
-    logger.debug(f"Search IDs: {search_ids}")
-
-    # Character hosts can only use nearby piles
+    # Determine Search Scope based on Host Identity
+    host_ent = None
     host_pos = None
-    if host_id != GENERAL_ID: # slightly more efficient
-        char = Character.query.get((game_token, host_id))
-        if char:
-            host_pos = char.position
+    if host_id == GENERAL_ID:
+        search_ids = [GENERAL_ID]
+    else:
+        host_ent = Entity.query.get((game_token, host_id))
+        if host_ent and host_ent.entity_type == Character.TYPENAME:
+            # Characters can reach into their own pockets, the floor, and global bank
+            search_ids = ctx.unique_ids(GENERAL_ID, host_id, ctx.loc_id)
+            host_pos = host_ent.position
+        else:
+            # Locations (Machines) can reach the floor and global bank
+            search_ids = ctx.unique_ids(GENERAL_ID, ctx.loc_id)
+    logger.debug(f"Search IDs: {search_ids}")
 
     for source in recipe.sources:
         item = source.ingredient
@@ -114,7 +169,6 @@ def resolve_recipe_sources(host_id, recipe, ctx, limit_to_channel=None):
                 ctx.char_id, ctx.loc_id)
         potential_owner_ids = [
             eid for eid in potential_owner_ids if eid in search_ids]
-
         logger.debug(
             f"Checking Item:{item.name} (Type:{item.storage_type})"
             f" in Owners:{potential_owner_ids}")
@@ -164,60 +218,6 @@ def resolve_recipe_sources(host_id, recipe, ctx, limit_to_channel=None):
 
     return resolved_sources
 
-def find_best_host(recipe, owner_id, ctx):
-    """
-    Determines the host according to priority with strict channel checks.
-    Enforces Storage-Type-Specific Priority to prevent General host 
-    from splitting wood or crafting local items.
-    """
-    logger.debug(
-        f"find_best_host() | Product:{recipe.product_id}"
-        f" | Char:{ctx.char_id} | Loc:{ctx.loc_id}")
-
-    game_token = g.game_token
-    product = Item.query.get((game_token, recipe.product_id))
-    if not product:
-        return None
-
-    # Pre-calculate viability for each available channel
-    
-    # Character (Local Context)
-    can_char = False
-    if ctx.char_id:
-        can_char, _ = can_perform_recipe(
-            ctx.char_id, recipe, owner_id, ctx,
-            limit_to_channel=Character.TYPENAME)
-
-    # Location (Ground only)
-    can_loc = False
-    if ctx.loc_id:
-        can_loc, _ = can_perform_recipe(
-            ctx.loc_id, recipe, owner_id, ctx,
-            limit_to_channel=Location.TYPENAME)
-
-    # PRIORITY LOGIC
-    # Branch 1: Product is Universal (Currency, Global Upgrades, etc.)
-    if product.storage_type == StorageType.UNIVERSAL:
-        # General (Universal only)
-        # We only check this for universal products.
-        can_gen, _ = can_perform_recipe(
-            GENERAL_ID, recipe, owner_id, ctx,
-            limit_to_channel=GENERAL_ID)
-        
-        # Priority: System Efficiency (General Storage) -> Salience (Active Character)
-        if can_gen: return GENERAL_ID
-        if can_char: return ctx.char_id
-        if can_loc: return ctx.loc_id
-        return GENERAL_ID
-    
-    # Branch 2: Product is Carried or Local (Tools, Resources, Structures)
-    else:
-        # Priority: Actor Presence -> Workshop Presence
-        # General host (Host ID 1) is STRICTLY FORBIDDEN for non-universal items.
-        if can_char: return ctx.char_id
-        if can_loc: return ctx.loc_id
-        return ctx.char_id or ctx.loc_id
-
 def execute_production(host_id, recipe, target_owner_id, ctx, batches=1):
     """Executes production batches and applies changes."""
     logger.debug(
@@ -266,9 +266,9 @@ def execute_production(host_id, recipe, target_owner_id, ctx, batches=1):
         elif host_ent:
             host_info = f"{host_ent.entity_type.upper()} '{host_ent.name}' (ID:{host_id})"
             if host_ent.entity_type == Character.TYPENAME:
-                log_msg = f"{host_end.name} produced {log_msg}."
+                log_msg = f"{host_ent.name} produced {log_msg}."
             elif host_ent.entity_type == Location.TYPENAME:
-                log_msg = f"{log_msg} produced at {host_end.name}."
+                log_msg = f"{log_msg} produced at {host_ent.name}."
         else:
             host_info = f"UNKNOWN ID:{host_id}"
         add_message(log_msg)

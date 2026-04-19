@@ -72,17 +72,23 @@
 
             <style>
                 .twocol-row, .item-here-row { --grid-cols: 1fr auto; }
-                .twocol-list, .item-here-list { --col-list-max-width: 300px; }
+                .twocol-list, .item-here-list { --col-list-max-width: 40ch; }
                 {% if has_grid %}
                 .item-here-row { --grid-cols: 4fr 1fr 1fr; }
-                .item-here-list { --col-list-max-width: 350px; }
+                .item-here-list { --col-list-max-width: 50ch; }
                 {% endif %}
+                .qty-col { 
+                    min-width: 8ch; 
+                    gap: 5px;
+                    white-space: nowrap;
+                }
             </style>
 
             {% if inventory_piles %}
             <section class="outer-border">
                 <h3>Items Here</h3>
                 <div class="col-list item-here-list">
+                {% set producing_ids = location.progress_records | map(attribute='product_id') | list %}
                 {% for pile in inventory_piles %}
                     <div class="col-row item-here-row">
                         {% set target_url = url_for('play.play_item',
@@ -91,9 +97,15 @@
                             {{ pile.item.name if not pile.item.masked else (pile.item.name | mask_string) }}
                         {% endcall %}
                         
-                        {% if not (pile.item.q_limit == 1 and pile.quantity == 1) %}
-                            <span>{{ pile.quantity | formatNum }}</span>
-                        {% endif %}
+                        <div class="qty-col">
+                            {% if not (pile.item.q_limit == 1 and pile.quantity == 1) %}
+                                <span>{{ pile.quantity | formatNum }}</span>
+                            {% endif %}
+
+                            {% if pile.item_id in producing_ids %}
+                                <span title="Local Production In Progress" class="spin">🔄</span>
+                            {% endif %}
+                        </div>
 
                         {% if has_grid %}
                             <span class="label-like">[{{ pile.position | join(",") }}]</span>
@@ -180,24 +192,6 @@
                     </div>
                 {% endfor %}
                 </div>
-            </section>
-            {% endif %}
-
-            {% set local_jobs = location.progress_records | selectattr('is_ongoing', 'equalto', True) | list %}
-            {% if local_jobs %}
-            <section class="outer-border">
-                <h3>Local Production</h3>
-                <ul class="clean-list">
-                    {% for job in local_jobs %}
-                    <li class="spacious-bottom">
-                        <div class="flex-between">
-                            {% set target_url = url_for('play.play_item', id=job.product_id, owner_id=location.id) %}
-                            <a href="{{ target_url }}"><strong>{{ job.product.name }}</strong></a>
-                            <span class="label-like">In Progress</span>
-                        </div>
-                    </li>
-                    {% endfor %}
-                </ul>
             </section>
             {% endif %}
         </div>

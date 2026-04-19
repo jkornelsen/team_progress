@@ -106,7 +106,7 @@
                             {% endcall %}
                         </td>
                         <td>
-                            {% set is_producing = item.progress_records | selectattr('is_ongoing', 'equalto', True) | list | length > 0 %}
+                            {% set is_producing = item.id in general_production_ids %}
                             <span class="text-accent">{{ (pile.quantity if pile else 0) | formatNum }}</span>
                             {% if is_producing %}
                                 <span title="In Production..." class="spin">🔄</span>
