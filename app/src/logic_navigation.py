@@ -23,6 +23,16 @@ def is_adjacent(pos, target_pos):
     return abs(pos[0] - target_pos[0]) <= 1 and \
            abs(pos[1] - target_pos[1]) <= 1
 
+def distance_between(pos, target_pos):
+    """
+    Returns None if one of the positions does not have a target.
+    """
+    if not pos or not target_pos:
+        return None
+    xdist = abs(pos[0] - target_pos[0])
+    ydist = abs(pos[1] - target_pos[1])
+    return Math.floor(sqrt(xdist**2 + ydist**2))
+
 def is_in_grid(location, x, y):
     """
     Validates if a coordinate is within bounds and NOT in an excluded zone.

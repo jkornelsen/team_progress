@@ -17,13 +17,33 @@
 
 <div class="event-play-container">
     <header class="entity-header">
-        <span class="label-like">
-            Called by 
-            {{ '👤' if subject.entity_type == 'character' else '📍' if subject.entity_type == 'location' else '📦' }} 
-            {% set target_url = url_for('play.play_' + subject.entity_type, id=subject.id) %}
-            {% call hk.hotlink(target_url, link_letters) %}
-                {{ subject.name }}
-            {% endcall %}
+        <span id="context-list" class="label-like">
+            {% if subject %}
+                Called by 
+                {{ '👤' if subject.entity_type == 'character' else '📍' if subject.entity_type == 'location' else '📦' }} 
+                {% set target_url = url_for('play.play_' + subject.entity_type, id=subject.id) %}
+                {% call hk.hotlink(target_url, link_letters) %}
+                    {{ subject.name }}
+                {% endcall %}
+            {% endif %}
+            {% if ctx_char and ctx_char.id != subject.id %}
+                <span style="margin-left: 5px; margin-right: 5px">|</span>
+                <span class="label-like">👤</span>
+                {% set target_url = url_for('play.play_character', id=ctx_char.id) %}
+                {% call hk.hotlink(target_url, link_letters) %}
+                    {{ ctx_char.name }}
+                {% endcall %}
+                active
+            {% endif %}
+            {% if ctx_loc and ctx_loc.id != subject.id %}
+                <span style="margin-left: 5px; margin-right: 5px">|</span>
+                <span class="label-like">📍</span>
+                at
+                {% set loc_url = url_for('play.play_location', id=ctx_loc.id) %}
+                {% call hk.hotlink(loc_url, link_letters, brackets=True) %}
+                    {{ ctx_loc.name }}
+                {% endcall %}
+            {% endif %}
         </span>
         <h1>⚡ {{ event.name }}</h1>
         {% if event.description %}
@@ -32,99 +52,114 @@
     </header>
 
     <div class="column-container">
+        <!-- LEFT COLUMN -->
+        <div class="left-column">
+            <section class="outer-border">
+                <h3>Participants</h3>
+                <div class="gap-10">
+                    {% if subject %}
+                    <div class="flex-row form-group">
+                        <input type="hidden" name="subj_id" value="{{ subject.id }}">
+                        <label>Main:</label>
+                        {% set target_url = url_for('play.play_' + subject.entity_type, id=subject.id) %}
+                        {% call hk.hotlink(target_url, link_letters) %}
+                            {{ subject.name }}
+                        {% endcall %}
+                    </div>
+                    {% endif %}
 
-        <section class="outer-border">
-            <h3>Participants</h3>
-            <div class="flex-column gap-10">
-                <div class="form-group">
-                    <label>Subject:</label>
-                    <input type="hidden" name="subj_id" value="{{ subject.id }}">
-                    {{ subject.name }}
-                </div>
-
-                {% if needs_other1 %}
-                <div class="form-group">
-                    <label>Target:</label>
-                    <select name="sec_id" class="full-width themed-input participant-trigger">
-                        <option value="">-- Select Target --</option>
-                        {% for ent in nearby_entities %}
-                            <option value="{{ ent.id }}">{{ ent.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                {% endif %}
-
-                {% if needs_other2 %}
-                <div class="form-group">
-                    <label>Environment:</label>
-                    <select name="tert_id" class="full-width themed-input participant-trigger">
-                        <option value="{{ current_loc.id }}">{{ current_loc.name }} (Current)</option>
-                    </select>
-                </div>
-                {% endif %}
-
-                {% if needs_target %}
-                <div class="form-group">
-                    <label>Target:</label>
-                    <select id="target-id" class="full-width themed-input participant-trigger">
-                        <option value="">-- Select Target --</option>
-                        {% for char in nearby_characters %}
-                            <option value="{{ char.id }}">{{ char.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                {% endif %}
-
-                {% for role_name, config in item_selectors.items() %}
+                    {% if needs_other1 %}
                     <div class="form-group">
-                        <label>Select {{ config.label }} for {{ role_name }}:</label>
-                        <select name="{{ role_name }}_item_id" class="full-width themed-input participant-trigger">
-                            <option value="">-- Select Item --</option>
-                            {% for pile in config.options %}
-                                <option value="{{ pile.id }}">{{ pile.item_blueprint.name }} (Qty: {{ pile.quantity }})</option>
-                            {% endfor %}
+                        <label>Target:</label>
+
+                        {% set eligible = eligible_role_entities['2nd'] %}
+                        
+                        {% if eligible|length == 1 %}
+                            {# Single option: display name as text and pass ID via hidden input #}
+                            {% set ent = eligible[0] %}
+                            <input type="hidden" name="sec_id" value="{{ ent.id }}">
+                            {% set target_url = url_for('play.play_' + ent.entity_type, id=ent.id) %}
+                            {% call hk.hotlink(target_url, link_letters) %}
+                                {{ ent.name }}
+                            {% endcall %}
+
+                        {% elif eligible|length > 1 %}
+                            <select name="sec_id" class="full-width themed-input participant-trigger">
+                                <option value="">-- Select Target --</option>
+                                {% for ent in eligible_role_entities['2nd'] %}
+                                    <option value="{{ ent.id }}">{{ ent.name }}</option>
+                                {% endfor %}
+                            </select>
+
+                        {% else %}
+                            {# No candidates found #}
+                            <span class="text-danger">No eligible targets nearby.</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    {% if needs_other2 %}
+                    <div class="form-group">
+                        <label>Environment:</label>
+                        <select name="tert_id" class="full-width themed-input participant-trigger">
+                            <option value="{{ current_loc.id }}">{{ current_loc.name }} (Current)</option>
                         </select>
                     </div>
-                {% endfor %}
-            </div>
-        </section>
+                    {% endif %}
 
-        <section class="outer-border">
-        {% if event.outcome_type == 'dice_system' %}
-            <h3>Roll Setup</h3>
-            {% if event.roller_type == 'dnd' %}
-            <div class="system-controls dnd-fields">
-                <div class="input-group">
-                    <label>Dice</label>
-                    <input type="number" id="num-dice" name="num_dice" value="1" min="1" class="form-control">
-                    
-                    <label>Sides</label>
-                    <input type="number" id="num-sides" name="sides" value="20" min="2" class="form-control">
-                    
-                    <label>Bonus</label>
-                    <input type="number" id="num-bonus" name="bonus" value="0" class="form-control">
+    {#
+                    {% for role_name, config in item_selectors.items() %}
+                        <div class="form-group">
+                            <label>Select {{ config.label }} for {{ role_name }}:</label>
+                            <select name="{{ role_name }}_item_id" class="full-width themed-input participant-trigger">
+                                <option value="">-- Select Item --</option>
+                                {% for pile in config.options %}
+                                    <option value="{{ pile.id }}">{{ pile.item_blueprint.name }} (Qty: {{ pile.quantity }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    {% endfor %}
+    #}
                 </div>
-            </div>
-            {% elif event.roller_type == 'ironsworn' %}
-            <div class="system-controls ironsworn-fields">
-                <div class="input-group">
-                    <label for="num-bonus">Action Bonus (Stat + Adds)</label>
-                    <input type="number" id="num-bonus" name="bonus" value="0" class="form-control" style="width: 80px;">
+            </section>
+
+            <section class="outer-border">
+            {% if event.outcome_type == 'dice_system' %}
+                <h3>Roll Setup</h3>
+                {% if event.roller_type == 'dnd' %}
+                <div class="system-controls dnd-fields">
+                    <div class="input-group">
+                        <label>Dice</label>
+                        <input type="number" id="num-dice" name="num_dice" value="1" min="1" class="form-control">
+                        
+                        <label>Sides</label>
+                        <input type="number" id="num-sides" name="sides" value="20" min="2" class="form-control">
+                        
+                        <label>Bonus</label>
+                        <input type="number" id="num-bonus" name="bonus" value="0" class="form-control">
+                    </div>
                 </div>
-                <p class="text-dim">Action (d6 + Bonus) vs. 2 Challenge Dice (d10)</p>
-            </div>
+                {% elif event.roller_type == 'ironsworn' %}
+                <div class="system-controls ironsworn-fields">
+                    <div class="input-group">
+                        <label for="num-bonus">Action Bonus (Stat + Adds)</label>
+                        <input type="number" id="num-bonus" name="bonus" value="0" class="form-control" style="width: 80px;">
+                    </div>
+                    <p class="text-dim">Action (d6 + Bonus) vs. 2 Challenge Dice (d10)</p>
+                </div>
+                {% endif %}
+            {% else %}
+                <h3>Modifiers</h3>
+                <div id="modifier-preview" class="label-like">
+                    <!-- JS will populate this when participants change -->
+                    Select participants to calculate modifiers...
+                </div>
             {% endif %}
-        {% else %}
-            <h3>Modifiers</h3>
-            <div id="modifier-preview" class="label-like">
-                <!-- JS will populate this when participants change -->
-                Select participants to calculate modifiers...
-            </div>
-        {% endif %}
-        </section>
+            </section>
+        </div>
 
-        <!-- LEFT COLUMN: Execution Setup -->
-        <div class="setup-column">
+        <!-- RIGHT COLUMN: Results & Application -->
+        <div class="right-column">
             <section class="outer-border">
                 <h3>Dice</h3>
                 <form id="event-form">
@@ -160,15 +195,16 @@
                 </form>
                 <div class="spacious-top text-center">
                     <button id="roll-btn" class="go-button" style="width: 100%; font-size: 1.2em;">
+                        {% if event.outcome_type == 'determined' %}
+                        [R] Calculate
+                        {% else %}
                         [R]oll for Outcome
+                        {% endif %}
                     </button>
                     <script>linkForKey["r"] = "#roll-btn";</script>
                 </div>
             </section>
-        </div>
 
-        <!-- RIGHT COLUMN: Results & Application -->
-        <div class="results-column">
             <section class="outer-border result-box" id="result-display">
                 <h3>Outcome</h3>
                 <div id="outcome-text" style="text-align: center;">
@@ -426,9 +462,9 @@
         
         // 1. Gather selected IDs from the dropdowns
         const params = new URLSearchParams();
-        params.append('subj_id', document.querySelector('input[name="subj_id"]')?.value || '');
-        params.append('sec_id', document.querySelector('select[name="sec_id"]')?.value || '');
-        params.append('tert_id', document.querySelector('select[name="tert_id"]')?.value || '');
+        params.append('subj_id', document.querySelector('[name="subj_id"]')?.value || '');
+        params.append('sec_id', document.querySelector('[name="sec_id"]')?.value || '');
+        params.append('tert_id', document.querySelector('[name="tert_id"]')?.value || '');
         // Add item instance selectors if they exist
         document.querySelectorAll('select[name*="_item_id"]').forEach(sel => {
             params.append(sel.name, sel.value);
@@ -493,8 +529,6 @@
         font-size: 0.9em;
     }
 
-    .form-group { display: flex; flex-direction: column; gap: 5px; }
-    .spacious-top { margin-top: 15px; }
     .modifier-list { list-style: none; padding: 0; }
     .modifier-list li { margin-bottom: 5px; border-bottom: 1px solid #333; padding-bottom: 3px; }
     .outcome-placeholder { padding: 40px 20px; color: var(--text-dim); font-style: italic; border: 2px dashed #444; }

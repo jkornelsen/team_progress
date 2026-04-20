@@ -2,6 +2,7 @@ import logging
 from flask import (
     Blueprint, render_template, request, jsonify, g, session, current_app)
 from http import HTTPStatus
+from sqlalchemy.orm import joinedload
 from app.models import (
     db, Entity, Item, Character, Location, Attrib, Event,
     Pile, AttribVal, Operation, OutcomeType,
@@ -28,10 +29,6 @@ from .logic_user_interaction import add_message
 
 logger = logging.getLogger(__name__)
 play_bp = Blueprint('play', __name__)
-
-def get_inventory_for_role(entity):
-    """Returns all piles (inventory items) for the given entity."""
-    return entity.piles
 
 # ------------------------------------------------------------------------
 # The Overview (Dashboard)
@@ -184,7 +181,7 @@ def play_location(id):
         referenced_items=referenced_data,
         attrib_values=attrib_values,
         active_char_id=active_char_id,
-        context_char=current_char,
+        ctx_char=current_char,
         link_letters=LinkLetters(excluded='ctmoed')
     )
 
@@ -220,11 +217,6 @@ def play_character(id):
     # Fetch Navigation (Nearby Destinations)
     destinations, has_nonadjacent = get_available_destinations(character)
     
-    # Fetch Abilities (Events linked to this character)
-    # Assuming a relationship 'abilities' exists in the Character model
-    # Or query EventRegistry/Triggers
-    abilities = Event.query.filter_by(game_token=game_token, toplevel=True).all() # Placeholder logic
-
     return render_template(
         'play/character.html',
         character=character,
@@ -233,7 +225,6 @@ def play_character(id):
         destinations=destinations,
         exit_loc_id=exit_loc_id,
         has_nonadjacent=has_nonadjacent,
-        abilities=abilities,
         party_members=party_members,
         link_letters=LinkLetters(excluded='gltmoe')
     )
@@ -428,8 +419,8 @@ def char_travel(id):
 
 @play_bp.route('/play/item/<int:id>')
 def play_item(id):
-    req = RequestHelper('args')
     game_token = g.game_token
+    req = RequestHelper('args')
 
     item = Item.query.get_or_404((game_token, id))
     capture_origin(name=item.name)
@@ -467,11 +458,11 @@ def play_item(id):
                 ctx.char_id = None
                 del session['old_char_id']
 
-    char = Character.query.get((game_token, ctx.char_id)) if ctx.char_id else None
-    if char:
-        ctx.loc_id = char.location_id
-        session['old_loc_id'] = char.location_id
-    loc = Location.query.get((game_token, ctx.loc_id)) if ctx.loc_id else None
+    ctx_char = Character.query.get((game_token, ctx.char_id)) if ctx.char_id else None
+    if ctx_char:
+        ctx.loc_id = ctx_char.location_id
+        session['old_loc_id'] = ctx_char.location_id
+    ctx_loc = Location.query.get((game_token, ctx.loc_id)) if ctx.loc_id else None
 
     logger.debug(
         f"---- play_item() ----\n"
@@ -664,11 +655,11 @@ def play_item(id):
     # Determine if the item is physically reachable by the context character
     is_reachable = True
     reach_error = None
-    if char:
+    if ctx_char:
         # If the item is on the ground at a location with a grid
         if owner.entity_type == 'location' and owner.dimensions and owner.dimensions[0] > 0:
             if pile.position:
-                if not is_adjacent(char.position, pile.position):
+                if not is_adjacent(ctx_char.position, pile.position):
                     is_reachable = False
                     reach_error = "Must be next to item to pick up."
             else:
@@ -678,9 +669,9 @@ def play_item(id):
                 reach_error = "This item is not currently placed on the grid."
         
         # If the item is carried by another character
-        elif owner.entity_type == Character.TYPENAME and owner.id != char.id:
-            if owner.location_id == char.location_id:
-                if not is_adjacent(char.position, owner.position):
+        elif owner.entity_type == Character.TYPENAME and owner.id != ctx_char.id:
+            if owner.location_id == ctx_char.location_id:
+                if not is_adjacent(ctx_char.position, owner.position):
                     is_reachable = False
                     reach_error = f"Must be next to {owner.name} to trade."
             else:
@@ -692,10 +683,10 @@ def play_item(id):
 
     # Create entities lookup for attribute requirement links
     attribreq_entities = {owner.id: owner}
-    if char:
-        attribreq_entities[char.id] = char
-    if loc:
-        attribreq_entities[loc.id] = char
+    if ctx_char:
+        attribreq_entities[ctx_char.id] = ctx_char
+    if ctx_loc:
+        attribreq_entities[ctx_loc.id] = ctx_char
     for entity_id in all_attribreq_entity_ids:
         if entity_id not in attribreq_entities and entity_id != GENERAL_ID:
             entity = Entity.query.get((game_token, entity_id))
@@ -707,8 +698,8 @@ def play_item(id):
         item=item,
         owner=owner,
         pile=pile,
-        char=char,
-        loc=loc,
+        ctx_char=ctx_char,
+        ctx_loc=ctx_loc,
         recipes=enriched_recipes,
         used_for_production=used_for_production,
         byproduct_of=byproduct_of,
@@ -914,43 +905,102 @@ def instant_item_production(host_id):
 @play_bp.route('/play/event/<int:id>', methods=['GET'])
 def play_event(id):
     game_token = g.game_token
+    req = RequestHelper('args')
     event = Event.query.get_or_404((game_token, id))
     capture_origin(name=event.name)
     
     # Get Context (Who is acting?)
     subject = None
-    subject_id = request.args.get('subject_id', type=int)
+    subject_id = req.get_int('subject_id')
     if subject_id:
         subject = Entity.query.filter_by(
             game_token=game_token, id=subject_id).first_or_404()
+    ctx = ContextIds(
+        subject_id,
+        req.get_int('char_id') or session.get('old_char_id'),
+        req.get_int('loc_id') or session.get('old_loc_id')
+    )
+    ctx_char = Character.query.get((game_token, ctx.char_id)) if ctx.char_id else None
+    if ctx_char:
+        ctx.loc_id = ctx_char.location_id
+    ctx_loc = Location.query.get((game_token, ctx.loc_id)) if ctx.loc_id else None
 
     # Analyze requirements
     needs_other1 = any(d.role == Participant.OTHER1 for d in event.determinants)
     needs_other2 = any(d.role == Participant.OTHER2 for d in event.determinants)
-    
-    # Identify Item Selectors
-    # If ChildItem is True but no item_id is configured, the user must choose.
-    # Or if there are multiple piles available for that item.
-    item_selectors = {}
+
+    # Get list of all available nearby entities
+
+    other_entities_here = []
+    other_piles_here = {}
+    subject_pile_qty = None
+    if ctx.loc_id:
+        other_chars_here = Character.query.options(
+            joinedload(Character.attrib_values)) \
+            .filter_by(game_token=game_token, location_id=ctx.loc_id) \
+            .filter(Character.id != subject_id) \
+            .all()
+        other_entities_here.extend(other_chars_here)
+
+        piles_here = Pile.query.filter_by(
+            game_token=game_token, owner_id=ctx.loc_id
+        ).all()
+        subject_piles = [p for p in piles_here if p.item_id == subject_id]
+        for p in piles_here:
+            if len(subject_piles) == 1 and p.item_id == subject_id:
+                subject_pile_qty = p.quantity
+                continue
+            other_piles_here.setdefault(p.item_id, []).append(p.quantity)
+
+    # Get available children
+
+    children_piles = {}
+    if ctx_char:
+        children_piles.setdefault(ctx_char.id, []).extend(ctx_char.piles)
+        
+    # Get determinants for each role
+
+    role_dets = {}
     for d in event.determinants:
-        if d.child_of_anchor:
-            # Add to a dict to ensure we only show one dropdown per role
-            if not d.item_id:
-                item_selectors[d.role] = {
-                    'label': d.label or "Item",
-                    'options': get_inventory_for_role(d.role) 
-                }
+        if d.role != Participant.SUBJECT:
+            role_dets.setdefault(d.role, []).append(d)
+
+    # Get list of nearby entities that have those attributes
+    # to fill the select box for each role.
+    # Display as text if only one option,
+    # and disallow event if no candidate for role.
+    # Include attr or qty value in the list.
     
-    # Fetch Eligible Participants (for the dropdowns)
-    # We query the base Entity table because ANY entity might have the required attribute
-    eligible_sources = Entity.query.filter_by(game_token=game_token).all()
-    eligible_targets = eligible_sources # Simplified
+    eligible_role_entities = {}
+    for role, detlist in role_dets.items():
+        det_entities = {}
+        for d in detlist:
+            role_set = set()
+            for entity in other_entities_here:
+                if d.attrib_id and not any(
+                        av.attrib_id == d.attrib_id
+                        for av in entity.attrib_values):
+                    continue
+
+                # TODO: check for event distance requirement e.g. 30ft (6 tiles)
+                # dist = distance_between(owner.position, c.position)
+                # if dist is not None and dist > d.distance_reqired
+
+                role_set.add(entity)
+
+            det_entities[d.id] = role_set
+
+        if det_entities:
+            eligible_role_entities[role] = list(
+                set.intersection(*det_entities.values()))
+        else:
+            eligible_role_entities[role] = []
     
     # Pre-calculate Determinants (Modifiers)
     # This logic helps the UI show things like "Strength (+5)" before rolling
     determinants = []
     if subject_id:
-        for det in getattr(event, 'determinants', []):
+        for det in event.determinants:
             val = get_entity_value(subject_id, det)
             determinants.append({
                 'label': det.label,
@@ -964,13 +1014,12 @@ def play_event(id):
         'play/event.html',
         event=event,
         subject=subject,
+        ctx_char=ctx_char,
+        ctx_loc=ctx_loc,
         needs_other1=needs_other1,
         needs_other2=needs_other2,
-        item_selectors=item_selectors,
-        eligible_sources=eligible_sources,
-        eligible_targets=eligible_targets,
         determinants=determinants,
-        operation=Operation,
+        eligible_role_entities=eligible_role_entities,
         link_letters=LinkLetters(excluded='moer')
     )
 
@@ -1053,7 +1102,7 @@ def apply_event(id):
 
     return '', HTTPStatus.NO_CONTENT
 
-@play_bp.route('/play/attrib/<int:attrib_id>/<int:subject_id>', methods=['GET', 'POST'])
+@play_bp.route('/play/attrib/<int:attrib_id>/subject/<int:subject_id>', methods=['GET', 'POST'])
 def play_attrib(attrib_id, subject_id):
     game_token = g.game_token
     attribute = Attrib.query.get_or_404((game_token, attrib_id))

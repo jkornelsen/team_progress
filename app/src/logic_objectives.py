@@ -55,7 +55,7 @@ def validate_requirements(game_token):
         # Condition 5: Character Attribute Level
         elif r.char_id and r.attrib_id:
             val_rec = AttribVal.query.filter_by(
-                game_token=game_token, owner_id=r.char_id, attrib_id=r.attrib_id
+                game_token=game_token, subject_id=r.char_id, attrib_id=r.attrib_id
             ).first()
             current_val = val_rec.value if val_rec else 0
             is_fulfilled = current_val >= r.attrib_value

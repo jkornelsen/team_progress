@@ -189,7 +189,7 @@
                 <section class="outer-border">
                     <h3>Abilities</h3>
                     <div class="col-list" style="--col-list-max-width: 250px;">
-                        {% for event in character.abilities %}
+                        {% for event in character.abilities|sort(attribute='name') %}
                             <div class="col-row" style="--grid-cols: 1fr auto;">
                                 {% set event_url = url_for('play.play_event', id=event.id, subject_id=character.id) %}
                                 

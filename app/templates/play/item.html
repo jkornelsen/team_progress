@@ -36,7 +36,7 @@
 
 <div class="item-play-container">
     <header class="entity-header">
-        <span id="context-links" class="label-like">
+        <span id="context-list" class="label-like">
             {% if owner.id == 1 %}
                 🌐 General Storage
             {% elif owner.entity_type == 'character' %}
@@ -55,22 +55,22 @@
                     <span class="label-like">[{{ pile.position | join(",") }}]</span>
                 {% endif %}
             {% endif %}
-            {% if char and char.id != owner.id %}
+            {% if ctx_char and ctx_char.id != owner.id %}
                 <span style="margin-left: 5px; margin-right: 5px">|</span>
                 <span class="label-like">👤</span>
-                {% set char_url = url_for('play.play_character', id=char.id) %}
-                {% call hk.hotlink(char_url, link_letters, brackets=True) %}
-                    {{ char.name }}
+                {% set url = url_for('play.play_character', id=ctx_char.id) %}
+                {% call hk.hotlink(url, link_letters, brackets=True) %}
+                    {{ ctx_char.name }}
                 {% endcall %}
                 active
             {% endif %}
-            {% if loc and loc.id != owner.id %}
+            {% if ctx_loc and ctx_loc.id != owner.id %}
                 <span style="margin-left: 5px; margin-right: 5px">|</span>
                 <span class="label-like">📍</span>
                 at
-                {% set loc_url = url_for('play.play_location', id=loc.id) %}
+                {% set loc_url = url_for('play.play_location', id=ctx_loc.id) %}
                 {% call hk.hotlink(loc_url, link_letters, brackets=True) %}
-                    {{ loc.name }}
+                    {{ ctx_loc.name }}
                 {% endcall %}
             {% endif %}
         </span>
@@ -375,13 +375,13 @@
                         </div>
                     </div>
 
-                    {% if owner.entity_type == 'location' and char %}
+                    {% if owner.entity_type == 'location' and ctx_char %}
                         {# Location -> Character (Pickup) #}
                         {% set has_controls = true %}
                         <div class="action-box">
                             {% if is_reachable %}
-                                <span class="target-name">{{ char.name }}</span>
-                                <input type="hidden" id="pickup-char-id" value="{{ char.id }}">
+                                <span class="target-name">{{ ctx_char.name }}</span>
+                                <input type="hidden" id="pickup-char-id" value="{{ ctx_char.id }}">
                                 <button id="pickup-btn" class="go-button">{{ hk.bracket('p') }}ick up</button>
                             {% else %}
                                 <i class="text-dim small">🚫 {{ reach_error or "Too far to reach" }}</i>
@@ -459,8 +459,8 @@
 <script>
     const itemId = {{ item.id }};
     const ownerId = {{ owner.id }}; 
-    const charId = {{ char.id if char else 'null' }};
-    const locId = {{ loc.id if loc else 'null' }};
+    const charId = {{ ctx_char.id if ctx_char else 'null' }};
+    const locId = {{ ctx_loc.id if ctx_loc else 'null' }};
     const startedAtZero = (parseFloat("{{ pile.quantity }}".replace(/,/g, '')) || 0) === 0;
 
     // Heartbeat tick

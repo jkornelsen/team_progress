@@ -227,7 +227,7 @@
                 <style>
                     .ability-row { --grid-cols: 12fr 1fr; }
                 </style>
-                {% for evt in character.abilities %}
+                {% for evt in character.abilities|sort(attribute='name') %}
                     {{ ability_row(loop.index0, evt.id, all_events) }}
                 {% endfor %}
             </div>

@@ -11,9 +11,9 @@
         {{ hk.fixed_text(
             url_for('configure.edit_location', id=location.id),
             hk.bracket('e') ~ "dit location", 'e') }}
-        {% if context_char %}
+        {% if ctx_char %}
             <span class="separator">|</span>
-            {% set target_url = url_for('configure.edit_character', id=context_char.id) %}
+            {% set target_url = url_for('configure.edit_character', id=ctx_char.id) %}
             {% set text = "e" ~ hk.bracket('d') ~ "it char" %}
             {{ hk.fixed_text(target_url, text, 'd') }}
         {% endif %}
@@ -25,11 +25,11 @@
 <div class="location-container">
     <header class="entity-header">
         <span id="context-list" class="label-like">
-            {% if context_char %}
+            {% if ctx_char %}
                 <span class="label-like">👤</span>
-                {% set target_url = url_for('play.play_character', id=context_char.id) %}
+                {% set target_url = url_for('play.play_character', id=ctx_char.id) %}
                 {% call hk.hotlink(target_url, link_letters) %}
-                    {{ context_char.name }}
+                    {{ ctx_char.name }}
                 {% endcall %}
                 active
             {% endif %}
