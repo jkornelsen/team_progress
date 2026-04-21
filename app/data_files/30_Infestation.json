@@ -65,15 +65,7 @@
                 "items": [],
                 "progress": [],
                 "item_refs": [],
-                "destinations": [
-                    {
-                        "loc2_id": 10,
-                        "duration": 1,
-                        "door1": null,
-                        "door2": null,
-                        "bidirectional": true
-                    }
-                ]
+                "destinations": []
             },
             {
                 "id": 8,
@@ -130,7 +122,7 @@
             {
                 "id": 10,
                 "name": "Baby Mice Area",
-                "description": "The weakest of the rodents, but alarmingly close to the base. Populations must be controlled so they don't spread further.",
+                "description": "The weakest of the rodents can be found here, but the area is alarmingly close to the base. Populations must be controlled so they don't spread further.",
                 "attribs": [],
                 "abilities": [],
                 "dimensions": null,
@@ -141,6 +133,13 @@
                 "progress": [],
                 "item_refs": [],
                 "destinations": [
+                    {
+                        "loc2_id": 7,
+                        "duration": 1,
+                        "door1": null,
+                        "door2": null,
+                        "bidirectional": true
+                    },
                     {
                         "loc2_id": 12,
                         "duration": 1,
@@ -207,7 +206,8 @@
                 "name": "Tainted Bunny",
                 "description": "Fur is greenish and sticky, with a fuzzy white tail.",
                 "attribs": [
-                    [4, 8.0]
+                    [4, 8.0],
+                    [26, 0.0]
                 ],
                 "abilities": [],
                 "toplevel": false,
@@ -222,7 +222,8 @@
                 "name": "Full-grown Mouse",
                 "description": "Okay, it's still kind of cute, despite the toxic green eyes.",
                 "attribs": [
-                    [4, 5.0]
+                    [4, 5.0],
+                    [26, 0.0]
                 ],
                 "abilities": [],
                 "toplevel": false,
@@ -237,7 +238,8 @@
                 "name": "Baby Mouse",
                 "description": "Mutant, rabid and green-eyed, burning from within due to toxic waste.",
                 "attribs": [
-                    [4, 2.0]
+                    [4, 2.0],
+                    [26, 0.0]
                 ],
                 "abilities": [],
                 "toplevel": false,
@@ -252,12 +254,30 @@
                 "name": "Bad Hare Day",
                 "description": "Red-eyed monster that never stops hopping up and down, up and down.\r\n\r\n- Set difficulty to *Hard*.\r\n- On victory, mark the boss as [Defeated](/play/attrib/3/char/5) and add **250 XP**.",
                 "attribs": [
-                    [3, 1.0],
-                    [4, 13.0]
+                    [3, 0.0],
+                    [4, 13.0],
+                    [26, 1.0]
                 ],
                 "abilities": [],
                 "toplevel": false,
                 "location_id": 9,
+                "position": null,
+                "travel_party": "",
+                "items": [],
+                "progress": []
+            },
+            {
+                "id": 25,
+                "name": "Old Fart Supreme",
+                "description": "Wearing a nametag with \"Gerry\" written on it.",
+                "attribs": [
+                    [3, 0.0],
+                    [4, 20.0],
+                    [26, 1.0]
+                ],
+                "abilities": [],
+                "toplevel": false,
+                "location_id": null,
                 "position": null,
                 "travel_party": "",
                 "items": [],
@@ -288,6 +308,14 @@
                 "abilities": [],
                 "is_binary": false,
                 "enum_list": []
+            },
+            {
+                "id": 26,
+                "name": "Is Boss",
+                "description": "",
+                "abilities": [],
+                "is_binary": true,
+                "enum_list": []
             }
         ],
         "events": [
@@ -307,15 +335,20 @@
                 "determinants": [
                     {
                         "usage_type": "in",
-                        "label": "",
-                        "role": "2nd",
-                        "field": "attr",
-                        "child_of_anchor": false,
-                        "item_id": 0,
-                        "attrib_id": 4,
-                        "operation": "+",
-                        "modifier": 1.0,
-                        "scaling": ""
+                        "label": null,
+                        "val_src": "field",
+                        "infield": {
+                            "role": "2nd",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": null,
+                            "attrib_id": 4
+                        },
+                        "outfield": null,
+                        "op_application": "+",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
                     }
                 ],
                 "effects": []
@@ -338,8 +371,8 @@
             },
             {
                 "id": 24,
-                "name": "Fight Enemy",
-                "description": "Determine the outcome of a combat encounter.\r\n\r\n- **Energy**: Make sure the robot has at least 1 to start.\r\n- **Difficulty:** If you're significantly outleveled, for example level 1 or 2 to the enemy's 5, then set difficulty to *Hard*. If you significantly outlevel the opponent, then set difficulty to *Easy*, although that is probably a good time to move on to the next location.\r\n\r\nRoll, then see [Finish Fight](/play/event/18).",
+                "name": "Fight Common Enemy",
+                "description": "Determine the outcome of a non-boss combat encounter.\r\n\r\n- **Energy**: Make sure the robot has at least 1 to start.\r\n- **Difficulty:** If you're significantly outleveled, for example level 1 or 2 to the enemy's 5, then set difficulty to *Hard*. If you significantly outlevel the opponent, then set difficulty to *Easy*, although that is probably a good time to move on to the next location.\r\n\r\nRoll, then see [Finish Fight](/play/event/18?subject_id=13).",
                 "attribs": [],
                 "abilities": [],
                 "toplevel": false,
@@ -352,27 +385,37 @@
                 "determinants": [
                     {
                         "usage_type": "in",
-                        "label": "",
-                        "role": "subj",
-                        "field": "attr",
-                        "child_of_anchor": false,
-                        "item_id": 0,
-                        "attrib_id": 4,
-                        "operation": "+",
-                        "modifier": 1.0,
-                        "scaling": ""
+                        "label": null,
+                        "val_src": "field",
+                        "infield": {
+                            "role": "subj",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": null,
+                            "attrib_id": 4
+                        },
+                        "outfield": null,
+                        "op_application": "+",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
                     },
                     {
                         "usage_type": "in",
-                        "label": "",
-                        "role": "2nd",
-                        "field": "attr",
-                        "child_of_anchor": false,
-                        "item_id": 0,
-                        "attrib_id": 4,
-                        "operation": "-",
-                        "modifier": 1.0,
-                        "scaling": ""
+                        "label": null,
+                        "val_src": "field",
+                        "infield": {
+                            "role": "2nd",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": null,
+                            "attrib_id": 4
+                        },
+                        "outfield": null,
+                        "op_application": "-",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
                     }
                 ],
                 "effects": []

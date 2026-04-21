@@ -46,7 +46,7 @@
             <div class="grid-2-col">
                 <div>
                     <label for="outcome_type">Outcome Type:</label>
-                    <select id="outcome_type" name="outcome_type" class="full-width themed-input" onchange="toggleOutcomeFields()">
+                    <select id="outcome_type" name="outcome_type" class="full-width themed-input" onchange="outcomeFieldsVisibility()">
                         <option value="fourway" {{ 'selected' if event.outcome_type == 'fourway' }}>Four-Way (Success/Fail)</option>
                         <option value="numeric" {{ 'selected' if event.outcome_type == 'numeric' }}>Numeric Roll</option>
                         <option value="determined" {{ 'selected' if event.outcome_type == 'determined' }}>Determined (Calculated)</option>
@@ -70,15 +70,6 @@
                         <option value="ironsworn" {{ 'selected' if event.roller_type == 'ironsworn' }}>Ironsworn: d6 + X vs 2d10</option>
                     </select>
                 </div>
-
-                <!--
-                <div style="flex: 2;">
-                    <label>Formula / Modifier:</label>
-                    <input type="text" name="dice_formula" 
-                           value="{{ event.dice_formula or '' }}" 
-                           placeholder="e.g. 2d10+3">
-                </div>
-                -->
             </div>
 
             <div class="grid-2-col">
@@ -115,7 +106,7 @@
             </div>
             <div id="det-list" class="spacious-top">
                 {% for factor in event.determinants %}
-                    {% set index = loop.index0 %}
+                    {% set index = loop.index %}
                     {% include 'configure/partials/event_factor_card.html' %}
                 {% endfor %}
             </div>
@@ -124,7 +115,6 @@
             </div>
         </section>
 
-        <!-- Template for JS -->
         <template id="factor-template">
             {% set index = 'INDEX' %}
             {% set factor = None %}
@@ -179,14 +169,31 @@
         const emptyMsg = document.getElementById('det-list-empty');
         const template = document.getElementById('factor-template').innerHTML;
         
-        const index = list.querySelectorAll('.factor-card').length;
-        const html = template.replace(/INDEX/g, index);
-        
+        const existingCards = list.querySelectorAll('.factor-card');
+        const indices = Array.from(existingCards).map(card => 
+            parseInt(card.getAttribute('data-index')) || 0
+        );
+        const nextIndex = indices.length > 0 ? Math.max(...indices) + 1 : 1;
+
+        const html = template.replace(/INDEX/g, nextIndex);
         list.insertAdjacentHTML('beforeend', html);
         emptyMsg.classList.add('hidden');
+
+        renumberLabels();
+
+        const newCard = list.lastElementChild;
+        innerExprVisibility(newCard);
+        outerExprVisibility(newCard);
     }
 
-    function toggleFieldTarget(select, index) {
+    function renumberLabels() {
+        const labels = document.querySelectorAll('#det-list .index-display');
+        labels.forEach((label, i) => {
+            label.textContent = `#${i + 1}`;
+        });
+    }
+
+    function fieldTargetVisibility(select, index) {
         const card = select.closest('.factor-card');
         const attrSelect = card.querySelector('.target-attr');
         const itemSelect = card.querySelector('.target-item');
@@ -200,7 +207,7 @@
         }
     }
 
-    function toggleOutcomeFields() {
+    function outcomeFieldsVisibility() {
         const type = document.getElementById('outcome_type').value;
         document.getElementById('fields-range').classList.toggle('hidden', !['fourway', 'numeric'].includes(type));
         document.getElementById('fields-base').classList.toggle('hidden', type !== 'determined');
@@ -210,13 +217,111 @@
         document.getElementById('effects').classList.toggle('hidden', type == 'dice_system');
     }
 
-    window.onload = toggleOutcomeFields;
+    function innerExprVisibility(card) {
+        const opSelector = card.querySelector('.op-inner-selector')
+        const op = opSelector.value;
+        const lhs = card.querySelector('[data-slot-lhs]');
+        const rhsGroup = card.querySelector('[data-slot-rhs]');
+        const rhsInput = card.querySelector('[data-input-constant]');
+
+        // Reset defaults
+        lhs.classList.remove('hidden');
+        rhsGroup.classList.remove('hidden');
+        lhs.style.order = "1";
+        card.querySelector('.op-inner-selector').style.order = "2";
+        rhsGroup.style.order = "3";
+        //lhs.textContent = "FetchedValue";
+
+        // Apply Logic based on OP
+        if (!op) {
+            rhsGroup.classList.add('hidden');
+        } 
+        else if (op === 'k') { 
+            // Mode: <-- Constant
+            lhs.classList.add('hidden');
+            rhsGroup.style.order = "1";
+            opSelector.style.order = "2";
+        }
+        else if (['log', 'sqrt', '0.5'].includes(op)) {
+            // UNARY: Move op to start, hide constant
+            lhs.style.order = "2";
+            card.querySelector('.op-inner-selector').style.order = "1";
+            rhsGroup.classList.add('hidden');
+        } 
+        else if (op === '^x') { // POW_OF_VAL (nˣ)
+            // REVERSED BINARY: Constant on left, Value on right
+            rhsGroup.style.order = "1";
+            lhs.style.order = "3";
+        } 
+        else {
+            // STANDARD BINARY (+, -, *, /, x^ )
+        }
+    }
+
+    function outerExprVisibility(card) {
+        const op = card.querySelector('.op-application-selector').value;
+        const appSelector = card.querySelector('.op-application-selector');
+        const innerGroup = card.querySelector('[data-inner-group]');
+        const requiredGroup = card.querySelector('[data-slot-required]');
+        
+        const comparisonOps = ['==', '>', '<', '>=', '<='];
+
+        if (comparisonOps.includes(op)) {
+            // COMPARISON: ( Inner ) == Target
+            innerGroup.style.order = "1";
+            appSelector.style.order = "2";
+            requiredGroup.style.order = "3";
+            
+            requiredGroup.classList.remove('hidden');
+        } else {
+            // MATH: + ( Inner )
+            appSelector.style.order = "1";
+            innerGroup.style.order = "2";
+            
+            requiredGroup.classList.add('hidden');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize all existing cards on page load
+        document.querySelectorAll('.factor-card').forEach(card => {
+            innerExprVisibility(card);
+            outerExprVisibility(card);
+        });
+        
+        // Other initializations
+        if (typeof outcomeFieldsVisibility === "function") {
+            outcomeFieldsVisibility();
+        }
+    });
+
+    // Use Event Delegation for dynamic changes
+    document.addEventListener('change', function(e) {
+        const card = e.target.closest('.factor-card');
+        if (!card) return;
+
+        if (e.target.classList.contains('op-inner-selector')) {
+            innerExprVisibility(card);
+        }
+        
+        if (e.target.classList.contains('op-application-selector')) {
+            outerExprVisibility(card);
+        }
+    });
 </script>
 
 <style>
-#fields-dice:not(.hidden), 
-#fields-range:not(.hidden) {
-    display: grid !important;
-}
+    .factor-card { background: #1a1a1a; margin-bottom: 15px; border-left: 4px solid var(--accent); }
+    .card-header { padding: 0px 12px; }
+    .card-body { padding: 2px; gap: 5px; }
+    .input-header { background: transparent; border: none; border-bottom: 1px solid #444; color: var(--accent); font-weight: bold; font-size: 1.1em; }
+    .input-header:focus { border-bottom-color: var(--accent); outline: none; }
+    .sub-section { background: #333; padding: 10px; border-radius: 4px; }
+    h5 { margin-bottom: 8px; font-size: 0.8em; color: var(--text-dim); text-transform: uppercase; }
+
+    #fields-dice:not(.hidden), 
+    #fields-range:not(.hidden) {
+        display: grid !important;
+    }
 </style>
 {% endblock %}

@@ -962,8 +962,7 @@ def play_event(id):
 
     role_dets = {}
     for d in event.determinants:
-        if d.role != Participant.SUBJECT:
-            role_dets.setdefault(d.role, []).append(d)
+        role_dets.setdefault(d.role, []).append(d)
 
     # Get list of nearby entities that have those attributes
     # to fill the select box for each role.
@@ -971,55 +970,53 @@ def play_event(id):
     # and disallow event if no candidate for role.
     # Include attr or qty value in the list.
     
+    def meets_det(det, entity):
+        if d.infield and d.infield.attrib_id and not any(
+                av.attrib_id == d.infield.attrib_id
+                for av in entity.attrib_values):
+            return False
+
+        # TODO: check for event distance requirement e.g. 30ft (6 tiles)
+        # dist = distance_between(owner.position, c.position)
+        # if dist is not None and dist > d.distance_reqired
+
+        return True
+
+    def roles_for_det(det, entities):
+        role_set = set()
+        for entity in entities:
+            if meets_det(d, entity):
+                role_set.add(entity)
+        return role_set
+
     eligible_role_entities = {}
+    dets_not_met = {}
     for role, detlist in role_dets.items():
         det_entities = {}
         for d in detlist:
-            role_set = set()
-            for entity in other_entities_here:
-                if d.attrib_id and not any(
-                        av.attrib_id == d.attrib_id
-                        for av in entity.attrib_values):
-                    continue
-
-                # TODO: check for event distance requirement e.g. 30ft (6 tiles)
-                # dist = distance_between(owner.position, c.position)
-                # if dist is not None and dist > d.distance_reqired
-
-                role_set.add(entity)
-
-            det_entities[d.id] = role_set
-
+            if role == Participant.SUBJECT:
+                meeting_entities = roles_for_det(
+                    d, [subject, *other_entities_here])
+            else:
+                meeting_entities = roles_for_det(
+                    d, other_entities_here)
+            det_entities[d.id] = meeting_entities
+            if not meeting_entities:
+                dets_not_met.setdefault(role, []).append(d)
         if det_entities:
             eligible_role_entities[role] = list(
                 set.intersection(*det_entities.values()))
         else:
             eligible_role_entities[role] = []
     
-    # Pre-calculate Determinants (Modifiers)
-    # This logic helps the UI show things like "Strength (+5)" before rolling
-    determinants = []
-    if subject_id:
-        for det in event.determinants:
-            val = get_entity_value(subject_id, det)
-            determinants.append({
-                'label': det.label,
-                'operation': det.operation,
-                'modifier': det.modifier,
-                'scaling': det.scaling,
-                'value': val
-            })
-
     return render_template(
         'play/event.html',
         event=event,
         subject=subject,
         ctx_char=ctx_char,
         ctx_loc=ctx_loc,
-        needs_other1=needs_other1,
-        needs_other2=needs_other2,
-        determinants=determinants,
-        eligible_role_entities=eligible_role_entities,
+        role_entities=eligible_role_entities,
+        dets_not_met=dets_not_met,
         link_letters=LinkLetters(excluded='moer')
     )
 

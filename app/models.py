@@ -828,13 +828,20 @@ class Participant:
     OTHER2 = '3rd'   # Environment or third participant
     UNIV = 'univ'    # General storage item, can be multiple
 
+    ROLE_DISPLAY = {
+        SUBJECT: "Main",
+        OTHER1: "Target",
+        OTHER2: "Environment",
+        UNIV: "Universal Item",
+    }
+
     # --- Depth Traversal ---
     # False: Use the anchor entity itself.
     # True: Select an item pile inside the anchor.
     # Only valid if the anchor resolves to a Character or Location.
     ChildItem = False
 
-    # --- Field ---
+    # --- Field Mode ---
     ATTR = 'attr'  # Fetch AttribVal
     QTY  = 'qty'   # Fetch pile quantity
 
@@ -844,33 +851,51 @@ class Participant:
 
     # --- Constraints ---
     ALL_ROLES = [SUBJECT, OTHER1, OTHER2, UNIV]
-    ALL_FIELDS = [ATTR, QTY]
+    ALL_MODES = [ATTR, QTY]
     ALL_USAGE = [IN, OUT]
 
 class Operation:
+    CONST = 'k'
+    EQ = '=='
+    GT = '>'
+    LT = '<'
     ADD = '+'
     SUB = '-'
     MULT = '*'
     DIV = '/'
     VAL_TO_POW = 'x^'
     POW_OF_VAL = '^x'
+    LOG = 'log'
+    SQRT = 'sqrt'
+    HALF = '0.5'
 
     Repr = {
-        ADD:        {'symbol': '+',  'text': 'Add'},
-        SUB:        {'symbol': '−',  'text': 'Subtract'},
-        MULT:       {'symbol': '×',  'text': 'Multiply'},
-        DIV:        {'symbol': '÷',  'text': 'Divide'},
-        VAL_TO_POW: {'symbol': 'xⁿ', 'text': 'Val To Power'},
-        POW_OF_VAL: {'symbol': 'nˣ', 'text': 'Power Of Val'},
+        CONST:      {'symbol': 'n',   'text': 'Fixed Constant'},
+        EQ:         {'symbol': '==',  'text': 'Equals'},
+        GT:         {'symbol': '>',   'text': 'Greater Than'},
+        LT:         {'symbol': '<',   'text': 'Less Than'},
+        ADD:        {'symbol': '+',   'text': 'Add'},
+        SUB:        {'symbol': '−',   'text': 'Subtract'},
+        MULT:       {'symbol': '×',   'text': 'Multiply'},
+        DIV:        {'symbol': '÷',   'text': 'Divide'},
+        VAL_TO_POW: {'symbol': 'xⁿ',  'text': 'Val To Power'},
+        POW_OF_VAL: {'symbol': 'nˣ',  'text': 'Power Of Val'},
+        LOG:        {'symbol': 'log', 'text': 'Logarithmic'}, # unary
+        SQRT:       {'symbol': '√',   'text': 'Square Root'},
+        HALF:       {'symbol': '½',   'text': 'Half'},
     }
 
-    ALL = [ADD, SUB, MULT, DIV, VAL_TO_POW, POW_OF_VAL]
+    # How the result applies to the total
+    APPLICATION_OPS = [ADD, SUB, MULT, DIV, EQ, GT, LT]
 
-class EventFactor(db.Model, DictHydrator):
+    # Modify the Field Value before we apply it to the total
+    TRANSFORM_OPS = [
+        ADD, SUB, MULT, DIV,
+        VAL_TO_POW, POW_OF_VAL, LOG, SQRT, HALF]
+
+class EventField(db.Model, DictHydrator):
     """
-    Defines which attrib values or item quantities are used to determine
-        an Event's outcome, and how they apply.
-    Can be a Determinant (input) or an Effect (output).
+    Access an attribute or item quantity by event role.
 
     Attribute Value Lookup:
         - Look up an AttribVal for the given attrib_id, either for an
@@ -885,6 +910,38 @@ class EventFactor(db.Model, DictHydrator):
           either specified in configuration or chosen by dropdown in play.
         - Example: Role SUBJECT_ITEM_QTY, Item LEATHER (How much leather Bob has)
     """
+    __tablename__ = 'event_fields'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    game_token = db.Column(db.String(50), index=True, nullable=False)
+
+    role = db.Column(db.String(10), nullable=False, default=Participant.SUBJECT)
+    field_mode = db.Column(db.String(10), nullable=False, default=Participant.ATTR)
+    child_of_anchor = db.Column(db.Boolean, nullable=False, default=False)
+    item_id = db.Column(db.Integer, nullable=True) # play dropdown if null
+    attrib_id = db.Column(db.Integer, nullable=True)
+
+    def to_dict(self):
+        return {
+            "role": self.role,
+            "field_mode": self.field_mode,
+            "child_of_anchor": self.child_of_anchor,
+            "item_id": self.item_id,
+            "attrib_id": self.attrib_id
+        }
+
+    __table_args__ = (
+        db.CheckConstraint(
+            role.in_(Participant.ALL_ROLES), name='check_role_valid'),
+        db.CheckConstraint(
+            field_mode.in_(Participant.ALL_MODES), name='check_field_valid'),
+    )
+
+class EventFactor(db.Model, DictHydrator):
+    """
+    Combine a retrieved value into an event Determinant (input)
+        or Effect (output).
+    Defines how to retrieve the value and how to apply it.
+    """
     __tablename__ = 'event_factors'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -893,54 +950,94 @@ class EventFactor(db.Model, DictHydrator):
 
     # --- Identity & Logic Type ---
     usage_type = db.Column(db.String(3), nullable=False, default=Participant.IN)
-    label = db.Column(db.String(50)) # "Base Damage", "Armor Soak", etc.
+    label = db.Column(db.String(50)) # e.g. "Base Damage", "Accuracy"
 
-    # --- Retrieval Logic (The "Who & What") ---
-    role = db.Column(db.String(10), nullable=False, default=Participant.SUBJECT)
-    field = db.Column(db.String(10), nullable=False, default=Participant.ATTR)
-    child_of_anchor = db.Column(db.Boolean, nullable=False, default=False)
-    item_id = db.Column(db.Integer, nullable=True) # play dropdown if null
-    attrib_id = db.Column(db.Integer, nullable=True)
+    # --- Retrieval ---
 
-    # --- Mathematical Transformation ---
-    operation = db.Column(db.String(2), default=Operation.ADD) 
-    modifier = db.Column(db.Float, default=1.0) # e.g. 2 ^ field val
-    scaling = db.Column(db.String(10)) # curve: 'log', 'half'
+    # 'field' or 'outcome'
+    # for outcome, would be useful to distinguish between fourway outcome types
+    val_src = db.Column(db.String(15), nullable=False, default='infield')
+    infield_id = db.Column(db.Integer, nullable=True)
+    outfield_id = db.Column(db.Integer, nullable=True) # Effects only
 
-    # Relationships
-    event = db.relationship('Event', back_populates='factors', foreign_keys=[game_token, event_id])
+    # --- Formula That Applies The Values ---
+    #
+    # Total <op_application> (RetrievedVal <op_transform> val_transform)
+    #
+    # Examples:
+    #   * (1.5 ^ Qty)      -> op_app: MULT, op_trans: POW_OF_VAL, val_trans: 1.5
+    #   (Str - 1) == 10    -> op_app: EQ, op_trans: SUB, val_trans: 1.0, val_req: 10
+    #   + log(HP)          -> op_app: ADD, scaling: 'log'
+    #   
+    op_application = db.Column(db.String(4), default=Operation.ADD) # outer op
+    op_transform = db.Column(db.String(4), default=None) # inner op
+    val_transform = db.Column(db.Float, default=1.0) # inner constant
+    val_required = db.Column(db.Float, default=1.0) # comparison RHS
 
     def to_dict(self):
         return {
             "usage_type": self.usage_type,
             "label": self.label,
-            "role": self.role,
-            "field": self.field,
-            "child_of_anchor": self.child_of_anchor,
-            "item_id": self.item_id,
-            "attrib_id": self.attrib_id,
-            "operation": self.operation,
-            "modifier": self.modifier,
-            "scaling": self.scaling
+            "val_src": self.val_src,
+            "infield": self.infield.to_dict() if self.infield else None,
+            "outfield": self.outfield.to_dict() if self.outfield else None,
+            "op_application": self.op_application,
+            "op_transform": self.op_transform,
+            "val_transform": self.val_transform,
+            "val_required": self.val_required
         }
 
     @classmethod
     def from_dict(cls, data, game_token, event_id, **overrides):
-        return super().from_dict(
+        factor = super().from_dict(
             data, game_token, event_id=event_id, **overrides)
+        in_data = data.get('infield')
+        if in_data:
+            factor.infield = EventField(game_token=game_token, **in_data)
+        out_data = data.get('outfield')
+        if out_data:
+            factor.outfield = EventField(game_token=game_token, **out_data)
+        return factor
+
+    @property
+    def role(self):
+        return self.infield.role if self.infield else None
+
+    @property
+    def field_name(self):
+        if self.attrib_id:
+            attrib = Attrib.query.get((self.game_token, self.attrib_id))
+            return attrib.name
+        elif self.item_id:
+            item = Item.query.get((self.game_token, self.item_id))
+            return f"{item.name} Quantity"
+
+    # Relationships
+    event = db.relationship(
+        'Event',
+        back_populates='factors',
+        foreign_keys=[game_token, event_id])
+    infield = db.relationship(
+        'EventField',
+        foreign_keys=[infield_id],
+        cascade="all, delete-orphan", single_parent=True)
+    outfield = db.relationship(
+        'EventField',
+        foreign_keys=[outfield_id],
+        cascade="all, delete-orphan", single_parent=True)
 
     __table_args__ = (
         db.ForeignKeyConstraint(
             ['game_token', 'event_id'],
             ['events.game_token', 'events.id'], ondelete='CASCADE'),
+        db.ForeignKeyConstraint(
+                ['infield_id'], 
+                ['event_fields.id'], ondelete='CASCADE'),
+        db.ForeignKeyConstraint(
+                ['outfield_id'], 
+                ['event_fields.id'], ondelete='CASCADE'),
         db.CheckConstraint(
             usage_type.in_(Participant.ALL_USAGE), name='check_usage_type_valid'),
-        db.CheckConstraint(
-            role.in_(Participant.ALL_ROLES), name='check_role_valid'),
-        db.CheckConstraint(
-            field.in_(Participant.ALL_FIELDS), name='check_field_valid'),
-        db.CheckConstraint(
-            operation.in_(Operation.ALL), name='check_operation_valid'),
     )
 
 class EntityAbility(db.Model):

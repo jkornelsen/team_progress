@@ -16,42 +16,35 @@ logger = logging.getLogger(__name__)
 # Determinant Logic (Modifiers)
 # ------------------------------------------------------------------------
 
-def get_entity_value(anchor_id, det):
-    """
-    The Core Resolver. 
-    Handles Base vs Child and Attr vs Qty logic.
-    """
+def get_entity_value(anchor_id, field_def):
+    """Handles Base vs Child and Attr vs Qty."""
     # 1. Determine the Target Entity (The Base or the Selected Child)
     target_id = anchor_id
     game_token=g.game_token
     
-    if det.child_of_anchor:
-        # If it's a child, we need the specific item instance ID from the request/context
-        # This is where 'entity_id=NULL' logic lives in the route.
-        target_id = request.form.get(f"{det.role}_item_id")
-    
-    if not target_id and det.role != Participant.UNIV:
+    if not target_id and field_def.role != Participant.UNIV:
         return 0.0
 
     # 2. Fetch the Data
-    if det.field == Participant.ATTR:
+    if field_def.field_mode == Participant.ATTR:
         # If entity_id is set, we use that specific Attribute Blueprint
         val_obj = AttribVal.query.filter_by(
-            game_token=game_token, subject_id=target_id, attrib_id=det.attrib_id
+            game_token=game_token,
+            subject_id=target_id,
+            attrib_id=field_def.attrib_id
         ).first()
         return val_obj.value if val_obj else 0.0
     
-    if det.field == Participant.QTY:
-        if det.role == 'univ' or not det.child_of_anchor:
-            # AUTO-FETCH: Sum all piles of the specific item blueprint
-            piles = Pile.query.filter_by(
-                game_token=game_token, owner_id=target_id, item_id=det.item_id
-            ).all()
-            return sum(p.quantity for p in piles)
+    if field_def.field_mode == Participant.QTY:
+        if field_def.role == 'univ' or not field_def.child_of_anchor:
+            pile = Pile.query.filter_by(
+                game_token=game_token,
+                owner_id=target_id,
+                item_id=field_def.item_id
+            ).first()
         else:
-            # INSTANCE-FETCH: Get the quantity of the specific selected pile
             pile = Pile.query.get((game_token, target_id))
-            return pile.quantity if pile else 0.0
+        return p.quantity if pile else 0.0
 
     return 0.0
 
@@ -67,47 +60,55 @@ def calculate_determinants(event, context_ids):
     modifiers = []
     game_token = g.game_token
 
+    field_name = "Value"
+    source_display = "(Constant)"
     for det in event.determinants:
         # 1. Identify the Anchor (Suzy, Location, etc.)
-        anchor_id = resolve_anchor_id(det.role, context_ids)
-        if not anchor_id:
-            continue
+        #anchor_id = resolve_anchor_id(det.role, context_ids)
+        #if not anchor_id:
+        #    continue
+        val = 0.0
+        source_display = "Constant"
             
-        anchor = Entity.query.get((game_token, anchor_id))
-        anchor_name = anchor.name if anchor else "Unknown"
-
         # 2. Identify the Field Name (Pathfinding, Iron Ore, etc.)
-        field_name = "Value"
-        if det.field == Participant.ATTR:
-            attr = Attrib.query.get((game_token, det.attrib_id))
-            field_name = attr.name if attr else "Attribute"
-        elif det.field == Participant.QTY:
-            item = Item.query.get((game_token, det.item_id))
-            field_name = f"{item.name} Qty" if item else "Quantity"
+        if det.val_src == 'field' and det.infield:
+            anchor_id = resolve_anchor_id(det.infield.role, context_ids)
+            val = get_entity_value(anchor_id, det.infield)
+            infield = det.infield
 
-        # 3. Handle Depth (Is it a child item inside the anchor?)
-        source_display = anchor_name
-        if det.child_of_anchor:
-            # If looking at an item instance inside Suzy, we need the item name
-            instance_id = context_ids.get(f"{det.role}_item_id")
-            if instance_id:
-                pile = Pile.query.get((game_token, instance_id))
-                if pile:
-                    source_display = f"{anchor_name}'s {pile.item.name}"
-            else:
-                source_display = f"{anchor_name}'s Item"
+            if infield.field_mode == Participant.ATTR:
+                attr = Attrib.query.get((game_token, infield.attrib_id))
+                field_name = attr.name if attr else "Attribute"
+            elif infield.field_mode == Participant.QTY:
+                item = Item.query.get((game_token, infield.item_id))
+                field_name = f"{item.name} Qty" if item else "Quantity"
 
-        # 4. Calculate the numeric value
-        raw_val = get_entity_value(anchor_id, det)
-        effective_val = apply_scaling(raw_val, det.scaling)
-        
-        # 5. Assemble the enriched dictionary
+            anchor = Entity.query.get((game_token, anchor_id))
+            anchor_name = anchor.name if anchor else "Unknown"
+            source_display = anchor_name
+            if infield.child_of_anchor:
+                # If looking at an item instance inside Suzy, we need the item name
+                instance_id = context_ids.get(f"{infield.role}_item_id")
+                if instance_id:
+                    pile = Pile.query.get((game_token, instance_id))
+                    if pile:
+                        source_display = f"{anchor_name}'s {pile.item.name}"
+                else:
+                    source_display = f"{anchor_name}'s Item"
+        elif det.val_src == 'const':
+            val = det.val_transform
+
+        # 3. Inner Transform: (Val <op> Constant)
+        if det.op_transform:
+            val = apply_operation(val, det.val_transform, det.op_transform)
+
+        # 4. Assemble the enriched dictionary
         modifiers.append({
             'label': det.label or "",
             'source_name': source_display,
             'field_name': field_name,
-            'value': effective_val,
-            'op': det.operation
+            'value': val,
+            'op': det.op_application
         })
         
     return modifiers
@@ -309,6 +310,35 @@ def roll_for_system_outcome(event_id, num_dice=1, sides=20, bonus=0):
 # ------------------------------------------------------------------------
 # Applying Changes
 # ------------------------------------------------------------------------
+
+def apply_event_effects(event, context_ids, roll_outcome):
+    """
+    Iterates through factors where usage_type == OUT.
+    """
+    for effect in event.effects:
+        if not effect.outfield: continue
+        
+        # 1. Determine base value to save
+        if effect.val_src == 'outcome':
+            new_val = roll_outcome
+        elif effect.val_src == 'field':
+            anchor_id = resolve_anchor_id(effect.outfield.role, context_ids)
+            new_val = get_entity_value(anchor_id, effect.outfield)
+        else:
+            new_val = effect.val_transform
+            
+        # 2. Transform result (e.g. outcome * 0.5 for half damage)
+        if effect.op_transform:
+            new_val = apply_operation(new_val, effect.val_transform, effect.op_transform)
+            
+        # 3. Apply to target
+        target_anchor_id = resolve_anchor_id(effect.outfield.role, context_ids)
+        
+        # Logic from apply_event_change...
+        if effect.outfield.field_mode == Participant.ATTR:
+            apply_event_change(effect.outfield.attrib_id, 'attrib', target_anchor_id, new_val)
+        else:
+            apply_event_change(effect.outfield.item_id, 'item', target_anchor_id, new_val)
 
 def apply_event_change(target_id, target_type, owner_id, new_value):
     """

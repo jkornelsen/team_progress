@@ -11,7 +11,7 @@ from app.models import (
     Entity, Item, Character, Location, Attrib, Event, 
     Pile, AttribVal, Operation, EntityAbility,
     Recipe, RecipeSource, RecipeByproduct, RecipeAttribReq,
-    LocDest, ItemRef, EventFactor, Participant,
+    LocDest, ItemRef, EventFactor, EventField, Participant,
     Overall, WinRequirement)
 from app.serialization import (
     init_game_session, load_scenario_from_path, DEFAULT_SCENARIO_FILE,
@@ -548,20 +548,27 @@ def edit_event(id):
 
         # 2. Process Determinants (Inputs)
         for row in req.get_list('dets'):
-            new_factor = EventFactor(
+            f = EventFactor(
                 game_token=game_token,
                 event_id=event.id,
                 usage_type=Participant.IN,
+                val_src=row.get_str('val_src', 'field'),
                 label=row.get_str('label'),
-                role=row.get_str('role'),
-                field=row.get_str('field'),
-                attrib_id=row.get_int('attrib_id'),
-                item_id=row.get_int('item_id'),
-                operation=row.get_str('operation'),
-                scaling=row.get_str('scaling'),
-                modifier=row.get_float('modifier'),
+                op_application=row.get_str('op_application'),
+                op_transform=row.get_str('op_transform'),
+                val_transform=row.get_float('val_transform', 1.0),
+                val_required=row.get_float('val_required', 1.0)
             )
-            event.factors.append(new_factor)
+            if f.val_src == 'field':
+                f.infield = EventField(
+                    game_token=game_token,
+                    role=row.get_str('role'),
+                    field_mode=row.get_str('field_mode') or None,
+                    child_of_anchor=row.get_bool('child_of_anchor'),
+                    attrib_id=row.get_int('attrib_id'),
+                    item_id=row.get_int('item_id')
+                )
+            event.factors.append(f)
 
         # 3. Process Effects (Changes)
         for row in req.get_list('changes'):
