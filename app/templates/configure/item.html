@@ -10,6 +10,9 @@
 {% endblock %}
 
 {% block content %}
+
+<script src="{{ url_for('static', filename='js/configuration.js') }}"></script>
+
 <div class="configure-item">
     <h1>Item Setup</h1>
     <p class="info">
@@ -105,12 +108,64 @@
                 {# Recipes are injected here via JS/Jinja loop #}
                 {% for recipe in recipes %}
                     {% set recipe_index = loop.index0 %}
-                    {% include 'configure/partials/recipe_row.html' %}
+                    {% include 'configure/partials/item_recipe_row.html' %}
                 {% endfor %}
             </div>
         </section>
 
-        <!-- 4. Form Actions -->
+        <!-- 4. Attributes -->
+        <section class="outer-border">
+            {% if all_attribs %}
+            <div class="flex-between">
+                <h3>Attributes</h3>
+                <button type="button" class="btn-sm" onclick="ConfigEditor.addRow('attrib-list', 'attrib-template')">+ Add Attribute</button>
+            </div>
+            <div id="attrib-list" class="col-list spacious-top {{ 'hidden' if not item.attrib_values }}">
+                <style>.item-attrib-row { --grid-cols: 6fr 6fr 1fr; }</style>
+                <div class="col-row item-attrib-row header-style">
+                    <span>Attribute</span><span>Value</span><span></span>
+                </div>
+                {% for av in item.attrib_values %}
+                    <div class="col-row item-attrib-row">
+                        <select name="attribs[{{ loop.index0 }}][id]">
+                            {% for attr_def in all_attribs %}
+                                <option value="{{ attr_def.id }}" {{ 'selected' if attr_def.id == av.attrib_id }}>{{ attr_def.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="text" name="attribs[{{ loop.index0 }}][value]" value="{{ av.value }}">
+                        <button type="button" class="btn-sm dangerous-button" onclick="ConfigEditor.removeRow(this, 'attrib-list')">×</button>
+                    </div>
+                {% endfor %}
+            </div>
+            {% else %}
+                <div style="font-style: italic">(No attributes)</div>
+            {% endif %}
+        </section>
+
+        <!-- 5. Item Events -->
+        <section class="outer-border">
+            <div class="flex-between">
+                <h3>Item Events</h3>
+                {% if all_events %}
+                    <button type="button" class="btn-sm" onclick="ConfigEditor.addRow('ability-list', 'ability-template')">+ Add Event</button>
+                {% endif %}
+            </div>
+            <div id="ability-list" class="col-list spacious-top {{ 'hidden' if not item.abilities }}" style="--col-list-max-width: 400px;">
+                <style>.item-ability-row { --grid-cols: 11fr 1fr; }</style>
+                {% for evt in item.abilities %}
+                    <div class="col-row item-ability-row">
+                        <select name="abilities[{{ loop.index0 }}][id]">
+                            {% for event_def in all_events %}
+                                <option value="{{ event_def.id }}" {{ 'selected' if event_def.id == evt.id }}>{{ event_def.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="button" class="btn-sm dangerous-button" onclick="ConfigEditor.removeRow(this, 'ability-list')">×</button>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- 6. Form Actions -->
         {{ footer_actions(
             entity_name='item', 
             entity_id=item.id
@@ -118,14 +173,14 @@
     </form>
 </div>
 
-<!-- 1. Template for a brand new Recipe Card -->
+<!-- Recipe Card -->
 <template id="recipe-template">
     {% set recipe_index = 'RECIPE_INDEX' %}
     {% set recipe = None %}
-    {% include 'configure/partials/recipe_row.html' %}
+    {% include 'configure/partials/item_recipe_row.html' %}
 </template>
 
-<!-- 2. Template for an Ingredient (Source) Row -->
+<!-- Source Row -->
 <template id="source-template">
     <div class="flex-row gap-5 align-center spacious-bottom">
         <select name="recipes[RECIPE_INDEX][sources][SUB_INDEX][item_id]">
@@ -141,7 +196,7 @@
     </div>
 </template>
 
-<!-- 3. Template for a Byproduct Row -->
+<!-- Byproduct Row -->
 <template id="byproduct-template">
     <div class="flex-row gap-5 align-center spacious-bottom">
         <select name="recipes[RECIPE_INDEX][byproducts][SUB_INDEX][item_id]">
@@ -154,7 +209,7 @@
     </div>
 </template>
 
-<!-- 4. Template for an Attribute Requirement Row -->
+<!-- Attribute Requirement Row -->
 <template id="attrib-req-template">
     <div class="flex-row gap-10 align-center spacious-bottom attrib-req-row">
         <select name="recipes[RECIPE_INDEX][attrib_reqs][SUB_INDEX][attrib_id]" onchange="updateAttribReqInput(this)">
@@ -166,6 +221,28 @@
         <input type="number" name="recipes[RECIPE_INDEX][attrib_reqs][SUB_INDEX][min]" placeholder="Min" step="any" style="width: 70px;" class="range-input">
         <input type="number" name="recipes[RECIPE_INDEX][attrib_reqs][SUB_INDEX][max]" placeholder="Max" step="any" style="width: 70px;" class="range-input">
         <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
+    </div>
+</template>
+
+<!-- Item Attribute Row -->
+<template id="attrib-template">
+    <div class="col-row item-attrib-row">
+        <select name="attribs[__INDEX__][id]">
+            {% for attr_def in all_attribs %}<option value="{{ attr_def.id }}">{{ attr_def.name }}</option>{% endfor %}
+        </select>
+        <input type="text" name="attribs[__INDEX__][value]" value="0">
+        <button type="button" class="btn-sm dangerous-button" onclick="ConfigEditor.removeRow(this, 'attrib-list')">×</button>
+    </div>
+</template>
+
+<!-- Item Event Row -->
+<template id="ability-template">
+    <div class="col-row item-ability-row">
+        <select name="abilities[__INDEX__][id]">
+            <option value="" disabled selected>Select an Event...</option>
+            {% for event_def in all_events %}<option value="{{ event_def.id }}">{{ event_def.name }}</option>{% endfor %}
+        </select>
+        <button type="button" class="btn-sm dangerous-button" onclick="ConfigEditor.removeRow(this, 'ability-list')">×</button>
     </div>
 </template>
 
@@ -217,7 +294,7 @@
 
     /**
      * Updates the attribute requirement input based on whether the attribute is binary
-     * This handles the inline attribute requirements in recipe_row.html
+     * This handles the inline attribute requirements in included partial
      */
     function updateAttribReqInput(selectElement) {
         const row = selectElement.parentElement;
@@ -310,7 +387,7 @@
         container.insertAdjacentHTML('beforeend', html);
     }
 
-    // Convenience wrappers called by buttons in recipe_row.html
+    // Convenience wrappers called by buttons in included partial
     function addSource(idx) { addSubRow(idx, 'sources', 'source-template'); }
     function addByproduct(idx) { addSubRow(idx, 'byproducts', 'byproduct-template'); }
     function addAttribReq(idx) { 

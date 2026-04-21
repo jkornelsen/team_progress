@@ -678,6 +678,11 @@ def play_item(id):
                 is_reachable = False
                 reach_error = f"{owner.name} is in a different location."
 
+    # Attributes for this Item
+    attrib_values = AttribVal.query.filter_by(
+        game_token=game_token, subject_id=id
+    ).all()
+
     # For equipping to a slot
     overall = Overall.query.get(game_token)
 
@@ -704,11 +709,12 @@ def play_item(id):
         used_for_production=used_for_production,
         byproduct_of=byproduct_of,
         progress=current_progress,
+        attribreq_entities=attribreq_entities,
         available_slots=overall.slots,
         other_chars_here=other_chars_here,
+        attrib_values=attrib_values,
         is_reachable=is_reachable,
         reach_error=reach_error,
-        attribreq_entities=attribreq_entities,
         link_letters=LinkLetters(excluded='moedpqrg')
     )
 
@@ -925,9 +931,25 @@ def play_event(id):
         ctx.loc_id = ctx_char.location_id
     ctx_loc = Location.query.get((game_token, ctx.loc_id)) if ctx.loc_id else None
 
-    # Analyze requirements
-    needs_other1 = any(d.role == Participant.OTHER1 for d in event.determinants)
-    needs_other2 = any(d.role == Participant.OTHER2 for d in event.determinants)
+    # Identify all unique participant role names required by this event
+    # We look at both determinants (inputs) and effects (outputs)
+    role_slots = set()
+    for f in event.factors:
+        if f.val_src == 'field':
+            role = f.infield.role if f.usage_type == 'in' else f.outfield.role
+            if role and role != 'univ':
+                role_slots.add(role)
+
+    # Get incoming assignments from query string (e.g., ?Attacker=5)
+    # We also fallback to session if only one character is 'active'
+    assignments = {}
+    for slot in role_slots:
+        val = request.args.get(slot, type=int)
+        if val:
+            assignments[slot] = val
+        elif slot == 'Subject' and session.get('old_char_id'):
+            # "Subject" is a common default slot name
+            assignments[slot] = session.get('old_char_id')
 
     # Get list of all available nearby entities
 

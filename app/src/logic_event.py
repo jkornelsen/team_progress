@@ -48,12 +48,15 @@ def get_entity_value(anchor_id, field_def):
 
     return 0.0
 
-def resolve_anchor_id(who, context):
-    """Maps Participant roles to a physical Entity ID."""
-    if who == Participant.UNIV: return GENERAL_ID
-    return context.get(f"{who}_id")
+def resolve_anchor_id(role_name, role_entities):
+    """
+    Maps a named participant slot to an entity ID.
+    This dict would come from URL parameters, or from selectbox,
+    or a single value returned by lookup that meets the requirements.
+    """
+    return role_entities.get(f"role_name")
 
-def calculate_determinants(event, context_ids):
+def calculate_determinants(event, role_entities):
     """
     Returns a list of calculated modifiers based on selected participants.
     """
@@ -63,16 +66,14 @@ def calculate_determinants(event, context_ids):
     field_name = "Value"
     source_display = "(Constant)"
     for det in event.determinants:
-        # 1. Identify the Anchor (Suzy, Location, etc.)
-        #anchor_id = resolve_anchor_id(det.role, context_ids)
-        #if not anchor_id:
-        #    continue
         val = 0.0
         source_display = "Constant"
             
-        # 2. Identify the Field Name (Pathfinding, Iron Ore, etc.)
+        # Identify the Field Name (Pathfinding, Iron Ore, etc.)
         if det.val_src == 'field' and det.infield:
-            anchor_id = resolve_anchor_id(det.infield.role, context_ids)
+            anchor_id = resolve_anchor_id(det.infield.role, role_entities)
+            if not anchor_id:
+                continue
             val = get_entity_value(anchor_id, det.infield)
             infield = det.infield
 
@@ -88,7 +89,7 @@ def calculate_determinants(event, context_ids):
             source_display = anchor_name
             if infield.child_of_anchor:
                 # If looking at an item instance inside Suzy, we need the item name
-                instance_id = context_ids.get(f"{infield.role}_item_id")
+                instance_id = role_entities.get(f"{infield.role}_item_id")
                 if instance_id:
                     pile = Pile.query.get((game_token, instance_id))
                     if pile:
@@ -98,11 +99,11 @@ def calculate_determinants(event, context_ids):
         elif det.val_src == 'const':
             val = det.val_transform
 
-        # 3. Inner Transform: (Val <op> Constant)
+        # Inner Transform: (Val <op> Constant)
         if det.op_transform:
             val = apply_operation(val, det.val_transform, det.op_transform)
 
-        # 4. Assemble the enriched dictionary
+        # Assemble the enriched dictionary
         modifiers.append({
             'label': det.label or "",
             'source_name': source_display,

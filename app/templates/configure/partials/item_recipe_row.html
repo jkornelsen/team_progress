@@ -3,7 +3,7 @@
     <input type="hidden" name="recipes[{{ recipe_index }}][id]" value="{{ recipe.id if recipe }}">
     
     <div class="flex-between align-center">
-        <h4>
+        <h4 style="margin-top: 0px; margin-bottom: 0px;">
             Recipe <span class="recipe-display-number">{{ '#' ~ (recipe_index + 1) if recipe_index is number else '' }}</span>
         </h4>
         <button type="button" class="btn-sm dangerous-button" onclick="this.closest('.recipe-card').remove()">Remove Recipe</button>
@@ -39,7 +39,7 @@
 
     <div class="column-container">
         <!-- 1. SOURCES (Ingredients) -->
-        <div class="sub-section">
+        <div class="sub-section" style="flex: 5">
             <h5>📉 Sources (Ingredients)</h5>
             <div class="source-list" id="sources-{{ recipe_index }}">
                 {% for source in recipe.sources if recipe %}
@@ -58,11 +58,11 @@
                 </div>
                 {% endfor %}
             </div>
-            <button type="button" class="btn-sm" onclick="addSource({{ recipe_index }})">+ Add Ingredient</button>
+            <button type="button" class="btn-sm" onclick="addSource({{ recipe_index }})">+ Add Source</button>
         </div>
 
         <!-- 2. BYPRODUCTS -->
-        <div class="sub-section">
+        <div class="sub-section" style="flex: 3">
             <h5>🎁 Byproducts</h5>
             <div class="byproduct-list" id="byproducts-{{ recipe_index }}">
                 {% for byproduct in recipe.byproducts if recipe %}

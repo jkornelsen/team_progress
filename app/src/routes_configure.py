@@ -128,6 +128,26 @@ def edit_item(id):
             elif gen_pile:
                 db.session.delete(gen_pile)
 
+        # Attribute Values
+        AttribVal.query.filter_by(game_token=game_token, subject_id=item.id).delete()
+        for row in req.get_list('attribs'):
+            attr_id = row.get_int('id')
+            if attr_id:
+                db.session.add(AttribVal(
+                    game_token=game_token, subject_id=item.id,
+                    attrib_id=attr_id, value=row.get_float('value')
+                ))
+
+        # Events
+        EntityAbility.query.filter_by(
+            game_token=game_token, entity_id=item.id).delete()
+        for row in req.get_list('abilities'):
+            event_id = row.get_int('id')
+            if event_id:
+                db.session.add(EntityAbility(
+                    game_token=game_token, entity_id=item.id, event_id=event_id
+                ))
+
         recipe_rows = req.get_list('recipes')
         item.recipes = []
 
@@ -210,6 +230,7 @@ def edit_item(id):
         initial_qty=gen_qty,
         all_items=Item.query.filter_by(game_token=game_token).all(),
         all_attribs=Attrib.query.filter_by(game_token=game_token).all(),
+        all_events=Event.query.filter_by(game_token=game_token).all(),
         recipes=item.recipes if item else []
     )
 

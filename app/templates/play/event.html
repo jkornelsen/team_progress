@@ -523,6 +523,78 @@
 
     // Run once on load to show Suzy's initial Pathfinding bonus
     document.addEventListener('DOMContentLoaded', refreshModifiers);
+
+    // Shows the text input when "+ Add New" is selected.
+    function handleRoleChange(selectEl, index) {
+        const group = document.getElementById(`new-role-group-${index}`);
+        const input = document.getElementById(`new-role-input-${index}`);
+
+        if (selectEl.value === "__NEW__") {
+            group.style.display = 'inline-flex';
+            input.focus();
+        } else {
+            group.style.display = 'none';
+        }
+    }
+
+    // Validates the name and adds it as a permanent option in the dropdown.
+    function confirmNewRole(index) {
+        const selectEl = document.querySelector(`select[name="dets[${index}][role]"]`);
+        const input = document.getElementById(`new-role-input-${index}`);
+        const group = document.getElementById(`new-role-group-${index}`);
+        
+        // Clean the value: lowercase and remove illegal chars
+        let value = input.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+
+        if (!value) {
+            alert("Please enter a valid role name.");
+            return;
+        }
+
+        // Check if option already exists
+        let existingOption = Array.from(selectEl.options).find(opt => opt.value === value);
+
+        if (!existingOption) {
+            // Create the new option
+            const newOpt = document.createElement('option');
+            newOpt.value = value;
+            newOpt.textContent = value;
+            
+            // Add it to the "Other Participant Roles" optgroup (the second optgroup)
+            const customGroup = selectEl.querySelectorAll('optgroup')[1];
+            customGroup.appendChild(newOpt);
+            
+            selectEl.value = value;
+        } else {
+            // If it already existed, just select it
+            selectEl.value = value;
+        }
+
+        // Cleanup
+        input.value = "";
+        group.style.display = 'none';
+    }
+
+    // Reverts the dropdown and hides the input.
+    function cancelNewRole(index) {
+        const selectEl = document.querySelector(`select[name="dets[${index}][role]"]`);
+        const group = document.getElementById(`new-role-group-${index}`);
+        const input = document.getElementById(`new-role-input-${index}`);
+
+        selectEl.selectedIndex = 0; // Reset to [Subject]
+        input.value = "";
+        group.style.display = 'none';
+    }
+
+    // Key listener for Enter and Escape keys.
+    function handleRoleKeydown(event, index) {
+        if (event.key === "Enter") {
+            event.preventDefault(); // Stop form submission
+            confirmNewRole(index);
+        } else if (event.key === "Escape") {
+            cancelNewRole(index);
+        }
+    }
 </script>
 
 <style>

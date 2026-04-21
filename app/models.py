@@ -822,18 +822,10 @@ class ItemRef(db.Model, DictHydrator):
 class Participant:
     """References a field to grab for an event factor."""
 
-    # --- Role of the Anchor Entity ---
-    SUBJECT = 'subj' # Context-driven e.g. player char
-    OTHER1 = '2nd'   # Typically user-selected e.g. enemy
-    OTHER2 = '3rd'   # Environment or third participant
-    UNIV = 'univ'    # General storage item, can be multiple
-
-    ROLE_DISPLAY = {
-        SUBJECT: "Main",
-        OTHER1: "Target",
-        OTHER2: "Environment",
-        UNIV: "Universal Item",
-    }
+    # --- Context-Driven Roles of the Anchor Entity ---
+    SUBJECT = '[Subject]'
+    OWNER = '[Owner]'
+    AT = '[At]'
 
     # --- Depth Traversal ---
     # False: Use the anchor entity itself.
@@ -850,7 +842,7 @@ class Participant:
     OUT = 'out' # Effect
 
     # --- Constraints ---
-    ALL_ROLES = [SUBJECT, OTHER1, OTHER2, UNIV]
+    CONTEXT_ROLES = [SUBJECT, OWNER, AT]
     ALL_MODES = [ATTR, QTY]
     ALL_USAGE = [IN, OUT]
 
@@ -914,7 +906,7 @@ class EventField(db.Model, DictHydrator):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     game_token = db.Column(db.String(50), index=True, nullable=False)
 
-    role = db.Column(db.String(10), nullable=False, default=Participant.SUBJECT)
+    role = db.Column(db.String(50), nullable=False, default=Participant.SUBJECT)
     field_mode = db.Column(db.String(10), nullable=False, default=Participant.ATTR)
     child_of_anchor = db.Column(db.Boolean, nullable=False, default=False)
     item_id = db.Column(db.Integer, nullable=True) # play dropdown if null

@@ -1,4 +1,14 @@
 {
+    "comments": [
+        "General rate durations for various bars and boosts:",
+        "8 → red/green bar",
+        "20 → yellow/orange/violet/white bar",
+        "12 → boost I",
+        "14 → boost II",
+        "15 → bars unlocked",
+        "10 → fabric",
+        "This 'comments' field is for reference only, ignored by the game and not saved."
+    ],
     "entities": {
         "items": [
             {
@@ -6,9 +16,10 @@
                 "name": "Green Bar Boost I",
                 "description": "Rate amount +0.5 each.",
                 "attribs": [],
-                "abilities": [],
+                "abilities": [45],
                 "storage_type": "u",
                 "q_limit": 10.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": true,
                 "recipes": [
@@ -18,11 +29,7 @@
                         "rate_duration": 12.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 6,
-                                "q_required": 7.0,
-                                "preserve": false
-                            }
+                            {"item_id": 6, "q_required": 7.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -34,9 +41,10 @@
                 "name": "Red Bar Boost I",
                 "description": "<i>Gain per batch</i> 1 each. See <a href=\"/play/event/1\">Red Bar Rate</a> for how to perform the upgrade (also linked below).",
                 "attribs": [],
-                "abilities": [],
+                "abilities": [46],
                 "storage_type": "u",
                 "q_limit": 20.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": true,
                 "recipes": [
@@ -46,11 +54,7 @@
                         "rate_duration": 12.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 34,
-                                "q_required": 20.0,
-                                "preserve": false
-                            }
+                            {"item_id": 34, "q_required": 20.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -62,9 +66,10 @@
                 "name": "Red Bar Boost II",
                 "description": "Rate amount x1.5\r\n\r\nMultiplying for each upgrade means the total benefit is exponential, so with a base rate amount of 20 from all <i>Red Bar Boost I</i> upgrades, the rate amount becomes:\r\n<pre>20 * 1.5 ^ 6 = 228</pre>",
                 "attribs": [],
-                "abilities": [],
+                "abilities": [46],
                 "storage_type": "u",
                 "q_limit": 6.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": true,
                 "recipes": [
@@ -74,21 +79,9 @@
                         "rate_duration": 14.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 39,
-                                "q_required": 1000.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 3,
-                                "q_required": 1.0,
-                                "preserve": true
-                            },
-                            {
-                                "item_id": 6,
-                                "q_required": 100.0,
-                                "preserve": false
-                            }
+                            {"item_id": 3, "q_required": 1.0, "preserve": true},
+                            {"item_id": 6, "q_required": 100.0, "preserve": false},
+                            {"item_id": 39, "q_required": 1000.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -103,6 +96,7 @@
                 "abilities": [],
                 "storage_type": "u",
                 "q_limit": 1.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": true,
                 "recipes": [
@@ -112,11 +106,7 @@
                         "rate_duration": 120.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 28,
-                                "q_required": 18.0,
-                                "preserve": true
-                            }
+                            {"item_id": 28, "q_required": 18.0, "preserve": true}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -128,9 +118,10 @@
                 "name": "\ud83d\udfe8Yellow Bar",
                 "description": "Combine light to produce this secondary color.\r\n<pre><c=\"yellow\"> _____________\r\n/____________/\r\n</c></pre>",
                 "attribs": [],
-                "abilities": [],
+                "abilities": [47],
                 "storage_type": "u",
                 "q_limit": 0.0,
+                "loc_hosted": false,
                 "toplevel": true,
                 "masked": true,
                 "recipes": [
@@ -140,16 +131,8 @@
                         "rate_duration": 20.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 39,
-                                "q_required": 10.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 34,
-                                "q_required": 5.0,
-                                "preserve": false
-                            }
+                            {"item_id": 34, "q_required": 5.0, "preserve": false},
+                            {"item_id": 39, "q_required": 10.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -164,6 +147,7 @@
                 "abilities": [],
                 "storage_type": "u",
                 "q_limit": 0.0,
+                "loc_hosted": false,
                 "toplevel": true,
                 "masked": true,
                 "recipes": [
@@ -173,21 +157,9 @@
                         "rate_duration": 20.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 39,
-                                "q_required": 5.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 6,
-                                "q_required": 5.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 23,
-                                "q_required": 1.0,
-                                "preserve": true
-                            }
+                            {"item_id": 6, "q_required": 5.0, "preserve": false},
+                            {"item_id": 23, "q_required": 1.0, "preserve": true},
+                            {"item_id": 39, "q_required": 5.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -202,6 +174,7 @@
                 "abilities": [],
                 "storage_type": "u",
                 "q_limit": 1.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": false,
                 "recipes": []
@@ -214,6 +187,7 @@
                 "abilities": [],
                 "storage_type": "u",
                 "q_limit": 10.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": true,
                 "recipes": [
@@ -223,16 +197,8 @@
                         "rate_duration": 12.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 10,
-                                "q_required": 200.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 18,
-                                "q_required": 10.0,
-                                "preserve": false
-                            }
+                            {"item_id": 10, "q_required": 200.0, "preserve": false},
+                            {"item_id": 18, "q_required": 10.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -247,6 +213,7 @@
                 "abilities": [],
                 "storage_type": "u",
                 "q_limit": 0.0,
+                "loc_hosted": false,
                 "toplevel": true,
                 "masked": true,
                 "recipes": [
@@ -256,21 +223,9 @@
                         "rate_duration": 20.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 39,
-                                "q_required": 5.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 31,
-                                "q_required": 5.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 19,
-                                "q_required": 1.0,
-                                "preserve": true
-                            }
+                            {"item_id": 19, "q_required": 1.0, "preserve": true},
+                            {"item_id": 31, "q_required": 5.0, "preserve": false},
+                            {"item_id": 39, "q_required": 5.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -285,6 +240,7 @@
                 "abilities": [],
                 "storage_type": "l",
                 "q_limit": 555.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": true,
                 "recipes": [
@@ -294,21 +250,9 @@
                         "rate_duration": 3.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 39,
-                                "q_required": 70.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 34,
-                                "q_required": 35.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 5,
-                                "q_required": 1.0,
-                                "preserve": true
-                            }
+                            {"item_id": 5, "q_required": 1.0, "preserve": true},
+                            {"item_id": 34, "q_required": 35.0, "preserve": false},
+                            {"item_id": 39, "q_required": 70.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -323,6 +267,7 @@
                 "abilities": [],
                 "storage_type": "l",
                 "q_limit": 1110.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": true,
                 "recipes": [
@@ -332,21 +277,9 @@
                         "rate_duration": 7.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 6,
-                                "q_required": 50.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 32,
-                                "q_required": 1.0,
-                                "preserve": true
-                            },
-                            {
-                                "item_id": 29,
-                                "q_required": 1.0,
-                                "preserve": false
-                            }
+                            {"item_id": 6, "q_required": 50.0, "preserve": false},
+                            {"item_id": 29, "q_required": 1.0, "preserve": false},
+                            {"item_id": 32, "q_required": 1.0, "preserve": true}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -361,6 +294,7 @@
                 "abilities": [],
                 "storage_type": "l",
                 "q_limit": 1.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": true,
                 "recipes": [
@@ -370,31 +304,11 @@
                         "rate_duration": 33.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 30,
-                                "q_required": 1.0,
-                                "preserve": true
-                            },
-                            {
-                                "item_id": 29,
-                                "q_required": 500.0,
-                                "preserve": true
-                            },
-                            {
-                                "item_id": 11,
-                                "q_required": 500.0,
-                                "preserve": true
-                            },
-                            {
-                                "item_id": 12,
-                                "q_required": 1000.0,
-                                "preserve": true
-                            },
-                            {
-                                "item_id": 14,
-                                "q_required": 1.0,
-                                "preserve": false
-                            }
+                            {"item_id": 11, "q_required": 500.0, "preserve": true},
+                            {"item_id": 12, "q_required": 1000.0, "preserve": true},
+                            {"item_id": 14, "q_required": 1.0, "preserve": false},
+                            {"item_id": 29, "q_required": 500.0, "preserve": true},
+                            {"item_id": 30, "q_required": 1.0, "preserve": true}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -409,6 +323,7 @@
                 "abilities": [],
                 "storage_type": "l",
                 "q_limit": 1.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": true,
                 "recipes": [
@@ -418,31 +333,11 @@
                         "rate_duration": 33.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 34,
-                                "q_required": 10000.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 30,
-                                "q_required": 1.0,
-                                "preserve": true
-                            },
-                            {
-                                "item_id": 29,
-                                "q_required": 10.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 11,
-                                "q_required": 10.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 12,
-                                "q_required": 10.0,
-                                "preserve": false
-                            }
+                            {"item_id": 11, "q_required": 10.0, "preserve": false},
+                            {"item_id": 12, "q_required": 10.0, "preserve": false},
+                            {"item_id": 29, "q_required": 10.0, "preserve": false},
+                            {"item_id": 30, "q_required": 1.0, "preserve": true},
+                            {"item_id": 34, "q_required": 10000.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -457,6 +352,7 @@
                 "abilities": [],
                 "storage_type": "u",
                 "q_limit": 2.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": true,
                 "recipes": [
@@ -466,11 +362,7 @@
                         "rate_duration": 12.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 18,
-                                "q_required": 1000.0,
-                                "preserve": false
-                            }
+                            {"item_id": 18, "q_required": 1000.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -485,6 +377,7 @@
                 "abilities": [],
                 "storage_type": "u",
                 "q_limit": 0.0,
+                "loc_hosted": false,
                 "toplevel": true,
                 "masked": true,
                 "recipes": [
@@ -494,21 +387,9 @@
                         "rate_duration": 3.0,
                         "instant": true,
                         "sources": [
-                            {
-                                "item_id": 39,
-                                "q_required": 1000.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 34,
-                                "q_required": 1000.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 6,
-                                "q_required": 100.0,
-                                "preserve": false
-                            }
+                            {"item_id": 6, "q_required": 100.0, "preserve": false},
+                            {"item_id": 34, "q_required": 1000.0, "preserve": false},
+                            {"item_id": 39, "q_required": 1000.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -523,6 +404,7 @@
                 "abilities": [],
                 "storage_type": "u",
                 "q_limit": 1.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": true,
                 "recipes": [
@@ -532,11 +414,7 @@
                         "rate_duration": 15.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 16,
-                                "q_required": 100.0,
-                                "preserve": false
-                            }
+                            {"item_id": 16, "q_required": 100.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -551,6 +429,7 @@
                 "abilities": [],
                 "storage_type": "u",
                 "q_limit": 0.0,
+                "loc_hosted": false,
                 "toplevel": true,
                 "masked": true,
                 "recipes": [
@@ -560,41 +439,13 @@
                         "rate_duration": 20.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 39,
-                                "q_required": 10.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 34,
-                                "q_required": 5.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 6,
-                                "q_required": 1.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 31,
-                                "q_required": 1.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 10,
-                                "q_required": 1.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 7,
-                                "q_required": 1.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 17,
-                                "q_required": 1.0,
-                                "preserve": true
-                            }
+                            {"item_id": 6, "q_required": 1.0, "preserve": false},
+                            {"item_id": 7, "q_required": 1.0, "preserve": false},
+                            {"item_id": 10, "q_required": 1.0, "preserve": false},
+                            {"item_id": 17, "q_required": 1.0, "preserve": true},
+                            {"item_id": 31, "q_required": 1.0, "preserve": false},
+                            {"item_id": 34, "q_required": 5.0, "preserve": false},
+                            {"item_id": 39, "q_required": 10.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -609,6 +460,7 @@
                 "abilities": [],
                 "storage_type": "u",
                 "q_limit": 1.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": true,
                 "recipes": [
@@ -618,11 +470,7 @@
                         "rate_duration": 15.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 7,
-                                "q_required": 1000.0,
-                                "preserve": false
-                            }
+                            {"item_id": 7, "q_required": 1000.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -634,9 +482,10 @@
                 "name": "Yellow Bar Boost I",
                 "description": "Rate amount +1 each.",
                 "attribs": [],
-                "abilities": [],
+                "abilities": [47],
                 "storage_type": "u",
                 "q_limit": 10.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": true,
                 "recipes": [
@@ -646,11 +495,7 @@
                         "rate_duration": 12.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 16,
-                                "q_required": 2.0,
-                                "preserve": false
-                            }
+                            {"item_id": 16, "q_required": 2.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -665,6 +510,7 @@
                 "abilities": [],
                 "storage_type": "u",
                 "q_limit": 10.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": true,
                 "recipes": [
@@ -674,21 +520,9 @@
                         "rate_duration": 12.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 34,
-                                "q_required": 10000.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 31,
-                                "q_required": 25.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 26,
-                                "q_required": 1.0,
-                                "preserve": true
-                            }
+                            {"item_id": 26, "q_required": 1.0, "preserve": true},
+                            {"item_id": 31, "q_required": 25.0, "preserve": false},
+                            {"item_id": 34, "q_required": 10000.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -700,9 +534,10 @@
                 "name": "Yellow Bar Boost II",
                 "description": "Rate amount x1.5\r\n<pre>Total: 10 * 1.5 ^ 6 = 114</pre>",
                 "attribs": [],
-                "abilities": [],
+                "abilities": [47],
                 "storage_type": "u",
                 "q_limit": 6.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": true,
                 "recipes": [
@@ -712,21 +547,9 @@
                         "rate_duration": 14.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 6,
-                                "q_required": 500.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 20,
-                                "q_required": 1.0,
-                                "preserve": true
-                            },
-                            {
-                                "item_id": 7,
-                                "q_required": 50.0,
-                                "preserve": false
-                            }
+                            {"item_id": 6, "q_required": 500.0, "preserve": false},
+                            {"item_id": 7, "q_required": 50.0, "preserve": false},
+                            {"item_id": 20, "q_required": 1.0, "preserve": true}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -741,6 +564,7 @@
                 "abilities": [],
                 "storage_type": "u",
                 "q_limit": 1.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": true,
                 "recipes": [
@@ -750,11 +574,7 @@
                         "rate_duration": 15.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 31,
-                                "q_required": 1000.0,
-                                "preserve": false
-                            }
+                            {"item_id": 31, "q_required": 1000.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -769,6 +589,7 @@
                 "abilities": [],
                 "storage_type": "u",
                 "q_limit": 1.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": false,
                 "recipes": [
@@ -778,11 +599,7 @@
                         "rate_duration": 3.0,
                         "instant": true,
                         "sources": [
-                            {
-                                "item_id": 8,
-                                "q_required": 1.0,
-                                "preserve": true
-                            }
+                            {"item_id": 8, "q_required": 1.0, "preserve": true}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -797,6 +614,7 @@
                 "abilities": [],
                 "storage_type": "u",
                 "q_limit": 10.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": true,
                 "recipes": [
@@ -806,21 +624,9 @@
                         "rate_duration": 12.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 6,
-                                "q_required": 1000.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 7,
-                                "q_required": 10.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 23,
-                                "q_required": 1.0,
-                                "preserve": true
-                            }
+                            {"item_id": 6, "q_required": 1000.0, "preserve": false},
+                            {"item_id": 7, "q_required": 10.0, "preserve": false},
+                            {"item_id": 23, "q_required": 1.0, "preserve": true}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -835,6 +641,7 @@
                 "abilities": [],
                 "storage_type": "u",
                 "q_limit": 1.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": true,
                 "recipes": [
@@ -844,11 +651,7 @@
                         "rate_duration": 15.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 16,
-                                "q_required": 1.0,
-                                "preserve": false
-                            }
+                            {"item_id": 16, "q_required": 1.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -863,6 +666,7 @@
                 "abilities": [],
                 "storage_type": "u",
                 "q_limit": 1.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": true,
                 "recipes": [
@@ -872,21 +676,9 @@
                         "rate_duration": 300.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 32,
-                                "q_required": 1.0,
-                                "preserve": true
-                            },
-                            {
-                                "item_id": 7,
-                                "q_required": 1.0,
-                                "preserve": true
-                            },
-                            {
-                                "item_id": 28,
-                                "q_required": 9.0,
-                                "preserve": true
-                            }
+                            {"item_id": 7, "q_required": 1.0, "preserve": true},
+                            {"item_id": 28, "q_required": 9.0, "preserve": true},
+                            {"item_id": 32, "q_required": 1.0, "preserve": true}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -901,6 +693,7 @@
                 "abilities": [],
                 "storage_type": "u",
                 "q_limit": 33.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": true,
                 "recipes": [
@@ -910,11 +703,7 @@
                         "rate_duration": 10.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 16,
-                                "q_required": 33.0,
-                                "preserve": false
-                            }
+                            {"item_id": 16, "q_required": 33.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -929,6 +718,7 @@
                 "abilities": [],
                 "storage_type": "l",
                 "q_limit": 555.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": true,
                 "recipes": [
@@ -938,21 +728,9 @@
                         "rate_duration": 3.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 31,
-                                "q_required": 100.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 5,
-                                "q_required": 1.0,
-                                "preserve": true
-                            },
-                            {
-                                "item_id": 18,
-                                "q_required": 1.0,
-                                "preserve": false
-                            }
+                            {"item_id": 5, "q_required": 1.0, "preserve": true},
+                            {"item_id": 18, "q_required": 1.0, "preserve": false},
+                            {"item_id": 31, "q_required": 100.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -967,6 +745,7 @@
                 "abilities": [],
                 "storage_type": "u",
                 "q_limit": 1.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": true,
                 "recipes": [
@@ -976,26 +755,10 @@
                         "rate_duration": 600.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 8,
-                                "q_required": 1.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 34,
-                                "q_required": 1.0,
-                                "preserve": true
-                            },
-                            {
-                                "item_id": 35,
-                                "q_required": 1.0,
-                                "preserve": true
-                            },
-                            {
-                                "item_id": 28,
-                                "q_required": 33.0,
-                                "preserve": true
-                            }
+                            {"item_id": 8, "q_required": 1.0, "preserve": false},
+                            {"item_id": 28, "q_required": 33.0, "preserve": true},
+                            {"item_id": 34, "q_required": 1.0, "preserve": true},
+                            {"item_id": 35, "q_required": 1.0, "preserve": true}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -1010,6 +773,7 @@
                 "abilities": [],
                 "storage_type": "u",
                 "q_limit": 0.0,
+                "loc_hosted": false,
                 "toplevel": true,
                 "masked": true,
                 "recipes": [
@@ -1019,16 +783,8 @@
                         "rate_duration": 30.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 8,
-                                "q_required": 1.0,
-                                "preserve": true
-                            },
-                            {
-                                "item_id": 26,
-                                "q_required": 1.0,
-                                "preserve": true
-                            }
+                            {"item_id": 8, "q_required": 1.0, "preserve": true},
+                            {"item_id": 26, "q_required": 1.0, "preserve": true}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -1039,16 +795,8 @@
                         "rate_duration": 3.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 30,
-                                "q_required": 1.0,
-                                "preserve": true
-                            },
-                            {
-                                "item_id": 35,
-                                "q_required": 1.0,
-                                "preserve": true
-                            }
+                            {"item_id": 30, "q_required": 1.0, "preserve": true},
+                            {"item_id": 35, "q_required": 1.0, "preserve": true}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -1063,6 +811,7 @@
                 "abilities": [],
                 "storage_type": "u",
                 "q_limit": 1.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": true,
                 "recipes": [
@@ -1072,11 +821,7 @@
                         "rate_duration": 180.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 28,
-                                "q_required": 3.0,
-                                "preserve": true
-                            }
+                            {"item_id": 28, "q_required": 3.0, "preserve": true}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -1088,9 +833,10 @@
                 "name": "Green Bar Boost II",
                 "description": "Rate amount x1.5\r\n\r\nThis means increasing by 50% each, exponentially. So, the green bar rate with all boosts I and II is:\r\n<pre>5 * 1.5 ^ 6 = 57 per 8 seconds</pre>",
                 "attribs": [],
-                "abilities": [],
+                "abilities": [45],
                 "storage_type": "u",
                 "q_limit": 6.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": true,
                 "recipes": [
@@ -1100,21 +846,9 @@
                         "rate_duration": 14.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 34,
-                                "q_required": 100.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 2,
-                                "q_required": 1.0,
-                                "preserve": true
-                            },
-                            {
-                                "item_id": 31,
-                                "q_required": 25.0,
-                                "preserve": false
-                            }
+                            {"item_id": 2, "q_required": 1.0, "preserve": true},
+                            {"item_id": 31, "q_required": 25.0, "preserve": false},
+                            {"item_id": 34, "q_required": 100.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -1126,9 +860,10 @@
                 "name": "\ud83d\udfe9Green Bar",
                 "description": "Shape green wavelengths into a form, a rectangular prism. Quantity describes the length from one end to the other.\r\n<pre><c=\"green\"> _____________\r\n/____________/\r\n</c></pre>",
                 "attribs": [],
-                "abilities": [],
+                "abilities": [45],
                 "storage_type": "u",
                 "q_limit": 0.0,
+                "loc_hosted": false,
                 "toplevel": true,
                 "masked": true,
                 "recipes": [
@@ -1138,16 +873,8 @@
                         "rate_duration": 8.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 8,
-                                "q_required": 1.0,
-                                "preserve": true
-                            },
-                            {
-                                "item_id": 37,
-                                "q_required": 1.0,
-                                "preserve": true
-                            }
+                            {"item_id": 8, "q_required": 1.0, "preserve": true},
+                            {"item_id": 37, "q_required": 1.0, "preserve": true}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -1158,16 +885,8 @@
                         "rate_duration": 3.0,
                         "instant": true,
                         "sources": [
-                            {
-                                "item_id": 37,
-                                "q_required": 1.0,
-                                "preserve": true
-                            },
-                            {
-                                "item_id": 24,
-                                "q_required": 1.0,
-                                "preserve": false
-                            }
+                            {"item_id": 24, "q_required": 1.0, "preserve": false},
+                            {"item_id": 37, "q_required": 1.0, "preserve": true}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -1178,16 +897,8 @@
                         "rate_duration": 3.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 30,
-                                "q_required": 1.0,
-                                "preserve": true
-                            },
-                            {
-                                "item_id": 35,
-                                "q_required": 1.0,
-                                "preserve": true
-                            }
+                            {"item_id": 30, "q_required": 1.0, "preserve": true},
+                            {"item_id": 35, "q_required": 1.0, "preserve": true}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -1202,6 +913,7 @@
                 "abilities": [],
                 "storage_type": "u",
                 "q_limit": 1.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": true,
                 "recipes": [
@@ -1211,36 +923,12 @@
                         "rate_duration": 300.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 39,
-                                "q_required": 500000.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 6,
-                                "q_required": 10000.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 32,
-                                "q_required": 1.0,
-                                "preserve": true
-                            },
-                            {
-                                "item_id": 27,
-                                "q_required": 1.0,
-                                "preserve": true
-                            },
-                            {
-                                "item_id": 7,
-                                "q_required": 10000.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 18,
-                                "q_required": 10000.0,
-                                "preserve": false
-                            }
+                            {"item_id": 6, "q_required": 10000.0, "preserve": false},
+                            {"item_id": 7, "q_required": 10000.0, "preserve": false},
+                            {"item_id": 18, "q_required": 10000.0, "preserve": false},
+                            {"item_id": 27, "q_required": 1.0, "preserve": true},
+                            {"item_id": 32, "q_required": 1.0, "preserve": true},
+                            {"item_id": 39, "q_required": 500000.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -1255,6 +943,7 @@
                 "abilities": [],
                 "storage_type": "u",
                 "q_limit": 0.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": false,
                 "recipes": []
@@ -1264,9 +953,10 @@
                 "name": "Green Bar Unlocked",
                 "description": "",
                 "attribs": [],
-                "abilities": [],
+                "abilities": [45],
                 "storage_type": "u",
                 "q_limit": 1.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": false,
                 "recipes": [
@@ -1276,16 +966,8 @@
                         "rate_duration": 15.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 39,
-                                "q_required": 30.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 40,
-                                "q_required": 1.0,
-                                "preserve": true
-                            }
+                            {"item_id": 39, "q_required": 30.0, "preserve": false},
+                            {"item_id": 40, "q_required": 1.0, "preserve": true}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -1300,6 +982,7 @@
                 "abilities": [],
                 "storage_type": "u",
                 "q_limit": 3.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": true,
                 "recipes": [
@@ -1309,11 +992,7 @@
                         "rate_duration": 10.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 39,
-                                "q_required": 10.0,
-                                "preserve": false
-                            }
+                            {"item_id": 39, "q_required": 10.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -1325,9 +1004,10 @@
                 "name": "\ud83d\udfe5Red Bar",
                 "description": "Select red wavelengths. Creating the first bar of light marks the start of meaningful time, the first different state.\r\n<pre><c=\"red\">\r\n _____________\r\n/____________/\r\n</c></pre>",
                 "attribs": [],
-                "abilities": [],
+                "abilities": [46],
                 "storage_type": "u",
                 "q_limit": 0.0,
+                "loc_hosted": false,
                 "toplevel": true,
                 "masked": false,
                 "recipes": [
@@ -1337,11 +1017,7 @@
                         "rate_duration": 8.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 8,
-                                "q_required": 1.0,
-                                "preserve": true
-                            }
+                            {"item_id": 8, "q_required": 1.0, "preserve": true}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -1352,11 +1028,7 @@
                         "rate_duration": 3.0,
                         "instant": true,
                         "sources": [
-                            {
-                                "item_id": 24,
-                                "q_required": 1.0,
-                                "preserve": false
-                            }
+                            {"item_id": 24, "q_required": 1.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -1367,16 +1039,8 @@
                         "rate_duration": 3.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 30,
-                                "q_required": 1.0,
-                                "preserve": true
-                            },
-                            {
-                                "item_id": 35,
-                                "q_required": 1.0,
-                                "preserve": true
-                            }
+                            {"item_id": 30, "q_required": 1.0, "preserve": true},
+                            {"item_id": 35, "q_required": 1.0, "preserve": true}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -1391,6 +1055,7 @@
                 "abilities": [],
                 "storage_type": "u",
                 "q_limit": 1.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": true,
                 "recipes": [
@@ -1400,11 +1065,7 @@
                         "rate_duration": 15.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 38,
-                                "q_required": 3.0,
-                                "preserve": true
-                            }
+                            {"item_id": 38, "q_required": 3.0, "preserve": true}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -1419,6 +1080,7 @@
                 "abilities": [],
                 "storage_type": "u",
                 "q_limit": 0.0,
+                "loc_hosted": false,
                 "toplevel": true,
                 "masked": false,
                 "recipes": []
@@ -1436,6 +1098,7 @@
                 "toplevel": true,
                 "masked": false,
                 "items": [],
+                "progress": [],
                 "item_refs": [],
                 "destinations": []
             },
@@ -1450,32 +1113,13 @@
                 "toplevel": false,
                 "masked": true,
                 "items": [
-                    {
-                        "item_id": 14,
-                        "quantity": 0.0,
-                        "position": null
-                    },
-                    {
-                        "item_id": 13,
-                        "quantity": 0.0,
-                        "position": null
-                    },
-                    {
-                        "item_id": 11,
-                        "quantity": 0.0,
-                        "position": null
-                    },
-                    {
-                        "item_id": 29,
-                        "quantity": 0.0,
-                        "position": null
-                    },
-                    {
-                        "item_id": 12,
-                        "quantity": 0.0,
-                        "position": null
-                    }
+                    {"item_id": 14, "quantity": 0.0, "position": null},
+                    {"item_id": 13, "quantity": 0.0, "position": null},
+                    {"item_id": 11, "quantity": 0.0, "position": null},
+                    {"item_id": 29, "quantity": 0.0, "position": null},
+                    {"item_id": 12, "quantity": 0.0, "position": null}
                 ],
+                "progress": [],
                 "item_refs": [],
                 "destinations": []
             },
@@ -1490,11 +1134,14 @@
                 "toplevel": false,
                 "masked": false,
                 "items": [],
+                "progress": [],
                 "item_refs": [],
                 "destinations": [
                     {
                         "loc2_id": 43,
                         "duration": 1,
+                        "door1": null,
+                        "door2": null,
                         "bidirectional": true
                     }
                 ]
@@ -1504,255 +1151,102 @@
         "attribs": [],
         "events": [
             {
-                "id": 45,
-                "name": "Green Bar Rate",
-                "description": "To determine the rate:\r\n1. Multiply by the <i><c=\"lemonchiffon\">BSF</c></i>.\r\n2. Multiply by <i>Green Bar Boost I</i>.\r\n3. For every <i>Green Bar Boost II</i>, press the button to multiply by <i><c=\"lemonchiffon\">Boost II Factor</c></i>.\r\n\r\nWith this result, in <a href=\"/play/item/17\">Green Bar</a> setup, set <i>Gain per Batch</i> for the <i>Ambient Energy</i> recipe.",
-                "trigger_chance": 0.0,
-                "numeric_range": [
-                    1,
-                    1
-                ],
-                "outcome_type": "determined",
-                "selection_strings": "",
-                "toplevel": false,
-                "triggers": [
-                    [
-                        "item",
-                        34
-                    ],
-                    [
-                        "item",
-                        2
-                    ],
-                    [
-                        "item",
-                        37
-                    ],
-                    [
-                        "item",
-                        33
-                    ]
-                ],
-                "determining": []
-            },
-            {
                 "id": 46,
                 "name": "Red Bar Rate",
                 "description": "To determine the rate:\r\n1. Multiply by the <i><c=\"lemonchiffon\">BSF</c></i>.\r\n2. Multiply by <i>Red Bar Boost I</i>.\r\n3. For every <i>Red Bar Boost II</i>, multiply by <i><c=\"lemonchiffon\">Boost II Factor</c></i> (press the button that many times).\r\n\r\nThen go to <a href=\"/play/item/15\">Red Bar</a> setup (shift+click on PC to leave window open). Set <i>Gain per Batch</i> for the <i>Ambient Energy</i> recipe to this result.",
-                "trigger_chance": 0.0,
-                "numeric_range": [
-                    1,
-                    1
-                ],
-                "outcome_type": "determined",
-                "selection_strings": "",
+                "attribs": [],
+                "abilities": [],
                 "toplevel": false,
-                "triggers": [
-                    [
-                        "item",
-                        39
-                    ],
-                    [
-                        "item",
-                        3
-                    ],
-                    [
-                        "item",
-                        4
-                    ]
-                ],
-                "determining": []
+                "outcome_type": "determined",
+                "roller_type": null,
+                "trigger_chance": 0.0,
+                "numeric_range": [1, 1],
+                "single_number": 1.0,
+                "selection_strings": "",
+                "determinants": [],
+                "effects": []
             },
             {
                 "id": 47,
                 "name": "Yellow Bar Rate",
                 "description": "To determine the rate:\r\n1. Multiply by the <i><c=\"lemonchiffon\">BSF</c></i>.\r\n2. Multiply by <i>Yellow Bar Boost I</i>.\r\n3. For every <i>Yellow Bar Boost II</i>, press the button to multiply by <i><c=\"lemonchiffon\">Boost II Factor</c></i>.\r\n\r\nWith this result, go to <a href=\"/play/item/20\">Yellow Bar</a> setup and set <i>Gain per Batch</i>.",
-                "trigger_chance": 0.0,
-                "numeric_range": [
-                    1,
-                    20
-                ],
-                "outcome_type": "determined",
-                "selection_strings": "",
+                "attribs": [],
+                "abilities": [],
                 "toplevel": false,
-                "triggers": [
-                    [
-                        "item",
-                        6
-                    ],
-                    [
-                        "item",
-                        20
-                    ],
-                    [
-                        "item",
-                        22
-                    ]
-                ],
-                "determining": []
+                "outcome_type": "determined",
+                "roller_type": null,
+                "trigger_chance": 0.0,
+                "numeric_range": [1, 20],
+                "single_number": 1.0,
+                "selection_strings": "",
+                "determinants": [],
+                "effects": []
+            },
+            {
+                "id": 45,
+                "name": "Green Bar Rate",
+                "description": "To determine the rate:\r\n1. Multiply by the <i><c=\"lemonchiffon\">BSF</c></i>.\r\n2. Multiply by <i>Green Bar Boost I</i>.\r\n3. For every <i>Green Bar Boost II</i>, press the button to multiply by <i><c=\"lemonchiffon\">Boost II Factor</c></i>.\r\n\r\nWith this result, in <a href=\"/play/item/17\">Green Bar</a> setup, set <i>Gain per Batch</i> for the <i>Ambient Energy</i> recipe.",
+                "attribs": [],
+                "abilities": [],
+                "toplevel": false,
+                "outcome_type": "determined",
+                "roller_type": null,
+                "trigger_chance": 0.0,
+                "numeric_range": [1, 1],
+                "single_number": 0.5,
+                "selection_strings": "",
+                "determinants": [],
+                "effects": []
             }
         ]
     },
     "general data": {
         "piles": [
-            {
-                "item_id": 2,
-                "quantity": 1.0
-            },
-            {
-                "item_id": 3,
-                "quantity": 1.0
-            },
-            {
-                "item_id": 4,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 5,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 6,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 7,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 8,
-                "quantity": 1.0
-            },
-            {
-                "item_id": 9,
-                "quantity": 1.0
-            },
-            {
-                "item_id": 10,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 15,
-                "quantity": 1.0
-            },
-            {
-                "item_id": 16,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 17,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 18,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 19,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 20,
-                "quantity": 1.0
-            },
-            {
-                "item_id": 21,
-                "quantity": 1.0
-            },
-            {
-                "item_id": 22,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 23,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 24,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 25,
-                "quantity": 1.0
-            },
-            {
-                "item_id": 26,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 27,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 28,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 30,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 31,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 32,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 33,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 34,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 35,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 36,
-                "quantity": 1.5
-            },
-            {
-                "item_id": 37,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 38,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 39,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 40,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 41,
-                "quantity": 1.0
-            }
+            {"item_id": 2, "quantity": 1.0},
+            {"item_id": 3, "quantity": 1.0},
+            {"item_id": 5, "quantity": 0.0},
+            {"item_id": 7, "quantity": 0.0},
+            {"item_id": 8, "quantity": 1.0},
+            {"item_id": 9, "quantity": 1.0},
+            {"item_id": 10, "quantity": 0.0},
+            {"item_id": 15, "quantity": 1.0},
+            {"item_id": 16, "quantity": 0.0},
+            {"item_id": 17, "quantity": 0.0},
+            {"item_id": 18, "quantity": 0.0},
+            {"item_id": 19, "quantity": 0.0},
+            {"item_id": 20, "quantity": 1.0},
+            {"item_id": 21, "quantity": 1.0},
+            {"item_id": 23, "quantity": 0.0},
+            {"item_id": 24, "quantity": 0.0},
+            {"item_id": 25, "quantity": 1.0},
+            {"item_id": 26, "quantity": 0.0},
+            {"item_id": 27, "quantity": 0.0},
+            {"item_id": 28, "quantity": 0.0},
+            {"item_id": 30, "quantity": 0.0},
+            {"item_id": 31, "quantity": 0.0},
+            {"item_id": 32, "quantity": 0.0},
+            {"item_id": 35, "quantity": 0.0},
+            {"item_id": 36, "quantity": 1.5},
+            {"item_id": 38, "quantity": 0.0},
+            {"item_id": 40, "quantity": 0.0},
+            {"item_id": 41, "quantity": 1.0}
         ],
         "progress": []
     },
     "overall settings": {
         "title": "Rays",
-        "description": "Form <c=\"#FF0000\">c</c><c=\"#FF6600\">o</c><c=\"#CC9900\">l</c><c=\"#CCCC00\">o</c><c=\"#99CC00\">r</c><c=\"#66CC00\">f</c><c=\"#0099CC\">u</c><c=\"#0000FF\">l</c> rectangular prisms at the beginning of space and time.\r\n\r\nComplete set of items. Upgrade rates by changing settings.\r\n\r\n&nbsp;&nbsp;&nbsp;&nbsp;<c=\"red\">[]]]]]]]]]]]]]]]]]]</c> &nbsp;&nbsp; <c=\"green\">######</c> &nbsp;&nbsp; <c=\"blue\">===</c>",
+        "description": "Form {#FF0000|c}{#FF6600|o}{#CC9900|l}{#CCCC00|o}{#99CC00|r}{#66CC00|f}{#0099CC|u}{#0000FF|l} rectangular prisms at the beginning of space and time.\r\n\r\nComplete set of items. Upgrade rates by changing settings.\r\n\r\n        {red|[]]]]]]]]]]]]]]]]]]}        {green|######}     {blue|===}",
         "number_format": "en_US",
         "slots": [],
         "progress_type": "Idle",
         "multiplayer": false,
         "win_reqs": [
             {
-                "id": 1,
                 "item_id": 13,
-                "loc_id": 43,
-                "char_id": null,
-                "attrib_id": null,
                 "quantity": 1.0,
+                "char_id": null,
+                "loc_id": 43,
+                "attrib_id": null,
                 "attrib_value": 0.0
             }
         ]
