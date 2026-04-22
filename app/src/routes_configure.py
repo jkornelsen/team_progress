@@ -556,12 +556,6 @@ def edit_event(id):
             req.get_int('range_min'), req.get_int('range_max')]
         event.toplevel = 'toplevel' in request.form
 
-        # Auto-collapse Tertiary to Secondary for a cleaner UI
-        if any(d.role == Participant.OTHER2 for d in event.determinants) and \
-           not any(d.role == Participant.OTHER1 for d in event.determinants):
-            for d in event.determinants:
-                if d.role == Participant.OTHER2:
-                    d.role = Participant.OTHER1
         # --- SAVE DETERMINANTS & EFFECTS ---
         # 1. Clear existing factors to perform a clean sync
         # (This is simpler than matching IDs for small lists)
@@ -612,8 +606,12 @@ def edit_event(id):
 
     return render_template('configure/event.html', 
         event=event,
-        all_attribs=Attrib.query.filter_by(game_token=game_token).all(),
-        operations=Operation
+        all_attribs=Attrib.query.filter_by(
+            game_token=game_token).order_by(Attrib.name).all(),
+        all_items=Item.query.filter_by(
+            game_token=game_token).order_by(Item.name).all(),
+        Operation=Operation,
+        Participant=Participant
     )
 
 # ------------------------------------------------------------------------

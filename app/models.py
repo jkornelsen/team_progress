@@ -827,6 +827,22 @@ class Participant:
     OWNER = '[Owner]'
     AT = '[At]'
 
+    FORM_SUFFIX = '_role_id'
+
+    @staticmethod
+    def formkey_to_role(key):
+        if key and key.endswith(Participant.FORM_SUFFIX):
+            return key[:-len(Participant.FORM_SUFFIX)]
+        return key
+
+    @staticmethod
+    def role_to_formkey(role):
+        if role:
+            if role.endswith(Participant.FORM_SUFFIX):
+                return role
+            return f"{role}{Participant.FORM_SUFFIX}"
+        return role
+
     # --- Depth Traversal ---
     # False: Use the anchor entity itself.
     # True: Select an item pile inside the anchor.
@@ -847,7 +863,7 @@ class Participant:
     ALL_USAGE = [IN, OUT]
 
 class Operation:
-    CONST = 'k'
+    CONST = 'c'
     EQ = '=='
     GT = '>'
     LT = '<'
@@ -921,9 +937,17 @@ class EventField(db.Model, DictHydrator):
             "attrib_id": self.attrib_id
         }
 
+    def get_field_name(self):
+        if self.attrib_id:
+            attrib = Attrib.query.get((self.game_token, self.attrib_id))
+            return attrib.name
+        elif self.item_id:
+            item = Item.query.get((self.game_token, self.item_id))
+            return f"{item.name} Quantity"
+
     __table_args__ = (
         db.CheckConstraint(
-            role.in_(Participant.ALL_ROLES), name='check_role_valid'),
+            "length(role) > 0", name='check_role_valid'),
         db.CheckConstraint(
             field_mode.in_(Participant.ALL_MODES), name='check_field_valid'),
     )
@@ -994,15 +1018,6 @@ class EventFactor(db.Model, DictHydrator):
     @property
     def role(self):
         return self.infield.role if self.infield else None
-
-    @property
-    def field_name(self):
-        if self.attrib_id:
-            attrib = Attrib.query.get((self.game_token, self.attrib_id))
-            return attrib.name
-        elif self.item_id:
-            item = Item.query.get((self.game_token, self.item_id))
-            return f"{item.name} Quantity"
 
     # Relationships
     event = db.relationship(

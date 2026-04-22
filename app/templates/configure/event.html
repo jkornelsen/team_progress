@@ -120,6 +120,7 @@
             {% set factor = None %}
             {% include 'configure/partials/event_factor_card.html' %}
         </template>
+        <datalist id="role-list"></datalist>
 
         <!-- 4. Values Changed -->
         <section id="effects" class="outer-border">
@@ -282,18 +283,72 @@
         }
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize all existing cards on page load
-        document.querySelectorAll('.factor-card').forEach(card => {
-            innerExprVisibility(card);
-            outerExprVisibility(card);
-        });
+    // Format using Pascal_Snake_Case
+    function standardizeRoleString(roleStr) {
+        if (!roleStr) return roleStr;
+
+        let whitelisted = (roleStr.match(/[a-zA-Z0-9_ ]+/g) || []).join('');
+        return whitelisted
+            .trim()                        // Remove leading/trailing spaces
+            .replace(/\s+/g, '_')          // Convert spaces to underscores
+            .toLowerCase()                 // Start clean for capitalization
+            .split('_')                    // Split into segments
+            .filter(word => word !== "")   // Remove empty segments
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1)) 
+            .join('_');                    // Re-glue with underscores
+    }
+
+    const CONTEXT_ROLES = {{ Participant.CONTEXT_ROLES | tojson }};
+
+    function rebuildRoleDatalist() {
+        const datalist = document.getElementById('role-list');
         
-        // Other initializations
-        if (typeof outcomeFieldsVisibility === "function") {
-            outcomeFieldsVisibility();
+        // 1. Gather all current values from role-selector inputs
+        const currentValues = Array.from(document.querySelectorAll('.role-selector'))
+            .map(el => el.value.trim())
+            .filter(val => val !== ""); // Ignore empty inputs
+
+        // 2. Create a unique Set of roles
+        // We start with CONTEXT_ROLES, then add whatever the users have typed
+        const uniqueRoles = new Set([...CONTEXT_ROLES, ...currentValues]);
+
+        // 3. Fallback: If only context roles exist, add "Target"
+        // This replicates your Python logic: if no custom roles are typed yet
+        if (uniqueRoles.size === CONTEXT_ROLES.length) {
+            uniqueRoles.add("Target");
         }
-    });
+
+        // 4. Rebuild the DOM
+        datalist.innerHTML = ''; // Wipe existing options
+        uniqueRoles.forEach(role => {
+            const opt = document.createElement('option');
+            opt.value = role;
+            datalist.appendChild(opt);
+        });
+    }
+
+    function handleRoleInput(el) {
+        el.value = standardizeRoleString(el.value);
+        rebuildRoleDatalist();
+
+        // Update the "original" tracker so the next Esc doesn't 
+        // revert to the value from 5 minutes ago
+        el.dataset.original = el.value;
+    }
+
+    function handleRoleKeydown(event, el) {
+        if (event.key === "Enter") {
+            event.preventDefault(); // Stop form submission
+            el.blur();              // Trigger handleRoleInput() via blur
+        } 
+        else if (event.key === "Escape") {
+            // Restore the value from when the user first focused the field
+            if (el.dataset.original !== undefined) {
+                el.value = el.dataset.original;
+            }
+            el.blur();
+        }
+    }
 
     // Use Event Delegation for dynamic changes
     document.addEventListener('change', function(e) {
@@ -307,6 +362,17 @@
         if (e.target.classList.contains('op-application-selector')) {
             outerExprVisibility(card);
         }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        rebuildRoleDatalist();
+
+        document.querySelectorAll('.factor-card').forEach(card => {
+            innerExprVisibility(card);
+            outerExprVisibility(card);
+        });
+        
+        outcomeFieldsVisibility();
     });
 </script>
 

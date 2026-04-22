@@ -153,6 +153,18 @@ button:hover {
 .dangerous-button:hover { background-color: #d32f2f; }
 .btn-sm { font-size: 0.8em; padding: 4px 8px; }
 
+.disabled-button {
+    font-weight: bold; 
+    padding: 6px 12px;
+    border: 1px dashed #444;
+    color: #888;
+    background-color: #222;
+    border-radius: 4px;
+    display: inline-block;
+    cursor: not-allowed;
+    font-size: 0.9em;
+}
+
 input, select, textarea {
     box-sizing: border-box;
     background: var(--bg-input);
@@ -396,4 +408,9 @@ input:disabled {
 }
 .align-center {
     align-items: center;
+}
+.justify-center {
+    display: flex;
+    justify-content: center;
+    width: 100%;
 }

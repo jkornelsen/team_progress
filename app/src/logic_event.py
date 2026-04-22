@@ -51,10 +51,13 @@ def get_entity_value(anchor_id, field_def):
 def resolve_anchor_id(role_name, role_entities):
     """
     Maps a named participant slot to an entity ID.
-    This dict would come from URL parameters, or from selectbox,
+    This entity ID comes from URL parameters, or from selectbox,
     or a single value returned by lookup that meets the requirements.
+
+    role_name: e.g. '[Subject]' or 'Target'
+    role_entities: e.g. {'[Subject]': 17, 'Target': 18}
     """
-    return role_entities.get(f"role_name")
+    return role_entities.get(role_name)
 
 def calculate_determinants(event, role_entities):
     """
@@ -139,7 +142,7 @@ def apply_operation(current_val, mod_val, op):
 # Outcome Resolution
 # ------------------------------------------------------------------------
 
-def roll_for_outcome(event_id, context_ids, difficulty=0.0):
+def roll_for_outcome(event_id, role_entities, difficulty=0.0):
     """
     Performs the random roll based on user-provided difficulty and Event rules.
     Returns: (numeric_result, string_display)
@@ -162,7 +165,7 @@ def roll_for_outcome(event_id, context_ids, difficulty=0.0):
         breakdown_parts = [f"Selection: <b>{choice}</b>"]
 
     elif event.outcome_type == 'coordinates':
-        loc_id = context_ids.get(f"{Participant.SUBJ}_id")
+        loc_id = role_entities.get(Participant.SUBJECT)
         _, coord_str = roll_coordinate(loc_id)
         breakdown_parts = [coord_str]
 
@@ -173,7 +176,7 @@ def roll_for_outcome(event_id, context_ids, difficulty=0.0):
 
     # 2. Resolve and Apply every Determinant individually
     # calculate_determinants returns list: [{label, source_name, field_name, value, op}, ...]
-    modifiers = calculate_determinants(event, context_ids)
+    modifiers = calculate_determinants(event, role_entities)
     
     for m in modifiers:
         val = m['value']
@@ -312,7 +315,7 @@ def roll_for_system_outcome(event_id, num_dice=1, sides=20, bonus=0):
 # Applying Changes
 # ------------------------------------------------------------------------
 
-def apply_event_effects(event, context_ids, roll_outcome):
+def apply_event_effects(event, role_entities, roll_outcome):
     """
     Iterates through factors where usage_type == OUT.
     """
@@ -323,7 +326,7 @@ def apply_event_effects(event, context_ids, roll_outcome):
         if effect.val_src == 'outcome':
             new_val = roll_outcome
         elif effect.val_src == 'field':
-            anchor_id = resolve_anchor_id(effect.outfield.role, context_ids)
+            anchor_id = resolve_anchor_id(effect.outfield.role, role_entities)
             new_val = get_entity_value(anchor_id, effect.outfield)
         else:
             new_val = effect.val_transform
@@ -333,7 +336,7 @@ def apply_event_effects(event, context_ids, roll_outcome):
             new_val = apply_operation(new_val, effect.val_transform, effect.op_transform)
             
         # 3. Apply to target
-        target_anchor_id = resolve_anchor_id(effect.outfield.role, context_ids)
+        target_anchor_id = resolve_anchor_id(effect.outfield.role, role_entities)
         
         # Logic from apply_event_change...
         if effect.outfield.field_mode == Participant.ATTR:

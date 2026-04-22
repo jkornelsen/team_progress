@@ -18,39 +18,19 @@
         <div class="sub-section">
             <div class="flex-row align-center gap-10">
                 <span style="margin-top: 4px">Role:</span>
-                <select name="dets[{{ index }}][role]"
-                    class="role-selector" 
-                    onchange="handleRoleChange(this, {{ index }})">
-
-                    <optgroup label="Anchors From Page Context">
-                        <option value="subj" {{ 'selected' if infield and infield.role == 'subj' }}>[Subject]</option>
-                        <option value="owner" {{ 'selected' if infield and infield.role == 'own' }}>[Owner]</option>
-                        <option value="at" {{ 'selected' if infield and infield.role == 'at' }}>[At]</option>
-                    </optgroup>
-
-                    <optgroup label="Other Participant Roles">
-                    {% for role in existing_custom_roles %}
-                        <option value="{{ role }}" {{ 'selected' if infield and infield.role == role }}>{{ role }}</option>
-                    {% endfor %}
-                    </optgroup>
-
-                    <option value="__NEW__">+ Add Role...</option>
-                </select>
-                <div id="new-role-group-{{ index }}" style="display: none; align-items: center; gap: 5px;">
-                    <input type="text" 
-                           id="new-role-input-{{ index }}" 
-                           placeholder="e.g. Target, Enemy, Shared_Funds" 
-                           style="width: 20ch;"
-                           pattern="[a-zA-Z0-9_]+"
-                           onkeydown="handleRoleKeydown(event, {{ index }})">
-                    
-                    <button type="button" onclick="confirmNewRole({{ index }})" title="Confirm">✔️</button>
-                    <button type="button" onclick="cancelNewRole({{ index }})" title="Cancel">❌</button>
-                </div>
+                <input name="dets[{{ index }}][role]"
+                    list="role-list"
+                    class="role-selector"
+                    value="{{ infield.role if infield else '' }}"
+                    onfocus="this.dataset.original = this.value"
+                    onblur="handleRoleInput(this)"
+                    onkeydown="handleRoleKeydown(event, this)"
+                    placeholder="e.g. Target_Enemy"
+                    style="max-width: 30ch;">
             </div>
 
             <div class="flex-row align-center gap-10">
-                <select name="dets[{{ index }}][field]" class="full-width" style="max-width: 30ch;" onchange="fieldTargetVisibility(this, {{ index }})">
+                <select name="dets[{{ index }}][field_mode]" class="full-width" style="max-width: 30ch;" onchange="fieldTargetVisibility(this, {{ index }})">
                     <option value="attr" {{ 'selected' if infield and infield.field_mode == 'attr' }}>Attribute Value</option>
                     <option value="qty" {{ 'selected' if infield and infield.field_mode == 'qty' }}>Item Quantity</option>
                 </select>
@@ -95,8 +75,8 @@
                             onchange="innerExprVisibility(this.closest('.factor-card'))">
                         <option value="k">← Constant</option>
                         <option value="" {{ 'selected' if not factor.op_transform }}>← Fetched</option>
-                        {% for op_key in operations.TRANSFORM_OPS %}
-                            {% set info = operations.Repr.get(op_key) %}
+                        {% for op_key in Operation.TRANSFORM_OPS %}
+                            {% set info = Operation.Repr.get(op_key) %}
                             <option value="{{ op_key }}" {{ 'selected' if factor.op_transform == op_key }}>
                                 {{ info.symbol }}
                             </option>
@@ -119,8 +99,8 @@
                         class="op-application-selector" 
                         style="max-width: 8ch;"
                         onchange="outerExprVisibility(this.closest('.factor-card'))">
-                    {% for op_key in operations.APPLICATION_OPS %}
-                        {% set info = operations.Repr.get(op_key) %}
+                    {% for op_key in Operation.APPLICATION_OPS %}
+                        {% set info = Operation.Repr.get(op_key) %}
                         <option value="{{ op_key }}" {{ 'selected' if factor.op_application == op_key }}>
                             {{ info.symbol }}
                         </option>

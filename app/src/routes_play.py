@@ -864,7 +864,7 @@ def start_item_production(host_id):
 def stop_item_production(host_id, item_id):
     if stop_production(host_id, item_id):
         return '', HTTPStatus.NO_CONTENT
-    item = Item.query.get((game_token, item_id))
+    item = Item.query.get((g.game_token, item_id))
     if not item:
         return jsonify(
             {"message": "Item not found"}), HTTPStatus.NOT_FOUND
@@ -915,76 +915,66 @@ def play_event(id):
     event = Event.query.get_or_404((game_token, id))
     capture_origin(name=event.name)
     
-    # Get Context (Who is acting?)
-    subject = None
+    # Semantic Context
     subject_id = req.get_int('subject_id')
-    if subject_id:
-        subject = Entity.query.filter_by(
-            game_token=game_token, id=subject_id).first_or_404()
-    ctx = ContextIds(
-        subject_id,
-        req.get_int('char_id') or session.get('old_char_id'),
-        req.get_int('loc_id') or session.get('old_loc_id')
-    )
-    ctx_char = Character.query.get((game_token, ctx.char_id)) if ctx.char_id else None
-    if ctx_char:
-        ctx.loc_id = ctx_char.location_id
-    ctx_loc = Location.query.get((game_token, ctx.loc_id)) if ctx.loc_id else None
+    subject = Entity.query.get((game_token, subject_id)) if subject_id else None
 
-    # Identify all unique participant role names required by this event
-    # We look at both determinants (inputs) and effects (outputs)
-    role_slots = set()
-    for f in event.factors:
-        if f.val_src == 'field':
-            role = f.infield.role if f.usage_type == 'in' else f.outfield.role
-            if role and role != 'univ':
-                role_slots.add(role)
+    owner_id = req.get_int('owner_id')
+    owner = Entity.query.get((game_token, owner_id)) if owner_id else None
 
-    # Get incoming assignments from query string (e.g., ?Attacker=5)
-    # We also fallback to session if only one character is 'active'
-    assignments = {}
-    for slot in role_slots:
-        val = request.args.get(slot, type=int)
-        if val:
-            assignments[slot] = val
-        elif slot == 'Subject' and session.get('old_char_id'):
-            # "Subject" is a common default slot name
-            assignments[slot] = session.get('old_char_id')
+    ctx_char_id = req.get_int('char_id') or session.get('old_char_id')
+    ctx_char = Character.query.get((game_token, ctx_char_id)) if ctx_char_id else None
+
+    ctx_loc_id = req.get_int('loc_id') or session.get('old_loc_id')
+    if subject and subject.entity_type == Character.TYPENAME:
+        ctx_loc_id = subject.location_id
+    elif owner and owner.entity_type == Character.TYPENAME:
+        ctx_loc_id = owner.location_id
+    elif ctx_char:
+        ctx_loc_id = ctx_char.location_id
+    ctx_loc = Location.query.get((game_token, ctx_loc_id)) if ctx_loc_id else None
 
     # Get list of all available nearby entities
 
     other_entities_here = []
     other_piles_here = {}
     subject_pile_qty = None
-    if ctx.loc_id:
-        other_chars_here = Character.query.options(
+    if ctx_loc_id:
+        other_entities_here = Character.query.options(
             joinedload(Character.attrib_values)) \
-            .filter_by(game_token=game_token, location_id=ctx.loc_id) \
+            .filter_by(game_token=game_token, location_id=ctx_loc_id) \
             .filter(Character.id != subject_id) \
             .all()
-        other_entities_here.extend(other_chars_here)
 
-        piles_here = Pile.query.filter_by(
-            game_token=game_token, owner_id=ctx.loc_id
-        ).all()
-        subject_piles = [p for p in piles_here if p.item_id == subject_id]
-        for p in piles_here:
-            if len(subject_piles) == 1 and p.item_id == subject_id:
-                subject_pile_qty = p.quantity
-                continue
-            other_piles_here.setdefault(p.item_id, []).append(p.quantity)
+        #TODO: can use quantities of other piles
+        #
+        #piles_here = Pile.query.filter_by(
+        #    game_token=game_token, owner_id=ctx_loc_id
+        #).all()
+        #subject_piles = [p for p in piles_here if p.item_id == subject_id]
+        #for p in piles_here:
+        #    if len(subject_piles) == 1 and p.item_id == subject_id:
+        #        subject_pile_qty = p.quantity
+        #        continue
+        #    other_piles_here.setdefault(p.item_id, []).append(p.quantity)
 
     # Get available children
 
-    children_piles = {}
-    if ctx_char:
-        children_piles.setdefault(ctx_char.id, []).extend(ctx_char.piles)
+    #TODO: handle qty fields
+    #
+    #children_piles = {}
+    #if ctx_char:
+    #    children_piles.setdefault(ctx_char.id, []).extend(ctx_char.piles)
         
     # Get determinants for each role
+    # TODO: can we apply the same logic for effects?
 
     role_dets = {}
     for d in event.determinants:
-        role_dets.setdefault(d.role, []).append(d)
+        #for efield in (d.infield, d.outfield):
+        efield = d.infield
+        if efield:
+            role_dets.setdefault(efield.role, set()).add(d)
 
     # Get list of nearby entities that have those attributes
     # to fill the select box for each role.
@@ -993,6 +983,7 @@ def play_event(id):
     # Include attr or qty value in the list.
     
     def meets_det(det, entity):
+        if not entity: return False
         if d.infield and d.infield.attrib_id and not any(
                 av.attrib_id == d.infield.attrib_id
                 for av in entity.attrib_values):
@@ -1004,33 +995,30 @@ def play_event(id):
 
         return True
 
-    def roles_for_det(det, entities):
-        role_set = set()
-        for entity in entities:
-            if meets_det(d, entity):
-                role_set.add(entity)
-        return role_set
-
     eligible_role_entities = {}
     dets_not_met = {}
     for role, detlist in role_dets.items():
-        det_entities = {}
-        for d in detlist:
-            if role == Participant.SUBJECT:
-                meeting_entities = roles_for_det(
-                    d, [subject, *other_entities_here])
-            else:
-                meeting_entities = roles_for_det(
-                    d, other_entities_here)
-            det_entities[d.id] = meeting_entities
-            if not meeting_entities:
-                dets_not_met.setdefault(role, []).append(d)
-        if det_entities:
-            eligible_role_entities[role] = list(
-                set.intersection(*det_entities.values()))
+        if role == Participant.SUBJECT:
+            search_pool = [subject] if subject else other_entities_here
+        elif role == Participant.OWNER:
+            search_pool = [owner] if owner else other_entities_here
+        elif role == Participant.AT:
+            search_pool = [ctx_loc] if ctx_loc else other_entities_here
         else:
-            eligible_role_entities[role] = []
-    
+            search_pool = other_entities_here
+
+        role_candidates = None
+        for d in detlist:
+            meeting_this_det = {ent for ent in search_pool if meets_det(d, ent)}
+            if role_candidates is None:
+                role_candidates = meeting_this_det
+            else:
+                role_candidates &= meeting_this_det # Intersection
+            if not meeting_this_det:
+                dets_not_met.setdefault(role, []).append(d)
+
+        eligible_role_entities[role] = list(role_candidates) if role_candidates else []
+
     return render_template(
         'play/event.html',
         event=event,
@@ -1039,23 +1027,24 @@ def play_event(id):
         ctx_loc=ctx_loc,
         role_entities=eligible_role_entities,
         dets_not_met=dets_not_met,
+        Participant=Participant,
         link_letters=LinkLetters(excluded='moer')
     )
 
-@play_bp.route('/event/preview/<int:id>')
+@play_bp.route('/event/preview/<int:id>', methods=['POST'])
 def event_preview(id):
-    """AJAX helper to set up determinants."""
+    """AJAX helper to calculate modifiers based on current UI selections."""
     game_token = g.game_token
     event = Event.query.get((game_token, id))
+    req = RequestHelper('form')
     
-    context = {
-        'subj_id': request.args.get('subj_id', type=int),
-        '2nd_id': request.args.get('sec_id', type=int),
-        '3rd_id': request.args.get('tert_id', type=int),
-        'univ_id': GENERAL_ID
-    }
+    role_entities = {}
+    for key in req:
+        if key.endswith(Participant.FORM_SUFFIX):
+            role_name = Participant.formkey_to_role(key)
+            role_entities[role_name] = req.get_int(key)
     
-    modifiers = calculate_determinants(event, context)
+    modifiers = calculate_determinants(event, role_entities)
     return jsonify(modifiers)
 
 @play_bp.route('/event/roll/<int:id>', methods=['POST'])
@@ -1064,29 +1053,22 @@ def roll_event(id):
     event = Event.query.get_or_404((game_token, id))
     req = RequestHelper('form')
 
-    # Gather context IDs
-    context_ids = {
-        'subj_id': req.get_int('subj_id'),
-        '2nd_id': req.get_int('sec_id'),
-        '3rd_id': req.get_int('tert_id'),
-        'univ_id': GENERAL_ID
-    }
-    
-    # Add any item instance selections
+    role_entities = {}
     for key in req:
-        if key.endswith('_item_id'):
-            context_ids[key] = req.get_int(key)
+        if key.endswith(Participant.FORM_SUFFIX):
+            role_name = Participant.formkey_to_role(key)
+            role_entities[role_name] = req.get_int(key)
 
     if event.outcome_type == OutcomeType.ROLLER:
-        n_dice = request.form.get('num_dice', 1, type=int)
-        sides = request.form.get('sides', 20, type=int)
-        bonus = request.form.get('bonus', 0, type=int)
+        n_dice = req.get_int('num_dice', 1)
+        sides = req.get_int('sides', 20)
+        bonus = req.get_int('bonus', 0)
         result_num, result_str = roll_for_system_outcome(
             id, n_dice, sides, bonus)
     else:
-        difficulty = request.form.get('difficulty', 0.55, type=float)
+        difficulty = req.get_float('difficulty', 0.55)
         result_num, result_str = roll_for_outcome(
-            id, context_ids, difficulty)
+            id, role_entities, difficulty)
     
     return jsonify({
         "result_value": result_num,

@@ -1153,17 +1153,69 @@
             {
                 "id": 46,
                 "name": "Red Bar Rate",
-                "description": "To determine the rate:\r\n1. Multiply by the <i><c=\"lemonchiffon\">BSF</c></i>.\r\n2. Multiply by <i>Red Bar Boost I</i>.\r\n3. For every <i>Red Bar Boost II</i>, multiply by <i><c=\"lemonchiffon\">Boost II Factor</c></i> (press the button that many times).\r\n\r\nThen go to <a href=\"/play/item/15\">Red Bar</a> setup (shift+click on PC to leave window open). Set <i>Gain per Batch</i> for the <i>Ambient Energy</i> recipe to this result.",
+                "description": "Press **Calculate** to determine the rate.\r\n\r\nThen, go to [Red Bar](/play/item/39) setup (shift+click on PC to leave this window open). Set *Gain per Batch* for the *Ambient Energy* recipe to this result.",
                 "attribs": [],
                 "abilities": [],
                 "toplevel": false,
                 "outcome_type": "determined",
-                "roller_type": null,
+                "roller_type": "dnd",
                 "trigger_chance": 0.0,
                 "numeric_range": [1, 1],
                 "single_number": 1.0,
                 "selection_strings": "",
-                "determinants": [],
+                "determinants": [
+                    {
+                        "usage_type": "in",
+                        "label": "",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "B_S_F",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 41,
+                            "attrib_id": 0
+                        },
+                        "outfield": null,
+                        "op_application": "*",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 0.0
+                    },
+                    {
+                        "usage_type": "in",
+                        "label": "",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "Boost_1",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 3,
+                            "attrib_id": 0
+                        },
+                        "outfield": null,
+                        "op_application": "*",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 0.0
+                    },
+                    {
+                        "usage_type": "in",
+                        "label": "",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "Boost_2",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 4,
+                            "attrib_id": 0
+                        },
+                        "outfield": null,
+                        "op_application": "*",
+                        "op_transform": "^x",
+                        "val_transform": 1.5,
+                        "val_required": 0.0
+                    }
+                ],
                 "effects": []
             },
             {

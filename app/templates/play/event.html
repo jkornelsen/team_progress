@@ -57,48 +57,23 @@
             <section class="outer-border">
                 <h3>Participants</h3>
                 <div class="gap-10">
-                    {% set role = 'subj' %}
-                    {% if role in role_entities %}
-                    <div class="flex-row form-group">
-                        <input type="hidden" name="subj_id" value="{{ subject.id }}">
-                        <label>Main:</label>
-                        {% if subject and role_entities[role] %}
-                            {% set target_url = url_for('play.play_' + subject.entity_type, id=subject.id) %}
-                            {% call hk.hotlink(target_url, link_letters) %}
-                                {{ subject.name }}
-                            {% endcall %}
-                        {% else %}
-                            {% if role in dets_not_met %}
-                                <span class="text-danger">Needs (</span>
-                                {% for det in dets_not_met[role] %}
-                                    {{ det.field_name }}
-                                {% endfor %}
-                                <span class="text-danger">)</span>
-                            {% else %}
-                                <span class="text-danger">None given</span>
-                            {% endif %}
-                        {% endif %}
-                    </div>
-                    {% endif %}
-
-                    {% set role = '2nd' %}
-                    {% if role in role_entities %}
+                    {% for role in role_entities %}
                     <div class="form-group">
-                        <label>Target:</label>
+                        <label style="font-style: italic;">{{ role | replace('_', ' ') }}:</label>
 
                         {% set eligible = role_entities[role] %}
                         {% if eligible|length == 1 %}
                             {# Single option: display name as text and pass ID via hidden input #}
                             {% set ent = eligible[0] %}
-                            <input type="hidden" name="sec_id" value="{{ ent.id }}">
+                            <input type="hidden" name="{{ role }}{{ Participant.FORM_SUFFIX }}" value="{{ ent.id }}">
                             {% set target_url = url_for('play.play_' + ent.entity_type, id=ent.id) %}
                             {% call hk.hotlink(target_url, link_letters) %}
                                 {{ ent.name }}
                             {% endcall %}
 
                         {% elif eligible|length > 1 %}
-                            <select name="sec_id" class="full-width themed-input participant-trigger">
-                                <option value="">-- Select Target --</option>
+                            <select name="{{ role }}{{ Participant.FORM_SUFFIX }}" class="full-width themed-input participant-trigger">
+                                <option value="">-- Select {{ role }} --</option>
                                 {% for ent in eligible %}
                                     <option value="{{ ent.id }}">{{ ent.name }}</option>
                                 {% endfor %}
@@ -106,27 +81,16 @@
 
                         {% else %}
                             {% if role in dets_not_met %}
-                                <span class="text-danger">None nearby with (</span>
+                                <span class="text-danger">Needs</span>
                                 {% for det in dets_not_met[role] %}
-                                    {{ det.field_name }}
+                                    {{ det.infield.get_field_name() }}{% if not loop.last %}, {% endif %}
                                 {% endfor %}
-                                <span class="text-danger">)</span>
                             {% else %}
                                 <span class="text-danger">None eligible nearby.</span>
                             {% endif %}
                         {% endif %}
                     </div>
-                    {% endif %}
-
-                    {% set role = '3rd' %}
-                    {% if role in role_entities %}
-                    <div class="form-group">
-                        <label>Environment:</label>
-                        <select name="tert_id" class="full-width themed-input participant-trigger">
-                            <option value="{{ current_loc.id }}">{{ current_loc.name }} (Current)</option>
-                        </select>
-                    </div>
-                    {% endif %}
+                    {% endfor %}
                 </div>
             </section>
 
@@ -157,6 +121,12 @@
                 {% endif %}
             {% else %}
                 <h3>Modifiers</h3>
+                {% if event.outcome_type == 'determined' %}
+                <div>
+                    <span style="font-weight: bold;">Fixed Base:</span>
+                    {{ event.single_number }}
+                </div>
+                {% endif %}
                 <div id="modifier-preview" class="label-like">
                     <!-- JS will populate this when participants change -->
                     Select participants to calculate modifiers...
@@ -168,7 +138,7 @@
         <!-- RIGHT COLUMN: Results & Application -->
         <div class="right-column">
             <section class="outer-border">
-                <h3>Dice</h3>
+                <h3>Range</h3>
                 <form id="event-form">
                     {% if event.outcome_type in ['fourway', 'numeric'] %}
                     <div class="die-adjustment-grid">
@@ -190,7 +160,7 @@
                             <option value="0.95">Extreme</option>
                         </select>
                     </div>
-                    
+                    {% endif %}
                     {% if event.outcome_type == 'fourway' %}
                     <div class="threshold-info label-like text-dim spacious-top">
                         Minor Success <span id="minor-success-threshold" class="text-accent">--</span>,
@@ -198,6 +168,8 @@
                         Major Failure <span id="major-failure-threshold" class="text-accent">--</span>
                     </div>
                     {% endif %}
+                    {% if event.outcome_type == 'determined' %}
+                        <span style="font-style: italic;">(fixed&mdash;no random dice roll)</span>
                     {% endif %}
                 </form>
                 {% if not dets_not_met %}
@@ -212,7 +184,14 @@
                         <script>linkForKey["r"] = "#roll-btn";</script>
                     </div>
                 {% else %}
-                    <div style="font-style: italic; text-align: center;">Missing participants</div>
+                    <div style="display: flex; justify-content: center; width: 100%; margin: 10px 0;">
+                    </div>
+                    <div class="justify-center">
+                        <div class="disabled-button">
+                            (Missing participants)
+                        </div>
+                    </div>
+</center>
                 {% endif %}
             </section>
 
@@ -388,19 +367,7 @@
     });
 
     document.getElementById('roll-btn').onclick = async () => {
-        const fd = new FormData();
-
-        // 1. Gather Context IDs
-        fd.append('subj_id', document.querySelector('input[name="subj_id"]')?.value || '');
-        fd.append('sec_id', document.querySelector('select[name="sec_id"]')?.value || '');
-        fd.append('tert_id', document.querySelector('select[name="tert_id"]')?.value || '');
-        
-        // Gather dynamic item selectors (Suzy's Axe, etc)
-        document.querySelectorAll('select[name*="_item_id"]').forEach(sel => {
-            fd.append(sel.name, sel.value);
-        });
-
-        // 2. Add System/Difficulty fields
+        const fd = getRoleIDs();
         const diff = document.getElementById('difficulty-select')?.value;
         if (diff) fd.append('difficulty', diff);
 
@@ -465,28 +432,33 @@
         s.onchange = updateApplyPreviews;
     });
 
+    // Gather selected IDs from the dropdowns
+    function getRoleIDs() {
+        const ROLE_SUFFIX = "{{ Participant.FORM_SUFFIX }}";
+        const fd = new FormData();
+        const inputs = document.querySelectorAll(
+            `input[name$="${ROLE_SUFFIX}"], select[name$="${ROLE_SUFFIX}"]`);
+        inputs.forEach(el => {
+            if (el.value) {
+                fd.append(el.name, el.value);
+            }
+        });
+        return fd;
+    }
+
     /**
      * Fetches calculated modifiers from the server and updates the UI
      */
     async function refreshModifiers() {
         const previewDiv = document.getElementById('modifier-preview');
         
-        // 1. Gather selected IDs from the dropdowns
-        const params = new URLSearchParams();
-        params.append('subj_id', document.querySelector('[name="subj_id"]')?.value || '');
-        params.append('sec_id', document.querySelector('[name="sec_id"]')?.value || '');
-        params.append('tert_id', document.querySelector('[name="tert_id"]')?.value || '');
-        // Add item instance selectors if they exist
-        document.querySelectorAll('select[name*="_item_id"]').forEach(sel => {
-            params.append(sel.name, sel.value);
-        });
-
-        // 2. Hit the API
-        const url = `/event/preview/${eventId}?${params.toString()}`;
-        const data = await apiGet(url, "Could not load modifiers");
+        // Get the data
+        const fd = getRoleIDs();
+        const url = `/event/preview/${eventId}`;
+        const data = await apiPost(url, fd, "Could not load modifiers");
         if (!data) return;
 
-        // 3. Render the results
+        // Render the results
         const modifiers = data;
         if (modifiers.length === 0) {
             previewDiv.innerHTML = '<span class="text-dim">No modifiers applied.</span>';
@@ -523,78 +495,6 @@
 
     // Run once on load to show Suzy's initial Pathfinding bonus
     document.addEventListener('DOMContentLoaded', refreshModifiers);
-
-    // Shows the text input when "+ Add New" is selected.
-    function handleRoleChange(selectEl, index) {
-        const group = document.getElementById(`new-role-group-${index}`);
-        const input = document.getElementById(`new-role-input-${index}`);
-
-        if (selectEl.value === "__NEW__") {
-            group.style.display = 'inline-flex';
-            input.focus();
-        } else {
-            group.style.display = 'none';
-        }
-    }
-
-    // Validates the name and adds it as a permanent option in the dropdown.
-    function confirmNewRole(index) {
-        const selectEl = document.querySelector(`select[name="dets[${index}][role]"]`);
-        const input = document.getElementById(`new-role-input-${index}`);
-        const group = document.getElementById(`new-role-group-${index}`);
-        
-        // Clean the value: lowercase and remove illegal chars
-        let value = input.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
-
-        if (!value) {
-            alert("Please enter a valid role name.");
-            return;
-        }
-
-        // Check if option already exists
-        let existingOption = Array.from(selectEl.options).find(opt => opt.value === value);
-
-        if (!existingOption) {
-            // Create the new option
-            const newOpt = document.createElement('option');
-            newOpt.value = value;
-            newOpt.textContent = value;
-            
-            // Add it to the "Other Participant Roles" optgroup (the second optgroup)
-            const customGroup = selectEl.querySelectorAll('optgroup')[1];
-            customGroup.appendChild(newOpt);
-            
-            selectEl.value = value;
-        } else {
-            // If it already existed, just select it
-            selectEl.value = value;
-        }
-
-        // Cleanup
-        input.value = "";
-        group.style.display = 'none';
-    }
-
-    // Reverts the dropdown and hides the input.
-    function cancelNewRole(index) {
-        const selectEl = document.querySelector(`select[name="dets[${index}][role]"]`);
-        const group = document.getElementById(`new-role-group-${index}`);
-        const input = document.getElementById(`new-role-input-${index}`);
-
-        selectEl.selectedIndex = 0; // Reset to [Subject]
-        input.value = "";
-        group.style.display = 'none';
-    }
-
-    // Key listener for Enter and Escape keys.
-    function handleRoleKeydown(event, index) {
-        if (event.key === "Enter") {
-            event.preventDefault(); // Stop form submission
-            confirmNewRole(index);
-        } else if (event.key === "Escape") {
-            cancelNewRole(index);
-        }
-    }
 </script>
 
 <style>
