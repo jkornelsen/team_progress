@@ -984,21 +984,56 @@ def play_event(id):
     
     def meets_det(det, entity):
         if not entity: return False
-        if d.infield and d.infield.attrib_id and not any(
-                av.attrib_id == d.infield.attrib_id
-                for av in entity.attrib_values):
-            return False
+        if det.infield and det.infield.field_mode == Participant.ATTR \
+                and det.infield.attrib_id:
+            if not any(
+                    av.attrib_id == d.infield.attrib_id
+                    for av in entity.attrib_values):
+                return False
 
         # TODO: check for event distance requirement e.g. 30ft (6 tiles)
         # dist = distance_between(owner.position, c.position)
         # if dist is not None and dist > d.distance_reqired
+
+        # Quantity check
+        if det.infield and det.infield.field_mode == Participant.QTY \
+                and det.infield.item_id:
+            item_def = Item.query.get((game_token, det.infield.item_id))
+
+            if item_def and item_def.storage_type == StorageType.UNIVERSAL:
+                return entity.id == GENERAL_ID
+
+            if entity.entity_type == Item.TYPENAME:
+                check_owner_id = owner_id
+            else:
+                check_owner_id = entity.id
+
+            has_pile = Pile.query.filter_by(
+                game_token=game_token, 
+                owner_id=check_owner_id,
+                item_id=det.infield.item_id
+            ).first() is not None
+            if not has_pile:
+                return False
 
         return True
 
     eligible_role_entities = {}
     dets_not_met = {}
     for role, detlist in role_dets.items():
-        if role == Participant.SUBJECT:
+        # Check if this role is for the General Owner (Uses Universal Items)
+        is_universal_role = False
+        for d in detlist:
+            if d.infield and d.infield.field_mode == Participant.QTY \
+                    and d.infield.item_id:
+                item = Item.query.get((game_token, d.infield.item_id))
+                if item and item.storage_type == StorageType.UNIVERSAL:
+                    is_universal_role = True
+                    break
+        
+        if is_universal_role:
+            search_pool= [Entity.query.get((game_token, GENERAL_ID))]
+        elif role == Participant.SUBJECT:
             search_pool = [subject] if subject else other_entities_here
         elif role == Participant.OWNER:
             search_pool = [owner] if owner else other_entities_here

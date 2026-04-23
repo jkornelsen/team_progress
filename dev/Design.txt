@@ -12,11 +12,54 @@ show updated item quantities in locations like overview and sources do
 
 changing an enumerated attrib should display the text in the log
 
+infestation
+    repair cost + reload cost can reduce xp to 0 (but never below)
+    enough energy for several rounds of multiple events
+    0 energy means another bot has to come and get you
+        at least for the highway
+        perhaps increases repair cost
+    enemies have hp -- often requires landing two basic hits
+    lots of combat events at different levels
+        basic fist pummel
+        electric shock -- stun and damage
+        chainsaw -- won't work if repairs needed is too high
+        spinning arms -- multiple hits
+        machine gun
+        shotgun
+        rifle
+        grappling hook -- moves to melee distance
+        rush
+        disengage
+        detect -- lowers enemy stealth
+        focus -- lowers enemy evasion
+    edit char to add ability link and/or require xl
+    clear bonuses after kill -- "finish fight" event perhaps
+    also "initiate fight" to set distance and restore hp
+    some abilities take long enough to allow enemy to respond
+    their attacks depend on distance
+        claw
+        bite
+        jump
+        hide
+        dodge
+        scurry -- disengage; requires between 30% and 50% hp
+        spit acid
+        tongue lash
+        rip off and project their own fur -- reduces their hp a bit
+        cane whack
+        cane poke
+    select enemy attack from random list under certain circumstances
+    other times choose what would make sense
+
+restrict location access by attribreq
+
+event distance requirements (different from determinants?) for other1
+    melee is distance 1
+    would add significant meaning to tactical positioning
+
 win condition quantity min and max, like attribs for recipes
 or "at least" / "at most" toggle
 Fission Plant: no more than a certain amount of pollution
-
-restrict location access by attribreq
 
 location production examples
     loc mine helium-3, then char converts to cannisters
@@ -42,10 +85,6 @@ we're pretty close to dynamic idle increases
     be a kind of pointer that would adjust automatically
     it could do that if we link to actual recipe ids that persist in json
     maybe start by expecting if recipes are deleted then user must adjust
-
-event distance requirements (different from determinants?) for other1
-    melee is distance 1
-    would add significant meaning to tactical positioning
 
 saving grandfather clock resets hour, an enumerated attrib, to 12am
 

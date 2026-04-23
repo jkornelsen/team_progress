@@ -66,10 +66,14 @@
                             {# Single option: display name as text and pass ID via hidden input #}
                             {% set ent = eligible[0] %}
                             <input type="hidden" name="{{ role }}{{ Participant.FORM_SUFFIX }}" value="{{ ent.id }}">
-                            {% set target_url = url_for('play.play_' + ent.entity_type, id=ent.id) %}
-                            {% call hk.hotlink(target_url, link_letters) %}
-                                {{ ent.name }}
-                            {% endcall %}
+                            {% if ent.id == 1 %}
+                                🌐 General
+                            {% else %}
+                                {% set target_url = url_for('play.play_' + ent.entity_type, id=ent.id) %}
+                                {% call hk.hotlink(target_url, link_letters) %}
+                                    {{ ent.name }}
+                                {% endcall %}
+                            {% endif %}
 
                         {% elif eligible|length > 1 %}
                             <select name="{{ role }}{{ Participant.FORM_SUFFIX }}" class="full-width themed-input participant-trigger">
@@ -123,8 +127,8 @@
                 <h3>Modifiers</h3>
                 {% if event.outcome_type == 'determined' %}
                 <div>
-                    <span style="font-weight: bold;">Fixed Base:</span>
-                    {{ event.single_number }}
+                    <span class="text-dim" style="font-weight: bold;">Fixed Base:</span>
+                    <span class="text-success">{{ event.single_number }}</span>
                 </div>
                 {% endif %}
                 <div id="modifier-preview" class="label-like">
@@ -203,6 +207,7 @@
             </section>
                 
             <!-- Apply the roll result to selected containers -->
+            {% if event.changes %}
             <section id="apply-section" class="outer-border hidden">
                 <h3>Apply Result to Items or Attributes</h3>
                 <p class="label-like text-dim">Select a character or location to apply the result to.</p>
@@ -247,6 +252,7 @@
                 </div>
                 {% endfor %}
             </section>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -263,7 +269,6 @@
     const maxInput = document.getElementById('die-max-input');
 
     const eventId = {{ event.id }};
-    const resultText = document.getElementById('outcome-text');
     const resolution = document.getElementById('resolution-actions');
 
     let lastRollValue = 0;
@@ -476,12 +481,15 @@
             let opDisplay = m.op;
             if (opDisplay === '*') opDisplay = '×';
             if (opDisplay === '/') opDisplay = '÷';
+            const hasInner = (m.breakdown !== m.value.toString());
+            const innerHtml = hasInner ? `<small class="text-dim">(${m.breakdown})</small>` : "";
             html += `
                 <li class="spacious-bottom" style="display: flex; align-items: baseline; gap: 4px;">
                     ${labelHtml}
                     <strong>${m.source_name}</strong> 
-                    <span class="text-dim">${m.field_name}</span> 
+                    <span class="text-dim">${m.field_name}:</span> 
                     <strong class="${colorClass}">${opDisplay}${Math.abs(m.value)}</strong>
+                    ${innerHtml}
                 </li>`;
         });
         html += '</ul>';
@@ -510,6 +518,18 @@
         color: var(--text-dim);
         font-family: monospace;
         font-size: 0.9em;
+    }
+
+    .outcome-total {
+        font-weight: bold;
+        font-size: 1.2em;
+        color: #1a1a1a;
+        background-color: #fff9c4;
+        padding: 2px 8px;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        display: inline-block; 
+        margin-left: 4px;
     }
 
     .modifier-list { list-style: none; padding: 0; }

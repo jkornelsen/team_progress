@@ -1,10 +1,10 @@
 import random
 import math
 import logging
-from flask import g, request
+from flask import g, request, session
 from app.models import (
-    db, Entity, Item, Location, Character, Attrib, Event,
-    Operation, OutcomeType, RollerType, Participant,
+    db, GENERAL_ID, Entity, Item, Location, Character, Attrib, Event,
+    StorageType, Operation, OutcomeType, RollerType, Participant,
     AttribVal, Pile, LocDest)
 from app.src.logic_piles import set_quantity
 from app.src.logic_user_interaction import add_message
@@ -17,16 +17,15 @@ logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------
 
 def get_entity_value(anchor_id, field_def):
-    """Handles Base vs Child and Attr vs Qty."""
-    # 1. Determine the Target Entity (The Base or the Selected Child)
-    target_id = anchor_id
+    """Handles Attr vs Qty and Base vs Child."""
     game_token=g.game_token
     
-    if not target_id and field_def.role != Participant.UNIV:
-        return 0.0
-
-    # 2. Fetch the Data
     if field_def.field_mode == Participant.ATTR:
+        # 1. Determine the Target Entity (The Base or the Selected Child)
+        # TODO: if field_def.child_of_anchor then search entities
+        # owned by anchor_id
+        target_id = anchor_id
+
         # If entity_id is set, we use that specific Attribute Blueprint
         val_obj = AttribVal.query.filter_by(
             game_token=game_token,
@@ -35,16 +34,25 @@ def get_entity_value(anchor_id, field_def):
         ).first()
         return val_obj.value if val_obj else 0.0
     
-    if field_def.field_mode == Participant.QTY:
-        if field_def.role == 'univ' or not field_def.child_of_anchor:
-            pile = Pile.query.filter_by(
-                game_token=game_token,
-                owner_id=target_id,
-                item_id=field_def.item_id
-            ).first()
+    anchor_ent = Entity.query.get((game_token, anchor_id))
+    is_item_anchor = anchor_ent and anchor_ent.entity_type == Item.TYPENAME
+
+    if field_def.field_mode == Participant.QTY and field_def.item_id:
+        item = Item.query.get((game_token, field_def.item_id))
+        if item and item.storage_type == StorageType.UNIVERSAL:
+            owner_id = GENERAL_ID
+        elif is_item_anchor:
+            owner_id = session.get('old_char_id') or session.get('old_loc_id') or GENERAL_ID
         else:
-            pile = Pile.query.get((game_token, target_id))
-        return p.quantity if pile else 0.0
+            owner_id = anchor_id
+
+        #TODO: limit by position
+        pile = Pile.query.filter_by(
+            game_token=game_token,
+            owner_id=owner_id,
+            item_id=field_def.item_id
+        ).first()
+        return pile.quantity if pile else 0.0
 
     return 0.0
 
@@ -88,7 +96,8 @@ def calculate_determinants(event, role_entities):
                 field_name = f"{item.name} Qty" if item else "Quantity"
 
             anchor = Entity.query.get((game_token, anchor_id))
-            anchor_name = anchor.name if anchor else "Unknown"
+            anchor_name = '' if anchor_id == GENERAL_ID \
+                else anchor.name if anchor else "Unknown"
             source_display = anchor_name
             if infield.child_of_anchor:
                 # If looking at an item instance inside Suzy, we need the item name
@@ -102,9 +111,14 @@ def calculate_determinants(event, role_entities):
         elif det.val_src == 'const':
             val = det.val_transform
 
+        breakdown_text = f"{val:g}"
+
         # Inner Transform: (Val <op> Constant)
         if det.op_transform:
-            val = apply_operation(val, det.val_transform, det.op_transform)
+            breakdown_text = get_inner_breakdown(
+                val, det.val_transform, det.op_transform)
+            val = apply_operation(
+                val, det.val_transform, det.op_transform)
 
         # Assemble the enriched dictionary
         modifiers.append({
@@ -112,6 +126,7 @@ def calculate_determinants(event, role_entities):
             'source_name': source_display,
             'field_name': field_name,
             'value': val,
+            'breakdown': breakdown_text,
             'op': det.op_application
         })
         
@@ -134,9 +149,24 @@ def apply_operation(current_val, mod_val, op):
     if op == '-': return current_val - mod_val
     if op == '*': return current_val * mod_val
     if op == '/': return current_val / mod_val if mod_val != 0 else current_val
-    if op == '^x': return current_val ** mod_val
-    if op == 'x^': return mod_val ** current_val
+    if op == 'x^': return current_val ** mod_val  # Val to Power (xⁿ)
+    if op == '^x': return mod_val ** current_val  # Power of Val (nˣ)
     return current_val
+
+def get_inner_breakdown(val, mod_val, op):
+    """Formats the inner transformation for the UI."""
+    if not op: return f"{val:g}"
+    if op == 'k': return f"{mod_val:g}"
+    if op == '+': return f"({val:g}+{mod_val:g})"
+    if op == '-': return f"({val:g}-{mod_val:g})"
+    if op == '*': return f"({val:g}×{mod_val:g})"
+    if op == '/': return f"({val:g}÷{mod_val:g})"
+    if op == 'x^': return f"{val:g}<sup>{mod_val:g}</sup>"
+    if op == '^x': return f"{mod_val:g}<sup>{val:g}</sup>"
+    if op == 'log': return f"log({val:g})"
+    if op == 'sqrt': return f"√{val:g}"
+    if op == '0.5': return f"{val:g}/2"
+    return f"{val:g}"
 
 # ------------------------------------------------------------------------
 # Outcome Resolution
@@ -181,20 +211,15 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
     for m in modifiers:
         val = m['value']
         op = m['op']
+        symbol = '×' if op == '*' else '÷' if op == '/' else op
+        breakdown_parts.append(f"{symbol} {val:g}")
         
         # Update Total
         total = apply_operation(total, val, op)
-        
-        # Update Breakdown String
-        # e.g., " + 1 (Suzy Pathfinding)"
-        symbol = op if op not in ['*','/'] else ('×' if op == '*' else '÷')
-        label = f"{m['source_name']} {m['field_name']}"
-        if m['label']: label = m['label']
-        
-        breakdown_parts.append(f"{symbol} {val:g} <small>({label})</small>")
 
     # 3. Final Formatting
-    breakdown_str = " ".join(breakdown_parts) + f" = <b>{total:g}</b>"
+    breakdown_str = " ".join(breakdown_parts) + \
+        f" = <span class='outcome-total'>{total:g}</span>"
     
     display_str = ""
     if event.outcome_type == 'fourway':
@@ -223,9 +248,9 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
         message_str = f"{total:g} — {res}"
     else:
         display_str = breakdown_str
-        message_str = display_str.replace('<br>', ' ')
+        message_str = f"{total:g}"
 
-    add_message(f"{event.name}: {message_str}")
+    add_message(f"{event.name}: Outcome {message_str}")
     return total, display_str
 
 def roll_coordinate(loc_id):
