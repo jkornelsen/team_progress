@@ -39,7 +39,7 @@ def check_item_unmasking(game_token, item_id):
 
 def can_unmask_item(game_token, item):
     """Returns True if at least one recipe for the item has all sources known."""
-    for recipe in item.production_recipes:
+    for recipe in item.recipes:
         all_sources_known = True
         for source in recipe.sources:
             ingredient = Item.query.get((game_token, source.item_id))

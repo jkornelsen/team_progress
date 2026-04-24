@@ -91,7 +91,10 @@ def can_perform_recipe(host_id, recipe, target_owner_id, ctx, batches=1):
     for res in resolved:
         required = res['source_def'].q_required * batches
         if res['total_available'] < required:
-            return False, f"Missing {res['item'].name}."
+            verb = "Missing"
+            if res['total_available'] > 0:
+                verb = "Need More"
+            return False, f"{verb} {res['item'].name}"
 
     # 3. Attribute Requirements
     scope = get_host_scope(host_id, ctx)

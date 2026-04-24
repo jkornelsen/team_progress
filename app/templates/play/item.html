@@ -67,7 +67,6 @@
             {% if ctx_loc and ctx_loc.id != owner.id %}
                 <span style="margin-left: 5px; margin-right: 5px">|</span>
                 <span class="label-like">📍</span>
-                at
                 {% set loc_url = url_for('play.play_location', id=ctx_loc.id) %}
                 {% call hk.hotlink(loc_url, link_letters, brackets=True) %}
                     {{ ctx_loc.name }}
@@ -117,10 +116,14 @@
                             <strong>Output: {{ r.rate_amount | formatNum }} {{ item.name }}</strong>
                             {% if r.is_location_hosted %}
                                 <span title="Automated production at location.">🏭</span>
-                            {% else %}
-                                <span title="Not location hosted.">/</span>
                             {% endif %}
-                            <span class="label-like">{{ r.rate_duration | formatNum }}s {{ '⚡ Instant' if r.instant }}</span>
+                            <span class="label-like">
+                                {% if r.instant %}
+                                    ⚡Instant
+                                {% else %}
+                                    {{ r.rate_duration | formatNum }}s
+                                {% endif %}
+                            </span>
                         </div>
                         
                         <!-- Sources (Ingredients) -->
@@ -197,80 +200,80 @@
                         {% endif %}
 
                         <div class="recipe-controls spacious-top">
-                            {% set letter = link_letters.next() if r.can_produce else None %}
-                            <div id="controls-{{ r.id }}" data-recipe-hotkey="{{ letter or '' }}">
-                                {% if r.can_produce %}
-                                    {% if r.instant %}
-                                        <div class="batch-selector flex-row align-center">
-                                            <input type="text" id="batches-{{ r.id }}" 
-                                                    value="{{ r.max_batches }}" 
-                                                    onchange="setQty('batches-{{ r.id }}', this.value)"
-                                                    min="1" max="{{ r.max_batches }}" 
-                                                    class="mini-input">
-                                            
-                                            <div class="batch-presets">
-                                                <button type="button" class="tag-button" 
-                                                        onclick="setQty('batches-{{ r.id }}', 1)">1</button>
-                                                <button type="button" class="tag-button" 
-                                                        onclick="setQty('batches-{{ r.id }}', {{ (r.max_batches / 2) | int }})">½</button>
-                                                <button type="button" class="tag-button" 
-                                                        onclick="setQty('batches-{{ r.id }}', {{ r.max_batches }})">Max</button>
-                                            </div>
+                            {% set letter = link_letters.next() %}
+                            <div id="controls-{{ r.id }}" data-recipe-hotkey="{{ letter }}">
+                                {% if r.instant %}
+                                    <div id="instant-controls-{{ r.id }}"
+                                        class="batch-selector flex-row align-center {{ 'hidden' if not r.can_produce }}">
+                                        <input type="text" id="batches-{{ r.id }}" 
+                                                value="{{ r.max_batches }}" 
+                                                onchange="setQty('batches-{{ r.id }}', this.value)"
+                                                min="1" max="{{ r.max_batches }}" 
+                                                class="mini-input">
+                                        
+                                        <div class="batch-presets">
+                                            <button type="button" class="tag-button" 
+                                                    onclick="setQty('batches-{{ r.id }}', 1)">1</button>
+                                            <button type="button" class="tag-button" 
+                                                    onclick="setQty('batches-{{ r.id }}', {{ (r.max_batches / 2) | int }})">½</button>
+                                            <button type="button" class="tag-button" 
+                                                    onclick="setQty('batches-{{ r.id }}', {{ r.max_batches }})">Max</button>
                                         </div>
-                                        <button id="gain-{{ r.id }}" onclick="gainItem({{ r.id }}, {{ r.host_id }})" class="go-button">
-                                            <span class="hotkey-indicator">{{ letter }}</span>
-                                            Gain Instant
-                                        </button>
-                                    {% else %}
-                                        <button id="start-{{ r.id }}"
-                                                onclick="startProd({{ r.id }}, {{ r.host_id }})"
-                                                class="go-button {{ 'hidden' if progress and progress.recipe_id == r.id }}">
-                                            <span class="hotkey-indicator">{{ letter }}</span>
-                                            Start
-                                        </button>
-                                    {% endif %}
-                                {% else %}
-                                    {# INTEGRATION: The 🚫 Info Icon with specific reason tooltip #}
-                                    <div class="blocked-container flex-row align-center">
-                                        {% if "Storage limit reached" in r.reason %}
-                                            <small class="text-dim"
-                                                style="margin-left: 5px;">Storage full</small>
-                                        {% else %}
-                                            <span class="info-icon"
-                                                style="cursor: help; font-size: 1.5em;"
-                                                title="{{ r.reason }}">🚫</span>
-                                            <small class="text-dim"
-                                                style="margin-left: 5px;">Requirements not met</small>
-                                        {% endif %}
                                     </div>
-                                {% endif %}
-
-                                {# Always show Stop if it IS ongoing, even if it can't start another batch right now #}
-                                {% if not r.instant %}
+                                    <button id="gain-{{ r.id }}"
+                                        onclick="gainItem({{ r.id }}, {{ r.host_id }})"
+                                        class="go-button {{ 'hidden' if not r.can_produce }}">
+                                        <span class="hotkey-indicator">{{ letter }}</span>
+                                        Gain Instant
+                                    </button>
+                                {% else %}
+                                    <button id="start-{{ r.id }}"
+                                            onclick="startProd({{ r.id }}, {{ r.host_id }})"
+                                            class="go-button {{ 'hidden' if not r.can_produce or
+                                            (progress and progress.recipe_id == r.id) }}">
+                                        <span class="hotkey-indicator">{{ letter }}</span>
+                                        Start
+                                    </button>
                                     <button id="stop-{{ r.id }}"
                                             onclick="stopProd({{ r.host_id }}, {{ r.product_id }})"
-                                            class="dangerous-button {{ 'hidden' if not (progress and progress.recipe_id == r.id) }}">
-                                        <span class="hotkey-indicator">{{ letter if letter else '' }}</span> Stop
+                                            class="dangerous-button {{ 'hidden' if not
+                                            (progress and progress.recipe_id == r.id) }}">
+                                        <span class="hotkey-indicator">{{ letter }}</span>
+                                        Stop
                                     </button>
                                 {% endif %}
-                                {% if letter %}
-                                    <script>
-                                        (function() {
-                                            const letter = '{{ letter }}';
-                                            const recipeId = '{{ r.id }}';
-                                            {# Determine state on page load #}
-                                            {% if progress and progress.recipe_id == r.id %}
-                                                window.linkForKey[letter] = `#stop-${recipeId}`;
-                                            {% elif r.can_produce %}
-                                                {% if r.instant %}
-                                                    window.linkForKey[letter] = `#gain-${recipeId}`;
-                                                {% else %}
-                                                    window.linkForKey[letter] = `#start-${recipeId}`;
-                                                {% endif %}
-                                            {% endif %}
-                                        })();
-                                    </script>
-                                {% endif %}
+
+                                {# Message why production is blocked #}
+                                <div id="blocked-{{ r.id }}" 
+                                     class="blocked-container flex-row align-center {{ 'hidden' if r.can_produce }}">
+                                    
+                                    {% set isStorageFull = "limit reached" in r.reason.lower() %}
+                                    
+                                    <span class="info-icon {{ 'hidden' if isStorageFull }}" 
+                                          style="cursor: help; font-size: 1.5em;" 
+                                          title="{{ r.reason }}">🚫</span>
+                                          
+                                    <small class="blocked-msg text-dim" style="margin-left: 5px;">
+                                        {{ 'Storage full' if isStorageFull else 'Requirements not met' }}
+                                    </small>
+                                </div>
+
+                                <script>
+                                    (function() {
+                                        {# Set up initial hotkey mapping #}
+                                        const letter = '{{ letter }}';
+                                        const recipeId = '{{ r.id }}';
+                                        const isInstant = {{ 'true' if r.instant else 'false' }};
+                                        const canProduce = {{ 'true' if r.can_produce else 'false' }};
+                                        const isRunning = {{ 'true' if progress and progress.recipe_id == r.id else 'false' }};
+
+                                        if (isRunning) {
+                                            window.linkForKey[letter] = `#stop-${recipeId}`;
+                                        } else if (canProduce) {
+                                            window.linkForKey[letter] = isInstant ? `#gain-${recipeId}` : `#start-${recipeId}`;
+                                        }
+                                    })();
+                                </script>
                             </div>
 
                             <!-- Production Bar -->
@@ -593,11 +596,22 @@
                 const container = document.getElementById(`controls-${r.recipe_id}`);
                 if (!container) return;
 
+                const card = container.closest('.recipe-card');
+                const letter = container.getAttribute('data-recipe-hotkey');
+
                 const startBtn = document.getElementById(`start-${r.recipe_id}`);
                 const stopBtn = document.getElementById(`stop-${r.recipe_id}`);
                 const gainBtn = document.getElementById(`gain-${r.recipe_id}`);
-                const letter = container.getAttribute('data-recipe-hotkey');
+                const blockedDiv = document.getElementById(`blocked-${r.recipe_id}`);
+                const instantControls = document.getElementById(`instant-controls-${r.recipe_id}`);
+
                 const progContainer = document.getElementById(`prog-container-${r.recipe_id}`);
+                // If server says recipe is currently valid, clear red text
+                if (r.can_produce && card) {
+                    card.querySelectorAll('.text-danger').forEach(
+                        el => el.classList.remove('text-danger'));
+                }
+
                 // Check if this recipe is the one currently running
                 const isRunning = (
                     main.is_ongoing && main.active_recipe_id === r.recipe_id);
@@ -605,9 +619,12 @@
                 if (isRunning) {
                     if (startBtn) startBtn.classList.add('hidden');
                     if (gainBtn) gainBtn.classList.add('hidden');
-                    if (stopBtn) stopBtn.classList.remove('hidden');
-                    if (letter) {
-                        window.linkForKey[letter] = `#stop-${r.recipe_id}`;
+                    if (instantControls) instantControls.classList.add('hidden');
+                    if (blockedDiv) blockedDiv.classList.add('hidden');
+
+                    if (stopBtn) {
+                        stopBtn.classList.remove('hidden');
+                        if (letter) window.linkForKey[letter] = `#stop-${r.recipe_id}`;
                     }
                     if (progContainer) {
                         progContainer.classList.remove('hidden');
@@ -630,42 +647,39 @@
                         progBar.value = 0;
                     }
 
-                    let blockedMsg = container.querySelector('.blocked-container');
-
-                    if (!r.can_produce) {
-                        // If we can't produce, hide buttons and show a message
-                        if (startBtn) startBtn.classList.add('hidden');
-                        if (gainBtn) gainBtn.classList.add('hidden');
+                    if (r.can_produce) {
+                        // CAN PRODUCE
                         if (stopBtn) stopBtn.classList.add('hidden');
-                        if (letter) delete window.linkForKey[letter];
-                        
-                        const isStorageFull = r.reason.includes("Storage limit reached");
-                        const icon = isStorageFull ? '' : '🚫';
-                        const text = isStorageFull ? 'Storage full' : 'Requirements not met';
+                        if (blockedDiv) blockedDiv.classList.add('hidden');
 
-                        const content = `
-                            <span class="info-icon" style="cursor: help; font-size: 1.5em;" title="${r.reason}">${icon}</span>
-                            <small class="blocked-msg text-dim" style="margin-left: 5px;">${text}</small>
-                        `;
-                        if (!blockedMsg) {
-                            blockedMsg = document.createElement('div');
-                            blockedMsg.className = 'blocked-container flex-row align-center';
-                            blockedMsg.innerHTML = content;
-                            container.appendChild(blockedMsg);
-                        } else {
-                            blockedMsg.innerHTML = content;
+                        if (startBtn) {
+                            startBtn.classList.remove('hidden');
+                            if (letter) window.linkForKey[letter] = `#start-${r.recipe_id}`;
+                        }
+                        if (gainBtn) {
+                            gainBtn.classList.remove('hidden');
+                            if (instantControls) instantControls.classList.remove('hidden');
+                            if (letter) window.linkForKey[letter] = `#gain-${r.recipe_id}`;
                         }
                     } else {
-                        // WE CAN PRODUCE: Restore buttons, remove blocked message
-                        if (startBtn) startBtn.classList.remove('hidden');
-                        if (gainBtn) gainBtn.classList.remove('hidden');
+                        // CAN'T PRODUCE
+                        if (startBtn) startBtn.classList.add('hidden');
                         if (stopBtn) stopBtn.classList.add('hidden');
+                        if (gainBtn) gainBtn.classList.add('hidden');
+                        if (instantControls) instantControls.classList.add('hidden');
+                        if (letter) delete window.linkForKey[letter];
                         
-                        if (blockedMsg) blockedMsg.remove();
+                        if (blockedDiv) {
+                            blockedDiv.classList.remove('hidden');
 
-                        // Restore hotkeys
-                        if (letter) {
-                            window.linkForKey[letter] = gainBtn ? `#gain-${r.recipe_id}` : `#start-${r.recipe_id}`;
+                            const isStorageFull = r.reason.toLowerCase().includes("limit reached");
+                            const icon = blockedDiv.querySelector('.info-icon');
+                            const msg = blockedDiv.querySelector('.blocked-msg');
+                            if (icon) {
+                                icon.classList.toggle('hidden', isStorageFull);
+                                icon.title = r.reason;
+                            }
+                            if (msg) msg.textContent = isStorageFull ? 'Storage full' : 'Requirements not met';
                         }
                     }
                 }

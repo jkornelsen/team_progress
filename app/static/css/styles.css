@@ -315,6 +315,26 @@ progress::-moz-progress-bar {
     margin: 10px 0;
 }
 
+.in-progress {
+    background: #00003a;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.1em;
+    height: 1.1em;
+    font-size: 0.8em;
+    vertical-align: middle;
+    position: relative;
+}
+
+.in-progress::before {
+    content: "↻";
+    color: #88f;
+    transform: translateY(-1px); 
+}
+
+
 /* Logs */
 .scrollable-log {
     height: 250px;
@@ -340,20 +360,43 @@ progress::-moz-progress-bar {
    6. UTILITIES (Margins, Colors, Display)
    ========================================================================== */
 
+/* ---- Structure ---- */
+
 .full-width {
     width: 100%;
     box-sizing: border-box; 
 }
 
-/* Margin utilities */
+.flex-row {
+    display: flex;
+    gap: 5px;
+}
+.flex-column {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.flex-between {
+    display: flex;
+    justify-content: space-between;
+}
+
+.align-center {
+    align-items: center;
+}
+.justify-center {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+/* ---- Spacing & Overrides ---- */
+
+.gap-10 { gap: 10px; }
+.gap-20 { gap: 20px; }
+
 .spacious-top { margin-top: 20px; }
 .spacious-bottom { margin-bottom: 8px; }
-
-/* Any text that shouldn't be as bright as the main data */
-.label-like { color: var(--text-dim); font-size: 0.85em; }
-
-/* Informational paragraphs. */
-.info { color: var(--text-dim); font-size: 0.90em; }
 
 .description-box {
     display: block;
@@ -363,15 +406,20 @@ progress::-moz-progress-bar {
     margin-right: 0;
 }
 
+/* ---- Color & Text ---- */
+
 .text-accent { color: var(--accent); }
 .text-danger { color: var(--danger); }
 .text-success { color: var(--success); }
 .text-dim { color: var(--text-dim); }
 
-.gap-10 { gap: 10px; }
-.gap-20 { gap: 20px; }
+/* Any text that shouldn't be as bright as the main data */
+.label-like { color: var(--text-dim); font-size: 0.85em; }
 
-.hidden { display: none !important; }
+/* Informational paragraphs. */
+.info { color: var(--text-dim); font-size: 0.90em; }
+
+/* ---- States ---- */
 
 .disabled {
     opacity: 0.5;
@@ -390,27 +438,6 @@ input:disabled {
     text-align: center; 
 }
 
-/* Standard flexbox utilities used for alignment */
-.flex-between {
-    display: flex;
-    justify-content: space-between;
-}
+/* The ultimate override */
+.hidden { display: none !important; }
 
-.flex-column {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.flex-row {
-    display: flex;
-    gap: 5px;
-}
-.align-center {
-    align-items: center;
-}
-.justify-center {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-}

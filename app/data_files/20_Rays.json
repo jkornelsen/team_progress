@@ -39,7 +39,7 @@
             {
                 "id": 3,
                 "name": "Red Bar Boost I",
-                "description": "<i>Gain per batch</i> 1 each. See <a href=\"/play/event/1\">Red Bar Rate</a> for how to perform the upgrade (also linked below).",
+                "description": "*Gain per batch* 1 each. See <a href=\"/play/event/46\">Red Bar Rate</a> to perform the upgrade.",
                 "attribs": [],
                 "abilities": [46],
                 "storage_type": "u",
@@ -64,7 +64,7 @@
             {
                 "id": 4,
                 "name": "Red Bar Boost II",
-                "description": "Rate amount x1.5\r\n\r\nMultiplying for each upgrade means the total benefit is exponential, so with a base rate amount of 20 from all <i>Red Bar Boost I</i> upgrades, the rate amount becomes:\r\n<pre>20 * 1.5 ^ 6 = 228</pre>",
+                "description": "Rate amount x1.5\r\n\r\nMultiplying for each upgrade means the total benefit is exponential, so with a base rate amount of 20 from all *Red Bar Boost I* upgrades, the rate amount becomes:\r\n```20 * 1.5 ^ 6 = 228```",
                 "attribs": [],
                 "abilities": [46],
                 "storage_type": "u",
@@ -79,7 +79,7 @@
                         "rate_duration": 14.0,
                         "instant": false,
                         "sources": [
-                            {"item_id": 3, "q_required": 1.0, "preserve": true},
+                            {"item_id": 3, "q_required": 2.0, "preserve": true},
                             {"item_id": 6, "q_required": 100.0, "preserve": false},
                             {"item_id": 39, "q_required": 1000.0, "preserve": false}
                         ],
@@ -116,7 +116,7 @@
             {
                 "id": 6,
                 "name": "\ud83d\udfe8Yellow Bar",
-                "description": "Combine light to produce this secondary color.\r\n<pre><c=\"yellow\"> _____________\r\n/____________/\r\n</c></pre>",
+                "description": "Combine light to produce this secondary color.\r\n{yellow|\r\n```\r\n _____________\r\n/____________/\r\n```\r\n}",
                 "attribs": [],
                 "abilities": [47],
                 "storage_type": "u",
@@ -142,7 +142,7 @@
             {
                 "id": 7,
                 "name": "\ud83d\udfe7Orange Bar",
-                "description": "An especially vibrant color.\r\n<pre><c=\"orange\"> _____________\r\n/____________/\r\n</c></pre>",
+                "description": "An especially vibrant color.\r\n{orange|\r\n```\r\n _____________\r\n/____________/\r\n```\r\n}",
                 "attribs": [],
                 "abilities": [],
                 "storage_type": "u",
@@ -169,7 +169,7 @@
             {
                 "id": 8,
                 "name": "Ambient Energy",
-                "description": "At first, indeterminate flashes of energy are the only thing distinguishable from nothingness. The energy seems unlimited. Maybe it even is.\r\n<pre><c=\"yellow\">\r\n        |\r\n<*>   -<*>-   *\r\n        |\r\n</c></pre>",
+                "description": "At first, indeterminate flashes of energy are the only thing distinguishable from nothingness. The energy seems unlimited. Maybe it even is.\r\n{yellow|\r\n```\r\n        |\r\n<*>   -<*>-   *\r\n        |\r\n```\r\n}",
                 "attribs": [],
                 "abilities": [],
                 "storage_type": "u",
@@ -208,7 +208,7 @@
             {
                 "id": 10,
                 "name": "\ud83d\udfeaViolet Bar",
-                "description": "At the end of the visible spectrum.\r\n<pre><c=\"violet\"> _____________\r\n/____________/\r\n</c></pre>",
+                "description": "At the end of the visible spectrum.\r\n{violet|\r\n```\r\n _____________\r\n/____________/\r\n```\r\n}",
                 "attribs": [],
                 "abilities": [],
                 "storage_type": "u",
@@ -289,7 +289,7 @@
             {
                 "id": 13,
                 "name": "Tree",
-                "description": "<c=\"saddlebrown\">Roots push deep into the earth, a mighty trunk stands tall, branches spread toward the heavens, and <c=\"green\">leaves</c> drink <c=\"yellow\">sunlight</c></c>.\r\n\r\n<i><c=\"#333333\">World Tree... Tree of Life... Tree of Knowledge...\r\nwisdom, connection, growth</c></i>",
+                "description": "{saddlebrown|Roots push deep into the earth, a mighty trunk stands tall, branches spread toward the heavens, and {green|leaves} drink {yellow|sunlight}}.\r\n\r\n*{#333333|World Tree... Tree of Life... Tree of Knowledge...\r\nwisdom, connection, growth}*",
                 "attribs": [],
                 "abilities": [],
                 "storage_type": "l",
@@ -347,7 +347,7 @@
             {
                 "id": 15,
                 "name": "Black Bar Boost I",
-                "description": "Rate amount +1 each, so set <i>gain per batch</i> to 2 when completed.",
+                "description": "Rate amount +1 each, so set *gain per batch* to 2 when completed.",
                 "attribs": [],
                 "abilities": [],
                 "storage_type": "u",
@@ -372,7 +372,7 @@
             {
                 "id": 16,
                 "name": "\u2b1bBlack Bar",
-                "description": "It seems like you shouldn't be able to see a black bar in space. Doesn't black absorb all light?<pre>\r\n  <c=\"black\">_____________\r\n<c=\"gray\">/</c>/____________/<c=\"gray\">/</c>\r\n</c></pre>\r\n<c=\"lemonchiffon\">Requires a reset:</c>\r\n1. Stop producing the sources of this item (<c=\"red\">#</c>, <c=\"green\">#</c>, <c=\"yellow\">#</c>).\r\n2. Produce as many black bars as possible.\r\n3. Set quantities of the sources to 0.\r\n4. Reset rates and boosts of <c=\"red\">#</c> (1/8s, <a href=\"/configure/item/18\">I</a>, <a href=\"/configure/item/21\">II</a>) and <c=\"green\">#</c> (0.5/8s, <a href=\"/configure/item/19\">I</a>, <a href=\"/configure/item/50\">II</a>), setting \"I\" boosts to 1.\r\n\r\n<c=\"lemonchiffon\">PC browser shortcuts</c>: <i>Ctrl+Click</i> to open multiple tabs, <i>Alt+LeftArrow</i> to go back.",
+                "description": "It seems like you shouldn't be able to see a black bar in space. Doesn't black absorb all light?\r\n{black|\r\n```\r\n  _____________\r\n{gray|/}/____________/{gray|/}\r\n```\r\n}\r\n{lemonchiffon|Requires a reset:}\r\n1. Stop producing the sources of this item ({red|#}, {green|#}, {yellow|#}).\r\n2. Produce as many black bars as possible.\r\n3. Set quantities of the sources to 0.\r\n4. Reset rates and boosts of {red|#} (1/8s, [I](/configure/item/3), [II](/configure/item/4)) and {green|#} (0.5/8s, [I](/configure/item/2), [II](/configure/item/33)), setting \"I\" boosts to 1.\r\n\r\n{lemonchiffon|PC browser shortcuts}: *Ctrl+Click* to open multiple tabs, *Alt+LeftArrow* to go back.",
                 "attribs": [],
                 "abilities": [],
                 "storage_type": "u",
@@ -424,7 +424,7 @@
             {
                 "id": 18,
                 "name": "\u2b1cWhite Bar",
-                "description": "Mix all other wavelengths for the pinnacle of light combination, the seventh.\r\n<pre><c=\"white\"> _____________\r\n/____________/\r\n</c></pre>",
+                "description": "Mix all other wavelengths for the pinnacle of light combination, the seventh.\r\n{white|\r\n```\r\n _____________\r\n/____________/\r\n```\r\n}",
                 "attribs": [],
                 "abilities": [],
                 "storage_type": "u",
@@ -532,7 +532,7 @@
             {
                 "id": 22,
                 "name": "Yellow Bar Boost II",
-                "description": "Rate amount x1.5\r\n<pre>Total: 10 * 1.5 ^ 6 = 114</pre>",
+                "description": "Rate amount x1.5\r\n```Total: 10 * 1.5 ^ 6 = 114```",
                 "attribs": [],
                 "abilities": [47],
                 "storage_type": "u",
@@ -549,7 +549,7 @@
                         "sources": [
                             {"item_id": 6, "q_required": 500.0, "preserve": false},
                             {"item_id": 7, "q_required": 50.0, "preserve": false},
-                            {"item_id": 20, "q_required": 1.0, "preserve": true}
+                            {"item_id": 20, "q_required": 2.0, "preserve": true}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -768,7 +768,7 @@
             {
                 "id": 31,
                 "name": "\ud83d\udfe6Blue Bar",
-                "description": "Gather blue wavelengths of light.<pre><c=\"blue\">\r\n _____________\r\n/____________/\r\n</c></pre>",
+                "description": "Gather tranquil blue wavelengths of light.\r\n{blue|\r\n```\r\n _____________\r\n/____________/\r\n```\r\n}",
                 "attribs": [],
                 "abilities": [],
                 "storage_type": "u",
@@ -806,7 +806,7 @@
             {
                 "id": 32,
                 "name": "Gravity Force",
-                "description": "Loosely pulls colors together, effectively separating them into large collections. Order black fabric in a texture that defines this force.\r\n\r\n<c=\"lemonchiffon\">When completed:</c>\r\n\u2022 Configure <a href=\"/configure/location/3\">this location</a> to check <i>Show in Overview</i>.",
+                "description": "Loosely pulls colors together, effectively separating them into large collections. Order black fabric in a texture that defines this force.\r\n\r\n{lemonchiffon|When completed:}\r\n\u2022 Configure <a href=\"/configure/location/3\">this location</a> to check *Show in Overview*.",
                 "attribs": [],
                 "abilities": [],
                 "storage_type": "u",
@@ -831,7 +831,7 @@
             {
                 "id": 33,
                 "name": "Green Bar Boost II",
-                "description": "Rate amount x1.5\r\n\r\nThis means increasing by 50% each, exponentially. So, the green bar rate with all boosts I and II is:\r\n<pre>5 * 1.5 ^ 6 = 57 per 8 seconds</pre>",
+                "description": "Rate amount x1.5\r\n\r\nThis means increasing by 50% each, exponentially. So, the green bar rate with all boosts I and II is:\r\n```5 * 1.5 ^ 6 = 57 per 8 seconds```",
                 "attribs": [],
                 "abilities": [45],
                 "storage_type": "u",
@@ -846,7 +846,7 @@
                         "rate_duration": 14.0,
                         "instant": false,
                         "sources": [
-                            {"item_id": 2, "q_required": 1.0, "preserve": true},
+                            {"item_id": 2, "q_required": 2.0, "preserve": true},
                             {"item_id": 31, "q_required": 25.0, "preserve": false},
                             {"item_id": 34, "q_required": 100.0, "preserve": false}
                         ],
@@ -858,7 +858,7 @@
             {
                 "id": 34,
                 "name": "\ud83d\udfe9Green Bar",
-                "description": "Shape green wavelengths into a form, a rectangular prism. Quantity describes the length from one end to the other.\r\n<pre><c=\"green\"> _____________\r\n/____________/\r\n</c></pre>",
+                "description": "Shape green wavelengths into a form, a rectangular prism. Quantity describes the length from one end to the other.\r\n{green|\r\n```\r\n _____________\r\n/____________/\r\n```\r\n}",
                 "attribs": [],
                 "abilities": [45],
                 "storage_type": "u",
@@ -908,7 +908,7 @@
             {
                 "id": 35,
                 "name": "Star",
-                "description": "Gigantic heat-generating sphere on a scale that even imagining threatens to overwhelm the mind.\r\n\r\n<c=\"lemonchiffon\">After constructing:</c>\r\n\u2022 Configure <a href=\"/configure/location/2\">this location</a> to unmask and show in Overview.\r\n\u2022 Hide the <a href=\"/configure/location/3\">Local Solar System</a> from Overview by unchecking the box.\r\n\u2022 For bar recipes that use this item (under <i>used for</i>), update <i>gain per batch</i> to 100 multiplied by <i><c=\"lemonchiffon\">BSF</c></i>.",
+                "description": "Gigantic heat-generating sphere on a scale that even imagining threatens to overwhelm the mind.\r\n\r\n{lemonchiffon|After constructing:}\r\n\u2022 Configure <a href=\"/configure/location/2\">this location</a> to unmask and show in Overview.\r\n\u2022 Hide the <a href=\"/configure/location/3\">Local Solar System</a> from Overview by unchecking the box.\r\n\u2022 For bar recipes that use this item (under *used for*), update *gain per batch* to 100 multiplied by *{lemonchiffon|BSF}*.",
                 "attribs": [],
                 "abilities": [],
                 "storage_type": "u",
@@ -1002,7 +1002,7 @@
             {
                 "id": 39,
                 "name": "\ud83d\udfe5Red Bar",
-                "description": "Select red wavelengths. Creating the first bar of light marks the start of meaningful time, the first different state.\r\n<pre><c=\"red\">\r\n _____________\r\n/____________/\r\n</c></pre>",
+                "description": "Select red wavelengths. Creating the first bar of light marks the start of meaningful time, the first different state.\r\n{red|\r\n```\r\n _____________\r\n/____________/\r\n```\r\n}",
                 "attribs": [],
                 "abilities": [46],
                 "storage_type": "u",
@@ -1050,7 +1050,7 @@
             {
                 "id": 40,
                 "name": "Distance Force",
-                "description": "Supports three-dimensional space so that things can be in different places. Everything else in physics depends on spacetime, including interactions like gravity.\r\n\r\n<i>Note: While this could be seen as playing God, I prefer to think of the player role in this scenario as an observer, with apparent choices actually predestined.</i>",
+                "description": "Supports three-dimensional space so that things can be in different places. Everything else in physics depends on spacetime, including interactions like gravity.\r\n\r\n*Note: While this could be seen as playing God, I prefer to think of the player role in this scenario as an observer, with apparent choices actually predestined.*",
                 "attribs": [],
                 "abilities": [],
                 "storage_type": "u",
@@ -1075,7 +1075,7 @@
             {
                 "id": 41,
                 "name": "\ud83c\udfc1Base Speed Factor",
-                "description": "Set this quantity (<i><c=\"lemonchiffon\">BSF</c></i>) to a multiplier such as:\r\n<pre>\r\n0.5   : slow\r\n1     : normal &mdash; no change\r\n2     : somewhat faster\r\n10    : fast\r\n100   : practically no idling &mdash; incremental only\r\n</pre>\r\nYou'll be using this to multiply gains for bars and elements, starting with <a href=\"/play/event/1\">Red Bar Gain</a>.\r\n\r\nFor upgrades and other low-quantity items, you can reduce recipe durations according to the table below, generally 5% less per <i><c=\"lemonchiffon\">BSF</c></i>. Minimum duration 1 second.\r\n<pre>\r\n<c=\"lemonchiffon\">BSF</c>    rate multiplier\r\n---    ---------------\r\n0.5    10% more\r\n1      no change\r\n2      10% less\r\n4      20% less\r\n5      25% less\r\n8      40% less\r\n10     50% less\r\n</pre>",
+                "description": "Set this quantity (*{lemonchiffon|BSF}*) to a multiplier such as:\r\n```\r\n0.5   : slow\r\n1     : normal \u2014 no change\r\n2     : somewhat faster\r\n10    : fast\r\n100   : practically no idling \u2014 incremental only\r\n```\r\nYou'll be using this to multiply gains for bars and elements, starting with [Red Bar Gain](/play/event/46).\r\n\r\nFor upgrades and other low-quantity items, you can reduce recipe durations according to the table below, generally 5% less per *{lemonchiffon|BSF}*. Minimum duration 1 second.\r\n```\r\n{lemonchiffon|BSF}    rate multiplier\r\n---    ---------------\r\n0.5    10% more\r\n1      no change\r\n2      10% less\r\n4      20% less\r\n5      25% less\r\n8      40% less\r\n10     50% less\r\n```",
                 "attribs": [],
                 "abilities": [],
                 "storage_type": "u",
@@ -1099,7 +1099,18 @@
                 "masked": false,
                 "items": [],
                 "progress": [],
-                "item_refs": [],
+                "item_refs": [
+                    {"item_id": 2},
+                    {"item_id": 3},
+                    {"item_id": 4},
+                    {"item_id": 9},
+                    {"item_id": 15},
+                    {"item_id": 20},
+                    {"item_id": 21},
+                    {"item_id": 22},
+                    {"item_id": 25},
+                    {"item_id": 33}
+                ],
                 "destinations": []
             },
             {
@@ -1153,7 +1164,7 @@
             {
                 "id": 46,
                 "name": "Red Bar Rate",
-                "description": "Press **Calculate** to determine the rate.\r\n\r\nThen, go to [Red Bar](/play/item/39) setup (shift+click on PC to leave this window open). Set *Gain per Batch* for the *Ambient Energy* recipe to this result.",
+                "description": "Press **Calculate** to determine the rate.\r\n\r\nThen, go to [Red Bar](/play/item/39) setup. Set *Gain per Batch* for the *Ambient Energy* recipe to this result.",
                 "attribs": [],
                 "abilities": [],
                 "toplevel": false,
@@ -1221,7 +1232,7 @@
             {
                 "id": 47,
                 "name": "Yellow Bar Rate",
-                "description": "To determine the rate:\r\n1. Multiply by the <i><c=\"lemonchiffon\">BSF</c></i>.\r\n2. Multiply by <i>Yellow Bar Boost I</i>.\r\n3. For every <i>Yellow Bar Boost II</i>, press the button to multiply by <i><c=\"lemonchiffon\">Boost II Factor</c></i>.\r\n\r\nWith this result, go to <a href=\"/play/item/20\">Yellow Bar</a> setup and set <i>Gain per Batch</i>.",
+                "description": "With this result, go to [Yellow Bar](/play/item/6) setup and set *Gain per Batch*.",
                 "attribs": [],
                 "abilities": [],
                 "toplevel": false,
@@ -1231,13 +1242,65 @@
                 "numeric_range": [1, 20],
                 "single_number": 1.0,
                 "selection_strings": "",
-                "determinants": [],
+                "determinants": [
+                    {
+                        "usage_type": "in",
+                        "label": "",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "B_S_F",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 41,
+                            "attrib_id": 0
+                        },
+                        "outfield": null,
+                        "op_application": "*",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 0.0
+                    },
+                    {
+                        "usage_type": "in",
+                        "label": "",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "Boost_1",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 20,
+                            "attrib_id": 0
+                        },
+                        "outfield": null,
+                        "op_application": "*",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 0.0
+                    },
+                    {
+                        "usage_type": "in",
+                        "label": "",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "Boost_2",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 22,
+                            "attrib_id": 0
+                        },
+                        "outfield": null,
+                        "op_application": "*",
+                        "op_transform": "^x",
+                        "val_transform": 1.5,
+                        "val_required": 0.0
+                    }
+                ],
                 "effects": []
             },
             {
                 "id": 45,
                 "name": "Green Bar Rate",
-                "description": "To determine the rate:\r\n1. Multiply by the <i><c=\"lemonchiffon\">BSF</c></i>.\r\n2. Multiply by <i>Green Bar Boost I</i>.\r\n3. For every <i>Green Bar Boost II</i>, press the button to multiply by <i><c=\"lemonchiffon\">Boost II Factor</c></i>.\r\n\r\nWith this result, in <a href=\"/play/item/17\">Green Bar</a> setup, set <i>Gain per Batch</i> for the <i>Ambient Energy</i> recipe.",
+                "description": "In [Green Bar](/play/item/34) setup, set *Gain per Batch* for the *Ambient Energy* recipe. Round to nearest 0.5.",
                 "attribs": [],
                 "abilities": [],
                 "toplevel": false,
@@ -1247,7 +1310,59 @@
                 "numeric_range": [1, 1],
                 "single_number": 0.5,
                 "selection_strings": "",
-                "determinants": [],
+                "determinants": [
+                    {
+                        "usage_type": "in",
+                        "label": "",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "B_S_F",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 41,
+                            "attrib_id": 0
+                        },
+                        "outfield": null,
+                        "op_application": "*",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 0.0
+                    },
+                    {
+                        "usage_type": "in",
+                        "label": "",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "Boost_1",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 2,
+                            "attrib_id": 0
+                        },
+                        "outfield": null,
+                        "op_application": "*",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 0.0
+                    },
+                    {
+                        "usage_type": "in",
+                        "label": "",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "Boost_2",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 33,
+                            "attrib_id": 0
+                        },
+                        "outfield": null,
+                        "op_application": "*",
+                        "op_transform": "^x",
+                        "val_transform": 1.5,
+                        "val_required": 0.0
+                    }
+                ],
                 "effects": []
             }
         ]

@@ -375,7 +375,8 @@ def edit_location(id):
             return duplicate_entity(loc.id, 'location')
         return redirect_back('configure.index') 
 
-    all_items = Item.query.filter_by(game_token=game_token).all()
+    all_items=Item.query.filter_by(
+        game_token=game_token).order_by(Item.name).all()
     universal_items = [
         i for i in all_items if i.storage_type == StorageType.UNIVERSAL]
     containable_items = [

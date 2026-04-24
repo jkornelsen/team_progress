@@ -12,6 +12,10 @@ from app.src.logic_navigation import get_all_valid_coords
 
 logger = logging.getLogger(__name__)
 
+def format_for_display(val):
+    """Round and strip trailing 0's"""
+    return f"{round(val, 2):g}"
+
 # ------------------------------------------------------------------------
 # Determinant Logic (Modifiers)
 # ------------------------------------------------------------------------
@@ -93,7 +97,7 @@ def calculate_determinants(event, role_entities):
                 field_name = attr.name if attr else "Attribute"
             elif infield.field_mode == Participant.QTY:
                 item = Item.query.get((game_token, infield.item_id))
-                field_name = f"{item.name} Qty" if item else "Quantity"
+                field_name = item.name if item else "Quantity"
 
             anchor = Entity.query.get((game_token, anchor_id))
             anchor_name = '' if anchor_id == GENERAL_ID \
@@ -111,7 +115,7 @@ def calculate_determinants(event, role_entities):
         elif det.val_src == 'const':
             val = det.val_transform
 
-        breakdown_text = f"{val:g}"
+        breakdown_text = format_for_display(val)
 
         # Inner Transform: (Val <op> Constant)
         if det.op_transform:
@@ -155,18 +159,21 @@ def apply_operation(current_val, mod_val, op):
 
 def get_inner_breakdown(val, mod_val, op):
     """Formats the inner transformation for the UI."""
-    if not op: return f"{val:g}"
-    if op == 'k': return f"{mod_val:g}"
-    if op == '+': return f"({val:g}+{mod_val:g})"
-    if op == '-': return f"({val:g}-{mod_val:g})"
-    if op == '*': return f"({val:g}×{mod_val:g})"
-    if op == '/': return f"({val:g}÷{mod_val:g})"
-    if op == 'x^': return f"{val:g}<sup>{mod_val:g}</sup>"
-    if op == '^x': return f"{mod_val:g}<sup>{val:g}</sup>"
-    if op == 'log': return f"log({val:g})"
-    if op == 'sqrt': return f"√{val:g}"
-    if op == '0.5': return f"{val:g}/2"
-    return f"{val:g}"
+    v = format_for_display(val)
+    m = format_for_display(mod_val)
+    formats = {
+        'c':    m,
+        '+':    f"({v}+{m})",
+        '-':    f"({v}-{m})",
+        '*':    f"({v}×{m})",
+        '/':    f"({v}÷{m})",
+        'x^':   f"{v}<sup>{m}</sup>",
+        '^x':   f"{m}<sup>{v}</sup>",
+        'log':  f"log({v})",
+        'sqrt': f"√{v}",
+        '0.5':  f"{v}/2"
+    }
+    return formats.get(op, v)
 
 # ------------------------------------------------------------------------
 # Outcome Resolution
@@ -187,7 +194,7 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
     # "Determined" events don't roll; they use the single_number as the start.
     if event.outcome_type == 'determined':
         total = event.single_number
-        breakdown_parts = [f"{total:g}"]
+        breakdown_parts = [format_for_display(total)]
 
     elif event.outcome_type == 'selection':
         options = [s.strip() for s in event.selection_strings.split('\n') if s.strip()]
@@ -212,14 +219,14 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
         val = m['value']
         op = m['op']
         symbol = '×' if op == '*' else '÷' if op == '/' else op
-        breakdown_parts.append(f"{symbol} {val:g}")
+        breakdown_parts.append(f"{symbol} {format_for_display(val)}")
         
         # Update Total
         total = apply_operation(total, val, op)
 
     # 3. Final Formatting
     breakdown_str = " ".join(breakdown_parts) + \
-        f" = <span class='outcome-total'>{total:g}</span>"
+        f" = <span class='outcome-total'>{format_for_display(total)}</span>"
     
     display_str = ""
     if event.outcome_type == 'fourway':
@@ -245,10 +252,10 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
             res = "Minor Failure"
 
         display_str = f"<b>{res}</b><br><small>{breakdown_str}</small>"
-        message_str = f"{total:g} — {res}"
+        message_str = f"{format_for_display(total)} — {res}"
     else:
         display_str = breakdown_str
-        message_str = f"{total:g}"
+        message_str = f"{format_for_display(total)}"
 
     add_message(f"{event.name}: Outcome {message_str}")
     return total, display_str

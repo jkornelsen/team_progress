@@ -107,9 +107,10 @@
                         </td>
                         <td>
                             {% set is_producing = item.id in general_production_ids %}
-                            <span class="text-accent">{{ (pile.quantity if pile else 0) | formatNum }}</span>
+                            <span>{{ (pile.quantity if pile else 0) | formatNum }}</span>
                             {% if is_producing %}
-                                <span title="In Production..." class="spin">🔄</span>
+                                <span title="In Production..." class="in-progress"></span>
+    
                             {% endif %}
                         </td>
                     </tr>
@@ -217,8 +218,6 @@
 <style>
     .objective-list { list-style: none; padding: 0; }
     .objective-list li { margin-bottom: 8px; }
-    .spin { display: inline-block; animation: rotation 2s infinite linear; }
-    @keyframes rotation { from { transform: rotate(0deg); } to { transform: rotate(359deg); } }
     .loc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 </style>
 {% endblock %}

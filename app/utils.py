@@ -421,7 +421,11 @@ def htmlify_filter(text):
             return f'<div style="color:{color}">{content}</div>'
         return f'<span style="color:{color}">{content}</span>'
 
-    html = re.sub(r'\{([\w#]+)\|(.*?)\}', color_replacer, html, flags=re.DOTALL)
+    # Keep replacing until no more {color|content} patterns are found.
+    # This handles nesting.
+    color_pattern = r'\{([\w#]+)\|([^{}]*)\}'
+    while re.search(color_pattern, html):
+        html = re.sub(color_pattern, color_replacer, html)
 
     # 3. Security: Force links to be internal-only
     # This prevents links with external protocols such as http://bad-site.com

@@ -44,6 +44,9 @@ def overview():
     items = Item.query.filter_by(game_token=game_token, toplevel=True).all()
     events = Event.query.filter_by(game_token=game_token, toplevel=True).all()
     
+    # Tick All Production
+    tick_all_active()
+
     # Fetch IDs of items currently being produced by the General Host
     general_production_ids = {
         p.product_id for p in Progress.query.filter_by(
@@ -159,6 +162,7 @@ def play_location(id):
             'item': ref.item,
             'quantity': gen_pile.quantity if gen_pile else 0.0
         })
+    referenced_data = sorted(referenced_data, key=lambda x: x['item'].name)
 
     # 5. Local attributes
     attrib_values = AttribVal.query.filter_by(
@@ -741,7 +745,6 @@ def item_production_status(item_id, owner_id):
         f" | Char:{ctx.char_id} | Loc:{ctx.loc_id}")
 
     # 1. TICK THE WORLD
-    # This keeps all hosts (System, Suzy, Bob) in sync.
     tick_all_active()
 
     # 2. GATHER DATA FOR THE SPECIFIC PILE WE ARE VIEWING

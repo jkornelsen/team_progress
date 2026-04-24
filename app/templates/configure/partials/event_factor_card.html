@@ -1,14 +1,7 @@
 <div class="factor-card outer-border" data-index="{{ index }}">
     {% set infield = factor.infield %}
-    <div class="flex-between align-center card-header">
-        <div class="flex-row align-center gap-10 full-width" style="max-width: 45ch;">
-            <span class="index-display label-like">#{{ index }}</span>
-            <input type="text" 
-                   name="dets[{{ index }}][label]" 
-                   class="input-header full-width" 
-                   value="{{ factor.label or '' }}" 
-                   placeholder="Label e.g. Evasion (optional)">
-        </div>
+    <div class="flex-row gap-20 align-center">
+        <span class="index-display label-like">#{{ index }}</span>
         <button type="button" class="btn-sm dangerous-button" onclick="this.closest('.factor-card').remove(); renumberLabels();">×</button>
     </div>
 
@@ -27,6 +20,12 @@
                     onkeydown="handleRoleKeydown(event, this)"
                     placeholder="e.g. Target_Enemy"
                     style="max-width: 30ch;">
+
+                <span style="margin-top: 4px">Label:</span>
+                <input type="text" 
+                       name="dets[{{ index }}][label]" 
+                       value="{{ factor.label or '' }}" 
+                       placeholder="e.g. Evasion (use of Dex)">
             </div>
 
             <div class="flex-row align-center gap-10">

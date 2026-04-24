@@ -38,7 +38,6 @@
             {% if ctx_loc and ctx_loc.id != subject.id %}
                 <span style="margin-left: 5px; margin-right: 5px">|</span>
                 <span class="label-like">📍</span>
-                at
                 {% set loc_url = url_for('play.play_location', id=ctx_loc.id) %}
                 {% call hk.hotlink(loc_url, link_letters, brackets=True) %}
                     {{ ctx_loc.name }}
@@ -481,6 +480,7 @@
             let opDisplay = m.op;
             if (opDisplay === '*') opDisplay = '×';
             if (opDisplay === '/') opDisplay = '÷';
+            const displayVal = Math.round(Math.abs(m.value) * 100) / 100;
             const hasInner = (m.breakdown !== m.value.toString());
             const innerHtml = hasInner ? `<small class="text-dim">(${m.breakdown})</small>` : "";
             html += `
@@ -488,7 +488,7 @@
                     ${labelHtml}
                     <strong>${m.source_name}</strong> 
                     <span class="text-dim">${m.field_name}:</span> 
-                    <strong class="${colorClass}">${opDisplay}${Math.abs(m.value)}</strong>
+                    <strong class="${colorClass}">${opDisplay}${displayVal}</strong>
                     ${innerHtml}
                 </li>`;
         });
