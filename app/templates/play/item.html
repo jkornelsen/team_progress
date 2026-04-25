@@ -207,17 +207,18 @@
                                         class="batch-selector flex-row align-center {{ 'hidden' if not r.can_produce }}">
                                         <input type="text" id="batches-{{ r.id }}" 
                                                 value="{{ r.max_batches }}" 
-                                                onchange="setQty('batches-{{ r.id }}', this.value)"
+                                                data-max="{{ r.max_batches }}"
+                                                onchange="setBatchQty('{{ r.id }}', this.value)"
                                                 min="1" max="{{ r.max_batches }}" 
                                                 class="mini-input">
                                         
-                                        <div class="batch-presets">
+                                        <div class="presets">
                                             <button type="button" class="tag-button" 
-                                                    onclick="setQty('batches-{{ r.id }}', 1)">1</button>
+                                                onclick="setBatchQty('{{ r.id }}', '1')">1</button>
                                             <button type="button" class="tag-button" 
-                                                    onclick="setQty('batches-{{ r.id }}', {{ (r.max_batches / 2) | int }})">½</button>
+                                                onclick="setBatchQty('{{ r.id }}', 'half')">½</button>
                                             <button type="button" class="tag-button" 
-                                                    onclick="setQty('batches-{{ r.id }}', {{ r.max_batches }})">Max</button>
+                                                onclick="setBatchQty('{{ r.id }}', 'max')">Max</button>
                                         </div>
                                     </div>
                                     <button id="gain-{{ r.id }}"
@@ -319,12 +320,7 @@
                                     Requires {{ entry.q_required | formatNum }}
                                 {% else %}
                                     {# Consumables: [Cost] | [Potential Yield] #}
-                                    <span class="q-req-display">Takes {{ entry.q_required | formatNum }} Each</span>
-                                    {% if entry.q_required != 1 %}
-                                    <small class="text-dim">
-                                        (Max <span class="yield-value">{{ (pile.quantity / entry.q_required) | int }}</span>)
-                                    </small>
-                                    {% endif %}
+                                    <span class="q-req-display">Takes {{ entry.q_required | formatNum }}{{ ' Each' if entry.item.q_limit and entry.item.q_limit > 1 else '' }}</span>
                                 {% endif %}
                             </span>
                         </div>
@@ -368,13 +364,13 @@
                                max="{{ pile.quantity }}" 
                                step="any" 
                                class="mini-input" style="flex-grow: 1;">
-                        <div class="action-qty-presets">
+                        <div class="presets">
                             <button type="button" class="tag-button"
-                                onclick="setQty('action-qty', 1)">1</button>
+                                onclick="setActionQty('1')">1</button>
                             <button type="button" class="tag-button"
-                                onclick="setQtyRatio('action-qty', 0.5)">½</button>
+                                onclick="setActionQty('half')">½</button>
                             <button type="button" class="tag-button"
-                                onclick="setQtyRatio('action-qty', 1)">Max</button>
+                                onclick="setActionQty('max')">Max</button>
                         </div>
                     </div>
 
@@ -503,6 +499,23 @@
     const locId = {{ ctx_loc.id if ctx_loc else 'null' }};
     const startedAtZero = (parseFloat("{{ pile.quantity }}".replace(/,/g, '')) || 0) === 0;
 
+    const recipeMetadata = {
+        {% for r in recipes %}
+        "{{ r.id }}": {
+            "can_produce": {{ 'true' if r.can_produce else 'false' }},
+            "sources": [
+                {% for s in r.sources %}
+                {
+                    "item_id": "{{ s.ingredient.id }}",
+                    "q_required": {{ s.q_required }},
+                    "preserve": {{ 'true' if s.preserve else 'false' }}
+                }{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ]
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    };
+
     // Heartbeat tick
 
     async function updateStatus() {
@@ -549,34 +562,69 @@
 
         // 5. Update Ingredient/Source Stock Labels
         if (data.sources) {
+            const stockMap = {};
             data.sources.forEach(s => {
+                const val = parseFloat(s.quantity.replace(/,/g, '')) || 0;
+                stockMap[s.id] = val;
+                
+                // Update the UI text for the source quantity
                 const el = document.getElementById(`source-qty-${s.id}`);
-                if (el) {
-                    el.textContent = s.quantity;
-                    // Visually flag if we run out
-                    const val = parseFloat(s.quantity.replace(/,/g, ''));
-                    // Note: This simple logic might need the recipe's requirement to be truly accurate
-                    // but it helps the UI feel reactive.
-                }
+                if (el) el.textContent = s.quantity;
             });
-        }
 
-        // 6. Update "Used For" Potential Yields
-        if (data.used_for) {
-            const currentStock = parseFloat(main.quantity.replace(/,/g, '')) || 0;
-            data.used_for.forEach(u => {
-                const box = document.getElementById(`used-yield-${u.id}`);
-                if (!box) return;
-                const isPreserve = box.getAttribute('data-preserve') === 'true';
-                const qReq = parseFloat(box.getAttribute('data-q-req'));
-                if (!isPreserve && qReq > 0) {
-                    const yieldValue = box.querySelector('.yield-value');
-                    if (yieldValue) {
-                        const potential = Math.floor(currentStock / qReq);
-                        yieldValue.textContent = potential.toLocaleString();
+            // Update max_batches for each recipe
+            for (const [recipeId, meta] of Object.entries(recipeMetadata)) {
+                let maxBatches = Infinity;
+                let hasConsumableIngredients = false;
+
+                meta.sources.forEach(source => {
+                    if (!source.preserve && source.q_required > 0) {
+                        hasConsumableIngredients = true;
+                        const currentStock = stockMap[source.item_id] || 0;
+                        const possible = Math.floor(currentStock / source.q_required);
+
+                        if (possible < maxBatches) {
+                            maxBatches = possible;
+                        }
+                    }
+                });
+
+                // If no ingredients are consumed, or recipe is infinite
+                if (!hasConsumableIngredients) {
+                    maxBatches = meta.can_produce ? 999 : 0;
+                }
+
+                if (meta.can_produce && maxBatches === 0) {
+                    maxBatches = 1;
+                }
+
+                const input = document.getElementById(`batches-${recipeId}`);
+                if (input) {
+                    input.dataset.max = maxBatches;
+                    input.max = maxBatches;
+
+                    const isUserEditing = document.activeElement === input;
+                    if (!isUserEditing) {
+                        // Automatically follow the new max
+                        const pending = JSON.parse(sessionStorage.getItem('pendingQty'));
+                        const isThisInput = pending && pending.targetId === `batches-${recipeId}`;
+                        const wasMax = isThisInput && pending.ratioType === 'max';
+
+                        if (wasMax) {
+                            input.value = maxBatches;
+                            pending.lastValue = maxBatches;
+                            sessionStorage.setItem('pendingQty', JSON.stringify(pending));
+                        } else if (isThisInput && pending.ratioType === 'half') {
+                            input.value = Math.floor(maxBatches / 2);
+                        } else {
+                            let currentVal = parseInt(input.value) || 0;
+                            if (currentVal > maxBatches) {
+                                input.value = maxBatches;
+                            }
+                        }
                     }
                 }
-            });
+            };
         }
 
         // 7. Update Attribute Requirements (if they change during play)
@@ -842,19 +890,35 @@
 
     // Quantity fields
 
+    function refreshQuantities() {
+        const pending = JSON.parse(sessionStorage.getItem('pendingQty'));
+        if (!pending) return;
+
+        if (pending.targetId.startsWith('batches-')) {
+            const recipeId = pending.targetId.replace('batches-', '');
+            // Re-apply the logic (Max/Half/1) based on the new dataset.max
+            if (pending.ratioType !== 'custom') {
+                setBatchQty(recipeId, pending.ratioType);
+            }
+        } else if (pending.targetId === 'action-qty') {
+            if (pending.ratioType !== 'custom') {
+                setActionQty(pending.ratioType);
+            }
+        }
+    }
+
     (function() {
         const saved = sessionStorage.getItem('pendingQty');
         if (saved) {
             try {
                 const data = JSON.parse(saved);
-                // We use a window listener or a small timeout to ensure 
-                // the DOM elements are fully ready before injecting
                 window.addEventListener('DOMContentLoaded', () => {
                     const target = document.getElementById(data.targetId);
                     if (target) {
-                        target.value = data.value;
+                        // Use lastValue, which is what applyQtyUpdate now saves
+                        target.value = data.lastValue || 1;
                     }
-                    // Burn the evidence so it doesn't persist on manual refreshes
+                    // Only remove if we actually found a target to apply it to
                     sessionStorage.removeItem('pendingQty');
                 });
             } catch (e) {
@@ -863,34 +927,65 @@
         }
     })();
 
-    function setQty(inputId, val) {
+    function applyQtyUpdate(inputId, value, ratioType = 'custom') {
         const input = document.getElementById(inputId);
-        if (input) {
-            const finalVal = Math.max(1, Math.floor(val));
-            input.value = finalVal;
-            sessionStorage.setItem('pendingQty', JSON.stringify({
-                targetId: inputId,
-                value: finalVal
-            }));
-        }
+        if (!input) return;
+
+        input.value = value;
+        
+        // Save the intent (ratioType) and the target
+        sessionStorage.setItem('pendingQty', JSON.stringify({
+            targetId: inputId,
+            ratioType: ratioType, // '1', 'half', 'max', or 'custom'
+            lastValue: value
+        }));
     }
 
-    function setQtyRatio(inputId, ratio) {
-        // Set by ratio of main quantity
-        const el = document.getElementById('main-qty-display');
-        if (!el) return 0;
-        const max = parseFloat(el.textContent.replace(/,/g, '')) || 0;
-        const val = max * ratio;
-        const finalVal = max > 0 ? Math.max(1, Math.floor(val)) : 0;
-        
+    function setBatchQty(recipeId, type) {
+        // Check if we received the full string "batches-123" or just "123"
+        const idOnly = recipeId.toString().replace('batches-', '');
+        const inputId = `batches-${idOnly}`;
         const input = document.getElementById(inputId);
-        if (input) {
-            input.value = finalVal;
-            sessionStorage.setItem('pendingQty', JSON.stringify({
-                targetId: inputId,
-                value: finalVal
-            }));
+        if (!input) return;
+
+        // Fallback chain: data-max -> attribute max -> 0
+        const max = parseInt(input.dataset.max) || parseInt(input.getAttribute('max')) || 0;
+        let finalVal = 1;
+
+        if (type === 'max') {
+            finalVal = max;
+        } else if (type === 'half') {
+            finalVal = Math.floor(max / 2);
+        } else if (type === '1') {
+            finalVal = 1;
+        } else {
+            finalVal = parseInt(type) || 1;
+            type = 'custom';
         }
+
+        // Ensure we don't return NaN or values below 1 (if max > 0)
+        finalVal = max > 0 ? Math.min(max, Math.max(1, finalVal)) : 0;
+        
+        applyQtyUpdate(inputId, finalVal, type);
+    }
+
+    function setActionQty(type) {
+        const inputId = 'action-qty';
+        const el = document.getElementById('main-qty-display'); // Where the raw number lives
+        if (!el) return;
+
+        const max = parseFloat(el.textContent.replace(/,/g, '')) || 0;
+        let finalVal = 1;
+
+        if (type === 'max') {
+            finalVal = max;
+        } else if (type === 'half') {
+            finalVal = max / 2;
+        } else if (type === '1') {
+            finalVal = 1;
+        }
+
+        applyQtyUpdate(inputId, finalVal, type);
     }
 
     const getActionQty = () => document.getElementById('action-qty')?.value || 0;
@@ -981,7 +1076,7 @@
     .reverse-lookup-list { --col-list-max-width: 350px; }
 
     .batch-selector { gap: 5px; margin-bottom: 8px; }
-    .batch-presets { display: flex; gap: 2px; }
+    .presets { display: flex; gap: 2px; }
     .tag-button { 
         font-size: 0.7em; 
         padding: 2px 6px; 

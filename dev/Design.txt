@@ -1,5 +1,7 @@
 ---- issues and proposed changes ----
 
+delete sources from recipes
+
 unmasked too many items e.g. orange bar
     happened when unlocking green bars?
 
@@ -7,13 +9,24 @@ mask entity names in objectives on overview
 
 recipe to consume -- infestation energy
 
+slow to restore a significant amount of progress
+
 effects
     conditional by fourway outcome result seems useful but tedious
     maybe give optional apply buttons instead and user can choose which
     makes sense because fourway is largely about interpretation
     also follows plan of never applying value changes unless explicitly chosen
+event to help with rays black bar reset
 
 show updated item quantities in locations like overview and sources do
+
+change recipe order on item configure
+    should be easier now that we have ids?
+    up/down arrow buttons next to "Remove Recipe" when multiple recipes
+
+checkbox on overview to auto refresh every 15 seconds
+    or 10 seconds
+    no need for select box
 
 changing an enumerated attrib should display the text in the log
 
@@ -70,26 +83,32 @@ location production examples
     loc mine helium-3, then char converts to cannisters
     lumber mill: logs > boards
 
-bacon for dinner is a good but minimalist quest
-consider adding a complex quest scenario with production, travel and combat
-maybe a set of tasks to enter guild or save village from invasion
+tethered one epic
+    set of quests
+    would multiple objectives feel more rewarding?
+    or sandboxy -- prefer not completely linear
+    production, travel and combat
+    like bacon for dinner but not minimalist
 
 other scenarios could benefit from a goal
 maybe build a wooden bridge in lumber to win
 
-we're pretty close to dynamic idle increases
-    an event can calculate the increase and
-    set the value of a built-in field such as quantity
-    all we would need is for it to be able to set the value of
-    rate duration or rate amount
+idle increases from event effects
+    would need to set the value of rate duration or rate amount
     however those fields are inside a specific recipe
     recipes aren't easy to list readably in a selectbox
     would such a selectbox be in configure or play?
     maybe recipe #1, recipe #2, recipe #3 would be readable enough
-    possibly if recipes are added or deleted, this "#1" syntax would
-    be a kind of pointer that would adjust automatically
-    it could do that if we link to actual recipe ids that persist in json
-    maybe start by expecting if recipes are deleted then user must adjust
+    link to recipe ids that persist in json
+
+what happens if several elapsed-time actions depend on each other?
+    pen requires lid requires plastic, and each is incremented regularly
+    when querying an item, first recursively query
+    all of its sources that are in progress
+    avoid recursion loops by maintaining a set of items to query
+    or bottom up: first all that do not consume, then recipes that only consume those
+would it help to do two loops, taking only half of max at a time
+    maybe this could make it better for two items but not three or more
 
 saving grandfather clock resets hour, an enumerated attrib, to 12am
 
@@ -140,25 +159,3 @@ button on page to reconnect
 
 prompt before overwriting another action in progress
 such as if a character is already doing something else
-
-if item play gets too cluttered we could make a recipe play screen
-it wouldn't have the upper button actions such as pickup
-that would be the only place where progress would be shown
-some events could be related to production, including all
-automatically triggered ones,
-while 'shoot' would make more sense on item play instead
-
-if an item cannot be produced,
-reload play item every 10 seconds until it can be?
-although that might not be why we're viewing the page,
-and if not, it could be annoying
-
-will it be difficult if several elapsed-time actions depend on each other?
-pen requires lid requires plastic, and each is incremented regularly
-when querying an item, first recursively query
-all of its sources that are in progress
-avoid recursion loops by maintaining a set of items to query
-the set would need to be a local variable passed as a parameter
-the player could control this by playing the source item first
-although that wouldn't be obvious at all
-going to overview would also take away that choice for top-level items
