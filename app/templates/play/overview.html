@@ -128,14 +128,13 @@
         <section class="outer-border">
             <div class="flex-between">
                 <h3>Log</h3>
-                <div class="reload-controls">
-                    <label class="label-like">Refresh:</label>
-                    <select id="reload-interval" class="mini-select">
-                        <option value="0" selected>Off</option>
-                        <option value="5000">5s</option>
-                        <option value="15000">15s</option>
-                        <option value="60000">1m</option>
-                    </select>
+                <div style="display: inline-flex; align-items: center; gap: 8px;">
+                    <label class="label-like" for="reload-toggle">Auto Refresh:</label>
+                    <input 
+                        type="checkbox" 
+                        id="reload-toggle" 
+                        data-interval="10000"
+                    >
                 </div>
             </div>
             <div class="scrollable-log" id="game-log">
@@ -170,11 +169,12 @@
 <script>
     // Handle Auto-Reload Logic
     let reloadTimer = null;
-    const reloadSelect = document.getElementById('reload-interval');
+    const reloadToggle = document.getElementById('reload-toggle');
     const STORAGE_KEY = 'game_reload_interval';
 
     function startTimer() {
-        const ms = parseInt(reloadSelect.value);
+        const isEnabled = reloadToggle.checked;
+        const ms = isEnabled ? parseInt(reloadToggle.getAttribute('data-interval')) : 0;
         localStorage.setItem(STORAGE_KEY, ms);
         if (reloadTimer) clearInterval(reloadTimer);
         if (ms > 0) {
@@ -186,12 +186,12 @@
     function initReload() {
         const savedValue = localStorage.getItem(STORAGE_KEY);
         if (savedValue !== null) {
-            reloadSelect.value = savedValue;
+            reloadToggle.checked = (savedValue > 0);
         }
         startTimer();
     }
 
-    reloadSelect.addEventListener('change', startTimer);
+    reloadToggle.addEventListener('change', startTimer);
     initReload();
 
     // Log scroll position

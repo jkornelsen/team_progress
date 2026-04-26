@@ -1,15 +1,15 @@
 ---- issues and proposed changes ----
 
-delete sources from recipes
-
 unmasked too many items e.g. orange bar
     happened when unlocking green bars?
 
 mask entity names in objectives on overview
 
-recipe to consume -- infestation energy
+lookup
+    red bar rate
+    This entity is not currently referenced anywhere in the game world.
 
-slow to restore a significant amount of progress
+recipe to consume -- infestation energy
 
 effects
     conditional by fourway outcome result seems useful but tedious
@@ -23,10 +23,6 @@ show updated item quantities in locations like overview and sources do
 change recipe order on item configure
     should be easier now that we have ids?
     up/down arrow buttons next to "Remove Recipe" when multiple recipes
-
-checkbox on overview to auto refresh every 15 seconds
-    or 10 seconds
-    no need for select box
 
 changing an enumerated attrib should display the text in the log
 
@@ -101,35 +97,7 @@ idle increases from event effects
     maybe recipe #1, recipe #2, recipe #3 would be readable enough
     link to recipe ids that persist in json
 
-what happens if several elapsed-time actions depend on each other?
-    pen requires lid requires plastic, and each is incremented regularly
-    when querying an item, first recursively query
-    all of its sources that are in progress
-    avoid recursion loops by maintaining a set of items to query
-    or bottom up: first all that do not consume, then recipes that only consume those
-would it help to do two loops, taking only half of max at a time
-    maybe this could make it better for two items but not three or more
-
 saving grandfather clock resets hour, an enumerated attrib, to 12am
-
-when going to overview from red bar after increasing rate
-    insert or update on table "recipe_sources" violates foreign key constraint "recipe_sources_game_token_recipe_id_fkey" DETAIL: Key (game_token, recipe_id)=(d95c044c-a2a5-4bf0-bba7-203ff3e7b33f, 56) is not present in table "recipes".
-reloading continued play without any apparent longterm problems
-
-while making air and earth (and green bars), lost green bar recipe
-    game_routes.py line 731, in stop_item
-        progress.batches_for_elapsed_time()
-    progress.py line 240, in batches_for_elapsed_time
-        self.set_recipe_by_id()
-    progress.py", line 267, in set_recipe_by_id
-        raise ValueError()
-    ValueError: Recipe missing for item 17.
-shouldn't be too hard to reproduce -- start from that stage rather than beginning
-next time save a JSON example that shows missing data
-
-items sometimes cannot be started or stopped
-probably there's some invalid progress data -- never allow invalid states
-maybe in progress without start time?
 
 ---- planning ----
 

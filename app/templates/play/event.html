@@ -136,6 +136,23 @@
                 </div>
             {% endif %}
             </section>
+
+            {% if caller_entities %}
+            <section class="outer-border">
+                <h3>Called From</h3>
+                <div class="col-list" style="--col-list-max-width: 250px;">
+                    {% for entity in caller_entities %}
+                        <div class="col-row" style="--grid-cols: 1fr auto;">
+                            {% set target_url = url_for('play.play_' ~ entity.entity_type, id=entity.id) %}
+                            
+                            {% call hk.hotlink(target_url, link_letters) %}
+                                {{ entity.name }} 
+                            {% endcall %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
         </div>
 
         <!-- RIGHT COLUMN: Results & Application -->

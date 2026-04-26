@@ -6,7 +6,7 @@ from sqlalchemy.orm import joinedload
 from app.models import (
     db, Entity, Item, Character, Location, Attrib, Event,
     Pile, AttribVal, Operation, OutcomeType,
-    Recipe, RecipeAttribReq, LocDest,
+    Recipe, RecipeAttribReq, LocDest, EntityAbility,
     Progress, Overall, WinRequirement, GameMessage,
     GENERAL_ID, StorageType, Participant)
 from app.utils import (
@@ -14,10 +14,10 @@ from app.utils import (
     capture_origin, redirect_back)
 from .logic_piles import transfer_item
 from .logic_event import (
-    roll_for_outcome, roll_for_system_outcome, TriggerException, calculate_determinants,
+    roll_for_outcome, roll_for_system_outcome, calculate_determinants,
     get_entity_value)
 from .logic_progress import (
-    update_progress, tick_all_active, start_production, stop_production)
+    tick_all_active, start_production, stop_production)
 from .logic_production import (
     find_best_host, resolve_recipe_sources, can_perform_recipe,
     execute_production)
@@ -39,10 +39,14 @@ def overview():
     game_token = g.game_token
     
     # Fetch Top-Level Entities
-    chars = Character.query.filter_by(game_token=game_token, toplevel=True).all()
-    locs = Location.query.filter_by(game_token=game_token, toplevel=True).all()
-    items = Item.query.filter_by(game_token=game_token, toplevel=True).all()
-    events = Event.query.filter_by(game_token=game_token, toplevel=True).all()
+    chars = Character.query.filter_by(
+        game_token=game_token, toplevel=True).order_by(Character.name).all()
+    locs = Location.query.filter_by(
+        game_token=game_token, toplevel=True).order_by(Location.name).all()
+    items = Item.query.filter_by(
+        game_token=game_token, toplevel=True).order_by(Item.name).all()
+    events = Event.query.filter_by(
+        game_token=game_token, toplevel=True).order_by(Event.name).all()
     
     # Tick All Production
     tick_all_active()
@@ -94,11 +98,12 @@ def play_location(id):
     # 1. Fetch Characters & Items
     characters_here = Character.query.filter_by(
         game_token=game_token, location_id=id
-    ).all()
+    ).order_by(Character.name).all()
     
     inventory_piles = Pile.query.filter_by(
         game_token=game_token, owner_id=id
     ).all()
+    inventory_piles.sort(key=lambda p: p.item.name.lower())
 
     # Validate the session's char_id
     current_char_id = session.get('old_char_id')
@@ -139,6 +144,8 @@ def play_location(id):
         ((LocDest.loc1_id == id) | 
          ((LocDest.loc2_id == id) & (LocDest.bidirectional == True)))
     ).all()
+    destinations.sort(key=lambda r: r.other_loc(id).name.lower())
+
     grid_exits = []
     for dest in destinations:
         door = dest.door_at(id)
@@ -1057,6 +1064,17 @@ def play_event(id):
 
         eligible_role_entities[role] = list(role_candidates) if role_candidates else []
 
+        # Entities that call this event
+        caller_entities = (
+            db.session.query(Entity)
+            .join(EntityAbility, (Entity.id == EntityAbility.entity_id) & 
+                                (Entity.game_token == EntityAbility.game_token))
+            .filter(EntityAbility.event_id == id)
+            .filter(EntityAbility.game_token == game_token)
+            .order_by(Entity.name.asc())
+            .all()
+        )
+
     return render_template(
         'play/event.html',
         event=event,
@@ -1065,6 +1083,7 @@ def play_event(id):
         ctx_loc=ctx_loc,
         role_entities=eligible_role_entities,
         dets_not_met=dets_not_met,
+        caller_entities=caller_entities,
         Participant=Participant,
         link_letters=LinkLetters(excluded='moer')
     )

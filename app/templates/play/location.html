@@ -103,7 +103,7 @@
                             {% endif %}
 
                             {% if pile.item_id in producing_ids %}
-                                <span title="Local Production In Progress" class="spin">🔄</span>
+                                <span title="Local Production In Production" class="in-progress"></span>
                             {% endif %}
                         </div>
 
@@ -169,11 +169,11 @@
             </section>
             {% endif %}
 
-            {% if location.exits %}
+            {% if destinations %}
             <section class="outer-border">
                 <h3>Destinations</h3>
                 <div class="col-list twocol-list">
-                {% for route in location.exits %}
+                {% for route in destinations %}
                     {% set target = route.other_loc(location.id) %}
                     {% set door = route.door_at(location.id) %}
                     <div class="col-row twocol-row">

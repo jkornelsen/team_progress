@@ -44,17 +44,19 @@
             <div class="source-list" id="sources-{{ recipe_index }}">
                 {% for source in recipe.sources if recipe %}
                 <div class="flex-row gap-5 align-center spacious-bottom">
-                    <select name="recipes[{{ recipe_index }}][sources][{{ loop.index0 }}][item_id]">
+                    <select name="recipes[{{ recipe_index }}][sources][{{ loop.index0 }}][item_id]" style="max-width: 20ch;">
                         {% for i in all_items %}
                         <option value="{{ i.id }}" {{ 'selected' if i.id == source.item_id }}>{{ i.name }}</option>
                         {% endfor %}
                     </select>
                     <input type="number" name="recipes[{{ recipe_index }}][sources][{{ loop.index0 }}][q_required]" 
                            value="{{ source.q_required }}" step="any" style="width: 60px;">
-                    <label class="checkbox-label">
+                    <label class="checkbox-label"
+                            title="Leave unchecked for resources that get consumed.">
                         <input type="checkbox" name="recipes[{{ recipe_index }}][sources][{{ loop.index0 }}][preserve]" 
                                {{ 'checked' if source.preserve }}> Preserve
                     </label>
+                    <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()" style="margin-left: 5px;">×</button>
                 </div>
                 {% endfor %}
             </div>
@@ -62,7 +64,7 @@
         </div>
 
         <!-- 2. BYPRODUCTS -->
-        <div class="sub-section" style="flex: 3">
+        <div class="sub-section" style="flex: 2">
             <h5>🎁 Byproducts</h5>
             <div class="byproduct-list" id="byproducts-{{ recipe_index }}">
                 {% for byproduct in recipe.byproducts if recipe %}
@@ -74,6 +76,7 @@
                     </select>
                     <input type="number" name="recipes[{{ recipe_index }}][byproducts][{{ loop.index0 }}][rate_amount]" 
                            value="{{ byproduct.rate_amount }}" step="any" style="width: 60px;">
+                    <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
                 </div>
                 {% endfor %}
             </div>
@@ -88,27 +91,24 @@
         <h5>⚖️ Attribute Requirements</h5>
         <div class="attrib-req-list" id="attribs-{{ recipe_index }}">
             {% for req in recipe.attrib_reqs if recipe %}
-            <div class="flex-row gap-10 align-center spacious-bottom">
-                <select name="recipes[{{ recipe_index }}][attrib_reqs][{{ loop.index0 }}][attrib_id]" data-is-binary="{{ req.attrib.is_binary if req.attrib else false }}" onchange="updateAttribReqInput(this)">
+            <div class="flex-row gap-10 align-center spacious-bottom attrib-req-row">
+                <select name="recipes[{{ recipe_index }}][attrib_reqs][{{ loop.index0 }}][attrib_id]" 
+                        data-is-binary="{{ req.attrib.is_binary if req.attrib else false }}" 
+                        onchange="updateAttribReqInput(this)">
                     {% for a in all_attribs %}
-                    <option value="{{ a.id }}" data-is-binary="{{ a.is_binary }}" {{ 'selected' if a.id == req.attrib_id }}>{{ a.name }}</option>
+                    <option value="{{ a.id }}" data-is-binary="{{ a.is_binary }}" {{ 'selected' if a.id == req.attrib_id }}>
+                        {{ a.name }}
+                    </option>
                     {% endfor %}
                 </select>
-                {% if req.attrib and req.attrib.is_binary %}
-                    <label class="checkbox-label" style="margin: 0;">
-                        <input type="checkbox" {{ 'checked' if req.min_val > 0 }} style="margin-right: 5px;">
-                    </label>
-                    <input type="hidden" name="recipes[{{ recipe_index }}][attrib_reqs][{{ loop.index0 }}][min]" value="{{ 1 if req.min_val > 0 else 0 }}">
-                    <input type="hidden" name="recipes[{{ recipe_index }}][attrib_reqs][{{ loop.index0 }}][max]" value="{{ 1 if req.min_val > 0 else 0 }}">
-                    <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
-                {% else %}
-                    <span class="label-like range-label">Range:</span>
-                    <input type="number" name="recipes[{{ recipe_index }}][attrib_reqs][{{ loop.index0 }}][min]" 
-                           value="{{ req.min_val }}" placeholder="Min" step="any" style="width: 70px;">
-                    <input type="number" name="recipes[{{ recipe_index }}][attrib_reqs][{{ loop.index0 }}][max]" 
-                           value="{{ req.max_val }}" placeholder="Max" step="any" style="width: 70px;">
-                    <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
-                {% endif %}
+
+                <span class="label-like range-label">Range:</span>
+                <input type="number" name="recipes[{{ recipe_index }}][attrib_reqs][{{ loop.index0 }}][min]" 
+                       value="{{ req.min_val }}" placeholder="Min" step="any" style="width: 70px;" class="range-input">
+                <input type="number" name="recipes[{{ recipe_index }}][attrib_reqs][{{ loop.index0 }}][max]" 
+                       value="{{ req.max_val }}" placeholder="Max" step="any" style="width: 70px;" class="range-input">
+                
+                <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
             </div>
             {% endfor %}
         </div>

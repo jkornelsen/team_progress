@@ -1,12 +1,15 @@
 {% extends 'layout/base.html' %}
+{% import 'macros/hotkeys.html' as hk %}
 
 {% block upper_left %}
     <nav class="nav-container">
-        <a href="{{ url_for('play.overview') }}">[o]verview</a>
+        {{ hk.page_overview() }}
         <span class="separator">|</span>
-        <a href="{{ url_for('configure.index') }}">main setup</a>
+        {{ hk.page_main_setup() }}
         <span class="separator">|</span>
-        <a href="{{ url_for('configure.edit_' + entity.entity_type, id=entity.id) }}">edit this {{ entity.entity_type }}</a>
+        {{ hk.fixed_text(
+            url_for('configure.edit_' + entity.entity_type, id=entity.id),
+            hk.bracket('e') ~ "dit " ~ entity.entity_type, 'e') }}
     </nav>
 {% endblock %}
 

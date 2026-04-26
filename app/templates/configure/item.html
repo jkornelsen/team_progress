@@ -183,16 +183,18 @@
 <!-- Source Row -->
 <template id="source-template">
     <div class="flex-row gap-5 align-center spacious-bottom">
-        <select name="recipes[RECIPE_INDEX][sources][SUB_INDEX][item_id]">
+        <select name="recipes[RECIPE_INDEX][sources][SUB_INDEX][item_id]" style="max-width: 20ch;">
             {% for i in all_items %}
                 <option value="{{ i.id }}">{{ i.name }}</option>
             {% endfor %}
         </select>
         <input type="number" name="recipes[RECIPE_INDEX][sources][SUB_INDEX][q_required]" value="1" step="any" style="width: 60px;">
-        <label class="checkbox-label">
-            <input type="checkbox" name="recipes[RECIPE_INDEX][sources][SUB_INDEX][preserve]"> Preserve
+        <label class="checkbox-label"
+                title="Leave unchecked for resources that get consumed.">
+            <input type="checkbox" name="recipes[RECIPE_INDEX][sources][SUB_INDEX][preserve]"
+                > Preserve
         </label>
-        <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
+        <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()" style="margin-left: 5px;">×</button>
     </div>
 </template>
 

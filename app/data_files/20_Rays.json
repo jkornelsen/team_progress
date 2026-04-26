@@ -91,7 +91,7 @@
             {
                 "id": 5,
                 "name": "Sticky Force",
-                "description": "Binds colors together into patterned objects.",
+                "description": "Binds colors together into patterned objects. Also allows drawing light from the sun.",
                 "attribs": [],
                 "abilities": [],
                 "storage_type": "u",
@@ -252,7 +252,8 @@
                         "sources": [
                             {"item_id": 5, "q_required": 1.0, "preserve": true},
                             {"item_id": 34, "q_required": 35.0, "preserve": false},
-                            {"item_id": 39, "q_required": 70.0, "preserve": false}
+                            {"item_id": 39, "q_required": 70.0, "preserve": false},
+                            {"item_id": 48, "q_required": 1.0, "preserve": true}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -279,7 +280,8 @@
                         "sources": [
                             {"item_id": 6, "q_required": 50.0, "preserve": false},
                             {"item_id": 29, "q_required": 1.0, "preserve": false},
-                            {"item_id": 32, "q_required": 1.0, "preserve": true}
+                            {"item_id": 32, "q_required": 1.0, "preserve": true},
+                            {"item_id": 48, "q_required": 1.0, "preserve": true}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -308,7 +310,8 @@
                             {"item_id": 12, "q_required": 1000.0, "preserve": true},
                             {"item_id": 14, "q_required": 1.0, "preserve": false},
                             {"item_id": 29, "q_required": 500.0, "preserve": true},
-                            {"item_id": 30, "q_required": 1.0, "preserve": true}
+                            {"item_id": 30, "q_required": 1.0, "preserve": true},
+                            {"item_id": 48, "q_required": 1.0, "preserve": true}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -337,7 +340,8 @@
                             {"item_id": 12, "q_required": 10.0, "preserve": false},
                             {"item_id": 29, "q_required": 10.0, "preserve": false},
                             {"item_id": 30, "q_required": 1.0, "preserve": true},
-                            {"item_id": 34, "q_required": 10000.0, "preserve": false}
+                            {"item_id": 34, "q_required": 10000.0, "preserve": false},
+                            {"item_id": 48, "q_required": 1.0, "preserve": true}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -729,7 +733,8 @@
                         "sources": [
                             {"item_id": 5, "q_required": 1.0, "preserve": true},
                             {"item_id": 18, "q_required": 1.0, "preserve": false},
-                            {"item_id": 31, "q_required": 100.0, "preserve": false}
+                            {"item_id": 31, "q_required": 100.0, "preserve": false},
+                            {"item_id": 48, "q_required": 1.0, "preserve": true}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -794,7 +799,7 @@
                         "rate_duration": 3.0,
                         "instant": false,
                         "sources": [
-                            {"item_id": 30, "q_required": 1.0, "preserve": true},
+                            {"item_id": 5, "q_required": 1.0, "preserve": true},
                             {"item_id": 35, "q_required": 1.0, "preserve": true}
                         ],
                         "byproducts": [],
@@ -896,7 +901,7 @@
                         "rate_duration": 3.0,
                         "instant": false,
                         "sources": [
-                            {"item_id": 30, "q_required": 1.0, "preserve": true},
+                            {"item_id": 5, "q_required": 1.0, "preserve": true},
                             {"item_id": 35, "q_required": 1.0, "preserve": true}
                         ],
                         "byproducts": [],
@@ -1038,7 +1043,7 @@
                         "rate_duration": 3.0,
                         "instant": false,
                         "sources": [
-                            {"item_id": 30, "q_required": 1.0, "preserve": true},
+                            {"item_id": 5, "q_required": 1.0, "preserve": true},
                             {"item_id": 35, "q_required": 1.0, "preserve": true}
                         ],
                         "byproducts": [],
@@ -1070,6 +1075,19 @@
                         "attrib_reqs": []
                     }
                 ]
+            },
+            {
+                "id": 48,
+                "name": "Terra Anchor Point",
+                "description": "Where to build the new planet—a reference point in space. Gravity holds the materials together.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 1.0,
+                "loc_hosted": true,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
             },
             {
                 "id": 41,
@@ -1127,6 +1145,7 @@
                     {"item_id": 13, "quantity": 0.0, "position": null},
                     {"item_id": 11, "quantity": 0.0, "position": null},
                     {"item_id": 29, "quantity": 0.0, "position": null},
+                    {"item_id": 48, "quantity": 1.0, "position": null},
                     {"item_id": 12, "quantity": 0.0, "position": null}
                 ],
                 "progress": [],
@@ -1145,7 +1164,7 @@
                 "masked": false,
                 "items": [],
                 "progress": [],
-                "item_refs": [],
+                "item_refs": [35],
                 "destinations": [
                     {
                         "loc2_id": 43,

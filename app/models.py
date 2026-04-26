@@ -506,7 +506,6 @@ class Event(Entity):
     outcome_type = db.Column(
         db.String(20), nullable=False, default=OutcomeType.FOURWAY)
     roller_type = db.Column(db.String(20))
-    trigger_chance = db.Column(db.Float, default=0.0)
     numeric_range = db.Column(ARRAY(db.Integer)) # [min, max]
     single_number = db.Column(db.Float, default=0.0)
     selection_strings = db.Column(db.Text)
@@ -518,7 +517,6 @@ class Event(Entity):
             "toplevel": self.toplevel,
             "outcome_type": self.outcome_type,
             "roller_type": self.roller_type,
-            "trigger_chance": self.trigger_chance,
             "numeric_range": self.numeric_range,
             "single_number": self.single_number,
             "selection_strings": self.selection_strings,

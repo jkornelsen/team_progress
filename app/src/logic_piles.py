@@ -65,19 +65,6 @@ def get_accessible_quantity(item_id, owner_id):
 
     return total
 
-def ensure_owner_up_to_date(owner_id):
-    """
-    Checks if this owner is hosting an active production progress,
-    and ticks it before we read their inventory.
-    """
-    prog = Progress.query.filter_by(
-        game_token=g.game_token, 
-        host_id=owner_id
-    ).first()
-    if prog:
-        from .logic_progress import update_progress
-        update_progress(prog.id)
-
 def set_quantity(item_id, owner_id, new_value, position=None, slot=None):
     """
     Overwrites the quantity of an item pile.
@@ -157,32 +144,6 @@ def transfer_item(item_id, from_owner_id, to_owner_id, quantity,
 # ------------------------------------------------------------------------
 # Convenience Accessors
 # ------------------------------------------------------------------------
-
-def get_general_stock(item_id):
-    """Helper to check the universal pile."""
-    ensure_owner_up_to_date(GENERAL_ID)
-    pile = Pile.query.filter_by(
-        game_token=g.game_token,
-        item_id=item_id,
-        owner_id=GENERAL_ID
-    ).first()
-    return pile.quantity if pile else 0.0
-
-def get_character_piles(char_id):
-    """Returns all Pile objects carried by a character."""
-    ensure_owner_up_to_date(char_id)
-    return Pile.query.filter_by(
-        game_token=g.game_token,
-        owner_id=char_id
-    ).all()
-
-def get_location_piles(loc_id):
-    """Returns all Pile objects sitting at a location (all grid positions)."""
-    ensure_owner_up_to_date(loc_id)
-    return Pile.query.filter_by(
-        game_token=g.game_token,
-        owner_id=loc_id
-    ).all()
 
 def set_item_slot(char_id, item_id, slot_name):
     """Equips an item into a specific slot."""

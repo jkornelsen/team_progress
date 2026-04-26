@@ -227,61 +227,56 @@ def execute_production(host_id, recipe, target_owner_id, ctx, batches=1):
         f"execute_production() Host:{host_id} | Product:{recipe.product_id}"
         f" | Char:{ctx.char_id} | Loc:{ctx.loc_id}")
 
-    actual_batches_done = 0
+    if batches <= 0:
+        return 0, None
+
     halt_reason = None
+    possible, reason = can_perform_recipe(
+        host_id, recipe, target_owner_id, ctx, batches)
+    if not possible:
+        return 0, reason
 
-    for _ in range(batches):
-        possible, reason = can_perform_recipe(
-            host_id, recipe, target_owner_id, ctx, 1)
-        if not possible:
-            halt_reason = reason
-            break
+    # Consume
+    resolved = resolve_recipe_sources(host_id, recipe, ctx)
+    for res in resolved:
+        if not res['source_def'].preserve:
+            adjust_quantity(
+                res['item'].id,
+                res['anticipated_owner_id'],
+                -(res['source_def'].q_required * batches))
 
-        # Consume
-        resolved = resolve_recipe_sources(host_id, recipe, ctx)
-        for res in resolved:
-            if not res['source_def'].preserve:
-                adjust_quantity(
-                    res['item'].id,
-                    res['anticipated_owner_id'],
-                    -res['source_def'].q_required)
-
-        # Produce
-        adjust_quantity(
-            recipe.product_id, target_owner_id, recipe.rate_amount)
-        
-        for bp in recipe.byproducts:
-            bp_target_id = get_byproduct_target(
-                bp.item_id, target_owner_id, host_id, ctx)
-            adjust_quantity(bp.item_id, bp_target_id, bp.rate_amount)
-
-        actual_batches_done += 1
+    # Produce
+    adjust_quantity(
+        recipe.product_id, target_owner_id, recipe.rate_amount * batches)
+    
+    for bp in recipe.byproducts:
+        bp_target_id = get_byproduct_target(
+            bp.item_id, target_owner_id, host_id, ctx)
+        adjust_quantity(bp.item_id, bp_target_id, bp.rate_amount * batches)
 
     # Log who did the production
-    if actual_batches_done > 0:
-        game_token = g.game_token
-        gain_qty = recipe.rate_amount * actual_batches_done
-        host_ent = Entity.query.get((game_token, host_id))
-        log_msg = f"{gain_qty} {recipe.product.name}"
-        if host_id == GENERAL_ID:
-            host_info = "GENERAL/SYSTEM"
-            log_msg = f"{log_msg} gained."
-        elif host_ent:
-            host_info = f"{host_ent.entity_type.upper()} '{host_ent.name}' (ID:{host_id})"
-            if host_ent.entity_type == Character.TYPENAME:
-                log_msg = f"{host_ent.name} produced {log_msg}."
-            elif host_ent.entity_type == Location.TYPENAME:
-                log_msg = f"{log_msg} produced at {host_ent.name}."
-        else:
-            host_info = f"UNKNOWN ID:{host_id}"
-        add_message(log_msg)
-        logger.info(
-            f"[PRODUCTION] Host: {host_info} | "
-            f"Result: +{gain_qty:g} {recipe.product.name} "
-            f"({actual_batches_done} batches)"
-        )
-
-    return actual_batches_done, halt_reason
+    game_token = g.game_token
+    gain_qty = recipe.rate_amount * batches
+    host_ent = Entity.query.get((game_token, host_id))
+    log_msg = f"{gain_qty} {recipe.product.name}"
+    if host_id == GENERAL_ID:
+        host_info = "GENERAL/SYSTEM"
+        log_msg = f"{log_msg} gained."
+    elif host_ent:
+        host_info = f"{host_ent.entity_type.upper()} '{host_ent.name}' (ID:{host_id})"
+        if host_ent.entity_type == Character.TYPENAME:
+            log_msg = f"{host_ent.name} produced {log_msg}."
+        elif host_ent.entity_type == Location.TYPENAME:
+            log_msg = f"{log_msg} produced at {host_ent.name}."
+    else:
+        host_info = f"UNKNOWN ID:{host_id}"
+    add_message(log_msg)
+    logger.info(
+        f"[PRODUCTION] Host: {host_info} | "
+        f"Result: +{gain_qty:g} {recipe.product.name} "
+        f"({batches} batches)"
+    )
+    return batches, None
 
 def get_byproduct_target(item_id, main_target_id, host_id, ctx):
     """

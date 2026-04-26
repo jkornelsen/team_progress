@@ -489,7 +489,6 @@
     </div>
 </div>
 
-{% include 'play/partials/modal_interrupt.html' %}
 <script src="{{ url_for('static', filename='js/api.js') }}"></script>
 
 <script>
@@ -519,20 +518,15 @@
     // Heartbeat tick
 
     async function updateStatus() {
-        // 1. Fetch the complete state snapshot for this context
+        // 1. Build route form data
         const fd = new FormData();
         fd.append('char_id', charId);
         fd.append('loc_id', locId);
 
+        // 2. Fetch the complete state snapshot for this context
         const url = `/production/status/item/${itemId}/owner/${ownerId}`;
         const data = await apiPost(url, fd, "Could not update status.");
         if (!data) return;
-
-        // 2. Handle "Interrupts" (Triggers/Random Events)
-        if (data.status === 'interrupt') {
-            showInterruptModal(data);
-            return;
-        }
 
         // 3. Handle Flash Messages (e.g., "Storage Full")
         if (data.halt_messages && data.halt_messages.length > 0) {
@@ -924,6 +918,22 @@
             } catch (e) {
                 sessionStorage.removeItem('pendingQty');
             }
+        }
+        // DEFAULT BEHAVIOR: If no intent is saved, set all batch inputs to 'max'
+        else {
+            document.querySelectorAll('input[id^="batches-"]').forEach(input => {
+                const recipeId = input.id.replace('batches-', '');
+                const maxVal = input.dataset.max || input.getAttribute('max') || 1;
+                
+                // This "seeds" the session so updateStatus() follows it immediately
+                sessionStorage.setItem('pendingQty', JSON.stringify({
+                    targetId: input.id,
+                    ratioType: 'max',
+                    lastValue: maxVal
+                }));
+                
+                input.value = maxVal;
+            });
         }
     })();
 

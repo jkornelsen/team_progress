@@ -228,9 +228,12 @@ def edit_item(id):
     return render_template('configure/item.html', 
         item=item, 
         initial_qty=gen_qty,
-        all_items=Item.query.filter_by(game_token=game_token).all(),
-        all_attribs=Attrib.query.filter_by(game_token=game_token).all(),
-        all_events=Event.query.filter_by(game_token=game_token).all(),
+        all_items=Item.query.filter_by(
+            game_token=game_token).order_by(Item.name).all(),
+        all_attribs=Attrib.query.filter_by(
+            game_token=game_token).order_by(Attrib.name).all(),
+        all_events=Event.query.filter_by(
+            game_token=game_token).order_by(Event.name).all(),
         recipes=item.recipes if item else []
     )
 
@@ -375,7 +378,7 @@ def edit_location(id):
             return duplicate_entity(loc.id, 'location')
         return redirect_back('configure.index') 
 
-    all_items=Item.query.filter_by(
+    all_items = Item.query.filter_by(
         game_token=game_token).order_by(Item.name).all()
     universal_items = [
         i for i in all_items if i.storage_type == StorageType.UNIVERSAL]
@@ -407,9 +410,12 @@ def edit_location(id):
         destinations=normalized_dests,
         inventory=Pile.query.filter_by(
             game_token=game_token, owner_id=id).all() if id != 'new' else [],
-        all_locs=Location.query.filter_by(game_token=game_token).all(),
-        all_attribs=Attrib.query.filter_by(game_token=game_token).all(),
-        all_events=Event.query.filter_by(game_token=game_token).all(),
+        all_locs=Location.query.filter_by(
+            game_token=game_token).order_by(Location.name).all(),
+        all_attribs=Attrib.query.filter_by(
+            game_token=game_token).order_by(Attrib.name).all(),
+        all_events=Event.query.filter_by(
+            game_token=game_token).order_by(Event.name).all(),
         all_containable_items=containable_items,
         all_universal_items=universal_items,
     )
@@ -484,10 +490,14 @@ def edit_character(id):
 
     return render_template('configure/character.html', 
         character=char, 
-        all_locs=Location.query.filter_by(game_token=game_token).all(),
-        all_attribs=Attrib.query.filter_by(game_token=game_token).all(),
-        all_items=Item.query.filter_by(game_token=game_token).all(),
-        all_events=Event.query.filter_by(game_token=game_token).all(),
+        all_locs=Location.query.filter_by(
+            game_token=game_token).order_by(Location.name).all(),
+        all_attribs=Attrib.query.filter_by(
+            game_token=game_token).order_by(Attrib.name).all(),
+        all_items=Item.query.filter_by(
+            game_token=game_token).order_by(Item.name).all(),
+        all_events=Event.query.filter_by(
+            game_token=game_token).order_by(Event.name).all(),
         overall=Overall.query.get(game_token)
     )
 
@@ -550,7 +560,6 @@ def edit_event(id):
         event.description = req.get_str('description')
         event.outcome_type = req.get_str('outcome_type')
         event.roller_type = req.get_str('roller_type')
-        event.trigger_chance = req.get_float('trigger_chance')
         event.single_number = req.get_float('single_number')
         event.selection_strings = req.get_str('selection_strings')
         event.numeric_range = [
