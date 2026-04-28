@@ -176,7 +176,7 @@
             {
                 "id": 15,
                 "name": "Marked Tree",
-                "description": "Plots are full of trees, but mark only one at a time for harvesting.\r\n\r\n<b><c=\"saddlebrown\">When Marked Tree quantity is 0</c></b>:\r\n1. Run <a href=\"/play/event/3\">Mark a Tree</a>, select <i>Starting Plot</i> and roll for coordinates.\r\n2. In <a href=\"/configure/location/4\">Starting Plot setup</a>, set the marked tree position to the new coordinates.\r\n3. Produce (below) a <i>Marked Tree</i> from <i>Plot 1 Trees</i> so quantity goes from 0 to 1.\r\n4. Set HP to 100.\r\n\r\nNow the tree is ready for a character such as the <i>Owner</i> to <i>Swing to Chop</i>.",
+                "description": "Plots are full of trees, but mark only one at a time for harvesting.\r\n\r\n<b><c=\"saddlebrown\">When Marked Tree quantity is 0</c></b>:\r\n1. Run [Mark a Tree](/play/event/3), select <i>Starting Plot</i> and roll for coordinates.\r\n2. In [Starting Plot setup](/configure/location/4), set the marked tree position to the new coordinates.\r\n3. Produce (below) a <i>Marked Tree</i> from <i>Plot 1 Trees</i> so quantity goes from 0 to 1.\r\n4. Set HP to 100.\r\n\r\nNow the tree is ready for a character such as the <i>Owner</i> to <i>Swing to Chop</i>.",
                 "attribs": [],
                 "abilities": [],
                 "storage_type": "l",
@@ -426,7 +426,7 @@
             {
                 "id": 21,
                 "name": "Mark a Tree",
-                "description": "Choose the grid coordinates of the next tree to be actively harvested on a plot. See <a href=\"/play/item/15\">Marked Tree</a> for instructions.",
+                "description": "Choose the grid coordinates of the next tree to be actively harvested on a plot. See [Marked Tree](/play/item/15) for instructions.",
                 "trigger_chance": 0.0,
                 "numeric_range": [
                     1,
@@ -450,7 +450,7 @@
             {
                 "id": 22,
                 "name": "Chopping Mishap Type",
-                "description": "Run to get details on what happened after a <a href=\"/play/event/6\">Chopping Mishap</a> occurs.",
+                "description": "Run to get details on what happened after a [Chopping Mishap](/play/event/6) occurs.",
                 "trigger_chance": 0.0,
                 "numeric_range": [
                     0,
@@ -465,7 +465,7 @@
             {
                 "id": 23,
                 "name": "Swing to Chop",
-                "description": "Adjust die max (not min) by axe power and wielder strength, giving -1 to -16 initially.\r\n\r\nAlso, run <a href=\"/play/event/6\">Chopping Mishap</a> when appropriate, such as after a poor damage roll, or for the final blow.",
+                "description": "Adjust die max (not min) by axe power and wielder strength, giving -1 to -16 initially.\r\n\r\nAlso, run [Chopping Mishap](/play/event/6) when appropriate, such as after a poor damage roll, or for the final blow.",
                 "trigger_chance": 0.0,
                 "numeric_range": [
                     -1,
@@ -554,7 +554,7 @@
             {
                 "id": 26,
                 "name": "Chopping Mishap",
-                "description": "Chance of something bad, or possibly good, happening.  Use accuracy to modify both min and max if relevant for the situation, such as when attempting to land a blow.\r\n\r\nRun <a href=\"/play/event/7\">Chopping Mishap Type</a> for further details.",
+                "description": "Chance of something bad, or possibly good, happening.  Use accuracy to modify both min and max if relevant for the situation, such as when attempting to land a blow.\r\n\r\nRun [Chopping Mishap Type](/play/event/7) for further details.",
                 "trigger_chance": 0.1,
                 "numeric_range": [
                     1,
@@ -619,6 +619,7 @@
         ],
         "progress_type": "Hybrid",
         "multiplayer": true,
+        "complete": "Starter Kit",
         "win_reqs": []
     }
 }

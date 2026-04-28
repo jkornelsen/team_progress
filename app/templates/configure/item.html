@@ -23,29 +23,33 @@
         <!-- 1. Identity (Entity Table) -->
         <section class="outer-border">
             <div class="form-group">
-                <label for="name">Item Name:</label>
-                <input type="text" id="name" name="name" value="{{ item.name or '' }}" required class="full-width themed-input">
+                <label>
+                    Item Name:
+                    <input type="text" id="name" name="name" value="{{ item.name or '' }}" required class="full-width themed-input">
+                </label>
             </div>
             <div class="form-group spacious-top">
-                <label for="description">Description:</label>
-                <textarea id="description" name="description" rows="6" class="full-width themed-input">{{ item.description or '' }}</textarea>
+                <label>
+                    Description:
+                    <textarea id="description" name="description" rows="6" class="full-width themed-input">{{ item.description or '' }}</textarea>
+                </label>
             </div>
         </section>
 
         <!-- 2. Logic & Storage (Item Table) -->
         <section class="outer-border">
             <p class="info">
-                Storage type is important to consider. Universal (accessible anywhere) is
+                Storage type is important to consider. Universal is
                 good for idle progress, while carried is typically for RPGs.
                 Crafting stations reside at a location.
                 To store more than one way, create an additional item
                 and convert with a recipe.
                 For example,
-                <i>funds</i> in the bank (general) &rarr; <i>cash</i> on hand (carried).
+                <i>funds</i> in the bank (universal) &rarr; <i>cash</i> on hand (carried).
             </p>
             <div class="column-container">
-                <div>
-                    <label>Storage Type:</label><br>
+                <fieldset class="group-box">
+                    <legend>Storage Type</legend>
                     <label class="radio-label">
                         <input type="radio" name="storage_type"
                             value="{{ StorageType.UNIVERSAL }}"
@@ -64,13 +68,13 @@
                             {{ 'checked' if item.storage_type == StorageType.LOCAL }}> 
                         Local &mdash; Fixed to a Location
                     </label>
-                </div>
+                </fieldset>
                 <div>
                     <label class="checkbox-label">
                         <input type="checkbox" name="masked" {{ 'checked' if item.masked }}> 
                         Masked (Hidden until explored)
                     </label><br>
-                    <label id="toplevel-label" class="checkbox-label">
+                    <label class="checkbox-label">
                         <input type="checkbox" id="toplevel" name="toplevel"
                             {{ 'checked' if item.toplevel }}> 
                         Show in Overview
@@ -86,13 +90,17 @@
 
             <div class="column-container">
                 <div class="form-group">
-                    <label for="q_limit">Limit per Pile:</label>
-                    <input type="number" id="q_limit" name="q_limit" value="{{ item.q_limit }}" step="any" placeholder="0 for unlimited" style="max-width: 20ch;">
+                    <label>
+                        Limit per Pile:
+                        <input type="number" id="q_limit" name="q_limit" value="{{ item.q_limit }}" step="any" placeholder="0 for unlimited" style="max-width: 20ch;">
+                    </label>
                 </div>
                 
                 <div id="universal-qty-box" class="form-group">
-                    <label id="quantity-label" for="quantity">Quantity:</label>
-                    <input type="number" id="quantity-input" name="quantity" value="{{ initial_qty or 0 }}" step="any" style="max-width: 20ch;">
+                    <label>
+                        Quantity:
+                        <input type="number" id="quantity-input" name="quantity" value="{{ initial_qty or 0 }}" step="any" style="max-width: 20ch;">
+                    </label>
                 </div>
             </div>
         </section>
@@ -253,9 +261,7 @@
 
     function updateStorageControls() {
         const quantityInput = document.getElementById('quantity-input');
-        const quantityLabel = document.getElementById('quantity-label');
         const topLevelCheckbox = document.getElementById('toplevel');
-        const topLevelLabel = document.getElementById('toplevel-label');
         const locHostedCheckbox = document.getElementById('loc-hosted');
         const locHostedLabel = document.getElementById('loc-hosted-label');
         
@@ -266,17 +272,13 @@
         if (isUniversal) {
             // Enable and Show
             quantityInput.disabled = false;
-            quantityLabel.classList.remove('disabled');
             topLevelCheckbox.disabled = false;
-            topLevelLabel.classList.remove('disabled');
         } else {
             // Disable and Hide/Reset
             quantityInput.disabled = true;
             quantityInput.value = 0;
-            quantityLabel.classList.add('disabled');
             topLevelCheckbox.disabled = true;
             topLevelCheckbox.checked = false;
-            topLevelLabel.classList.add('disabled');
         }
         if (isLocal) {
             // Enable and Show
@@ -368,11 +370,48 @@
         const html = template.replace(/RECIPE_INDEX/g, newIndex);
         
         container.insertAdjacentHTML('beforeend', html);
+        updateOrderIndices();
 
         // Get the newly added checkbox and sync it
         const newCard = container.lastElementChild;
         const newCheckbox = newCard.querySelector('.instant-checkbox');
         if (newCheckbox) toggleInstant(newCheckbox);
+    }
+
+    /**
+     * Change sort order of recipes
+     */
+    function moveRecipe(button, direction) {
+        const card = button.closest('.recipe-card');
+        if (direction === -1 && card.previousElementSibling) {
+            card.parentNode.insertBefore(card, card.previousElementSibling);
+        } else if (direction === 1 && card.nextElementSibling) {
+            card.parentNode.insertBefore(card.nextElementSibling, card);
+        }
+        updateOrderIndices();
+    }
+
+    /**
+     * Updates all recipe indices in the DOM to match their current visual order.
+     * This ensures the server receives them in the order the user expects.
+     */
+    function updateOrderIndices() {
+        const cards = document.querySelectorAll('#recipes-container .recipe-card');
+        const total = cards.length;
+
+        cards.forEach((card, index) => {
+            // 1. Update visual # and hidden field
+            const display = card.querySelector('.recipe-display-number');
+            if (display) display.textContent = `#${index + 1}`;
+            const orderInput = card.querySelector('.recipe-order-input');
+            if (orderInput) orderInput.value = index;
+
+            // 2. Handle Button Disabling
+            const upBtn = card.querySelector('.btn-recipe-up');
+            const downBtn = card.querySelector('.btn-recipe-down');
+            if (upBtn) upBtn.disabled = (index === 0);
+            if (downBtn) downBtn.disabled = (index === total - 1);
+        });
     }
 
     /**
@@ -438,6 +477,7 @@
     // Run on page load
     document.addEventListener('DOMContentLoaded', () => {
         updateStorageControls();
+        updateOrderIndices();
 
         const selectElements = document.querySelectorAll(
             '#recipes-container select[name*="[attrib_id]"]');

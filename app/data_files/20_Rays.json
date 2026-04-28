@@ -957,12 +957,12 @@
                 "name": "Green Bar Unlocked",
                 "description": "",
                 "attribs": [],
-                "abilities": [45],
+                "abilities": [],
                 "storage_type": "u",
                 "q_limit": 1.0,
                 "loc_hosted": false,
                 "toplevel": false,
-                "masked": false,
+                "masked": true,
                 "recipes": [
                     {
                         "id": 31,
@@ -1092,7 +1092,7 @@
             {
                 "id": 41,
                 "name": "\ud83c\udfc1Base Speed Factor",
-                "description": "Set this quantity (*{lemonchiffon|BSF}*) to a multiplier such as:\r\n```\r\n0.5   : slow\r\n1     : normal \u2014 no change\r\n2     : somewhat faster\r\n10    : fast\r\n100   : practically no idling \u2014 incremental only\r\n```\r\nYou'll be using this to multiply gains for bars and elements, starting with [Red Bar Gain](/play/event/46).\r\n\r\nFor upgrades and other low-quantity items, you can reduce recipe durations according to the table below, generally 5% less per *{lemonchiffon|BSF}*. Minimum duration 1 second.\r\n```\r\n{lemonchiffon|BSF}    rate multiplier\r\n---    ---------------\r\n0.5    10% more\r\n1      no change\r\n2      10% less\r\n4      20% less\r\n5      25% less\r\n8      40% less\r\n10     50% less\r\n```",
+                "description": "Set this quantity (*{lemonchiffon|BSF}*) to a multiplier such as:\r\n```\r\n0.5   : slow\r\n1     : normal \u2014 no change\r\n2     : somewhat faster\r\n10    : fast\r\n100   : practically no idling \u2014 incremental only\r\n```\r\nYou'll be using this to multiply gains for bars and elements, starting with [Red Bar Rate](/play/event/46).\r\n\r\nFor upgrades and other low-quantity items, you can reduce recipe durations according to the table below, generally 5% less per *{lemonchiffon|BSF}*. Minimum duration 1 second.\r\n```\r\n{lemonchiffon|BSF}    rate multiplier\r\n---    ---------------\r\n0.5    10% more\r\n1      no change\r\n2      10% less\r\n4      20% less\r\n5      25% less\r\n8      40% less\r\n10     50% less\r\n```",
                 "attribs": [],
                 "abilities": [],
                 "storage_type": "u",
@@ -1164,7 +1164,9 @@
                 "masked": false,
                 "items": [],
                 "progress": [],
-                "item_refs": [35],
+                "item_refs": [
+                    {"item_id": 35}
+                ],
                 "destinations": [
                     {
                         "loc2_id": 43,
@@ -1425,6 +1427,7 @@
         "slots": [],
         "progress_type": "Idle",
         "multiplayer": false,
+        "complete": "Complete",
         "win_reqs": [
             {
                 "item_id": 13,

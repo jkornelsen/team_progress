@@ -93,9 +93,8 @@
                     <div class="col-row item-here-row">
                         {% set target_url = url_for('play.play_item',
                             id=pile.item_id, owner_id=location.id, pos=pile.position) %}
-                        {% call hk.hotlink(target_url, link_letters) %}
-                            {{ pile.item.name if not pile.item.masked else (pile.item.name | mask_string) }}
-                        {% endcall %}
+                        {{ render.maskable_name(
+                            pile.item.item, url=target_url, link_letters=link_letters) }}
                         
                         <div class="qty-col">
                             {% if not (pile.item.q_limit == 1 and pile.quantity == 1) %}
@@ -123,9 +122,8 @@
                     <div class="col-row twocol-row">
                         {% set target_url = url_for('play.play_item',
                             id=ref.item.id, owner_id=GENERAL_ID) %}
-                        {% call hk.hotlink(target_url, link_letters) %}
-                            {{ ref.item.name }}
-                        {% endcall %}
+                        {{ render.maskable_name(
+                            ref.item, url=target_url, link_letters=link_letters) }}
                         {% if not (ref.item.q_limit == 1 and ref.quantity == 1) %}
                             <span>{{ ref.quantity | formatNum }}</span>
                         {% endif %}
@@ -177,14 +175,11 @@
                     {% set target = route.other_loc(location.id) %}
                     {% set door = route.door_at(location.id) %}
                     <div class="col-row twocol-row">
+                    {% set target_url = url_for('play.play_location', id=target.id) %}
+                    {{ render.maskable_name(
+                        target, url=target_url, link_letters=link_letters) }}
                     {% if target.masked %}
-                        {{ target.name | mask_string }}
                         (not yet visited)
-                    {% else %}
-                        {% set target_url = url_for('play.play_location', id=target.id) %}
-                        {% call hk.hotlink(target_url, link_letters) %}
-                            {{ target.name }}
-                        {% endcall %}
                     {% endif %}
                     {% if door %}
                         <span class="label-like">[{{ door | join(",") }}]</span>

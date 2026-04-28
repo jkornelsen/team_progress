@@ -1123,7 +1123,7 @@
             {
                 "id": 49,
                 "name": "Populate Room \u2014 Number of Enemies",
-                "description": "Higher XP level means that more enemies may spawn. Also roll for:\r\n\u2022 <a href=\"/play/event/7\">Which Enemy</a>\r\n\u2022 <a href=\"/play/event/9\">Grid Coordinates</a>",
+                "description": "Higher XP level means that more enemies may spawn. Also roll for:\r\n\u2022 [Which Enemy](/play/event/7)\r\n\u2022 [Grid Coordinates](/play/event/9)",
                 "trigger_chance": 0.0,
                 "numeric_range": [
                     0,
@@ -1199,7 +1199,7 @@
             {
                 "id": 52,
                 "name": "Shoot \u2014 Success",
-                "description": "Determines whether a ranged attack hits. Dexterity increases accuracy, while evasion decreases it.\r\n\r\nIf successful, also roll <a href=\"/play/event/6\">Shoot \u2014 Dmg</a> to determine how much damage is done and apply to a target.\r\n\r\nMajor failures cause destruction of ammo and may give the enemy a chance to counterattack.",
+                "description": "Determines whether a ranged attack hits. Dexterity increases accuracy, while evasion decreases it.\r\n\r\nIf successful, also roll [Shoot \u2014 Dmg](/play/event/6) to determine how much damage is done and apply to a target.\r\n\r\nMajor failures cause destruction of ammo and may give the enemy a chance to counterattack.",
                 "trigger_chance": 0.0,
                 "numeric_range": [
                     1,
@@ -1255,7 +1255,7 @@
             {
                 "id": 53,
                 "name": "Melee \u2014 Success",
-                "description": "Determines whether a melee attack hits. Dexterity increases accuracy, while evasion decreases it.\r\n\r\nIf successful, also roll <a href=\"/play/event/13\">Melee \u2014 Dmg</a> to determine how much damage is done and apply to a target.",
+                "description": "Determines whether a melee attack hits. Dexterity increases accuracy, while evasion decreases it.\r\n\r\nIf successful, also roll [Melee \u2014 Dmg](/play/event/13) to determine how much damage is done and apply to a target.",
                 "trigger_chance": 0.0,
                 "numeric_range": [
                     1,
@@ -1303,7 +1303,7 @@
             {
                 "id": 54,
                 "name": "Shoot \u2014 Dmg",
-                "description": "Dex increases both die min and max, while Str and damage from gear increase die max only.\r\n\r\nFirst roll <a href=\"/play/event/5\">Shoot \u2014 Success</a> to determine if the attack hits.",
+                "description": "Dex increases both die min and max, while Str and damage from gear increase die max only.\r\n\r\nFirst roll [Shoot \u2014 Success](/play/event/5) to determine if the attack hits.",
                 "trigger_chance": 0.0,
                 "numeric_range": [
                     -1,
@@ -1359,7 +1359,7 @@
             {
                 "id": 55,
                 "name": "Melee \u2014 Dmg",
-                "description": "Str increases both die min and max, while damage from gear increases die max only.\r\n\r\nFirst roll <a href=\"/play/event/14\">Melee \u2014 Success</a> to determine if the attack hits.",
+                "description": "Str increases both die min and max, while damage from gear increases die max only.\r\n\r\nFirst roll [Melee \u2014 Success](/play/event/14) to determine if the attack hits.",
                 "trigger_chance": 0.0,
                 "numeric_range": [
                     -1,
@@ -1399,7 +1399,7 @@
             {
                 "id": 56,
                 "name": "Populate Room \u2014 Which Enemy",
-                "description": "Roll after <a href=\"/play/event/8\">Number of Enemies</a>.",
+                "description": "Roll after [Number of Enemies](/play/event/8).",
                 "trigger_chance": 0.0,
                 "numeric_range": [
                     1,
@@ -1414,7 +1414,7 @@
             {
                 "id": 57,
                 "name": "Populate Room \u2014 Which Item",
-                "description": "Roll after <a href=\"/play/event/11\">Number of Items</a>.",
+                "description": "Roll after [Number of Items](/play/event/11).",
                 "trigger_chance": 0.0,
                 "numeric_range": [
                     1,
@@ -1429,7 +1429,7 @@
             {
                 "id": 58,
                 "name": "Populate Room \u2014 Number of Items",
-                "description": "After leaving the entry floor, divide die min by depth, giving a better chance for items.\r\n\r\nIf outcome is more than 0, then also roll for:\r\n\u2022 <a href=\"/play/event/12\">Which Item</a>\r\n\u2022 <a href=\"/play/event/9\">Grid Coordinates</a>",
+                "description": "After leaving the entry floor, divide die min by depth, giving a better chance for items.\r\n\r\nIf outcome is more than 0, then also roll for:\r\n\u2022 [Which Item](/play/event/12)\r\n\u2022 [Grid Coordinates](/play/event/9)",
                 "trigger_chance": 0.0,
                 "numeric_range": [
                     -10,
@@ -1453,7 +1453,7 @@
             {
                 "id": 59,
                 "name": "Drops",
-                "description": "Number of items dropped by an enemy on death. Add their XP level to max die.\r\n\r\nIf result is greater than 0, then roll for <a href=\"/play/event/12\">which item</a>.",
+                "description": "Number of items dropped by an enemy on death. Add their XP level to max die.\r\n\r\nIf result is greater than 0, then roll for [which item](/play/event/12).",
                 "trigger_chance": 0.0,
                 "numeric_range": [
                     -10,
@@ -1530,6 +1530,7 @@
         ],
         "progress_type": "RPG",
         "multiplayer": true,
+        "complete": "Starter Kit",
         "win_reqs": []
     }
 }

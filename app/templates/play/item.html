@@ -1,5 +1,6 @@
 {% extends 'layout/base.html' %}
 {% import 'macros/hotkeys.html' as hk %}
+{% import 'macros/render.html' as render %}
 
 {% set manualtick = False %} {# set to True to call one update at a time for debugging #}
 
@@ -49,7 +50,7 @@
                 📍 At 
                 {% set target_url = url_for('play.play_location', id=owner.id) %}
                 {% call hk.hotlink(target_url, link_letters, brackets=True) %}
-                    {{ owner.name }}
+                    {{ render.maskable_name(owner) }}
                 {% endcall %}
                 {% if pile.position %}
                     <span class="label-like">[{{ pile.position | join(",") }}]</span>
@@ -69,18 +70,13 @@
                 <span class="label-like">📍</span>
                 {% set loc_url = url_for('play.play_location', id=ctx_loc.id) %}
                 {% call hk.hotlink(loc_url, link_letters, brackets=True) %}
-                    {{ ctx_loc.name }}
+                    {{ render.maskable_name(ctx_loc) }}
                 {% endcall %}
             {% endif %}
         </span>
         
         <h1>
-            {% if item.masked %}
-                {{ item.name | mask_string }}
-            {% else %}
-                {{ item.name }}
-            {% endif %}
-
+            {{ render.maskable_name(item) }}
             <span class="text-accent" id="main-qty-display">{{ pile.quantity | formatNum }}</span>
             {% if item.q_limit > 0 %}
                 <small class="label-like">/ {{ item.q_limit | formatNum }}</small>
@@ -113,7 +109,35 @@
                     {% for r in recipes %}
                     <div class="recipe-card {{ 'active' if progress and progress.recipe_id == r.id }}">
                         <div class="recipe-header flex-between">
-                            <strong>Output: {{ r.rate_amount | formatNum }} {{ item.name }}</strong>
+                            <strong>
+                                Output:
+
+                                {# 1. Calculate how much of the CURRENT item this recipe consumes #}
+                                {% set ns = namespace(self_consumed=0) %}
+                                
+                                {% for s in r.sources %}
+                                    {# Note: s is a dictionary here because it is the 'enriched' recipe data #}
+                                    {% if s.ingredient.id == item.id and not s.preserve %}
+                                        {% set ns.self_consumed = s.q_required %}
+                                    {% endif %}
+                                {% endfor %}
+
+                                {# 2. Determine the icon/label based on Net Yield #}
+                                {% if r.rate_amount > ns.self_consumed %}
+                                    {# Normal Production #}
+                                    {{ r.rate_amount | formatNum }}
+                                {% elif r.rate_amount == 0 and ns.self_consumed == 0 %}
+                                    {# Effect/Tool only, no change in quantity #}
+                                    <span title="Mechanism/Effect Only" style="cursor: help;">🛠️</span>
+                                {% else %}
+                                    {# Net loss or Trash Can (e.g. rate 0, consumes 1) #}
+                                    <span title="Consumes main item" style="cursor: help; font-size: 1.2em;">📉</span>
+                                    {% if r.rate_amount > 0 %}
+                                        {# If it yields something but less than it took, show the partial yield #}
+                                        <small class="label-like">({{ r.rate_amount | formatNum }})</small>
+                                    {% endif %}
+                                {% endif %}
+                            </strong>
                             {% if r.is_location_hosted %}
                                 <span title="Automated production at location.">🏭</span>
                             {% endif %}
@@ -130,18 +154,13 @@
                         <ul class="source-list label-like">
                             {% for s in r.sources %}
                                 <li>
-                                    <span title="{{ 'Source must be available but is preserved' if s.preserve else 'Gets consumed' }}">
+                                    <span title="{{ 'Source must be available but is preserved' if s.preserve else 'Gets consumed' }}" style="cursor: help;">
                                         {{ '🛠️' if s.preserve else '📉' }}
                                     </span>
-                                    {% if s.ingredient.masked %}
-                                        {{ s.ingredient.name | mask_string }}:
-                                    {% else %}
-                                        {% set target_url = url_for('play.play_item', 
-                                            id=s.ingredient.id, **s.url_params) %}
-                                        {% call hk.hotlink(target_url, link_letters) %}
-                                            {{ s.ingredient.name }}
-                                        {% endcall %}:
-                                    {% endif %}
+                                    {% set target_url = url_for('play.play_item', 
+                                        id=s.ingredient.id, **s.url_params) %}
+                                    {{ render.maskable_name(
+                                        s.ingredient, url=target_url, link_letters=link_letters) }}
                                     {{ s.q_required | formatNum }}
                                     (Have <span id="source-qty-{{ s.ingredient.id }}"
                                         class="{{ 'text-danger' if s.current_stock < s.q_required else '' }}"
@@ -306,9 +325,8 @@
                         <div class="col-row used-for-row">
                             {% set target_url = url_for('play.play_item',
                                 id=entry.item.id, **entry.url_params) %}
-                            {% call hk.hotlink(target_url, link_letters) %}
-                                {{ entry.item.name if not entry.item.masked else (entry.item.name | mask_string) }}
-                            {% endcall %}
+                            {{ render.maskable_name(
+                                entry.item, url=target_url, link_letters=link_letters) }}
 
                             <span class="label-like used-yield-box" 
                                   id="used-yield-{{ entry.item.id }}" 
@@ -339,9 +357,8 @@
                         <div class="col-row byproduct-of-row">
                             {% set target_url = url_for('play.play_item',
                                 id=entry.item.id, **entry.url_params) %}
-                            {% call hk.hotlink(target_url, link_letters) %}
-                                {{ entry.item.name if not entry.item.masked else (entry.item.name | mask_string) }}
-                            {% endcall %}
+                            {{ render.maskable_name(
+                                entry.item, url=target_url, link_letters=link_letters) }}
                         </div>
                     {% endfor %}
                 </div>
@@ -502,6 +519,7 @@
         {% for r in recipes %}
         "{{ r.id }}": {
             "can_produce": {{ 'true' if r.can_produce else 'false' }},
+            "rate_amount": {{ r.rate_amount }},
             "sources": [
                 {% for s in r.sources %}
                 {
@@ -566,6 +584,9 @@
                 if (el) el.textContent = s.quantity;
             });
 
+            const qLimit = {{ item.q_limit }};
+            const currentQty = parseFloat(main.quantity.replace(/,/g, '')) || 0;
+
             // Update max_batches for each recipe
             for (const [recipeId, meta] of Object.entries(recipeMetadata)) {
                 let maxBatches = Infinity;
@@ -588,7 +609,16 @@
                     maxBatches = meta.can_produce ? 999 : 0;
                 }
 
-                if (meta.can_produce && maxBatches === 0) {
+                // Calculate limit based on Storage Capacity
+                // Final Max is the stricter of the two
+                let storageMax = Infinity;
+                const yieldPerBatch = meta.rate_amount;
+                if (qLimit > 0 && yieldPerBatch > 0) {
+                    storageMax = Math.max(0, Math.floor((qLimit - currentQty) / yieldPerBatch));
+                }
+                maxBatches = Math.min(maxBatches, storageMax);
+
+                if (meta.can_produce && maxBatches === 0 && currentQty < qLimit) {
                     maxBatches = 1;
                 }
 

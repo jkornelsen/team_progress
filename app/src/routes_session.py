@@ -66,7 +66,7 @@ def join_game():
     if game_token:
         session['game_token'] = game_token
         # Ensure the shared-id registry is bootstrapped for this token
-        init_game_session(game_token)
+        init_game_session()
         return redirect(url_for('play.overview'))
     
     return "Please include a valid game token in the URL.", 400

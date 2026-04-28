@@ -1064,16 +1064,16 @@ def play_event(id):
 
         eligible_role_entities[role] = list(role_candidates) if role_candidates else []
 
-        # Entities that call this event
-        caller_entities = (
-            db.session.query(Entity)
-            .join(EntityAbility, (Entity.id == EntityAbility.entity_id) & 
-                                (Entity.game_token == EntityAbility.game_token))
-            .filter(EntityAbility.event_id == id)
-            .filter(EntityAbility.game_token == game_token)
-            .order_by(Entity.name.asc())
-            .all()
-        )
+    # Entities that call this event
+    caller_entities = (
+        db.session.query(Entity)
+        .join(EntityAbility, (Entity.id == EntityAbility.entity_id) & 
+                            (Entity.game_token == EntityAbility.game_token))
+        .filter(EntityAbility.event_id == id)
+        .filter(EntityAbility.game_token == game_token)
+        .order_by(Entity.name.asc())
+        .all()
+    )
 
     return render_template(
         'play/event.html',

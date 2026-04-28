@@ -4,7 +4,7 @@
             {
                 "id": 5,
                 "name": "Energy",
-                "description": "Must have at least 1 unit for fighting. A unit is 100 Kilojoules.\r\n\r\nAfter each fight, consume 1 energy with the recipe that shows a trash can. Restore by levelling up, or travel to the <i>Maintenance Building</i> and click on the <i>Recharging Station</i>.\r\n\r\nLimit is 2 + <a href=\"/play/attrib/2/char/1\">XL</a>, plus any special bonuses.",
+                "description": "Must have at least 1 unit for fighting. A unit is 100 Kilojoules.\r\n\r\nAfter each fight, consume 1 energy with the recipe that shows a trash can. Restore by levelling up, or travel to the *Maintenance Building* and click on the *Recharging Station*.\r\n\r\nLimit is 2 + [XL](/play/attrib/4/subject/13), plus any special bonuses.",
                 "attribs": [],
                 "abilities": [],
                 "storage_type": "c",
@@ -288,7 +288,7 @@
             {
                 "id": 2,
                 "name": "XP",
-                "description": "Dispatch rodents to gain experience \u2014 bigger ones yield more.\r\n\r\nAlso, check whether it's time to increase <a href=\"/play/attrib/2/char/1\">XL</a>.",
+                "description": "Dispatch rodents to gain experience \u2014 bigger ones yield more.\r\n\r\nAlso, check whether it's time to increase [XL](/play/attrib/2/char/1).",
                 "abilities": [],
                 "is_binary": false,
                 "enum_list": []
@@ -304,7 +304,7 @@
             {
                 "id": 4,
                 "name": "XL",
-                "description": "Gaining a new level increases <a href=\"/configure/item/1\">energy limit</a> and sets <a href=\"/configure/character/1\">current energy</a> to full.\r\n\r\nOn reaching level 3, see <a href=\"/play/event/4\">Upgrade Bonus</a>.\r\n\r\n<pre>\r\nLevel  Total XP Required\r\n~~~~~  ~~~~~~~~~~~~~~~~~\r\n1      (0)\r\n2      10\r\n3      30\r\n4      70\r\n5      120\r\n6      200\r\n7      300\r\n8      450\r\n9      650\r\n10     900\r\n11     1200\r\n12     1600\r\n13     2100\r\n14     2700\r\n15     3400\r\n16     4200\r\n17     5100\r\n18     6100\r\n19     7200\r\n20     8500\r\n21     10000\r\n</pre>",
+                "description": "Gaining a new level increases [energy limit](/configure/item/5) and sets [current energy](/play/item/5?owner_id=13) to full.\r\n\r\nOn reaching level 3, see [Upgrade Bonus](/play/event/23?subject_id=13).\r\n\r\n<pre>\r\nLevel  Total XP Required\r\n~~~~~  ~~~~~~~~~~~~~~~~~\r\n1      (0)\r\n2      10\r\n3      30\r\n4      70\r\n5      120\r\n6      200\r\n7      300\r\n8      450\r\n9      650\r\n10     900\r\n11     1200\r\n12     1600\r\n13     2100\r\n14     2700\r\n15     3400\r\n16     4200\r\n17     5100\r\n18     6100\r\n19     7200\r\n20     8500\r\n21     10000\r\n</pre>",
                 "abilities": [],
                 "is_binary": false,
                 "enum_list": []
@@ -433,6 +433,7 @@
         "slots": [],
         "progress_type": "RPG",
         "multiplayer": false,
+        "complete": "Complete",
         "win_reqs": [
             {
                 "item_id": null,

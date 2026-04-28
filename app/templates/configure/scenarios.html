@@ -17,9 +17,11 @@
             <label class="label-like">Sort by:</label>
             <select name="sort_by" onchange="this.form.submit()" class="mini-select">
                 <option value="filename" {{ 'selected' if sort_by == 'filename' }}>Introduce Concepts</option>
-                <option value="title" {{ 'selected' if sort_by == 'title' }}>Title</option>
+                <option value="complete_rank" {{ 'selected' if sort_by == 'complete_rank' }}>Completeness</option>
                 <option value="progress_type" {{ 'selected' if sort_by == 'progress_type' }}>Progress Type</option>
                 <option value="filesize" {{ 'selected' if sort_by == 'filesize' }}>Size</option>
+                <option value="multiplayer" {{ 'selected' if sort_by == 'multiplayer' }}>Multiplayer Design</option>
+                <option value="title" {{ 'selected' if sort_by == 'title' }}>Title</option>
             </select>
         </form>
     </header>
@@ -44,10 +46,11 @@
 
             <footer class="scenario-footer flex-between align-center spacious-top">
                 <div class="meta-tags">
+                    <span class="tag">{{ (scenario.filesize / 1024) | int }} KB</span>
+                    <span class="tag">{{ scenario.complete }}</span>
                     {% if scenario.multiplayer %}
                         <span class="tag tag-mp" title="Designed for multiple players">Multiplayer</span>
                     {% endif %}
-                    <span class="tag">{{ (scenario.filesize / 1024) | int }} KB</span>
                 </div>
 
                 <form method="POST" action="{{ url_for('configure.browse_scenarios') }}">

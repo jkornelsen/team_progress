@@ -21,6 +21,7 @@ from app.database import clone_with_children
 from app.utils import (
     LinkLetters, RequestHelper, parse_coords,
     capture_origin, redirect_back)
+from .logic_discovery import run_discovery_scan
 
 logger = logging.getLogger(__name__)
 configure_bp = Blueprint('configure', __name__, url_prefix='/configure')
@@ -149,9 +150,9 @@ def edit_item(id):
                 ))
 
         recipe_rows = req.get_list('recipes')
+        recipe_rows.sort(key=lambda r: r.get_int('order_index', 0))
         item.recipes = []
-
-        for recipe_row in recipe_rows:
+        for order_index, recipe_row in enumerate(recipe_rows):
             if not recipe_row:
                 continue
 
@@ -163,6 +164,7 @@ def edit_item(id):
                 game_token=game_token,
                 id=recipe_id,
                 product_id=item.id,
+                order_index=order_index,
                 rate_amount=recipe_row.get_float('rate_amount', 1.0),
                 rate_duration=recipe_row.get_float('rate_duration', 3.0),
                 instant=recipe_row.get_bool('instant')
@@ -211,6 +213,8 @@ def edit_item(id):
             item.recipes.append(recipe)
 
         db.session.commit()
+
+        run_discovery_scan(game_token)
 
         if 'duplicate' in request.form:
             return duplicate_entity(item.id, 'item')
@@ -374,6 +378,9 @@ def edit_location(id):
                 ))
 
         db.session.commit()
+
+        run_discovery_scan(game_token)
+
         if 'duplicate' in request.form:
             return duplicate_entity(loc.id, 'location')
         return redirect_back('configure.index') 
@@ -484,6 +491,9 @@ def edit_character(id):
                 )
 
         db.session.commit()
+
+        run_discovery_scan(game_token)
+
         if 'duplicate' in request.form:
             return duplicate_entity(loc.id, 'location')
         return redirect_back('configure.index') 
@@ -639,11 +649,12 @@ def lookup_entity(ent_type, id):
     # 1. Check Pile (Who has this item / Where is this item?)
     if ent_type == 'item':
         piles = Pile.query.filter_by(game_token=game_token, item_id=id).all()
-        results['Physical Presence'] = []
+        key_name = 'Physical Presence'
+        results[key_name] = []
         for p in piles:
             owner = Entity.query.get((game_token, p.owner_id))
             label = "General Storage" if owner.id == GENERAL_ID else f"Stored at ({owner.entity_type})"
-            results['Physical Presence'].append({
+            results[key_name].append({
                 'label': label,
                 'name': owner.name,
                 'link': url_for(f'play.play_{owner.entity_type}', id=owner.id),
@@ -651,12 +662,13 @@ def lookup_entity(ent_type, id):
             })
 
     # 2. Check Attributes (Who uses this attribute?)
-    if ent_type == 'attrib':
+    elif ent_type == 'attrib':
         values = AttribVal.query.filter_by(game_token=game_token, attrib_id=id).all()
-        results['Applied to Entities'] = []
+        key_name = 'Applied to Entities'
+        results[key_name] = []
         for v in values:
             subject = Entity.query.get((game_token, v.subject_id))
-            results['Applied to Entities'].append({
+            results[key_name].append({
                 'label': f'Stat on {subject.entity_type}',
                 'name': subject.name,
                 'link': url_for(f'play.play_{subject.entity_type}', id=subject.id),
@@ -664,14 +676,15 @@ def lookup_entity(ent_type, id):
             })
 
     # 3. Check Recipe Dependencies (Recursive analysis)
-    if ent_type == 'item':
+    elif ent_type == 'item':
         # As an ingredient
         sources = RecipeSource.query.filter_by(game_token=game_token, item_id=id).all()
-        results['Used as Ingredient'] = []
+        key_name = 'Used as Ingredient'
+        results[key_name] = []
         for s in sources:
             recipe = Recipe.query.get((game_token, s.recipe_id))
             prod = Item.query.get((game_token, recipe.item_id))
-            results['Used as Ingredient'].append({
+            results[key_name].append({
                 'label': 'Required to produce',
                 'name': prod.name,
                 'link': url_for('play.play_item', id=prod.id),
@@ -679,20 +692,62 @@ def lookup_entity(ent_type, id):
             })
 
     # 4. Check Navigation (What links to this location?)
-    if ent_type == 'location':
+    elif ent_type == 'location':
         dests = LocDest.query.filter(
             LocDest.game_token == game_token,
             (LocDest.loc1_id == id) | (LocDest.loc2_id == id)
         ).all()
-        results['Connected Locations'] = []
+        key_name = 'Destinations'
+        results[key_name] = []
         for d in dests:
             other_id = d.loc2_id if d.loc1_id == id else d.loc1_id
             other = Location.query.get((game_token, other_id))
-            results['Connected Locations'].append({
+            results[key_name].append({
                 'label': 'Linked to',
                 'name': other.name,
                 'link': url_for('play.play_location', id=other.id),
                 'meta': f'{d.duration}s travel'
+            })
+
+    # A. Check Entity Abilities (Who can trigger this?)
+    elif ent_type == 'event':
+        abilities = EntityAbility.query.filter_by(game_token=game_token, event_id=id).all()
+        if abilities:
+            key_name = 'Can Be Called By'
+            results[key_name] = []
+            for ab in abilities:
+                owner = Entity.query.get((game_token, ab.entity_id))
+                if owner:
+                    results[key_name].append({
+                        'label': f'Ability on {owner.entity_type}',
+                        'name': owner.name,
+                        'link': url_for(f'play.play_{owner.entity_type}', id=owner.id),
+                    })
+
+    # --- GLOBAL DESCRIPTION SCAN (For Markdown Links) ---
+    # This handles things like [Red Bar Rate](/play/event/46)
+    mention_key = 'Mentioned in Descriptions'
+    search_str = f'/{ent_type}/{id}'
+    
+    # Check Overall Scenario description
+    ov = Overall.query.get(game_token)
+    if ov.description and search_str in ov.description:
+        results.setdefault(mention_key, []).append({
+            'label': 'Scenario Settings',
+            'name': ov.title,
+            'link': url_for('configure.edit_overall'),
+        })
+
+    # Check all Entity descriptions
+    all_ents = Entity.query.filter_by(game_token=game_token).all()
+    for ent in all_ents:
+        if ent.id == id and ent.entity_type == ent_type:
+            continue # Don't list self
+        if ent.description and search_str in ent.description:
+            results.setdefault(mention_key, []).append({
+                'label': f'{ent.entity_type.capitalize()} Desc',
+                'name': ent.name,
+                'link': url_for(f'play.play_{ent.entity_type}', id=ent.id),
             })
 
     return render_template('configure/lookup.html', entity=entity, results=results)
@@ -700,6 +755,14 @@ def lookup_entity(ent_type, id):
 # ------------------------------------------------------------------------
 # File Handling
 # ------------------------------------------------------------------------
+
+COMPLETENESS_LEVELS = {
+    "Idea Only": 1,
+    "Under Construction": 2,
+    "Starter Kit": 3,
+    "Has Objectives": 4,
+    "Complete": 5
+}
 
 @configure_bp.route('/scenarios', methods=['GET', 'POST'])
 def browse_scenarios():
@@ -712,7 +775,7 @@ def browse_scenarios():
             return redirect(url_for('play.overview'))
         return render_template(
             'error.html',
-            message="Error loading scenario.",
+            message="Error loading pre-built scenario.",
             ), HTTPStatus.INTERNAL_SERVER_ERROR
 
     # GET logic: List files
@@ -728,19 +791,31 @@ def browse_scenarios():
                 try:
                     data = json.load(f)
                     overall = data.get(JsonKeys.OVERALL, {})
+                    complete = overall.get('complete', 'Under Construction')
                     scenarios.append({
                         'filename': filename,
                         'title': overall.get('title', filename),
                         'description': overall.get('description', ''),
                         'progress_type': overall.get('progress_type', 'Idle'),
                         'multiplayer': overall.get('multiplayer', False),
+                        'complete': complete,
+                        'complete_rank': COMPLETENESS_LEVELS.get(complete, 2),
                         'filesize': os.path.getsize(path)
                     })
                 except Exception as e:
                     logger.error(f"Error parsing {filename}: {e}")
 
     # Sorting
-    scenarios = sorted(scenarios, key=lambda x: x.get(sort_by, ''))
+    if sort_by in ('filename', 'title', 'progress_type'):
+        reverse = False  # Ascending
+    elif sort_by in ('filesize', 'complete_rank', 'multiplayer'):
+        reverse = True  # Descending
+    else:
+        raise ValueError(f"Unexpected sort_by {sort_by}")
+    scenarios = sorted(
+        scenarios,
+        key=lambda x: x.get(sort_by, ''),
+        reverse=reverse)
     
     return render_template(
         'configure/scenarios.html', 
@@ -781,12 +856,12 @@ def upload():
             return redirect(url_for('play.overview'))
         except (SyntaxError, NameError, AttributeError):
             raise
-        except Exception as ex:
+        except Exception as e:
             db.session.rollback()
             return render_template(
                 'error.html',
                 message="Couldn't Import",
-                details=str(ex)
+                details=str(e)
                 ), HTTPStatus.INTERNAL_SERVER_ERROR
 
     return render_template(

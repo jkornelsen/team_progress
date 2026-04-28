@@ -1,37 +1,48 @@
 <div class="recipe-card outer-border" data-recipe-index="{{ recipe_index }}">
     <!-- Hidden ID for existing recipes -->
     <input type="hidden" name="recipes[{{ recipe_index }}][id]" value="{{ recipe.id if recipe }}">
+    <input type="hidden" name="recipes[{{ recipe_index }}][order_index]" class="recipe-order-input" value="{{ recipe.order_index if recipe else 0 }}">
     
     <div class="flex-between align-center">
         <h4 style="margin-top: 0px; margin-bottom: 0px;">
             Recipe <span class="recipe-display-number">{{ '#' ~ (recipe_index + 1) if recipe_index is number else '' }}</span>
         </h4>
-        <button type="button" class="btn-sm dangerous-button" onclick="this.closest('.recipe-card').remove()">Remove Recipe</button>
+        <div class="flex-row gap-5">
+            <button type="button" class="btn-sm btn-recipe-up" onclick="moveRecipe(this, -1)">↑</button>
+            <button type="button" class="btn-sm btn-recipe-down" onclick="moveRecipe(this, 1)">↓</button>
+            <button type="button" class="btn-sm dangerous-button" onclick="this.closest('.recipe-card').remove(); updateOrderIndices();">Remove</button>
+        </div>
     </div>
 
     <div class="grid-3-col spacious-top">
         <div class="form-group">
-            <label>Gain per Batch:</label>
-            <input type="number" name="recipes[{{ recipe_index }}][rate_amount]" 
-                   value="{{ recipe.rate_amount if recipe else 1.0 }}" step="any" required>
+            <label>
+                Gain per Batch:
+                <input type="number" name="recipes[{{ recipe_index }}][rate_amount]" 
+                       value="{{ recipe.rate_amount if recipe else 1.0 }}" step="any" required>
+            </label>
         </div>
         <div class="form-group duration-group">
-            <label>Duration (Seconds):</label>
-            <input type="number"
-                    name="recipes[{{ recipe_index }}][rate_duration]" 
-                    id="duration-{{ recipe_index }}"
-                    class="duration-input"
-                    value="{{ recipe.rate_duration if recipe else 3.0 }}"
-                    step="any" required>
+            <label>
+                Duration (Seconds):
+                <input type="number"
+                        name="recipes[{{ recipe_index }}][rate_duration]" 
+                        id="duration-{{ recipe_index }}"
+                        class="duration-input"
+                        value="{{ recipe.rate_duration if recipe else 3.0 }}"
+                        step="any" required>
+            </label>
         </div>
         <div class="form-group align-center flex-row" style="padding-top: 25px;">
-            <input type="checkbox"
-                    name="recipes[{{ recipe_index }}][instant]" 
-                    id="instant-{{ recipe_index }}"
-                    class="instant-checkbox"
-                    onchange="toggleInstant(this)"
-                    {{ 'checked' if recipe and recipe.instant }}>
-            <label for="instant-{{ recipe_index }}">Instant</label>
+            <label class="checkbox-label">
+                <input type="checkbox"
+                        name="recipes[{{ recipe_index }}][instant]" 
+                        id="instant-{{ recipe_index }}"
+                        class="instant-checkbox"
+                        onchange="toggleInstant(this)"
+                        {{ 'checked' if recipe and recipe.instant }}>
+                Instant
+            </label>
         </div>
     </div>
 

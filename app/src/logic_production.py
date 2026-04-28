@@ -73,7 +73,7 @@ def can_perform_recipe(host_id, recipe, target_owner_id, ctx, batches=1):
         host_pos = host_ent.position
 
     # 1. Output Limit
-    if recipe.product.q_limit > 0:
+    if recipe.rate_amount > 0 and recipe.product.q_limit > 0:
         query = Pile.query.filter_by(
             game_token=game_token,
             item_id=recipe.product_id,

@@ -11,6 +11,7 @@ from .models import (
     Pile, Recipe, RecipeSource, RecipeByproduct, 
     RecipeAttribReq, Progress, Overall, WinRequirement)
 from .src.logic_user_interaction import clear_session_logs
+from .src.logic_discovery import run_discovery_scan
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +27,7 @@ def init_game_session():
     overall = Overall.query.get(game_token)
     if not overall:
         logger.info(f"Initializing game session")
-        success = load_scenario_from_path(DEFAULT_SCENARIO_FILE)
-        if not success:
+        if not load_scenario_from_path(DEFAULT_SCENARIO_FILE):
             logger.warning(f"Falling back to class default.")
             overall = Overall(game_token=game_token)
             db.session.add(overall)
@@ -107,6 +107,10 @@ def import_from_dict(data):
     ov.next_entity_id = (max_id or 1) + 1
     
     db.session.commit()
+
+    # Check for unmasking dependencies
+    run_discovery_scan(game_token)
+
     return True
 
 def remap_general_id(entities_data):

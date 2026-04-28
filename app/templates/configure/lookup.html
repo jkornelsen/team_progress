@@ -23,7 +23,7 @@
 
     <div class="column-container">
         <!-- Main Usage List -->
-        <div class="usage-column">
+        <div class="usage-column" style="flex: 5">
             {% for category, items in results.items() %}
                 {% if items %}
                 <section class="outer-border">
@@ -53,7 +53,7 @@
         </div>
 
         <!-- Entity Summary Sidebar -->
-        <div class="summary-column">
+        <div class="summary-column" style="flex: 3">
             <section class="outer-border">
                 <h4>Quick Actions</h4>
                 <div class="flex-column gap-10">

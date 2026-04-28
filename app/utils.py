@@ -329,7 +329,16 @@ def parse_coords(coord_str, required_len=2):
 
 def mask_string(s):
     """Replaces letters and numbers with bullets."""
-    return ''.join('•' if c.isalnum() else c for c in s)
+    if not s:
+        return ""
+    allowed = set(" -_.,:;()[]{}!@#$%^&*+=<>?/ \t\n\r")
+    return ''.join(c if c in allowed else '•' for c in s)
+
+def maskable_name(entity):
+    if getattr(entity, 'masked', None):
+        return mask_string(entity.name)
+    return entity.name
+
 
 # ------------------------------------------------------------------------
 # IDs Logic

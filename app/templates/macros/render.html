@@ -1,3 +1,17 @@
+{% import 'macros/hotkeys.html' as hk %}
+
+{% macro maskable_name(item, url=None, link_letters=None) %}
+    {# Jinja treats undefined/None as False #}
+    {% if item.masked %}
+        {{ item.name | mask_string }}
+    {% elif url %}
+        {% call hk.hotlink(url, link_letters) %}
+            {{ item.name }}
+        {% endcall %}
+    {% else %}
+        {{ item.name }}
+    {% endif %}
+{% endmacro %}
 
 {% macro attrib(attrib_val, attrib_def) %}
     {% if attrib_def.is_binary %}
