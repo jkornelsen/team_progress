@@ -2,13 +2,26 @@
     "entities": {
         "items": [
             {
+                "id": 6,
+                "name": "Recharging Station",
+                "description": "Click on <i>Energy</i> to power up the robot.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 0.0,
+                "loc_hosted": false,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
                 "id": 5,
                 "name": "Energy",
-                "description": "Must have at least 1 unit for fighting. A unit is 100 Kilojoules.\r\n\r\nAfter each fight, consume 1 energy with the recipe that shows a trash can. Restore by levelling up, or travel to the *Maintenance Building* and click on the *Recharging Station*.\r\n\r\nLimit is 2 + [XL](/play/attrib/4/subject/13), plus any special bonuses.",
+                "description": "Must have at least 1 unit for fighting. A unit is 100 Kilojoules.\r\n\r\nAfter each fight, consume 1 energy with the recipe that shows a trash can. Restore by levelling up, or travel to the *Maintenance Building* and click on the *Recharging Station*.\r\n\r\nLimit is 5 + 2 * [XL](/play/attrib/4/subject/13), plus any special bonuses. Record the bonuses by editing this description:\r\n\r\n- No special bonuses yet",
                 "attribs": [],
                 "abilities": [],
                 "storage_type": "c",
-                "q_limit": 3.0,
+                "q_limit": 5.0,
                 "loc_hosted": false,
                 "toplevel": false,
                 "masked": false,
@@ -38,13 +51,13 @@
                 ]
             },
             {
-                "id": 6,
-                "name": "Recharging Station",
-                "description": "Click on <i>Energy</i> to power up the robot.",
+                "id": 34,
+                "name": "Pool of Water",
+                "description": "Can be used to extinguish flames.",
                 "attribs": [],
                 "abilities": [],
                 "storage_type": "l",
-                "q_limit": 0.0,
+                "q_limit": 1.0,
                 "loc_hosted": false,
                 "toplevel": false,
                 "masked": false,
@@ -184,24 +197,6 @@
         ],
         "characters": [
             {
-                "id": 13,
-                "name": "Herbert 2100B",
-                "description": "Remotely controlled machine \u2014 the player character.\r\n\r\nDoes not get diseases from being bitten, but has a limited amount of power. Battle testing allows the engineers to improve the technology incrementally.",
-                "attribs": [
-                    [2, 0.0],
-                    [4, 1.0]
-                ],
-                "abilities": [18, 23, 24],
-                "toplevel": true,
-                "location_id": 12,
-                "position": null,
-                "travel_party": "",
-                "items": [
-                    {"item_id": 5, "quantity": 3.0, "slot": ""}
-                ],
-                "progress": []
-            },
-            {
                 "id": 14,
                 "name": "Tainted Bunny",
                 "description": "Fur is greenish and sticky, with a fuzzy white tail.",
@@ -228,22 +223,6 @@
                 "abilities": [],
                 "toplevel": false,
                 "location_id": 7,
-                "position": null,
-                "travel_party": "",
-                "items": [],
-                "progress": []
-            },
-            {
-                "id": 16,
-                "name": "Baby Mouse",
-                "description": "Mutant, rabid and green-eyed, burning from within due to toxic waste.",
-                "attribs": [
-                    [4, 2.0],
-                    [26, 0.0]
-                ],
-                "abilities": [],
-                "toplevel": false,
-                "location_id": 10,
                 "position": null,
                 "travel_party": "",
                 "items": [],
@@ -282,6 +261,46 @@
                 "travel_party": "",
                 "items": [],
                 "progress": []
+            },
+            {
+                "id": 13,
+                "name": "\ud83e\udd16 Herbert 2100B",
+                "description": "Remotely controlled machine \u2014 the player character.\r\n\r\nDoes not get diseases from being bitten, but has a limited amount of power. Battle testing allows the engineers to improve the technology incrementally.",
+                "attribs": [
+                    [4, 1.0],
+                    [29, 3.0],
+                    [30, 2.0],
+                    [27, 10.0],
+                    [2, 0.0]
+                ],
+                "abilities": [18, 23, 28, 35, 38],
+                "toplevel": true,
+                "location_id": 12,
+                "position": null,
+                "travel_party": "",
+                "items": [
+                    {"item_id": 5, "quantity": 2.0, "slot": ""}
+                ],
+                "progress": []
+            },
+            {
+                "id": 16,
+                "name": "Baby Mouse",
+                "description": "Mutant, rabid and green-eyed, burning from within due to toxic waste. Max 5 HP.",
+                "attribs": [
+                    [4, 2.0],
+                    [26, 0.0],
+                    [29, 1.0],
+                    [30, 3.0],
+                    [27, 5.0]
+                ],
+                "abilities": [39, 40, 41],
+                "toplevel": false,
+                "location_id": 10,
+                "position": null,
+                "travel_party": "",
+                "items": [],
+                "progress": []
             }
         ],
         "attribs": [
@@ -302,57 +321,71 @@
                 "enum_list": []
             },
             {
-                "id": 4,
-                "name": "XL",
-                "description": "Gaining a new level increases [energy limit](/configure/item/5) and sets [current energy](/play/item/5?owner_id=13) to full.\r\n\r\nOn reaching level 3, see [Upgrade Bonus](/play/event/23?subject_id=13).\r\n\r\n<pre>\r\nLevel  Total XP Required\r\n~~~~~  ~~~~~~~~~~~~~~~~~\r\n1      (0)\r\n2      10\r\n3      30\r\n4      70\r\n5      120\r\n6      200\r\n7      300\r\n8      450\r\n9      650\r\n10     900\r\n11     1200\r\n12     1600\r\n13     2100\r\n14     2700\r\n15     3400\r\n16     4200\r\n17     5100\r\n18     6100\r\n19     7200\r\n20     8500\r\n21     10000\r\n</pre>",
-                "abilities": [],
-                "is_binary": false,
-                "enum_list": []
-            },
-            {
                 "id": 26,
                 "name": "Is Boss",
                 "description": "",
                 "abilities": [],
                 "is_binary": true,
                 "enum_list": []
+            },
+            {
+                "id": 27,
+                "name": "HP",
+                "description": "How much damage the enemy can take before being defeated. 0 HP doesn't necessarily mean dead \u2014 see the Finish Fight event for what happens at that point.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 31,
+                "name": "Movement Speed",
+                "description": "How fast to reposition in the room.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 30,
+                "name": "Action Speed",
+                "description": "How fast to take an action.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 32,
+                "name": "Accuracy",
+                "description": "Or use Action Speed instead, meaning a guaranteed hit if we can land a hit on the target fast enough? Because robots should be 100% accurate unless something is damaged.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 33,
+                "name": "Voltage",
+                "description": "Determines electrical damage of an attack as well as how much energy is consumed.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 29,
+                "name": "Force",
+                "description": "How much power is available to hit or move things. Equates to Strength for non-robots (or we could use a separate Str attrib).",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 4,
+                "name": "XL",
+                "description": "Gaining a new level increases [energy limit](/configure/item/5) and sets [current energy](/play/item/5?owner_id=13) to full.\r\n\r\nOn reaching level 3, see [Upgrade Bonus](/play/event/23?subject_id=13).\r\n\r\n<pre>\r\nLevel  Total XP Required\r\n~~~~~  ~~~~~~~~~~~~~~~~~\r\n1      (0)\r\n2      5\r\n3      15\r\n4      30\r\n5      50\r\n6      80\r\n7      120\r\n8      180\r\n9      260\r\n10     370\r\n11     500\r\n12     660\r\n13     860\r\n14     1110\r\n15     1400\r\n16     1800\r\n17     2300\r\n18     2900\r\n19     3600\r\n20     4200\r\n</pre>",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
             }
         ],
         "events": [
-            {
-                "id": 18,
-                "name": "Finish Fight",
-                "description": "After each fight, consume 1 [Energy](/play/item/5?owner_id=13).\r\n\r\nAlso, if the fight ended in victory, then add the enemy's XL to [XP](/play/attrib/2/subject/13). To do this, press Calculate. Once the outcome is set, fill for XP and apply.\r\n\r\nMajor success doubles the XP, while a critical failure decreases 2 Energy.",
-                "attribs": [],
-                "abilities": [],
-                "toplevel": false,
-                "outcome_type": "determined",
-                "roller_type": "dnd",
-                "trigger_chance": 0.0,
-                "numeric_range": [0, 0],
-                "single_number": 0.0,
-                "selection_strings": "",
-                "determinants": [
-                    {
-                        "usage_type": "in",
-                        "label": null,
-                        "val_src": "field",
-                        "infield": {
-                            "role": "Target",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": null,
-                            "attrib_id": 4
-                        },
-                        "outfield": null,
-                        "op_application": "+",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0
-                    }
-                ],
-                "effects": []
-            },
             {
                 "id": 23,
                 "name": "Upgrade Bonus",
@@ -362,7 +395,6 @@
                 "toplevel": false,
                 "outcome_type": "selection",
                 "roller_type": null,
-                "trigger_chance": 0.0,
                 "numeric_range": [1, 20],
                 "single_number": 0.0,
                 "selection_strings": "Triple XP for the next three fights.\r\nGain 50% of XP towards the next level.\r\nIncrease Energy limit by 1.\r\nFor three fights, do not decrease Energy unless critical.\r\nNo Bonus.",
@@ -370,28 +402,27 @@
                 "effects": []
             },
             {
-                "id": 24,
-                "name": "Fight Common Enemy",
-                "description": "Determine the outcome of a non-boss combat encounter.\r\n\r\n- **Energy**: Make sure the robot has at least 1 to start.\r\n- **Difficulty:** If you're significantly outleveled, for example level 1 or 2 to the enemy's 5, then set difficulty to *Hard*. If you significantly outlevel the opponent, then set difficulty to *Easy*, although that is probably a good time to move on to the next location.\r\n\r\nRoll, then see [Finish Fight](/play/event/18?subject_id=13).",
+                "id": 35,
+                "name": "ATK Ignite",
+                "description": "Burning enemies take damage each round. Typically lasts 3 rounds. Damage per round is decided by the original event outcome.\r\n\r\n- **Energy**: Make sure the robot has at least 1 to start.\r\n- **Difficulty:** If you're significantly outleveled, for example level 1 or 2 to the enemy's 5, then set difficulty to *Hard*. If you significantly outlevel the opponent, then set difficulty to *Easy*, although that is probably a good time to move on to the next location.\r\n\r\nRoll, then see [Finish Fight](/play/event/18?subject_id=13).",
                 "attribs": [],
                 "abilities": [],
                 "toplevel": false,
                 "outcome_type": "fourway",
                 "roller_type": "dnd",
-                "trigger_chance": 0.0,
                 "numeric_range": [1, 20],
                 "single_number": 0.0,
                 "selection_strings": "",
                 "determinants": [
                     {
                         "usage_type": "in",
-                        "label": null,
+                        "label": "",
                         "val_src": "field",
                         "infield": {
                             "role": "[Subject]",
                             "field_mode": "attr",
                             "child_of_anchor": false,
-                            "item_id": null,
+                            "item_id": 0,
                             "attrib_id": 4
                         },
                         "outfield": null,
@@ -402,17 +433,380 @@
                     },
                     {
                         "usage_type": "in",
-                        "label": null,
+                        "label": "",
                         "val_src": "field",
                         "infield": {
                             "role": "Target",
                             "field_mode": "attr",
                             "child_of_anchor": false,
-                            "item_id": null,
+                            "item_id": 0,
                             "attrib_id": 4
                         },
                         "outfield": null,
                         "op_application": "-",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
+                    }
+                ],
+                "effects": []
+            },
+            {
+                "id": 36,
+                "name": "DEF Dodge",
+                "description": "Attempt to evade a hit entirely or partially.",
+                "attribs": [],
+                "abilities": [],
+                "toplevel": false,
+                "outcome_type": "fourway",
+                "roller_type": "dnd",
+                "numeric_range": [1, 20],
+                "single_number": 0.0,
+                "selection_strings": "",
+                "determinants": [],
+                "effects": []
+            },
+            {
+                "id": 37,
+                "name": "DEF Shock",
+                "description": "Attempt to resist getting shocked. Is this necessary or can the attack event do the necessary roll?",
+                "attribs": [],
+                "abilities": [],
+                "toplevel": false,
+                "outcome_type": "fourway",
+                "roller_type": "dnd",
+                "numeric_range": [1, 20],
+                "single_number": 0.0,
+                "selection_strings": "",
+                "determinants": [],
+                "effects": []
+            },
+            {
+                "id": 38,
+                "name": "ATK Fist Pummel Dmg",
+                "description": "- Roll, then decrease Enemy HP by that amount.\r\n- If Enemy HP is reduced to 0 then [Finish Fight](/play/event/18?subject_id=13).\r\n\r\nDo we need a separate dmg roll? Ideally the hit roll would do everything. We could use determinate damage based on force and enemy resistance.",
+                "attribs": [],
+                "abilities": [],
+                "toplevel": false,
+                "outcome_type": "numeric",
+                "roller_type": "dnd",
+                "numeric_range": [1, 6],
+                "single_number": 0.0,
+                "selection_strings": "",
+                "determinants": [
+                    {
+                        "usage_type": "in",
+                        "label": "",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "[Subject]",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 29
+                        },
+                        "outfield": null,
+                        "op_application": "+",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 0.0
+                    },
+                    {
+                        "usage_type": "in",
+                        "label": "",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "Enemy",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 27
+                        },
+                        "outfield": null,
+                        "op_application": ">=",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
+                    }
+                ],
+                "effects": []
+            },
+            {
+                "id": 40,
+                "name": "ATK Bite Dmg",
+                "description": "Roll, then decrease Robot HP by that amount.",
+                "attribs": [],
+                "abilities": [],
+                "toplevel": false,
+                "outcome_type": "numeric",
+                "roller_type": "dnd",
+                "numeric_range": [1, 6],
+                "single_number": 0.0,
+                "selection_strings": "",
+                "determinants": [
+                    {
+                        "usage_type": "in",
+                        "label": "",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "[Subject]",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 29
+                        },
+                        "outfield": null,
+                        "op_application": "+",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 0.0
+                    },
+                    {
+                        "usage_type": "in",
+                        "label": "",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "Target",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 27
+                        },
+                        "outfield": null,
+                        "op_application": ">=",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
+                    }
+                ],
+                "effects": []
+            },
+            {
+                "id": 41,
+                "name": "Choose Enemy Action",
+                "description": "Roll to determine what enemy does next. If there is a straightforward choice in the narrative then there is no need to roll.",
+                "attribs": [],
+                "abilities": [],
+                "toplevel": false,
+                "outcome_type": "selection",
+                "roller_type": "dnd",
+                "numeric_range": [1, 20],
+                "single_number": 0.0,
+                "selection_strings": "Bite\r\nHeal\r\nLeave Melee Range",
+                "determinants": [],
+                "effects": []
+            },
+            {
+                "id": 28,
+                "name": "ATK Fist Pummel (To-Hit)",
+                "description": "Close grasping digits and swing robotic arm forward. Basic melee attack.\r\n\r\n- **Energy**: The robot must have at least 1 to start. After the attack, consume 1 [Energy](/play/item/5?owner_id=13).\r\n- **Difficulty:** If you're significantly outleveled, for example level 1 or 2 to the enemy's 5, then set difficulty to *Hard*. If you significantly outlevel the opponent, then set difficulty to *Easy*.\r\n- **Damage:** If the attack hits then [Roll for Damage](/play/event/38?subject_id=13).\r\n- **Major Success:** (Nat 20) Roll two damage rolls instead of one.\r\n- **Major Failure:** Consume 2 Energy instead of 1.\r\n\r\nAfter the swing, the enemy gets to [take an action](/play/event/41) if they're still alive.",
+                "attribs": [],
+                "abilities": [],
+                "toplevel": false,
+                "outcome_type": "fourway",
+                "roller_type": "dnd",
+                "numeric_range": [1, 20],
+                "single_number": 0.0,
+                "selection_strings": "",
+                "determinants": [
+                    {
+                        "usage_type": "in",
+                        "label": "Can Operate",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "[Subject]",
+                            "field_mode": "qty",
+                            "child_of_anchor": true,
+                            "item_id": 5,
+                            "attrib_id": 0
+                        },
+                        "outfield": null,
+                        "op_application": ">=",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 0.0
+                    },
+                    {
+                        "usage_type": "in",
+                        "label": "Can Fight",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "[Subject]",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 27
+                        },
+                        "outfield": null,
+                        "op_application": ">=",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
+                    },
+                    {
+                        "usage_type": "in",
+                        "label": "Enemy Can Fight",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "Enemy",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 27
+                        },
+                        "outfield": null,
+                        "op_application": ">=",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
+                    },
+                    {
+                        "usage_type": "in",
+                        "label": "Chance to Hit",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "[Subject]",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 30
+                        },
+                        "outfield": null,
+                        "op_application": "+",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 0.0
+                    },
+                    {
+                        "usage_type": "in",
+                        "label": "Evasion",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "Enemy",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 30
+                        },
+                        "outfield": null,
+                        "op_application": "-",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 0.0
+                    }
+                ],
+                "effects": []
+            },
+            {
+                "id": 39,
+                "name": "ATK Bite (To-Hit)",
+                "description": "Use teeth for a basic melee attack.\r\n\r\n- **Difficulty:** If you're significantly outleveled, for example level 1 or 2 to the enemy's 5, then set difficulty to *Easy*. If you significantly outlevel the enemy, then set difficulty to *Hard*.\r\n- **Damage:** If the attack hits then [Roll for Damage](/play/event/40?subject_id=${subject_id}).\r\n- **Major Success:** (Nat 20) Enemy gets two damage rolls instead of one.\r\n- **Major Failure:** Enemy loses a turn.",
+                "attribs": [],
+                "abilities": [],
+                "toplevel": false,
+                "outcome_type": "fourway",
+                "roller_type": "dnd",
+                "numeric_range": [1, 20],
+                "single_number": 0.0,
+                "selection_strings": "",
+                "determinants": [
+                    {
+                        "usage_type": "in",
+                        "label": "Can Fight",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "[Subject]",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 27
+                        },
+                        "outfield": null,
+                        "op_application": ">=",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 0.0
+                    },
+                    {
+                        "usage_type": "in",
+                        "label": "Target Can Fight",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "Target",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 27
+                        },
+                        "outfield": null,
+                        "op_application": ">=",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 0.0
+                    },
+                    {
+                        "usage_type": "in",
+                        "label": "Chance to Hit",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "[Subject]",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 30
+                        },
+                        "outfield": null,
+                        "op_application": "+",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 0.0
+                    },
+                    {
+                        "usage_type": "in",
+                        "label": "Evasion",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "Target",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 30
+                        },
+                        "outfield": null,
+                        "op_application": "-",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 0.0
+                    }
+                ],
+                "effects": []
+            },
+            {
+                "id": 18,
+                "name": "Finish Fight",
+                "description": "If the fight ended in victory, then add the enemy's XL to [XP](/play/attrib/2/subject/13). To do this, press Calculate. Once the outcome is set, fill for XP and apply.\r\n\r\nTo fight the same kind of enemy again (not bosses which are unique), reset enemy stats.",
+                "attribs": [],
+                "abilities": [],
+                "toplevel": false,
+                "outcome_type": "determined",
+                "roller_type": "dnd",
+                "numeric_range": [0, 0],
+                "single_number": 0.0,
+                "selection_strings": "",
+                "determinants": [
+                    {
+                        "usage_type": "in",
+                        "label": "",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "Target",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 4
+                        },
+                        "outfield": null,
+                        "op_application": "+",
                         "op_transform": "",
                         "val_transform": 1.0,
                         "val_required": 1.0
@@ -428,7 +822,7 @@
     },
     "overall settings": {
         "title": "Infestation",
-        "description": "After a disastrous lab experiment, Florida has been overrun with mutant rodents. Especially dangerous ones are further south. Vacationers and residents have fled. Many retired folks are missing.\r\n\r\nCombat and strategy are simple\u2014all about {lime|levelling up} for the next area.",
+        "description": "After a disastrous lab experiment, Florida has been overrun with mutant rodents. Especially dangerous ones are further south. Vacationers and residents have fled. Many retired folks are missing.\r\n\r\nHack 'n slash combat that includes {lime|levelling up}.",
         "number_format": "en_US",
         "slots": [],
         "progress_type": "RPG",

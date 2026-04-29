@@ -94,7 +94,7 @@
                         {% set target_url = url_for('play.play_item',
                             id=pile.item_id, owner_id=location.id, pos=pile.position) %}
                         {{ render.maskable_name(
-                            pile.item.item, url=target_url, link_letters=link_letters) }}
+                            pile.item, url=target_url, link_letters=link_letters) }}
                         
                         <div class="qty-col">
                             {% if not (pile.item.q_limit == 1 and pile.quantity == 1) %}
@@ -447,14 +447,19 @@
     document.addEventListener('keydown', (event) => {
         if (isMobile) return;
         
-        const activeElem = document.activeElement.tagName;
+        const activeElem = document.activeElement;
         const isInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes(activeElem.tagName);
         if (isInput && activeElem.type !== 'checkbox') {
             return;
         }
 
         const key = event.key;
+        if (event.altKey || event.ctrlKey || event.metaKey) {
+            console.debug("Ignoring modifier keys");
+            return;
+        }
 
+        {% if has_grid %}
         // 1. Handle Movement (Arrows & Numpad)
         const moveKeys = {
             // Cardinal
@@ -477,7 +482,6 @@
         }
 
         // 2. Active character screen
-        {% if has_grid %}
         const active = getActiveChar();
         if (active) {
             if (event.key.toLowerCase() === 'c') {

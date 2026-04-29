@@ -169,6 +169,8 @@
                             </label>
                         </div>
                     </div>
+                    {% endif %}
+                    {% if event.outcome_type == 'fourway' %}
                     <div class="flex-row spacious-bottom">
                         <label for="difficulty-select">Difficulty:</label>
                         <select id="difficulty-select">
@@ -180,8 +182,6 @@
                             <option value="0.95">Extreme</option>
                         </select>
                     </div>
-                    {% endif %}
-                    {% if event.outcome_type == 'fourway' %}
                     <div class="threshold-info label-like text-dim spacious-top">
                         Minor Success <span id="minor-success-threshold" class="text-accent">--</span>,
                         Major Success <span id="major-success-threshold" class="text-accent">--</span>,
@@ -283,6 +283,7 @@
     const diffSelect = document.getElementById('difficulty-select');
     const minInput = document.getElementById('die-min-input');
     const maxInput = document.getElementById('die-max-input');
+    const rollBtn = document.getElementById('roll-btn');
 
     const eventId = {{ event.id }};
     const resolution = document.getElementById('resolution-actions');
@@ -387,7 +388,7 @@
         };
     });
 
-    document.getElementById('roll-btn').onclick = async () => {
+    rollBtn.onclick = async () => {
         const fd = getRoleIDs();
         const diff = document.getElementById('difficulty-select')?.value;
         if (diff) fd.append('difficulty', diff);
@@ -398,7 +399,9 @@
 
         lastRollValue = data.result_value;
         document.getElementById('outcome-text').innerHTML = data.display;
+        {% if event.changes %}
         document.getElementById('apply-section').classList.remove('hidden');
+        {% endif %}
         updateApplyPreviews();
     };
 
@@ -467,6 +470,16 @@
         return fd;
     }
 
+    const OP_MAP = {
+        '*':  '×',
+        '/':  '÷',
+        '>=': '≥',
+        '<=': '≤',
+        '!=': '≠',
+        '==': '='
+    };
+    const COMPARISON_OPS = {{ Operation.COMPARISON_OPS | tojson }};
+
     /**
      * Fetches calculated modifiers from the server and updates the UI
      */
@@ -486,31 +499,62 @@
             return;
         }
 
-        // Construct: "Label: Source Field OpValue"
-        // e.g. "Nav Skill: Suzy Pathfinding +1"
+        let allRequirementsMet = true;
         let html = '<ul class="modifier-list" style="list-style: none; padding: 0;">';
+
         modifiers.forEach(m => {
             const colorClass = m.value >= 0 ? 'text-success' : 'text-danger';
             const labelHtml = (m.label && m.label.trim() !== "") 
                 ? `<span class="label-like">${m.label}:</span>` 
                 : "";
-            let opDisplay = m.op;
-            if (opDisplay === '*') opDisplay = '×';
-            if (opDisplay === '/') opDisplay = '÷';
             const displayVal = Math.round(Math.abs(m.value) * 100) / 100;
+            const displayOp = OP_MAP[m.op] || m.op;
+            const isComparison = COMPARISON_OPS.includes(m.op);
             const hasInner = (m.breakdown !== m.value.toString());
             const innerHtml = hasInner ? `<small class="text-dim">(${m.breakdown})</small>` : "";
-            html += `
-                <li class="spacious-bottom" style="display: flex; align-items: baseline; gap: 4px;">
-                    ${labelHtml}
+
+            let contentHtml = "";
+
+            if (isComparison) {
+                // FORMAT: Source Field (Breakdown) >= RequiredValue
+                // We use the 'value' to determine if the condition is currently met for coloring
+                const isMet = eval(`${m.value} ${m.op.replace('==', '===')} ${m.val_required}`);
+                if (!isMet) allRequirementsMet = false;
+                const colorClass = isMet ? 'text-success' : 'text-danger';
+
+               contentHtml = `
                     <strong>${m.source_name}</strong> 
                     <span class="text-dim">${m.field_name}:</span> 
-                    <strong class="${colorClass}">${opDisplay}${displayVal}</strong>
+                    <span class="${colorClass}" style="margin: 0 4px;">${displayVal}</span>
                     ${innerHtml}
+                    <strong class="${colorClass}">${displayOp} ${m.val_required}</strong>
+                `;
+            } else {
+                // FORMAT: Source Field: +Value (Breakdown)
+                const colorClass = m.value >= 0 ? 'text-success' : 'text-danger';
+                
+                contentHtml = `
+                    <strong>${m.source_name}</strong> 
+                    <span class="text-dim">${m.field_name}:</span> 
+                    <strong class="${colorClass}">${displayOp}${displayVal}</strong>
+                    ${innerHtml}
+                `;
+            }
+
+            html += `
+                <li class="spacious-bottom" style="display: flex; align-items: baseline; gap: 4px;">
+                    ${labelHtml} ${contentHtml}
                 </li>`;
         });
         html += '</ul>';
         previewDiv.innerHTML = html;
+
+        // DISABLE ROLL IF REQUIREMENTS NOT MET
+        if (rollBtn) {
+            rollBtn.disabled = !allRequirementsMet;
+            rollBtn.style.opacity = allRequirementsMet ? "1" : "0.5";
+            rollBtn.title = allRequirementsMet ? "" : "Requirements not met.";
+        }
     }
 
     // Attach listeners to all participant dropdowns

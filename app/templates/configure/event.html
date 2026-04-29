@@ -122,11 +122,11 @@
             </div>
             <div id="change-list" class="spacious-top">
                 {# Loop through effects if editing #}
-                {% for chg in event.changes %}
+                {% for eff in event.effects %}
                 <div class="flex-row gap-10 align-center spacious-bottom">
                     <select name="changes[{{ loop.index0 }}][attrib_id]" style="flex: 2;">
                         {% for a in all_attribs %}
-                            <option value="{{ a.id }}" {{ 'selected' if a.id == chg.attrib_id }}>{{ a.name }}</option>
+                            <option value="{{ a.id }}" {{ 'selected' if a.id == eff.attrib_id }}>{{ a.name }}</option>
                         {% endfor %}
                     </select>
                     <span class="label-like">is adjusted by outcome</span>
@@ -180,10 +180,35 @@
     }
 
     function renumberLabels() {
-        const labels = document.querySelectorAll('#det-list .index-display');
-        labels.forEach((label, i) => {
-            label.textContent = `#${i + 1}`;
+        // We only target cards inside the Determinant list
+        const cards = document.querySelectorAll('#det-list .factor-card');
+        const total = cards.length;
+
+        cards.forEach((card, i) => {
+            // 1. Update visual index text
+            card.querySelector('.index-display').textContent = `#${i + 1}`;
+            
+            // 2. Update hidden order input for database
+            const orderInput = card.querySelector('.factor-order-input');
+            if (orderInput) orderInput.value = i;
+
+            // 3. Specifically target the Determinant up/down buttons
+            const upBtn = card.querySelector('.btn-det-up');
+            const downBtn = card.querySelector('.btn-det-down');
+
+            if (upBtn) {
+                upBtn.disabled = (i === 0); // Disable UP if it's the first item
+            }
+            if (downBtn) {
+                downBtn.disabled = (i === total - 1); // Disable DOWN if it's the last item
+            }
         });
+
+        // Toggle the "No entities" message
+        const emptyMsg = document.getElementById('det-list-empty');
+        if (emptyMsg) {
+            emptyMsg.classList.toggle('hidden', total > 0);
+        }
     }
 
     function fieldTargetVisibility(select, index) {
@@ -275,9 +300,15 @@
         }
     }
 
+    const CONTEXT_ROLES = {{ Participant.CONTEXT_ROLES | tojson }};
+
     // Format using Pascal_Snake_Case
     function standardizeRoleString(roleStr) {
         if (!roleStr) return roleStr;
+
+        if (CONTEXT_ROLES.includes(roleStr)) {
+            return roleStr;
+        }
 
         let whitelisted = (roleStr.match(/[a-zA-Z0-9_ ]+/g) || []).join('');
         return whitelisted
@@ -289,8 +320,6 @@
             .map(word => word.charAt(0).toUpperCase() + word.slice(1)) 
             .join('_');                    // Re-glue with underscores
     }
-
-    const CONTEXT_ROLES = {{ Participant.CONTEXT_ROLES | tojson }};
 
     function rebuildRoleDatalist() {
         const datalist = document.getElementById('role-list');
@@ -342,6 +371,17 @@
         }
     }
 
+    // Factor ordering
+    function moveFactor(button, direction) {
+        const card = button.closest('.factor-card');
+        if (direction === -1 && card.previousElementSibling) {
+            card.parentNode.insertBefore(card, card.previousElementSibling);
+        } else if (direction === 1 && card.nextElementSibling) {
+            card.parentNode.insertBefore(card.nextElementSibling, card);
+        }
+        renumberLabels();
+    }
+
     // Use Event Delegation for dynamic changes
     document.addEventListener('change', function(e) {
         const card = e.target.closest('.factor-card');
@@ -364,6 +404,7 @@
             outerExprVisibility(card);
         });
         
+        renumberLabels();
         outcomeFieldsVisibility();
     });
 </script>

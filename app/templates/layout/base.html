@@ -20,10 +20,15 @@
             if (isMobile) return;
             
             // Ignore if typing in a form field
-            const active = document.activeElement.tagName;
-            if (['INPUT', 'TEXTAREA'].includes(active)) return;
+            const activeElem = document.activeElement;
+            if (['INPUT', 'TEXTAREA'].includes(activeElem.tagName)) return;
 
             const key = event.key; // Case sensitive for mapping
+            if (event.altKey || event.ctrlKey || event.metaKey) {
+                console.debug("Ignoring modifier keys");
+                return;
+            }
+
             const target = window.linkForKey[key];
 
             if (target) {

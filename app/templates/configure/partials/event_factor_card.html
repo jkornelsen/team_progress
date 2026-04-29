@@ -1,8 +1,14 @@
 <div class="factor-card outer-border" data-index="{{ index }}">
+    <input type="hidden" name="dets[{{ index }}][order_index]" class="factor-order-input" value="{{ factor.order_index if factor else 0 }}">
+
     {% set infield = factor.infield %}
-    <div class="flex-row gap-20 align-center">
+    <div class="flex-between align-center">
         <span class="index-display label-like">#{{ index }}</span>
-        <button type="button" class="btn-sm dangerous-button" onclick="this.closest('.factor-card').remove(); renumberLabels();">×</button>
+        <div class="flex-row gap-10">
+            <button type="button" class="btn-sm btn-det-up" onclick="moveFactor(this, -1)">↑</button>
+            <button type="button" class="btn-sm btn-det-down" onclick="moveFactor(this, 1)">↓</button>
+            <button type="button" class="btn-sm dangerous-button" onclick="this.closest('.factor-card').remove(); renumberLabels();">×</button>
+        </div>
     </div>
 
     <div class="card-body">

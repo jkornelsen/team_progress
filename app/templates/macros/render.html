@@ -1,8 +1,7 @@
 {% import 'macros/hotkeys.html' as hk %}
 
 {% macro maskable_name(item, url=None, link_letters=None) %}
-    {# Jinja treats undefined/None as False #}
-    {% if item.masked %}
+    {% if item.masked | default(false) %}
         {{ item.name | mask_string }}
     {% elif url %}
         {% call hk.hotlink(url, link_letters) %}

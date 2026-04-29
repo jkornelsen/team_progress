@@ -85,7 +85,7 @@ def calculate_determinants(event, role_entities):
         source_display = "Constant"
             
         # Identify the Field Name (Pathfinding, Iron Ore, etc.)
-        if det.val_src == 'field' and det.infield:
+        if det.val_src == Participant.FIELD and det.infield:
             anchor_id = resolve_anchor_id(det.infield.role, role_entities)
             if not anchor_id:
                 continue
@@ -112,7 +112,7 @@ def calculate_determinants(event, role_entities):
                         source_display = f"{anchor_name}'s {pile.item.name}"
                 else:
                     source_display = f"{anchor_name}'s Item"
-        elif det.val_src == 'const':
+        elif det.val_src == Participant.CONST:
             val = det.val_transform
 
         breakdown_text = format_for_display(val)
@@ -130,8 +130,9 @@ def calculate_determinants(event, role_entities):
             'source_name': source_display,
             'field_name': field_name,
             'value': val,
+            'val_required': det.val_required,
+            'op': det.op_application,
             'breakdown': breakdown_text,
-            'op': det.op_application
         })
         
     return modifiers
@@ -192,6 +193,7 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
     base_max = event.numeric_range[1] if event.numeric_range else 20
 
     # "Determined" events don't roll; they use the single_number as the start.
+    total = 0
     if event.outcome_type == 'determined':
         total = event.single_number
         breakdown_parts = [format_for_display(total)]
@@ -215,9 +217,14 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
     # calculate_determinants returns list: [{label, source_name, field_name, value, op}, ...]
     modifiers = calculate_determinants(event, role_entities)
     
+    breakdown_parts = [breakdown_parts[0]] # Start with the Die Roll/Base
+    arithmetic_ops = ['+', '-', '*', '/']
+
     for m in modifiers:
         val = m['value']
         op = m['op']
+        if op in Operation.COMPARISON_OPS:
+            continue
         symbol = '×' if op == '*' else '÷' if op == '/' else op
         breakdown_parts.append(f"{symbol} {format_for_display(val)}")
         
@@ -225,8 +232,10 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
         total = apply_operation(total, val, op)
 
     # 3. Final Formatting
-    breakdown_str = " ".join(breakdown_parts) + \
-        f" = <span class='outcome-total'>{format_for_display(total)}</span>"
+    breakdown_str = " ".join(breakdown_parts)
+    if event.outcome_type not in('selection', 'coordinates'):
+        breakdown_str += \
+            f" = <span class='outcome-total'>{format_for_display(total)}</span>"
     
     display_str = ""
     if event.outcome_type == 'fourway':
@@ -355,9 +364,9 @@ def apply_event_effects(event, role_entities, roll_outcome):
         if not effect.outfield: continue
         
         # 1. Determine base value to save
-        if effect.val_src == 'outcome':
+        if effect.val_src == Participant.OUTCOME:
             new_val = roll_outcome
-        elif effect.val_src == 'field':
+        elif effect.val_src == Participant.FIELD:
             anchor_id = resolve_anchor_id(effect.outfield.role, role_entities)
             new_val = get_entity_value(anchor_id, effect.outfield)
         else:

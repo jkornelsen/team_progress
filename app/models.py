@@ -205,7 +205,6 @@ class Item(Entity):
 
     def to_dict(self):
         data = super().to_dict()
-        sorted_recipes = sorted(self.recipes, key=lambda r: r.order_index)
         data.update({
             "storage_type": self.storage_type,
             "q_limit": self.q_limit,
@@ -213,7 +212,10 @@ class Item(Entity):
             "toplevel": self.toplevel,
             "masked": self.masked,
             "attribs": [[v.attrib_id, v.value] for v in self.attrib_values],
-            "recipes": [r.to_dict() for r in sorted_recipes],
+            "recipes": [
+                r.to_dict() for r in
+                sorted(self.recipes, key=lambda r: r.order_index)
+            ],
         })
         return data
 
@@ -538,12 +540,14 @@ class Event(Entity):
         effects = data.get('effects', [])
         event.factors = [
             EventFactor.from_dict(
-                d, game_token, event.id, usage_type=Participant.IN) 
-            for d in dets
+                d, game_token, event.id,
+                usage_type=Participant.IN, order_index=idx) 
+            for idx, d in enumerate(dets)
         ] + [
             EventFactor.from_dict(
-                e, game_token, event.id, usage_type=Participant.OUT) 
-            for e in effects
+                e, game_token, event.id,
+                usage_type=Participant.OUT, order_index=idx) 
+            for idx, e in enumerate(effects)
         ]
         return event
 
@@ -554,11 +558,17 @@ class Event(Entity):
 
     @property
     def determinants(self):
-        return [f for f in self.factors if f.usage_type == Participant.IN]
+        return sorted(
+            [f for f in self.factors if f.usage_type == Participant.IN],
+            key=lambda f: f.order_index or 0
+        )
 
     @property
     def effects(self):
-        return [f for f in self.factors if f.usage_type == Participant.OUT]
+        return sorted(
+            [f for f in self.factors if f.usage_type == Participant.OUT],
+            key=lambda f: f.order_index or 0
+        )
 
     factors = db.relationship(
         'EventFactor',
@@ -857,6 +867,10 @@ class Participant:
     ATTR = 'attr'  # Fetch AttribVal
     QTY  = 'qty'   # Fetch pile quantity
 
+    FIELD   = 'field'    # get that field
+    CONST   = 'const'    # fixed value (val_transform)
+    OUTCOME = 'outcome'  # use the outcome
+
     # --- Usage ---
     IN = 'in'   # Determinant
     OUT = 'out' # Effect
@@ -869,7 +883,7 @@ class Participant:
 class Operation:
     CONST = 'c'
     EQ = '=='
-    GT = '>'
+    GE = '>='
     LT = '<'
     ADD = '+'
     SUB = '-'
@@ -884,7 +898,7 @@ class Operation:
     Repr = {
         CONST:      {'symbol': 'n',   'text': 'Fixed Constant'},
         EQ:         {'symbol': '==',  'text': 'Equals'},
-        GT:         {'symbol': '>',   'text': 'Greater Than'},
+        GE:         {'symbol': '>=',  'text': 'At Least'},
         LT:         {'symbol': '<',   'text': 'Less Than'},
         ADD:        {'symbol': '+',   'text': 'Add'},
         SUB:        {'symbol': '−',   'text': 'Subtract'},
@@ -898,7 +912,8 @@ class Operation:
     }
 
     # How the result applies to the total
-    APPLICATION_OPS = [ADD, SUB, MULT, DIV, EQ, GT, LT]
+    APPLICATION_OPS = [ADD, SUB, MULT, DIV, EQ, GE, LT]
+    COMPARISON_OPS = [EQ, GE, LT]
 
     # Modify the Field Value before we apply it to the total
     TRANSFORM_OPS = [
@@ -970,13 +985,13 @@ class EventFactor(db.Model, DictHydrator):
 
     # --- Identity & Logic Type ---
     usage_type = db.Column(db.String(3), nullable=False, default=Participant.IN)
+    order_index = db.Column(db.Integer, default=0)
     label = db.Column(db.String(50)) # e.g. "Base Damage", "Accuracy"
 
     # --- Retrieval ---
 
-    # 'field' or 'outcome'
-    # for outcome, would be useful to distinguish between fourway outcome types
-    val_src = db.Column(db.String(15), nullable=False, default='infield')
+    # for Participant.OUTCOME, would be useful to distinguish between fourway outcome types
+    val_src = db.Column(db.String(15), nullable=False, default=Participant.FIELD)
     infield_id = db.Column(db.Integer, nullable=True)
     outfield_id = db.Column(db.Integer, nullable=True) # Effects only
 
@@ -1432,6 +1447,7 @@ class Overall(db.Model, DictHydrator):
     slots = db.Column(ARRAY(db.Text))
     progress_type = db.Column(db.String(20))
     multiplayer = db.Column(db.Boolean, default=False)
+    complete = db.Column(db.Boolean, default=False)
 
     # Used to generate unique IDs per game token
     next_entity_id = db.Column(db.Integer, default=2)
@@ -1444,6 +1460,7 @@ class Overall(db.Model, DictHydrator):
             "slots": self.slots or [],
             "progress_type": self.progress_type,
             "multiplayer": self.multiplayer,
+            "complete": self.complete,
             "win_reqs": [wr.to_dict() for wr in self.win_reqs]
         }
 

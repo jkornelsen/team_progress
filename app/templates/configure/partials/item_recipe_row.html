@@ -7,7 +7,7 @@
         <h4 style="margin-top: 0px; margin-bottom: 0px;">
             Recipe <span class="recipe-display-number">{{ '#' ~ (recipe_index + 1) if recipe_index is number else '' }}</span>
         </h4>
-        <div class="flex-row gap-5">
+        <div class="flex-row gap-10">
             <button type="button" class="btn-sm btn-recipe-up" onclick="moveRecipe(this, -1)">↑</button>
             <button type="button" class="btn-sm btn-recipe-down" onclick="moveRecipe(this, 1)">↓</button>
             <button type="button" class="btn-sm dangerous-button" onclick="this.closest('.recipe-card').remove(); updateOrderIndices();">Remove</button>

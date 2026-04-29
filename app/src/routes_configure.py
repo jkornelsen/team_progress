@@ -587,14 +587,15 @@ def edit_event(id):
                 game_token=game_token,
                 event_id=event.id,
                 usage_type=Participant.IN,
-                val_src=row.get_str('val_src', 'field'),
+                order_index=row.get_int('order_index'),
+                val_src=row.get_str('val_src', Participant.FIELD),
                 label=row.get_str('label'),
                 op_application=row.get_str('op_application'),
                 op_transform=row.get_str('op_transform'),
                 val_transform=row.get_float('val_transform', 1.0),
                 val_required=row.get_float('val_required', 1.0)
             )
-            if f.val_src == 'field':
+            if f.val_src == Participant.FIELD:
                 f.infield = EventField(
                     game_token=game_token,
                     role=row.get_str('role'),

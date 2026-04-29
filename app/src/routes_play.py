@@ -1085,6 +1085,7 @@ def play_event(id):
         dets_not_met=dets_not_met,
         caller_entities=caller_entities,
         Participant=Participant,
+        Operation=Operation,
         link_letters=LinkLetters(excluded='moer')
     )
 

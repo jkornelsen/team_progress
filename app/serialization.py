@@ -187,7 +187,7 @@ def patch_from_dict(data):
     
     # Find the highest ID mentioned in the incoming JSON
     json_ids = []
-    entities_data = data.get(JsonKeys.rNTITIES, {})
+    entities_data = data.get(JsonKeys.ENTITIES, {})
     for key in ENTITIES:
         for entry in entities_data.get(key, []):
             if 'id' in entry: json_ids.append(entry['id'])
