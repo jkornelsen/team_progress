@@ -102,7 +102,7 @@ def adjust_quantity(item_id, owner_id, delta, position=None, slot=None):
     
     if old_qty <= 0 and pile.quantity > 0:
         # gained an item for the first time
-        check_item_unmasking(g.game_token, item_id)
+        check_item_unmasking(g.game_token, item_id, was_gained=True)
     
     # Cleanup: remove empty rows to keep the DB small
     if pile.quantity == 0:

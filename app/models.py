@@ -211,7 +211,6 @@ class Item(Entity):
             "loc_hosted": self.loc_hosted,
             "toplevel": self.toplevel,
             "masked": self.masked,
-            "attribs": [[v.attrib_id, v.value] for v in self.attrib_values],
             "recipes": [
                 r.to_dict() for r in
                 sorted(self.recipes, key=lambda r: r.order_index)
@@ -225,10 +224,6 @@ class Item(Entity):
         for order_index, r_data in enumerate(data.get('recipes', [])):
             item.recipes.append(
                 Recipe.from_dict(r_data, game_token, order_index))
-        for attr_pair in data.get('attribs', []):
-            item.attrib_values.append(AttribVal(
-                game_token=game_token, attrib_id=attr_pair[0], value=attr_pair[1]
-            ))
         return item
 
     def get_deep_relationships(self):
@@ -1161,7 +1156,10 @@ class Recipe(db.Model, DictHydrator):
     @property
     def summary(self):
         """Generates a string like: 'Yield 1 from Iron, Coal'"""
-        sources = ", ".join([s.ingredient.name for s in self.sources[:3]])
+        from app.utils import maskable_name
+        sources = ", ".join([
+            maskable_name(s.ingredient) for s in self.sources[:3]
+        ])
         if not sources:
             return f"Yield {self.rate_amount:g} (No ingredients)"
         return f"Yield {self.rate_amount:g} from {sources}"
@@ -1447,7 +1445,7 @@ class Overall(db.Model, DictHydrator):
     slots = db.Column(ARRAY(db.Text))
     progress_type = db.Column(db.String(20))
     multiplayer = db.Column(db.Boolean, default=False)
-    complete = db.Column(db.Boolean, default=False)
+    complete = db.Column(db.String(20), default='')
 
     # Used to generate unique IDs per game token
     next_entity_id = db.Column(db.Integer, default=2)

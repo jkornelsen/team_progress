@@ -2,93 +2,17 @@
     "entities": {
         "items": [
             {
-                "id": 2,
-                "name": "Production Speed II",
-                "description": "Quadruple the energy production speed to 8 per 8 seconds. This only improves speed, so also double the waste generated and resources required.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "l",
-                "q_limit": 5.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": [
-                    {
-                        "id": 20,
-                        "rate_amount": 1.0,
-                        "rate_duration": 300.0,
-                        "instant": false,
-                        "sources": [
-                            {
-                                "item_id": 11,
-                                "q_required": 1000.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 3,
-                                "q_required": 1.0,
-                                "preserve": true
-                            }
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
-                    }
-                ]
-            },
-            {
-                "id": 3,
-                "name": "Production Speed I",
-                "description": "Double energy production speed to 2 per 8 seconds. This only improves speed, so also double the waste generated and resources required.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "l",
-                "q_limit": 10.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": [
-                    {
-                        "id": 19,
-                        "rate_amount": 1.0,
-                        "rate_duration": 300.0,
-                        "instant": false,
-                        "sources": [
-                            {
-                                "item_id": 11,
-                                "q_required": 100.0,
-                                "preserve": false
-                            }
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
-                    }
-                ]
-            },
-            {
                 "id": 4,
                 "name": "Plutonium",
                 "description": "Valuable nuclear material used in a reactor to generate high energy levels.\r\n\r\nMeasured in units of 100 \u03bcg (0.0001 g). This amount causes 1e17 fission reactions, generating 1 kWh of energy.",
                 "attribs": [],
-                "abilities": [],
+                "abilities": [18],
                 "storage_type": "u",
                 "q_limit": 0.0,
+                "loc_hosted": false,
                 "toplevel": true,
                 "masked": false,
-                "recipes": [
-                    {
-                        "id": 15,
-                        "rate_amount": 1.0,
-                        "rate_duration": 8.0,
-                        "instant": false,
-                        "sources": [
-                            {
-                                "item_id": 7,
-                                "q_required": 1.0,
-                                "preserve": false
-                            }
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
-                    }
-                ]
+                "recipes": []
             },
             {
                 "id": 5,
@@ -98,6 +22,7 @@
                 "abilities": [],
                 "storage_type": "u",
                 "q_limit": 0.0,
+                "loc_hosted": false,
                 "toplevel": true,
                 "masked": true,
                 "recipes": [
@@ -107,11 +32,7 @@
                         "rate_duration": 8.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 5,
-                                "q_required": 2.0,
-                                "preserve": false
-                            }
+                            {"item_id": 5, "q_required": 2.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -126,20 +47,9 @@
                 "abilities": [],
                 "storage_type": "l",
                 "q_limit": 1.0,
+                "loc_hosted": true,
                 "toplevel": false,
                 "masked": false,
-                "recipes": []
-            },
-            {
-                "id": 7,
-                "name": "Spent Fuel",
-                "description": "Nuclear fuel becomes inefficient and radioactive after use. Refine into fresh plutonium by atomic reclamation.\r\n",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "u",
-                "q_limit": 0.0,
-                "toplevel": false,
-                "masked": true,
                 "recipes": []
             },
             {
@@ -150,6 +60,7 @@
                 "abilities": [],
                 "storage_type": "u",
                 "q_limit": 0.0,
+                "loc_hosted": false,
                 "toplevel": true,
                 "masked": true,
                 "recipes": [
@@ -159,16 +70,8 @@
                         "rate_duration": 3.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 10,
-                                "q_required": 1.0,
-                                "preserve": true
-                            },
-                            {
-                                "item_id": 8,
-                                "q_required": 1.0,
-                                "preserve": false
-                            }
+                            {"item_id": 8, "q_required": 1.0, "preserve": false},
+                            {"item_id": 10, "q_required": 1.0, "preserve": true}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -176,47 +79,26 @@
                 ]
             },
             {
-                "id": 9,
-                "name": "Energy",
-                "description": "Stored in a high-capacity battery. Quantity is measured in kilowatt-hours (kWh).\r\n\r\nA fully charged battery is enough to provide backup power for a city while the main supply is repaired. (Note: Present-day batteries cannot hold such amounts.)",
+                "id": 3,
+                "name": "Production Speed I",
+                "description": "+1 each to energy production speed. This improves speed but not efficiency, so also increase the waste generated and resources required.",
                 "attribs": [],
-                "abilities": [],
-                "storage_type": "u",
-                "q_limit": 10000000.0,
-                "toplevel": true,
+                "abilities": [17],
+                "storage_type": "l",
+                "q_limit": 10.0,
+                "loc_hosted": false,
+                "toplevel": false,
                 "masked": false,
                 "recipes": [
                     {
-                        "id": 14,
+                        "id": 19,
                         "rate_amount": 1.0,
-                        "rate_duration": 8.0,
+                        "rate_duration": 300.0,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 4,
-                                "q_required": 1.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 6,
-                                "q_required": 1.0,
-                                "preserve": true
-                            }
+                            {"item_id": 11, "q_required": 100.0, "preserve": false}
                         ],
-                        "byproducts": [
-                            {
-                                "product_id": 7,
-                                "rate_amount": 1.0
-                            },
-                            {
-                                "product_id": 5,
-                                "rate_amount": 2.0
-                            },
-                            {
-                                "product_id": 8,
-                                "rate_amount": 2.0
-                            }
-                        ],
+                        "byproducts": [],
                         "attrib_reqs": []
                     }
                 ]
@@ -224,23 +106,64 @@
             {
                 "id": 10,
                 "name": "Cooling Tower",
-                "description": "Cycles water to cool through contact with air.\r\n\r\n",
+                "description": "Cycles water to cool through contact with air.",
                 "attribs": [],
                 "abilities": [],
                 "storage_type": "l",
                 "q_limit": 1.0,
+                "loc_hosted": true,
                 "toplevel": false,
                 "masked": false,
                 "recipes": []
             },
             {
+                "id": 7,
+                "name": "Spent Fuel",
+                "description": "Nuclear fuel becomes inefficient and radioactive after use. Refine into fresh plutonium by atomic reclamation.",
+                "attribs": [],
+                "abilities": [18],
+                "storage_type": "u",
+                "q_limit": 0.0,
+                "loc_hosted": false,
+                "toplevel": false,
+                "masked": true,
+                "recipes": []
+            },
+            {
+                "id": 2,
+                "name": "Production Speed II",
+                "description": "Energy production speed \u00d7 (4 per) for a fairly steep linear increase. This improves speed but not efficiency, so also increase the waste generated and resources required.\r\n\r\nProducing the first increase makes 1.25 so round that value to 1 in [location settings](/configure/location/14) for quadruple effect.",
+                "attribs": [],
+                "abilities": [17],
+                "storage_type": "l",
+                "q_limit": 5.0,
+                "loc_hosted": false,
+                "toplevel": false,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 20,
+                        "rate_amount": 1.0,
+                        "rate_duration": 300.0,
+                        "instant": false,
+                        "sources": [
+                            {"item_id": 3, "q_required": 1.0, "preserve": true},
+                            {"item_id": 11, "q_required": 1000.0, "preserve": false}
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
                 "id": 11,
                 "name": "Funds",
-                "description": "Money is required for purchasing upgrades. Ultimately, the goal is to store energy, so don't sell all of it.",
+                "description": "Money is required for research &amp; development.",
                 "attribs": [],
                 "abilities": [],
                 "storage_type": "c",
                 "q_limit": 0.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": false,
                 "recipes": [
@@ -250,16 +173,72 @@
                         "rate_duration": 3.0,
                         "instant": true,
                         "sources": [
-                            {
-                                "item_id": 9,
-                                "q_required": 10.0,
-                                "preserve": false
-                            }
+                            {"item_id": 9, "q_required": 10.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
                     }
                 ]
+            },
+            {
+                "id": 22,
+                "name": "Offices",
+                "description": "More offices makes it easier to have more employees.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 0.0,
+                "loc_hosted": false,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 9,
+                "name": "Energy",
+                "description": "Stored in a high-capacity battery. Quantity is measured in kilowatt-hours (kWh).\r\n\r\nA fully charged battery is enough to provide backup power for a city while the main supply is repaired. *IRL Note: Present-day batteries cannot hold such amounts.*",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 10000000.0,
+                "loc_hosted": false,
+                "toplevel": true,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 14,
+                        "rate_amount": 1.0,
+                        "rate_duration": 8.0,
+                        "instant": false,
+                        "sources": [
+                            {"item_id": 4, "q_required": 1.0, "preserve": false},
+                            {"item_id": 6, "q_required": 1.0, "preserve": true}
+                        ],
+                        "byproducts": [
+                            {"item_id": 5, "rate_amount": 2.0},
+                            {"item_id": 7, "rate_amount": 1.0},
+                            {"item_id": 8, "rate_amount": 2.0}
+                        ],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 19,
+                "name": "Workers",
+                "description": "Keep track of how many employees work here and their average mood. If their mood or health are bad then they may consider leaving.",
+                "attribs": [
+                    [20, 7.0],
+                    [24, 2.0],
+                    [26, 0.0]
+                ],
+                "abilities": [21, 23, 25],
+                "storage_type": "l",
+                "q_limit": 0.0,
+                "loc_hosted": false,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
             }
         ],
         "locations": [
@@ -274,13 +253,14 @@
                 "toplevel": true,
                 "masked": false,
                 "items": [
-                    {
-                        "item_id": 6,
-                        "quantity": 1.0,
-                        "position": null
-                    }
+                    {"item_id": 6, "quantity": 1.0, "position": null},
+                    {"item_id": 19, "quantity": 1.0, "position": null},
+                    {"item_id": 22, "quantity": 2.0, "position": null}
                 ],
-                "item_refs": [],
+                "progress": [],
+                "item_refs": [
+                    {"item_id": 9}
+                ],
                 "destinations": []
             },
             {
@@ -294,13 +274,14 @@
                 "toplevel": true,
                 "masked": false,
                 "items": [
-                    {
-                        "item_id": 10,
-                        "quantity": 1.0,
-                        "position": null
-                    }
+                    {"item_id": 10, "quantity": 1.0, "position": null},
+                    {"item_id": 19, "quantity": 1.0, "position": null},
+                    {"item_id": 22, "quantity": 2.0, "position": null}
                 ],
-                "item_refs": [],
+                "progress": [],
+                "item_refs": [
+                    {"item_id": 8}
+                ],
                 "destinations": []
             },
             {
@@ -314,89 +295,336 @@
                 "toplevel": true,
                 "masked": false,
                 "items": [
-                    {
-                        "item_id": 2,
-                        "quantity": 0.0,
-                        "position": null
-                    },
-                    {
-                        "item_id": 3,
-                        "quantity": 0.0,
-                        "position": null
-                    }
+                    {"item_id": 2, "quantity": 0.25, "position": null},
+                    {"item_id": 3, "quantity": 1.0, "position": null},
+                    {"item_id": 19, "quantity": 1.0, "position": null},
+                    {"item_id": 22, "quantity": 2.0, "position": null}
                 ],
+                "progress": [],
                 "item_refs": [],
                 "destinations": []
             }
         ],
         "characters": [],
-        "attribs": [],
-        "events": [
+        "attribs": [
             {
-                "id": 15,
-                "name": "Fission Problem Type",
-                "description": "Get more information about a problem that occurred.",
-                "trigger_chance": 0.0,
-                "numeric_range": [
-                    0,
-                    10
-                ],
-                "outcome_type": "selection",
-                "selection_strings": "Radioactive Waste Leak\r\nWaste Bacteria Inert\r\nCooling System Leak\r\nMechanical Failure\r\nElectricity Down\r\nUnusable Amenities\r\nEnergy Not Gained\r\nExcess Energy\r\nCore Meltdown",
-                "toplevel": false,
-                "triggers": [],
-                "determining": []
+                "id": 26,
+                "name": "Layoffs",
+                "description": "How many total workers were just let go.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
             },
             {
-                "id": 16,
-                "name": "Fission Problem",
-                "description": "Minor problems, such as waste leaks, up to the worst case, core meltdown. Waste buildup increases the chance of something going wrong.\r\n\r\nTo determine which problem occurred, especially for critical failures, run [Fission Problem Type](/play/event/2).",
-                "trigger_chance": 0.05,
-                "numeric_range": [
-                    1,
-                    1000
-                ],
-                "outcome_type": "fourway",
-                "selection_strings": "",
+                "id": 24,
+                "name": "Pay",
+                "description": "Roughly keep track of how pay compares to industry averages.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": ["Very High", "Above Average", "Standard", "Low", "Very Low"]
+            },
+            {
+                "id": 20,
+                "name": "Mood",
+                "description": "Scale of 1 (miserable) to 10 (highly motivated to work).\r\n\r\n- Injury lowers mood based on how many workers get injured.\r\n- Long hours and poor pay negatively affect mood.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            }
+        ],
+        "events": [
+            {
+                "id": 17,
+                "name": "Production Speed",
+                "description": "Determine production speed by taking upgrades into account.",
+                "attribs": [],
+                "abilities": [],
                 "toplevel": false,
-                "triggers": [
-                    [
-                        "item",
-                        9
-                    ]
+                "outcome_type": "determined",
+                "roller_type": "dnd",
+                "numeric_range": [1, 20],
+                "single_number": 1.0,
+                "selection_strings": "",
+                "determinants": [
+                    {
+                        "usage_type": "in",
+                        "label": "",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "[At]",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 3,
+                            "attrib_id": 0
+                        },
+                        "outfield": null,
+                        "op_application": "*",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 0.0
+                    },
+                    {
+                        "usage_type": "in",
+                        "label": "",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "[At]",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 2,
+                            "attrib_id": 0
+                        },
+                        "outfield": null,
+                        "op_application": "*",
+                        "op_transform": "*",
+                        "val_transform": 4.0,
+                        "val_required": 0.0
+                    }
                 ],
-                "determining": []
+                "effects": []
+            },
+            {
+                "id": 18,
+                "name": "Reclaim Spent Fuel",
+                "description": "- Set *Difficulty* to *Easy*.\r\n- Waste buildup increases the chance of something going wrong.\r\n- Set [Spent Fuel](/play/item/7) to 0 and set plutonium quantity to that amount instead.\r\n- If there is a failure then you still get the reclaimed fuel, but something goes wrong\u2014determine [Plant Problem Type](/play/event/15).",
+                "attribs": [],
+                "abilities": [],
+                "toplevel": false,
+                "outcome_type": "fourway",
+                "roller_type": "dnd",
+                "numeric_range": [1, 20],
+                "single_number": 0.0,
+                "selection_strings": "",
+                "determinants": [
+                    {
+                        "usage_type": "in",
+                        "label": "",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "Spent_Fuel",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 7,
+                            "attrib_id": 0
+                        },
+                        "outfield": null,
+                        "op_application": ">=",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
+                    },
+                    {
+                        "usage_type": "in",
+                        "label": "",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "Radioactive_Waste",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 5,
+                            "attrib_id": 0
+                        },
+                        "outfield": null,
+                        "op_application": "-",
+                        "op_transform": "log",
+                        "val_transform": 1.0,
+                        "val_required": 0.0
+                    },
+                    {
+                        "usage_type": "in",
+                        "label": "",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "Thermal_Waste",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 8,
+                            "attrib_id": 0
+                        },
+                        "outfield": null,
+                        "op_application": "-",
+                        "op_transform": "log",
+                        "val_transform": 1.0,
+                        "val_required": 0.0
+                    }
+                ],
+                "effects": []
+            },
+            {
+                "id": 15,
+                "name": "Plant Problem Type",
+                "description": "Get more information about a problem that occurred. Possible outcomes:\r\n\r\n- **Unusable Amenities** \u2014 employees don't appreciate this kind of work environment\r\n- **Low Wages** \u2014 employees are unhappy and may go on strike\r\n- **Waste Bacteria Inert** \u2014 fail to reduce radioactive waste\r\n- **Radioactive Waste Leak** \u2014 significantly increases amount of radioactive waste (cleanup becomes a bigger job)\r\n- **Cooling System Leak** \u2014 less efficient thermal waste reduction, could potentially hit employees with scalding water\r\n- **Mechanical Failure** \u2014 temporarily prevents some systems from operating, may require mechanical repairs\r\n- **Electricity Down** \u2014 temporarily prevents some systems from operating, may require repairs to electrical system\r\n- **Energy Not Gained** \u2014 nothing to fix but roll back recent energy gains\r\n- **Excess Energy** \u2014 this is a bigger problem, damaging storage systems\r\n- **Core Meltdown** \u2014 the worst-case scenario\r\n\r\nIf the inciting roll was a major failure then consider the problem to be more severe.",
+                "attribs": [],
+                "abilities": [],
+                "toplevel": false,
+                "outcome_type": "selection",
+                "roller_type": "dnd",
+                "numeric_range": [0, 10],
+                "single_number": 0.0,
+                "selection_strings": "Radioactive Waste Leak\r\nWaste Bacteria Inert\r\nCooling System Leak\r\nMechanical Failure\r\nElectricity Down\r\nUnusable Amenities\r\nEnergy Not Gained\r\nExcess Energy\r\nCore Meltdown",
+                "determinants": [],
+                "effects": []
+            },
+            {
+                "id": 23,
+                "name": "Workers: Retain",
+                "description": "If they're not happy then they may decide to leave.",
+                "attribs": [],
+                "abilities": [],
+                "toplevel": false,
+                "outcome_type": "fourway",
+                "roller_type": "dnd",
+                "numeric_range": [1, 20],
+                "single_number": 0.0,
+                "selection_strings": "",
+                "determinants": [
+                    {
+                        "usage_type": "in",
+                        "label": "",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "[At]",
+                            "field_mode": "attr",
+                            "child_of_anchor": true,
+                            "item_id": 0,
+                            "attrib_id": 20
+                        },
+                        "outfield": null,
+                        "op_application": "+",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 0.0
+                    },
+                    {
+                        "usage_type": "in",
+                        "label": "",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "[At]",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 22,
+                            "attrib_id": 0
+                        },
+                        "outfield": null,
+                        "op_application": "+",
+                        "op_transform": "log",
+                        "val_transform": 0.5,
+                        "val_required": 0.0
+                    },
+                    {
+                        "usage_type": "in",
+                        "label": "",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "[At]",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 19,
+                            "attrib_id": 0
+                        },
+                        "outfield": null,
+                        "op_application": "-",
+                        "op_transform": "log",
+                        "val_transform": 0.5,
+                        "val_required": 0.0
+                    }
+                ],
+                "effects": []
+            },
+            {
+                "id": 21,
+                "name": "Workers: Hire",
+                "description": "",
+                "attribs": [],
+                "abilities": [],
+                "toplevel": false,
+                "outcome_type": "numeric",
+                "roller_type": "dnd",
+                "numeric_range": [-10, 10],
+                "single_number": 0.0,
+                "selection_strings": "",
+                "determinants": [
+                    {
+                        "usage_type": "in",
+                        "label": "",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "[At]",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 22,
+                            "attrib_id": 0
+                        },
+                        "outfield": null,
+                        "op_application": "+",
+                        "op_transform": "log",
+                        "val_transform": 1.0,
+                        "val_required": 0.0
+                    },
+                    {
+                        "usage_type": "in",
+                        "label": "Crowded",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "[At]",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 19,
+                            "attrib_id": 0
+                        },
+                        "outfield": null,
+                        "op_application": "-",
+                        "op_transform": "log",
+                        "val_transform": 1.0,
+                        "val_required": 0.0
+                    },
+                    {
+                        "usage_type": "in",
+                        "label": "",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "[At]",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 19,
+                            "attrib_id": 20
+                        },
+                        "outfield": null,
+                        "op_application": "+",
+                        "op_transform": "log",
+                        "val_transform": 0.5,
+                        "val_required": 0.0
+                    }
+                ],
+                "effects": []
+            },
+            {
+                "id": 25,
+                "name": "Workers: Fire",
+                "description": "Lower selected worker counts and set Layoffs to how many you just removed total.\r\n\r\nIf the outcome is successful, then the layoffs increase profits, resulting in a [pay raise](/play/attrib/24/subject/19).",
+                "attribs": [],
+                "abilities": [],
+                "toplevel": false,
+                "outcome_type": "fourway",
+                "roller_type": "dnd",
+                "numeric_range": [1, 20],
+                "single_number": 0.0,
+                "selection_strings": "",
+                "determinants": [],
+                "effects": []
             }
         ]
     },
     "general data": {
         "piles": [
-            {
-                "item_id": 4,
-                "quantity": 10.0
-            },
-            {
-                "item_id": 5,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 7,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 8,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 9,
-                "quantity": 0.0
-            }
+            {"item_id": 4, "quantity": 10.0}
         ],
         "progress": []
     },
     "overall settings": {
         "title": "Fission Plant",
-        "description": "Produce enough energy to fill a high-capacity battery while managing <c=orange>waste</c>. Handle any critical failures and then restore operations.\r\n\r\nYou're in charge of creating appropriate upgrades and event mechanics.",
+        "description": "Produce enough energy to fill a high-capacity battery while managing {orange|waste}. Handle any critical failures and then restore operations.\r\n\r\nYou're in charge of creating appropriate upgrades and event mechanics.",
         "number_format": "sci",
         "slots": [],
         "progress_type": "Idle",
@@ -404,12 +632,11 @@
         "complete": "Has Objectives",
         "win_reqs": [
             {
-                "id": 2,
                 "item_id": 9,
-                "loc_id": null,
-                "char_id": null,
-                "attrib_id": null,
                 "quantity": 10000000.0,
+                "char_id": null,
+                "loc_id": null,
+                "attrib_id": null,
                 "attrib_value": 0.0
             }
         ]

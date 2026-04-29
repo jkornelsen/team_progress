@@ -519,10 +519,11 @@ def play_item(id):
         host_id = find_best_host(r, owner.id, ctx)
         logger.debug(f'host {host_id}')
         
-        # Determine viability for the UI (Greedy check)
+        # Determine viability for the UI
         can_do, reason = can_perform_recipe(host_id, r, owner.id, ctx)
         resolved_ingredients = resolve_recipe_sources(host_id, r, ctx)
         
+        # Prepare sources data for the UI
         sources_ui_data = []
         for res in resolved_ingredients:
             url_params = { 'owner_id': res['anticipated_owner_id'] }
@@ -541,6 +542,15 @@ def play_item(id):
                 'pile_owner_id': res['anticipated_owner_id'],
                 'pile_owner_type': res['anticipated_owner_type'],
                 'url_params': url_params
+            })
+
+        # Prepare byproducts data for the UI
+        byproducts_ui_data = []
+        for bp in r.byproducts:
+            byproducts_ui_data.append({
+                'item': bp.item,
+                'rate_amount': bp.rate_amount,
+                'url_params': ctx.get_params()
             })
 
         # Check attribute requirements against all relevant entities
@@ -603,6 +613,7 @@ def play_item(id):
             'can_produce': can_do,
             'reason': reason,
             'sources': sources_ui_data,
+            'byproducts': byproducts_ui_data,
             'attrib_reqs': attrib_reqs_ui_data
         })
 

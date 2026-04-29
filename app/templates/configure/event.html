@@ -260,13 +260,13 @@
             rhsGroup.style.order = "1";
             opSelector.style.order = "2";
         }
-        else if (['log', 'sqrt', '0.5'].includes(op)) {
+        else if (['sqrt', '0.5'].includes(op)) {
             // UNARY: Move op to start, hide constant
             lhs.style.order = "2";
             card.querySelector('.op-inner-selector').style.order = "1";
             rhsGroup.classList.add('hidden');
         } 
-        else if (op === '^x') { // POW_OF_VAL (nˣ)
+        else if (['^x', 'log'].includes(op)) {
             // REVERSED BINARY: Constant on left, Value on right
             rhsGroup.style.order = "1";
             lhs.style.order = "3";

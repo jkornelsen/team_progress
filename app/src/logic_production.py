@@ -5,6 +5,7 @@ from flask import g, session
 from app.models import (
     db, Entity, Item, Location, Character, Pile, Progress,
     Recipe, AttribVal, GENERAL_ID, StorageType)
+from app.utils import maskable_name
 from .logic_piles import adjust_quantity
 from .logic_navigation import is_adjacent
 from .logic_user_interaction import add_message
@@ -94,7 +95,7 @@ def can_perform_recipe(host_id, recipe, target_owner_id, ctx, batches=1):
             verb = "Missing"
             if res['total_available'] > 0:
                 verb = "Need More"
-            return False, f"{verb} {res['item'].name}"
+            return False, f"{verb} {maskable_name(res['item'])}"
 
     # 3. Attribute Requirements
     scope = get_host_scope(host_id, ctx)
@@ -108,7 +109,7 @@ def can_perform_recipe(host_id, recipe, target_owner_id, ctx, batches=1):
                 req_met = True
                 break
         if not req_met:
-            return False, f"Requires {req.attrib.name} {req.range_display}"
+            return False, f"Requires {maskable_name(req.attrib)} {req.range_display}"
 
     return True, ""
 

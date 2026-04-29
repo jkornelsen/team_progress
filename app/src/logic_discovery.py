@@ -3,7 +3,7 @@ from app.models import db, Item, Recipe, RecipeSource, Pile
 
 logger = logging.getLogger(__name__)
 
-def check_item_unmasking(game_token, item_id):
+def check_item_unmasking(game_token, item_id, was_gained=False):
     """
     Unmasks items that depend on the provided item_id.
     Called whenever an item's quantity increases for the first time.
@@ -11,6 +11,12 @@ def check_item_unmasking(game_token, item_id):
     item = Item.query.get((game_token, item_id))
     if not item or item.counted_for_unmasking:
         return
+
+    # If we just gained this from 0, it's discovered.
+    if item.masked and was_gained:
+        item.masked = False
+        db.session.commit()
+        logger.info(f"Item discovered via gain: {item.name}")
 
     # Mark this item as proven so we don't process it repeatedly
     # Rules: It must be visible to the player AND they must have some of it.

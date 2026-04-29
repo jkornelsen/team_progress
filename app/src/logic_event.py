@@ -6,6 +6,7 @@ from app.models import (
     db, GENERAL_ID, Entity, Item, Location, Character, Attrib, Event,
     StorageType, Operation, OutcomeType, RollerType, Participant,
     AttribVal, Pile, LocDest)
+from app.utils import maskable_name
 from app.src.logic_piles import set_quantity
 from app.src.logic_user_interaction import add_message
 from app.src.logic_navigation import get_all_valid_coords
@@ -101,7 +102,7 @@ def calculate_determinants(event, role_entities):
 
             anchor = Entity.query.get((game_token, anchor_id))
             anchor_name = '' if anchor_id == GENERAL_ID \
-                else anchor.name if anchor else "Unknown"
+                else maskable_name(anchor) if anchor else "Unknown"
             source_display = anchor_name
             if infield.child_of_anchor:
                 # If looking at an item instance inside Suzy, we need the item name
@@ -109,7 +110,8 @@ def calculate_determinants(event, role_entities):
                 if instance_id:
                     pile = Pile.query.get((game_token, instance_id))
                     if pile:
-                        source_display = f"{anchor_name}'s {pile.item.name}"
+                        source_display = \
+                            f"{anchor_name}'s {maskable_name(pile.item)}"
                 else:
                     source_display = f"{anchor_name}'s Item"
         elif det.val_src == Participant.CONST:
@@ -150,12 +152,25 @@ def apply_scaling(val, mode):
 
 def apply_operation(current_val, mod_val, op):
     """Applies the specific operation and returns the new value."""
+
+    # Unary Transforms
+    if op == 'log':
+        if current_val == 0: return 0.0
+        sign = 1 if current_val > 0 else -1
+        return sign * mod_val * math.log10(abs(current_val) + 1)
+    if op == 'sqrt':
+        return math.sqrt(abs(current_val))
+    if op == '0.5':
+        return current_val / 2.0
+
+    # Binary Operations
     if op == '+': return current_val + mod_val
     if op == '-': return current_val - mod_val
     if op == '*': return current_val * mod_val
     if op == '/': return current_val / mod_val if mod_val != 0 else current_val
     if op == 'x^': return current_val ** mod_val  # Val to Power (xⁿ)
     if op == '^x': return mod_val ** current_val  # Power of Val (nˣ)
+
     return current_val
 
 def get_inner_breakdown(val, mod_val, op):
@@ -164,10 +179,10 @@ def get_inner_breakdown(val, mod_val, op):
     m = format_for_display(mod_val)
     formats = {
         'c':    m,
-        '+':    f"({v}+{m})",
-        '-':    f"({v}-{m})",
-        '*':    f"({v}×{m})",
-        '/':    f"({v}÷{m})",
+        '+':    f"{v}+{m}",
+        '-':    f"{v}-{m}",
+        '*':    f"{v}×{m}",
+        '/':    f"{v}÷{m}",
         'x^':   f"{v}<sup>{m}</sup>",
         '^x':   f"{m}<sup>{v}</sup>",
         'log':  f"log({v})",
@@ -217,22 +232,41 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
     # calculate_determinants returns list: [{label, source_name, field_name, value, op}, ...]
     modifiers = calculate_determinants(event, role_entities)
     
-    breakdown_parts = [breakdown_parts[0]] # Start with the Die Roll/Base
-    arithmetic_ops = ['+', '-', '*', '/']
+    PRECEDENCE = {
+        '+': 1, '-': 1,
+        '*': 2, '/': 2,
+        'x^': 3, '^x': 3
+    }
+    breakdown_str = breakdown_parts[0] # Start with the Die Roll/Base
+    current_min_precedence = 99 
 
     for m in modifiers:
         val = m['value']
         op = m['op']
         if op in Operation.COMPARISON_OPS:
             continue
+
         symbol = '×' if op == '*' else '÷' if op == '/' else op
-        breakdown_parts.append(f"{symbol} {format_for_display(val)}")
-        
+        formatted_val = format_for_display(val)
+
+        # If the new operator is higher precedence than the previous ones,
+        # wrap the left side to maintain sequential logic.
+        # Example: (1 + 1) × 4
+        op_prec = PRECEDENCE.get(op, 1)
+        if op_prec > current_min_precedence:
+            breakdown_str = f"({breakdown_str})"
+        if op == 'x^':
+            breakdown_str = f"{breakdown_str}<sup>{formatted_val}</sup>"
+        elif op == '^x':
+            breakdown_str = f"{formatted_val}<sup>{breakdown_str}</sup>"
+        else:
+            breakdown_str = f"{breakdown_str} {symbol} {formatted_val}"
+        current_min_precedence = op_prec
+
         # Update Total
         total = apply_operation(total, val, op)
 
     # 3. Final Formatting
-    breakdown_str = " ".join(breakdown_parts)
     if event.outcome_type not in('selection', 'coordinates'):
         breakdown_str += \
             f" = <span class='outcome-total'>{format_for_display(total)}</span>"
