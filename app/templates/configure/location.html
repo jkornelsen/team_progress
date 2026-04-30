@@ -1,16 +1,28 @@
 {% extends 'layout/base.html' %}
+{% import 'macros/hotkeys.html' as hk %}
 {% from 'macros/config_forms.html' import footer_actions %}
+{% import 'macros/render.html' as render %}
 
 {% block upper_left %}
     <nav class="nav-container">
-        <a href="{{ url_for('play.overview') }}">[o]verview</a>
+        {{ hk.page_overview() }}
         <span class="separator">|</span>
-        <a href="{{ url_for('configure.index') }}">[m]ain setup</a>
+        {{ hk.page_main_setup() }}
     </nav>
 {% endblock %}
 
 {% block content %}
 
+<script>
+    const ATTRIB_REGISTRY = {
+        {% for a in all_attribs %}
+        "{{ a.id }}": {
+            "is_binary": {{ 'true' if a.is_binary else 'false' }},
+            "enums": {{ a.enum_list | tojson | safe if a.enum_list else 'null' }}
+        }{{ "," if not loop.last }}
+        {% endfor %}
+    };
+</script>
 <script src="{{ url_for('static', filename='js/configuration.js') }}"></script>
 
 <!-- TEMPLATES FOR DYNAMIC ROWS -->
@@ -102,16 +114,25 @@
 {% macro attrib_row(index, av=None, all_attribs=[]) %}
     {% set selected_id = av.attrib_id if av else None %}
     {% set val = av.value if av else 0 %}
+    
     <div class="col-row attrib-row">
-        <select name="attribs[{{ index }}][id]">
+        <select name="attribs[{{ index }}][id]" 
+                data-attrib-select="true"
+                data-is-range="false"
+                onchange="ConfigEditor.syncAttributeUI(this, false)"
+                data-current-value="{{ val }}">
             {% for attr_def in all_attribs %}
-                <option value="{{ attr_def.id }}" {{ 'selected' if attr_def.id == selected_id }}>
+                <option value="{{ attr_def.id }}" 
+                    {{ 'selected' if attr_def.id == selected_id }}>
                     {{ attr_def.name }}
                 </option>
             {% endfor %}
         </select>
-        <input type="text" name="attribs[{{ index }}][value]" value="{{ val }}" placeholder="Value">
-        <button type="button" class="btn-sm dangerous-button" onclick="ConfigEditor.removeRow(this, 'attrib-list')">×</button>
+        <div class="value-container">
+            <!-- Filled by ConfigEditor.syncAttributeUI -->
+        </div>
+        <button type="button" class="btn-sm dangerous-button" 
+                onclick="ConfigEditor.removeRow(this, 'attrib-list')">×</button>
     </div>
 {% endmacro %}
 

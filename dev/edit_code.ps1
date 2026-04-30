@@ -57,9 +57,11 @@ function Get-FilteredChildItems {
 $EDITOR = "${Env:ProgramFiles}/Vim/vim91/gvim.exe"
 $projroot = Join-Path $PSScriptRoot ".."
 $appdir = Join-Path $projroot "/app"
+$staticdir = Join-Path $appdir "/static"
 $pyFiles = Get-FilteredChildItems -Path $appdir -Filter "*.py"
 $htmlFiles = Get-FilteredChildItems -Path $appdir -Filter "*.html"
 $cssFiles = Get-FilteredChildItems -Path $appdir -Filter "*.css"
+$jsFiles = Get-FilteredChildItems -Path $staticdir -Filter "*.js"
 $mdFiles = Get-ChildItem -Path $projroot -Filter "*.md" -File
 $pyTopFiles = Get-ChildItem -Path $projroot -Filter "*.py" -File
 $txtFiles = Get-ChildItem -Path $PSScriptRoot -Filter "*.txt" -File
@@ -68,13 +70,14 @@ $jsonFiles = Get-ChildItem -Path (Join-Path $appdir "data_files") -Filter "*.jso
 # Quote each file path individually
 $htmlFilePaths = @($htmlFiles.FullName | ForEach-Object { "`"$_`"" })
 $cssFilePaths = @($cssFiles.FullName | ForEach-Object { "`"$_`"" })
+$jsFilePaths = @($jsFiles.FullName | ForEach-Object { "`"$_`"" })
 $pyFilePaths = @($pyFiles.FullName | ForEach-Object { "`"$_`"" })
 $pyTopFilePaths = @($pyTopFiles.FullName | ForEach-Object { "`"$_`"" })
 $txtFilePaths = @($txtFiles.FullName | ForEach-Object { "`"$_`"" })
 $mdFilePaths = @($mdFiles.FullName | ForEach-Object { "`"$_`"" })
 $jsonFilePaths = @($jsonFiles.FullName | ForEach-Object { "`"$_`"" })
 
-OpenAndSnap ($htmlFilePaths + $cssFilePaths)
+OpenAndSnap ($htmlFilePaths + $cssFilePaths + $jsFilePaths)
 OpenAndSnap ($pyFilePaths + $pyTopFilePaths)
 OpenAndSnap ($txtFilePaths + $mdFilePaths)
 OpenAndSnap $jsonFilePaths

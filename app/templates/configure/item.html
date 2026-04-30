@@ -1,16 +1,27 @@
 {% extends 'layout/base.html' %}
+{% import 'macros/hotkeys.html' as hk %}
 {% from 'macros/config_forms.html' import footer_actions %}
 
 {% block upper_left %}
     <nav class="nav-container">
-        <a href="{{ url_for('play.overview') }}">[o]verview</a>
+        {{ hk.page_overview() }}
         <span class="separator">|</span>
-        <a href="{{ url_for('configure.index') }}">[m]ain setup</a>
+        {{ hk.page_main_setup() }}
     </nav>
 {% endblock %}
 
 {% block content %}
 
+<script>
+    const ATTRIB_REGISTRY = {
+        {% for a in all_attribs %}
+        "{{ a.id }}": {
+            "is_binary": {{ 'true' if a.is_binary else 'false' }},
+            "enums": {{ a.enum_list | tojson | safe if a.enum_list else 'null' }}
+        }{{ "," if not loop.last }}
+        {% endfor %}
+    };
+</script>
 <script src="{{ url_for('static', filename='js/configuration.js') }}"></script>
 
 <div class="configure-item">
@@ -135,12 +146,21 @@
                 </div>
                 {% for av in item.attrib_values %}
                     <div class="col-row item-attrib-row">
-                        <select name="attribs[{{ loop.index0 }}][id]">
+                        <select name="attribs[{{ loop.index0 }}][id]" 
+                                data-attrib-select="true" 
+                                data-is-range="false"
+                                onchange="ConfigEditor.syncAttributeUI(this, false)"
+                                data-current-value="{{ av.value }}">
                             {% for attr_def in all_attribs %}
-                                <option value="{{ attr_def.id }}" {{ 'selected' if attr_def.id == av.attrib_id }}>{{ attr_def.name }}</option>
+                                <option value="{{ attr_def.id }}" 
+                                        {{ 'selected' if attr_def.id == av.attrib_id }}>
+                                    {{ attr_def.name }}
+                                </option>
                             {% endfor %}
                         </select>
-                        <input type="text" name="attribs[{{ loop.index0 }}][value]" value="{{ av.value }}">
+                        <div class="value-container">
+                            <!-- Filled by ConfigEditor.syncAttributeUI -->
+                        </div>
                         <button type="button" class="btn-sm dangerous-button" onclick="ConfigEditor.removeRow(this, 'attrib-list')">×</button>
                     </div>
                 {% endfor %}
@@ -222,14 +242,19 @@
 <!-- Attribute Requirement Row -->
 <template id="attrib-req-template">
     <div class="flex-row gap-10 align-center spacious-bottom attrib-req-row">
-        <select name="recipes[RECIPE_INDEX][attrib_reqs][SUB_INDEX][attrib_id]" onchange="updateAttribReqInput(this)">
+        <select name="recipes[RECIPE_INDEX][attrib_reqs][SUB_INDEX][attrib_id]" 
+                data-attrib-select="true"
+                data-is-range="true"
+                onchange="ConfigEditor.syncAttributeUI(this, true)">
             {% for a in all_attribs %}
-                <option value="{{ a.id }}" data-is-binary="{{ a.is_binary }}">{{ a.name }}</option>
+                <option value="{{ a.id }}">
+                    {{ a.name }}
+                </option>
             {% endfor %}
         </select>
-        <span class="label-like range-label">Range:</span>
-        <input type="number" name="recipes[RECIPE_INDEX][attrib_reqs][SUB_INDEX][min]" placeholder="Min" step="any" style="width: 70px;" class="range-input">
-        <input type="number" name="recipes[RECIPE_INDEX][attrib_reqs][SUB_INDEX][max]" placeholder="Max" step="any" style="width: 70px;" class="range-input">
+        <div class="range-container">
+            <!-- Filled by ConfigEditor.syncAttributeUI -->
+        </div>
         <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
     </div>
 </template>
@@ -237,10 +262,19 @@
 <!-- Item Attribute Row -->
 <template id="attrib-template">
     <div class="col-row item-attrib-row">
-        <select name="attribs[__INDEX__][id]">
-            {% for attr_def in all_attribs %}<option value="{{ attr_def.id }}">{{ attr_def.name }}</option>{% endfor %}
+        <select name="attribs[__INDEX__][id]" 
+                data-attrib-select="true" 
+                data-is-range="false"
+                onchange="ConfigEditor.syncAttributeUI(this, false)">
+            {% for attr_def in all_attribs %}
+                <option value="{{ attr_def.id }}">
+                    {{ attr_def.name }}
+                </option>
+            {% endfor %}
         </select>
-        <input type="text" name="attribs[__INDEX__][value]" value="0">
+        <div class="value-container">
+            <!-- Filled by ConfigEditor.syncAttributeUI -->
+        </div>
         <button type="button" class="btn-sm dangerous-button" onclick="ConfigEditor.removeRow(this, 'attrib-list')">×</button>
     </div>
 </template>
@@ -295,68 +329,6 @@
     document.querySelectorAll('input[name="storage_type"]').forEach(radio => {
         radio.addEventListener('change', updateStorageControls);
     });
-
-    /**
-     * Updates the attribute requirement input based on whether the attribute is binary
-     * This handles the inline attribute requirements in included partial
-     */
-    function updateAttribReqInput(selectElement) {
-        const row = selectElement.parentElement;
-        const selectedOption = selectElement.options[selectElement.selectedIndex];
-        const isBinary = selectedOption.dataset.isBinary === 'True' || selectedOption.dataset.isBinary === 'true';
-        
-        const rangeLabel = row.querySelector('.range-label');
-        const minInput = row.querySelector('input[name*="[min]"]');
-        const maxInput = row.querySelector('input[name*="[max]"]');
-        
-        const syncCheckbox = (checkbox) => {
-            if (!checkbox) return;
-            checkbox.onchange = (e) => {
-                if (minInput) minInput.value = e.target.checked ? '1' : '0';
-                if (maxInput) maxInput.value = e.target.checked ? '1' : '0';
-            };
-            if (minInput && maxInput) {
-                const minVal = parseFloat(minInput.value) || 0;
-                const maxVal = parseFloat(maxInput.value) || 0;
-                checkbox.checked = minVal > 0 || maxVal > 0;
-            }
-        };
-
-        if (isBinary) {
-            // Hide range inputs, show checkbox
-            if (minInput && minInput.style.display !== 'none') minInput.style.display = 'none';
-            if (maxInput && maxInput.style.display !== 'none') maxInput.style.display = 'none';
-            if (rangeLabel && rangeLabel.style.display !== 'none') rangeLabel.style.display = 'none';
-            
-            // Find or create checkbox
-            let checkbox = row.querySelector('input[type="checkbox"]');
-            if (!checkbox) {
-                const label = document.createElement('label');
-                label.className = 'checkbox-label';
-                label.style.margin = '0';
-                const checkboxInput = document.createElement('input');
-                checkboxInput.type = 'checkbox';
-                checkboxInput.name = selectElement.name.replace('[attrib_id]', '[is_checked]');
-                checkboxInput.style.marginRight = '5px';
-                syncCheckbox(checkboxInput);
-                label.appendChild(checkboxInput);
-                selectElement.parentElement.insertBefore(label, minInput || maxInput);
-                checkbox = checkboxInput;
-            } else {
-                syncCheckbox(checkbox);
-            }
-        } else {
-            // Show range inputs, hide checkbox
-            if (minInput && minInput.style.display === 'none') minInput.style.display = 'inline';
-            if (maxInput && maxInput.style.display === 'none') maxInput.style.display = 'inline';
-            if (rangeLabel && rangeLabel.style.display === 'none') rangeLabel.style.display = 'inline';
-            
-            const checkbox = row.querySelector('input[type="checkbox"]');
-            if (checkbox && checkbox.parentElement.tagName === 'LABEL') {
-                checkbox.parentElement.remove();
-            }
-        }
-    }
 
     /**
      * Adds a top-level Recipe Card
@@ -439,7 +411,7 @@
             const lastRow = container.lastElementChild;
             const selectElement = lastRow.querySelector('select');
             if (selectElement) {
-                updateAttribReqInput(selectElement);
+                ConfigEditor.syncAttributeUI(selectElement, true);
             }
         }, 0);
     }
@@ -479,11 +451,6 @@
         updateStorageControls();
         updateOrderIndices();
 
-        const selectElements = document.querySelectorAll(
-            '#recipes-container select[name*="[attrib_id]"]');
-        selectElements.forEach(selectElement => {
-            updateAttribReqInput(selectElement);
-        });
         document.querySelectorAll('.instant-checkbox').forEach(cb => {
             toggleInstant(cb);
         });

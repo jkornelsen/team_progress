@@ -104,21 +104,20 @@
             {% for req in recipe.attrib_reqs if recipe %}
             <div class="flex-row gap-10 align-center spacious-bottom attrib-req-row">
                 <select name="recipes[{{ recipe_index }}][attrib_reqs][{{ loop.index0 }}][attrib_id]" 
-                        data-is-binary="{{ req.attrib.is_binary if req.attrib else false }}" 
-                        onchange="updateAttribReqInput(this)">
+                        data-attrib-select="true"
+                        data-is-range="true"
+                        data-current-min="{{ req.min_val }}"
+                        data-current-max="{{ req.max_val }}"
+                        onchange="ConfigEditor.syncAttributeUI(this, true)">
                     {% for a in all_attribs %}
-                    <option value="{{ a.id }}" data-is-binary="{{ a.is_binary }}" {{ 'selected' if a.id == req.attrib_id }}>
+                    <option value="{{ a.id }}" {{ 'selected' if a.id == req.attrib_id }}>
                         {{ a.name }}
                     </option>
                     {% endfor %}
                 </select>
-
-                <span class="label-like range-label">Range:</span>
-                <input type="number" name="recipes[{{ recipe_index }}][attrib_reqs][{{ loop.index0 }}][min]" 
-                       value="{{ req.min_val }}" placeholder="Min" step="any" style="width: 70px;" class="range-input">
-                <input type="number" name="recipes[{{ recipe_index }}][attrib_reqs][{{ loop.index0 }}][max]" 
-                       value="{{ req.max_val }}" placeholder="Max" step="any" style="width: 70px;" class="range-input">
-                
+                <div class="range-container flex-row gap-5 align-center">
+                    <!-- Filled by ConfigEditor.syncAttributeUI -->
+                </div>
                 <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
             </div>
             {% endfor %}

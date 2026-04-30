@@ -4,7 +4,7 @@
 import os
 
 def bundle_files(start_dir="..", output_file="bundled.md"):
-    extensions = ('.py', '.html')
+    extensions = ('.py', '.html', '.js', '.css')
     #extensions = ('.json')  # data files
     ignored_folders = {
         'venv', '.venv', '.git', '.vscode', '__pycache__', 'postgres_data',

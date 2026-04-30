@@ -1,11 +1,12 @@
 {% extends 'layout/base.html' %}
+{% import 'macros/hotkeys.html' as hk %}
 {% from 'macros/config_forms.html' import footer_actions %}
 
 {% block upper_left %}
     <nav class="nav-container">
-        <a href="{{ url_for('play.overview') }}">[o]verview</a>
+        {{ hk.page_overview() }}
         <span class="separator">|</span>
-        <a href="{{ url_for('configure.index') }}">[m]ain setup</a>
+        {{ hk.page_main_setup() }}
     </nav>
 {% endblock %}
 
@@ -13,6 +14,16 @@
 
 <!-- TEMPLATES FOR DYNAMIC ROWS -->
 
+<script>
+    const ATTRIB_REGISTRY = {
+        {% for a in all_attribs %}
+        "{{ a.id }}": {
+            "is_binary": {{ 'true' if a.is_binary else 'false' }},
+            "enums": {{ a.enum_list | tojson | safe if a.enum_list else 'null' }}
+        }{{ "," if not loop.last }}
+        {% endfor %}
+    };
+</script>
 <script src="{{ url_for('static', filename='js/configuration.js') }}"></script>
 
 <div class="configure-event">
@@ -108,7 +119,7 @@
         </section>
 
         <template id="factor-template">
-            {% set index = 'INDEX' %}
+            {% set index = '__INDEX__' %}
             {% set factor = None %}
             {% include 'configure/partials/event_factor_card.html' %}
         </template>
@@ -168,7 +179,7 @@
         );
         const nextIndex = indices.length > 0 ? Math.max(...indices) + 1 : 1;
 
-        const html = template.replace(/INDEX/g, nextIndex);
+        const html = template.replace(/__INDEX__/g, nextIndex);
         list.insertAdjacentHTML('beforeend', html);
         emptyMsg.classList.add('hidden');
 
@@ -223,6 +234,7 @@
             attrSelect.classList.add('hidden');
             itemSelect.classList.remove('hidden');
         }
+        outerExprVisibility(card);
     }
 
     function outcomeFieldsVisibility() {
@@ -281,7 +293,8 @@
         const appSelector = card.querySelector('.op-application-selector');
         const innerGroup = card.querySelector('[data-inner-group]');
         const requiredGroup = card.querySelector('[data-slot-required]');
-        
+        const attrSelect = card.querySelector('.target-attr');
+
         const comparisonOps = ['==', '>', '<', '>=', '<='];
 
         if (comparisonOps.includes(op)) {
@@ -289,13 +302,13 @@
             innerGroup.style.order = "1";
             appSelector.style.order = "2";
             requiredGroup.style.order = "3";
-            
             requiredGroup.classList.remove('hidden');
+
+            syncAttributeUI_EF(attrSelect, false);
         } else {
             // MATH: + ( Inner )
             appSelector.style.order = "1";
             innerGroup.style.order = "2";
-            
             requiredGroup.classList.add('hidden');
         }
     }
@@ -382,6 +395,14 @@
         renumberLabels();
     }
 
+    // Event-specific wrapper to handle field mode logic
+    function syncAttributeUI_EF(attrSelect) {
+        const card = attrSelect.closest('.factor-card');
+        const modeSelect = card.querySelector('select[name$="[field_mode]"]');
+        const isItemMode = modeSelect && modeSelect.value === 'qty';
+        ConfigEditor.syncAttributeUI(attrSelect, false, isItemMode);
+    }
+
     // Use Event Delegation for dynamic changes
     document.addEventListener('change', function(e) {
         const card = e.target.closest('.factor-card');
@@ -400,6 +421,11 @@
         rebuildRoleDatalist();
 
         document.querySelectorAll('.factor-card').forEach(card => {
+            const index = card.getAttribute('data-index');
+            const modeSelect = card.querySelector('select[name$="[field_mode]"]');
+            if (modeSelect) {
+                fieldTargetVisibility(modeSelect, index);
+            }
             innerExprVisibility(card);
             outerExprVisibility(card);
         });

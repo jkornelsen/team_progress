@@ -42,7 +42,13 @@
 
                 <!-- Attribute Dropdown -->
                 <select name="dets[{{ index }}][attrib_id]" 
-                        class="target-attr full-width {{ 'hidden' if infield and infield.field_mode == 'qty' }}" style="max-width: 30ch;">
+                        data-attrib-select="true"
+                        data-field-name="val_required"
+                        data-is-range="false"
+                        data-current-value="{{ factor.val_required or 1.0 }}"
+                        onchange="syncAttributeUI_EF(this, false)"
+                        class="target-attr full-width {{ 'hidden' if infield and infield.field_mode == 'qty' }}" 
+                        style="max-width: 30ch;">
                     <option value="">-- Select Attribute --</option>
                     {% for a in all_attribs %}
                         <option value="{{ a.id }}" {{ 'selected' if infield and infield.attrib_id == a.id }}>{{ a.name }}</option>
@@ -51,7 +57,7 @@
 
                 <!-- Item Dropdown -->
                 <select name="dets[{{ index }}][item_id]" 
-                        class="target-item full-width {{ 'hidden' if infield and infield.field_mode != 'qty' }}" style="max-width: 30ch;">
+                        class="target-item full-width {{ 'hidden' if not (infield and infield.field_mode == 'qty') }}" style="max-width: 30ch;">
                     <option value="">-- Select Item --</option>
                     {% for i in all_items %}
                         <option value="{{ i.id }}" {{ 'selected' if infield and infield.item_id == i.id }}>{{ i.name }}</option>
@@ -113,11 +119,7 @@
                 </select>
 
                 <div data-slot-required class="flex-row align-center gap-5 hidden">
-                    <input type="number" 
-                           name="dets[{{ index }}][val_required]" 
-                           value="{{ factor.val_required or 0.0 }}" 
-                           step="any" 
-                           style="max-width: 8ch;">
+                    <!-- Filled by ConfigEditor.syncAttributeUI -->
                 </div>
 
             </div>

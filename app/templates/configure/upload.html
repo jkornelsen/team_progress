@@ -1,4 +1,13 @@
 {% extends 'layout/base.html' %}
+{% import 'macros/hotkeys.html' as hk %}
+
+{% block upper_left %}
+    <nav class="nav-container">
+        {{ hk.page_overview() }}
+        <span class="separator">|</span>
+        {{ hk.page_main_setup() }}
+    </nav>
+{% endblock %}
 
 {% block content %}
 <div class="session-card outer-border" style="max-width: 600px; margin: 40px auto;">

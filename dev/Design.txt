@@ -14,8 +14,10 @@ direct idle increase effects
 
 show updated item quantities in locations like overview and sources do
 
-select box for enumerated attribs in item configure
 changing an enumerated attrib should display the text in the log
+
+the comparison part of event requirements == 1 or >= 1 can be hidden
+    because it is the same as truthy
 
 infestation
     repair cost + reload cost can reduce xp to 0 (but never below)
@@ -57,6 +59,10 @@ did saving and duplicating blow away event determiners?
 restrict location access by item qty or attribreq
 
 allow progress at a location once started even if no longer current loc
+
+validate that role isn't empty before submitting event config
+fill in event role as item name
+    when item is universal and role not specified
 
 event distance requirements (different from determinants?) for other1
     melee is distance 1
