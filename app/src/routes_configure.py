@@ -17,7 +17,6 @@ from app.serialization import (
     init_game_session, load_scenario_from_path, DEFAULT_SCENARIO_FILE,
     import_from_dict, patch_from_dict,
     clear_game_data, export_game_to_json, export_to_dict)
-from app.database import clone_with_children
 from app.utils import (
     LinkLetters, RequestHelper, parse_coords,
     capture_origin, redirect_back)
@@ -614,9 +613,7 @@ def edit_event(id):
                     game_token=game_token,
                     event_id=event.id,
                     usage_type=Participant.OUT, # Mark as Output
-                    role=Participant.SUBJECT, # Typically defaults to the actor
                     attrib_id=attr_id,
-                    operation=Operation.ADD 
                 )
                 event.factors.append(new_effect)
 
@@ -909,14 +906,33 @@ def duplicate_entity(source_id, entity_type):
     game_token = g.game_token
     model_class = ENTITIES[f"{entity_type}s"]
     src = model_class.query.get((game_token, source_id))
+    
     if not src:
         return redirect(url_for('configure.index'))
     
-    new_id = Overall.generate_next_id(game_token)
-    new_name = increment_name(src.name)
-
-    # Recursive Clone e.g. Item -> Recipes -> Sources/Byproducts
-    clone_with_children(src, {'id': new_id, 'name': new_name})
+    # 1. Get the data
+    data = src.to_dict()
     
+    # 2. Recursive helper to strip 'id' from the dict and all nested objects
+    # This ensures Recipes, Factors, etc. all get brand new IDs
+    def strip_ids(obj):
+        if isinstance(obj, dict):
+            obj.pop('id', None)
+            for v in obj.values():
+                strip_ids(v)
+        elif isinstance(obj, list):
+            for item in obj:
+                strip_ids(item)
+
+    strip_ids(data)
+    
+    # 3. Modify the name
+    data['name'] = increment_name(src.name)
+    
+    # 4. Re-hydrate by generating new IDs
+    new_obj = model_class.from_dict(data, game_token)
+    
+    db.session.add(new_obj)
     db.session.commit()
-    return redirect(url_for(f'configure.edit_{entity_type}', id=new_id))
+    
+    return redirect(url_for(f'configure.edit_{entity_type}', id=new_obj.id))

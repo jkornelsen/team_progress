@@ -198,7 +198,7 @@
         "characters": [
             {
                 "id": 14,
-                "name": "Tainted Bunny",
+                "name": "\ud83d\udc07Tainted Bunny",
                 "description": "Fur is greenish and sticky, with a fuzzy white tail.",
                 "attribs": [
                     [4, 8.0],
@@ -214,7 +214,7 @@
             },
             {
                 "id": 15,
-                "name": "Full-grown Mouse",
+                "name": "\ud83d\udc2dFull-grown Mouse",
                 "description": "Okay, it's still kind of cute, despite the toxic green eyes.",
                 "attribs": [
                     [4, 5.0],
@@ -230,7 +230,7 @@
             },
             {
                 "id": 17,
-                "name": "Bad Hare Day",
+                "name": "\ud83d\udc30Bad Hare Day",
                 "description": "Red-eyed monster that never stops hopping up and down, up and down.\r\n\r\n- Set difficulty to *Hard*.\r\n- On victory, mark the boss as [Defeated](/play/attrib/3/char/5) and add **250 XP**.",
                 "attribs": [
                     [3, 0.0],
@@ -247,7 +247,7 @@
             },
             {
                 "id": 25,
-                "name": "Old Fart Supreme",
+                "name": "\ud83d\udc74Old Fart Supreme",
                 "description": "Wearing a nametag with \"Gerry\" written on it.",
                 "attribs": [
                     [3, 0.0],
@@ -271,9 +271,10 @@
                     [29, 3.0],
                     [30, 2.0],
                     [27, 10.0],
-                    [2, 0.0]
+                    [2, 0.0],
+                    [45, 0.0]
                 ],
-                "abilities": [18, 23, 28, 35, 38],
+                "abilities": [28, 38, 35, 18, 43, 44, 23],
                 "toplevel": true,
                 "location_id": 12,
                 "position": null,
@@ -285,16 +286,18 @@
             },
             {
                 "id": 16,
-                "name": "Baby Mouse",
+                "name": "\ud83d\udc01Baby Mouse",
                 "description": "Mutant, rabid and green-eyed, burning from within due to toxic waste. Max 5 HP.",
                 "attribs": [
                     [4, 2.0],
                     [26, 0.0],
                     [29, 1.0],
                     [30, 3.0],
-                    [27, 5.0]
+                    [27, 5.0],
+                    [42, 1.0],
+                    [45, 0.0]
                 ],
-                "abilities": [39, 40, 41],
+                "abilities": [39, 40, 41, 43],
                 "toplevel": false,
                 "location_id": 10,
                 "position": null,
@@ -304,6 +307,22 @@
             }
         ],
         "attribs": [
+            {
+                "id": 45,
+                "name": "Boost",
+                "description": "Set to the result of [Surge](/play/event/44) for 1 round. It goes away even if the enemy doesn't choose to attack in that round.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 42,
+                "name": "Distance",
+                "description": "Measure of how far away the enemy is (Theater of the Mind, because this scenario does not use a grid). Melee distance is 1.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
             {
                 "id": 2,
                 "name": "XP",
@@ -386,6 +405,140 @@
             }
         ],
         "events": [
+            {
+                "id": 43,
+                "name": "Move to Range",
+                "description": "Step out of melee range, repositioning to about 5 tiles away.\r\n\r\n- **Major Success:** (Nat 20) No loss of turn\u2014the action is free.\r\n- **Major Failure:** Allow an *Attack of Opportunity*.",
+                "attribs": [],
+                "abilities": [],
+                "toplevel": false,
+                "outcome_type": "fourway",
+                "roller_type": "dnd",
+                "numeric_range": [1, 20],
+                "single_number": 0.0,
+                "selection_strings": "",
+                "determinants": [
+                    {
+                        "usage_type": "in",
+                        "label": "Can Fight",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "[Subject]",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 27
+                        },
+                        "outfield": null,
+                        "op_application": ">=",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
+                    },
+                    {
+                        "usage_type": "in",
+                        "label": "Target Can Fight",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "Target",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 27
+                        },
+                        "outfield": null,
+                        "op_application": ">=",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
+                    },
+                    {
+                        "usage_type": "in",
+                        "label": "Quickness",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "[Subject]",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 30
+                        },
+                        "outfield": null,
+                        "op_application": "+",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
+                    },
+                    {
+                        "usage_type": "in",
+                        "label": "Quickness",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "Target",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 30
+                        },
+                        "outfield": null,
+                        "op_application": "-",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
+                    }
+                ],
+                "effects": []
+            },
+            {
+                "id": 44,
+                "name": "Surge",
+                "description": "Gain a bonus to power and speed for 1 turn.\r\n\r\n- Normally costs a turn to use. However, if you had just withdrawn to range and the enemy used their turn to follow, then it does not.\r\n- Can only be used once per fight.\r\n- Chance of causing a penalty rather than a bonus.",
+                "attribs": [],
+                "abilities": [],
+                "toplevel": false,
+                "outcome_type": "numeric",
+                "roller_type": "dnd",
+                "numeric_range": [-1, 4],
+                "single_number": 0.0,
+                "selection_strings": "",
+                "determinants": [
+                    {
+                        "usage_type": "in",
+                        "label": "Can Fight",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "[Subject]",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 27
+                        },
+                        "outfield": null,
+                        "op_application": ">=",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
+                    },
+                    {
+                        "usage_type": "in",
+                        "label": "Target Can Fight",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "Target",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 27
+                        },
+                        "outfield": null,
+                        "op_application": ">=",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
+                    }
+                ],
+                "effects": []
+            },
             {
                 "id": 23,
                 "name": "Upgrade Bonus",
@@ -499,23 +652,6 @@
                         "label": "",
                         "val_src": "field",
                         "infield": {
-                            "role": "[Subject]",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": 0,
-                            "attrib_id": 29
-                        },
-                        "outfield": null,
-                        "op_application": "+",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 0.0
-                    },
-                    {
-                        "usage_type": "in",
-                        "label": "",
-                        "val_src": "field",
-                        "infield": {
                             "role": "Enemy",
                             "field_mode": "attr",
                             "child_of_anchor": false,
@@ -526,6 +662,40 @@
                         "op_application": ">=",
                         "op_transform": "",
                         "val_transform": 1.0,
+                        "val_required": 1.0
+                    },
+                    {
+                        "usage_type": "in",
+                        "label": "",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "[Subject]",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 29
+                        },
+                        "outfield": null,
+                        "op_application": "+",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
+                    },
+                    {
+                        "usage_type": "in",
+                        "label": "",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "[Subject]",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 45
+                        },
+                        "outfield": null,
+                        "op_application": "+",
+                        "op_transform": "log",
+                        "val_transform": 10.0,
                         "val_required": 1.0
                     }
                 ],
@@ -592,7 +762,7 @@
                 "roller_type": "dnd",
                 "numeric_range": [1, 20],
                 "single_number": 0.0,
-                "selection_strings": "Bite\r\nHeal\r\nLeave Melee Range",
+                "selection_strings": "Bite\r\nHeal\r\nMove to Range",
                 "determinants": [],
                 "effects": []
             },
@@ -624,7 +794,7 @@
                         "op_application": ">=",
                         "op_transform": "",
                         "val_transform": 1.0,
-                        "val_required": 0.0
+                        "val_required": 1.0
                     },
                     {
                         "usage_type": "in",
@@ -662,6 +832,23 @@
                     },
                     {
                         "usage_type": "in",
+                        "label": "Melee Range",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "Enemy",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 42
+                        },
+                        "outfield": null,
+                        "op_application": "<",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 2.0
+                    },
+                    {
+                        "usage_type": "in",
                         "label": "Chance to Hit",
                         "val_src": "field",
                         "infield": {
@@ -675,7 +862,24 @@
                         "op_application": "+",
                         "op_transform": "",
                         "val_transform": 1.0,
-                        "val_required": 0.0
+                        "val_required": 1.0
+                    },
+                    {
+                        "usage_type": "in",
+                        "label": "Accuracy Bonus",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "[Subject]",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 45
+                        },
+                        "outfield": null,
+                        "op_application": "+",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
                     },
                     {
                         "usage_type": "in",
@@ -692,7 +896,7 @@
                         "op_application": "-",
                         "op_transform": "",
                         "val_transform": 1.0,
-                        "val_required": 0.0
+                        "val_required": 1.0
                     }
                 ],
                 "effects": []
@@ -725,7 +929,7 @@
                         "op_application": ">=",
                         "op_transform": "",
                         "val_transform": 1.0,
-                        "val_required": 0.0
+                        "val_required": 1.0
                     },
                     {
                         "usage_type": "in",
@@ -742,7 +946,7 @@
                         "op_application": ">=",
                         "op_transform": "",
                         "val_transform": 1.0,
-                        "val_required": 0.0
+                        "val_required": 1.0
                     },
                     {
                         "usage_type": "in",
@@ -759,7 +963,24 @@
                         "op_application": "+",
                         "op_transform": "",
                         "val_transform": 1.0,
-                        "val_required": 0.0
+                        "val_required": 1.0
+                    },
+                    {
+                        "usage_type": "in",
+                        "label": "Accuracy Bonus",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "[Subject]",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 45
+                        },
+                        "outfield": null,
+                        "op_application": "+",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
                     },
                     {
                         "usage_type": "in",
@@ -776,7 +997,7 @@
                         "op_application": "-",
                         "op_transform": "",
                         "val_transform": 1.0,
-                        "val_required": 0.0
+                        "val_required": 1.0
                     }
                 ],
                 "effects": []

@@ -88,7 +88,7 @@
             <option value="" disabled {{ 'selected' if not selected_id }}>Select an Event...</option>
             {% for event_def in all_events %}
                 <option value="{{ event_def.id }}" {{ 'selected' if event_def.id == selected_id }}>
-                    {{ event_def.name }} ({{ event_def.outcome_type }})
+                    {{ event_def.name }}
                 </option>
             {% endfor %}
         </select>

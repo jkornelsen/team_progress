@@ -71,6 +71,14 @@ class DictHydrator:
         
         # Apply mandatory IDs or overrides
         fields.update(overrides)
+
+        # If this model needs a manual ID and doesn't have one, generate it.
+        # This applies to entities and Recipe.
+        if hasattr(cls, 'id') and fields.get('id') is None:
+            if cls in list(ENTITIES.values()) + [Recipe]:
+                from .models import Overall
+                fields['id'] = Overall.generate_next_id(game_token)
+
         return cls(game_token=game_token, **fields)
 
 def timeToStr(dt_obj):
@@ -128,11 +136,6 @@ class Entity(db.Model, DictHydrator):
                 event_id=event_id
             ))
         return entity
-
-    def get_deep_relationships(self):
-        d = deep_rel('attrib_values', AttribVal, 'subject_id')
-        d.update(deep_rel('_ability_links', EntityAbility, 'entity_id'))
-        return d
 
     @classmethod
     def get_or_new(cls, game_token, id):
@@ -226,11 +229,6 @@ class Item(Entity):
                 Recipe.from_dict(r_data, game_token, order_index))
         return item
 
-    def get_deep_relationships(self):
-        d = super().get_deep_relationships()
-        d.update(deep_rel('recipes', Recipe, 'product_id'))
-        return d
-
     in_piles = db.relationship(
         'Pile',
         back_populates='item',
@@ -316,12 +314,6 @@ class Location(Entity):
             loc.routes_forward.append(
                 LocDest.from_dict(d_data, game_token, loc.id))
         return loc
-
-    def get_deep_relationships(self):
-        d = super().get_deep_relationships()
-        d.update(deep_rel('item_refs', ItemRef, 'loc_id'))
-        d.update(deep_rel('routes_forward', LocDest, 'loc1_id'))
-        return d
 
     @property
     def exits(self):
@@ -545,11 +537,6 @@ class Event(Entity):
             for idx, e in enumerate(effects)
         ]
         return event
-
-    def get_deep_relationships(self):
-        d = super().get_deep_relationships()
-        d.update(deep_rel('factors', EventFactor, 'event_id'))
-        return d
 
     @property
     def determinants(self):
@@ -835,6 +822,7 @@ class Participant:
     SUBJECT = '[Subject]'
     OWNER = '[Owner]'
     AT = '[At]'
+    UNIVERSAL = '[Universal]'
 
     FORM_SUFFIX = '_role_id'
 
@@ -861,6 +849,7 @@ class Participant:
     # --- Field Mode ---
     ATTR = 'attr'  # Fetch AttribVal
     QTY  = 'qty'   # Fetch pile quantity
+    DIST = 'dist'  # Distance from subject grid pos (e.g. melee vs ranged)
 
     FIELD   = 'field'    # get that field
     CONST   = 'const'    # fixed value (val_transform)
@@ -871,7 +860,7 @@ class Participant:
     OUT = 'out' # Effect
 
     # --- Constraints ---
-    CONTEXT_ROLES = [SUBJECT, OWNER, AT]
+    CONTEXT_ROLES = [SUBJECT, OWNER, AT, UNIVERSAL]
     ALL_MODES = [ATTR, QTY]
     ALL_USAGE = [IN, OUT]
 
@@ -1134,12 +1123,6 @@ class Recipe(db.Model, DictHydrator):
             for ar in data.get('attrib_reqs', [])
         ]
         return recipe
-
-    def get_deep_relationships(self):
-        d = deep_rel('sources', RecipeSource, 'recipe_id')
-        d.update(deep_rel('byproducts', RecipeByproduct, 'recipe_id'))
-        d.update(deep_rel('attrib_reqs', RecipeAttribReq, 'recipe_id'))
-        return d
 
     @property
     def source_items(self):

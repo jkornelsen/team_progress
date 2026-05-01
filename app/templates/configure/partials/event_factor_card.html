@@ -35,7 +35,10 @@
             </div>
 
             <div class="flex-row align-center gap-10">
-                <select name="dets[{{ index }}][field_mode]" class="full-width" style="max-width: 30ch;" onchange="fieldTargetVisibility(this, {{ index }})">
+                <select name="dets[{{ index }}][field_mode]"
+                        class="full-width"
+                        style="max-width: 30ch;"
+                        onchange="fieldTargetVisibility(this, {{ index }}); syncRoleWithField(this)">
                     <option value="attr" {{ 'selected' if infield and infield.field_mode == 'attr' }}>Attribute Value</option>
                     <option value="qty" {{ 'selected' if infield and infield.field_mode == 'qty' }}>Item Quantity</option>
                 </select>
@@ -57,7 +60,9 @@
 
                 <!-- Item Dropdown -->
                 <select name="dets[{{ index }}][item_id]" 
-                        class="target-item full-width {{ 'hidden' if not (infield and infield.field_mode == 'qty') }}" style="max-width: 30ch;">
+                        class="target-item full-width {{ 'hidden' if not (infield and infield.field_mode == 'qty') }}"
+                        style="max-width: 30ch;"
+                        onchange="syncRoleWithField(this)">
                     <option value="">-- Select Item --</option>
                     {% for i in all_items %}
                         <option value="{{ i.id }}" {{ 'selected' if infield and infield.item_id == i.id }}>{{ i.name }}</option>

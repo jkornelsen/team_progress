@@ -24,13 +24,31 @@ def format_for_display(val):
 def get_entity_value(anchor_id, field_def):
     """Handles Attr vs Qty and Base vs Child."""
     game_token=g.game_token
+    target_id = anchor_id
     
-    if field_def.field_mode == Participant.ATTR:
-        # 1. Determine the Target Entity (The Base or the Selected Child)
-        # TODO: if field_def.child_of_anchor then search entities
-        # owned by anchor_id
-        target_id = anchor_id
+    # Handle Depth Traversal
+    if field_def.child_of_anchor:
+        # Find the first pile that satisfies the requirement
+        if field_def.field_mode == Participant.ATTR:
+            pile = db.session.query(Pile).join(
+                Item, 
+                (Pile.item_id == Item.id) & (Pile.game_token == Item.game_token)
+            ).join(
+                AttribVal, 
+                (AttribVal.subject_id == Item.id) & (AttribVal.game_token == Item.game_token)
+            ).filter(
+                Pile.game_token == game_token,
+                Pile.owner_id == anchor_id,
+                AttribVal.attrib_id == field_def.attrib_id
+            ).first()
+            if not pile: return 0.0
+            target_id = pile.item_id 
+        else:
+            # Quantity Mode: Target is the specific item_id requested
+            target_id = field_def.item_id
 
+    # Fetch Attribute Value
+    if field_def.field_mode == Participant.ATTR:
         # If entity_id is set, we use that specific Attribute Blueprint
         val_obj = AttribVal.query.filter_by(
             game_token=game_token,
@@ -39,17 +57,18 @@ def get_entity_value(anchor_id, field_def):
         ).first()
         return val_obj.value if val_obj else 0.0
     
-    anchor_ent = Entity.query.get((game_token, anchor_id))
-    is_item_anchor = anchor_ent and anchor_ent.entity_type == Item.TYPENAME
-
+    # Fetch Quantity Value
     if field_def.field_mode == Participant.QTY and field_def.item_id:
         item = Item.query.get((game_token, field_def.item_id))
-        if item and item.storage_type == StorageType.UNIVERSAL:
+        if field_def.role == Participant.UNIVERSAL or (
+                item and item.storage_type == StorageType.UNIVERSAL):
             owner_id = GENERAL_ID
-        elif is_item_anchor:
-            owner_id = session.get('old_char_id') or session.get('old_loc_id') or GENERAL_ID
         else:
-            owner_id = anchor_id
+            anchor_ent = Entity.query.get((game_token, anchor_id))
+            if anchor_ent and anchor_ent.entity_type == Item.TYPENAME:
+                owner_id = session.get('old_char_id') or session.get('old_loc_id') or GENERAL_ID
+            else:
+                owner_id = anchor_id
 
         #TODO: limit by position
         pile = Pile.query.filter_by(
@@ -71,6 +90,55 @@ def resolve_anchor_id(role_name, role_entities):
     role_entities: e.g. {'[Subject]': 17, 'Target': 18}
     """
     return role_entities.get(role_name)
+
+def meets_det(factor, entity):
+    """
+    Validation logic to see if a specific entity (Char/Loc/Item) 
+    fulfills a specific determinant's requirements.
+    """
+    if not entity or not factor.infield:
+        return False
+    field = factor.infield
+    game_token = g.game_token
+
+    # --- 1. CHILD TRAVERSAL (Item inside a Location/Character) ---
+    if field.child_of_anchor:
+        # Check all item piles currently at this location or owned by this character
+        # 'entity' here is the Anchor (e.g., The Energy Core Room)
+        for pile in entity.piles:
+            if field.field_mode == Participant.ATTR:
+                # Check if the Item Blueprint has the required attribute
+                if any(av.attrib_id == field.attrib_id for av in pile.item.attrib_values):
+                    return True
+            elif field.field_mode == Participant.QTY:
+                if pile.item_id == field.item_id:
+                    return True
+        return False
+
+    # --- 2. UNIVERSAL STORAGE CHECK ---
+    # If the item is universal, only ID 1 (General Storage) can meet it
+    if field.field_mode == Participant.QTY and field.item_id:
+        item_def = Item.query.get((game_token, field.item_id))
+        if item_def and item_def.storage_type == StorageType.UNIVERSAL:
+            return entity.id == GENERAL_ID
+
+    # --- 3. STANDARD ATTRIBUTE CHECK (On the Anchor itself) ---
+    if field.field_mode == Participant.ATTR and field.attrib_id:
+        if not any(av.attrib_id == field.attrib_id for av in entity.attrib_values):
+            return False
+
+    # TODO: check for event distance requirement e.g. 30ft (6 tiles)
+    # dist = distance_between(owner.position, c.position)
+    # if dist is not None and dist > d.distance_reqired
+
+    # --- 4. STANDARD QUANTITY CHECK (On the Anchor itself) ---
+    if field.field_mode == Participant.QTY and field.item_id:
+        # Check if the entity has a pile of this item
+        has_pile = any(p.item_id == field.item_id for p in entity.piles)
+        if not has_pile:
+            return False
+
+    return True
 
 def calculate_determinants(event, role_entities):
     """
@@ -105,15 +173,30 @@ def calculate_determinants(event, role_entities):
                 else maskable_name(anchor) if anchor else "Unknown"
             source_display = anchor_name
             if infield.child_of_anchor:
-                # If looking at an item instance inside Suzy, we need the item name
-                instance_id = role_entities.get(f"{infield.role}_item_id")
-                if instance_id:
-                    pile = Pile.query.get((game_token, instance_id))
-                    if pile:
-                        source_display = \
-                            f"{anchor_name}'s {maskable_name(pile.item)}"
+                # Try to find the specific child item that provided the value
+                child_name = "Item"
+                pile_query = db.session.query(Pile).join(
+                    Item, (Pile.item_id == Item.id) & (Pile.game_token == Item.game_token)
+                )
+                if det.infield.field_mode == Participant.ATTR:
+                    pile = pile_query.join(
+                        AttribVal, (
+                            AttribVal.subject_id == Item.id) & (
+                            AttribVal.game_token == Item.game_token)
+                    ).filter(
+                        Pile.game_token == g.game_token,
+                        Pile.owner_id == anchor_id,
+                        AttribVal.attrib_id == det.infield.attrib_id
+                    ).first()
                 else:
-                    source_display = f"{anchor_name}'s Item"
+                    pile = pile_query.filter(
+                        Pile.game_token == g.game_token,
+                        Pile.owner_id == anchor_id,
+                        Pile.item_id == det.infield.item_id
+                    ).first()
+                if pile:
+                    child_name = maskable_name(pile.item)
+                source_display = f"{anchor_name}'s {child_name}"
         elif det.val_src == Participant.CONST:
             val = det.val_transform
 
@@ -155,9 +238,18 @@ def apply_operation(current_val, mod_val, op):
 
     # Unary Transforms
     if op == 'log':
-        if current_val == 0: return 0.0
+        c = 50
+        if current_val == 0:
+            return 0.0
+        current_abs = abs(current_val)
         sign = 1 if current_val > 0 else -1
-        return sign * mod_val * math.log10(abs(current_val) + 1)
+        if current_abs < 1:
+            return current_val
+        if current_abs < 1.1:
+            return sign * 1
+        ratio = math.log(1 + current_abs / c) / (
+            1 + math.log(1 + current_abs / c))
+        return sign * (1 + mod_val * ratio)
     if op == 'sqrt':
         return math.sqrt(abs(current_val))
     if op == '0.5':
@@ -185,7 +277,7 @@ def get_inner_breakdown(val, mod_val, op):
         '/':    f"{v}÷{m}",
         'x^':   f"{v}<sup>{m}</sup>",
         '^x':   f"{m}<sup>{v}</sup>",
-        'log':  f"log({v})",
+        'log':  f"{v} Soft Capped",
         'sqrt': f"√{v}",
         '0.5':  f"{v}/2"
     }

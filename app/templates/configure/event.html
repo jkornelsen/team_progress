@@ -168,6 +168,12 @@
 </template>
 
 <script>
+    const ITEM_STORAGE_TYPE = {
+        {% for i in all_items %}
+        "{{ i.id }}": "{{ i.storage_type }}",
+        {% endfor %}
+    };
+
     function addFactor() {
         const list = document.getElementById('det-list');
         const emptyMsg = document.getElementById('det-list-empty');
@@ -220,6 +226,31 @@
         if (emptyMsg) {
             emptyMsg.classList.toggle('hidden', total > 0);
         }
+    }
+
+    function syncRoleWithField(element) {
+        const card = element.closest('.factor-card');
+        const mode = card.querySelector('select[name$="[field_mode]"]').value;
+        const itemId = card.querySelector('.target-item').value;
+        const roleInput = card.querySelector('.role-selector');
+        const storageType = ITEM_STORAGE_TYPE[itemId];
+
+        if (mode === 'qty' && storageType === "{{ StorageType.UNIVERSAL }}") {
+            // Force Universal
+            roleInput.value = "{{ Participant.UNIVERSAL }}";
+            roleInput.readOnly = true;
+            roleInput.style.opacity = "0.7";
+        } else {
+            // If it was auto-locked to Universal, revert it to Subject when switching away
+            if (roleInput.value === "{{ Participant.UNIVERSAL }}") {
+                roleInput.value = "{{ Participant.SUBJECT }}";
+            }
+            roleInput.readOnly = false;
+            roleInput.style.opacity = "1";
+        }
+
+        // Refresh UI labels/previews
+        handleRoleInput(roleInput);
     }
 
     function fieldTargetVisibility(select, index) {

@@ -14,11 +14,6 @@ direct idle increase effects
 
 show updated item quantities in locations like overview and sources do
 
-changing an enumerated attrib should display the text in the log
-
-the comparison part of event requirements == 1 or >= 1 can be hidden
-    because it is the same as truthy
-
 infestation
     repair cost + reload cost can reduce xp to 0 (but never below)
     enough energy for several rounds of multiple events
@@ -34,9 +29,7 @@ infestation
         rifle
         grappling hook -- moves to melee distance
         rush
-        disengage
         detect -- lowers enemy stealth
-        focus -- lowers enemy evasion
     edit char to add ability link and/or require xl
     clear any temporary bonuses in "finish fight" event
     also "initiate fight" to set distance and restore hp
@@ -46,7 +39,6 @@ infestation
         jump
         hide
         dodge
-        scurry -- disengage; requires between 30% and 50% hp
         spit acid
         tongue lash
         rip off and project their own fur -- reduces their hp a bit
@@ -54,17 +46,14 @@ infestation
         cane poke
     later enemies bigger than rodents e.g. alligators -- only final boss human
 
-did saving and duplicating blow away event determiners?
-
 restrict location access by item qty or attribreq
 
 allow progress at a location once started even if no longer current loc
 
 validate that role isn't empty before submitting event config
-fill in event role as item name
-    when item is universal and role not specified
 
-event distance requirements (different from determinants?) for other1
+event grid distance to target (from subject)
+    Participant.DIST field mode
     melee is distance 1
     would add significant meaning to tactical positioning
 

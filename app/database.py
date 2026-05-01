@@ -61,39 +61,6 @@ def start_postgres():
     except subprocess.CalledProcessError as e:
         print(f"Failed to start PostgreSQL: {e}")
 
-def clone_with_children(obj, overrides):
-    """
-    Disconnects an object from the DB and resets its state.
-    Optionally applies attribute overrides (like a new ID or Name).
-
-    Recursively clones an object and any children defined 
-    in get_deep_relationships().
-    """
-    # 1. Capture children before ghosting the parent
-    child_map = {}
-    if hasattr(obj, 'get_deep_relationships'):
-        for attr, (child_class, fk_field) in obj.get_deep_relationships().items():
-            # Use list() to freeze the collection in memory
-            child_map[attr] = (list(getattr(obj, attr)), fk_field)
-
-    # 2. Ghost the parent
-    db.session.expunge(obj)
-    make_transient(obj)
-    for key, value in overrides.items():
-        setattr(obj, key, value)
-    
-    db.session.add(obj)
-    db.session.flush() # Get the new parent ID
-
-    # 3. Recursively clone children
-    for attr, (children, fk_field) in child_map.items():
-        for child in children:
-            # The child's override is the new parent's ID
-            child_overrides = {fk_field: obj.id, 'id': None}
-            clone_with_children(child, child_overrides)
-            
-    return obj
-
 def safe_remove(obj):
     """Removes an object from the session/DB regardless of whether it was saved yet."""
     state = inspect(obj)

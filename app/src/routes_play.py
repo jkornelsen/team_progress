@@ -15,7 +15,7 @@ from app.utils import (
 from .logic_piles import transfer_item
 from .logic_event import (
     roll_for_outcome, roll_for_system_outcome, calculate_determinants,
-    get_entity_value)
+    get_entity_value, meets_det)
 from .logic_progress import (
     tick_all_active, start_production, stop_production)
 from .logic_production import (
@@ -1003,42 +1003,6 @@ def play_event(id):
     # and disallow event if no candidate for role.
     # Include attr or qty value in the list.
     
-    def meets_det(det, entity):
-        if not entity: return False
-        if det.infield and det.infield.field_mode == Participant.ATTR \
-                and det.infield.attrib_id:
-            if not any(
-                    av.attrib_id == d.infield.attrib_id
-                    for av in entity.attrib_values):
-                return False
-
-        # TODO: check for event distance requirement e.g. 30ft (6 tiles)
-        # dist = distance_between(owner.position, c.position)
-        # if dist is not None and dist > d.distance_reqired
-
-        # Quantity check
-        if det.infield and det.infield.field_mode == Participant.QTY \
-                and det.infield.item_id:
-            item_def = Item.query.get((game_token, det.infield.item_id))
-
-            if item_def and item_def.storage_type == StorageType.UNIVERSAL:
-                return entity.id == GENERAL_ID
-
-            if entity.entity_type == Item.TYPENAME:
-                check_owner_id = owner_id
-            else:
-                check_owner_id = entity.id
-
-            has_pile = Pile.query.filter_by(
-                game_token=game_token, 
-                owner_id=check_owner_id,
-                item_id=det.infield.item_id
-            ).first() is not None
-            if not has_pile:
-                return False
-
-        return True
-
     eligible_role_entities = {}
     dets_not_met = {}
     for role, detlist in role_dets.items():
@@ -1168,7 +1132,15 @@ def apply_event(id):
     # Log
     container = Entity.query.get((g.game_token, container_id))
     key_def = Entity.query.get((g.game_token, key_id))
-    add_message(f"Updated {key_def.name} on {container.name} to {new_value}")
+    display_val = f"{new_value:g}"
+    if key_type == 'attrib' and hasattr(key_def, 'enum_list'):
+        if key_def.is_binary:
+            display_val = "ON" if new_value > 0 else "OFF"
+        elif key_def.enum_list:
+            try:
+                display_val = key_def.enum_list[int(new_value)]
+            except: pass
+    add_message(f"Updated {key_def.name} on {container.name} to {display_val}")
 
     return '', HTTPStatus.NO_CONTENT
 
@@ -1204,7 +1176,30 @@ def play_attrib(attrib_id, subject_id):
         db.session.commit()
         
         # Log
-        add_message(f"Modified {attribute.name} on {subject.name} to {new_val}")
+        op_wording = {
+            '+':   {"verb": "Increased", "prep": "by"},
+            '-':   {"verb": "Reduced",   "prep": "by"},
+            '*':   {"verb": "Multiplied","prep": "by"},
+            '/':   {"verb": "Divided",   "prep": "by"},
+            'set': {"verb": "Set",       "prep": "to"}
+        }
+        op_words = op_wording.get(op, {"verb": "Modified", "prep": "to"})
+        if op == 'set':
+            if attribute.is_binary:
+                val_str = "ON" if new_val > 0 else "OFF"
+            elif attribute.enum_list:
+                try:
+                    val_str = attribute.enum_list[int(new_val)]
+                except:
+                    val_str = f"{new_val:g}"
+            else:
+                val_str = f"{new_val:g}"
+        else:
+            val_str = f"{round(abs(operand), 2):g} = {round(new_val, 2):g}"
+        add_message(
+            f"{op_words['verb']} {subject.name} {attribute.name}"
+            f" {op_words['prep']} {val_str}"
+        )
         return redirect_back()
 
     # Get reverse dependencies (items needing this for recipes)

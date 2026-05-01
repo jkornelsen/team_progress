@@ -53,10 +53,9 @@
                 </div>
 
                 <div id="enum-container" class="flex-grow {{ 'hidden' if not attrib or not attrib.enum_list }}">
-                    <label for="enum_values">State Labels (One per line):</label>
+                    <label for="enum_values">States (One per line):</label>
                     <textarea id="enum_values" name="enum_values" rows="5" class="full-width themed-input" 
                               placeholder="Empty&#10;Low&#10;Medium&#10;High&#10;Full">{{ attrib.enum_list | join('\n') if attrib.enum_list }}</textarea>
-                    <small class="label-like">Stored as 0, 1, 2... based on line index.</small>
                 </div>
             </div>
         </section>

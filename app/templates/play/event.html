@@ -66,7 +66,7 @@
                             {% set ent = eligible[0] %}
                             <input type="hidden" name="{{ role }}{{ Participant.FORM_SUFFIX }}" value="{{ ent.id }}">
                             {% if ent.id == 1 %}
-                                🌐 General
+                                🌐
                             {% else %}
                                 {% set target_url = url_for('play.play_' + ent.entity_type, id=ent.id) %}
                                 {% call hk.hotlink(target_url, link_letters) %}
@@ -320,22 +320,24 @@
         updateDieLogic();
     }
 
-    rollBtn.onclick = async () => {
-        const fd = getRoleIDs();
-        const diff = document.getElementById('difficulty-select')?.value;
-        if (diff) fd.append('difficulty', diff);
+    if (rollBtn) {
+        rollBtn.onclick = async () => {
+            const fd = getRoleIDs();
+            const diff = document.getElementById('difficulty-select')?.value;
+            if (diff) fd.append('difficulty', diff);
 
-        const url = `/event/roll/${eventId}`;
-        const data = await apiPost(url, fd, "Could not roll.");
-        if (!data) return;
+            const url = `/event/roll/${eventId}`;
+            const data = await apiPost(url, fd, "Could not roll.");
+            if (!data) return;
 
-        lastRollValue = data.result_value;
-        document.getElementById('outcome-text').innerHTML = data.display;
-        {% if event.changes %}
-        document.getElementById('apply-section').classList.remove('hidden');
-        {% endif %}
-        updateApplyPreviews();
-    };
+            lastRollValue = data.result_value;
+            document.getElementById('outcome-text').innerHTML = data.display;
+            {% if event.changes %}
+            document.getElementById('apply-section').classList.remove('hidden');
+            {% endif %}
+            updateApplyPreviews();
+        };
+    }
 
     /**
      * Updates the "New Value" preview labels in the Apply section
@@ -437,13 +439,13 @@
         modifiers.forEach(m => {
             const colorClass = m.value >= 0 ? 'text-success' : 'text-danger';
             const labelHtml = (m.label && m.label.trim() !== "") 
-                ? `<span class="label-like">${m.label}:</span>` 
+                ? `<span class="">${m.label}:</span>` 
                 : "";
             const displayVal = Math.round(Math.abs(m.value) * 100) / 100;
             const displayOp = OP_MAP[m.op] || m.op;
             const isComparison = COMPARISON_OPS.includes(m.op);
             const hasInner = (m.breakdown !== m.value.toString());
-            const innerHtml = hasInner ? `<small class="text-dim">(${m.breakdown})</small>` : "";
+            const innerHtml = hasInner ? `<small class="text-dim">[${m.breakdown}]</small>` : "";
 
             let contentHtml = "";
 
@@ -454,27 +456,43 @@
                 if (!isMet) allRequirementsMet = false;
                 const colorClass = isMet ? 'text-success' : 'text-danger';
 
-               contentHtml = `
-                    <strong>${m.source_name}</strong> 
-                    <span class="text-dim">${m.field_name}:</span> 
-                    <span class="${colorClass}" style="margin: 0 4px;">${displayVal}</span>
-                    ${innerHtml}
-                    <strong class="${colorClass}">${displayOp} ${m.val_required}</strong>
+                let displayFormula;
+                if (m.val_required === 1 && (m.op === '>=' || m.op === '==')) {
+                    const rawInner = hasInner ? ` (${m.breakdown})` : ""; 
+                    displayFormula = `
+                        <span class="${colorClass}" style="margin: 0 4px;">${isMet ? "Has" : "Needs"}</span>
+                        <small class="text-dim">[${displayVal}${rawInner} ${displayOp} ${m.val_required}]</small>
+                    `;
+                } else {
+                    displayFormula = `
+                        <span class="${colorClass}" style="margin: 0 4px;">${displayVal}</span>
+                        ${innerHtml}
+                        <strong class="${colorClass}">${displayOp} ${m.val_required}</strong>
+                    `;
+                }
+
+                contentHtml = `
+                    <strong>${m.source_name}</strong>
+                    <div style="padding-left: 1.5em;">
+                        <span class="text-dim">${m.field_name}:</span> 
+                        ${displayFormula}
+                    </div>
                 `;
             } else {
                 // FORMAT: Source Field: +Value (Breakdown)
                 const colorClass = m.value >= 0 ? 'text-success' : 'text-danger';
-                
                 contentHtml = `
-                    <strong>${m.source_name}</strong> 
-                    <span class="text-dim">${m.field_name}:</span> 
-                    <strong class="${colorClass}">${displayOp}${displayVal}</strong>
-                    ${innerHtml}
+                    <strong>${m.source_name}</strong>
+                    <div style="padding-left: 1.5em;">
+                        <span class="text-dim">${m.field_name}:</span> 
+                        <strong class="${colorClass}" style="margin: 0 4px;">${displayOp}${displayVal}</strong>
+                        ${innerHtml}
+                    </div>
                 `;
             }
 
             html += `
-                <li class="spacious-bottom" style="display: flex; align-items: baseline; gap: 4px;">
+                <li class="spacious-bottom" style="display: block;">
                     ${labelHtml} ${contentHtml}
                 </li>`;
         });
