@@ -7,9 +7,9 @@ from app.models import (
     StorageType, Operation, OutcomeType, RollerType, Participant,
     AttribVal, Pile, LocDest)
 from app.utils import maskable_name
-from app.src.logic_piles import set_quantity
-from app.src.logic_user_interaction import add_message
-from app.src.logic_navigation import get_all_valid_coords
+from .logic_piles import set_quantity
+from .logic_user_interaction import add_message
+from .logic_navigation import get_all_valid_coords, distance_between
 
 logger = logging.getLogger(__name__)
 
@@ -21,11 +21,29 @@ def format_for_display(val):
 # Determinant Logic (Modifiers)
 # ------------------------------------------------------------------------
 
-def get_entity_value(anchor_id, field_def):
+def get_entity_value(anchor_id, field_def, subject_id=None):
     """Handles Attr vs Qty and Base vs Child."""
     game_token=g.game_token
     target_id = anchor_id
     
+    # Distance Calculation (Read-Only)
+    if field_def.field_mode == Participant.DIST:
+        if not subject_id or not anchor_id: return 0.0
+        subj = Entity.query.get((game_token, subject_id))
+        target = Entity.query.get((game_token, anchor_id))
+        if not (subj and target and subj.position and target.position):
+            return 0.0
+        return float(distance_between(subj.position, target.position) or 0.0)
+
+    # Recipe Property Fetching
+    if field_def.field_mode in [Participant.RATE_AMT, Participant.RATE_DUR]:
+        if not field_def.recipe_id: return 0.0
+        recipe = Recipe.query.get((game_token, field_def.recipe_id))
+        if not recipe: return 0.0
+        return recipe.rate_amount \
+            if field_def.field_mode == Participant.RATE_AMT \
+            else recipe.rate_duration
+
     # Handle Depth Traversal
     if field_def.child_of_anchor:
         # Find the first pile that satisfies the requirement
@@ -364,6 +382,7 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
             f" = <span class='outcome-total'>{format_for_display(total)}</span>"
     
     display_str = ""
+    tier = None
     if event.outcome_type == 'fourway':
         span = abs(base_max - base_min) + 1
         shift = round(span * difficulty)
@@ -375,16 +394,22 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
 
         if die_roll == base_max:
             res = "Major Success (Natural)"
+            tier = Participant.SUCCESS_MAJOR
         elif die_roll == base_min:
             res = "Major Failure (Natural)"
+            tier = Participant.FAILURE_MAJOR
         elif total >= major_success_min:
             res = "Major Success"
+            tier = Participant.SUCCESS_MAJOR
         elif total >= minor_success_min:
             res = "Minor Success"
+            tier = Participant.SUCCESS_MINOR
         elif total <= major_failure_max:
             res = "Major Failure"
+            tier = Participant.FAILURE_MAJOR
         else:
             res = "Minor Failure"
+            tier = Participant.FAILURE_MINOR
 
         display_str = f"<b>{res}</b><br><small>{breakdown_str}</small>"
         message_str = f"{format_for_display(total)} — {res}"
@@ -393,7 +418,7 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
         message_str = f"{format_for_display(total)}"
 
     add_message(f"{event.name}: Outcome {message_str}")
-    return total, display_str
+    return total, display_str, tier
 
 def roll_coordinate(loc_id):
     """Pick a random available square at a location."""
@@ -482,62 +507,102 @@ def roll_for_system_outcome(event_id, num_dice=1, sides=20, bonus=0):
 # Applying Changes
 # ------------------------------------------------------------------------
 
-def apply_event_effects(event, role_entities, roll_outcome):
+def process_all_effects(event, role_entities, roll_total, tier_key, force_auto_only=False):
     """
-    Iterates through factors where usage_type == OUT.
+    Called by roll_event route. Scans all effects and triggers
+    automatic ones that match the success tier.
     """
-    for effect in event.effects:
-        if not effect.outfield: continue
-        
-        # 1. Determine base value to save
-        if effect.val_src == Participant.OUTCOME:
-            new_val = roll_outcome
-        elif effect.val_src == Participant.FIELD:
-            anchor_id = resolve_anchor_id(effect.outfield.role, role_entities)
-            new_val = get_entity_value(anchor_id, effect.outfield)
-        else:
-            new_val = effect.val_transform
-            
-        # 2. Transform result (e.g. outcome * 0.5 for half damage)
-        if effect.op_transform:
-            new_val = apply_operation(new_val, effect.val_transform, effect.op_transform)
-            
-        # 3. Apply to target
-        target_anchor_id = resolve_anchor_id(effect.outfield.role, role_entities)
-        
-        # Logic from apply_event_change...
-        if effect.outfield.field_mode == Participant.ATTR:
-            apply_event_change(effect.outfield.attrib_id, 'attrib', target_anchor_id, new_val)
-        else:
-            apply_event_change(effect.outfield.item_id, 'item', target_anchor_id, new_val)
+    for eff in event.effects:
+        if not check_outcome_success(eff.outcome_success, tier_key):
+            continue
+        if force_auto_only and not eff.auto_apply:
+            continue
+        do_effect_change(eff, roll_total, role_entities)
 
-def apply_event_change(target_id, target_type, owner_id, new_value):
+def check_outcome_success(filter_val, tier):
+    if filter_val == Participant.ALWAYS:
+        return True
+    if tier_key is None:
+        return False
+    if filter_val == Participant.SUCCESS_ANY:
+        return 'success' in tier
+    if filter_val == Participant.FAILURE_ANY:
+        return 'failure' in tier
+    return filter_val == tier
+
+def do_effect_change(eff, roll_total, role_entities):
     """
-    Saves the result of a roll to a specific attribute or item pile.
-    - target_id: ID of the Attribute or Item definition.
-    - target_type: 'attrib' or 'item'.
-    - owner_id: ID of the Character or Location receiving the change.
-    - new_value: The final number to be stored.
+    Calculates math, writes to DB, and logs the change.
     """
-    if target_type == 'attrib':
-        # Find or create the specific stat for this owner
+    game_token = g.game_token
+    subject_id = resolve_anchor_id(Participant.SUBJECT, role_entities)
+
+    # --- STEP 1: CALCULATE IMPACT (The "From") ---
+    if eff.val_src == Participant.OUTCOME:
+        impact = roll_total
+    elif eff.val_src == Participant.FIELD:
+        # Source can be infield (explicit) or outfield (recursive target)
+        source_field = eff.infield or eff.outfield
+        anchor_id = resolve_anchor_id(source_field.role, role_entities)
+        impact = get_entity_value(anchor_id, source_field, subject_id)
+    else:
+        impact = eff.val_transform
+
+    if eff.op_transform:
+        impact = apply_operation(impact, eff.val_transform, eff.op_transform)
+
+    # --- STEP 2: APPLY TO DATABASE (The "To") ---
+    field_def = eff.outfield
+    if not field_def:
+        return
+
+    target_id = resolve_anchor_id(field_def.role, role_entities)
+    op = eff.op_application
+
+    # Destination A: Attributes
+    if field_def.field_mode == Participant.ATTR:
         record = AttribVal.query.filter_by(
-            game_token=g.game_token,
-            subject_id=owner_id,
-            attrib_id=target_id
+            game_token=game_token, subject_id=target_id, attrib_id=field_def.attrib_id
         ).first()
+        current = record.value if record else 0.0
+        new_val = impact if op == Operation.EQ else apply_operation(current, impact, op)
+        
         if not record:
-            record = AttribVal(
-                game_token=g.game_token,
-                subject_id=owner_id,
-                attrib_id=target_id,
-                value=0.0)
-            db.session.add(record)
-        record.value = new_value
+            db.session.add(AttribVal(
+                game_token=game_token, subject_id=target_id, 
+                attrib_id=field_def.attrib_id, value=new_val))
+        else:
+            record.value = new_val
 
-    elif target_type == 'item':
-        # Find or create the specific inventory pile for this owner
-        set_quantity(target_id, owner_id, new_value)
+    # Destination B: Item Quantities
+    elif field_def.field_mode == Participant.QTY:
+        from .logic_piles import get_accessible_quantity, set_quantity
+        # Items are a special case because we want to use the existing pile logic
+        # that handles deleting empty piles.
+        current = get_accessible_quantity(field_def.item_id, target_id)
+        new_val = impact if op == Operation.EQ else apply_operation(current, impact, op)
+        set_quantity(field_def.item_id, target_id, new_val)
+
+    # Destination C: Recipe Efficiency (Global Blueprint Change)
+    elif field_def.field_mode in [Participant.RATE_AMT, Participant.RATE_DUR]:
+        recipe = Recipe.query.get((game_token, field_def.recipe_id))
+        if recipe:
+            if field_def.field_mode == Participant.RATE_AMT:
+                current = recipe.rate_amount
+                recipe.rate_amount = impact if op == Operation.EQ else apply_operation(current, impact, op)
+            else:
+                current = recipe.rate_duration
+                new_dur = impact if op == Operation.EQ else apply_operation(current, impact, op)
+                recipe.rate_duration = max(0.1, new_dur) # Safety clamp
 
     db.session.commit()
-    return True
+
+    # --- STEP 3: LOG ---
+    target_name = "Target"
+    if eff.outfield:
+        ent_id = resolve_anchor_id(eff.outfield.role, role_entities)
+        ent = Entity.query.get((game_token, ent_id))
+        target_name = ent.name if ent else "Target"
+    label = eff.label or "Effect"
+    verb = "Auto-applied" if eff.auto_apply else "Applied"
+    add_message(f"{verb} {label} on {target_name}")

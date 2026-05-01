@@ -1,18 +1,23 @@
----- issues and proposed changes ----
+-------------------------------------------------------------------------------
+- issues and proposed changes
+-------------------------------------------------------------------------------
+
+-- functional --
 
 effects
     conditional by fourway outcome result seems useful but tedious
     maybe give optional apply buttons instead and user can choose which
     makes sense because fourway is largely about interpretation
     also follows plan of never applying value changes unless explicitly chosen
-event to help with rays black bar reset
+what is val_src supposed to do? is that different from field_mode?
+    tried looking at 30-Apr commit but didn't help -- maybe check older
 direct idle increase effects
     select the recipe in event config
     and whether to use rate duration or rate amount
     recipes can be listed readably in a selectbox with Recipe.summary
     link to recipe ids that persist in json
 
-show updated item quantities in locations like overview and sources do
+-- scenario --
 
 infestation
     repair cost + reload cost can reduce xp to 0 (but never below)
@@ -46,11 +51,34 @@ infestation
         cane poke
     later enemies bigger than rodents e.g. alligators -- only final boss human
 
+event to help with rays black bar reset
+
+tethered one epic
+    set of quests
+    would multiple objectives feel more rewarding?
+    prefer somewhat sandboxy rather than completely linear
+    production, travel and combat
+    like bacon for dinner but not minimalist
+
+other scenarios could benefit from a goal
+maybe build a wooden bridge in lumber to win
+
+location production examples
+    loc mine helium-3, then char converts to cannisters
+    lumber mill: logs > boards
+
+saving grandfather clock resets hour, an enumerated attrib, to 12am
+    hasn't been tested in new version
+
+-- tightening and quality of life --
+
+show updated item quantities in locations like overview and sources do
+
 restrict location access by item qty or attribreq
 
-allow progress at a location once started even if no longer current loc
-
 validate that role isn't empty before submitting event config
+
+prompt before overwriting another character action in progress
 
 event grid distance to target (from subject)
     Participant.DIST field mode
@@ -68,37 +96,16 @@ win condition quantity min and max, like attribs for recipes
 or "at least" / "at most" toggle
 Fission Plant: no more than a certain amount of pollution
 
-location production examples
-    loc mine helium-3, then char converts to cannisters
-    lumber mill: logs > boards
+-- code
 
-tethered one epic
-    set of quests
-    would multiple objectives feel more rewarding?
-    prefer somewhat sandboxy rather than completely linear
-    production, travel and combat
-    like bacon for dinner but not minimalist
+refactor play_item
+some logic_ modules seem less useful
+consider manual refactoring or a list of summarized ai suggestions
 
-other scenarios could benefit from a goal
-maybe build a wooden bridge in lumber to win
+only put non-default values in json
+    otherwise it makes huge lists of "= null" that are hard to read
 
-saving grandfather clock resets hour, an enumerated attrib, to 12am
-
----- planning ----
-
-hosting possibilities:
-Pythonanywhere should be able to host postgres and flask web app.
-https://www.reddit.com/r/flask/comments/12beskr/free_hosting_sites_compatible_with_flask/
-render.com is an alternative.
-
-try selenium to test client side
-
-consider sharing community scenarios
-perhaps submit to reddit, or github via enhancement requests
-
-like Roll20 or Foundry?
-
----- doesn't seem important currently ----
+-- doesn't seem important currently --
 
 prompt each player to save to their PC occasionally
 only if no one recently saved from that session
@@ -110,5 +117,18 @@ disconnect means go to a static page so it doesn't keep requesting updates
 session['disconnected'] = True
 button on page to reconnect
 
-prompt before overwriting another action in progress
-such as if a character is already doing something else
+-------------------------------------------------------------------------------
+- planning
+-------------------------------------------------------------------------------
+
+hosting possibilities:
+Pythonanywhere should be able to host postgres and flask web app.
+https://www.reddit.com/r/flask/comments/12beskr/free_hosting_sites_compatible_with_flask/
+render.com is an alternative.
+
+try selenium to test client side
+
+consider sharing community scenarios
+perhaps submit to reddit, or github via pull requests
+
+like Roll20 or Foundry?

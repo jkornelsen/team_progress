@@ -105,11 +105,12 @@
         <section id="determinants" class="outer-border">
             <div class="flex-between">
                 <h3>Determining Values (Inputs)</h3>
-                <button type="button" class="btn-sm" onclick="addFactor()">+ Add Input</button>
+                <button type="button" class="btn-sm" onclick="addFactor('det')">+ Add Input</button>
             </div>
             <div id="det-list" class="spacious-top">
                 {% for factor in event.determinants %}
                     {% set index = loop.index %}
+                    {% set usage = 'det' %}
                     {% include 'configure/partials/event_factor_card.html' %}
                 {% endfor %}
             </div>
@@ -118,9 +119,10 @@
             </div>
         </section>
 
-        <template id="factor-template">
+        <template id="det-template">
             {% set index = '__INDEX__' %}
             {% set factor = None %}
+            {% set usage = 'det' %}
             {% include 'configure/partials/event_factor_card.html' %}
         </template>
         <datalist id="role-list"></datalist>
@@ -129,23 +131,27 @@
         <section id="effects" class="outer-border">
             <div class="flex-between">
                 <h3>Values Changed (Effects)</h3>
-                <button type="button" class="btn-sm" onclick="ConfigEditor.addRow('change-list', 'change-template')">+ Add Effect</button>
+                <button type="button" class="btn-sm" onclick="addFactor('eff')">+ Add Effect</button>
             </div>
-            <div id="change-list" class="spacious-top">
-                {# Loop through effects if editing #}
-                {% for eff in event.effects %}
-                <div class="flex-row gap-10 align-center spacious-bottom">
-                    <select name="changes[{{ loop.index0 }}][attrib_id]" style="flex: 2;">
-                        {% for a in all_attribs %}
-                            <option value="{{ a.id }}" {{ 'selected' if a.id == eff.attrib_id }}>{{ a.name }}</option>
-                        {% endfor %}
-                    </select>
-                    <span class="label-like">is adjusted by outcome</span>
-                    <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
-                </div>
+            <div id="eff-list" class="spacious-top">
+                {% for factor in event.effects %}
+                    {% set index = loop.index %}
+                    {% set usage = 'eff' %}
+                    {% include 'configure/partials/event_factor_card.html' %}
                 {% endfor %}
             </div>
+            <div id="eff-list-empty" class="no-entities {{ 'hidden' if event.effects }}">
+                (No effects set for this event)
+            </div>
         </section>
+
+        <!-- Template for Effects -->
+        <template id="eff-template">
+            {% set index = '__INDEX__' %}
+            {% set factor = None %}
+            {% set usage = 'eff' %}
+            {% include 'configure/partials/event_factor_card.html' %}
+        </template>
 
         <!-- Footer Actions -->
         {{ footer_actions(
@@ -173,11 +179,12 @@
         "{{ i.id }}": "{{ i.storage_type }}",
         {% endfor %}
     };
+    const RECIPE_MAP = {{ recipe_map | tojson | safe }};
 
-    function addFactor() {
-        const list = document.getElementById('det-list');
-        const emptyMsg = document.getElementById('det-list-empty');
-        const template = document.getElementById('factor-template').innerHTML;
+    function addFactor(usage) {
+        const list = document.getElementById(`${usage}-list`);
+        const emptyMsg = document.getElementById(`${usage}-list-empty`);
+        const template = document.getElementById(`${usage}-template`).innerHTML;
         
         const existingCards = list.querySelectorAll('.factor-card');
         const indices = Array.from(existingCards).map(card => 
@@ -194,44 +201,46 @@
         const newCard = list.lastElementChild;
         innerExprVisibility(newCard);
         outerExprVisibility(newCard);
+
+        const sourceSelect = newCard.querySelector('select[name$="[val_src]"]');
+        if (sourceSelect) syncSourceVisibility(sourceSelect);
     }
 
-    function renumberLabels() {
-        // We only target cards inside the Determinant list
-        const cards = document.querySelectorAll('#det-list .factor-card');
+    function syncSourceVisibility(select) {
+        const card = select.closest('.factor-card');
+        const sourceFieldBox = card.querySelector('.source-field-box');
+        
+        if (select.value === 'field') {
+            sourceFieldBox.classList.remove('hidden');
+        } else {
+            sourceFieldBox.classList.add('hidden');
+        }
+    }
+
+    function renumberLabels(usage = 'det') {
+        const cards = document.querySelectorAll(`#${usage}-list .factor-card`);
         const total = cards.length;
 
         cards.forEach((card, i) => {
-            // 1. Update visual index text
             card.querySelector('.index-display').textContent = `#${i + 1}`;
-            
-            // 2. Update hidden order input for database
             const orderInput = card.querySelector('.factor-order-input');
             if (orderInput) orderInput.value = i;
 
-            // 3. Specifically target the Determinant up/down buttons
-            const upBtn = card.querySelector('.btn-det-up');
-            const downBtn = card.querySelector('.btn-det-down');
+            const upBtn = card.querySelector(`.btn-${usage}-up`);
+            const downBtn = card.querySelector(`.btn-${usage}-down`);
 
-            if (upBtn) {
-                upBtn.disabled = (i === 0); // Disable UP if it's the first item
-            }
-            if (downBtn) {
-                downBtn.disabled = (i === total - 1); // Disable DOWN if it's the last item
-            }
+            if (upBtn) upBtn.disabled = (i === 0);
+            if (downBtn) downBtn.disabled = (i === total - 1);
         });
 
-        // Toggle the "No entities" message
-        const emptyMsg = document.getElementById('det-list-empty');
-        if (emptyMsg) {
-            emptyMsg.classList.toggle('hidden', total > 0);
-        }
+        const emptyMsg = document.getElementById(`${usage}-list-empty`);
+        if (emptyMsg) emptyMsg.classList.toggle('hidden', total > 0);
     }
 
     function syncRoleWithField(element) {
         const card = element.closest('.factor-card');
         const mode = card.querySelector('select[name$="[field_mode]"]').value;
-        const itemId = card.querySelector('.target-item').value;
+        const itemId = card.querySelector('.id-item').value;
         const roleInput = card.querySelector('.role-selector');
         const storageType = ITEM_STORAGE_TYPE[itemId];
 
@@ -255,8 +264,8 @@
 
     function fieldTargetVisibility(select, index) {
         const card = select.closest('.factor-card');
-        const attrSelect = card.querySelector('.target-attr');
-        const itemSelect = card.querySelector('.target-item');
+        const attrSelect = card.querySelector('.id-attr');
+        const itemSelect = card.querySelector('.id-item');
 
         if (select.value === 'attr') {
             attrSelect.classList.remove('hidden');
@@ -266,6 +275,73 @@
             itemSelect.classList.remove('hidden');
         }
         outerExprVisibility(card);
+    }
+
+    /**
+     * Synchronizes the ID selectors (Attrib, Item, Recipe) based on the chosen Mode.
+     */
+    function syncFieldModeUI(modeSelect) {
+        const container = modeSelect.closest('.field-input-group');
+        const mode = modeSelect.value;
+
+        const attrSelect = container.querySelector('.id-attr');
+        const itemSelect = container.querySelector('.id-item');
+        const recipeSelect = container.querySelector('.id-recipe');
+
+        // 1. Reset visibility
+        attrSelect?.classList.add('hidden');
+        itemSelect?.classList.add('hidden');
+        recipeSelect?.classList.add('hidden');
+
+        // 2. Show relevant boxes
+        if (mode === 'attr') {
+            attrSelect?.classList.remove('hidden');
+        } 
+        else if (mode === 'qty' || mode === 'dist') {
+            itemSelect?.classList.remove('hidden');
+        } 
+        else if (mode.startsWith('rate_')) {
+            // Recipe properties (Yield or Duration)
+            itemSelect?.classList.remove('hidden');
+            recipeSelect?.classList.remove('hidden');
+            // Trigger population of recipe list
+            syncRecipeOptions(itemSelect);
+        }
+    }
+
+    /**
+     * Fills the Recipe dropdown based on which Item is selected.
+     */
+    function syncRecipeOptions(itemSelect, initialRecipeId = null) {
+        const container = itemSelect.closest('.field-input-group');
+        const recipeSelect = container.querySelector('.id-recipe');
+        const itemId = itemSelect.value;
+        
+        // Get current recipe_id if we aren't providing one (for hydration)
+        const currentRecipeId = initialRecipeId || recipeSelect.dataset.currentId;
+
+        // Clear existing options
+        recipeSelect.innerHTML = '';
+
+        const recipes = RECIPE_MAP[itemId] || [];
+
+        if (recipes.length === 0) {
+            const opt = document.createElement('option');
+            opt.textContent = "(No recipes for this item)";
+            opt.value = "";
+            recipeSelect.appendChild(opt);
+            return;
+        }
+
+        recipes.forEach(r => {
+            const opt = document.createElement('option');
+            opt.value = r.id;
+            opt.textContent = r.summary; // e.g. "Yield 1 from Iron, Coal"
+            if (r.id == currentRecipeId) {
+                opt.selected = true;
+            }
+            recipeSelect.appendChild(opt);
+        });
     }
 
     function outcomeFieldsVisibility() {
@@ -324,7 +400,7 @@
         const appSelector = card.querySelector('.op-application-selector');
         const innerGroup = card.querySelector('[data-inner-group]');
         const requiredGroup = card.querySelector('[data-slot-required]');
-        const attrSelect = card.querySelector('.target-attr');
+        const attrSelect = card.querySelector('.id-attr');
 
         const comparisonOps = ['==', '>', '<', '>=', '<='];
 
@@ -451,7 +527,8 @@
     document.addEventListener('DOMContentLoaded', function() {
         rebuildRoleDatalist();
 
-        document.querySelectorAll('.factor-card').forEach(card => {
+        document.querySelectorAll(
+                '.factor-card').forEach(card => {
             const index = card.getAttribute('data-index');
             const modeSelect = card.querySelector('select[name$="[field_mode]"]');
             if (modeSelect) {
@@ -459,6 +536,18 @@
             }
             innerExprVisibility(card);
             outerExprVisibility(card);
+        });
+        document.querySelectorAll(
+                '.field-input-group select[name$="[field_mode]"]').forEach(select => {
+            syncFieldModeUI(select);
+        });
+        document.querySelectorAll(
+                '.field-input-group .id-item').forEach(itemSelect => {
+            const container = itemSelect.closest('.field-input-group');
+            const mode = container.querySelector('select[name$="[field_mode]"]').value;
+            if (mode.startsWith('rate_')) {
+                syncRecipeOptions(itemSelect);
+            }
         });
         
         renumberLabels();

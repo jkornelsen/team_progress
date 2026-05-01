@@ -79,6 +79,13 @@ class BaseFieldMap:
         val = self._get_raw(key)
         return parse_coords(val)
 
+    def get_map(self, key):
+        """Returns a nested BaseFieldMap for the given key."""
+        val = self.data.get(key)
+        if isinstance(val, BaseFieldMap):
+            return val
+        return BaseFieldMap({})
+
     def get_list(self, key_text):
         """
         Extracts nested data and returns a list of BaseFieldMap objects.
@@ -370,17 +377,6 @@ class ContextIds:
     def addl_loc_id(self):
         """Is the loc id additional info besides owner id."""
         return self.loc_id and self.loc_id != self.owner_id
-
-    @property
-    def best_char_id(self):
-        """
-        Priority order for character identity:
-        1. Specific character provided (char_id)
-        2. The host of the current action (host_id)
-        3. The owner of the context (owner_id)
-        This is only a guess because we don't check if host or owner are chars.
-        """
-        return self.char_id or self.host_id or self.owner_id
 
     def get_params(self):
         """Returns a dict of non-redundant IDs useful for unpacking

@@ -528,12 +528,12 @@ class Event(Entity):
         event.factors = [
             EventFactor.from_dict(
                 d, game_token, event.id,
-                usage_type=Participant.IN, order_index=idx) 
+                usage_type=Participant.DET, order_index=idx) 
             for idx, d in enumerate(dets)
         ] + [
             EventFactor.from_dict(
                 e, game_token, event.id,
-                usage_type=Participant.OUT, order_index=idx) 
+                usage_type=Participant.EFF, order_index=idx) 
             for idx, e in enumerate(effects)
         ]
         return event
@@ -541,14 +541,14 @@ class Event(Entity):
     @property
     def determinants(self):
         return sorted(
-            [f for f in self.factors if f.usage_type == Participant.IN],
+            [f for f in self.factors if f.usage_type == Participant.DET],
             key=lambda f: f.order_index or 0
         )
 
     @property
     def effects(self):
         return sorted(
-            [f for f in self.factors if f.usage_type == Participant.OUT],
+            [f for f in self.factors if f.usage_type == Participant.EFF],
             key=lambda f: f.order_index or 0
         )
 
@@ -816,13 +816,14 @@ class ItemRef(db.Model, DictHydrator):
 # ------------------------------------------------------------------------
 
 class Participant:
-    """References a field to grab for an event factor."""
+    """References a field to fetch or target for an event factor."""
 
     # --- Context-Driven Roles of the Anchor Entity ---
     SUBJECT = '[Subject]'
     OWNER = '[Owner]'
     AT = '[At]'
     UNIVERSAL = '[Universal]'
+    CONTEXT_ROLES = [SUBJECT, OWNER, AT, UNIVERSAL]
 
     FORM_SUFFIX = '_role_id'
 
@@ -846,23 +847,32 @@ class Participant:
     # Only valid if the anchor resolves to a Character or Location.
     ChildItem = False
 
-    # --- Field Mode ---
-    ATTR = 'attr'  # Fetch AttribVal
-    QTY  = 'qty'   # Fetch pile quantity
-    DIST = 'dist'  # Distance from subject grid pos (e.g. melee vs ranged)
+    # --- Value Sources (val_src) ---
+    FIELD   = 'field'    # Value in that field
+    CONST   = 'const'    # Fixed value (EventFactor.val_transform)
+    OUTCOME = 'outcome'  # Read the roll result (effects only)
 
-    FIELD   = 'field'    # get that field
-    CONST   = 'const'    # fixed value (val_transform)
-    OUTCOME = 'outcome'  # use the outcome
+    # --- Field Mode (field_mode) ---
+    ATTR = 'attr'  # AttribVal
+    QTY  = 'qty'   # Pile quantity
+    DIST = 'dist'  # Distance from subject grid pos (read-only)
+    RATE_AMT = 'rate_amt' # Recipe.rate_amount
+    RATE_DUR = 'rate_dur' # Recipe.rate_duration
+    ALL_MODES = [ATTR, QTY, DIST, RATE_AMT, RATE_DUR]
+
+    # --- Outcome Success Filter ---
+    ALWAYS = 'always'
+    SUCCESS_ANY = 'success_any'
+    SUCCESS_MAJOR = 'success_major'
+    SUCCESS_MINOR = 'success_minor'
+    FAILURE_ANY = 'failure_any'
+    FAILURE_MAJOR = 'failure_major'
+    FAILURE_MINOR = 'failure_minor'
 
     # --- Usage ---
-    IN = 'in'   # Determinant
-    OUT = 'out' # Effect
-
-    # --- Constraints ---
-    CONTEXT_ROLES = [SUBJECT, OWNER, AT, UNIVERSAL]
-    ALL_MODES = [ATTR, QTY]
-    ALL_USAGE = [IN, OUT]
+    DET = 'det'  # Determinant (affects roll)
+    EFF = 'eff'  # Effect (applies changes)
+    ALL_USAGE = [DET, EFF]
 
 class Operation:
     CONST = 'c'
@@ -928,8 +938,10 @@ class EventField(db.Model, DictHydrator):
     role = db.Column(db.String(50), nullable=False, default=Participant.SUBJECT)
     field_mode = db.Column(db.String(10), nullable=False, default=Participant.ATTR)
     child_of_anchor = db.Column(db.Boolean, nullable=False, default=False)
-    item_id = db.Column(db.Integer, nullable=True) # play dropdown if null
+
+    item_id = db.Column(db.Integer, nullable=True)
     attrib_id = db.Column(db.Integer, nullable=True)
+    recipe_id = db.Column(db.Integer, nullable=True)
 
     def to_dict(self):
         return {
@@ -937,7 +949,8 @@ class EventField(db.Model, DictHydrator):
             "field_mode": self.field_mode,
             "child_of_anchor": self.child_of_anchor,
             "item_id": self.item_id,
-            "attrib_id": self.attrib_id
+            "attrib_id": self.attrib_id,
+            "recipe_id": self.attrib_id
         }
 
     def get_field_name(self):
@@ -968,13 +981,16 @@ class EventFactor(db.Model, DictHydrator):
     event_id = db.Column(db.Integer, nullable=False)
 
     # --- Identity & Logic Type ---
-    usage_type = db.Column(db.String(3), nullable=False, default=Participant.IN)
+    usage_type = db.Column(db.String(3), nullable=False, default=Participant.DET)
     order_index = db.Column(db.Integer, default=0)
-    label = db.Column(db.String(50)) # e.g. "Base Damage", "Accuracy"
+    label = db.Column(db.String(50))
+
+    # --- Filter & Workflow ---
+    outcome_success = db.Column(db.String(20), default=Participant.ALWAYS)
+    auto_apply = db.Column(db.Boolean, default=False)
 
     # --- Retrieval ---
-
-    # for Participant.OUTCOME, would be useful to distinguish between fourway outcome types
+    #XXX: Shouldn't val_src be moved to EventField, e.g. const in, fld out
     val_src = db.Column(db.String(15), nullable=False, default=Participant.FIELD)
     infield_id = db.Column(db.Integer, nullable=True)
     outfield_id = db.Column(db.Integer, nullable=True) # Effects only
@@ -998,6 +1014,8 @@ class EventFactor(db.Model, DictHydrator):
             "usage_type": self.usage_type,
             "label": self.label,
             "val_src": self.val_src,
+            "outcome_success": self.outcome_success,
+            "auto_apply": self.auto_apply,
             "infield": self.infield.to_dict() if self.infield else None,
             "outfield": self.outfield.to_dict() if self.outfield else None,
             "op_application": self.op_application,

@@ -1,0 +1,75 @@
+<div class="field-input-group">
+    {% set role = field_data.role if field_data else '' %}
+    {% set field_mode = field_data.field_mode if field_data else 'attr' %}
+    {% set attrib_id = field_data.attrib_id if field_data else None %}
+    {% set item_id = field_data.item_id if field_data else None %}
+
+    <!-- Role -->
+    <div class="flex-row align-center gap-10">
+        <span style="margin-top: 4px">Role:</span>
+        <input name="{{ field_prefix }}[role]"
+            list="role-list"
+            class="role-selector"
+            value="{{ role }}"
+            onfocus="this.dataset.original = this.value"
+            onblur="handleRoleInput(this)"
+            onkeydown="handleRoleKeydown(event, this)"
+            placeholder="e.g. Target_Enemy"
+            style="max-width: 30ch;">
+    </div>
+
+    <!-- Mode -->
+    <div class="flex-row align-center gap-10">
+        <select name="{{ field_prefix }}[field_mode]"
+                class="full-width"
+                style="max-width: 30ch;"
+                onchange="syncFieldModeUI(this); fieldTargetVisibility(this, {{ index }}); syncRoleWithField(this)">
+            <option value="attr" {{ 'selected' if field_mode == 'attr' }}>Attribute</option>
+            <option value="qty" {{ 'selected' if field_mode == 'qty' }}>Item Quantity</option>
+            <option value="dist" {{ 'selected' if field_mode == 'dist' }}>Distance</option>
+            <option value="rate_amt" {{ 'selected' if field_mode == 'rate_amt' }}>Recipe Yield</option>
+            <option value="rate_dur" {{ 'selected' if field_mode == 'rate_dur' }}>Recipe Speed</option>
+        </select>
+
+        <div class="id-selectors">
+            <!-- Attrib -->
+            <select name="{{ field_prefix }}[attrib_id]" 
+                    data-attrib-select="true"
+                    data-field-name="val_required"
+                    data-is-range="false"
+                    data-current-value="{{ factor.val_required if factor else 1.0 }}"
+                    onchange="syncAttributeUI_EF(this, false)"
+                    class="id-attr full-width {{
+                        'hidden' if field_mode == 'qty' }}" 
+                    style="max-width: 30ch;">
+                {% for a in all_attribs %}
+                    <option value="{{ a.id }}" {{ 'selected' if attrib_id == a.id }}>{{ a.name }}</option>
+                {% endfor %}
+            </select>
+            
+            <!-- Item (also filters Recipes) -->
+            <select name="{{ field_prefix }}[item_id]" 
+                    class="id-item full-width {{
+                        'hidden' if field_mode == 'attr'
+                        or field_mode == 'dist' }}"
+                    style="max-width: 30ch;"
+                    onchange="syncRecipeOptions(this); syncRoleWithField(this)">
+                {% for i in all_items %}
+                    <option value="{{ i.id }}" {{ 'selected' if item_id == i.id }}>{{ i.name }}</option>
+                {% endfor %}
+            </select>
+
+            <!-- Recipe -->
+            <select name="{{ field_prefix }}[recipe_id]"
+                    class="id-recipe {{
+                        'hidden' if 'rate' not in field_mode }}"
+                    data-current-id="{{ field_data.recipe_id or '' }}">
+                <!-- Populated by syncRecipeOptions() -->
+            </select>
+        </div>
+    </div>
+    <label class="checkbox-label spacious-top">
+        <input type="checkbox" name="{{ field_prefix }}[child_of_anchor]" {{ 'checked' if field_data and field_data.child_of_anchor }}>
+        An item at/owned by source
+    </label>
+</div>

@@ -437,7 +437,6 @@
         let html = '<ul class="modifier-list" style="list-style: none; padding: 0;">';
 
         modifiers.forEach(m => {
-            const colorClass = m.value >= 0 ? 'text-success' : 'text-danger';
             const labelHtml = (m.label && m.label.trim() !== "") 
                 ? `<span class="">${m.label}:</span>` 
                 : "";
@@ -485,7 +484,7 @@
                     <strong>${m.source_name}</strong>
                     <div style="padding-left: 1.5em;">
                         <span class="text-dim">${m.field_name}:</span> 
-                        <strong class="${colorClass}" style="margin: 0 4px;">${displayOp}${displayVal}</strong>
+                        <strong class="${colorClass}" style="margin: 0 4px;">${displayOp} ${displayVal}</strong>
                         ${innerHtml}
                     </div>
                 `;

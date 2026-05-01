@@ -15,7 +15,7 @@ from app.utils import (
 from .logic_piles import transfer_item
 from .logic_event import (
     roll_for_outcome, roll_for_system_outcome, calculate_determinants,
-    get_entity_value, meets_det)
+    get_entity_value, meets_det, process_all_effects)
 from .logic_progress import (
     tick_all_active, start_production, stop_production)
 from .logic_production import (
@@ -1092,6 +1092,7 @@ def roll_event(id):
             role_name = Participant.formkey_to_role(key)
             role_entities[role_name] = req.get_int(key)
 
+    tier = None
     if event.outcome_type == OutcomeType.ROLLER:
         n_dice = req.get_int('num_dice', 1)
         sides = req.get_int('sides', 20)
@@ -1100,48 +1101,29 @@ def roll_event(id):
             id, n_dice, sides, bonus)
     else:
         difficulty = req.get_float('difficulty', 0.55)
-        result_num, result_str = roll_for_outcome(
+        result_num, result_str, tier = roll_for_outcome(
             id, role_entities, difficulty)
+
+    process_all_effects(
+        event, role_entities, result_num, tier, force_auto_only=True)
     
     return jsonify({
         "result_value": result_num,
+        "tier": tier,
         "display": result_str
     })
 
-@play_bp.route('/event/apply/<int:id>', methods=['POST'])
-def apply_event(id):
-    """Apply a roll result to a specific container."""
-    # 1. The thing we are changing (The Key)
+@play_bp.route('/event/apply-effect/<int:factor_id>', methods=['POST'])
+def apply_single_effect(factor_id):
     req = RequestHelper('form')
-    key_id = req.get_int('key_id')
-    key_type = req.get_str('key_type') # 'attrib' or 'item'
+    eff = EventFactor.query.get_or_404((g.game_token, factor_id))
     
-    # 2. Who owns it (The Container)
-    container_id = req.get_int('container_id')
+    role_entities = {
+        Participant.formkey_to_role(k): req.get_int(k)
+        for k in req if k.endswith(Participant.FORM_SUFFIX)
+    }
+    do_effect_change(eff, req.get_float('roll_total'), role_entities)
     
-    # 3. The new calculated value from the UI
-    new_value = req.get_float('new_value')
-
-    if not key_id or not container_id:
-        return jsonify(
-            {"message": "Missing target info"}), HTTPStatus.BAD_REQUEST
-
-    from .logic_event import apply_event_change
-    apply_event_change(key_id, key_type, container_id, new_value)
-    
-    # Log
-    container = Entity.query.get((g.game_token, container_id))
-    key_def = Entity.query.get((g.game_token, key_id))
-    display_val = f"{new_value:g}"
-    if key_type == 'attrib' and hasattr(key_def, 'enum_list'):
-        if key_def.is_binary:
-            display_val = "ON" if new_value > 0 else "OFF"
-        elif key_def.enum_list:
-            try:
-                display_val = key_def.enum_list[int(new_value)]
-            except: pass
-    add_message(f"Updated {key_def.name} on {container.name} to {display_val}")
-
     return '', HTTPStatus.NO_CONTENT
 
 @play_bp.route('/play/attrib/<int:attrib_id>/subject/<int:subject_id>', methods=['GET', 'POST'])

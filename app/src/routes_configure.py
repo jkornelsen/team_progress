@@ -11,7 +11,7 @@ from app.models import (
     Entity, Item, Character, Location, Attrib, Event, 
     Pile, AttribVal, Operation, EntityAbility,
     Recipe, RecipeSource, RecipeByproduct, RecipeAttribReq,
-    LocDest, ItemRef, EventFactor, EventField, Participant,
+    LocDest, ItemRef, EventFactor, EventField, Participant, OutcomeType,
     Overall, WinRequirement)
 from app.serialization import (
     init_game_session, load_scenario_from_path, DEFAULT_SCENARIO_FILE,
@@ -494,7 +494,7 @@ def edit_character(id):
         run_discovery_scan(game_token)
 
         if 'duplicate' in request.form:
-            return duplicate_entity(loc.id, 'location')
+            return duplicate_entity(char.id, 'location')
         return redirect_back('configure.index') 
 
     return render_template('configure/character.html', 
@@ -567,67 +567,82 @@ def edit_event(id):
 
         event.name = req.get_str('name', event.name)
         event.description = req.get_str('description')
-        event.outcome_type = req.get_str('outcome_type')
-        event.roller_type = req.get_str('roller_type')
-        event.single_number = req.get_float('single_number')
-        event.selection_strings = req.get_str('selection_strings')
-        event.numeric_range = [
-            req.get_int('range_min'), req.get_int('range_max')]
         event.toplevel = 'toplevel' in request.form
+        event.outcome_type = req.get_str('outcome_type')
+
+        event.roller_type = None
+        event.numeric_range = None
+        event.single_number = 0.0
+        event.selection_strings = None
+        if event.outcome_type == OutcomeType.ROLLER:
+            event.roller_type = req.get_str('roller_type')
+        elif event.outcome_type in [OutcomeType.FOURWAY, OutcomeType.NUMERIC]:
+            event.numeric_range = [
+                req.get_int('range_min'), 
+                req.get_int('range_max')
+            ]
+        elif event.outcome_type == OutcomeType.DETERMINED:
+            event.single_number = req.get_float('single_number')
+        elif event.outcome_type == OutcomeType.SELECT:
+            event.selection_strings = req.get_str('selection_strings')
 
         # --- SAVE DETERMINANTS & EFFECTS ---
         # 1. Clear existing factors to perform a clean sync
         # (This is simpler than matching IDs for small lists)
         event.factors = [] 
 
-        # 2. Process Determinants (Inputs)
-        for row in req.get_list('dets'):
-            f = EventFactor(
-                game_token=game_token,
-                event_id=event.id,
-                usage_type=Participant.IN,
-                order_index=row.get_int('order_index'),
-                val_src=row.get_str('val_src', Participant.FIELD),
-                label=row.get_str('label'),
-                op_application=row.get_str('op_application'),
-                op_transform=row.get_str('op_transform'),
-                val_transform=row.get_float('val_transform', 1.0),
-                val_required=row.get_float('val_required', 1.0)
-            )
-            if f.val_src == Participant.FIELD:
-                f.infield = EventField(
-                    game_token=game_token,
-                    role=row.get_str('role'),
-                    field_mode=row.get_str('field_mode') or None,
-                    child_of_anchor=row.get_bool('child_of_anchor'),
-                    attrib_id=row.get_int('attrib_id'),
-                    item_id=row.get_int('item_id')
-                )
-            event.factors.append(f)
-
-        # 3. Process Effects (Changes)
-        for row in req.get_list('changes'):
-            attr_id = row.get_int('attrib_id')
-            if attr_id:
-                new_effect = EventFactor(
+        # 2. Process Determinants and Effects
+        for usage in [Participant.DET, Participant.EFF]:
+            for row in req.get_list(f"{usage}s"):
+                factor = EventFactor(
                     game_token=game_token,
                     event_id=event.id,
-                    usage_type=Participant.OUT, # Mark as Output
-                    attrib_id=attr_id,
+                    usage_type=usage,
+                    order_index=row.get_int('order_index'),
+                    label=row.get_str('label'),
+                    val_src=row.get_str('val_src', Participant.FIELD),
+                    outcome_success=row.get_str('outcome_success', Participant.ALWAYS),
+                    auto_apply=row.get_bool('auto_apply'),
+                    op_application=row.get_str('op_application'),
+                    op_transform=row.get_str('op_transform'),
+                    val_transform=row.get_float('val_transform', 1.0),
+                    val_required=row.get_float('val_required', 1.0)
                 )
-                event.factors.append(new_effect)
+                for field_key in ('infield', 'outfield'):
+                    if factor.val_src == Participant.FIELD:
+                        fld = row.get_map(field_key)
+                        if fld.data:
+                            setattr(factor, field_key, EventField(
+                                game_token=game_token,
+                                role=fld.get_str('role'),
+                                field_mode=fld.get_str('field_mode'),
+                                child_of_anchor=fld.get_bool('child_of_anchor'),
+                                item_id=fld.get_int('item_id') or None,
+                                attrib_id=fld.get_int('attrib_id') or None,
+                                recipe_id=fld.get_int('recipe_id') or None
+                            ))
+                event.factors.append(factor)
 
         db.session.commit()
         if 'duplicate' in request.form:
             return duplicate_entity(event.id, 'event')
         return redirect_back('configure.index') 
 
+    # Data for select boxes
+    all_items = Item.query.filter_by(
+        game_token=game_token).order_by(Item.name).all()
+    recipe_map = {}
+    for item in all_items:
+        recipe_map[item.id] = [
+            {'id': r.id, 'summary': r.summary} for r in item.recipes
+        ]
+
     return render_template('configure/event.html', 
         event=event,
         all_attribs=Attrib.query.filter_by(
             game_token=game_token).order_by(Attrib.name).all(),
-        all_items=Item.query.filter_by(
-            game_token=game_token).order_by(Item.name).all(),
+        all_items=all_items,
+        recipe_map=recipe_map,
         Operation=Operation,
         Participant=Participant
     )

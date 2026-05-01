@@ -125,8 +125,9 @@ def get_host_scope(host_id, ctx):
         return [GENERAL_ID]
 
     host_ent = Entity.query.get((game_token, host_id))
+
+    # Character: Can see their own bags, the floor they stand on, and the bank.
     if host_ent and host_ent.entity_type == Character.TYPENAME:
-        # Actor: Greedy scope
         return ctx.unique_ids(GENERAL_ID, host_id, ctx.loc_id)
     
     # Machine/Environment: Local scope
@@ -134,9 +135,7 @@ def get_host_scope(host_id, ctx):
 
 def resolve_recipe_sources(host_id, recipe, ctx):
     """
-    - General Host (System): Only sees Universal items in General Storage.
-    - Location Host (Machine): Sees Universal items + items on its own floor.
-    - Character Host (Actor): Sees Universal items + items on the floor + their own bag.
+    Determines where ingredients are pulled from based on host identity.
     """
     game_token = g.game_token
     resolved_sources = []
@@ -154,23 +153,29 @@ def resolve_recipe_sources(host_id, recipe, ctx):
             host_pos = host_ent.position
         else:
             # Locations (Machines) can reach the floor and global bank
-            search_ids = ctx.unique_ids(GENERAL_ID, ctx.loc_id)
+            search_ids = ctx.unique_ids(GENERAL_ID, host_id)
     logger.debug(f"Search IDs: {search_ids}")
 
     for source in recipe.sources:
         item = source.ingredient
         
-        # Define search priorities based on storage type
+        # Determine pile based on Storage Type
         if item.storage_type == StorageType.UNIVERSAL:
             potential_owner_ids = [GENERAL_ID]
         elif item.storage_type == StorageType.LOCAL:
-            potential_owner_ids = ctx.unique_ids(ctx.loc_id)
+            if host_ent and host_ent.entity_type == Location.TYPENAME:
+                potential_owner_ids = [host_id]
+            else:
+                potential_owner_ids = ctx.unique_ids(ctx.loc_id)
         elif item.storage_type == StorageType.CARRIED:
-            # Look in the character's bag, or on the ground at the location
-            potential_owner_ids = ctx.unique_ids(
-                ctx.not_general(host_id),
-                ctx.not_general(ctx.owner_id),
-                ctx.char_id, ctx.loc_id)
+            if host_ent and host_ent.entity_type == Location.TYPENAME:
+                potential_owner_ids = [host_id]
+            else:
+                potential_owner_ids = ctx.unique_ids(
+                    ctx.not_general(host_id),
+                    ctx.not_general(ctx.owner_id),
+                    ctx.char_id,
+                    ctx.loc_id)
         potential_owner_ids = [
             eid for eid in potential_owner_ids if eid in search_ids]
         logger.debug(
@@ -281,7 +286,7 @@ def execute_production(host_id, recipe, target_owner_id, ctx, batches=1):
 
 def get_byproduct_target(item_id, main_target_id, host_id, ctx):
     """
-    Determines where secondary items go (the owner) based on StorageType.
+    Determines where secondary items go (the owner).
     """
     game_token = g.game_token
 
@@ -289,9 +294,15 @@ def get_byproduct_target(item_id, main_target_id, host_id, ctx):
     if item.storage_type == StorageType.UNIVERSAL:
         return GENERAL_ID
     
-    # If it's a tool/carried item, try to give it to the host or character
-    if item.storage_type == StorageType.CARRIED:
-        return ctx.best_char_id or host_id
-        
-    # Otherwise, default to the same place as the main product
-    return main_target_id
+    host_ent = Entity.query.get((g.game_token, host_id))
+    if host_ent.entity_type == Character.TYPENAME:
+        return main_target_id if main_target_id != GENERAL_ID else host_id
+
+    if host_ent.entity_type == Location.TYPENAME:
+        return host_id
+
+    # Universal hosted but not universal byproduct so put it wherever we can
+    return next(ctx.unique_ids(
+        ctx.not_general(ctx.owner_id),
+        ctx.char_id,
+        ctx.loc_id), None)
