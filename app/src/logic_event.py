@@ -172,7 +172,7 @@ def calculate_determinants(event, role_entities):
         source_display = "Constant"
             
         # Identify the Field Name (Pathfinding, Iron Ore, etc.)
-        if det.val_src == Participant.FIELD and det.infield:
+        if det.get_val_from == Participant.INFIELD and det.infield:
             anchor_id = resolve_anchor_id(det.infield.role, role_entities)
             if not anchor_id:
                 continue
@@ -215,7 +215,7 @@ def calculate_determinants(event, role_entities):
                 if pile:
                     child_name = maskable_name(pile.item)
                 source_display = f"{anchor_name}'s {child_name}"
-        elif det.val_src == Participant.CONST:
+        elif det.get_val_from == Participant.CONST:
             val = det.val_transform
 
         breakdown_text = format_for_display(val)
@@ -538,9 +538,9 @@ def do_effect_change(eff, roll_total, role_entities):
     subject_id = resolve_anchor_id(Participant.SUBJECT, role_entities)
 
     # --- STEP 1: CALCULATE IMPACT (The "From") ---
-    if eff.val_src == Participant.OUTCOME:
+    if eff.get_val_from == Participant.OUTCOME:
         impact = roll_total
-    elif eff.val_src == Participant.FIELD:
+    elif eff.get_val_from == Participant.INFIELD:
         # Source can be infield (explicit) or outfield (recursive target)
         source_field = eff.infield or eff.outfield
         anchor_id = resolve_anchor_id(source_field.role, role_entities)

@@ -202,19 +202,14 @@
         innerExprVisibility(newCard);
         outerExprVisibility(newCard);
 
-        const sourceSelect = newCard.querySelector('select[name$="[val_src]"]');
+        const sourceSelect = newCard.querySelector('[name$="[get_val_from]"]');
         if (sourceSelect) syncSourceVisibility(sourceSelect);
     }
 
-    function syncSourceVisibility(select) {
-        const card = select.closest('.factor-card');
+    function syncSourceVisibility(element) {
+        const card = element.closest('.factor-card');
         const sourceFieldBox = card.querySelector('.source-field-box');
-        
-        if (select.value === 'field') {
-            sourceFieldBox.classList.remove('hidden');
-        } else {
-            sourceFieldBox.classList.add('hidden');
-        }
+        sourceFieldBox.classList.toggle('hidden', element.value !== 'infield');
     }
 
     function renumberLabels(usage = 'det') {

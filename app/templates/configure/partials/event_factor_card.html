@@ -41,16 +41,23 @@
         <!-- 2. THE SOURCE (The "From") -->
         <h5>📥 Value Source</h5>
         <div class="sub-section">
-           {% set val_src = factor.val_src if factor else 'field' %}
-            <select name="{{ usage }}s[{{ index }}][val_src]" onchange="syncSourceVisibility(this)">
-                <option value="field" {{ 'selected' if val_src == 'field' }}>Field</option>
-                <option value="const" {{ 'selected' if val_src == 'const' }}>Fixed Constant</option>
-                {% if usage == Participant.EFF %}
-                    <option value="outcome" {{ 'selected' if val_src == 'outcome' }}>Result of Roll</option>
-                {% endif %}
-            </select>
+            {% set get_val_from = factor.get_val_from
+                if usage == Participant.EFF and factor
+                else 'infield' %}
+            {% if usage == Participant.EFF %}
+                <select name="{{ usage }}s[{{ index }}][get_val_from]" onchange="syncSourceVisibility(this)">
+                    <option value="field" {{ 'selected' if get_val_from == 'infield' }}>Field</option>
+                    <option value="const" {{ 'selected' if get_val_from == 'const' }}>Fixed Constant</option>
+                    {% if usage == Participant.EFF %}
+                        <option value="outcome" {{ 'selected' if get_val_from == 'outcome' }}>Result of Roll</option>
+                    {% endif %}
+                </select>
+            {% else %}
+                <input type="hidden"
+                        name="{{ usage }}s[{{ index }}][get_val_from]" value="infield">
+            {% endif %}
 
-            <div class="source-field-box {{ 'hidden' if val_src != 'field' }}">
+            <div class="source-field-box {{ 'hidden' if get_val_from != 'infield' }}">
                 {% set field_prefix = usage ~ "s[" ~ index ~ "][infield]" %}
                 {% set field_data = factor.infield if factor else None %}
                 {% include 'configure/partials/event_field_inputs.html' %}

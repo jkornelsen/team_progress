@@ -847,12 +847,12 @@ class Participant:
     # Only valid if the anchor resolves to a Character or Location.
     ChildItem = False
 
-    # --- Value Sources (val_src) ---
-    FIELD   = 'field'    # Value in that field
-    CONST   = 'const'    # Fixed value (EventFactor.val_transform)
-    OUTCOME = 'outcome'  # Read the roll result (effects only)
+    # --- Get Value From ---
+    INFIELD = 'infield'  # EventField
+    OUTCOME = 'outcome'  # Read the roll result
+    CONST   = 'const'    # Treat val_transform as the input
 
-    # --- Field Mode (field_mode) ---
+    # --- Field Mode ---
     ATTR = 'attr'  # AttribVal
     QTY  = 'qty'   # Pile quantity
     DIST = 'dist'  # Distance from subject grid pos (read-only)
@@ -970,8 +970,7 @@ class EventField(db.Model, DictHydrator):
 
 class EventFactor(db.Model, DictHydrator):
     """
-    Combine a retrieved value into an event Determinant (input)
-        or Effect (output).
+    Combine a retrieved value into a Determinant or Effect.
     Defines how to retrieve the value and how to apply it.
     """
     __tablename__ = 'event_factors'
@@ -990,8 +989,7 @@ class EventFactor(db.Model, DictHydrator):
     auto_apply = db.Column(db.Boolean, default=False)
 
     # --- Retrieval ---
-    #XXX: Shouldn't val_src be moved to EventField, e.g. const in, fld out
-    val_src = db.Column(db.String(15), nullable=False, default=Participant.FIELD)
+    get_val_from = db.Column(db.String(15), nullable=False, default=Participant.INFIELD)
     infield_id = db.Column(db.Integer, nullable=True)
     outfield_id = db.Column(db.Integer, nullable=True) # Effects only
 
@@ -1013,15 +1011,15 @@ class EventFactor(db.Model, DictHydrator):
         return {
             "usage_type": self.usage_type,
             "label": self.label,
-            "val_src": self.val_src,
-            "outcome_success": self.outcome_success,
-            "auto_apply": self.auto_apply,
+            "get_val_from": self.get_val_from,
             "infield": self.infield.to_dict() if self.infield else None,
             "outfield": self.outfield.to_dict() if self.outfield else None,
             "op_application": self.op_application,
             "op_transform": self.op_transform,
             "val_transform": self.val_transform,
-            "val_required": self.val_required
+            "val_required": self.val_required,
+            "outcome_success": self.outcome_success,
+            "auto_apply": self.auto_apply
         }
 
     @classmethod

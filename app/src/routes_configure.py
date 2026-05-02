@@ -600,7 +600,7 @@ def edit_event(id):
                     usage_type=usage,
                     order_index=row.get_int('order_index'),
                     label=row.get_str('label'),
-                    val_src=row.get_str('val_src', Participant.FIELD),
+                    get_val_from=row.get_str('get_val_from', Participant.INFIELD),
                     outcome_success=row.get_str('outcome_success', Participant.ALWAYS),
                     auto_apply=row.get_bool('auto_apply'),
                     op_application=row.get_str('op_application'),
@@ -609,7 +609,12 @@ def edit_event(id):
                     val_required=row.get_float('val_required', 1.0)
                 )
                 for field_key in ('infield', 'outfield'):
-                    if factor.val_src == Participant.FIELD:
+                    if field_key == 'infield' and \
+                            factor.get_val_from != Participant.INFIELD:
+                        factor.infield = None
+                    elif field_key == 'outfield' and usage == Participant.DET:
+                        factor.outfield = None
+                    else:
                         fld = row.get_map(field_key)
                         if fld.data:
                             setattr(factor, field_key, EventField(
