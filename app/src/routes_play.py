@@ -5,7 +5,7 @@ from http import HTTPStatus
 from sqlalchemy.orm import joinedload
 from app.models import (
     db, Entity, Item, Character, Location, Attrib, Event,
-    Pile, AttribVal, Operation, OutcomeType,
+    Pile, AttribVal, Operation, OutcomeType, EventFactor,
     Recipe, RecipeAttribReq, LocDest, EntityAbility,
     Progress, Overall, WinRequirement, GameMessage,
     GENERAL_ID, StorageType, Participant)
@@ -15,7 +15,8 @@ from app.utils import (
 from .logic_piles import transfer_item
 from .logic_event import (
     roll_for_outcome, roll_for_system_outcome, calculate_determinants,
-    get_entity_value, meets_det, process_all_effects)
+    get_entity_value, meets_det,
+    effect_description, do_effect_change, process_all_effects)
 from .logic_progress import (
     tick_all_active, start_production, stop_production)
 from .logic_production import (
@@ -1039,6 +1040,14 @@ def play_event(id):
 
         eligible_role_entities[role] = list(role_candidates) if role_candidates else []
 
+    effects_data = []
+    for eff in event.effects:
+        effects_data.append({
+            'obj': eff,
+            'formula': effect_description(eff),
+            'target_role': eff.outfield.role
+        })
+
     # Entities that call this event
     caller_entities = (
         db.session.query(Entity)
@@ -1058,6 +1067,7 @@ def play_event(id):
         ctx_loc=ctx_loc,
         role_entities=eligible_role_entities,
         dets_not_met=dets_not_met,
+        effects_data=effects_data,
         caller_entities=caller_entities,
         Participant=Participant,
         Operation=Operation,
@@ -1116,7 +1126,7 @@ def roll_event(id):
 @play_bp.route('/event/apply-effect/<int:factor_id>', methods=['POST'])
 def apply_single_effect(factor_id):
     req = RequestHelper('form')
-    eff = EventFactor.query.get_or_404((g.game_token, factor_id))
+    eff = EventFactor.query.get_or_404(factor_id)
     
     role_entities = {
         Participant.formkey_to_role(k): req.get_int(k)

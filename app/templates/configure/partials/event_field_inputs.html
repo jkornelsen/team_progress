@@ -7,8 +7,11 @@
     <!-- Role -->
     <div class="flex-row align-center gap-10 role-row">
         <span>Participant:</span>
-        <select name="{{ field_prefix }}[role]" 
-                class="role-selector"
+        <input type="hidden" 
+                name="{{ field_prefix }}[role]" 
+                class="role-hidden-input" 
+                value="{{ role }}">
+        <select class="role-selector"
                 style="max-width: 30ch;"
                 onchange="syncRoleWithField(this)">
             <option value="{{ Participant.SUBJECT }}"

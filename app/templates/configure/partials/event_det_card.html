@@ -27,26 +27,16 @@
         <!-- 2. THE SOURCE (The "From") -->
         <h5>📥 Value Source</h5>
         <div class="flex-row align-center sub-section">
-            <input type="hidden" name="dets[{{ index }}][infield]" value="infield">
+            <input type="hidden" name="dets[{{ index }}][get_val_from]" value="infield">
 
             <div class="source-field-box">
-                {% set field_prefix = usage ~ "s[" ~ index ~ "][infield]" %}
+                {% set field_prefix = "dets[" ~ index ~ "][infield]" %}
                 {% set field_data = factor.infield if factor else None %}
                 {% include 'configure/partials/event_field_inputs.html' %}
             </div>
         </div>
 
-        <!-- 3. THE DESTINATION (The "To") - Only for Effects -->
-        {% if usage == Participant.EFF %}
-            <h5>📤 Apply Change To</h5>
-            <div class="sub-section">
-                {% set field_prefix = "effs[" ~ index ~ "][outfield]" %}
-                {% set field_data = factor.outfield if factor else None %}
-                {% include 'configure/partials/event_field_inputs.html' %}
-            </div>
-        {% endif %}
-
-        <!-- 4. MATH (Calculations) -->
+        <!-- 3. MATH (Calculations) -->
         <h5>🧮 Calculation</h5>
         <div class="sub-section">
             <div class="flex-row align-center gap-10">

@@ -850,9 +850,10 @@ class Participant:
     ChildItem = False
 
     # --- Get Value From ---
-    INFIELD = 'infield'  # EventField
-    OUTCOME = 'outcome'  # Read the roll result
-    CONST   = 'const'    # Treat val_transform as the input
+    INFIELD = 'infield'   # Standard EventField setup
+    OUTFIELD = 'outfield' # Treat infield and outfield the same
+    OUTCOME = 'outcome'   # Read the roll result
+    CONST = 'const'       # Treat val_transform as the input
 
     # --- Field Mode ---
     ATTR = 'attr'  # AttribVal
@@ -889,6 +890,7 @@ class Operation:
     VAL_TO_POW = 'x^'
     POW_OF_VAL = '^x'
     SOFTCAP = 'scap'
+    ROUND = 'roun'
 
     Repr = {
         CONST:      'n',
@@ -903,6 +905,7 @@ class Operation:
         VAL_TO_POW: 'xⁿ',
         POW_OF_VAL: 'nˣ',
         SOFTCAP:    'SoftCap',
+        ROUND:      'Round',
     }
 
     # How the result applies to the total
@@ -912,7 +915,7 @@ class Operation:
     # Modify the Field Value before we apply it to the total
     TRANSFORM_OPS = [
         ADD, SUB, MULT, DIV,
-        VAL_TO_POW, POW_OF_VAL, SOFTCAP]
+        VAL_TO_POW, POW_OF_VAL, ROUND, SOFTCAP]
 
 class EventField(db.Model, DictHydrator):
     """

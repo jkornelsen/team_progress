@@ -219,51 +219,47 @@
                 </div>
             </section>
                 
-            <!-- Apply the roll result to selected containers -->
-            {% if event.changes %}
-            <section id="apply-section" class="outer-border hidden">
-                <h3>Apply Result to Items or Attributes</h3>
-                <p class="label-like text-dim">Select a character or location to apply the result to.</p>
-
-                {% for change in event.changes %}
-                <div class="change-row outer-border" data-key-id="{{ change.id }}" data-key-type="{{ change.entity_type }}">
-                    <div class="flex-between align-center">
-                        <strong>Modify {{ change.name }}:</strong>
-                        
-                        <select class="container-select">
-                            <option value="" data-current="0">-- Select Container --</option>
+            {% if event.effects %}
+            <section id="effects-section" class="outer-border {% if not effects_data %}hidden{% endif %}">
+                <h3>Effects</h3>
+                <div id="effects-list">
+                    {% for item in effects_data %}
+                        {% set eff = item.obj %}
+                        <div class="effect-row spacious-bottom" 
+                             id="eff-row-{{ eff.id }}" 
+                             data-role="{{ item.target_role }}"
+                             data-auto="{{ 'true' if eff.auto_apply else 'false' }}">
                             
-                            {# Option group for Characters who have this stat/item #}
-                            <optgroup label="Characters">
-                                {% for char in eligible_chars %}
-                                    {% set current_val = get_val(char, change) %}
-                                    <option value="{{ char.id }}" data-current="{{ current_val }}">
-                                        {{ char.name }} (Current: {{ current_val | formatNum }})
-                                    </option>
-                                {% endfor %}
-                            </optgroup>
+                            <div class="flex-between align-center">
+                                <div>
+                                    <span class="verb-label" style="font-weight: bold;">
+                                        {{ 'Will change' if not eff.auto_apply else 'Auto-applies' }}
+                                    </span>
+                                    <strong class="target-name-display">...</strong>
+                                    <span class="text-dim">{{ eff.outfield.get_field_name() }}</span>
+                                </div>
+                                
+                                {% if not eff.auto_apply %}
+                                    <button type="button" 
+                                            class="btn-sm go-button apply-eff-btn hidden" 
+                                            onclick="applySingleEffect({{ eff.id }})">
+                                        Apply
+                                    </button>
+                                    <span class="check-mark hidden text-success">✓ Changed</span>
+                                {% else %}
+                                    <span class="auto-badge label-like">Auto</span>
+                                {% endif %}
+                            </div>
 
-                            {# Option group for Locations or General Storage #}
-                            <optgroup label="World/Storage">
-                                {% for loc in eligible_locs %}
-                                    {% set current_val = get_val(loc, change) %}
-                                    <option value="{{ loc.id }}" data-current="{{ current_val }}">
-                                        {{ loc.name }} (Current: {{ current_val | formatNum }})
-                                    </option>
-                                {% endfor %}
-                            </optgroup>
-                        </select>
-                    </div>
-
-                    <div class="apply-controls spacious-top flex-between align-center">
-                        <div class="preview-text">
-                            Value: <span class="text-dim old-val">0</span> 
-                            &rarr; <span class="text-accent new-val-preview">--</span>
+                            <div class="formula-box label-like" style="padding-left: 15px;">
+                                <span class="formula-text">{{ item.formula }}</span>
+                                <span class="preview-calculation hidden">
+                                    (<span class="old-val"></span> ➔ <span class="new-val text-success"></span>)
+                                </span>
+                            </div>
                         </div>
-                        <button type="button" class="btn apply-btn">Apply [A]ction</button>
-                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
             </section>
             {% endif %}
         </div>
@@ -318,76 +314,88 @@
             const diff = document.getElementById('difficulty-select')?.value;
             if (diff) fd.append('difficulty', diff);
 
-            const url = `/event/roll/${eventId}`;
-            const data = await apiPost(url, fd, "Could not roll.");
+            const data = await apiPost(`/event/roll/${eventId}`, fd, "Could not roll");
             if (!data) return;
 
             lastRollValue = data.result_value;
             document.getElementById('outcome-text').innerHTML = data.display;
-            {% if event.changes %}
-            document.getElementById('apply-section').classList.remove('hidden');
-            {% endif %}
-            updateApplyPreviews();
+
+            // Update Effects Visuals
+            document.querySelectorAll('.effect-row').forEach(row => {
+                const isAuto = row.dataset.auto === "true";
+                const btn = row.querySelector('.apply-eff-btn');
+                const check = row.querySelector('.check-mark');
+                const preview = row.querySelector('.preview-calculation');
+                const verb = row.querySelector('.verb-label');
+
+                if (isAuto) {
+                    verb.innerText = "Applied";
+                    row.style.opacity = "0.7";
+                } else {
+                    btn.classList.remove('hidden');
+                    verb.innerText = "Change";
+                }
+                
+                // Show the calculation (Actual numbers depend on your specific logic, 
+                // here is a simplified version)
+                preview.classList.remove('hidden');
+            });
         };
     }
 
     /**
-     * Updates the "New Value" preview labels in the Apply section
-     * based on the result of the roll.
+     * Updates the names and current values for the Effects section
      */
-    function updateApplyPreviews() {
-        document.querySelectorAll('.change-row').forEach(row => {
-            const select = row.querySelector('.container-select');
-            const oldValSpan = row.querySelector('.old-val');
-            const newValSpan = row.querySelector('.new-val-preview');
+    function updateEffectUI() {
+        const roleIds = getRoleIDs();
+        const ROLE_SUFF = "{{ Participant.FORM_SUFFIX }}";
+        
+        document.querySelectorAll('.effect-row').forEach(async (row) => {
+            const role = row.dataset.role;
+            const roleIdField = `${role}${ROLE_SUFF}`;
+            const targetId = roleIds.get(roleIdField);
+            const nameDisplay = row.querySelector('.target-name-display');
             
-            const selected = select.selectedOptions[0];
-            const currentVal = parseFloat(selected.dataset.current) || 0;
-            
-            oldValSpan.innerText = currentVal;
-            // The logic: New Value = Current + Roll Result
-            const calculated = currentVal + lastRollValue;
-            newValSpan.innerText = Math.round(calculated * 100) / 100;
+            if (targetId) {
+                const select = document.querySelector(`select[name="${roleIdField}"]`);
+                let name = "Target";
+                if (select) {
+                    name = select.options[select.selectedIndex].text;
+                } else {
+                    const hidden = document.querySelector(`input[name="${roleIdField}"]`);
+                    name = "";
+                }
+                nameDisplay.innerText = name;
+            } else {
+                nameDisplay.innerText = "(" + role + ")";
+            }
         });
     }
 
-    document.querySelectorAll('.apply-btn').forEach(btn => {
-        btn.onclick = async () => {
-            const row = btn.closest('.change-row');
-            const containerId = row.querySelector('.container-select').value;
-            const newValue = parseFloat(row.querySelector('.new-val-preview').innerText);
+    /**
+     * Sends a request to apply a manual effect
+     */
+    async function applySingleEffect(factorId) {
+        const row = document.getElementById(`eff-row-${factorId}`);
+        const fd = getRoleIDs();
+        fd.append('roll_total', lastRollValue);
 
-            if (!containerId || isNaN(newValue)) {
-                alert("Please select a target container first.");
-                return;
-            }
-
-            const fd = new FormData();
-            fd.append('key_id', row.dataset.keyId);
-            fd.append('key_type', row.dataset.keyType); // 'attrib' or 'item'
-            fd.append('container_id', containerId);
-            fd.append('new_value', newValue);
-
-            const url = `/event/apply/{{ event.id }}`;
-            const data = await apiPost(url, fd, "Could not move.");
-            if (!data) return;
-
-            btn.innerText = "Applied! ✅";
-            btn.disabled = true;
-        };
-    });
-
-    // Recalculate previews whenever selection changes
-    document.querySelectorAll('.container-select').forEach(s => {
-        s.onchange = updateApplyPreviews;
-    });
+        const success = await apiPost(
+            `/event/apply-effect/${factorId}`, fd, "Could not apply");
+        if (success) {
+            row.querySelector('.apply-eff-btn').classList.add('hidden');
+            row.querySelector('.check-mark').classList.remove('hidden');
+            row.querySelector('.verb-label').innerText = "Changed";
+            row.style.opacity = "0.7";
+        }
+    }
 
     // Gather selected IDs from the dropdowns
     function getRoleIDs() {
-        const ROLE_SUFFIX = "{{ Participant.FORM_SUFFIX }}";
+        const ROLE_SUFF = "{{ Participant.FORM_SUFFIX }}";
         const fd = new FormData();
         const inputs = document.querySelectorAll(
-            `input[name$="${ROLE_SUFFIX}"], select[name$="${ROLE_SUFFIX}"]`);
+            `input[name$="${ROLE_SUFF}"], select[name$="${ROLE_SUFF}"]`);
         inputs.forEach(el => {
             if (el.value) {
                 fd.append(el.name, el.value);
@@ -488,13 +496,16 @@
         }
     }
 
-    // Attach listeners to all participant dropdowns
     document.querySelectorAll('.participant-trigger').forEach(el => {
-        el.addEventListener('change', refreshModifiers);
+        el.addEventListener('change', () => {
+            refreshModifiers();
+            updateEffectUI();
+        });
     });
-
-    // Run once on load to show Suzy's initial Pathfinding bonus
-    document.addEventListener('DOMContentLoaded', refreshModifiers);
+    document.addEventListener('DOMContentLoaded', function() {
+        refreshModifiers();
+        updateEffectUI();
+    });
 </script>
 
 <style>

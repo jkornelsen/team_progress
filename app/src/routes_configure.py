@@ -612,20 +612,30 @@ def edit_event(id):
                     if field_key == 'infield' and \
                             factor.get_val_from != Participant.INFIELD:
                         factor.infield = None
+                        continue
                     elif field_key == 'outfield' and usage == Participant.DET:
                         factor.outfield = None
-                    else:
-                        fld = row.get_map(field_key)
-                        if fld.data:
-                            setattr(factor, field_key, EventField(
-                                game_token=game_token,
-                                role=fld.get_str('role'),
-                                field_mode=fld.get_str('field_mode'),
-                                child_of_anchor=fld.get_bool('child_of_anchor'),
-                                item_id=fld.get_int('item_id') or None,
-                                attrib_id=fld.get_int('attrib_id') or None,
-                                recipe_id=fld.get_int('recipe_id') or None
-                            ))
+                        continue
+                    fld = row.get_map(field_key)
+                    if fld.data:
+                        mode = fld.get_str('field_mode')
+                        fld_attrib_id = fld.get_int('attrib_id') \
+                            if mode == Participant.ATTR else None
+                        fld_item_id = fld.get_int('item_id') \
+                            if mode in [Participant.QTY, Participant.DIST] \
+                            or 'rate' in mode else None
+                        fld_recipe_id = fld.get_int('recipe_id') \
+                            if 'rate' in mode else None
+
+                        setattr(factor, field_key, EventField(
+                            game_token=game_token,
+                            role=fld.get_str('role'),
+                            field_mode=fld.get_str('field_mode'),
+                            child_of_anchor=fld.get_bool('child_of_anchor'),
+                            attrib_id=fld_attrib_id,
+                            item_id=fld_item_id,
+                            recipe_id=fld_recipe_id,
+                        ))
                 event.factors.append(factor)
 
         db.session.commit()

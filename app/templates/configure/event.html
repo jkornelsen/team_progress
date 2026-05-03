@@ -124,7 +124,7 @@
             </div>
             <div id="det-list" class="spacious-top">
                 {% for factor in event.determinants %}
-                    {% set index = loop.index %}
+                    {% set index = loop.index0 %}
                     {% include 'configure/partials/event_det_card.html' %}
                 {% endfor %}
             </div>
@@ -147,7 +147,7 @@
             </div>
             <div id="eff-list" class="spacious-top">
                 {% for factor in event.effects %}
-                    {% set index = loop.index %}
+                    {% set index = loop.index0 %}
                     {% include 'configure/partials/event_eff_card.html' %}
                 {% endfor %}
             </div>
@@ -233,21 +233,41 @@
         const tierSelect = card.querySelector('.success-tier-select');
         const eventOutcomeType = document.getElementById('outcome_type').value;
 
-        const isField = (element.value === '{{ Participant.INFIELD }}');
+        const isAnotherField = (element.value === '{{ Participant.INFIELD }}');
+        const sameAsOutfield = (element.value === '{{ Participant.OUTFIELD }}');
         const isOutcome = (element.value === '{{ Participant.OUTCOME }}');
+        const isFixedConstant = (element.value === '{{ Participant.CONST }}');
 
         if (sourceFieldBox) {
-            sourceFieldBox.classList.toggle('hidden', !isField);
+            sourceFieldBox.classList.toggle('hidden', !isAnotherField);
         }
 
         if (sourceConstBox) {
-            sourceConstBox.classList.toggle('hidden', isField);
+            sourceConstBox.classList.toggle('hidden', isAnotherField);
         }
 
         if (placeholder) {
-            if (isField) placeholder.innerText = "Source Value";
-            else if (isOutcome) placeholder.innerText = "RollResult";
-            else placeholder.innerText = "Constant";
+            if (isAnotherField || sameAsOutfield)
+                placeholder.innerText = "Source Value";
+            else if (isOutcome)
+                placeholder.innerText = "Roll Result";
+            else
+                placeholder.innerText = "Constant";
+        }
+
+        if (card.classList.contains('eff-card')) {
+            const innerOpSelect = card.querySelector('.op-inner-selector');
+            if (isFixedConstant) {
+                innerOpSelect.value = "{{ Operation.CONST }}";
+                innerOpSelect.disabled = true;
+                innerOpSelect.style.opacity = "0.7";
+                innerOpSelect.style.cursor = "not-allowed";
+            } else {
+                innerOpSelect.disabled = false;
+                innerOpSelect.style.opacity = "";
+                innerOpSelect.style.cursor = "";
+            }
+            innerExprVisibility(card);
         }
 
         if (successFilter) {
@@ -283,14 +303,15 @@
     function syncRoleWithField(element) {
         const card = element.closest('.factor-card');
         const fieldGroup = element.closest('.field-input-group');
-        
+
         const modeSelect = fieldGroup.querySelector('.field-mode-select');
         const roleSelect = fieldGroup.querySelector('.role-selector');
+        const roleHidden = fieldGroup.querySelector('.role-hidden-input');
         const roleRow = fieldGroup.querySelector('.role-row');
         const itemSelect = fieldGroup.querySelector('.id-item');
         const childContainer = fieldGroup.querySelector('.child-toggle-container');
         const childCheckbox = fieldGroup.querySelector('.child-item-checkbox');
-        
+
         if (!modeSelect || !roleSelect) return;
 
         const mode = modeSelect.value;
@@ -338,6 +359,9 @@
         } else {
             roleSelect.disabled = false;
             Array.from(roleSelect.options).forEach(opt => opt.disabled = false);
+        }
+        if (roleHidden) {
+            roleHidden.value = roleSelect.value;
         }
 
         // Child Item Toggle Visibility
@@ -446,6 +470,7 @@
         rhsGroup.style.order = "3";
 
         // Apply Logic based on OP
+        let isFunctional = false;
         if (!op) {
             rhsGroup.classList.add('hidden');
         } 
@@ -454,13 +479,20 @@
             rhsGroup.style.order = "1";
             opSelector.style.order = "2";
         }
-        else if (op === "{{ Operation.POW_OF_VAL }}" || op === "{{ Operation.SOFTCAP }}") {
+        else if (op === "{{ Operation.POW_OF_VAL }}") {
             rhsGroup.style.order = "1";
             lhs.style.order = "3";
         } 
+        else if (op === "{{ Operation.SOFTCAP }}" || op === "{{ Operation.ROUND }}") {
+            opSelector.style.order = "1";
+            lhs.style.order = "2";
+            rhsGroup.style.order = "3";
+            isFunctional = true;
+        }
         else {
             // STANDARD BINARY (+, -, *, /, x^ )
         }
+        card.classList.toggle('functional-layout', isFunctional);
     }
 
     function outerExprVisibility(card) {
@@ -526,6 +558,13 @@
         }
     });
 
+    // Re-enable so the values get sent to the server
+    document.querySelector('form').addEventListener('submit', function() {
+        this.querySelectorAll('.op-inner-selector').forEach(select => {
+            select.disabled = false;
+        });
+    });
+
     document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll(
                 '.field-input-group select[name$="[field_mode]"]').forEach(select => {
@@ -535,10 +574,8 @@
             syncSourceVisibility(select);
         });
         document.querySelectorAll('.factor-card').forEach(card => {
-            if (card.classList.contains('det-card')) {
-                innerExprVisibility(card);
-                outerExprVisibility(card);
-            }
+            innerExprVisibility(card);
+            outerExprVisibility(card);
         });
         document.querySelectorAll(
                 '.field-input-group .id-item').forEach(itemSelect => {
@@ -567,6 +604,12 @@
     #fields-dice:not(.hidden), 
     #fields-range:not(.hidden) {
         display: grid !important;
+    }
+
+    .factor-card.functional-layout [data-slot-lhs]::after {
+        content: ",";
+        margin-right: 4px;
+        font-weight: bold;
     }
 </style>
 {% endblock %}

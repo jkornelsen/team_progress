@@ -63,7 +63,6 @@ const ConfigEditor = {
         const row = select.closest('.factor-card') || select.closest('.col-row, .attrib-req-row, .flex-row');
         const container = row.querySelector('.value-container, .range-container, [data-slot-required]');
         if (!container) {
-            console.error("Container [data-slot-required] not found in row", row);
             return;
         }
 

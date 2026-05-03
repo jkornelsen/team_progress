@@ -5,7 +5,7 @@ from flask import g, request, session
 from app.models import (
     db, GENERAL_ID, Entity, Item, Location, Character, Attrib, Event,
     StorageType, Operation, OutcomeType, RollerType, Participant,
-    AttribVal, Pile, LocDest)
+    AttribVal, Pile, LocDest, Recipe)
 from app.utils import maskable_name
 from .logic_piles import set_quantity
 from .logic_user_interaction import add_message
@@ -256,6 +256,12 @@ def apply_operation(current_val, mod_val, op):
             1 + math.log(1 + current_abs / c))
         return sign * (1 + mod_val * ratio)
 
+    if op == Operation.ROUND:
+        try:
+            return float(round(current_val, int(mod_val)))
+        except (ValueError, TypeError):
+            return float(round(current_val))
+
     if op == Operation.ADD:  return current_val + mod_val
     if op == Operation.SUB:  return current_val - mod_val
     if op == Operation.MULT: return current_val * mod_val
@@ -278,7 +284,8 @@ def get_inner_breakdown(val, mod_val, op):
         Operation.DIV:        f"{v}÷{m}",
         Operation.VAL_TO_POW: f"{v}<sup>{m}</sup>",
         Operation.POW_OF_VAL: f"{m}<sup>{v}</sup>",
-        Operation.SOFTCAP:    f"{v} Soft Capped"
+        Operation.SOFTCAP:    f"{v} Soft Capped",
+        Operation.ROUND  :    f"Round {v}, {m}"
     }
     return formats.get(op, v)
 
@@ -488,6 +495,34 @@ def roll_for_system_outcome(event_id, num_dice=1, sides=20, bonus=0):
 # Applying Changes
 # ------------------------------------------------------------------------
 
+def effect_description(eff):
+    """Returns a string describing the math logic of an effect."""
+    # The Source
+    if eff.get_val_from == Participant.OUTCOME:
+        source_val = "[Roll Result]"
+    elif eff.get_val_from in (Participant.INFIELD, Participant.OUTFIELD):
+        field = eff.infield or eff.outfield
+        source_val = field.get_field_name() if field else "Value"
+    else:
+        source_val = format_for_display(eff.val_transform)
+
+    # The Inner Transform
+    if eff.op_transform and eff.get_val_from != Participant.CONST:
+        # e.g., (Roll Result * 2)
+        source_val = get_inner_breakdown(0, eff.val_transform, eff.op_transform).replace("0", source_val)
+
+    # The Outer Application
+    op_labels = {
+        Operation.ASSIGN: "Set to",
+        Operation.ADD: "Increase by",
+        Operation.SUB: "Decrease by",
+        Operation.MULT: "Multiply by",
+        Operation.DIV: "Divide by"
+    }
+    verb = op_labels.get(eff.op_application, "Change by")
+    
+    return f"{verb} {source_val}"
+
 def process_all_effects(event, role_entities, roll_total, tier_key, force_auto_only=False):
     """
     Called by roll_event route. Scans all effects and triggers
@@ -521,8 +556,7 @@ def do_effect_change(eff, roll_total, role_entities):
     # --- STEP 1: CALCULATE IMPACT (The "From") ---
     if eff.get_val_from == Participant.OUTCOME:
         impact = roll_total
-    elif eff.get_val_from == Participant.INFIELD:
-        # Source can be infield (explicit) or outfield (recursive target)
+    elif eff.get_val_from in (Participant.INFIELD, Participant.OUTFIELD):
         source_field = eff.infield or eff.outfield
         anchor_id = resolve_anchor_id(source_field.role, role_entities)
         impact = get_entity_value(anchor_id, source_field, subject_id)
@@ -546,7 +580,8 @@ def do_effect_change(eff, roll_total, role_entities):
             game_token=game_token, subject_id=target_id, attrib_id=field_def.attrib_id
         ).first()
         current = record.value if record else 0.0
-        new_val = impact if op == Operation.EQ else apply_operation(current, impact, op)
+        new_val = impact if op == Operation.ASSIGN \
+            else apply_operation(current, impact, op)
         
         if not record:
             db.session.add(AttribVal(
@@ -561,7 +596,8 @@ def do_effect_change(eff, roll_total, role_entities):
         # Items are a special case because we want to use the existing pile logic
         # that handles deleting empty piles.
         current = get_accessible_quantity(field_def.item_id, target_id)
-        new_val = impact if op == Operation.EQ else apply_operation(current, impact, op)
+        new_val = impact if op == Operation.ASSIGN \
+            else apply_operation(current, impact, op)
         set_quantity(field_def.item_id, target_id, new_val)
 
     # Destination C: Recipe Efficiency (Global Blueprint Change)
@@ -570,10 +606,12 @@ def do_effect_change(eff, roll_total, role_entities):
         if recipe:
             if field_def.field_mode == Participant.RATE_AMT:
                 current = recipe.rate_amount
-                recipe.rate_amount = impact if op == Operation.EQ else apply_operation(current, impact, op)
+                recipe.rate_amount = impact if op == Operation.ASSIGN \
+                    else apply_operation(current, impact, op)
             else:
                 current = recipe.rate_duration
-                new_dur = impact if op == Operation.EQ else apply_operation(current, impact, op)
+                new_dur = impact if op == Operation.ASSIGN else \
+                    apply_operation(current, impact, op)
                 recipe.rate_duration = max(0.1, new_dur) # Safety clamp
 
     db.session.commit()
