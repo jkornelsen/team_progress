@@ -1,8 +1,8 @@
-<div class="factor-card outer-border {{ usage }}-card"
-     data-index="{{ index }}" data-usage="{{ usage }}">
+<div class="factor-card outer-border det-card"
+     data-index="{{ index }}" data-usage="det">
     
     <input type="hidden"
-            name="{{ usage }}s[{{ index }}][order_index]"
+            name="dets[{{ index }}][order_index]"
             class="factor-order-input"
             value="{{ factor.order_index if factor else 0 }}">
 
@@ -11,28 +11,14 @@
         <div class="flex-row align-center gap-10">
             <span class="index-display label-like">#{{ index }}</span>
             <input type="text" 
-                   name="{{ usage }}s[{{ index }}][label]" 
-                   value="{{ factor.label if factor else '' }}" 
+                   name="dets[{{ index }}][label]" 
+                   value="{{ factor.label if factor and factor.label else '' }}" 
                    placeholder="Label e.g. Evasion (Optional)">
-            
-            {% if usage == Participant.EFF %}
-                {% set f_success = factor.outcome_success if factor else 'always' %}
-                <select name="effs[{{ index }}][outcome_success]" class="mini-select">
-                    <option value="always" {{ 'selected' if f_success == 'always' }}>Always</option>
-                    <option value="success_any" {{ 'selected' if f_success == 'success_any' }}>On Any Success</option>
-                    <option value="success_major" {{ 'selected' if f_success == 'success_major' }}>On Major Success</option>
-                    <option value="success_minor" {{ 'selected' if f_success == 'success_minor' }}>On Minor Success</option>
-                    <option value="failure_any" {{ 'selected' if f_success == 'failure_any' }}>On Any Failure</option>
-                </select>
-                <label class="checkbox-label" title="Apply change immediately on roll without confirmation">
-                    <input type="checkbox" name="effs[{{ index }}][auto_apply]" {{ 'checked' if factor and factor.auto_apply }}> Auto
-                </label>
-            {% endif %}
         </div>
         <!-- Move/Delete buttons -->
         <div class="flex-row gap-10">
-            <button type="button" class="btn-sm btn-{{ usage }}-up" onclick="moveFactor(this, -1)">↑</button>
-            <button type="button" class="btn-sm btn-{{ usage }}-down" onclick="moveFactor(this, 1)">↓</button>
+            <button type="button" class="btn-sm btn-det-up" onclick="moveFactor(this, -1)">↑</button>
+            <button type="button" class="btn-sm btn-det-down" onclick="moveFactor(this, 1)">↓</button>
             <button type="button" class="btn-sm dangerous-button" onclick="this.closest('.factor-card').remove(); renumberLabels();">×</button>
         </div>
     </div>
@@ -40,24 +26,10 @@
     <div class="card-body">
         <!-- 2. THE SOURCE (The "From") -->
         <h5>📥 Value Source</h5>
-        <div class="sub-section">
-            {% set get_val_from = factor.get_val_from
-                if usage == Participant.EFF and factor
-                else 'infield' %}
-            {% if usage == Participant.EFF %}
-                <select name="{{ usage }}s[{{ index }}][get_val_from]" onchange="syncSourceVisibility(this)">
-                    <option value="field" {{ 'selected' if get_val_from == 'infield' }}>Field</option>
-                    <option value="const" {{ 'selected' if get_val_from == 'const' }}>Fixed Constant</option>
-                    {% if usage == Participant.EFF %}
-                        <option value="outcome" {{ 'selected' if get_val_from == 'outcome' }}>Result of Roll</option>
-                    {% endif %}
-                </select>
-            {% else %}
-                <input type="hidden"
-                        name="{{ usage }}s[{{ index }}][get_val_from]" value="infield">
-            {% endif %}
+        <div class="flex-row align-center sub-section">
+            <input type="hidden" name="dets[{{ index }}][infield]" value="infield">
 
-            <div class="source-field-box {{ 'hidden' if get_val_from != 'infield' }}">
+            <div class="source-field-box">
                 {% set field_prefix = usage ~ "s[" ~ index ~ "][infield]" %}
                 {% set field_data = factor.infield if factor else None %}
                 {% include 'configure/partials/event_field_inputs.html' %}
@@ -82,26 +54,25 @@
                 <div class="inner-expr-group flex-row align-center gap-5" data-inner-group>
                     <span style="font-size: 2em; order: 0;">(</span>
                     
-                    <span data-slot-lhs style="font-style: italic">FetchedValue</span>
+                    <span data-slot-lhs style="font-style: italic">Fetched Value</span>
 
                     {% set op_transform = factor.op_transform if factor else '' %}
-                    <select name="{{ usage }}s[{{ index }}][op_transform]" 
+                    <select name="dets[{{ index }}][op_transform]" 
                             class="op-inner-selector"
                             style="max-width: 15ch;"
                             onchange="innerExprVisibility(this.closest('.factor-card'))">
-                        <option value="k" {{ 'selected' if op_transform == 'k' }}>← Constant</option>
-                        <option value="" {{ 'selected' if not op_transform }}>← Fetched</option>
+                        <option value="{{ Operation.CONST }}" {{ 'selected' if op_transform == Operation.CONST }}>Constant</option>
+                        <option value="" {{ 'selected' if not op_transform }}>Use Value</option>
                         {% for op_key in Operation.TRANSFORM_OPS %}
-                            {% set info = Operation.Repr.get(op_key) %}
                             <option value="{{ op_key }}" {{ 'selected' if op_transform == op_key }}>
-                                {{ info.symbol }}
+                                {{ Operation.Repr[op_key] }}
                             </option>
                         {% endfor %}
                     </select>
 
                     <div data-slot-rhs class="flex-row align-center gap-5">
                         <input type="number" 
-                               name="{{ usage }}s[{{ index }}][val_transform]" 
+                               name="dets[{{ index }}][val_transform]" 
                                data-input-constant
                                value="{{ factor.val_transform if factor else 1.0 }}" 
                                step="any" 
@@ -112,14 +83,13 @@
                 </div>
 
                 {% set op_application = factor.op_application if factor else '+' %}
-                <select name="{{ usage }}s[{{ index }}][op_application]" 
+                <select name="dets[{{ index }}][op_application]" 
                         class="op-application-selector" 
                         style="max-width: 8ch;"
                         onchange="outerExprVisibility(this.closest('.factor-card'))">
                     {% for op_key in Operation.APPLICATION_OPS %}
-                        {% set info = Operation.Repr.get(op_key) %}
                         <option value="{{ op_key }}" {{ 'selected' if op_application == op_key }}>
-                            {{ info.symbol }}
+                            {{ Operation.Repr[op_key] }}
                         </option>
                     {% endfor %}
                 </select>

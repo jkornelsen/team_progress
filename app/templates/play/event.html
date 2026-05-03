@@ -163,10 +163,7 @@
                     {% if event.outcome_type in ['fourway', 'numeric'] %}
                     <div class="die-adjustment-grid">
                         <div class="form-group">
-                            <label>Die: {{ event.numeric_range[0] }} to {{ event.numeric_range[1] }}
-                            <input type="hidden" id="die-min-input" name="die_min" value="{{ event.numeric_range[0] }}">
-                            <input type="hidden" id="die-max-input" name="die_max" value="{{ event.numeric_range[1] }}">
-                            </label>
+                            <label>Die: {{ event.numeric_range[0] }} to {{ event.numeric_range[1] }}</label>
                         </div>
                     </div>
                     {% endif %}
@@ -276,28 +273,23 @@
 <script src="{{ url_for('static', filename='js/api.js') }}"></script>
 
 <script>
-    const baseMin = {{ event.numeric_range[0] if event.numeric_range else 1 }};
-    const baseMax = {{ event.numeric_range[1] if event.numeric_range else 20 }};
-    const baseSpan = baseMax - baseMin + 1;
+    const OP_MAP = {{ Operation.Repr | tojson | safe }};
+    const COMPARISON_OPS = {{ Operation.COMPARISON_OPS | tojson }};
+    const eventId = {{ event.id }};
 
     const diffSelect = document.getElementById('difficulty-select');
-    const minInput = document.getElementById('die-min-input');
-    const maxInput = document.getElementById('die-max-input');
     const rollBtn = document.getElementById('roll-btn');
-
-    const eventId = {{ event.id }};
-    const resolution = document.getElementById('resolution-actions');
 
     let lastRollValue = 0;
 
-    function updateDieLogic() {
+    function updateDieThresholds() {
         if (!diffSelect) return;
 
-        const difficulty = parseFloat(diffSelect.value);
-        const min = baseMin; 
-        const max = baseMax; 
+        const min = {{ event.numeric_range[0] if event.numeric_range else 1 }};
+        const max = {{ event.numeric_range[1] if event.numeric_range else 20 }};
         const span = max - min + 1;
 
+        const difficulty = parseFloat(diffSelect.value);
         const shift = Math.round(span * difficulty);
         
         const majorFailureMax = min + Math.floor(shift * 0.20);
@@ -314,10 +306,10 @@
     }
 
     if (diffSelect) {
-        diffSelect.addEventListener('change', updateDieLogic);
+        diffSelect.addEventListener('change', updateDieThresholds);
         
         // Initial run
-        updateDieLogic();
+        updateDieThresholds();
     }
 
     if (rollBtn) {
@@ -403,16 +395,6 @@
         });
         return fd;
     }
-
-    const OP_MAP = {
-        '*':  '×',
-        '/':  '÷',
-        '>=': '≥',
-        '<=': '≤',
-        '!=': '≠',
-        '==': '='
-    };
-    const COMPARISON_OPS = {{ Operation.COMPARISON_OPS | tojson }};
 
     /**
      * Fetches calculated modifiers from the server and updates the UI

@@ -39,6 +39,8 @@ infestation
         cane whack
         cane poke
     later enemies bigger than rodents e.g. alligators -- only final boss human
+    store attrib "Boss I Defeated" in universal item "Enemies Defeated"
+        so events can check for that attrib
 
 event to help with rays black bar reset
 
@@ -61,28 +63,15 @@ saving grandfather clock resets hour, an enumerated attrib, to 12am
 
 -- tightening and quality of life --
 
+effects config source "the field we're changing"
+    doesn't need to define a (duplicate) infield
+only allow "constant" inner op for "fixed constant" source
+
 show updated item quantities in locations like overview and sources do
 
 restrict location access by item qty or attribreq
 
-validate that role isn't empty before submitting event config
-
 prompt before overwriting another character action in progress
-
-don't show outcome filtering selectbox in event configure unless 
-    get_value_from is 'outcome' and event outcome_type is fourway
-
-event grid distance to target (from subject)
-    Participant.DIST field mode
-    melee is distance 1
-    would add significant meaning to tactical positioning
-
-event requirement with a certain char selected
-    functions somewhat like univ item
-    grab their attrib or inventory item qty
-    for example require a certain boss to be "Defeated"
-    the chars must be present to be involved
-would be useful to restrict location access by defeated char as well
 
 win condition quantity min and max, like attribs for recipes
 or "at least" / "at most" toggle

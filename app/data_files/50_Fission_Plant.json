@@ -347,11 +347,10 @@
                 "selection_strings": "",
                 "determinants": [
                     {
-                        "usage_type": "in",
                         "label": "",
                         "val_src": "field",
                         "infield": {
-                            "role": "[At]",
+                            "role": "at",
                             "field_mode": "qty",
                             "child_of_anchor": false,
                             "item_id": 3,
@@ -364,11 +363,10 @@
                         "val_required": 0.0
                     },
                     {
-                        "usage_type": "in",
                         "label": "",
                         "val_src": "field",
                         "infield": {
-                            "role": "[At]",
+                            "role": "at",
                             "field_mode": "qty",
                             "child_of_anchor": false,
                             "item_id": 2,
@@ -397,11 +395,10 @@
                 "selection_strings": "",
                 "determinants": [
                     {
-                        "usage_type": "in",
                         "label": "",
                         "val_src": "field",
                         "infield": {
-                            "role": "[Universal]",
+                            "role": "universal",
                             "field_mode": "qty",
                             "child_of_anchor": false,
                             "item_id": 7,
@@ -414,11 +411,10 @@
                         "val_required": 1.0
                     },
                     {
-                        "usage_type": "in",
                         "label": "",
                         "val_src": "field",
                         "infield": {
-                            "role": "[Universal]",
+                            "role": "universal",
                             "field_mode": "qty",
                             "child_of_anchor": false,
                             "item_id": 5,
@@ -426,16 +422,15 @@
                         },
                         "outfield": null,
                         "op_application": "-",
-                        "op_transform": "log",
+                        "op_transform": "scap",
                         "val_transform": 1.0,
                         "val_required": 0.0
                     },
                     {
-                        "usage_type": "in",
                         "label": "",
                         "val_src": "field",
                         "infield": {
-                            "role": "[Universal]",
+                            "role": "universal",
                             "field_mode": "qty",
                             "child_of_anchor": false,
                             "item_id": 8,
@@ -443,7 +438,7 @@
                         },
                         "outfield": null,
                         "op_application": "-",
-                        "op_transform": "log",
+                        "op_transform": "scap",
                         "val_transform": 1.0,
                         "val_required": 0.0
                     }
@@ -479,11 +474,10 @@
                 "selection_strings": "",
                 "determinants": [
                     {
-                        "usage_type": "in",
                         "label": "",
                         "val_src": "field",
                         "infield": {
-                            "role": "[At]",
+                            "role": "at",
                             "field_mode": "attr",
                             "child_of_anchor": true,
                             "item_id": 0,
@@ -496,11 +490,10 @@
                         "val_required": 0.0
                     },
                     {
-                        "usage_type": "in",
                         "label": "",
                         "val_src": "field",
                         "infield": {
-                            "role": "[At]",
+                            "role": "at",
                             "field_mode": "qty",
                             "child_of_anchor": false,
                             "item_id": 22,
@@ -508,16 +501,15 @@
                         },
                         "outfield": null,
                         "op_application": "+",
-                        "op_transform": "log",
+                        "op_transform": "scap",
                         "val_transform": 0.5,
                         "val_required": 0.0
                     },
                     {
-                        "usage_type": "in",
                         "label": "",
                         "val_src": "field",
                         "infield": {
-                            "role": "[At]",
+                            "role": "at",
                             "field_mode": "qty",
                             "child_of_anchor": false,
                             "item_id": 19,
@@ -525,7 +517,7 @@
                         },
                         "outfield": null,
                         "op_application": "-",
-                        "op_transform": "log",
+                        "op_transform": "scap",
                         "val_transform": 0.5,
                         "val_required": 0.0
                     }
@@ -546,11 +538,10 @@
                 "selection_strings": "",
                 "determinants": [
                     {
-                        "usage_type": "in",
                         "label": "",
                         "val_src": "field",
                         "infield": {
-                            "role": "[At]",
+                            "role": "at",
                             "field_mode": "qty",
                             "child_of_anchor": false,
                             "item_id": 22,
@@ -558,16 +549,15 @@
                         },
                         "outfield": null,
                         "op_application": "+",
-                        "op_transform": "log",
+                        "op_transform": "scap",
                         "val_transform": 1.0,
                         "val_required": 0.0
                     },
                     {
-                        "usage_type": "in",
                         "label": "Crowded",
                         "val_src": "field",
                         "infield": {
-                            "role": "[At]",
+                            "role": "at",
                             "field_mode": "qty",
                             "child_of_anchor": false,
                             "item_id": 19,
@@ -575,16 +565,15 @@
                         },
                         "outfield": null,
                         "op_application": "-",
-                        "op_transform": "log",
+                        "op_transform": "scap",
                         "val_transform": 1.0,
                         "val_required": 0.0
                     },
                     {
-                        "usage_type": "in",
                         "label": "",
                         "val_src": "field",
                         "infield": {
-                            "role": "[At]",
+                            "role": "at",
                             "field_mode": "attr",
                             "child_of_anchor": false,
                             "item_id": 19,
@@ -592,7 +581,7 @@
                         },
                         "outfield": null,
                         "op_application": "+",
-                        "op_transform": "log",
+                        "op_transform": "scap",
                         "val_transform": 0.5,
                         "val_required": 0.0
                     }

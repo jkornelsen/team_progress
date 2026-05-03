@@ -819,11 +819,13 @@ class Participant:
     """References a field to fetch or target for an event factor."""
 
     # --- Context-Driven Roles of the Anchor Entity ---
-    SUBJECT = '[Subject]'
-    OWNER = '[Owner]'
-    AT = '[At]'
-    UNIVERSAL = '[Universal]'
-    CONTEXT_ROLES = [SUBJECT, OWNER, AT, UNIVERSAL]
+    SUBJECT = 'subject'     # Entity that triggered the event
+    TARGET = 'target'       # Nearby entity or explicitly chosen other
+    AT = 'at'               # Current location
+    OWNER = 'owner'         # Entity holding the item
+    UNIVERSAL = 'universal' # Global items
+    BLUEPRINT = 'blueprint' # Item blueprint (not pile) e.g. Recipes
+    CONTEXT_ROLES = [SUBJECT, TARGET, AT, OWNER, UNIVERSAL, BLUEPRINT]
 
     FORM_SUFFIX = '_role_id'
 
@@ -879,30 +881,28 @@ class Operation:
     EQ = '=='
     GE = '>='
     LT = '<'
+    ASSIGN = ':='
     ADD = '+'
     SUB = '-'
     MULT = '*'
     DIV = '/'
     VAL_TO_POW = 'x^'
     POW_OF_VAL = '^x'
-    LOG = 'log'
-    SQRT = 'sqrt'
-    HALF = '0.5'
+    SOFTCAP = 'scap'
 
     Repr = {
-        CONST:      {'symbol': 'n',   'text': 'Fixed Constant'},
-        EQ:         {'symbol': '==',  'text': 'Equals'},
-        GE:         {'symbol': '>=',  'text': 'At Least'},
-        LT:         {'symbol': '<',   'text': 'Less Than'},
-        ADD:        {'symbol': '+',   'text': 'Add'},
-        SUB:        {'symbol': '−',   'text': 'Subtract'},
-        MULT:       {'symbol': '×',   'text': 'Multiply'},
-        DIV:        {'symbol': '÷',   'text': 'Divide'},
-        VAL_TO_POW: {'symbol': 'xⁿ',  'text': 'Val To Power'},
-        POW_OF_VAL: {'symbol': 'nˣ',  'text': 'Power Of Val'},
-        LOG:        {'symbol': 'log', 'text': 'Logarithmic'}, # unary
-        SQRT:       {'symbol': '√',   'text': 'Square Root'},
-        HALF:       {'symbol': '½',   'text': 'Half'},
+        CONST:      'n',
+        EQ:         '=',
+        GE:         '≥',
+        LT:         '<',
+        ASSIGN:     '≔',
+        ADD:        '+',
+        SUB:        '−',
+        MULT:       '×',
+        DIV:        '÷',
+        VAL_TO_POW: 'xⁿ',
+        POW_OF_VAL: 'nˣ',
+        SOFTCAP:    'SoftCap',
     }
 
     # How the result applies to the total
@@ -912,7 +912,7 @@ class Operation:
     # Modify the Field Value before we apply it to the total
     TRANSFORM_OPS = [
         ADD, SUB, MULT, DIV,
-        VAL_TO_POW, POW_OF_VAL, LOG, SQRT, HALF]
+        VAL_TO_POW, POW_OF_VAL, SOFTCAP]
 
 class EventField(db.Model, DictHydrator):
     """
@@ -950,7 +950,7 @@ class EventField(db.Model, DictHydrator):
             "child_of_anchor": self.child_of_anchor,
             "item_id": self.item_id,
             "attrib_id": self.attrib_id,
-            "recipe_id": self.attrib_id
+            "recipe_id": self.recipe_id
         }
 
     def get_field_name(self):
@@ -1009,7 +1009,6 @@ class EventFactor(db.Model, DictHydrator):
 
     def to_dict(self):
         return {
-            "usage_type": self.usage_type,
             "label": self.label,
             "get_val_from": self.get_val_from,
             "infield": self.infield.to_dict() if self.infield else None,

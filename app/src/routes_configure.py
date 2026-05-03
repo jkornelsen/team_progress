@@ -648,6 +648,7 @@ def edit_event(id):
             game_token=game_token).order_by(Attrib.name).all(),
         all_items=all_items,
         recipe_map=recipe_map,
+        OutcomeType=OutcomeType,
         Operation=Operation,
         Participant=Participant
     )

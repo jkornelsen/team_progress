@@ -50,7 +50,7 @@
                     {# 1. Binary Toggle #}
                     {% if attribute.is_binary %}
                         <div class="flex-row align-center">
-                            <input type="hidden" name="operator" value="set">
+                            <input type="hidden" name="operator" value=":=">
                             <input type="hidden" name="value"  value="{{ 0 if attrib_value.value else 1 }}">
                             {% set text = hk.bracket('t') ~ "oggle " ~ ('OFF' if attrib_value.value else 'ON') %}
                             {{ hk.submit(1, link_letters, text, 't', showLetter=False) }}
@@ -60,7 +60,7 @@
                     {# 2. Enum Selection #}
                     {% elif attribute.enum_list %}
                         <div class="flex-row align-center">
-                            <input type="hidden" name="operator" value="set">
+                            <input type="hidden" name="operator" value=":=">
                             <select name="value" class="flex-grow">
                                 {% for entry in attribute.enum_list %}
                                     <option value="{{ loop.index0 }}" {{ 'selected' if attrib_value.value == loop.index0 }}>
@@ -76,11 +76,11 @@
                     {% else %}
                         <div class="calculator flex-row align-center">
                             <select name="operator" id="op-select" class="flex-grow">
+                                <option value=":=">Set To (≔)</option>
                                 <option value="+">Add (+)</option>
                                 <option value="-">Subtract (-)</option>
                                 <option value="*">Multiply (×)</option>
                                 <option value="/">Divide (÷)</option>
-                                <option value="set">Set To (=)</option>
                             </select>
                             <input name="operand" type="number" step="any" style="max-width: 120px;">
                             {{ hk.submit(3, link_letters,

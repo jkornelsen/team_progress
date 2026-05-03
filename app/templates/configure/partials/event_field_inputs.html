@@ -5,30 +5,46 @@
     {% set item_id = field_data.item_id if field_data else None %}
 
     <!-- Role -->
-    <div class="flex-row align-center gap-10">
-        <span style="margin-top: 4px">Role:</span>
-        <input name="{{ field_prefix }}[role]"
-            list="role-list"
-            class="role-selector"
-            value="{{ role }}"
-            onfocus="this.dataset.original = this.value"
-            onblur="handleRoleInput(this)"
-            onkeydown="handleRoleKeydown(event, this)"
-            placeholder="e.g. Target_Enemy"
-            style="max-width: 30ch;">
+    <div class="flex-row align-center gap-10 role-row">
+        <span>Participant:</span>
+        <select name="{{ field_prefix }}[role]" 
+                class="role-selector"
+                style="max-width: 30ch;"
+                onchange="syncRoleWithField(this)">
+            <option value="{{ Participant.SUBJECT }}"
+                title="Who or what started this event"
+                {{ 'selected' if role == Participant.SUBJECT }}>Subject</option>
+
+            <option value="{{ Participant.TARGET }}"
+                title="Another nearby or selected entity involved"
+                {{ 'selected' if role == Participant.TARGET }}>Target</option>
+
+            <option value="{{ Participant.AT }}"
+                title="The location where this is happening"
+                {{ 'selected' if role == Participant.AT }}>At</option>
+
+            <option value="{{ Participant.UNIVERSAL }}"
+                title="Global storage items not held or placed anywhere"
+                {{ 'selected' if role == Participant.UNIVERSAL }}>Universal</option>
+
+            <option value="{{ Participant.BLUEPRINT }}"
+                hidden style="display: none;"
+                title="(Item Blueprint)"
+                {{ 'selected' if role == Participant.BLUEPRINT }}>Universal</option>
+        </select>
     </div>
 
-    <!-- Mode -->
-    <div class="flex-row align-center gap-10">
+    <div class="flex-row gap-10">
+        <!-- Mode -->
         <select name="{{ field_prefix }}[field_mode]"
-                class="full-width"
+                class="field-mode-select full-width"
                 style="max-width: 30ch;"
-                onchange="syncFieldModeUI(this); fieldTargetVisibility(this, {{ index }}); syncRoleWithField(this)">
-            <option value="attr" {{ 'selected' if field_mode == 'attr' }}>Attribute</option>
-            <option value="qty" {{ 'selected' if field_mode == 'qty' }}>Item Quantity</option>
-            <option value="dist" {{ 'selected' if field_mode == 'dist' }}>Distance</option>
-            <option value="rate_amt" {{ 'selected' if field_mode == 'rate_amt' }}>Recipe Yield</option>
-            <option value="rate_dur" {{ 'selected' if field_mode == 'rate_dur' }}>Recipe Speed</option>
+                onchange="syncFieldModeUI(this)">
+            <option value="{{ Participant.ATTR }}" {{ 'selected' if field_mode == Participant.ATTR }}>Attribute</option>
+            <option value="{{ Participant.QTY }}" {{ 'selected' if field_mode == Participant.QTY }}>Item Quantity</option>
+            <option value="{{ Participant.DIST }}" {{ 'selected' if field_mode == Participant.DIST }}>Distance</option>
+            <option value="{{ Participant.RATE_AMT }}" {{ 'selected' if field_mode == Participant.RATE_AMT }}>Recipe Yield</option>
+            <option value="{{ Participant.RATE_DUR }}" {{ 'selected' if field_mode == Participant.RATE_DUR }}>Recipe Duration</option>
         </select>
 
         <div class="id-selectors">
@@ -40,7 +56,7 @@
                     data-current-value="{{ factor.val_required if factor else 1.0 }}"
                     onchange="syncAttributeUI_EF(this, false)"
                     class="id-attr full-width {{
-                        'hidden' if field_mode == 'qty' }}" 
+                        'hidden' if field_mode ==  Participant.QTY }}" 
                     style="max-width: 30ch;">
                 {% for a in all_attribs %}
                     <option value="{{ a.id }}" {{ 'selected' if attrib_id == a.id }}>{{ a.name }}</option>
@@ -50,8 +66,8 @@
             <!-- Item (also filters Recipes) -->
             <select name="{{ field_prefix }}[item_id]" 
                     class="id-item full-width {{
-                        'hidden' if field_mode == 'attr'
-                        or field_mode == 'dist' }}"
+                        'hidden' if field_mode ==  Participant.ATTR
+                        or field_mode ==  Participant.DIST }}"
                     style="max-width: 30ch;"
                     onchange="syncRecipeOptions(this); syncRoleWithField(this)">
                 {% for i in all_items %}
@@ -68,8 +84,12 @@
             </select>
         </div>
     </div>
-    <label class="checkbox-label spacious-top">
-        <input type="checkbox" name="{{ field_prefix }}[child_of_anchor]" {{ 'checked' if field_data and field_data.child_of_anchor }}>
-        An item at/owned by source
-    </label>
+    <div class="child-toggle-container">
+        <label class="checkbox-label">
+            <input type="checkbox" name="{{ field_prefix }}[child_of_anchor]" 
+                   class="child-item-checkbox"
+                   {{ 'checked' if field_data and field_data.child_of_anchor }}>
+            Attribute of an item inside inventory/floor of participant
+        </label>
+    </div>
 </div>

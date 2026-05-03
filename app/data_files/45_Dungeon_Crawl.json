@@ -1077,7 +1077,6 @@
                 "id": 47,
                 "name": "Perception",
                 "description": "Chance to detect items or stealthy characters, or avoid detection.\r\n\r\n\u2022 Int and Dex increase detection.\r\n\u2022 Dex increases stealth.",
-                "trigger_chance": 0.0,
                 "numeric_range": [
                     1,
                     20
@@ -1109,7 +1108,6 @@
                 "id": 48,
                 "name": "Initiative",
                 "description": "Determine who goes first in combat.\r\n\r\nHowever, this roll may not be needed if there is another way to determine who goes first. For example, if one party is stealthed and not detected, then they go first.",
-                "trigger_chance": 0.0,
                 "numeric_range": [
                     1,
                     20
@@ -1124,7 +1122,6 @@
                 "id": 49,
                 "name": "Populate Room \u2014 Number of Enemies",
                 "description": "Higher XP level means that more enemies may spawn. Also roll for:\r\n\u2022 [Which Enemy](/play/event/7)\r\n\u2022 [Grid Coordinates](/play/event/9)",
-                "trigger_chance": 0.0,
                 "numeric_range": [
                     0,
                     2
@@ -1148,7 +1145,6 @@
                 "id": 50,
                 "name": "Grid Coordinates",
                 "description": "Find out where something is placed.",
-                "trigger_chance": 0.0,
                 "numeric_range": [
                     1,
                     5
@@ -1163,7 +1159,6 @@
                 "id": 51,
                 "name": "Carve or Fletch",
                 "description": "Shape bow and attach string. Success requires dexterity. Fletching arrows is similar.\r\n\r\n\u2022 Major success produces a bow with improved stats.\r\n\u2022 Minor success results in a standard bow.\r\n\u2022 Minor failure produces a bow with poor stats, or fewer arrows.\r\n\u2022 Major failure consumes resources and may cause injury.",
-                "trigger_chance": 0.0,
                 "numeric_range": [
                     1,
                     20
@@ -1200,7 +1195,6 @@
                 "id": 52,
                 "name": "Shoot \u2014 Success",
                 "description": "Determines whether a ranged attack hits. Dexterity increases accuracy, while evasion decreases it.\r\n\r\nIf successful, also roll [Shoot \u2014 Dmg](/play/event/6) to determine how much damage is done and apply to a target.\r\n\r\nMajor failures cause destruction of ammo and may give the enemy a chance to counterattack.",
-                "trigger_chance": 0.0,
                 "numeric_range": [
                     1,
                     20
@@ -1256,7 +1250,6 @@
                 "id": 53,
                 "name": "Melee \u2014 Success",
                 "description": "Determines whether a melee attack hits. Dexterity increases accuracy, while evasion decreases it.\r\n\r\nIf successful, also roll [Melee \u2014 Dmg](/play/event/13) to determine how much damage is done and apply to a target.",
-                "trigger_chance": 0.0,
                 "numeric_range": [
                     1,
                     20
@@ -1304,7 +1297,6 @@
                 "id": 54,
                 "name": "Shoot \u2014 Dmg",
                 "description": "Dex increases both die min and max, while Str and damage from gear increase die max only.\r\n\r\nFirst roll [Shoot \u2014 Success](/play/event/5) to determine if the attack hits.",
-                "trigger_chance": 0.0,
                 "numeric_range": [
                     -1,
                     -2
@@ -1360,7 +1352,6 @@
                 "id": 55,
                 "name": "Melee \u2014 Dmg",
                 "description": "Str increases both die min and max, while damage from gear increases die max only.\r\n\r\nFirst roll [Melee \u2014 Success](/play/event/14) to determine if the attack hits.",
-                "trigger_chance": 0.0,
                 "numeric_range": [
                     -1,
                     -2
@@ -1400,7 +1391,6 @@
                 "id": 56,
                 "name": "Populate Room \u2014 Which Enemy",
                 "description": "Roll after [Number of Enemies](/play/event/8).",
-                "trigger_chance": 0.0,
                 "numeric_range": [
                     1,
                     20
@@ -1415,7 +1405,6 @@
                 "id": 57,
                 "name": "Populate Room \u2014 Which Item",
                 "description": "Roll after [Number of Items](/play/event/11).",
-                "trigger_chance": 0.0,
                 "numeric_range": [
                     1,
                     20
@@ -1430,7 +1419,6 @@
                 "id": 58,
                 "name": "Populate Room \u2014 Number of Items",
                 "description": "After leaving the entry floor, divide die min by depth, giving a better chance for items.\r\n\r\nIf outcome is more than 0, then also roll for:\r\n\u2022 [Which Item](/play/event/12)\r\n\u2022 [Grid Coordinates](/play/event/9)",
-                "trigger_chance": 0.0,
                 "numeric_range": [
                     -10,
                     2
@@ -1454,7 +1442,6 @@
                 "id": 59,
                 "name": "Drops",
                 "description": "Number of items dropped by an enemy on death. Add their XP level to max die.\r\n\r\nIf result is greater than 0, then roll for [which item](/play/event/12).",
-                "trigger_chance": 0.0,
                 "numeric_range": [
                     -10,
                     0
@@ -1478,7 +1465,6 @@
                 "id": 60,
                 "name": "@Magic Missile",
                 "description": "Magical attack that does physical damage similar to shooting an arrow. Cannot miss but may do 0 damage. Consumes MP.",
-                "trigger_chance": 0.0,
                 "numeric_range": [
                     0,
                     -2

@@ -1145,28 +1145,29 @@ def play_attrib(attrib_id, subject_id):
         req = RequestHelper('form')
         op = req.get_str('operator')
         
-        if op == 'set':
+        if op == Operation.ASSIGN:
             new_val = req.get_float('value') or req.get_float('operand')
         else:
             operand = req.get_float('operand')
-            if op == '+': new_val = val_record.value + operand
-            elif op == '-': new_val = val_record.value - operand
-            elif op == '*': new_val = val_record.value * operand
-            elif op == '/': new_val = val_record.value / operand if operand != 0 else val_record.value
-        
+            if op == Operation.ADD:     new_val = val_record.value + operand
+            elif op == Operation.SUB:   new_val = val_record.value - operand
+            elif op == Operation.MULT:  new_val = val_record.value * operand
+            elif op == Operation.DIV:   new_val = val_record.value / operand \
+                                        if operand != 0 else val_record.value
+
         val_record.value = new_val
         db.session.commit()
-        
+
         # Log
         op_wording = {
-            '+':   {"verb": "Increased", "prep": "by"},
-            '-':   {"verb": "Reduced",   "prep": "by"},
-            '*':   {"verb": "Multiplied","prep": "by"},
-            '/':   {"verb": "Divided",   "prep": "by"},
-            'set': {"verb": "Set",       "prep": "to"}
+            Operation.ADD:    {"verb": "Increased",  "prep": "by"},
+            Operation.SUB:    {"verb": "Reduced",    "prep": "by"},
+            Operation.MULT:   {"verb": "Multiplied", "prep": "by"},
+            Operation.DIV:    {"verb": "Divided",    "prep": "by"},
+            Operation.ASSIGN: {"verb": "Set",        "prep": "to"},
         }
         op_words = op_wording.get(op, {"verb": "Modified", "prep": "to"})
-        if op == 'set':
+        if op == Operation.ASSIGN:
             if attribute.is_binary:
                 val_str = "ON" if new_val > 0 else "OFF"
             elif attribute.enum_list:

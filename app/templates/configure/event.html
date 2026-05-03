@@ -57,13 +57,28 @@
             <div class="grid-2-col">
                 <div>
                     <label for="outcome_type">Outcome Type:</label>
-                    <select id="outcome_type" name="outcome_type" class="full-width themed-input" onchange="outcomeFieldsVisibility()">
-                        <option value="fourway" {{ 'selected' if event.outcome_type == 'fourway' }}>Four-Way (Success/Fail)</option>
-                        <option value="numeric" {{ 'selected' if event.outcome_type == 'numeric' }}>Numeric Roll</option>
-                        <option value="determined" {{ 'selected' if event.outcome_type == 'determined' }}>Determined (Calculated)</option>
-                        <option value="selection" {{ 'selected' if event.outcome_type == 'selection' }}>Random Selection</option>
-                        <option value="coordinates" {{ 'selected' if event.outcome_type == 'coordinates' }}>Random Coordinates</option>
-                        <option value="dice_system" {{ 'selected' if event.outcome_type == 'dice_system' }}>Dice System (Manual)</option>
+                    <select id="outcome_type"
+                            name="outcome_type"
+                            class="full-width themed-input"
+                            onchange="outcomeFieldsVisibility()">
+                        <option value="{{ OutcomeType.FOURWAY }}" {{ 'selected'
+                            if event.outcome_type == OutcomeType.FOURWAY }}
+                            >Four-Way (Success/Fail)</option>
+                        <option value="{{ OutcomeType.NUMERIC }}" {{ 'selected'
+                            if event.outcome_type == OutcomeType.NUMERIC }}
+                            >Numeric Roll</option>
+                        <option value="{{ OutcomeType.DETERMINED }}" {{ 'selected'
+                            if event.outcome_type == OutcomeType.DETERMINED }}
+                            >Determined (Calculated)</option>
+                        <option value="{{ OutcomeType.SELECT }}" {{ 'selected'
+                            if event.outcome_type == OutcomeType.SELECT }}
+                            >Random Selection</option>
+                        <option value="{{ OutcomeType.COORDS }}" {{ 'selected'
+                            if event.outcome_type == OutcomeType.COORDS }}
+                            >Random Coordinates</option>
+                        <option value="{{ OutcomeType.ROLLER }}" {{ 'selected'
+                            if event.outcome_type == OutcomeType.ROLLER }}
+                            >Dice System (Manual)</option>
                     </select>
                 </div>
 
@@ -104,14 +119,13 @@
         <!-- 3. Determinants -->
         <section id="determinants" class="outer-border">
             <div class="flex-between">
-                <h3>Determining Values (Inputs)</h3>
-                <button type="button" class="btn-sm" onclick="addFactor('det')">+ Add Input</button>
+                <h3>Values to Determine Roll</h3>
+                <button type="button" class="btn-sm" onclick="addFactor('det')">+ Add Determinant</button>
             </div>
             <div id="det-list" class="spacious-top">
                 {% for factor in event.determinants %}
                     {% set index = loop.index %}
-                    {% set usage = 'det' %}
-                    {% include 'configure/partials/event_factor_card.html' %}
+                    {% include 'configure/partials/event_det_card.html' %}
                 {% endfor %}
             </div>
             <div id="det-list-empty" class="no-entities {{ 'hidden' if event.determinants }}">
@@ -122,22 +136,19 @@
         <template id="det-template">
             {% set index = '__INDEX__' %}
             {% set factor = None %}
-            {% set usage = 'det' %}
-            {% include 'configure/partials/event_factor_card.html' %}
+            {% include 'configure/partials/event_det_card.html' %}
         </template>
-        <datalist id="role-list"></datalist>
 
         <!-- 4. Values Changed -->
         <section id="effects" class="outer-border">
             <div class="flex-between">
-                <h3>Values Changed (Effects)</h3>
+                <h3>Effects — Apply Changes After Roll</h3>
                 <button type="button" class="btn-sm" onclick="addFactor('eff')">+ Add Effect</button>
             </div>
             <div id="eff-list" class="spacious-top">
                 {% for factor in event.effects %}
                     {% set index = loop.index %}
-                    {% set usage = 'eff' %}
-                    {% include 'configure/partials/event_factor_card.html' %}
+                    {% include 'configure/partials/event_eff_card.html' %}
                 {% endfor %}
             </div>
             <div id="eff-list-empty" class="no-entities {{ 'hidden' if event.effects }}">
@@ -149,8 +160,7 @@
         <template id="eff-template">
             {% set index = '__INDEX__' %}
             {% set factor = None %}
-            {% set usage = 'eff' %}
-            {% include 'configure/partials/event_factor_card.html' %}
+            {% include 'configure/partials/event_eff_card.html' %}
         </template>
 
         <!-- Footer Actions -->
@@ -199,17 +209,55 @@
         renumberLabels();
 
         const newCard = list.lastElementChild;
+
+        const sourceSelect = newCard.querySelector('.source-type-select') || 
+                           newCard.querySelector('[name$="[get_val_from]"]');
+        if (sourceSelect) {
+            syncSourceVisibility(sourceSelect);
+        }
+
+        newCard.querySelectorAll('.field-mode-select').forEach(select => {
+            syncFieldModeUI(select);
+        });
+
         innerExprVisibility(newCard);
         outerExprVisibility(newCard);
-
-        const sourceSelect = newCard.querySelector('[name$="[get_val_from]"]');
-        if (sourceSelect) syncSourceVisibility(sourceSelect);
     }
 
     function syncSourceVisibility(element) {
         const card = element.closest('.factor-card');
         const sourceFieldBox = card.querySelector('.source-field-box');
-        sourceFieldBox.classList.toggle('hidden', element.value !== 'infield');
+        const sourceConstBox = card.querySelector('.source-const-box');
+        const placeholder = card.querySelector('.source-placeholder-text');
+        const successFilter = card.querySelector('.success-filter-container');
+        const tierSelect = card.querySelector('.success-tier-select');
+        const eventOutcomeType = document.getElementById('outcome_type').value;
+
+        const isField = (element.value === '{{ Participant.INFIELD }}');
+        const isOutcome = (element.value === '{{ Participant.OUTCOME }}');
+
+        if (sourceFieldBox) {
+            sourceFieldBox.classList.toggle('hidden', !isField);
+        }
+
+        if (sourceConstBox) {
+            sourceConstBox.classList.toggle('hidden', isField);
+        }
+
+        if (placeholder) {
+            if (isField) placeholder.innerText = "Source Value";
+            else if (isOutcome) placeholder.innerText = "RollResult";
+            else placeholder.innerText = "Constant";
+        }
+
+        if (successFilter) {
+            if (isOutcome && (eventOutcomeType === "{{ OutcomeType.FOURWAY }}")) {
+                successFilter.classList.remove('hidden');
+            } else {
+                successFilter.classList.add('hidden');
+                if (tierSelect) tierSelect.value = 'always';
+            }
+        }
     }
 
     function renumberLabels(usage = 'det') {
@@ -234,42 +282,71 @@
 
     function syncRoleWithField(element) {
         const card = element.closest('.factor-card');
-        const mode = card.querySelector('select[name$="[field_mode]"]').value;
-        const itemId = card.querySelector('.id-item').value;
-        const roleInput = card.querySelector('.role-selector');
-        const storageType = ITEM_STORAGE_TYPE[itemId];
+        const fieldGroup = element.closest('.field-input-group');
+        
+        const modeSelect = fieldGroup.querySelector('.field-mode-select');
+        const roleSelect = fieldGroup.querySelector('.role-selector');
+        const roleRow = fieldGroup.querySelector('.role-row');
+        const itemSelect = fieldGroup.querySelector('.id-item');
+        const childContainer = fieldGroup.querySelector('.child-toggle-container');
+        const childCheckbox = fieldGroup.querySelector('.child-item-checkbox');
+        
+        if (!modeSelect || !roleSelect) return;
 
-        if (mode === 'qty' && storageType === "{{ StorageType.UNIVERSAL }}") {
-            // Force Universal
-            roleInput.value = "{{ Participant.UNIVERSAL }}";
-            roleInput.readOnly = true;
-            roleInput.style.opacity = "0.7";
+        const mode = modeSelect.value;
+        const role = roleSelect.value;
+        const itemId = itemSelect ? itemSelect.value : null;
+        const storageType = itemId ? ITEM_STORAGE_TYPE[itemId] : null;
+
+        // Role Restrictions based on Storage Type
+        if (mode.startsWith('rate_')) {
+            roleSelect.value = "{{ Participant.BLUEPRINT }}";
+            roleRow.classList.add('hidden');
+            childContainer.classList.add('hidden');
+            outerExprVisibility(card);
+            return;
         } else {
-            // If it was auto-locked to Universal, revert it to Subject when switching away
-            if (roleInput.value === "{{ Participant.UNIVERSAL }}") {
-                roleInput.value = "{{ Participant.SUBJECT }}";
+            roleRow.classList.remove('hidden');
+            Array.from(roleSelect.options).forEach(opt => {
+                if (opt.value === "{{ Participant.BLUEPRINT }}") opt.hidden = true;
+            });
+            if (roleSelect.value === "{{ Participant.BLUEPRINT }}") {
+                roleSelect.value = "{{ Participant.SUBJECT }}";
             }
-            roleInput.readOnly = false;
-            roleInput.style.opacity = "1";
         }
-
-        // Refresh UI labels/previews
-        handleRoleInput(roleInput);
-    }
-
-    function fieldTargetVisibility(select, index) {
-        const card = select.closest('.factor-card');
-        const attrSelect = card.querySelector('.id-attr');
-        const itemSelect = card.querySelector('.id-item');
-
-        if (select.value === 'attr') {
-            attrSelect.classList.remove('hidden');
-            itemSelect.classList.add('hidden');
+        if (mode === "{{ Participant.QTY }}" || mode === "{{ Participant.DIST }}") {
+            const isUniversalItem = (storageType === "{{ StorageType.UNIVERSAL }}");
+            const isRoleUniversal = (role === "{{ Participant.UNIVERSAL }}");
+            if (isUniversalItem) {
+                if (!isRoleUniversal) {
+                    roleSelect.value = "{{ Participant.UNIVERSAL }}";
+                }
+                roleSelect.disabled = true;
+            } else {
+                if (isRoleUniversal) {
+                    roleSelect.value = "{{ Participant.SUBJECT }}";
+                }
+                roleSelect.disabled = false;
+                Array.from(roleSelect.options).forEach(opt => {
+                    if (opt.value === "{{ Participant.UNIVERSAL }}") {
+                        opt.disabled = true;
+                    } else {
+                        opt.disabled = false;
+                    }
+                });
+            }
         } else {
-            attrSelect.classList.add('hidden');
-            itemSelect.classList.remove('hidden');
+            roleSelect.disabled = false;
+            Array.from(roleSelect.options).forEach(opt => opt.disabled = false);
         }
-        outerExprVisibility(card);
+
+        // Child Item Toggle Visibility
+        if ((mode === 'attr') && (roleSelect.value !== "{{ Participant.UNIVERSAL }}")) {
+            childContainer.classList.remove('hidden');
+        } else {
+            childContainer.classList.add('hidden');
+            childCheckbox.checked = false;
+        }
     }
 
     /**
@@ -302,6 +379,7 @@
             // Trigger population of recipe list
             syncRecipeOptions(itemSelect);
         }
+        syncRoleWithField(modeSelect);
     }
 
     /**
@@ -347,6 +425,10 @@
         document.getElementById('fields-dice').classList.toggle('hidden', type !== 'dice_system');
         document.getElementById('determinants').classList.toggle('hidden', type == 'dice_system');
         document.getElementById('effects').classList.toggle('hidden', type == 'dice_system');
+
+        document.querySelectorAll('.eff-card .source-type-select').forEach(select => {
+            syncSourceVisibility(select);
+        });
     }
 
     function innerExprVisibility(card) {
@@ -362,26 +444,17 @@
         lhs.style.order = "1";
         card.querySelector('.op-inner-selector').style.order = "2";
         rhsGroup.style.order = "3";
-        //lhs.textContent = "FetchedValue";
 
         // Apply Logic based on OP
         if (!op) {
             rhsGroup.classList.add('hidden');
         } 
-        else if (op === 'k') { 
-            // Mode: <-- Constant
+        else if (op === "{{ Operation.CONST }}") { 
             lhs.classList.add('hidden');
             rhsGroup.style.order = "1";
             opSelector.style.order = "2";
         }
-        else if (['sqrt', '0.5'].includes(op)) {
-            // UNARY: Move op to start, hide constant
-            lhs.style.order = "2";
-            card.querySelector('.op-inner-selector').style.order = "1";
-            rhsGroup.classList.add('hidden');
-        } 
-        else if (['^x', 'log'].includes(op)) {
-            // REVERSED BINARY: Constant on left, Value on right
+        else if (op === "{{ Operation.POW_OF_VAL }}" || op === "{{ Operation.SOFTCAP }}") {
             rhsGroup.style.order = "1";
             lhs.style.order = "3";
         } 
@@ -391,98 +464,32 @@
     }
 
     function outerExprVisibility(card) {
-        const op = card.querySelector('.op-application-selector').value;
         const appSelector = card.querySelector('.op-application-selector');
+        const op = appSelector.value;
         const innerGroup = card.querySelector('[data-inner-group]');
         const requiredGroup = card.querySelector('[data-slot-required]');
         const attrSelect = card.querySelector('.id-attr');
 
         const comparisonOps = ['==', '>', '<', '>=', '<='];
 
-        if (comparisonOps.includes(op)) {
-            // COMPARISON: ( Inner ) == Target
-            innerGroup.style.order = "1";
-            appSelector.style.order = "2";
-            requiredGroup.style.order = "3";
-            requiredGroup.classList.remove('hidden');
+        if (requiredGroup) {
+            if (comparisonOps.includes(op)) {
+                // COMPARISON: ( Inner ) == Target
+                innerGroup.style.order = "1";
+                appSelector.style.order = "2";
+                requiredGroup.style.order = "3";
+                requiredGroup.classList.remove('hidden');
 
-            syncAttributeUI_EF(attrSelect, false);
-        } else {
-            // MATH: + ( Inner )
-            appSelector.style.order = "1";
-            innerGroup.style.order = "2";
-            requiredGroup.classList.add('hidden');
-        }
-    }
-
-    const CONTEXT_ROLES = {{ Participant.CONTEXT_ROLES | tojson }};
-
-    // Format using Pascal_Snake_Case
-    function standardizeRoleString(roleStr) {
-        if (!roleStr) return roleStr;
-
-        if (CONTEXT_ROLES.includes(roleStr)) {
-            return roleStr;
-        }
-
-        let whitelisted = (roleStr.match(/[a-zA-Z0-9_ ]+/g) || []).join('');
-        return whitelisted
-            .trim()                        // Remove leading/trailing spaces
-            .replace(/\s+/g, '_')          // Convert spaces to underscores
-            .toLowerCase()                 // Start clean for capitalization
-            .split('_')                    // Split into segments
-            .filter(word => word !== "")   // Remove empty segments
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1)) 
-            .join('_');                    // Re-glue with underscores
-    }
-
-    function rebuildRoleDatalist() {
-        const datalist = document.getElementById('role-list');
-        
-        // 1. Gather all current values from role-selector inputs
-        const currentValues = Array.from(document.querySelectorAll('.role-selector'))
-            .map(el => el.value.trim())
-            .filter(val => val !== ""); // Ignore empty inputs
-
-        // 2. Create a unique Set of roles
-        // We start with CONTEXT_ROLES, then add whatever the users have typed
-        const uniqueRoles = new Set([...CONTEXT_ROLES, ...currentValues]);
-
-        // 3. Fallback: If only context roles exist, add "Target"
-        // This replicates your Python logic: if no custom roles are typed yet
-        if (uniqueRoles.size === CONTEXT_ROLES.length) {
-            uniqueRoles.add("Target");
-        }
-
-        // 4. Rebuild the DOM
-        datalist.innerHTML = ''; // Wipe existing options
-        uniqueRoles.forEach(role => {
-            const opt = document.createElement('option');
-            opt.value = role;
-            datalist.appendChild(opt);
-        });
-    }
-
-    function handleRoleInput(el) {
-        el.value = standardizeRoleString(el.value);
-        rebuildRoleDatalist();
-
-        // Update the "original" tracker so the next Esc doesn't 
-        // revert to the value from 5 minutes ago
-        el.dataset.original = el.value;
-    }
-
-    function handleRoleKeydown(event, el) {
-        if (event.key === "Enter") {
-            event.preventDefault(); // Stop form submission
-            el.blur();              // Trigger handleRoleInput() via blur
-        } 
-        else if (event.key === "Escape") {
-            // Restore the value from when the user first focused the field
-            if (el.dataset.original !== undefined) {
-                el.value = el.dataset.original;
+                syncAttributeUI_EF(attrSelect, false);
+            } else {
+                // MATH: + ( Inner )
+                appSelector.style.order = "1";
+                innerGroup.style.order = "2";
+                requiredGroup.classList.add('hidden');
             }
-            el.blur();
+        } else {
+            appSelector.parentElement.style.order = "1";
+            innerGroup.style.order = "2";
         }
     }
 
@@ -520,21 +527,18 @@
     });
 
     document.addEventListener('DOMContentLoaded', function() {
-        rebuildRoleDatalist();
-
-        document.querySelectorAll(
-                '.factor-card').forEach(card => {
-            const index = card.getAttribute('data-index');
-            const modeSelect = card.querySelector('select[name$="[field_mode]"]');
-            if (modeSelect) {
-                fieldTargetVisibility(modeSelect, index);
-            }
-            innerExprVisibility(card);
-            outerExprVisibility(card);
-        });
         document.querySelectorAll(
                 '.field-input-group select[name$="[field_mode]"]').forEach(select => {
             syncFieldModeUI(select);
+        });
+        document.querySelectorAll('.source-type-select').forEach(select => {
+            syncSourceVisibility(select);
+        });
+        document.querySelectorAll('.factor-card').forEach(card => {
+            if (card.classList.contains('det-card')) {
+                innerExprVisibility(card);
+                outerExprVisibility(card);
+            }
         });
         document.querySelectorAll(
                 '.field-input-group .id-item').forEach(itemSelect => {
@@ -545,7 +549,8 @@
             }
         });
         
-        renumberLabels();
+        renumberLabels('det');
+        renumberLabels('eff');
         outcomeFieldsVisibility();
     });
 </script>

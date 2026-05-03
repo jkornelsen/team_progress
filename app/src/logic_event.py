@@ -240,22 +240,9 @@ def calculate_determinants(event, role_entities):
         
     return modifiers
 
-def apply_scaling(val, mode):
-    """
-    Applies logic like 'Soft Capped' (log) or 'Reduced' (half).
-    """
-    if mode == 'log':
-        if val == 0: return 0
-        return math.sign(val) * 5 * math.log10(abs(val) + 1)
-    if mode == 'half':
-        return val / 2.0
-    return val
-
 def apply_operation(current_val, mod_val, op):
     """Applies the specific operation and returns the new value."""
-
-    # Unary Transforms
-    if op == 'log':
+    if op == Operation.SOFTCAP:
         c = 50
         if current_val == 0:
             return 0.0
@@ -268,18 +255,14 @@ def apply_operation(current_val, mod_val, op):
         ratio = math.log(1 + current_abs / c) / (
             1 + math.log(1 + current_abs / c))
         return sign * (1 + mod_val * ratio)
-    if op == 'sqrt':
-        return math.sqrt(abs(current_val))
-    if op == '0.5':
-        return current_val / 2.0
 
-    # Binary Operations
-    if op == '+': return current_val + mod_val
-    if op == '-': return current_val - mod_val
-    if op == '*': return current_val * mod_val
-    if op == '/': return current_val / mod_val if mod_val != 0 else current_val
-    if op == 'x^': return current_val ** mod_val  # Val to Power (xⁿ)
-    if op == '^x': return mod_val ** current_val  # Power of Val (nˣ)
+    if op == Operation.ADD:  return current_val + mod_val
+    if op == Operation.SUB:  return current_val - mod_val
+    if op == Operation.MULT: return current_val * mod_val
+    if op == Operation.DIV:  return current_val / mod_val \
+                                if mod_val != 0 else current_val
+    if op == Operation.VAL_TO_POW: return current_val ** mod_val
+    if op == Operation.POW_OF_VAL: return mod_val ** current_val
 
     return current_val
 
@@ -288,16 +271,14 @@ def get_inner_breakdown(val, mod_val, op):
     v = format_for_display(val)
     m = format_for_display(mod_val)
     formats = {
-        'c':    m,
-        '+':    f"{v}+{m}",
-        '-':    f"{v}-{m}",
-        '*':    f"{v}×{m}",
-        '/':    f"{v}÷{m}",
-        'x^':   f"{v}<sup>{m}</sup>",
-        '^x':   f"{m}<sup>{v}</sup>",
-        'log':  f"{v} Soft Capped",
-        'sqrt': f"√{v}",
-        '0.5':  f"{v}/2"
+        Operation.CONST:      m,
+        Operation.ADD:        f"{v}+{m}",
+        Operation.SUB:        f"{v}-{m}",
+        Operation.MULT:       f"{v}×{m}",
+        Operation.DIV:        f"{v}÷{m}",
+        Operation.VAL_TO_POW: f"{v}<sup>{m}</sup>",
+        Operation.POW_OF_VAL: f"{m}<sup>{v}</sup>",
+        Operation.SOFTCAP:    f"{v} Soft Capped"
     }
     return formats.get(op, v)
 
@@ -343,9 +324,9 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
     modifiers = calculate_determinants(event, role_entities)
     
     PRECEDENCE = {
-        '+': 1, '-': 1,
-        '*': 2, '/': 2,
-        'x^': 3, '^x': 3
+        Operation.ADD:        1, Operation.SUB:        1,
+        Operation.MULT:       2, Operation.DIV:        2,
+        Operation.VAL_TO_POW: 3, Operation.POW_OF_VAL: 3,
     }
     breakdown_str = breakdown_parts[0] # Start with the Die Roll/Base
     current_min_precedence = 99 
@@ -356,7 +337,7 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
         if op in Operation.COMPARISON_OPS:
             continue
 
-        symbol = '×' if op == '*' else '÷' if op == '/' else op
+        symbol = Operation.Repr[op]
         formatted_val = format_for_display(val)
 
         # If the new operator is higher precedence than the previous ones,
@@ -365,9 +346,9 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
         op_prec = PRECEDENCE.get(op, 1)
         if op_prec > current_min_precedence:
             breakdown_str = f"({breakdown_str})"
-        if op == 'x^':
+        if op == Operation.VAL_TO_POW:
             breakdown_str = f"{breakdown_str}<sup>{formatted_val}</sup>"
-        elif op == '^x':
+        elif op == Operation.POW_OF_VAL:
             breakdown_str = f"{formatted_val}<sup>{breakdown_str}</sup>"
         else:
             breakdown_str = f"{breakdown_str} {symbol} {formatted_val}"

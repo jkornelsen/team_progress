@@ -419,11 +419,10 @@
                 "selection_strings": "",
                 "determinants": [
                     {
-                        "usage_type": "in",
                         "label": "Can Fight",
-                        "val_src": "field",
+                        "get_val_from": "infield",
                         "infield": {
-                            "role": "[Subject]",
+                            "role": "subject",
                             "field_mode": "attr",
                             "child_of_anchor": false,
                             "item_id": 0,
@@ -436,11 +435,10 @@
                         "val_required": 1.0
                     },
                     {
-                        "usage_type": "in",
                         "label": "Target Can Fight",
-                        "val_src": "field",
+                        "get_val_from": "infield",
                         "infield": {
-                            "role": "Target",
+                            "role": "target",
                             "field_mode": "attr",
                             "child_of_anchor": false,
                             "item_id": 0,
@@ -453,11 +451,10 @@
                         "val_required": 1.0
                     },
                     {
-                        "usage_type": "in",
                         "label": "Quickness",
-                        "val_src": "field",
+                        "get_val_from": "infield",
                         "infield": {
-                            "role": "[Subject]",
+                            "role": "subject",
                             "field_mode": "attr",
                             "child_of_anchor": false,
                             "item_id": 0,
@@ -470,11 +467,10 @@
                         "val_required": 1.0
                     },
                     {
-                        "usage_type": "in",
                         "label": "Quickness",
-                        "val_src": "field",
+                        "get_val_from": "infield",
                         "infield": {
-                            "role": "Target",
+                            "role": "target",
                             "field_mode": "attr",
                             "child_of_anchor": false,
                             "item_id": 0,
@@ -503,11 +499,10 @@
                 "selection_strings": "",
                 "determinants": [
                     {
-                        "usage_type": "in",
                         "label": "Can Fight",
-                        "val_src": "field",
+                        "get_val_from": "infield",
                         "infield": {
-                            "role": "[Subject]",
+                            "role": "subject",
                             "field_mode": "attr",
                             "child_of_anchor": false,
                             "item_id": 0,
@@ -520,11 +515,10 @@
                         "val_required": 1.0
                     },
                     {
-                        "usage_type": "in",
                         "label": "Target Can Fight",
-                        "val_src": "field",
+                        "get_val_from": "infield",
                         "infield": {
-                            "role": "Target",
+                            "role": "target",
                             "field_mode": "attr",
                             "child_of_anchor": false,
                             "item_id": 0,
@@ -568,11 +562,10 @@
                 "selection_strings": "",
                 "determinants": [
                     {
-                        "usage_type": "in",
                         "label": "",
-                        "val_src": "field",
+                        "get_val_from": "infield",
                         "infield": {
-                            "role": "[Subject]",
+                            "role": "subject",
                             "field_mode": "attr",
                             "child_of_anchor": false,
                             "item_id": 0,
@@ -585,11 +578,10 @@
                         "val_required": 1.0
                     },
                     {
-                        "usage_type": "in",
                         "label": "",
-                        "val_src": "field",
+                        "get_val_from": "infield",
                         "infield": {
-                            "role": "Target",
+                            "role": "target",
                             "field_mode": "attr",
                             "child_of_anchor": false,
                             "item_id": 0,
@@ -648,11 +640,10 @@
                 "selection_strings": "",
                 "determinants": [
                     {
-                        "usage_type": "in",
                         "label": "",
-                        "val_src": "field",
+                        "get_val_from": "infield",
                         "infield": {
-                            "role": "Enemy",
+                            "role": "target",
                             "field_mode": "attr",
                             "child_of_anchor": false,
                             "item_id": 0,
@@ -665,11 +656,10 @@
                         "val_required": 1.0
                     },
                     {
-                        "usage_type": "in",
                         "label": "",
-                        "val_src": "field",
+                        "get_val_from": "infield",
                         "infield": {
-                            "role": "[Subject]",
+                            "role": "subject",
                             "field_mode": "attr",
                             "child_of_anchor": false,
                             "item_id": 0,
@@ -682,11 +672,10 @@
                         "val_required": 1.0
                     },
                     {
-                        "usage_type": "in",
                         "label": "",
-                        "val_src": "field",
+                        "get_val_from": "infield",
                         "infield": {
-                            "role": "[Subject]",
+                            "role": "subject",
                             "field_mode": "attr",
                             "child_of_anchor": false,
                             "item_id": 0,
@@ -694,7 +683,7 @@
                         },
                         "outfield": null,
                         "op_application": "+",
-                        "op_transform": "log",
+                        "op_transform": "scap",
                         "val_transform": 10.0,
                         "val_required": 1.0
                     }
@@ -715,11 +704,10 @@
                 "selection_strings": "",
                 "determinants": [
                     {
-                        "usage_type": "in",
                         "label": "",
-                        "val_src": "field",
+                        "get_val_from": "infield",
                         "infield": {
-                            "role": "[Subject]",
+                            "role": "subject",
                             "field_mode": "attr",
                             "child_of_anchor": false,
                             "item_id": 0,
@@ -732,11 +720,10 @@
                         "val_required": 0.0
                     },
                     {
-                        "usage_type": "in",
                         "label": "",
-                        "val_src": "field",
+                        "get_val_from": "infield",
                         "infield": {
-                            "role": "Target",
+                            "role": "target",
                             "field_mode": "attr",
                             "child_of_anchor": false,
                             "item_id": 0,
@@ -780,11 +767,10 @@
                 "selection_strings": "",
                 "determinants": [
                     {
-                        "usage_type": "in",
                         "label": "Can Operate",
-                        "val_src": "field",
+                        "get_val_from": "infield",
                         "infield": {
-                            "role": "[Subject]",
+                            "role": "subject",
                             "field_mode": "qty",
                             "child_of_anchor": true,
                             "item_id": 5,
@@ -797,11 +783,10 @@
                         "val_required": 1.0
                     },
                     {
-                        "usage_type": "in",
                         "label": "Can Fight",
-                        "val_src": "field",
+                        "get_val_from": "infield",
                         "infield": {
-                            "role": "[Subject]",
+                            "role": "subject",
                             "field_mode": "attr",
                             "child_of_anchor": false,
                             "item_id": 0,
@@ -814,11 +799,10 @@
                         "val_required": 1.0
                     },
                     {
-                        "usage_type": "in",
                         "label": "Enemy Can Fight",
-                        "val_src": "field",
+                        "get_val_from": "infield",
                         "infield": {
-                            "role": "Enemy",
+                            "role": "target",
                             "field_mode": "attr",
                             "child_of_anchor": false,
                             "item_id": 0,
@@ -831,11 +815,10 @@
                         "val_required": 1.0
                     },
                     {
-                        "usage_type": "in",
                         "label": "Melee Range",
-                        "val_src": "field",
+                        "get_val_from": "infield",
                         "infield": {
-                            "role": "Enemy",
+                            "role": "target",
                             "field_mode": "attr",
                             "child_of_anchor": false,
                             "item_id": 0,
@@ -848,11 +831,10 @@
                         "val_required": 2.0
                     },
                     {
-                        "usage_type": "in",
                         "label": "Chance to Hit",
-                        "val_src": "field",
+                        "get_val_from": "infield",
                         "infield": {
-                            "role": "[Subject]",
+                            "role": "subject",
                             "field_mode": "attr",
                             "child_of_anchor": false,
                             "item_id": 0,
@@ -865,11 +847,10 @@
                         "val_required": 1.0
                     },
                     {
-                        "usage_type": "in",
                         "label": "Accuracy Bonus",
-                        "val_src": "field",
+                        "get_val_from": "infield",
                         "infield": {
-                            "role": "[Subject]",
+                            "role": "subject",
                             "field_mode": "attr",
                             "child_of_anchor": false,
                             "item_id": 0,
@@ -882,11 +863,10 @@
                         "val_required": 1.0
                     },
                     {
-                        "usage_type": "in",
                         "label": "Evasion",
-                        "val_src": "field",
+                        "get_val_from": "infield",
                         "infield": {
-                            "role": "Enemy",
+                            "role": "target",
                             "field_mode": "attr",
                             "child_of_anchor": false,
                             "item_id": 0,
@@ -915,11 +895,10 @@
                 "selection_strings": "",
                 "determinants": [
                     {
-                        "usage_type": "in",
                         "label": "Can Fight",
-                        "val_src": "field",
+                        "get_val_from": "infield",
                         "infield": {
-                            "role": "[Subject]",
+                            "role": "subject",
                             "field_mode": "attr",
                             "child_of_anchor": false,
                             "item_id": 0,
@@ -932,11 +911,10 @@
                         "val_required": 1.0
                     },
                     {
-                        "usage_type": "in",
                         "label": "Target Can Fight",
-                        "val_src": "field",
+                        "get_val_from": "infield",
                         "infield": {
-                            "role": "Target",
+                            "role": "target",
                             "field_mode": "attr",
                             "child_of_anchor": false,
                             "item_id": 0,
@@ -949,11 +927,10 @@
                         "val_required": 1.0
                     },
                     {
-                        "usage_type": "in",
                         "label": "Chance to Hit",
-                        "val_src": "field",
+                        "get_val_from": "infield",
                         "infield": {
-                            "role": "[Subject]",
+                            "role": "subject",
                             "field_mode": "attr",
                             "child_of_anchor": false,
                             "item_id": 0,
@@ -966,11 +943,10 @@
                         "val_required": 1.0
                     },
                     {
-                        "usage_type": "in",
                         "label": "Accuracy Bonus",
-                        "val_src": "field",
+                        "get_val_from": "infield",
                         "infield": {
-                            "role": "[Subject]",
+                            "role": "subject",
                             "field_mode": "attr",
                             "child_of_anchor": false,
                             "item_id": 0,
@@ -983,11 +959,10 @@
                         "val_required": 1.0
                     },
                     {
-                        "usage_type": "in",
                         "label": "Evasion",
-                        "val_src": "field",
+                        "get_val_from": "infield",
                         "infield": {
-                            "role": "Target",
+                            "role": "target",
                             "field_mode": "attr",
                             "child_of_anchor": false,
                             "item_id": 0,
@@ -1016,11 +991,10 @@
                 "selection_strings": "",
                 "determinants": [
                     {
-                        "usage_type": "in",
                         "label": "",
-                        "val_src": "field",
+                        "get_val_from": "infield",
                         "infield": {
-                            "role": "Target",
+                            "role": "target",
                             "field_mode": "attr",
                             "child_of_anchor": false,
                             "item_id": 0,
