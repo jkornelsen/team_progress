@@ -13,7 +13,7 @@
                 value="{{ role }}">
         <select class="role-selector"
                 style="max-width: 30ch;"
-                onchange="syncRoleWithField(this)">
+                onchange="syncEventFieldState(this)">
             <option value="{{ Participant.SUBJECT }}"
                 title="Who or what started this event"
                 {{ 'selected' if role == Participant.SUBJECT }}>Subject</option>
@@ -42,12 +42,17 @@
         <select name="{{ field_prefix }}[field_mode]"
                 class="field-mode-select full-width"
                 style="max-width: 30ch;"
-                onchange="syncFieldModeUI(this)">
-            <option value="{{ Participant.ATTR }}" {{ 'selected' if field_mode == Participant.ATTR }}>Attribute</option>
-            <option value="{{ Participant.QTY }}" {{ 'selected' if field_mode == Participant.QTY }}>Item Quantity</option>
-            <option value="{{ Participant.DIST }}" {{ 'selected' if field_mode == Participant.DIST }}>Distance</option>
-            <option value="{{ Participant.RATE_AMT }}" {{ 'selected' if field_mode == Participant.RATE_AMT }}>Recipe Yield</option>
-            <option value="{{ Participant.RATE_DUR }}" {{ 'selected' if field_mode == Participant.RATE_DUR }}>Recipe Duration</option>
+                onchange="syncFieldIdsState(this)">
+            <option value="{{ Participant.ATTR }}" {{ 'selected'
+                if field_mode == Participant.ATTR }}>Attribute</option>
+            <option value="{{ Participant.QTY }}" {{ 'selected'
+                if field_mode == Participant.QTY }}>Item Quantity</option>
+            <option value="{{ Participant.DIST }}" {{ 'selected'
+                if field_mode == Participant.DIST }}>Distance</option>
+            <option value="{{ Participant.RATE_AMT }}" {{ 'selected'
+                if field_mode == Participant.RATE_AMT }}>Recipe Yield</option>
+            <option value="{{ Participant.RATE_DUR }}" {{ 'selected'
+                if field_mode == Participant.RATE_DUR }}>Recipe Duration</option>
         </select>
 
         <div class="id-selectors">
@@ -57,7 +62,7 @@
                     data-field-name="val_required"
                     data-is-range="false"
                     data-current-value="{{ factor.val_required if factor else 1.0 }}"
-                    onchange="syncAttributeUI_EF(this, false)"
+                    onchange="syncFieldAttribState(this, false)"
                     class="id-attr full-width {{
                         'hidden' if field_mode ==  Participant.QTY }}" 
                     style="max-width: 30ch;">
@@ -66,13 +71,13 @@
                 {% endfor %}
             </select>
             
-            <!-- Item (also filters Recipes) -->
+            <!-- Item -->
             <select name="{{ field_prefix }}[item_id]" 
                     class="id-item full-width {{
                         'hidden' if field_mode ==  Participant.ATTR
                         or field_mode ==  Participant.DIST }}"
                     style="max-width: 30ch;"
-                    onchange="syncRecipeOptions(this); syncRoleWithField(this)">
+                    onchange="syncRecipesState(this); syncEventFieldState(this)">
                 {% for i in all_items %}
                     <option value="{{ i.id }}" {{ 'selected' if item_id == i.id }}>{{ i.name }}</option>
                 {% endfor %}
@@ -83,7 +88,7 @@
                     class="id-recipe {{
                         'hidden' if 'rate' not in field_mode }}"
                     data-current-id="{{ field_data.recipe_id or '' }}">
-                <!-- Populated by syncRecipeOptions() -->
+                <!-- Populated by syncRecipesState() -->
             </select>
         </div>
     </div>

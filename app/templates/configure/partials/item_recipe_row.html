@@ -8,9 +8,12 @@
             Recipe <span class="recipe-display-number">{{ '#' ~ (recipe_index + 1) if recipe_index is number else '' }}</span>
         </h4>
         <div class="flex-row gap-10">
-            <button type="button" class="btn-sm btn-recipe-up" onclick="moveRecipe(this, -1)">↑</button>
-            <button type="button" class="btn-sm btn-recipe-down" onclick="moveRecipe(this, 1)">↓</button>
-            <button type="button" class="btn-sm dangerous-button" onclick="this.closest('.recipe-card').remove(); updateOrderIndices();">Remove</button>
+            <button type="button" class="btn-sm btn-recipe-up"
+                onclick="moveRecipe(this, -1)">↑</button>
+            <button type="button" class="btn-sm btn-recipe-down"
+                onclick="moveRecipe(this, 1)">↓</button>
+            <button type="button" class="btn-sm dangerous-button"
+                onclick="this.closest('.recipe-card').remove(); updateOrderIndices();">Remove</button>
         </div>
     </div>
 
@@ -39,7 +42,7 @@
                         name="recipes[{{ recipe_index }}][instant]" 
                         id="instant-{{ recipe_index }}"
                         class="instant-checkbox"
-                        onchange="toggleInstant(this)"
+                        onchange="syncInstantState(this)"
                         {{ 'checked' if recipe and recipe.instant }}>
                 Instant
             </label>
@@ -67,11 +70,13 @@
                         <input type="checkbox" name="recipes[{{ recipe_index }}][sources][{{ loop.index0 }}][preserve]" 
                                {{ 'checked' if source.preserve }}> Preserve
                     </label>
-                    <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()" style="margin-left: 5px;">×</button>
+                    <button type="button" class="btn-sm dangerous-button"
+                        onclick="this.parentElement.remove()" style="margin-left: 5px;">×</button>
                 </div>
                 {% endfor %}
             </div>
-            <button type="button" class="btn-sm" onclick="addSource({{ recipe_index }})">+ Add Source</button>
+            <button type="button" class="btn-sm"
+                onclick="addSource({{ recipe_index }})">+ Add Source</button>
         </div>
 
         <!-- 2. BYPRODUCTS -->
@@ -87,11 +92,13 @@
                     </select>
                     <input type="number" name="recipes[{{ recipe_index }}][byproducts][{{ loop.index0 }}][rate_amount]" 
                            value="{{ byproduct.rate_amount }}" step="any" style="width: 60px;">
-                    <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
+                    <button type="button" class="btn-sm dangerous-button"
+                        onclick="this.parentElement.remove()">×</button>
                 </div>
                 {% endfor %}
             </div>
-            <button type="button" class="btn-sm" onclick="addByproduct({{ recipe_index }})">+ Add Byproduct</button>
+            <button type="button" class="btn-sm"
+                onclick="addByproduct({{ recipe_index }})">+ Add Byproduct</button>
         </div>
     </div>
 
@@ -108,7 +115,7 @@
                         data-is-range="true"
                         data-current-min="{{ req.min_val }}"
                         data-current-max="{{ req.max_val }}"
-                        onchange="ConfigEditor.syncAttributeUI(this, true)">
+                        onchange="ConfigEditor.syncAttribState(this, isRange=true)">
                     {% for a in all_attribs %}
                     <option value="{{ a.id }}" {{ 'selected' if a.id == req.attrib_id }}>
                         {{ a.name }}
@@ -116,12 +123,14 @@
                     {% endfor %}
                 </select>
                 <div class="range-container flex-row gap-5 align-center">
-                    <!-- Filled by ConfigEditor.syncAttributeUI -->
+                    <!-- Filled by ConfigEditor.syncAttribState -->
                 </div>
-                <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
+                <button type="button" class="btn-sm dangerous-button"
+                    onclick="this.parentElement.remove()">×</button>
             </div>
             {% endfor %}
         </div>
-        <button type="button" class="btn-sm" onclick="addAttribReq({{ recipe_index }})">+ Add Requirement</button>
+        <button type="button" class="btn-sm"
+            onclick="addAttribReq({{ recipe_index }})">+ Add Requirement</button>
     </div>
 </div>

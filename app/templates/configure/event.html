@@ -60,7 +60,7 @@
                     <select id="outcome_type"
                             name="outcome_type"
                             class="full-width themed-input"
-                            onchange="outcomeFieldsVisibility()">
+                            onchange="syncOutcomeTypeState()">
                         <option value="{{ OutcomeType.FOURWAY }}" {{ 'selected'
                             if event.outcome_type == OutcomeType.FOURWAY }}
                             >Four-Way (Success/Fail)</option>
@@ -213,18 +213,68 @@
         const sourceSelect = newCard.querySelector('.source-type-select') || 
                            newCard.querySelector('[name$="[get_val_from]"]');
         if (sourceSelect) {
-            syncSourceVisibility(sourceSelect);
+            syncEffSourceState(sourceSelect);
         }
 
         newCard.querySelectorAll('.field-mode-select').forEach(select => {
-            syncFieldModeUI(select);
+            syncFieldIdsState(select);
         });
 
-        innerExprVisibility(newCard);
-        outerExprVisibility(newCard);
+        syncInnerExprState(newCard);
+        syncOuterExprState(newCard);
     }
 
-    function syncSourceVisibility(element) {
+    function renumberLabels(usage = 'det') {
+        const cards = document.querySelectorAll(`#${usage}-list .factor-card`);
+        const total = cards.length;
+
+        cards.forEach((card, i) => {
+            card.querySelector('.index-display').textContent = `#${i + 1}`;
+            const orderInput = card.querySelector('.factor-order-input');
+            if (orderInput) orderInput.value = i;
+
+            const upBtn = card.querySelector(`.btn-${usage}-up`);
+            const downBtn = card.querySelector(`.btn-${usage}-down`);
+
+            if (upBtn) upBtn.disabled = (i === 0);
+            if (downBtn) downBtn.disabled = (i === total - 1);
+        });
+
+        const emptyMsg = document.getElementById(`${usage}-list-empty`);
+        if (emptyMsg) emptyMsg.classList.toggle('hidden', total > 0);
+    }
+
+    function moveFactor(button, direction) {
+        const card = button.closest('.factor-card');
+        if (direction === -1 && card.previousElementSibling) {
+            card.parentNode.insertBefore(card, card.previousElementSibling);
+        } else if (direction === 1 && card.nextElementSibling) {
+            card.parentNode.insertBefore(card.nextElementSibling, card);
+        }
+        renumberLabels();
+    }
+
+    function syncOutcomeTypeState() {
+        const type = document.getElementById('outcome_type').value;
+        document.getElementById('fields-range').classList.toggle(
+            'hidden', !['fourway', 'numeric'].includes(type));
+        document.getElementById('fields-base').classList.toggle(
+            'hidden', type !== 'determined');
+        document.getElementById('fields-selection').classList.toggle(
+            'hidden', type !== 'selection');
+        document.getElementById('fields-dice').classList.toggle(
+            'hidden', type !== 'dice_system');
+        document.getElementById('determinants').classList.toggle(
+            'hidden', type == 'dice_system');
+        document.getElementById('effects').classList.toggle(
+            'hidden', type == 'dice_system');
+
+        document.querySelectorAll('.eff-card .source-type-select').forEach(select => {
+            syncEffSourceState(select);
+        });
+    }
+
+    function syncEffSourceState(element) {
         const card = element.closest('.factor-card');
         const sourceFieldBox = card.querySelector('.source-field-box');
         const sourceConstBox = card.querySelector('.source-const-box');
@@ -267,7 +317,7 @@
                 innerOpSelect.style.opacity = "";
                 innerOpSelect.style.cursor = "";
             }
-            innerExprVisibility(card);
+            syncInnerExprState(card);
         }
 
         if (successFilter) {
@@ -280,27 +330,7 @@
         }
     }
 
-    function renumberLabels(usage = 'det') {
-        const cards = document.querySelectorAll(`#${usage}-list .factor-card`);
-        const total = cards.length;
-
-        cards.forEach((card, i) => {
-            card.querySelector('.index-display').textContent = `#${i + 1}`;
-            const orderInput = card.querySelector('.factor-order-input');
-            if (orderInput) orderInput.value = i;
-
-            const upBtn = card.querySelector(`.btn-${usage}-up`);
-            const downBtn = card.querySelector(`.btn-${usage}-down`);
-
-            if (upBtn) upBtn.disabled = (i === 0);
-            if (downBtn) downBtn.disabled = (i === total - 1);
-        });
-
-        const emptyMsg = document.getElementById(`${usage}-list-empty`);
-        if (emptyMsg) emptyMsg.classList.toggle('hidden', total > 0);
-    }
-
-    function syncRoleWithField(element) {
+    function syncEventFieldState(element) {
         const card = element.closest('.factor-card');
         const fieldGroup = element.closest('.field-input-group');
 
@@ -324,7 +354,7 @@
             roleSelect.value = "{{ Participant.BLUEPRINT }}";
             roleRow.classList.add('hidden');
             childContainer.classList.add('hidden');
-            outerExprVisibility(card);
+            syncOuterExprState(card);
             return;
         } else {
             roleRow.classList.remove('hidden');
@@ -376,7 +406,7 @@
     /**
      * Synchronizes the ID selectors (Attrib, Item, Recipe) based on the chosen Mode.
      */
-    function syncFieldModeUI(modeSelect) {
+    function syncFieldIdsState(modeSelect) {
         const container = modeSelect.closest('.field-input-group');
         const mode = modeSelect.value;
 
@@ -401,15 +431,15 @@
             itemSelect?.classList.remove('hidden');
             recipeSelect?.classList.remove('hidden');
             // Trigger population of recipe list
-            syncRecipeOptions(itemSelect);
+            syncRecipesState(itemSelect);
         }
-        syncRoleWithField(modeSelect);
+        syncEventFieldState(modeSelect);
     }
 
     /**
      * Fills the Recipe dropdown based on which Item is selected.
      */
-    function syncRecipeOptions(itemSelect, initialRecipeId = null) {
+    function syncRecipesState(itemSelect, initialRecipeId = null) {
         const container = itemSelect.closest('.field-input-group');
         const recipeSelect = container.querySelector('.id-recipe');
         const itemId = itemSelect.value;
@@ -441,21 +471,44 @@
         });
     }
 
-    function outcomeFieldsVisibility() {
-        const type = document.getElementById('outcome_type').value;
-        document.getElementById('fields-range').classList.toggle('hidden', !['fourway', 'numeric'].includes(type));
-        document.getElementById('fields-base').classList.toggle('hidden', type !== 'determined');
-        document.getElementById('fields-selection').classList.toggle('hidden', type !== 'selection');
-        document.getElementById('fields-dice').classList.toggle('hidden', type !== 'dice_system');
-        document.getElementById('determinants').classList.toggle('hidden', type == 'dice_system');
-        document.getElementById('effects').classList.toggle('hidden', type == 'dice_system');
+    function syncOuterExprState(card) {
+        const appSelector = card.querySelector('.op-application-selector');
+        const op = appSelector.value;
+        const innerGroup = card.querySelector('[data-inner-group]');
+        const requiredGroup = card.querySelector('[data-slot-required]');
+        const attrSelect = card.querySelector('.id-attr');
 
-        document.querySelectorAll('.eff-card .source-type-select').forEach(select => {
-            syncSourceVisibility(select);
-        });
+        const comparisonOps = ['==', '>', '<', '>=', '<='];
+
+        if (requiredGroup) {
+            if (comparisonOps.includes(op)) {
+                // COMPARISON: ( Inner ) == Target
+                innerGroup.style.order = "1";
+                appSelector.style.order = "2";
+                requiredGroup.style.order = "3";
+                requiredGroup.classList.remove('hidden');
+
+                syncFieldAttribState(attrSelect, false);
+            } else {
+                // MATH: + ( Inner )
+                appSelector.style.order = "1";
+                innerGroup.style.order = "2";
+                requiredGroup.classList.add('hidden');
+            }
+        } else {
+            appSelector.parentElement.style.order = "1";
+            innerGroup.style.order = "2";
+        }
     }
 
-    function innerExprVisibility(card) {
+    function syncFieldAttribState(attrSelect) {
+        const card = attrSelect.closest('.factor-card');
+        const modeSelect = card.querySelector('select[name$="[field_mode]"]');
+        const isItemMode = modeSelect && modeSelect.value === 'qty';
+        ConfigEditor.syncAttribState(attrSelect, isRange=false, forceNumeric=isItemMode);
+    }
+
+    function syncInnerExprState(card) {
         const opSelector = card.querySelector('.op-inner-selector')
         const op = opSelector.value;
         const lhs = card.querySelector('[data-slot-lhs]');
@@ -495,66 +548,17 @@
         card.classList.toggle('functional-layout', isFunctional);
     }
 
-    function outerExprVisibility(card) {
-        const appSelector = card.querySelector('.op-application-selector');
-        const op = appSelector.value;
-        const innerGroup = card.querySelector('[data-inner-group]');
-        const requiredGroup = card.querySelector('[data-slot-required]');
-        const attrSelect = card.querySelector('.id-attr');
-
-        const comparisonOps = ['==', '>', '<', '>=', '<='];
-
-        if (requiredGroup) {
-            if (comparisonOps.includes(op)) {
-                // COMPARISON: ( Inner ) == Target
-                innerGroup.style.order = "1";
-                appSelector.style.order = "2";
-                requiredGroup.style.order = "3";
-                requiredGroup.classList.remove('hidden');
-
-                syncAttributeUI_EF(attrSelect, false);
-            } else {
-                // MATH: + ( Inner )
-                appSelector.style.order = "1";
-                innerGroup.style.order = "2";
-                requiredGroup.classList.add('hidden');
-            }
-        } else {
-            appSelector.parentElement.style.order = "1";
-            innerGroup.style.order = "2";
-        }
-    }
-
-    // Factor ordering
-    function moveFactor(button, direction) {
-        const card = button.closest('.factor-card');
-        if (direction === -1 && card.previousElementSibling) {
-            card.parentNode.insertBefore(card, card.previousElementSibling);
-        } else if (direction === 1 && card.nextElementSibling) {
-            card.parentNode.insertBefore(card.nextElementSibling, card);
-        }
-        renumberLabels();
-    }
-
-    // Event-specific wrapper to handle field mode logic
-    function syncAttributeUI_EF(attrSelect) {
-        const card = attrSelect.closest('.factor-card');
-        const modeSelect = card.querySelector('select[name$="[field_mode]"]');
-        const isItemMode = modeSelect && modeSelect.value === 'qty';
-        ConfigEditor.syncAttributeUI(attrSelect, false, isItemMode);
-    }
-
     // Use Event Delegation for dynamic changes
     document.addEventListener('change', function(e) {
         const card = e.target.closest('.factor-card');
         if (!card) return;
 
         if (e.target.classList.contains('op-inner-selector')) {
-            innerExprVisibility(card);
+            syncInnerExprState(card);
         }
         
         if (e.target.classList.contains('op-application-selector')) {
-            outerExprVisibility(card);
+            syncOuterExprState(card);
         }
     });
 
@@ -568,27 +572,27 @@
     document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll(
                 '.field-input-group select[name$="[field_mode]"]').forEach(select => {
-            syncFieldModeUI(select);
+            syncFieldIdsState(select);
         });
         document.querySelectorAll('.source-type-select').forEach(select => {
-            syncSourceVisibility(select);
+            syncEffSourceState(select);
         });
         document.querySelectorAll('.factor-card').forEach(card => {
-            innerExprVisibility(card);
-            outerExprVisibility(card);
+            syncInnerExprState(card);
+            syncOuterExprState(card);
         });
         document.querySelectorAll(
                 '.field-input-group .id-item').forEach(itemSelect => {
             const container = itemSelect.closest('.field-input-group');
             const mode = container.querySelector('select[name$="[field_mode]"]').value;
             if (mode.startsWith('rate_')) {
-                syncRecipeOptions(itemSelect);
+                syncRecipesState(itemSelect);
             }
         });
         
         renumberLabels('det');
         renumberLabels('eff');
-        outcomeFieldsVisibility();
+        syncOutcomeTypeState();
     });
 </script>
 

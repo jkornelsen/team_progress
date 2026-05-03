@@ -236,7 +236,7 @@
                         <div class="control-meta">
                             <label class="label-like">Moving:</label>
                             <select id="active-char-select"
-                                class="mini-select" onchange="updatePartyUI(); this.blur();">
+                                class="mini-select" onchange="syncPartyState(); this.blur();">
                                 {% for char in characters_here %}
                                     <option value="{{ char.id }}" {{ 'selected' if char.id == active_char_id }}>
                                         {{ char.name }}
@@ -347,10 +347,10 @@
             }
         });
         items.forEach(i => renderToken(i, 'item-token'));
-        updateTravelUI();
+        syncTravelPromptState();
     }
 
-    function updateTravelUI() {
+    function syncTravelPromptState() {
         const travelPrompt = document.getElementById('travel-prompt');
         if (!travelPrompt) return;
 
@@ -367,15 +367,24 @@
         }
     }
 
-    function getActiveChar() {
-        const id = charSelector ? charSelector.value : null;
-        if (id && chars[id]) {
-            return {
-                char_id: id,
-                char: chars[id]
-            };
+    function syncPartyState() {
+        const container = document.getElementById('party-move-container');
+        if (!container) return;
+        
+        const active = getActiveChar();
+        if (!active || !active.char.travel_party) {
+            container.style.display = 'none';
+            return;
         }
-        return null;
+
+        // Check if there's at least one OTHER character in the same party here
+        const partyName = active.char.travel_party;
+        const otherMembers = Object.keys(chars).filter(id => 
+            id !== active.char_id && chars[id].travel_party === partyName
+        );
+
+        container.style.display = otherMembers.length > 0 ? 'block' : 'none';
+        syncTravelPromptState(); // Refresh the door prompts too
     }
 
     function getActiveExit() {
@@ -390,26 +399,15 @@
         });
     }
 
-    // 3. Movement Logic
-
-    function updatePartyUI() {
-        const active = getActiveChar();
-        const container = document.getElementById('party-move-container');
-        if (!container) return;
-        
-        if (!active || !active.char.travel_party) {
-            container.style.display = 'none';
-            return;
+    function getActiveChar() {
+        const id = charSelector ? charSelector.value : null;
+        if (id && chars[id]) {
+            return {
+                char_id: id,
+                char: chars[id]
+            };
         }
-
-        // Check if there's at least one OTHER character in the same party here
-        const partyName = active.char.travel_party;
-        const otherMembers = Object.keys(chars).filter(id => 
-            id !== active.char_id && chars[id].travel_party === partyName
-        );
-
-        container.style.display = otherMembers.length > 0 ? 'block' : 'none';
-        updateTravelUI(); // Refresh the door prompts too
+        return null;
     }
 
     function updateCharListCoords(charId, pos) {
@@ -521,7 +519,7 @@
     // Initial Load
     $(document).ready(() => {
         fillGrid();
-        updatePartyUI();
+        syncPartyState();
     });
 </script>
 

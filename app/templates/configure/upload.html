@@ -15,15 +15,15 @@
     
     <div class="flex-row gap-10 spacious-bottom justify-center">
         <label class="tab-button">
-            <input type="radio" name="import_mode" value="overwrite" checked onchange="updateUI(this.value)"> 
+            <input type="radio" name="import_mode" value="overwrite" checked onchange="syncFormState(this.value)"> 
             <span>Overwrite</span>
         </label>
         <label class="tab-button">
-            <input type="radio" name="import_mode" value="patch" onchange="updateUI(this.value)"> 
+            <input type="radio" name="import_mode" value="patch" onchange="syncFormState(this.value)"> 
             <span>Patch</span>
         </label>
         <label class="tab-button">
-            <input type="radio" name="import_mode" value="clear" onchange="updateUI(this.value)"> 
+            <input type="radio" name="import_mode" value="clear" onchange="syncFormState(this.value)"> 
             <span>New Blank</span>
         </label>
     </div>
@@ -69,7 +69,7 @@
     const modeInput = document.getElementById('active-mode');
     const modeIcon = document.getElementById('mode-icon');
 
-    function updateUI(mode) {
+    function syncFormState(mode) {
         const modeInput = document.getElementById('active-mode');
         const statusBox = document.getElementById('status-box');
         

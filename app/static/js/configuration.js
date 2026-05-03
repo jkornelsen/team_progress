@@ -26,7 +26,7 @@ const ConfigEditor = {
         // Find any attribute selects in the new row and sync them
         newRow.querySelectorAll(
             'select[data-attrib-select="true"]').forEach(s => {
-            this.syncAttributeUI(s, s.dataset.isRange === "true");
+            this.syncAttribState(s, isRange = (s.dataset.isRange === "true"));
         });
 
         if (customCallback) customCallback(newRow);
@@ -54,7 +54,7 @@ const ConfigEditor = {
      * @param isRange - Set to true for Recipes (Min/Max), false for Character/Item Values
      * @param forceNumeric -- e.g. event determiner item field (not attrib)
      */
-    syncAttributeUI: function(select, isRange = false, forceNumeric = false) {
+    syncAttribState: function(select, isRange = false, forceNumeric = false) {
         if (!select) { console.error("No select element"); return; }
         const attribId = select.value;
         const meta = ATTRIB_REGISTRY ? ATTRIB_REGISTRY[attribId] : null;
@@ -129,6 +129,6 @@ const ConfigEditor = {
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll(
         'select[data-attrib-select="true"]').forEach(s => {
-        ConfigEditor.syncAttributeUI(s, s.dataset.isRange === "true");
+        ConfigEditor.syncAttribState(s, isRange = (s.dataset.isRange === "true"));
     });
 });

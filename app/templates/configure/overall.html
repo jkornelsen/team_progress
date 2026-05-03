@@ -11,6 +11,9 @@
 {% endblock %}
 
 {% block content %}
+
+<script src="{{ url_for('static', filename='js/configuration.js') }}"></script>
+
 <div class="configure-overall">
     <h1>Scenario Settings & Objectives</h1>
     
@@ -54,7 +57,7 @@
         <section class="outer-border">
             <div class="flex-between align-center">
                 <h3>Win Conditions (Objectives)</h3>
-                <button type="button" class="btn-sm" onclick="addRow('winreq-list', 'winreq-template')">+ Add Objective</button>
+                <button type="button" class="btn-sm" onclick="ConfigEditor.addRow('winreq-list', 'winreq-template')">+ Add Objective</button>
             </div>
             <p class="label-like spacious-bottom">Define what needs to happen to "Win" this scenario. All conditions must be met.</p>
             
@@ -126,7 +129,7 @@
         <div class="grid-3-col spacious-top">
             <div class="form-group">
                 <label>Target Entity:</label>
-                <select name="winreqs[INDEX][target_id]">
+                <select name="winreqs[__INDEX__][target_id]">
                     <option value="">(None)</option>
                     <optgroup label="Items">{% for i in items %}<option value="{{ i.id }}">{{ i.name }}</option>{% endfor %}</optgroup>
                     <optgroup label="Characters">{% for c in chars %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</optgroup>
@@ -134,7 +137,7 @@
             </div>
             <div class="form-group">
                 <label>Must be at Location:</label>
-                <select name="winreqs[INDEX][loc_id]">
+                <select name="winreqs[__INDEX__][loc_id]">
                     <option value="">(Anywhere)</option>
                     {% for l in locations %}<option value="{{ l.id }}">{{ l.name }}</option>{% endfor %}
                 </select>
@@ -142,8 +145,8 @@
             <div class="form-group">
                 <label>Required Value:</label>
                 <div class="flex-row gap-5">
-                    <input type="number" name="winreqs[INDEX][quantity]" value="1" step="any">
-                    <select name="winreqs[INDEX][attrib_id]" style="width: 100px;">
+                    <input type="number" name="winreqs[__INDEX__][quantity]" value="1" step="any">
+                    <select name="winreqs[__INDEX__][attrib_id]" style="width: 100px;">
                         <option value="">(Qty)</option>
                         {% for a in attribs %}<option value="{{ a.id }}">{{ a.name }}</option>{% endfor %}
                     </select>
@@ -154,22 +157,12 @@
 </template>
 
 <script>
-    function addRow(containerId, templateId) {
-        const container = document.getElementById(containerId);
-        const template = document.getElementById(templateId).innerHTML;
-        const index = container.querySelectorAll('.winreq-card').length + Date.now(); // Unique index
-        const html = template.replace(/INDEX/g, index);
-        container.insertAdjacentHTML('beforeend', html);
-    }
 </script>
 
 <style>
     .winreq-card { background: #111; padding: 15px; border-left: 4px solid var(--border); }
     .winreq-card:hover { border-left-color: var(--accent); }
     .grid-3-col { display: grid; grid-template-columns: 1.5fr 1.5fr 2fr; gap: 15px; }
-/*
-    .full-width { width: 100%; box-sizing: border-box; background: #000; color: #fff; border: 1px solid var(--border); padding: 10px; }
-*/
     .footer-actions { margin-top: 40px; padding: 20px; border-top: 1px solid var(--border); }
 </style>
 {% endblock %}

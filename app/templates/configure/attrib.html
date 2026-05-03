@@ -77,7 +77,7 @@
 </div>
 
 <script>
-    function syncAttribUI() {
+    function syncFormState() {
         const enumTextbox = document.getElementById('enum_values');
         const enumContainer = document.getElementById('enum-container');
         
@@ -116,14 +116,14 @@
         
         // Radio listeners
         document.querySelectorAll('input[name="value_type"]').forEach(radio => {
-            radio.addEventListener('change', syncAttribUI);
+            radio.addEventListener('change', syncFormState);
         });
 
         // Textbox listener
-        enumTextbox.addEventListener('input', syncAttribUI);
+        enumTextbox.addEventListener('input', syncFormState);
 
         // Initial Run
-        syncAttribUI();
+        syncFormState();
     });
 </script>
 

@@ -34,7 +34,7 @@
         <select name="attribs[{{ index }}][id]" 
                 data-attrib-select="true"
                 data-is-range="false"
-                onchange="ConfigEditor.syncAttributeUI(this, false)"
+                onchange="ConfigEditor.syncAttribState(this)"
                 data-current-value="{{ val }}">
             {% for attr_def in all_attribs %}
                 <option value="{{ attr_def.id }}" 
@@ -44,7 +44,7 @@
             {% endfor %}
         </select>
         <div class="value-container">
-            <!-- Filled by ConfigEditor.syncAttributeUI -->
+            <!-- Filled by ConfigEditor.syncAttribState -->
         </div>
         <button type="button" class="btn-sm dangerous-button" 
                 onclick="ConfigEditor.removeRow(this, 'attrib-list')">×</button>

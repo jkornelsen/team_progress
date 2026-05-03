@@ -17,9 +17,12 @@
         </div>
         <!-- Move/Delete buttons -->
         <div class="flex-row gap-10">
-            <button type="button" class="btn-sm btn-det-up" onclick="moveFactor(this, -1)">↑</button>
-            <button type="button" class="btn-sm btn-det-down" onclick="moveFactor(this, 1)">↓</button>
-            <button type="button" class="btn-sm dangerous-button" onclick="this.closest('.factor-card').remove(); renumberLabels();">×</button>
+            <button type="button" class="btn-sm btn-det-up"
+                onclick="moveFactor(this, -1)">↑</button>
+            <button type="button" class="btn-sm btn-det-down"
+                onclick="moveFactor(this, 1)">↓</button>
+            <button type="button" class="btn-sm dangerous-button"
+                onclick="this.closest('.factor-card').remove(); renumberLabels();">×</button>
         </div>
     </div>
 
@@ -50,11 +53,14 @@
                     <select name="dets[{{ index }}][op_transform]" 
                             class="op-inner-selector"
                             style="max-width: 15ch;"
-                            onchange="innerExprVisibility(this.closest('.factor-card'))">
-                        <option value="{{ Operation.CONST }}" {{ 'selected' if op_transform == Operation.CONST }}>Constant</option>
-                        <option value="" {{ 'selected' if not op_transform }}>Use Value</option>
+                            onchange="syncInnerExprState(this.closest('.factor-card'))">
+                        <option value="{{ Operation.CONST }}" {{ 'selected'
+                            if op_transform == Operation.CONST }}>Constant</option>
+                        <option value="" {{ 'selected'
+                            if not op_transform }}>Use Value</option>
                         {% for op_key in Operation.TRANSFORM_OPS %}
-                            <option value="{{ op_key }}" {{ 'selected' if op_transform == op_key }}>
+                            <option value="{{ op_key }}" {{ 'selected'
+                            if op_transform == op_key }}>
                                 {{ Operation.Repr[op_key] }}
                             </option>
                         {% endfor %}
@@ -76,16 +82,17 @@
                 <select name="dets[{{ index }}][op_application]" 
                         class="op-application-selector" 
                         style="max-width: 8ch;"
-                        onchange="outerExprVisibility(this.closest('.factor-card'))">
+                        onchange="syncOuterExprState(this.closest('.factor-card'))">
                     {% for op_key in Operation.APPLICATION_OPS %}
-                        <option value="{{ op_key }}" {{ 'selected' if op_application == op_key }}>
+                        <option value="{{ op_key }}" {{ 'selected'
+                            if op_application == op_key }}>
                             {{ Operation.Repr[op_key] }}
                         </option>
                     {% endfor %}
                 </select>
 
                 <div data-slot-required class="flex-row align-center gap-5 hidden">
-                    <!-- Filled by ConfigEditor.syncAttributeUI -->
+                    <!-- Filled by ConfigEditor.syncAttribState -->
                 </div>
             </div>
         </div>
