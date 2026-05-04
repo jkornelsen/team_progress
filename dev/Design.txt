@@ -2,9 +2,69 @@
 - issues and proposed changes
 -------------------------------------------------------------------------------
 
--- functional --
+---- functional ----
 
--- scenario --
+idling such as red bars often stop
+    went to green bar rate or black bar configure
+    came back to overview
+    red and green had both stopped
+    some progress seemed to have been gained
+    log all stoppages either to server or game log
+
+logic_production.py", line 72, in can_perform_recipe
+    host_ent = Entity.query.get((game_token, host_id))
+    sqlalchemy.orm.exc.StaleDataError: UPDATE statement on table 'progress' expected to update 1 row(s); 0 were matched.
+    routes_play.py", line 767, in item_production_status
+    likely a concurrent update problem because progress had already stopped
+
+green bar rate rounded to 2 instead of 1.5
+    maybe it's rounding to nearest 1
+
+setting red bar qty in black bar reset didn't work
+    and setting red bar boost 1 qty gave null owner_id error
+setting red bar boost 1 duration goes to 0.1s
+
+preserve effects order
+    up/down buttons
+
+---- tightening and quality of life ----
+
+show calculated event effect values
+    Green Bar Rate     [Apply] hover:"Available after Roll/Calculate"
+    Green Bar Rate     ⚙️       hover:"Applied automatically by Roll/Calculate"
+        Base Speed Factor x 0.5 (line not shown for constants)
+        **5** -> 1 x 0.5 = **0.5**
+        **5** + 0.5 = **0.5** (for increasing/decreasing)
+        **5** -> **0.5** (for constants)
+add optional param to inner expr renderer that adds surrounding spaces
+recipe rate effects are not getting set to blueprint
+    one says subject, another says universal
+
+button to apply all effects for an event
+    show only when more than one manually applied effect
+
+effect config calculation should default to "use value"
+
+make "used to produce" a unique list for e.g. Green Bar Unlocked
+    show lowest required amount
+
+producing 0 out of 0 requested is not a failure
+
+returning to subject when changing an attrib value is unpredictable
+    best stay on the same page instead
+editing attribs is returning to owner rather than play attrib
+
+show updated item quantities in locations like overview and sources do
+
+restrict location access by item qty or attribreq
+
+prompt before overwriting another character action in progress
+
+win condition quantity min and max, like attribs for recipes
+or "at least" / "at most" toggle
+Fission Plant: no more than a certain amount of pollution
+
+---- scenario ----
 
 infestation
     repair cost + reload cost can reduce xp to 0 (but never below)
@@ -40,8 +100,6 @@ infestation
     store attrib "Boss I Defeated" in universal item "Enemies Defeated"
         so events can check for that attrib
 
-event to help with rays black bar reset
-
 tethered one epic
     set of quests
     would multiple objectives feel more rewarding?
@@ -59,21 +117,7 @@ location production examples
 saving grandfather clock resets hour, an enumerated attrib, to 12am
     hasn't been tested in new version
 
--- tightening and quality of life --
-
-show calculated event effect values
-
-show updated item quantities in locations like overview and sources do
-
-restrict location access by item qty or attribreq
-
-prompt before overwriting another character action in progress
-
-win condition quantity min and max, like attribs for recipes
-or "at least" / "at most" toggle
-Fission Plant: no more than a certain amount of pollution
-
--- code
+---- code ----
 
 refactor play_item
 some logic_ modules seem less useful
@@ -82,17 +126,17 @@ consider manual refactoring or a list of summarized ai suggestions
 only put non-default values in json
     otherwise it makes huge lists of "= null" that are hard to read
 
--- doesn't seem important currently --
+---- doesn't seem important currently ----
 
 prompt each player to save to their PC occasionally
-only if no one recently saved from that session
-warn that loading will erase any scenario currently being played, so save first
+    only if no one recently saved from that session
+    warn that loading will erase any scenario currently being played, so save first
 
 disconnect after 30 minutes without user interaction
-reloading overview doesn't count
-disconnect means go to a static page so it doesn't keep requesting updates
-session['disconnected'] = True
-button on page to reconnect
+    reloading overview doesn't count
+    disconnect means go to a static page so it doesn't keep requesting updates
+    session['disconnected'] = True
+    button on page to reconnect
 
 -------------------------------------------------------------------------------
 - planning

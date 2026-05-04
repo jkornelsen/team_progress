@@ -233,10 +233,10 @@
                             <div class="flex-between align-center">
                                 <div>
                                     <span class="verb-label" style="font-weight: bold;">
-                                        {{ 'Will change' if not eff.auto_apply else 'Auto-applies' }}
+                                        {{ '' if not eff.auto_apply else 'AUTO' }}
                                     </span>
                                     <strong class="target-name-display">...</strong>
-                                    <span class="text-dim">{{ eff.outfield.get_field_name() }}</span>
+                                    <span>{{ eff.outfield.get_field_name() }}</span>
                                 </div>
                                 
                                 {% if not eff.auto_apply %}
@@ -439,7 +439,7 @@
                     row.style.opacity = "0.7";
                 } else {
                     btn.classList.remove('hidden');
-                    verb.innerText = "Change";
+                    verb.innerText = "";
                 }
                 
                 // Show the calculation (Actual numbers depend on your specific logic, 
@@ -472,6 +472,8 @@
                     name = "";
                 }
                 nameDisplay.innerText = name;
+            } else if (role === "{{ Participant.UNIVERSAL }}") {
+                nameDisplay.innerText = "🌐";
             } else {
                 nameDisplay.innerText = "(" + role + ")";
             }
@@ -491,7 +493,7 @@
         if (success) {
             row.querySelector('.apply-eff-btn').classList.add('hidden');
             row.querySelector('.check-mark').classList.remove('hidden');
-            row.querySelector('.verb-label').innerText = "Changed";
+            row.querySelector('.verb-label').innerText = "Applied";
             row.style.opacity = "0.7";
         }
     }

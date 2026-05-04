@@ -957,12 +957,23 @@ class EventField(db.Model, DictHydrator):
         }
 
     def get_field_name(self):
-        if self.attrib_id:
+        if self.field_mode == Participant.ATTR and self.attrib_id:
             attrib = Attrib.query.get((self.game_token, self.attrib_id))
             return attrib.name
-        elif self.item_id:
+        if self.field_mode == Participant.QTY and self.item_id:
             item = Item.query.get((self.game_token, self.item_id))
-            return f"{item.name} Quantity"
+            return f"{item.name} Qty"
+        if self.field_mode == Participant.DIST:
+           return f"Distance from Subject"
+        if self.field_mode == Participant.RATE_AMT and self.item_id \
+                and self.recipe_id:
+            item = Item.query.get((self.game_token, self.item_id))
+            return f"{item.name} Yield"
+        if self.field_mode == Participant.RATE_DUR and self.item_id \
+                and self.recipe_id:
+            item = Item.query.get((self.game_token, self.item_id))
+            return f"{item.name} Recipe Duration"
+        return ""
 
     __table_args__ = (
         db.CheckConstraint(

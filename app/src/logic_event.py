@@ -509,19 +509,18 @@ def effect_description(eff):
     # The Inner Transform
     if eff.op_transform and eff.get_val_from != Participant.CONST:
         # e.g., (Roll Result * 2)
-        source_val = get_inner_breakdown(0, eff.val_transform, eff.op_transform).replace("0", source_val)
+        REPLACE = 135.79
+        source_val = get_inner_breakdown(
+            REPLACE, eff.val_transform, eff.op_transform).replace(
+            str(REPLACE), source_val)
 
     # The Outer Application
-    op_labels = {
-        Operation.ASSIGN: "Set to",
-        Operation.ADD: "Increase by",
-        Operation.SUB: "Decrease by",
-        Operation.MULT: "Multiply by",
-        Operation.DIV: "Divide by"
-    }
-    verb = op_labels.get(eff.op_application, "Change by")
+    if eff.op_application == Operation.ASSIGN:
+        op_app_repr = "→"
+    else:
+        op_app_repr = Operation.Repr(eff.op_application)
     
-    return f"{verb} {source_val}"
+    return f"{op_app_repr} {source_val}"
 
 def process_all_effects(event, role_entities, roll_total, tier_key, force_auto_only=False):
     """
