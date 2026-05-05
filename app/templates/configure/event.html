@@ -282,6 +282,7 @@
         const successFilter = card.querySelector('.success-filter-container');
         const tierSelect = card.querySelector('.success-tier-select');
         const eventOutcomeType = document.getElementById('outcome_type').value;
+        const innerOpSelect = card.querySelector('.op-inner-selector');
 
         const isAnotherField = (element.value === '{{ Participant.INFIELD }}');
         const sameAsOutfield = (element.value === '{{ Participant.OUTFIELD }}');
@@ -306,13 +307,15 @@
         }
 
         if (card.classList.contains('eff-card')) {
-            const innerOpSelect = card.querySelector('.op-inner-selector');
             if (isFixedConstant) {
                 innerOpSelect.value = "{{ Operation.CONST }}";
                 innerOpSelect.disabled = true;
                 innerOpSelect.style.opacity = "0.7";
                 innerOpSelect.style.cursor = "not-allowed";
             } else {
+                if (innerOpSelect.value === "{{ Operation.CONST }}") {
+                    innerOpSelect.value = "";
+                }
                 innerOpSelect.disabled = false;
                 innerOpSelect.style.opacity = "";
                 innerOpSelect.style.cursor = "";
@@ -350,8 +353,9 @@
         const storageType = itemId ? ITEM_STORAGE_TYPE[itemId] : null;
 
         // Role Restrictions based on Storage Type
-        if (mode.startsWith('rate_')) {
+        if (mode === "{{ Participant.RATE_AMT }}" || mode === "{{ Participant.RATE_DUR }}") {
             roleSelect.value = "{{ Participant.BLUEPRINT }}";
+            if (roleHidden) roleHidden.value = "{{ Participant.BLUEPRINT }}";
             roleRow.classList.add('hidden');
             childContainer.classList.add('hidden');
             syncOuterExprState(card);

@@ -83,10 +83,10 @@
                             </select>
 
                         {% else %}
-                            {% if role in dets_not_met %}
+                            {% if role in fields_not_met %}
                                 <span class="text-danger">Needs</span>
-                                {% for det in dets_not_met[role] %}
-                                    {{ det.infield.get_field_name() }}{% if not loop.last %}, {% endif %}
+                                {% for fld in fields_not_met[role] %}
+                                    {{ fld.get_field_name() }}{% if not loop.last %}, {% endif %}
                                 {% endfor %}
                             {% else %}
                                 <span class="text-danger">None eligible nearby.</span>
@@ -189,7 +189,7 @@
                         <span style="font-style: italic;">(fixed&mdash;no random dice roll)</span>
                     {% endif %}
                 </form>
-                {% if not dets_not_met %}
+                {% if not fields_not_met %}
                     <div class="spacious-top text-center">
                         <button id="roll-btn" class="go-button" style="width: 100%; font-size: 1.2em;">
                             {% if event.outcome_type == 'determined' %}
@@ -229,26 +229,27 @@
                              id="eff-row-{{ eff.id }}" 
                              data-role="{{ item.target_role }}"
                              data-auto="{{ 'true' if eff.auto_apply else 'false' }}">
-                            
                             <div class="flex-between align-center">
                                 <div>
-                                    <span class="verb-label" style="font-weight: bold;">
-                                        {{ '' if not eff.auto_apply else 'AUTO' }}
-                                    </span>
                                     <strong class="target-name-display">...</strong>
                                     <span>{{ eff.outfield.get_field_name() }}</span>
                                 </div>
-                                
-                                {% if not eff.auto_apply %}
-                                    <button type="button" 
-                                            class="btn-sm go-button apply-eff-btn hidden" 
+
+                                {% set roll_label = 'Calculate' if event.outcome_type == 'determined' else 'Roll' %}
+                                <div class="effect-action-area">
+                                    {% if not eff.auto_apply %}
+                                        <button type="button" 
+                                            class="btn-sm go-button apply-eff-btn" 
+                                            disabled
+                                            title="Available after pressing {{ roll_label }}"
                                             onclick="applySingleEffect({{ eff.id }})">
-                                        Apply
-                                    </button>
-                                    <span class="check-mark hidden text-success">✓ Changed</span>
-                                {% else %}
-                                    <span class="auto-badge label-like">Auto</span>
-                                {% endif %}
+                                            Apply
+                                        </button>
+                                        <span class="check-mark hidden text-success">✓ Changed</span>
+                                    {% else %}
+                                        <span class="auto-gear" title="Automatically applied by {{ roll_label }} button">⚙️</span>
+                                    {% endif %}
+                                </div>
                             </div>
 
                             <div class="formula-box label-like" style="padding-left: 15px;">
@@ -432,14 +433,12 @@
                 const btn = row.querySelector('.apply-eff-btn');
                 const check = row.querySelector('.check-mark');
                 const preview = row.querySelector('.preview-calculation');
-                const verb = row.querySelector('.verb-label');
 
                 if (isAuto) {
-                    verb.innerText = "Applied";
                     row.style.opacity = "0.7";
                 } else {
-                    btn.classList.remove('hidden');
-                    verb.innerText = "";
+                    btn.disabled = false;
+                    btn.title = "Apply this change";
                 }
                 
                 // Show the calculation (Actual numbers depend on your specific logic, 
@@ -462,7 +461,11 @@
             const targetId = roleIds.get(roleIdField);
             const nameDisplay = row.querySelector('.target-name-display');
             
-            if (targetId) {
+            if (role === "{{ Participant.UNIVERSAL }}") {
+                nameDisplay.innerText = "🌐";
+            } else if (role === "{{ Participant.BLUEPRINT }}") {
+                nameDisplay.innerText = "📦";
+            } else if (targetId) {
                 const select = document.querySelector(`select[name="${roleIdField}"]`);
                 let name = "Target";
                 if (select) {
@@ -472,8 +475,6 @@
                     name = "";
                 }
                 nameDisplay.innerText = name;
-            } else if (role === "{{ Participant.UNIVERSAL }}") {
-                nameDisplay.innerText = "🌐";
             } else {
                 nameDisplay.innerText = "(" + role + ")";
             }
@@ -493,7 +494,6 @@
         if (success) {
             row.querySelector('.apply-eff-btn').classList.add('hidden');
             row.querySelector('.check-mark').classList.remove('hidden');
-            row.querySelector('.verb-label').innerText = "Applied";
             row.style.opacity = "0.7";
         }
     }

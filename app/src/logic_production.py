@@ -90,7 +90,9 @@ def can_perform_recipe(host_id, recipe, target_owner_id, ctx, batches=1):
     # 2. Ingredient Availability
     resolved = resolve_recipe_sources(host_id, recipe, ctx)
     for res in resolved:
-        required = res['source_def'].q_required * batches
+        source_def = res['source_def']
+        required = source_def.q_required * (
+            1 if source_def.preserve else batches)
         if res['total_available'] < required:
             verb = "Missing"
             if res['total_available'] > 0:
@@ -277,7 +279,7 @@ def execute_production(host_id, recipe, target_owner_id, ctx, batches=1):
     else:
         host_info = f"UNKNOWN ID:{host_id}"
     add_message(log_msg)
-    logger.info(
+    logger.debug(
         f"[PRODUCTION] Host: {host_info} | "
         f"Result: +{gain_qty:g} {recipe.product.name} "
         f"({batches} batches)"

@@ -32,8 +32,8 @@
                         name="recipes[{{ recipe_index }}][rate_duration]" 
                         id="duration-{{ recipe_index }}"
                         class="duration-input"
-                        value="{{ recipe.rate_duration if recipe else 3.0 }}"
-                        step="any" required>
+                        value="{{ recipe.rate_duration if recipe else 3 }}"
+                        step="1" min="1" required>
             </label>
         </div>
         <div class="form-group align-center flex-row" style="padding-top: 25px;">

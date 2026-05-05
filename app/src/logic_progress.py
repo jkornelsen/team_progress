@@ -2,14 +2,16 @@ import math
 import logging
 from datetime import datetime, timezone
 from flask import g, session
+from sqlalchemy import text
+import zlib
 from app.models import (
     db, Entity, Item, Location, Character, Pile, Progress,
     Recipe, RecipeSource, RecipeByproduct, AttribVal,
     GENERAL_ID, StorageType)
 from app.utils import ContextIds
-from app.src.logic_piles import adjust_quantity
-from app.src.logic_production import (
-    can_perform_recipe, execute_production)
+from .logic_piles import adjust_quantity
+from .logic_production import can_perform_recipe, execute_production
+from .logic_user_interaction import add_message
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +23,14 @@ def tick_all_active(messages_host_id=None):
       reasons specifically for this host.
     """
     game_token = g.game_token
+
+    # DB lock to prevent concurrent access to this game token
+    lock_id = zlib.adler32(game_token.encode())
+    db.session.execute(
+        text("SELECT pg_advisory_xact_lock(:id)"), 
+        {"id": lock_id}
+    )
+
     all_active_records = Progress.query.filter_by(game_token=game_token).all()
     
     # --- PHASE 1: PREPARATION ---
@@ -29,7 +39,8 @@ def tick_all_active(messages_host_id=None):
     for p in all_active_records:
         recipe = p.recipe
         if not recipe:
-            logger.warning(f"No Recipe for Progress {p.id} found.")
+            logger.warning(f"No Recipe for Progress {p.id} found. Deleting.")
+            db.session.delete(p)
             continue
         if recipe.instant:
             logger.warning(f"Progress {p.id} points to instant recipe {recipe.id}.")
@@ -96,20 +107,29 @@ def tick_all_active(messages_host_id=None):
     halt_messages = []
     for item in work_items:
         p = item['progress']
+        halt_reason = item['halt_reason']
         
         # Check future viability
-        if not item['halt_reason']:
+        if not halt_reason:
             possible, reason = can_perform_recipe(
                 p.host_id, item['recipe'], p.owner_id, item['ctx'])
             if not possible:
-                item['halt_reason'] = reason
+                halt_reason = reason
 
         # Handle deletion for halted items
-        if item['halt_reason']:
-            if p.host_id == messages_host_id:
-                halt_messages.append(item['halt_reason'])
+        if halt_reason:
+            # Capture needed data into local variables while p is still valid
+            prod_name = p.product.name if p.product else "Unknown Item"
+            p_host_id = p.host_id
+            p_id = p.id
+            stop_msg = f"Production of {prod_name} halted: {halt_reason}"
+            logger.info(f"[PRODUCTION STOPPED] Host:{p_host_id} | {stop_msg}")
+            add_message(stop_msg)
+            if p_host_id == messages_host_id:
+                halt_messages.append(halt_reason)
             db.session.delete(p)
 
+    # Once commit is called, the advisory lock is automatically released.
     db.session.commit()
     return halt_messages
 
@@ -200,6 +220,9 @@ def stop_production(host_id, product_id):
         tick_all_active() # Final catch up
         still_exists = db.session.query(Progress).filter_by(id=progress.id).first()
         if still_exists:
+            logger.info(
+                f"[PRODUCTION MANUAL STOP] Host:{host_id}"
+                f" | Product:{product_id}")
             db.session.delete(still_exists)
         db.session.commit()
         return True

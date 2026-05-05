@@ -165,7 +165,7 @@ def edit_item(id):
                 product_id=item.id,
                 order_index=order_index,
                 rate_amount=recipe_row.get_float('rate_amount', 1.0),
-                rate_duration=recipe_row.get_float('rate_duration', 3.0),
+                rate_duration=max(1, recipe_row.get_int('rate_duration', 3)),
                 instant=recipe_row.get_bool('instant')
             )
 

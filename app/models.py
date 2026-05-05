@@ -1123,7 +1123,7 @@ class Recipe(db.Model, DictHydrator):
     product_id = db.Column(db.Integer, nullable=False)
     order_index = db.Column(db.Integer, default=0)
     rate_amount = db.Column(db.Float, default=1.0)
-    rate_duration = db.Column(db.Float, default=3.0)
+    rate_duration = db.Column(db.Integer, default=3)
     instant = db.Column(db.Boolean, default=False)
 
     def to_dict(self):

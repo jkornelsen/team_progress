@@ -35,18 +35,18 @@
                 <select name="effs[{{ index }}][get_val_from]"
                         class="source-type-select"
                         onchange="syncEffSourceState(this)">
-                    <option value="{{ Participant.CONST }}" {{ 'selected'
-                        if factor and factor.get_val_from == Participant.CONST
-                        }}>Fixed Constant</option>
-                    <option value="{{ Participant.OUTFIELD }}" {{ 'selected'
-                        if factor and factor.get_val_from == Participant.OUTFIELD
-                        }}>The Field We're Changing</option>
-                    <option value="{{ Participant.INFIELD }}" {{ 'selected'
-                        if factor and factor.get_val_from == Participant.INFIELD
-                        }}>Another Field</option>
                     <option value="{{ Participant.OUTCOME }}" {{ 'selected'
                         if factor and factor.get_val_from == Participant.OUTCOME
                         }}>Result of Roll</option>
+                    <option value="{{ Participant.INFIELD }}" {{ 'selected'
+                        if factor and factor.get_val_from == Participant.INFIELD
+                        }}>Another Field</option>
+                    <option value="{{ Participant.OUTFIELD }}" {{ 'selected'
+                        if factor and factor.get_val_from == Participant.OUTFIELD
+                        }}>The Field We're Changing</option>
+                    <option value="{{ Participant.CONST }}" {{ 'selected'
+                        if factor and factor.get_val_from == Participant.CONST
+                        }}>Fixed Constant</option>
                 </select>
 
                 <div class="success-filter-container {{

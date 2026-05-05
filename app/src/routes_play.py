@@ -15,7 +15,7 @@ from app.utils import (
 from .logic_piles import transfer_item
 from .logic_event import (
     roll_for_outcome, roll_for_system_outcome, calculate_determinants,
-    get_entity_value, meets_det,
+    get_entity_value, can_use_field,
     effect_description, do_effect_change, process_all_effects)
 from .logic_progress import (
     tick_all_active, start_production, stop_production)
@@ -988,15 +988,12 @@ def play_event(id):
     #if ctx_char:
     #    children_piles.setdefault(ctx_char.id, []).extend(ctx_char.piles)
         
-    # Get determinants for each role
-    # TODO: can we apply the same logic for effects?
-
-    role_dets = {}
-    for d in event.determinants:
-        #for efield in (d.infield, d.outfield):
-        efield = d.infield
-        if efield:
-            role_dets.setdefault(efield.role, set()).add(d)
+    # Get factor fields for each role
+    role_fields = {}
+    for f in event.factors:
+        for fld in filter(None, (f.infield, f.outfield)):
+            if fld.role:
+                role_fields.setdefault(fld.role, set()).add(fld)
 
     # Get list of nearby entities that have those attributes
     # to fill the select box for each role.
@@ -1005,19 +1002,11 @@ def play_event(id):
     # Include attr or qty value in the list.
     
     eligible_role_entities = {}
-    dets_not_met = {}
-    for role, detlist in role_dets.items():
-        # Check if this role is for the General Owner (Uses Universal Items)
-        is_universal_role = False
-        for d in detlist:
-            if d.infield and d.infield.field_mode == Participant.QTY \
-                    and d.infield.item_id:
-                item = Item.query.get((game_token, d.infield.item_id))
-                if item and item.storage_type == StorageType.UNIVERSAL:
-                    is_universal_role = True
-                    break
-        
-        if is_universal_role:
+    fields_not_met = {}
+    for role, fieldlist in role_fields.items():
+        if role == Participant.BLUEPRINT:
+            continue
+        if role == Participant.UNIVERSAL:
             search_pool= [Entity.query.get((game_token, GENERAL_ID))]
         elif role == Participant.SUBJECT:
             search_pool = [subject] if subject else other_entities_here
@@ -1029,14 +1018,14 @@ def play_event(id):
             search_pool = other_entities_here
 
         role_candidates = None
-        for d in detlist:
-            meeting_this_det = {ent for ent in search_pool if meets_det(d, ent)}
+        for f in fieldlist:
+            can_use = {ent for ent in search_pool if can_use_field(f, ent)}
             if role_candidates is None:
-                role_candidates = meeting_this_det
+                role_candidates = can_use
             else:
-                role_candidates &= meeting_this_det # Intersection
-            if not meeting_this_det:
-                dets_not_met.setdefault(role, []).append(d)
+                role_candidates &= can_use # Intersection
+            if not can_use:
+                fields_not_met.setdefault(role, []).append(f)
 
         eligible_role_entities[role] = list(role_candidates) if role_candidates else []
 
@@ -1066,7 +1055,7 @@ def play_event(id):
         ctx_char=ctx_char,
         ctx_loc=ctx_loc,
         role_entities=eligible_role_entities,
-        dets_not_met=dets_not_met,
+        fields_not_met=fields_not_met,
         effects_data=effects_data,
         caller_entities=caller_entities,
         Participant=Participant,

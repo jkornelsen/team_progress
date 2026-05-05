@@ -107,16 +107,17 @@ def resolve_anchor_id(role_name, role_entities):
     role_name: e.g. '[Subject]' or 'Target'
     role_entities: e.g. {'[Subject]': 17, 'Target': 18}
     """
+    if role_name == Participant.UNIVERSAL:
+        return GENERAL_ID
+    if role_name == Participant.BLUEPRINT:
+        return None
     return role_entities.get(role_name)
 
-def meets_det(factor, entity):
+def can_use_field(field, entity):
     """
-    Validation logic to see if a specific entity (Char/Loc/Item) 
-    fulfills a specific determinant's requirements.
+    Validation logic to see if the given entity (Char/Loc/Item) 
+    can be accessed using the given eventfield.
     """
-    if not entity or not factor.infield:
-        return False
-    field = factor.infield
     game_token = g.game_token
 
     # --- 1. CHILD TRAVERSAL (Item inside a Location/Character) ---
@@ -257,9 +258,12 @@ def apply_operation(current_val, mod_val, op):
         return sign * (1 + mod_val * ratio)
 
     if op == Operation.ROUND:
+        # Round to nearest X
         try:
-            return float(round(current_val, int(mod_val)))
-        except (ValueError, TypeError):
+            if mod_val == 0:
+                return current_val
+            return float(round(current_val / mod_val) * mod_val)
+        except (ValueError, TypeError, ZeroDivisionError):
             return float(round(current_val))
 
     if op == Operation.ADD:  return current_val + mod_val
@@ -570,7 +574,11 @@ def do_effect_change(eff, roll_total, role_entities):
     if not field_def:
         return
 
-    target_id = resolve_anchor_id(field_def.role, role_entities)
+    if field_def.field_mode not in [Participant.RATE_AMT, Participant.RATE_DUR]:
+        target_id = resolve_anchor_id(field_def.role, role_entities)
+        if target_id is None:
+            logger.warn(f"Could not resolve target role {field_def.role}")
+            return
     op = eff.op_application
 
     # Destination A: Attributes
@@ -611,7 +619,8 @@ def do_effect_change(eff, roll_total, role_entities):
                 current = recipe.rate_duration
                 new_dur = impact if op == Operation.ASSIGN else \
                     apply_operation(current, impact, op)
-                recipe.rate_duration = max(0.1, new_dur) # Safety clamp
+                # Truncate to integer and clamp at 1 second minimum
+                recipe.rate_duration = max(1, int(impact))
 
     db.session.commit()
 

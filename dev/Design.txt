@@ -4,46 +4,26 @@
 
 ---- functional ----
 
-idling such as red bars often stop
-    went to green bar rate or black bar configure
-    came back to overview
-    red and green had both stopped
-    some progress seemed to have been gained
-    log all stoppages either to server or game log
-
-logic_production.py", line 72, in can_perform_recipe
-    host_ent = Entity.query.get((game_token, host_id))
-    sqlalchemy.orm.exc.StaleDataError: UPDATE statement on table 'progress' expected to update 1 row(s); 0 were matched.
-    routes_play.py", line 767, in item_production_status
-    likely a concurrent update problem because progress had already stopped
-
-green bar rate rounded to 2 instead of 1.5
-    maybe it's rounding to nearest 1
-
-setting red bar qty in black bar reset didn't work
-    and setting red bar boost 1 qty gave null owner_id error
-setting red bar boost 1 duration goes to 0.1s
-
 preserve effects order
     up/down buttons
+
+sqlalchemy.orm.exc.ObjectDeletedError: Instance '<Progress at 0x134226688c0>' has been deleted, or its row is otherwise not present.
+    routes_play.py", line 767, in item_production_status
+    tick_all_active()
+    logic_progress.py", line 133, in tick_all_active
+    db.session.commit()
 
 ---- tightening and quality of life ----
 
 show calculated event effect values
-    Green Bar Rate     [Apply] hover:"Available after Roll/Calculate"
-    Green Bar Rate     ⚙️       hover:"Applied automatically by Roll/Calculate"
-        Base Speed Factor x 0.5 (line not shown for constants)
-        **5** -> 1 x 0.5 = **0.5**
-        **5** + 0.5 = **0.5** (for increasing/decreasing)
-        **5** -> **0.5** (for constants)
+    Base Speed Factor x 0.5 (line not shown for constants)
+    **5** -> 1 x 0.5 = **0.5**
+    **5** + 0.5 = **0.5** (for increasing/decreasing)
+    **5** -> **0.5** (for constants)
 add optional param to inner expr renderer that adds surrounding spaces
-recipe rate effects are not getting set to blueprint
-    one says subject, another says universal
 
 button to apply all effects for an event
     show only when more than one manually applied effect
-
-effect config calculation should default to "use value"
 
 make "used to produce" a unique list for e.g. Green Bar Unlocked
     show lowest required amount
@@ -53,6 +33,11 @@ producing 0 out of 0 requested is not a failure
 returning to subject when changing an attrib value is unpredictable
     best stay on the same page instead
 editing attribs is returning to owner rather than play attrib
+
+message "Counting elapsed time" on overlay
+    or maybe a flash message
+    can we determine amount of time elapsed?
+    maybe by grabbing the timestamp from the first progress record found
 
 show updated item quantities in locations like overview and sources do
 

@@ -86,7 +86,9 @@ def adjust_quantity(item_id, owner_id, delta, position=None, slot=None):
     """
     pile = get_or_create_pile(item_id, owner_id, position, slot)
 
-    logger.info(f"[QTY CHANGE] Item:{item_id} | Owner:{owner_id} | Delta:{delta} | Current:{pile.quantity}")
+    logger.debug(
+        f"[QTY CHANGE] Item:{item_id} | Owner:{owner_id}"
+        f" | Delta:{delta} | Current:{pile.quantity}")
     
     # Check Item limits if increasing
     if delta > 0:
