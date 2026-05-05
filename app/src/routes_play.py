@@ -635,15 +635,17 @@ def play_item(id):
 
     # Recipes where this item is a SOURCE (Ingredient)
     used_for_production = []
+    seen_ids = set()
     for source_link in item.as_ingredient:
         product = source_link.recipe.product
-        if product.id != id:
+        if product.id != id and product.id not in seen_ids:
             used_for_production.append({
                 'item': product,
                 'q_required': source_link.q_required,
                 'preserve': source_link.preserve,
                 'url_params': ctx.get_params()
             })
+            seen_ids.add(product.id)
 
     # Recipes where this item is a BYPRODUCT
     byproduct_of = []

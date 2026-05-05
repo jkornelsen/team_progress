@@ -36,6 +36,8 @@ def tick_all_active(messages_host_id=None):
     # --- PHASE 1: PREPARATION ---
     CHUNK_SIZE = 10
     work_items = []
+    max_catchup_time = 0
+
     for p in all_active_records:
         recipe = p.recipe
         if not recipe:
@@ -52,11 +54,15 @@ def tick_all_active(messages_host_id=None):
         new_batches = total_potential - p.batches_processed
         
         if new_batches > 0:
+            catchup_seconds = new_batches * recipe.rate_duration
+            max_catchup_time = max(max_catchup_time, catchup_seconds)
+
             work_items.append({
                 'progress': p,
                 'recipe': recipe,
                 'total_remaining': new_batches,
                 'chunk_size': math.ceil(new_batches / CHUNK_SIZE),
+                'catching_up': new_batches > 2,
                 'halt_reason': None,
                 'ctx': ContextIds(
                     owner_id=p.owner_id, 
@@ -85,7 +91,8 @@ def tick_all_active(messages_host_id=None):
                 item['recipe'], 
                 item['progress'].owner_id, 
                 item['ctx'], 
-                batches=to_do
+                batches=to_do,
+                allow_partial=item['catching_up']
             )
             
             # Update tracking
@@ -94,16 +101,21 @@ def tick_all_active(messages_host_id=None):
             
             if actual > 0:
                 any_work_done_this_wave = True
-            
-            # If it halted, record why
-            if reason:
+            elif reason:
+                # If it halted, record why
                 item['halt_reason'] = reason
 
         # Optimization: If the whole world is stuck, stop looping
         if not any_work_done_this_wave:
             break
 
-    # --- PHASE 3: CLEANUP & COMMITS ---
+    # --- PHASE 3: LOGGING & COMMITS ---
+    if max_catchup_time >= 600:
+        hours = int(max_catchup_time // 3600)
+        minutes = int((max_catchup_time % 3600) // 60)
+        time_str = f"{hours}h {minutes}m" if hours > 0 else f"{minutes}m"
+        add_message(f"Caught up after {time_str}")
+
     halt_messages = []
     for item in work_items:
         p = item['progress']

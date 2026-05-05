@@ -4,10 +4,6 @@
 
 ---- functional ----
 
-elapsed time
-    [03:41] Production of ⬜White Bar halted: Need More 🟪Violet Bar
-    [03:41] Production of 🟪Violet Bar halted: Need More 🟦Blue Bar
-
 sqlalchemy.orm.exc.ObjectDeletedError: Instance '<Progress at 0x134226688c0>' has been deleted, or its row is otherwise not present.
     routes_play.py", line 767, in item_production_status
     tick_all_active()
@@ -25,19 +21,11 @@ add optional param to inner expr renderer that adds surrounding spaces
 
 adding event factors with button at top is awkward
 
-make "used to produce" a unique list for e.g. Green Bar Unlocked
-    show lowest required amount
-
 producing 0 out of 0 requested is not a failure
 
 returning to subject when changing an attrib value is unpredictable
     best stay on the same page instead
 editing attribs is returning to owner rather than play attrib
-
-message "Counting elapsed time" on overlay
-    or maybe a flash message
-    can we determine amount of time elapsed?
-    maybe by grabbing the timestamp from the first progress record found
 
 show updated item quantities in locations like overview and sources do
 
@@ -48,6 +36,9 @@ prompt before overwriting another character action in progress
 win condition quantity min and max, like attribs for recipes
 or "at least" / "at most" toggle
 Fission Plant: no more than a certain amount of pollution
+
+sessions should be easier to connect to
+    maybe remember game token on client side
 
 ---- scenario ----
 

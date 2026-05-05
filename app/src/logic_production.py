@@ -229,7 +229,8 @@ def resolve_recipe_sources(host_id, recipe, ctx):
 
     return resolved_sources
 
-def execute_production(host_id, recipe, target_owner_id, ctx, batches=1):
+def execute_production(
+        host_id, recipe, target_owner_id, ctx, batches=1, allow_partial=False):
     """Executes production batches and applies changes."""
     logger.debug(
         f"execute_production() Host:{host_id} | Product:{recipe.product_id}"
@@ -238,11 +239,41 @@ def execute_production(host_id, recipe, target_owner_id, ctx, batches=1):
     if batches <= 0:
         return 0, None
 
-    halt_reason = None
+    # Validate if we can perform at least ONE
     possible, reason = can_perform_recipe(
-        host_id, recipe, target_owner_id, ctx, batches)
+        host_id, recipe, target_owner_id, ctx, batches=1)
     if not possible:
         return 0, reason
+
+    # Calculate the real ceiling based on current ingredients
+    if allow_partial and batches > 1:
+        resolved = resolve_recipe_sources(host_id, recipe, ctx)
+        max_possible = batches
+        
+        for res in resolved:
+            source_def = res['source_def']
+            if not source_def.preserve and source_def.q_required > 0:
+                # How many batches can this specific ingredient support?
+                limit = math.floor(res['total_available'] / source_def.q_required)
+                if limit < max_possible:
+                    max_possible = limit
+        
+        # Also check Output Limit (q_limit)
+        if recipe.rate_amount > 0 and recipe.product.q_limit > 0:
+            current_qty = get_accessible_quantity(recipe.product_id, target_owner_id)
+            space_left = recipe.product.q_limit - current_qty
+            limit = math.floor(space_left / recipe.rate_amount)
+            if limit < max_possible:
+                max_possible = limit
+
+        batches = max(1, max_possible)
+
+    # Final verification for the (potentially adjusted) batch count
+    if batches > 1:
+        possible, reason = can_perform_recipe(
+            host_id, recipe, target_owner_id, ctx, batches)
+        if not possible:
+            return 0, reason
 
     # Consume
     resolved = resolve_recipe_sources(host_id, recipe, ctx)
