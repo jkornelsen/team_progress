@@ -190,15 +190,13 @@
                     {% endif %}
                 </form>
                 {% if not fields_not_met %}
+                    {% set roll_text = ' calculate' if event.outcome_type == 'determined'
+                        else 'oll for Outcome' %}
+                    {% set roll_label = hk.bracket('r') ~ roll_text %}
                     <div class="spacious-top text-center">
-                        <button id="roll-btn" class="go-button" style="width: 100%; font-size: 1.2em;">
-                            {% if event.outcome_type == 'determined' %}
-                            [R] Calculate
-                            {% else %}
-                            [R]oll for Outcome
-                            {% endif %}
-                        </button>
-                        <script>linkForKey["r"] = "#roll-btn";</script>
+                        <!-- ID submit-roll -->
+                        {{ hk.submit('roll', link_letters,
+                            label=roll_label, forced_key='r', showLetter=False) }}
                     </div>
                 {% else %}
                     <div style="display: flex; justify-content: center; width: 100%; margin: 10px 0;">
@@ -221,7 +219,23 @@
                 
             {% if event.effects %}
             <section id="effects-section" class="outer-border {% if not effects_data %}hidden{% endif %}">
-                <h3>Effects</h3>
+                <div class="flex-between align-center">
+                    <h3>Effects</h3>
+                    {% set roll_title = 'Calculate' if event.outcome_type == 'determined' else 'Roll' %}
+                    {% set manual_count = effects_data | rejectattr('obj.auto_apply') | list | length %}
+                    {% if manual_count > 1 %}
+                        <div id="apply-all-container">
+                            <button type="button"
+                                id="apply-all-btn"
+                                class="go-button btn-sm" 
+                                disabled
+                                title="Available after pressing {{ roll_title }}"
+                                onclick="applyAllManual()">
+                                — Apply All —
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
                 <div id="effects-list">
                     {% for item in effects_data %}
                         {% set eff = item.obj %}
@@ -235,19 +249,18 @@
                                     <span>{{ eff.outfield.get_field_name() }}</span>
                                 </div>
 
-                                {% set roll_label = 'Calculate' if event.outcome_type == 'determined' else 'Roll' %}
                                 <div class="effect-action-area">
                                     {% if not eff.auto_apply %}
                                         <button type="button" 
                                             class="btn-sm go-button apply-eff-btn" 
                                             disabled
-                                            title="Available after pressing {{ roll_label }}"
+                                            title="Available after pressing {{ roll_title }}"
                                             onclick="applySingleEffect({{ eff.id }})">
                                             Apply
                                         </button>
                                         <span class="check-mark hidden text-success">✓ Changed</span>
                                     {% else %}
-                                        <span class="auto-gear" title="Automatically applied by {{ roll_label }} button">⚙️</span>
+                                        <span class="auto-gear" title="Automatically applied by {{ roll_title }} button">⚙️</span>
                                     {% endif %}
                                 </div>
                             </div>
@@ -275,7 +288,7 @@
     const eventId = {{ event.id }};
 
     const diffSelect = document.getElementById('difficulty-select');
-    const rollBtn = document.getElementById('roll-btn');
+    const rollBtn = document.getElementById('submit-roll');
 
     let lastRollValue = 0;
 
@@ -427,7 +440,7 @@
             lastRollValue = data.result_value;
             document.getElementById('outcome-text').innerHTML = data.display;
 
-            // Update Effects Visuals
+            // Enable individual buttons
             document.querySelectorAll('.effect-row').forEach(row => {
                 const isAuto = row.dataset.auto === "true";
                 const btn = row.querySelector('.apply-eff-btn');
@@ -440,12 +453,54 @@
                     btn.disabled = false;
                     btn.title = "Apply this change";
                 }
-                
-                // Show the calculation (Actual numbers depend on your specific logic, 
-                // here is a simplified version)
                 preview.classList.remove('hidden');
             });
+
+            // Enable "Apply All" button if it exists
+            const applyAllBtn = document.getElementById('apply-all-btn');
+            const applyAllContainer = document.getElementById('apply-all-container');
+            if (applyAllBtn) {
+                applyAllBtn.disabled = false;
+                applyAllBtn.title = "Do all apply buttons in order";
+            }
         };
+    }
+
+    /**
+     * Iterates through all visible manual apply buttons and triggers them
+     */
+    async function applyAllManual() {
+        const applyAllBtn = document.getElementById('apply-all-btn');
+        if (!applyAllBtn) return;
+        const buttons = document.querySelectorAll('.apply-eff-btn:not(.hidden):not(:disabled)');
+        
+        applyAllBtn.disabled = true;
+
+        // Trigger buttons in sequence
+        for (const btn of buttons) {
+            btn.click();
+            
+            // Brief delay to allow the UI to feel responsive between updates
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        applyAllBtn.closest('#apply-all-container').classList.add('hidden');
+    }
+
+    /**
+     * Sends a request to apply a manual effect
+     */
+    async function applySingleEffect(factorId) {
+        const row = document.getElementById(`eff-row-${factorId}`);
+        const fd = getRoleIDs();
+        fd.append('roll_total', lastRollValue);
+
+        const success = await apiPost(
+            `/event/apply-effect/${factorId}`, fd, "Could not apply");
+        if (success) {
+            row.querySelector('.apply-eff-btn').classList.add('hidden');
+            row.querySelector('.check-mark').classList.remove('hidden');
+            row.style.opacity = "0.7";
+        }
     }
 
     /**
@@ -481,23 +536,6 @@
         });
     }
 
-    /**
-     * Sends a request to apply a manual effect
-     */
-    async function applySingleEffect(factorId) {
-        const row = document.getElementById(`eff-row-${factorId}`);
-        const fd = getRoleIDs();
-        fd.append('roll_total', lastRollValue);
-
-        const success = await apiPost(
-            `/event/apply-effect/${factorId}`, fd, "Could not apply");
-        if (success) {
-            row.querySelector('.apply-eff-btn').classList.add('hidden');
-            row.querySelector('.check-mark').classList.remove('hidden');
-            row.style.opacity = "0.7";
-        }
-    }
-
     document.querySelectorAll('.participant-trigger').forEach(el => {
         el.addEventListener('change', () => {
             refreshModifiers();
@@ -512,38 +550,43 @@
 </script>
 
 <style>
-    .outcome-text b {
-        font-size: 1.4em;
-        color: var(--accent);
-        margin-left: 5px;
-    }
+#submit-roll {
+    width: 100%;
+    font-size: 1.2em;
+    margin-top: 10px;
+}
+.outcome-text b {
+    font-size: 1.4em;
+    color: var(--accent);
+    margin-left: 5px;
+}
 
-    .outcome-text small {
-        display: block;
-        margin-top: 5px;
-        color: var(--text-dim);
-        font-family: monospace;
-        font-size: 0.9em;
-    }
+.outcome-text small {
+    display: block;
+    margin-top: 5px;
+    color: var(--text-dim);
+    font-family: monospace;
+    font-size: 0.9em;
+}
 
-    .outcome-total {
-        font-weight: bold;
-        font-size: 1.2em;
-        color: #1a1a1a;
-        background-color: #fff9c4;
-        padding: 2px 8px;
-        border-radius: 4px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        display: inline-block; 
-        margin-left: 4px;
-    }
+.outcome-total {
+    font-weight: bold;
+    font-size: 1.2em;
+    color: #1a1a1a;
+    background-color: #fff9c4;
+    padding: 2px 8px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: inline-block; 
+    margin-left: 4px;
+}
 
-    .modifier-list { list-style: none; padding: 0; }
-    .modifier-list li { margin-bottom: 5px; border-bottom: 1px solid #333; padding-bottom: 3px; }
-    .outcome-placeholder { padding: 40px 20px; color: var(--text-dim); font-style: italic; border: 2px dashed #444; }
-    .active-result { border: 2px solid var(--accent); background: #111; color: white; font-style: normal; font-size: 1.2em; font-weight: bold; }
-    .outcome-final { animation: fadeIn 0.5s; }
-    .dim-hr { border: 0; border-top: 1px solid #333; margin: 15px 0; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+.modifier-list { list-style: none; padding: 0; }
+.modifier-list li { margin-bottom: 5px; border-bottom: 1px solid #333; padding-bottom: 3px; }
+.outcome-placeholder { padding: 40px 20px; color: var(--text-dim); font-style: italic; border: 2px dashed #444; }
+.active-result { border: 2px solid var(--accent); background: #111; color: white; font-style: normal; font-size: 1.2em; font-weight: bold; }
+.outcome-final { animation: fadeIn 0.5s; }
+.dim-hr { border: 0; border-top: 1px solid #333; margin: 15px 0; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 {% endblock %}

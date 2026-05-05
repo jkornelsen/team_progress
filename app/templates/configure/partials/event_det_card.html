@@ -22,7 +22,7 @@
             <button type="button" class="btn-sm btn-det-down"
                 onclick="moveFactor(this, 1)">↓</button>
             <button type="button" class="btn-sm dangerous-button"
-                onclick="this.closest('.factor-card').remove(); renumberLabels();">×</button>
+                onclick="this.closest('.factor-card').remove(); renumberLabels('det');">×</button>
         </div>
     </div>
 
@@ -72,7 +72,7 @@
                                data-input-constant
                                value="{{ factor.val_transform if factor else 1.0 }}" 
                                step="any" 
-                               style="max-width: 8ch;">
+                               style="max-width: 12ch;">
                     </div>
 
                     <span style="font-size: 2em; order: 4;">)</span>

@@ -206,7 +206,7 @@
         list.insertAdjacentHTML('beforeend', html);
         emptyMsg.classList.add('hidden');
 
-        renumberLabels();
+        renumberLabels(usage);
 
         const newCard = list.lastElementChild;
 
@@ -224,7 +224,7 @@
         syncOuterExprState(newCard);
     }
 
-    function renumberLabels(usage = 'det') {
+    function renumberLabels(usage) {
         const cards = document.querySelectorAll(`#${usage}-list .factor-card`);
         const total = cards.length;
 
@@ -246,12 +246,14 @@
 
     function moveFactor(button, direction) {
         const card = button.closest('.factor-card');
+        const usage = card.closest('#det-list') ? 'det' : 'eff';
+
         if (direction === -1 && card.previousElementSibling) {
             card.parentNode.insertBefore(card, card.previousElementSibling);
         } else if (direction === 1 && card.nextElementSibling) {
             card.parentNode.insertBefore(card.nextElementSibling, card);
         }
-        renumberLabels();
+        renumberLabels(usage);
     }
 
     function syncOutcomeTypeState() {

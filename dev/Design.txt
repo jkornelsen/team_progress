@@ -4,8 +4,9 @@
 
 ---- functional ----
 
-preserve effects order
-    up/down buttons
+elapsed time
+    [03:41] Production of ⬜White Bar halted: Need More 🟪Violet Bar
+    [03:41] Production of 🟪Violet Bar halted: Need More 🟦Blue Bar
 
 sqlalchemy.orm.exc.ObjectDeletedError: Instance '<Progress at 0x134226688c0>' has been deleted, or its row is otherwise not present.
     routes_play.py", line 767, in item_production_status
@@ -22,8 +23,7 @@ show calculated event effect values
     **5** -> **0.5** (for constants)
 add optional param to inner expr renderer that adds surrounding spaces
 
-button to apply all effects for an event
-    show only when more than one manually applied effect
+adding event factors with button at top is awkward
 
 make "used to produce" a unique list for e.g. Green Bar Unlocked
     show lowest required amount

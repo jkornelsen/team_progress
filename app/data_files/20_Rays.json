@@ -1749,7 +1749,7 @@
             {
                 "id": 51,
                 "name": "Recipe Durations",
-                "description": "After choosing the BSF, set the [Duration Multiplier](/play/attrib/53/subject/41). \r\n\r\nThen press *Calculate* and use the *Apply* buttons. For durations under 2 seconds, you may prefer to set the recipe to *Instant* instead.",
+                "description": "After choosing the BSF, set the [Duration Multiplier](/play/attrib/53/subject/41). \r\n\r\nThen press *Calculate* and use the *Apply* buttons.",
                 "attribs": [],
                 "abilities": [],
                 "toplevel": false,
@@ -1772,7 +1772,111 @@
                             "recipe_id": null
                         },
                         "outfield": {
-                            "role": "universal",
+                            "role": "blueprint",
+                            "field_mode": "rate_dur",
+                            "child_of_anchor": false,
+                            "item_id": 15,
+                            "attrib_id": null,
+                            "recipe_id": 65
+                        },
+                        "op_application": ":=",
+                        "op_transform": "*",
+                        "val_transform": 12.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": null,
+                            "attrib_id": 53,
+                            "recipe_id": null
+                        },
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "rate_dur",
+                            "child_of_anchor": false,
+                            "item_id": 21,
+                            "attrib_id": null,
+                            "recipe_id": 43
+                        },
+                        "op_application": ":=",
+                        "op_transform": "*",
+                        "val_transform": 12.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": null,
+                            "attrib_id": 53,
+                            "recipe_id": null
+                        },
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "rate_dur",
+                            "child_of_anchor": false,
+                            "item_id": 2,
+                            "attrib_id": null,
+                            "recipe_id": 7
+                        },
+                        "op_application": ":=",
+                        "op_transform": "*",
+                        "val_transform": 12.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": null,
+                            "attrib_id": 53,
+                            "recipe_id": null
+                        },
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "rate_dur",
+                            "child_of_anchor": false,
+                            "item_id": 25,
+                            "attrib_id": null,
+                            "recipe_id": 48
+                        },
+                        "op_application": ":=",
+                        "op_transform": "*",
+                        "val_transform": 12.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": null,
+                            "attrib_id": 53,
+                            "recipe_id": null
+                        },
+                        "outfield": {
+                            "role": "blueprint",
                             "field_mode": "rate_dur",
                             "child_of_anchor": false,
                             "item_id": 3,
@@ -1782,6 +1886,448 @@
                         "op_application": ":=",
                         "op_transform": "*",
                         "val_transform": 12.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": null,
+                            "attrib_id": 53,
+                            "recipe_id": null
+                        },
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "rate_dur",
+                            "child_of_anchor": false,
+                            "item_id": 9,
+                            "attrib_id": null,
+                            "recipe_id": 59
+                        },
+                        "op_application": ":=",
+                        "op_transform": "*",
+                        "val_transform": 12.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": null,
+                            "attrib_id": 53,
+                            "recipe_id": null
+                        },
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "rate_dur",
+                            "child_of_anchor": false,
+                            "item_id": 20,
+                            "attrib_id": null,
+                            "recipe_id": 37
+                        },
+                        "op_application": ":=",
+                        "op_transform": "*",
+                        "val_transform": 12.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": null,
+                            "attrib_id": 53,
+                            "recipe_id": null
+                        },
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "rate_dur",
+                            "child_of_anchor": false,
+                            "item_id": 33,
+                            "attrib_id": null,
+                            "recipe_id": 38
+                        },
+                        "op_application": ":=",
+                        "op_transform": "*",
+                        "val_transform": 14.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": null,
+                            "attrib_id": 53,
+                            "recipe_id": null
+                        },
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "rate_dur",
+                            "child_of_anchor": false,
+                            "item_id": 4,
+                            "attrib_id": null,
+                            "recipe_id": 4
+                        },
+                        "op_application": ":=",
+                        "op_transform": "*",
+                        "val_transform": 14.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": null,
+                            "attrib_id": 53,
+                            "recipe_id": null
+                        },
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "rate_dur",
+                            "child_of_anchor": false,
+                            "item_id": 22,
+                            "attrib_id": null,
+                            "recipe_id": 45
+                        },
+                        "op_application": ":=",
+                        "op_transform": "*",
+                        "val_transform": 14.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": null,
+                            "attrib_id": 53,
+                            "recipe_id": null
+                        },
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "rate_dur",
+                            "child_of_anchor": false,
+                            "item_id": 26,
+                            "attrib_id": null,
+                            "recipe_id": 33
+                        },
+                        "op_application": ":=",
+                        "op_transform": "*",
+                        "val_transform": 15.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": null,
+                            "attrib_id": 53,
+                            "recipe_id": null
+                        },
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "rate_dur",
+                            "child_of_anchor": false,
+                            "item_id": 37,
+                            "attrib_id": null,
+                            "recipe_id": 31
+                        },
+                        "op_application": ":=",
+                        "op_transform": "*",
+                        "val_transform": 15.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": null,
+                            "attrib_id": 53,
+                            "recipe_id": null
+                        },
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "rate_dur",
+                            "child_of_anchor": false,
+                            "item_id": 23,
+                            "attrib_id": null,
+                            "recipe_id": 42
+                        },
+                        "op_application": ":=",
+                        "op_transform": "*",
+                        "val_transform": 15.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": null,
+                            "attrib_id": 53,
+                            "recipe_id": null
+                        },
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "rate_dur",
+                            "child_of_anchor": false,
+                            "item_id": 19,
+                            "attrib_id": null,
+                            "recipe_id": 47
+                        },
+                        "op_application": ":=",
+                        "op_transform": "*",
+                        "val_transform": 15.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": null,
+                            "attrib_id": 53,
+                            "recipe_id": null
+                        },
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "rate_dur",
+                            "child_of_anchor": false,
+                            "item_id": 17,
+                            "attrib_id": null,
+                            "recipe_id": 46
+                        },
+                        "op_application": ":=",
+                        "op_transform": "*",
+                        "val_transform": 15.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": null,
+                            "attrib_id": 53,
+                            "recipe_id": null
+                        },
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "rate_dur",
+                            "child_of_anchor": false,
+                            "item_id": 28,
+                            "attrib_id": null,
+                            "recipe_id": 51
+                        },
+                        "op_application": ":=",
+                        "op_transform": "*",
+                        "val_transform": 10.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": null,
+                            "attrib_id": 53,
+                            "recipe_id": null
+                        },
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "rate_dur",
+                            "child_of_anchor": false,
+                            "item_id": 38,
+                            "attrib_id": null,
+                            "recipe_id": 49
+                        },
+                        "op_application": ":=",
+                        "op_transform": "*",
+                        "val_transform": 10.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": null,
+                            "attrib_id": 53,
+                            "recipe_id": null
+                        },
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "rate_dur",
+                            "child_of_anchor": false,
+                            "item_id": 40,
+                            "attrib_id": null,
+                            "recipe_id": 50
+                        },
+                        "op_application": ":=",
+                        "op_transform": "*",
+                        "val_transform": 15.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": null,
+                            "attrib_id": 53,
+                            "recipe_id": null
+                        },
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "rate_dur",
+                            "child_of_anchor": false,
+                            "item_id": 27,
+                            "attrib_id": null,
+                            "recipe_id": 54
+                        },
+                        "op_application": ":=",
+                        "op_transform": "*",
+                        "val_transform": 300.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": null,
+                            "attrib_id": 53,
+                            "recipe_id": null
+                        },
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "rate_dur",
+                            "child_of_anchor": false,
+                            "item_id": 32,
+                            "attrib_id": null,
+                            "recipe_id": 53
+                        },
+                        "op_application": ":=",
+                        "op_transform": "*",
+                        "val_transform": 180.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": null,
+                            "attrib_id": 53,
+                            "recipe_id": null
+                        },
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "rate_dur",
+                            "child_of_anchor": false,
+                            "item_id": 30,
+                            "attrib_id": null,
+                            "recipe_id": 52
+                        },
+                        "op_application": ":=",
+                        "op_transform": "*",
+                        "val_transform": 600.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": null,
+                            "attrib_id": 53,
+                            "recipe_id": null
+                        },
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "rate_dur",
+                            "child_of_anchor": false,
+                            "item_id": 5,
+                            "attrib_id": null,
+                            "recipe_id": 55
+                        },
+                        "op_application": ":=",
+                        "op_transform": "*",
+                        "val_transform": 120.0,
                         "val_required": 1.0,
                         "outcome_success": "always",
                         "auto_apply": false
@@ -1994,16 +2540,17 @@
             {
                 "id": 56,
                 "name": "Solar Rates",
-                "description": "For bar recipes that draw from solar energy.",
+                "description": "For bar recipes that draw from solar energy, along with elements.",
                 "attribs": [],
                 "abilities": [],
                 "toplevel": false,
                 "outcome_type": "determined",
                 "roller_type": null,
                 "numeric_range": null,
-                "single_number": 100.0,
+                "single_number": 0.0,
                 "selection_strings": null,
-                "determinants": [
+                "determinants": [],
+                "effects": [
                     {
                         "label": "",
                         "get_val_from": "infield",
@@ -2015,20 +2562,6 @@
                             "attrib_id": null,
                             "recipe_id": null
                         },
-                        "outfield": null,
-                        "op_application": "*",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0,
-                        "outcome_success": "always",
-                        "auto_apply": false
-                    }
-                ],
-                "effects": [
-                    {
-                        "label": "",
-                        "get_val_from": "outcome",
-                        "infield": null,
                         "outfield": {
                             "role": "blueprint",
                             "field_mode": "rate_amt",
@@ -2038,16 +2571,23 @@
                             "recipe_id": 56
                         },
                         "op_application": ":=",
-                        "op_transform": "",
-                        "val_transform": 1.0,
+                        "op_transform": "*",
+                        "val_transform": 100.0,
                         "val_required": 1.0,
                         "outcome_success": "always",
                         "auto_apply": false
                     },
                     {
                         "label": "",
-                        "get_val_from": "outcome",
-                        "infield": null,
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "universal",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 41,
+                            "attrib_id": null,
+                            "recipe_id": null
+                        },
                         "outfield": {
                             "role": "blueprint",
                             "field_mode": "rate_amt",
@@ -2057,16 +2597,23 @@
                             "recipe_id": 58
                         },
                         "op_application": ":=",
-                        "op_transform": "",
-                        "val_transform": 1.0,
+                        "op_transform": "*",
+                        "val_transform": 100.0,
                         "val_required": 1.0,
                         "outcome_success": "always",
                         "auto_apply": false
                     },
                     {
                         "label": "",
-                        "get_val_from": "outcome",
-                        "infield": null,
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "universal",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 41,
+                            "attrib_id": null,
+                            "recipe_id": null
+                        },
                         "outfield": {
                             "role": "blueprint",
                             "field_mode": "rate_amt",
@@ -2076,7 +2623,85 @@
                             "recipe_id": 57
                         },
                         "op_application": ":=",
-                        "op_transform": "",
+                        "op_transform": "*",
+                        "val_transform": 100.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "universal",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 41,
+                            "attrib_id": null,
+                            "recipe_id": null
+                        },
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "rate_amt",
+                            "child_of_anchor": false,
+                            "item_id": 12,
+                            "attrib_id": null,
+                            "recipe_id": 62
+                        },
+                        "op_application": ":=",
+                        "op_transform": "*",
+                        "val_transform": 4.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "universal",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 41,
+                            "attrib_id": null,
+                            "recipe_id": null
+                        },
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "rate_amt",
+                            "child_of_anchor": false,
+                            "item_id": 11,
+                            "attrib_id": null,
+                            "recipe_id": 61
+                        },
+                        "op_application": ":=",
+                        "op_transform": "*",
+                        "val_transform": 1.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "universal",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 41,
+                            "attrib_id": null,
+                            "recipe_id": null
+                        },
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "rate_amt",
+                            "child_of_anchor": false,
+                            "item_id": 29,
+                            "attrib_id": null,
+                            "recipe_id": 60
+                        },
+                        "op_application": ":=",
+                        "op_transform": "*",
                         "val_transform": 1.0,
                         "val_required": 1.0,
                         "outcome_success": "always",

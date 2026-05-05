@@ -8,8 +8,15 @@
             <input type="text" name="effs[{{ index }}][label]" value="{{ factor.label if factor else '' }}" placeholder="Effect Label">
             
         </div>
-        <button type="button" class="btn-sm dangerous-button"
-            onclick="this.closest('.factor-card').remove(); renumberLabels('eff');">×</button>
+        <!-- Move/Delete buttons -->
+        <div class="flex-row gap-10">
+            <button type="button" class="btn-sm btn-det-up"
+                onclick="moveFactor(this, -1)">↑</button>
+            <button type="button" class="btn-sm btn-det-down"
+                onclick="moveFactor(this, 1)">↓</button>
+            <button type="button" class="btn-sm dangerous-button"
+                onclick="this.closest('.factor-card').remove(); renumberLabels('eff');">×</button>
+        </div>
     </div>
 
     <div class="card-body">
@@ -143,7 +150,7 @@
                                data-input-constant
                                value="{{ factor.val_transform if factor else 1.0 }}" 
                                step="any" 
-                               style="max-width: 8ch;">
+                               style="max-width: 12ch;">
                     </div>
 
                     <span style="font-size: 2em; order: 4;">)</span>
