@@ -36,7 +36,7 @@ def validate_requirements(game_token):
             ).all()
             current_qty = sum(p.quantity for p in piles)
             is_fulfilled = current_qty >= r.quantity
-            desc = f"Place {format_num(r.quantity)} {maskable_name(r.item)}" \
+            desc = f"{format_num(r.quantity)} {maskable_name(r.item)}" \
                    f" at {maskable_name(r.loc)}"
 
         # Condition 3: Item owned by a Character

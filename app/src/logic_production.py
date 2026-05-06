@@ -37,17 +37,20 @@ def find_best_host(recipe, owner_id, ctx):
     if product.storage_type == StorageType.UNIVERSAL:
         # Priority A: General Host (System)
         # We use this if ingredients/stats are all in the global bank.
-        if can_perform_recipe(GENERAL_ID, recipe, owner_id, ctx)[0]:
+        if can_perform_recipe(
+                GENERAL_ID, recipe, owner_id, ctx, ignore_limit=True)[0]:
             return GENERAL_ID
 
         # Priority B: Character (Personal Trigger)
         # If the bank is missing ingredients, but the character has them.
-        if ctx.char_id and can_perform_recipe(ctx.char_id, recipe, owner_id, ctx)[0]:
+        if ctx.char_id and can_perform_recipe(
+                ctx.char_id, recipe, owner_id, ctx, ignore_limit=True)[0]:
             return ctx.char_id
 
         # Priority C: Location (Environment/Passive)
         # If no character is there.
-        if ctx.loc_id and can_perform_recipe(ctx.loc_id, recipe, owner_id, ctx)[0]:
+        if ctx.loc_id and can_perform_recipe(
+                ctx.loc_id, recipe, owner_id, ctx, ignore_limit=True)[0]:
             return ctx.loc_id
 
         # Fallback for UI (Error reporting)
@@ -58,7 +61,8 @@ def find_best_host(recipe, owner_id, ctx):
         return ctx.char_id
 
 def can_perform_recipe(
-        host_id, recipe, target_owner_id, ctx, batches=1, catching_up=False):
+        host_id, recipe, target_owner_id, ctx, batches=1,
+        catching_up=False, ignore_limit=False):
     """
     Validates if a host can perform a recipe. 
     Checks Storage limits, Ingredients, and Attributes.
@@ -77,7 +81,8 @@ def can_perform_recipe(
         host_pos = host_ent.position
 
     # 1. Output Limit
-    if recipe.rate_amount > 0 and recipe.product.q_limit > 0:
+    if not ignore_limit and recipe.rate_amount > 0 \
+            and recipe.product.q_limit > 0:
         query = Pile.query.filter_by(
             game_token=game_token,
             item_id=recipe.product_id,
@@ -309,7 +314,7 @@ def execute_production(
     game_token = g.game_token
     gain_qty = recipe.rate_amount * batches
     host_ent = Entity.query.get((game_token, host_id))
-    log_msg = f"{gain_qty} {recipe.product.name}"
+    log_msg = f"{gain_qty:g} {recipe.product.name}"
     if host_id == GENERAL_ID:
         host_info = "GENERAL/SYSTEM"
         log_msg = f"{log_msg} gained."

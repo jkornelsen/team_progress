@@ -472,7 +472,7 @@ def htmlify_filter(text):
         href = match.group(2).strip().rstrip('"').rstrip("'")
         if not href.startswith('/'):
             href = '/' + href
-        if not re.match(r'^/[a-zA-Z0-9/=?&_.-]*$', href):
+        if not re.match(r'^/[a-zA-Z0-9/=?&_.\-#]*$', href):
             logger.warning(f"Preventing link to '{href}'")
             return 'href="#"'
         return match.group(0)

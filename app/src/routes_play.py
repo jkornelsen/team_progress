@@ -261,7 +261,7 @@ def drop_item(id):
     item = Item.query.get((g.game_token, item_id))
     if success:
         db.session.commit()
-        add_message(f"{char.name} dropped {qty} {item.name}")
+        add_message(f"{char.name} dropped {qty:g} {item.name}")
         return '', HTTPStatus.NO_CONTENT
     return jsonify(
         {"message": f"Could not drop {item.name}."}
@@ -293,7 +293,7 @@ def pickup_item(id):
     item = Item.query.get((g.game_token, item_id))
     if success:
         db.session.commit()
-        add_message(f"{char.name} picked up {qty} {item.name}")
+        add_message(f"{char.name} picked up {qty:g} {item.name}")
         return '', HTTPStatus.NO_CONTENT
 
     return jsonify(
@@ -327,7 +327,7 @@ def give_item(id):
     item = Item.query.get((g.game_token, item_id))
     if success:
         db.session.commit()
-        add_message(f"{char.name} gave {qty} {item.name} to {target_char.name}")
+        add_message(f"{char.name} gave {qty:g} {item.name} to {target_char.name}")
         return '', HTTPStatus.NO_CONTENT
     return jsonify(
         {"message": "Could not transfer {item.name} to {target_char.name}."}
