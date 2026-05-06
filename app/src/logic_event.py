@@ -241,6 +241,123 @@ def calculate_determinants(event, role_entities):
         
     return modifiers
 
+def calculate_effects_targets(event, role_entities):
+    """
+    Returns a list of current and calculated values for the event's effects.
+    """
+    results = []
+    game_token = g.game_token
+    subject_id = resolve_anchor_id(Participant.SUBJECT, role_entities)
+
+    for eff in event.effects:
+        field_def = eff.outfield
+        if not field_def: continue
+
+        # --- 1. RESOLVE TARGET NAME & CURRENT VALUE (Existing Logic) ---
+        target_id = resolve_anchor_id(field_def.role, role_entities)
+        current_val = 0.0
+        target_name = ""
+        is_resolved = False
+
+        if field_def.field_mode in [Participant.RATE_AMT, Participant.RATE_DUR]:
+            is_resolved = True 
+            target_name = "📦"
+            current_val = get_entity_value(None, field_def)
+        elif target_id is not None:
+            is_resolved = True
+            current_val = get_entity_value(target_id, field_def, subject_id)
+            target_name = "🌐" if target_id == GENERAL_ID else \
+                          Entity.query.get((game_token, target_id)).name
+        else:
+            target_name = "(" + field_def.role + ")"
+            is_resolved = False
+
+        # --- 2. RESOLVE SOURCE DATA (Existing Logic) ---
+        source_name = ""
+        source_val = 0.0
+        
+        if eff.get_val_from == Participant.OUTCOME:
+            source_name = "Roll Result"
+        elif eff.get_val_from in (Participant.INFIELD, Participant.OUTFIELD):
+            field = eff.infield or eff.outfield
+            anchor_id = resolve_anchor_id(field.role, role_entities)
+            source_name = field.get_field_name()
+            if field.field_mode in [Participant.RATE_AMT, Participant.RATE_DUR] or anchor_id:
+                source_val = get_entity_value(anchor_id, field, subject_id)
+        else:
+            source_val = eff.val_transform
+
+        # --- 3. NEW: CALCULATE PRE-ROLL IMPACT ---
+        # If the source is known (not the roll), we calculate the math on the server now.
+        impact_value = None
+        is_known = False
+        if eff.get_val_from != Participant.OUTCOME:
+            is_known = True
+            impact_value = source_val
+            if eff.op_transform:
+                impact_value = apply_operation(impact_value, eff.val_transform, eff.op_transform)
+
+        results.append({
+            'effect_id': eff.id,
+            'target_name': target_name,
+            'current_value': current_val,
+            'is_resolved': is_resolved,
+            'source_name': source_name,
+            'source_value': source_val,
+            'impact_value': impact_value, # The result of the inner math
+            'is_known': is_known,         # Result is independent of dice
+            'op_app': eff.op_application,
+            'op_trans': eff.op_transform,
+            'val_trans': eff.val_transform,
+            'get_val_from': eff.get_val_from
+        })
+    return results
+
+def calculate_solved_effects(event, role_entities, roll_total):
+    """
+    Calculates the final outcome of every effect for previewing 
+    after a roll has occurred, but before it is applied.
+    """
+    results = []
+    game_token = g.game_token
+    subject_id = resolve_anchor_id(Participant.SUBJECT, role_entities)
+
+    for eff in event.effects:
+        # 1. Resolve Target Value
+        target_id = resolve_anchor_id(eff.outfield.role, role_entities)
+        current_val = 0.0
+        if eff.outfield.field_mode in [Participant.RATE_AMT, Participant.RATE_DUR]:
+             current_val = get_entity_value(None, eff.outfield)
+        elif target_id is not None:
+            current_val = get_entity_value(target_id, eff.outfield, subject_id)
+
+        # 2. Calculate the "Impact" (The 'From' side)
+        if eff.get_val_from == Participant.OUTCOME:
+            impact = roll_total
+        elif eff.get_val_from in (Participant.INFIELD, Participant.OUTFIELD):
+            source_field = eff.infield or eff.outfield
+            anchor_id = resolve_anchor_id(source_field.role, role_entities)
+            impact = get_entity_value(anchor_id, source_field, subject_id)
+        else:
+            impact = eff.val_transform
+
+        # Apply inner transform (e.g. Round, Softcap)
+        if eff.op_transform:
+            impact = apply_operation(impact, eff.val_transform, eff.op_transform)
+
+        # 3. Calculate Final Result (The 'To' side)
+        if eff.op_application == Operation.ASSIGN:
+            final_val = impact
+        else:
+            final_val = apply_operation(current_val, impact, eff.op_application)
+
+        results.append({
+            'effect_id': eff.id,
+            'impact_value': impact,
+            'final_value': final_val
+        })
+    return results
+
 def apply_operation(current_val, mod_val, op):
     """Applies the specific operation and returns the new value."""
     if op == Operation.SOFTCAP:

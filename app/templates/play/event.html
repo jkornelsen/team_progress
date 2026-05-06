@@ -242,6 +242,10 @@
                         <div class="effect-row spacious-bottom" 
                              id="eff-row-{{ eff.id }}" 
                              data-role="{{ item.target_role }}"
+                             data-auto="{{ 'true' if eff.auto_apply else 'false' }}"
+                             data-get-val-from="{{ eff.get_val_from }}"
+                             data-op-trans="{{ eff.op_transform or '' }}"
+                             data-val-trans="{{ eff.val_transform }}"
                              data-auto="{{ 'true' if eff.auto_apply else 'false' }}">
                             <div class="flex-between align-center">
                                 <div>
@@ -265,11 +269,19 @@
                                 </div>
                             </div>
 
-                            <div class="formula-box label-like" style="padding-left: 15px;">
-                                <span class="formula-text">{{ item.formula }}</span>
-                                <span class="preview-calculation hidden">
-                                    (<span class="old-val"></span> ➔ <span class="new-val text-success"></span>)
-                                </span>
+                            <div class="formula-box label-like" style="padding-left: 15px; line-height: 1.2;">
+                                <!-- Line 2: Source Logic Description -->
+                                <div class="source-logic-description text-dim"></div>
+                                
+                                <!-- Line 3: The Equation -->
+                                <div class="preview-calculation">
+                                    <span class="current-value-display text-accent" style="font-weight:bold;"></span>
+                                    <span class="op-display" style="margin: 0 4px;"></span>
+                                    <span class="equation-display"></span>
+                                    <span class="impact-result hidden">
+                                        = <span class="new-val text-success" style="font-weight:bold;"></span>
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     {% endfor %}
@@ -292,98 +304,6 @@
 
     let lastRollValue = 0;
 
-    /**
-     * Fetches calculated modifiers from the server and updates the UI
-     */
-    async function refreshModifiers() {
-        const previewDiv = document.getElementById('modifier-preview');
-        
-        // Get the data
-        const fd = getRoleIDs();
-        const url = `/event/preview/${eventId}`;
-        const data = await apiPost(url, fd, "Could not load modifiers");
-        if (!data) return;
-
-        // Render the results
-        const modifiers = data;
-        if (modifiers.length === 0) {
-            previewDiv.innerHTML = '<span class="text-dim">No modifiers applied.</span>';
-            return;
-        }
-
-        let allRequirementsMet = true;
-        let html = '<ul class="modifier-list" style="list-style: none; padding: 0;">';
-
-        modifiers.forEach(m => {
-            const labelHtml = (m.label && m.label.trim() !== "") 
-                ? `<span class="">${m.label}:</span>` 
-                : "";
-            const displayVal = Math.round(Math.abs(m.value) * 100) / 100;
-            const displayOp = OP_MAP[m.op] || m.op;
-            const isComparison = COMPARISON_OPS.includes(m.op);
-            const hasInner = (m.breakdown !== m.value.toString());
-            const innerHtml = hasInner ? `<small class="text-dim">[${m.breakdown}]</small>` : "";
-
-            let contentHtml = "";
-
-            if (isComparison) {
-                // FORMAT: Source Field (Breakdown) >= RequiredValue
-                // We use the 'value' to determine if the condition is currently met for coloring
-                const isMet = eval(`${m.value} ${m.op.replace('==', '===')} ${m.val_required}`);
-                if (!isMet) allRequirementsMet = false;
-                const colorClass = isMet ? 'text-success' : 'text-danger';
-
-                let displayFormula;
-                if (m.val_required === 1 && (m.op === '>=' || m.op === '==')) {
-                    const rawInner = hasInner ? ` (${m.breakdown})` : ""; 
-                    displayFormula = `
-                        <span class="${colorClass}" style="margin: 0 4px;">${isMet ? "Has" : "Needs"}</span>
-                        <small class="text-dim">[${displayVal}${rawInner} ${displayOp} ${m.val_required}]</small>
-                    `;
-                } else {
-                    displayFormula = `
-                        <span class="${colorClass}" style="margin: 0 4px;">${displayVal}</span>
-                        ${innerHtml}
-                        <strong class="${colorClass}">${displayOp} ${m.val_required}</strong>
-                    `;
-                }
-
-                contentHtml = `
-                    <strong>${m.source_name}</strong>
-                    <div style="padding-left: 1.5em;">
-                        <span class="text-dim">${m.field_name}:</span> 
-                        ${displayFormula}
-                    </div>
-                `;
-            } else {
-                // FORMAT: Source Field: +Value (Breakdown)
-                const colorClass = m.value >= 0 ? 'text-success' : 'text-danger';
-                contentHtml = `
-                    <strong>${m.source_name}</strong>
-                    <div style="padding-left: 1.5em;">
-                        <span class="text-dim">${m.field_name}:</span> 
-                        <strong class="${colorClass}" style="margin: 0 4px;">${displayOp} ${displayVal}</strong>
-                        ${innerHtml}
-                    </div>
-                `;
-            }
-
-            html += `
-                <li class="spacious-bottom" style="display: block;">
-                    ${labelHtml} ${contentHtml}
-                </li>`;
-        });
-        html += '</ul>';
-        previewDiv.innerHTML = html;
-
-        // DISABLE ROLL IF REQUIREMENTS NOT MET
-        if (rollBtn) {
-            rollBtn.disabled = !allRequirementsMet;
-            rollBtn.style.opacity = allRequirementsMet ? "1" : "0.5";
-            rollBtn.title = allRequirementsMet ? "" : "Requirements not met.";
-        }
-    }
-
     // Gather selected IDs from the dropdowns
     function getRoleIDs() {
         const ROLE_SUFF = "{{ Participant.FORM_SUFFIX }}";
@@ -396,6 +316,167 @@
             }
         });
         return fd;
+    }
+
+    /**
+     * Formatting helper for Line 2 (Logic) and Line 3 (Numbers).
+     * Uses functional notation for Round/SoftCap, binary for others.
+     */
+    function formatImpactExpression(source, constant, op) {
+        if (!op || op === '{{ Operation.CONST }}') return source;
+
+        const opSymbol = OP_MAP[op] || op;
+        const isFunctional = (op === '{{ Operation.ROUND }}' || op === '{{ Operation.SOFTCAP }}');
+
+        if (isFunctional) {
+            return `${opSymbol}(${source}, ${constant})`;
+        } else {
+            return `(${source} ${opSymbol} ${constant})`;
+        }
+    }
+
+    /**
+     * Fetches calculated modifiers from the server and updates the UI
+     */
+    async function refreshModifiers() {
+        const previewDiv = document.getElementById('modifier-preview');
+        const fd = getRoleIDs();
+        const url = `/event/preview/${eventId}`;
+        const data = await apiPost(url, fd, "Could not load modifiers");
+        if (!data) return;
+
+        // --- Handle Determinants (Left Column) ---
+        let allRequirementsMet = true;
+        let html = '<ul class="modifier-list" style="list-style: none; padding: 0;">';
+
+        const modifiers = data.modifiers;
+        if (modifiers.length === 0) {
+            previewDiv.innerHTML = '<span class="text-dim">No modifiers applied.</span>';
+        } else {
+            modifiers.forEach(m => {
+                const labelHtml = (m.label && m.label.trim() !== "") 
+                    ? `<span class="">${m.label}:</span>` 
+                    : "";
+                const displayVal = Math.round(Math.abs(m.value) * 100) / 100;
+                const displayOp = OP_MAP[m.op] || m.op;
+
+                const isComparison = COMPARISON_OPS.includes(m.op);
+                const hasInner = (m.breakdown !== m.value.toString());
+                const innerHtml = hasInner ? `<small class="text-dim">[${m.breakdown}]</small>` : "";
+
+                let contentHtml = "";
+
+                if (isComparison) {
+                    // FORMAT: Source Field (Breakdown) >= RequiredValue
+                    // We use the 'value' to determine if the condition is currently met for coloring
+                    const isMet = eval(`${m.value} ${m.op.replace('==', '===')} ${m.val_required}`);
+                    if (!isMet) allRequirementsMet = false;
+                    const colorClass = isMet ? 'text-success' : 'text-danger';
+
+                    let displayFormula;
+                    if (m.val_required === 1 && (m.op === '>=' || m.op === '==')) {
+                        const rawInner = hasInner ? ` (${m.breakdown})` : ""; 
+                        displayFormula = `
+                            <span class="${colorClass}" style="margin: 0 4px;">${isMet ? "Has" : "Needs"}</span>
+                            <small class="text-dim">[${displayVal}${rawInner} ${displayOp} ${m.val_required}]</small>
+                        `;
+                    } else {
+                        displayFormula = `
+                            <span class="${colorClass}" style="margin: 0 4px;">${displayVal}</span>
+                            ${innerHtml}
+                            <strong class="${colorClass}">${displayOp} ${m.val_required}</strong>
+                        `;
+                    }
+
+                    contentHtml = `
+                        <strong>${m.source_name}</strong>
+                        <div style="padding-left: 1.5em;">
+                            <span class="text-dim">${m.field_name}:</span> 
+                            ${displayFormula}
+                        </div>
+                    `;
+                } else {
+                    // FORMAT: Source Field: +Value (Breakdown)
+                    const colorClass = m.value >= 0 ? 'text-success' : 'text-danger';
+                    contentHtml = `
+                        <strong>${m.source_name}</strong>
+                        <div style="padding-left: 1.5em;">
+                            <span class="text-dim">${m.field_name}:</span> 
+                            <strong class="${colorClass}" style="margin: 0 4px;">${displayOp} ${displayVal}</strong>
+                            ${innerHtml}
+                        </div>
+                    `;
+                }
+
+                html += `
+                    <li class="spacious-bottom" style="display: block;">
+                        ${labelHtml} ${contentHtml}
+                    </li>`;
+            });
+            previewDiv.innerHTML = html + '</ul>';
+        }
+
+        if (rollBtn) {
+            rollBtn.disabled = !allRequirementsMet;
+            rollBtn.style.opacity = allRequirementsMet ? "1" : "0.5";
+        }
+
+        // --- Handle Effect Previews (Right Column) ---
+        if (data.effect_targets) {
+            data.effect_targets.forEach(eff => {
+                const row = document.getElementById(`eff-row-${eff.effect_id}`);
+                if (!row) return;
+
+                row.dataset.isKnown = eff.is_known ? "true" : "false";
+
+                const equationEl = row.querySelector('.equation-display');
+                const getValFrom = row.dataset.getValFrom;
+
+                row.querySelector('.target-name-display').innerText = eff.target_name;
+                row.style.opacity = eff.is_resolved ? "1" : "0.5";
+
+                // Update current value and operator
+                row.querySelector('.current-value-display').innerText = eff.is_resolved ? Math.round(eff.current_value * 100) / 100 : "?";
+                row.querySelector('.op-display').innerText = (eff.op_app === '{{ Operation.ASSIGN }}') ? '→' : (OP_MAP[eff.op_app] || eff.op_app);
+
+                // Update Line 2: Logic description
+                const logicEl = row.querySelector('.source-logic-description');
+
+                const hasTransform = (
+                    row.dataset.opTrans && row.dataset.opTrans !== ''
+                    && row.dataset.opTrans !== '{{ Operation.CONST }}');
+                if (eff.source_name && (
+                    getValFrom !== '{{ Participant.OUTCOME }}' &&
+                    getValFrom !== '{{ Participant.CONST }}'))
+                {
+                    logicEl.innerText = formatImpactExpression(eff.source_name, row.dataset.valTrans, row.dataset.opTrans);
+                    logicEl.classList.remove('hidden');
+                } else {
+                    logicEl.classList.add('hidden');
+                }
+
+                // Update Line 3: The Equation (using placeholders)
+                if (eff.is_known) {
+                    // Server has provided the impact_value because it's not dependent on the roll
+                    const formattedImpact = `<span class="text-success" style="font-weight:bold;">${Math.round(eff.impact_value * 100) / 100}</span>`;
+                    
+                    if (hasTransform) {
+                        // Show: (1 * 1.0) = 1 (green)
+                        const baseEq = formatImpactExpression(Math.round(eff.source_value * 100) / 100, row.dataset.valTrans, row.dataset.opTrans);
+                        equationEl.innerHTML = `${baseEq} = ${formattedImpact}`;
+                    } else {
+                        // Show: 1 (green)
+                        equationEl.innerHTML = formattedImpact;
+                    }
+                } else {
+                    // Result depends on "Roll"
+                    equationEl.innerText = formatImpactExpression("Roll", row.dataset.valTrans, row.dataset.opTrans);
+                }
+                
+                // Hide results from previous rolls
+                row.querySelector('.impact-result').classList.add('hidden');
+            });
+        }
     }
 
     function updateDieThresholds() {
@@ -433,35 +514,70 @@
             const fd = getRoleIDs();
             const diff = document.getElementById('difficulty-select')?.value;
             if (diff) fd.append('difficulty', diff);
+            
+            // Dice System specific inputs
+            const nDice = document.getElementById('num-dice')?.value;
+            const nSides = document.getElementById('num-sides')?.value;
+            const nBonus = document.getElementById('num-bonus')?.value;
+            if (nDice) fd.append('num_dice', nDice);
+            if (nSides) fd.append('sides', nSides);
+            if (nBonus) fd.append('bonus', nBonus);
 
             const data = await apiPost(`/event/roll/${eventId}`, fd, "Could not roll");
             if (!data) return;
 
+            // 1. Display the main outcome result
             lastRollValue = data.result_value;
             document.getElementById('outcome-text').innerHTML = data.display;
 
-            // Enable individual buttons
-            document.querySelectorAll('.effect-row').forEach(row => {
-                const isAuto = row.dataset.auto === "true";
-                const btn = row.querySelector('.apply-eff-btn');
-                const check = row.querySelector('.check-mark');
-                const preview = row.querySelector('.preview-calculation');
+            // 2. Update Effects using the pre-calculated results from the server
+            if (data.solved_effects) {
+                data.solved_effects.forEach(solved => {
+                    const row = document.getElementById(`eff-row-${solved.effect_id}`);
+                    if (!row) return;
 
-                if (isAuto) {
-                    row.style.opacity = "0.7";
-                } else {
-                    btn.disabled = false;
-                    btn.title = "Apply this change";
-                }
-                preview.classList.remove('hidden');
-            });
+                    const impactRes = row.querySelector('.impact-result');
+                    const newValEl = row.querySelector('.new-val');
+                    const equationEl = row.querySelector('.equation-display');
+                    const isKnown = row.dataset.isKnown === "true";
 
-            // Enable "Apply All" button if it exists
+                    if (!isKnown) {
+                        // This effect depended on the roll. 
+                        // Update the "Roll" placeholder with the actual number
+                        if (row.dataset.getValFrom === '{{ Participant.OUTCOME }}') {
+                            equationEl.innerText = formatImpactExpression(
+                                Math.round(lastRollValue * 100) / 100, 
+                                row.dataset.valTrans, 
+                                row.dataset.opTrans
+                            );
+                        }
+
+                        // Show the final value calculated by the server
+                        if (newValEl) newValEl.innerText = Math.round(solved.final_value * 100) / 100;
+                        if (impactRes) impactRes.classList.remove('hidden');
+                    } else {
+                        // This was a known value (e.g. Constant or Field).
+                        // It's already showing the correct green result in equationEl.
+                        if (impactRes) impactRes.classList.add('hidden');
+                    }
+
+                    // Handle button states
+                    const isAuto = row.dataset.auto === "true";
+                    const btn = row.querySelector('.apply-eff-btn');
+                    if (isAuto) {
+                        row.style.opacity = "0.7";
+                    } else if (btn) {
+                        btn.disabled = false;
+                        btn.title = "Apply this change";
+                    }
+                });
+            }
+
+            // 3. Enable "Apply All" if multiple manual buttons are now active
             const applyAllBtn = document.getElementById('apply-all-btn');
-            const applyAllContainer = document.getElementById('apply-all-container');
             if (applyAllBtn) {
-                applyAllBtn.disabled = false;
-                applyAllBtn.title = "Do all apply buttons in order";
+                const manualButtons = document.querySelectorAll('.apply-eff-btn:not(.hidden):not(:disabled)');
+                applyAllBtn.disabled = (manualButtons.length <= 1);
             }
         };
     }

@@ -12,13 +12,6 @@ sqlalchemy.orm.exc.ObjectDeletedError: Instance '<Progress at 0x134226688c0>' ha
 
 ---- tightening and quality of life ----
 
-show calculated event effect values
-    Base Speed Factor x 0.5 (line not shown for constants)
-    **5** -> 1 x 0.5 = **0.5**
-    **5** + 0.5 = **0.5** (for increasing/decreasing)
-    **5** -> **0.5** (for constants)
-add optional param to inner expr renderer that adds surrounding spaces
-
 adding event factors with button at top is awkward
 
 producing 0 out of 0 requested is not a failure
@@ -101,6 +94,7 @@ consider manual refactoring or a list of summarized ai suggestions
 
 only put non-default values in json
     otherwise it makes huge lists of "= null" that are hard to read
+    don't need auto_apply for eventfactors that are determinants
 
 ---- doesn't seem important currently ----
 

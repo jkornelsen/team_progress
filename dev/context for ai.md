@@ -6,6 +6,12 @@
 
 - Bundle new code, old code, json data files
 
+## Ideas
+
+- Use inline constants from model e.g. '{{ Participant.OUTCOME }}' in javascript rather than hardcoded literal 'outcome'
+
+- Do math on server rather than calculating 'current_val op val_transform' in javascript
+
 ## Repeatable Mini-Template
 
 Context:

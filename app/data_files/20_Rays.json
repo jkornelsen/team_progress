@@ -39,7 +39,7 @@
             {
                 "id": 3,
                 "name": "Red Bar Boost I",
-                "description": "*Gain per batch* 1 each. See [Red Bar Rate](/play/event/46) to perform the upgrade.",
+                "description": "**Gain per batch* 1 each. See *Red Bar Rate* to perform the upgrade.",
                 "attribs": [],
                 "abilities": [46],
                 "storage_type": "u",
@@ -91,7 +91,7 @@
             {
                 "id": 5,
                 "name": "Sticky Force",
-                "description": "Binds colors together into patterned objects. Also allows drawing light from the sun.",
+                "description": "Binds colors together into patterned materials. Also allows drawing light from the sun.",
                 "attribs": [],
                 "abilities": [],
                 "storage_type": "u",
@@ -376,7 +376,7 @@
             {
                 "id": 16,
                 "name": "\u2b1bBlack Bar",
-                "description": "It seems like you shouldn't be able to see a black bar in space. Doesn't black absorb all light?\r\n```\r\n  {black|_____________}\r\n{gray|/}{black|/____________/}{gray|/}\r\n```\r\n{lemonchiffon|Requires a reset:}\r\n1. Press *Gain* to produce as many black bars as possible.\r\n2. Before anything else, do *Black Bar Reset*.",
+                "description": "It seems like you shouldn't be able to see a black bar in space. Doesn't black absorb all light?\r\n```\r\n  {black|_____________}\r\n{gray|/}{black|/____________/}{gray|/}\r\n```\r\n{lemonchiffon|Requires a reset:}\r\n1. Press *Max* and *Gain* to produce as many black bars as possible.\r\n2. Then, do *Black Bar Reset*.",
                 "attribs": [],
                 "abilities": [49, 55],
                 "storage_type": "u",
@@ -912,7 +912,7 @@
             {
                 "id": 35,
                 "name": "Star",
-                "description": "Gigantic heat-generating sphere on a scale that even imagining threatens to overwhelm the mind.\r\n\r\n{lemonchiffon|After constructing:}\r\n\u2022 Configure [this location](/configure/location/43) to unmask and show in Overview.\r\n\u2022 Hide the [Local Solar System](/configure/location/44) from Overview by unchecking the box.\r\n\u2022 Go to *Solar Rates* to apply *{lemonchiffon|BSF}* setting if different from default.",
+                "description": "Gigantic heat-generating sphere on a scale that even imagining threatens to overwhelm the mind.\r\n\r\n{lemonchiffon|After constructing:}\r\n\u2022 Configure [this location](/configure/location/43) to unmask and show in Overview.\r\n\u2022 Hide the [Local Solar System](/configure/location/44) from Overview by unchecking the box.\r\n\u2022 Go to *Solar Rates* to apply *{lemonchiffon|BSF}* if different from default setting.",
                 "attribs": [],
                 "abilities": [56],
                 "storage_type": "u",
@@ -1195,7 +1195,7 @@
             {
                 "id": 46,
                 "name": "Red Bar Rate",
-                "description": "1. Press **Calculate** to determine the rate.\r\n2. Press **Apply** to set *Gain per Batch* for [Red Bar](/play/item/39).",
+                "description": "Press **Calculate** to determine the rate and set *Gain per Batch* for *Red Bar*.",
                 "attribs": [],
                 "abilities": [],
                 "toplevel": false,
@@ -1281,14 +1281,14 @@
                         "val_transform": 1.0,
                         "val_required": 1.0,
                         "outcome_success": "always",
-                        "auto_apply": false
+                        "auto_apply": true
                     }
                 ]
             },
             {
                 "id": 45,
                 "name": "Green Bar Rate",
-                "description": "1. Press **Calculate** to determine the rate.\r\n2. Press **Apply** to set *Gain per Batch* for [Green Bar](/play/item/34).",
+                "description": "Press **Calculate** to determine the rate and set *Gain per Batch* for *Green Bar*.",
                 "attribs": [],
                 "abilities": [],
                 "toplevel": false,
@@ -1374,14 +1374,14 @@
                         "val_transform": 0.5,
                         "val_required": 1.0,
                         "outcome_success": "always",
-                        "auto_apply": false
+                        "auto_apply": true
                     }
                 ]
             },
             {
                 "id": 47,
                 "name": "Yellow Bar Rate",
-                "description": "Sets [Yellow Bar](/play/item/6) rate.",
+                "description": "Sets *Yellow Bar* rate.",
                 "attribs": [],
                 "abilities": [],
                 "toplevel": false,
@@ -1467,14 +1467,14 @@
                         "val_transform": 1.0,
                         "val_required": 1.0,
                         "outcome_success": "always",
-                        "auto_apply": false
+                        "auto_apply": true
                     }
                 ]
             },
             {
                 "id": 49,
                 "name": "Black Bar Reset",
-                "description": "After gaining the max *Black Bars* possible, press *Calculate*.\r\n{gray|Then, press all *Apply* buttons} to do the following:\r\n\r\n- Reset rates and boosts of {red|#} (1/8s, [I](/play/item/3), [II](/play/item/4)) and {green|#} (0.5/8s, [I](/play/item/2), [II](/play/item/33))\r\n- Set quantities of {red|#}, {green|#}, and {yellow|#} to 0",
+                "description": "After gaining the max Black Bars possible, press *Calculate*. Then, press *Apply All* to do the following:\r\n\r\n- Reset rates and boosts of {red|#} (1/8s, [I](/play/item/3), [II](/play/item/4)) and {green|#} (0.5/8s, [I](/play/item/2), [II](/play/item/33))\r\n- Set quantities of {red|#}, {green|#}, and {yellow|#} to 0",
                 "attribs": [],
                 "abilities": [],
                 "toplevel": false,
@@ -1483,7 +1483,27 @@
                 "numeric_range": null,
                 "single_number": 0.0,
                 "selection_strings": null,
-                "determinants": [],
+                "determinants": [
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "universal",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 16,
+                            "attrib_id": null,
+                            "recipe_id": null
+                        },
+                        "outfield": null,
+                        "op_application": "+",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    }
+                ],
                 "effects": [
                     {
                         "label": "",
@@ -1497,7 +1517,7 @@
                             "recipe_id": null
                         },
                         "outfield": {
-                            "role": "universal",
+                            "role": "blueprint",
                             "field_mode": "rate_amt",
                             "child_of_anchor": false,
                             "item_id": 39,
@@ -1507,6 +1527,70 @@
                         "op_application": ":=",
                         "op_transform": "*",
                         "val_transform": 1.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "const",
+                        "infield": null,
+                        "outfield": {
+                            "role": "universal",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 39,
+                            "attrib_id": null,
+                            "recipe_id": null
+                        },
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "universal",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 41,
+                            "attrib_id": null,
+                            "recipe_id": null
+                        },
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "rate_amt",
+                            "child_of_anchor": false,
+                            "item_id": 34,
+                            "attrib_id": null,
+                            "recipe_id": 3
+                        },
+                        "op_application": ":=",
+                        "op_transform": "*",
+                        "val_transform": 0.5,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "const",
+                        "infield": null,
+                        "outfield": {
+                            "role": "universal",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 34,
+                            "attrib_id": null,
+                            "recipe_id": null
+                        },
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0,
                         "val_required": 1.0,
                         "outcome_success": "always",
                         "auto_apply": false
@@ -1596,70 +1680,6 @@
                             "field_mode": "qty",
                             "child_of_anchor": false,
                             "item_id": 33,
-                            "attrib_id": null,
-                            "recipe_id": null
-                        },
-                        "op_application": ":=",
-                        "op_transform": "c",
-                        "val_transform": 0.0,
-                        "val_required": 1.0,
-                        "outcome_success": "always",
-                        "auto_apply": false
-                    },
-                    {
-                        "label": "",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "universal",
-                            "field_mode": "qty",
-                            "child_of_anchor": false,
-                            "item_id": 41,
-                            "attrib_id": null,
-                            "recipe_id": null
-                        },
-                        "outfield": {
-                            "role": "subject",
-                            "field_mode": "rate_amt",
-                            "child_of_anchor": false,
-                            "item_id": 34,
-                            "attrib_id": null,
-                            "recipe_id": 3
-                        },
-                        "op_application": ":=",
-                        "op_transform": "*",
-                        "val_transform": 0.5,
-                        "val_required": 1.0,
-                        "outcome_success": "always",
-                        "auto_apply": false
-                    },
-                    {
-                        "label": "",
-                        "get_val_from": "const",
-                        "infield": null,
-                        "outfield": {
-                            "role": "universal",
-                            "field_mode": "qty",
-                            "child_of_anchor": false,
-                            "item_id": 34,
-                            "attrib_id": null,
-                            "recipe_id": null
-                        },
-                        "op_application": ":=",
-                        "op_transform": "c",
-                        "val_transform": 0.0,
-                        "val_required": 1.0,
-                        "outcome_success": "always",
-                        "auto_apply": false
-                    },
-                    {
-                        "label": "",
-                        "get_val_from": "const",
-                        "infield": null,
-                        "outfield": {
-                            "role": "universal",
-                            "field_mode": "qty",
-                            "child_of_anchor": false,
-                            "item_id": 39,
                             "attrib_id": null,
                             "recipe_id": null
                         },
@@ -2404,7 +2424,7 @@
                         "val_transform": 1.0,
                         "val_required": 1.0,
                         "outcome_success": "always",
-                        "auto_apply": false
+                        "auto_apply": true
                     }
                 ]
             },
@@ -2478,7 +2498,7 @@
                         "val_transform": 1.0,
                         "val_required": 1.0,
                         "outcome_success": "always",
-                        "auto_apply": false
+                        "auto_apply": true
                     }
                 ]
             },

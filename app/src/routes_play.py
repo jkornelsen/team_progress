@@ -15,6 +15,7 @@ from app.utils import (
 from .logic_piles import transfer_item
 from .logic_event import (
     roll_for_outcome, roll_for_system_outcome, calculate_determinants,
+    calculate_effects_targets, calculate_solved_effects,
     get_entity_value, can_use_field,
     effect_description, do_effect_change, process_all_effects)
 from .logic_progress import (
@@ -1067,7 +1068,9 @@ def play_event(id):
 
 @play_bp.route('/event/preview/<int:id>', methods=['POST'])
 def event_preview(id):
-    """AJAX helper to calculate modifiers based on current UI selections."""
+    """AJAX helper to calculate modifiers and effect targets based
+    on UI selections.
+    """
     game_token = g.game_token
     event = Event.query.get((game_token, id))
     req = RequestHelper('form')
@@ -1079,7 +1082,11 @@ def event_preview(id):
             role_entities[role_name] = req.get_int(key)
     
     modifiers = calculate_determinants(event, role_entities)
-    return jsonify(modifiers)
+    effect_targets = calculate_effects_targets(event, role_entities)
+    return jsonify({
+        "modifiers": modifiers,
+        "effect_targets": effect_targets
+    })
 
 @play_bp.route('/event/roll/<int:id>', methods=['POST'])
 def roll_event(id):
@@ -1105,13 +1112,16 @@ def roll_event(id):
         result_num, result_str, tier = roll_for_outcome(
             id, role_entities, difficulty)
 
+    solved_effects = calculate_solved_effects(
+        event, role_entities, result_num)
     process_all_effects(
         event, role_entities, result_num, tier, force_auto_only=True)
     
     return jsonify({
         "result_value": result_num,
         "tier": tier,
-        "display": result_str
+        "display": result_str,
+        "solved_effects": solved_effects
     })
 
 @play_bp.route('/event/apply-effect/<int:factor_id>', methods=['POST'])

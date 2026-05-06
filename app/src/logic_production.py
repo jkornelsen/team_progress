@@ -12,6 +12,8 @@ from .logic_user_interaction import add_message
 
 logger = logging.getLogger(__name__)
 
+STALLED = "Stalled"
+
 def find_best_host(recipe, owner_id, ctx):
     """
     Determines the host according to priority with strict channel checks.
@@ -55,7 +57,8 @@ def find_best_host(recipe, owner_id, ctx):
     else:
         return ctx.char_id
 
-def can_perform_recipe(host_id, recipe, target_owner_id, ctx, batches=1):
+def can_perform_recipe(
+        host_id, recipe, target_owner_id, ctx, batches=1, catching_up=False):
     """
     Validates if a host can perform a recipe. 
     Checks Storage limits, Ingredients, and Attributes.
@@ -94,6 +97,13 @@ def can_perform_recipe(host_id, recipe, target_owner_id, ctx, batches=1):
         required = source_def.q_required * (
             1 if source_def.preserve else batches)
         if res['total_available'] < required:
+            if catching_up:
+                is_being_produced = db.session.query(Progress.id).filter_by(
+                    game_token=game_token, 
+                    product_id=res['item'].id
+                ).first() is not None
+                if is_being_produced:
+                    return False, STALLED
             verb = "Missing"
             if res['total_available'] > 0:
                 verb = "Need More"
@@ -230,7 +240,7 @@ def resolve_recipe_sources(host_id, recipe, ctx):
     return resolved_sources
 
 def execute_production(
-        host_id, recipe, target_owner_id, ctx, batches=1, allow_partial=False):
+        host_id, recipe, target_owner_id, ctx, batches=1, catching_up=False):
     """Executes production batches and applies changes."""
     logger.debug(
         f"execute_production() Host:{host_id} | Product:{recipe.product_id}"
@@ -241,12 +251,13 @@ def execute_production(
 
     # Validate if we can perform at least ONE
     possible, reason = can_perform_recipe(
-        host_id, recipe, target_owner_id, ctx, batches=1)
+        host_id, recipe, target_owner_id, ctx, batches=1,
+        catching_up=catching_up)
     if not possible:
         return 0, reason
 
     # Calculate the real ceiling based on current ingredients
-    if allow_partial and batches > 1:
+    if catching_up and batches > 1:
         resolved = resolve_recipe_sources(host_id, recipe, ctx)
         max_possible = batches
         
@@ -271,7 +282,8 @@ def execute_production(
     # Final verification for the (potentially adjusted) batch count
     if batches > 1:
         possible, reason = can_perform_recipe(
-            host_id, recipe, target_owner_id, ctx, batches)
+            host_id, recipe, target_owner_id, ctx, batches,
+            catching_up=catching_up)
         if not possible:
             return 0, reason
 

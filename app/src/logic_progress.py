@@ -10,7 +10,7 @@ from app.models import (
     GENERAL_ID, StorageType)
 from app.utils import ContextIds
 from .logic_piles import adjust_quantity
-from .logic_production import can_perform_recipe, execute_production
+from .logic_production import can_perform_recipe, execute_production, STALLED
 from .logic_user_interaction import add_message
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ def tick_all_active(messages_host_id=None):
     all_active_records = Progress.query.filter_by(game_token=game_token).all()
     
     # --- PHASE 1: PREPARATION ---
-    CHUNK_SIZE = 10
+    CHUNK_SIZE = 8
     work_items = []
     max_catchup_time = 0
 
@@ -92,7 +92,7 @@ def tick_all_active(messages_host_id=None):
                 item['progress'].owner_id, 
                 item['ctx'], 
                 batches=to_do,
-                allow_partial=item['catching_up']
+                catching_up=item['catching_up']
             )
             
             # Update tracking
@@ -101,6 +101,8 @@ def tick_all_active(messages_host_id=None):
             
             if actual > 0:
                 any_work_done_this_wave = True
+            elif reason == "Stalled":
+                logger.debug(f"Item {item['recipe'].product_id} waiting.")
             elif reason:
                 # If it halted, record why
                 item['halt_reason'] = reason
