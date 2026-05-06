@@ -732,21 +732,15 @@ def do_effect_change(eff, roll_total, role_entities):
                 current = recipe.rate_amount
                 recipe.rate_amount = impact if op == Operation.ASSIGN \
                     else apply_operation(current, impact, op)
+                log_impact = f"yield to {recipe.rate_amount:g}"
             else:
                 current = recipe.rate_duration
                 new_dur = impact if op == Operation.ASSIGN else \
                     apply_operation(current, impact, op)
                 # Truncate to integer and clamp at 1 second minimum
                 recipe.rate_duration = max(1, int(impact))
+                log_impact = "duration to {recipe.rate_duration:g}"
+
+            add_message(f"Set {recipe.product.name} {log_impact}")
 
     db.session.commit()
-
-    # --- STEP 3: LOG ---
-    target_name = "Target"
-    if eff.outfield:
-        ent_id = resolve_anchor_id(eff.outfield.role, role_entities)
-        ent = Entity.query.get((game_token, ent_id))
-        target_name = ent.name if ent else "Target"
-    label = eff.label or "Effect"
-    verb = "Auto-applied" if eff.auto_apply else "Applied"
-    add_message(f"{verb} {label} on {target_name}")

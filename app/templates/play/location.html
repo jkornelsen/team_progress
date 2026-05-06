@@ -328,7 +328,7 @@
 
         const renderToken = (obj, typeClass) => {
             const $cell = $(`#cell-${obj.x}-${obj.y}`);
-            if ($cell.length) {
+            if ($cell.length && $cell.is(':empty')) {
                 const $link = $('<a></a>')
                     .attr('href', obj.link)
                     .attr('title', obj.name)

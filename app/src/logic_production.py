@@ -93,7 +93,7 @@ def can_perform_recipe(
         current_pile = query.first()
 
         if current_pile and current_pile.quantity >= recipe.product.q_limit:
-            return False, "Storage limit reached."
+            return False, "Storage limit reached"
 
     # 2. Ingredient Availability
     resolved = resolve_recipe_sources(host_id, recipe, ctx)
@@ -317,13 +317,13 @@ def execute_production(
     log_msg = f"{gain_qty:g} {recipe.product.name}"
     if host_id == GENERAL_ID:
         host_info = "GENERAL/SYSTEM"
-        log_msg = f"{log_msg} gained."
+        log_msg = f"{log_msg} gained"
     elif host_ent:
         host_info = f"{host_ent.entity_type.upper()} '{host_ent.name}' (ID:{host_id})"
         if host_ent.entity_type == Character.TYPENAME:
-            log_msg = f"{host_ent.name} produced {log_msg}."
+            log_msg = f"{host_ent.name} produced {log_msg}"
         elif host_ent.entity_type == Location.TYPENAME:
-            log_msg = f"{log_msg} produced at {host_ent.name}."
+            log_msg = f"{log_msg} produced at {host_ent.name}"
     else:
         host_info = f"UNKNOWN ID:{host_id}"
     add_message(log_msg)
