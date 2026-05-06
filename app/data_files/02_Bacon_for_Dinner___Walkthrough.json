@@ -2,33 +2,9 @@
     "entities": {
         "items": [
             {
-                "id": 5,
-                "name": "Knife",
-                "description": "For butchering.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "c",
-                "q_limit": 1.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
-            },
-            {
-                "id": 6,
-                "name": "Phone",
-                "description": "Suzy's mother is the first number on the contacts list.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "c",
-                "q_limit": 1.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
-            },
-            {
-                "id": 7,
-                "name": "Wood Stove",
-                "description": "This item functions as a crafting station, fixed at the *Home* location. Useful for producing items from recipes, namely, *Cooked Bacon* \u2014 go ahead and click on it.",
+                "id": 9,
+                "name": "Barn",
+                "description": "A crafting station, similar to the *Wood Stove*.",
                 "attribs": [],
                 "abilities": [],
                 "storage_type": "l",
@@ -36,6 +12,78 @@
                 "toplevel": false,
                 "masked": false,
                 "recipes": []
+            },
+            {
+                "id": 12,
+                "name": "Cash",
+                "description": "Getting paid doesn't take any particular amount of time, so there's a *Gain* button instead of *Start*, but otherwise, it works the same. To get paid all at once, enter a higher number such as 11 \u2014 it won't do more than what you have available. \r\n\r\nIf you don't have enough cash to buy a pig yet, go back to *Chores* and repeat this process. Also, of course, you'll need more than one pig in order to get baby pigs.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 100.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 13,
+                        "rate_amount": 3.0,
+                        "rate_duration": 3.0,
+                        "instant": true,
+                        "sources": [
+                            {
+                                "item_id": 11,
+                                "q_required": 1.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": [
+                            {
+                                "attrib_id": 4,
+                                "value_range": [
+                                    1.0,
+                                    1.0
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 11,
+                "name": "Chores",
+                "description": "In this scenario, Chores and Cash are *general storage* items (or *universal*), meaning that they can be used anywhere and don't have to be carried by a specific person.\r\n\r\nPress *Start* to do some chores. There's no limit to the chores that can be done, but you can only get paid for 10 at a time. Go to *Cash* to get your earnings.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 10.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 14,
+                        "rate_amount": 1.0,
+                        "rate_duration": 3.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 9,
+                                "q_required": 1.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": [
+                            {
+                                "attrib_id": 3,
+                                "value_range": [
+                                    1.0,
+                                    1.0
+                                ]
+                            }
+                        ]
+                    }
+                ]
             },
             {
                 "id": 8,
@@ -71,12 +119,24 @@
                 ]
             },
             {
-                "id": 9,
-                "name": "Barn",
-                "description": "A crafting station, similar to the *Wood Stove*.",
+                "id": 5,
+                "name": "Knife",
+                "description": "For butchering.",
                 "attribs": [],
                 "abilities": [],
-                "storage_type": "l",
+                "storage_type": "c",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 6,
+                "name": "Phone",
+                "description": "Suzy's mother is the first number on the contacts list.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "c",
                 "q_limit": 1.0,
                 "toplevel": false,
                 "masked": false,
@@ -126,78 +186,6 @@
                 ]
             },
             {
-                "id": 11,
-                "name": "Chores",
-                "description": "In this scenario, Chores and Cash are *general storage* items (or *universal*), meaning that they can be used anywhere and don't have to be carried by a specific person.\r\n\r\nPress *Start* to do some chores. There's no limit to the chores that can be done, but you can only get paid for 10 at a time. Go to *Cash* to get your earnings.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "u",
-                "q_limit": 10.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": [
-                    {
-                        "id": 14,
-                        "rate_amount": 1.0,
-                        "rate_duration": 3.0,
-                        "instant": false,
-                        "sources": [
-                            {
-                                "item_id": 9,
-                                "q_required": 1.0,
-                                "preserve": true
-                            }
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": [
-                            {
-                                "attrib_id": 3,
-                                "value_range": [
-                                    1.0,
-                                    1.0
-                                ]
-                            }
-                        ]
-                    }
-                ]
-            },
-            {
-                "id": 12,
-                "name": "Cash",
-                "description": "Getting paid doesn't take any particular amount of time, so there's a *Gain* button instead of *Start*, but otherwise, it works the same. To get paid all at once, enter a higher number such as 11 \u2014 it won't do more than what you have available. \r\n\r\nIf you don't have enough cash to buy a pig yet, go back to *Chores* and repeat this process. Also, of course, you'll need more than one pig in order to get baby pigs.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "u",
-                "q_limit": 100.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": [
-                    {
-                        "id": 13,
-                        "rate_amount": 3.0,
-                        "rate_duration": 3.0,
-                        "instant": true,
-                        "sources": [
-                            {
-                                "item_id": 11,
-                                "q_required": 1.0,
-                                "preserve": false
-                            }
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": [
-                            {
-                                "attrib_id": 4,
-                                "value_range": [
-                                    1.0,
-                                    1.0
-                                ]
-                            }
-                        ]
-                    }
-                ]
-            },
-            {
                 "id": 13,
                 "name": "Raw Bacon",
                 "description": "Now we can make use of that *Knife* Suzy has been carrying. There are 4 pigs currently at the farm. Press *Start* and wait while she turns them into neatly sized pieces of meat.\r\n\r\nIf Suzy is not shown under *Where* as carrying the knife, you may need to go back to her screen and click on the knife to get to this raw bacon screen. Similarly, if the pigs are at the farm but not shown, navigate back to the farm and then click through the pigs to get here.\r\n\r\nLooks like we ran out. Go back to *Pigs* and see how to get more.\r\n\r\nOnce you have a full load of raw bacon (20), it's time for Suzy to start the perilous trip back home. Navigate to her page to do so.",
@@ -229,6 +217,18 @@
                         "attrib_reqs": []
                     }
                 ]
+            },
+            {
+                "id": 7,
+                "name": "Wood Stove",
+                "description": "This item functions as a crafting station, fixed at the *Home* location. Useful for producing items from recipes, namely, *Cooked Bacon* \u2014 go ahead and click on it.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
             }
         ],
         "locations": [
@@ -317,24 +317,6 @@
         ],
         "characters": [
             {
-                "id": 17,
-                "name": "Uncle",
-                "description": "Will pay a modest salary for chores.",
-                "attribs": [
-                    [
-                        4,
-                        1.0
-                    ]
-                ],
-                "abilities": [],
-                "toplevel": false,
-                "masked": false,
-                "location_id": 16,
-                "position": null,
-                "travel_party": "",
-                "items": []
-            },
-            {
                 "id": 18,
                 "name": "Mom",
                 "description": "An NPC. You can still control her actions, though, if she is needed in the woods later to rescue Suzy.\r\n\r\nAfter viewing this character the first time, press the key shown in brackets [ ] to return to *Home*. For mobile users, just tap on *Home*.",
@@ -384,6 +366,24 @@
                         "slot": ""
                     }
                 ]
+            },
+            {
+                "id": 17,
+                "name": "Uncle",
+                "description": "Will pay a modest salary for chores.",
+                "attribs": [
+                    [
+                        4,
+                        1.0
+                    ]
+                ],
+                "abilities": [],
+                "toplevel": false,
+                "masked": false,
+                "location_id": 16,
+                "position": null,
+                "travel_party": "",
+                "items": []
             }
         ],
         "attribs": [
@@ -414,6 +414,25 @@
         ],
         "events": [
             {
+                "id": 21,
+                "name": "Connect to Service",
+                "description": "Suzy needs to call her Mother for help of some kind. Choose Easy difficulty since we won't be far from civilization, then roll.\r\n\r\nFor a major success, Mother will explain to Suzy how to get home, meaning that she will arrive home without further incident. For a minor success, Mother can travel to the woods and lead Suzy out, using her higher *Pathfinding* skill so that *Travel Danger* has a better chance to succeed.\r\n\r\nFor a single minor failure, Suzy can probably just try to call again (wouldn't you, if you were her?) But if things get worse, you might have to go to setup and add a *Wolf* character, then roll either *Travel Danger* or a new event such as *Danger Interaction* to see if it is close enough to be threatening. If push comes to shove, maybe she can grab a fallen branch to fend it off (set up as a new item), or climb a tree, or yell.\r\n\r\nThis is the end of the walkthrough explanation. After returning home, Suzy can cook the bacon. Once the win condition described under *Overall Settings* is met, a green checkmark should show in the log on the overview page, indicating that the scenario is successfully completed.",
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [
+                    [
+                        "item",
+                        6
+                    ]
+                ],
+                "determining": []
+            },
+            {
                 "id": 20,
                 "name": "Travel Danger",
                 "description": "Set difficulty to Moderate, meaning the chance of getting lost or eaten by wolves in this particular forest is decent but not overwhelming. If Suzy is alone in the forest, select her name with stat 2 and press *Add*. Otherwise, use her Mother's stat. Then press *Roll*.\r\n\r\nBecause she's tired after all those chores, play at a disadvantage, which means we take the worst of two rolls. So, remember the first result and then press Roll again.\r\n\r\nActually, in this case, we need it to be a *Minor Failure*, so keep rolling until that happens. We'll take that to mean she's lost but there are no wolves or twisted ankles.\r\n\r\nTo get out of this pickle, go to Suzy's page and and find the *Connect to Service* event.",
@@ -440,25 +459,6 @@
                         "label": ""
                     }
                 ]
-            },
-            {
-                "id": 21,
-                "name": "Connect to Service",
-                "description": "Suzy needs to call her Mother for help of some kind. Choose Easy difficulty since we won't be far from civilization, then roll.\r\n\r\nFor a major success, Mother will explain to Suzy how to get home, meaning that she will arrive home without further incident. For a minor success, Mother can travel to the woods and lead Suzy out, using her higher *Pathfinding* skill so that *Travel Danger* has a better chance to succeed.\r\n\r\nFor a single minor failure, Suzy can probably just try to call again (wouldn't you, if you were her?) But if things get worse, you might have to go to setup and add a *Wolf* character, then roll either *Travel Danger* or a new event such as *Danger Interaction* to see if it is close enough to be threatening. If push comes to shove, maybe she can grab a fallen branch to fend it off (set up as a new item), or climb a tree, or yell.\r\n\r\nThis is the end of the walkthrough explanation. After returning home, Suzy can cook the bacon. Once the win condition described under *Overall Settings* is met, a green checkmark should show in the log on the overview page, indicating that the scenario is successfully completed.",
-                "numeric_range": [
-                    1,
-                    20
-                ],
-                "outcome_type": "fourway",
-                "selection_strings": "",
-                "toplevel": false,
-                "triggers": [
-                    [
-                        "item",
-                        6
-                    ]
-                ],
-                "determining": []
             }
         ]
     },

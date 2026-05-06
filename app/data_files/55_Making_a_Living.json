@@ -2,13 +2,98 @@
     "entities": {
         "items": [
             {
-                "id": 7,
-                "name": "Unprepared Food",
-                "description": "Buy at the grocery store.",
+                "id": 16,
+                "name": "Biology 101",
+                "description": "Important for medical or other science related fields.\r\n\r\nTo start the class, pay for it and include it to be subtracted for the daily recipe to gain hours, like how Math 101 is set up.\r\n\r\nThe class will be taught over 1 week, and you'll need to attend most of the classes to get the best grades.",
                 "attribs": [],
                 "abilities": [],
                 "storage_type": "u",
-                "q_limit": 0.0,
+                "q_limit": 12.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 19,
+                        "rate_amount": 12.0,
+                        "rate_duration": 3.0,
+                        "instant": true,
+                        "sources": [
+                            {
+                                "item_id": 22,
+                                "q_required": 5000.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 24,
+                "name": "Biology 101 Taken",
+                "description": "",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 5.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 21,
+                        "rate_amount": 1.0,
+                        "rate_duration": 3.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 16,
+                                "q_required": 1.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 18,
+                                "q_required": 1.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 9,
+                "name": "Calendar",
+                "description": "Tells the day of the week. Must be marked by hand.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "toplevel": true,
+                "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 21,
+                "name": "Cash Register",
+                "description": "To work as a cashier (behind the counter) or bagger (at the end of the counter).",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 18,
+                "name": "Classroom",
+                "description": "Required to attend a class.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 1.0,
                 "toplevel": false,
                 "masked": false,
                 "recipes": []
@@ -24,46 +109,6 @@
                 "toplevel": true,
                 "masked": false,
                 "recipes": []
-            },
-            {
-                "id": 9,
-                "name": "Calendar",
-                "description": "Tells the day of the week. Must be marked by hand.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "u",
-                "q_limit": 1.0,
-                "toplevel": true,
-                "masked": false,
-                "recipes": []
-            },
-            {
-                "id": 10,
-                "name": "Meal",
-                "description": "One meal a day should be plenty. Healthier (producing fuller energy) if cooked rather than eaten straight out of a box. You could prepare several portions and refrigerate them.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "u",
-                "q_limit": 5.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": [
-                    {
-                        "id": 15,
-                        "rate_amount": 1.0,
-                        "rate_duration": 8.0,
-                        "instant": false,
-                        "sources": [
-                            {
-                                "item_id": 7,
-                                "q_required": 3.0,
-                                "preserve": false
-                            }
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
-                    }
-                ]
             },
             {
                 "id": 11,
@@ -97,30 +142,6 @@
                         "attrib_reqs": []
                     }
                 ]
-            },
-            {
-                "id": 12,
-                "name": "Park Facilities",
-                "description": "Places you find at the park.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "l",
-                "q_limit": 1.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
-            },
-            {
-                "id": 13,
-                "name": "Student Loan",
-                "description": "If you take out a loan now, monthly payments will be required later. Interest on these loans is not too bad, however, as the government encourages people to get college degrees.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "u",
-                "q_limit": 0.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
             },
             {
                 "id": 14,
@@ -161,67 +182,6 @@
                 ]
             },
             {
-                "id": 15,
-                "name": "Pre-Med",
-                "description": "This degree isn't designed as an end, but rather, a means to eventually finish an M.D. and become a physician. If you're not interested in that much school, then it would be better to choose a different major.\r\n\r\nUndergrad degrees at this school typically require 8 classes taken. So, to finish this degree, add 6 more as sources for the recipe.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "u",
-                "q_limit": 1.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": [
-                    {
-                        "id": 20,
-                        "rate_amount": 1.0,
-                        "rate_duration": 3.0,
-                        "instant": true,
-                        "sources": [
-                            {
-                                "item_id": 25,
-                                "q_required": 5.0,
-                                "preserve": true
-                            },
-                            {
-                                "item_id": 24,
-                                "q_required": 5.0,
-                                "preserve": true
-                            }
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
-                    }
-                ]
-            },
-            {
-                "id": 16,
-                "name": "Biology 101",
-                "description": "Important for medical or other science related fields.\r\n\r\nTo start the class, pay for it and include it to be subtracted for the daily recipe to gain hours, like how Math 101 is set up.\r\n\r\nThe class will be taught over 1 week, and you'll need to attend most of the classes to get the best grades.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "u",
-                "q_limit": 12.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": [
-                    {
-                        "id": 19,
-                        "rate_amount": 12.0,
-                        "rate_duration": 3.0,
-                        "instant": true,
-                        "sources": [
-                            {
-                                "item_id": 22,
-                                "q_required": 5000.0,
-                                "preserve": false
-                            }
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
-                    }
-                ]
-            },
-            {
                 "id": 17,
                 "name": "Math 101",
                 "description": "This is a good time to decide whether you're happy enough to study strange symbols like capital greek letter sigma and elongated S's, or whether you'll switch to Art or another major to avoid further punishment.\r\n\r\nThe class will be taught over 1 week, and you'll need to attend most of the classes to get the best grades.",
@@ -229,18 +189,6 @@
                 "abilities": [],
                 "storage_type": "u",
                 "q_limit": 12.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
-            },
-            {
-                "id": 18,
-                "name": "Classroom",
-                "description": "Required to attend a class.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "l",
-                "q_limit": 1.0,
                 "toplevel": false,
                 "masked": false,
                 "recipes": []
@@ -274,28 +222,65 @@
                 ]
             },
             {
-                "id": 20,
-                "name": "Party",
-                "description": "Reduces stress and increases people skills but can significantly reduce intelligence, especially if you behave wildly.",
+                "id": 25,
+                "name": "Math 101 Taken",
+                "description": "Hopefully you will attend class each day. This is your record of attendance. If it's too low, you're sure to get a poor or failing grade. You can attend 1 hour each day, while the class lasts.",
                 "attribs": [],
                 "abilities": [],
-                "storage_type": "l",
-                "q_limit": 1.0,
+                "storage_type": "u",
+                "q_limit": 5.0,
                 "toplevel": false,
                 "masked": false,
-                "recipes": []
+                "recipes": [
+                    {
+                        "id": 18,
+                        "rate_amount": 1.0,
+                        "rate_duration": 3.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 17,
+                                "q_required": 1.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 18,
+                                "q_required": 1.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
             },
             {
-                "id": 21,
-                "name": "Cash Register",
-                "description": "To work as a cashier (behind the counter) or bagger (at the end of the counter).",
+                "id": 10,
+                "name": "Meal",
+                "description": "One meal a day should be plenty. Healthier (producing fuller energy) if cooked rather than eaten straight out of a box. You could prepare several portions and refrigerate them.",
                 "attribs": [],
                 "abilities": [],
-                "storage_type": "l",
-                "q_limit": 1.0,
+                "storage_type": "u",
+                "q_limit": 5.0,
                 "toplevel": false,
                 "masked": false,
-                "recipes": []
+                "recipes": [
+                    {
+                        "id": 15,
+                        "rate_amount": 1.0,
+                        "rate_duration": 8.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 7,
+                                "q_required": 3.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
             },
             {
                 "id": 22,
@@ -322,6 +307,63 @@
                             {
                                 "item_id": 21,
                                 "q_required": 1.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 12,
+                "name": "Park Facilities",
+                "description": "Places you find at the park.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 20,
+                "name": "Party",
+                "description": "Reduces stress and increases people skills but can significantly reduce intelligence, especially if you behave wildly.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 15,
+                "name": "Pre-Med",
+                "description": "This degree isn't designed as an end, but rather, a means to eventually finish an M.D. and become a physician. If you're not interested in that much school, then it would be better to choose a different major.\r\n\r\nUndergrad degrees at this school typically require 8 classes taken. So, to finish this degree, add 6 more as sources for the recipe.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 20,
+                        "rate_amount": 1.0,
+                        "rate_duration": 3.0,
+                        "instant": true,
+                        "sources": [
+                            {
+                                "item_id": 25,
+                                "q_required": 5.0,
+                                "preserve": true
+                            },
+                            {
+                                "item_id": 24,
+                                "q_required": 5.0,
                                 "preserve": true
                             }
                         ],
@@ -384,77 +426,35 @@
                 ]
             },
             {
-                "id": 24,
-                "name": "Biology 101 Taken",
-                "description": "",
+                "id": 13,
+                "name": "Student Loan",
+                "description": "If you take out a loan now, monthly payments will be required later. Interest on these loans is not too bad, however, as the government encourages people to get college degrees.",
                 "attribs": [],
                 "abilities": [],
                 "storage_type": "u",
-                "q_limit": 5.0,
+                "q_limit": 0.0,
                 "toplevel": false,
                 "masked": false,
-                "recipes": [
-                    {
-                        "id": 21,
-                        "rate_amount": 1.0,
-                        "rate_duration": 3.0,
-                        "instant": false,
-                        "sources": [
-                            {
-                                "item_id": 16,
-                                "q_required": 1.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 18,
-                                "q_required": 1.0,
-                                "preserve": true
-                            }
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
-                    }
-                ]
+                "recipes": []
             },
             {
-                "id": 25,
-                "name": "Math 101 Taken",
-                "description": "Hopefully you will attend class each day. This is your record of attendance. If it's too low, you're sure to get a poor or failing grade. You can attend 1 hour each day, while the class lasts.",
+                "id": 7,
+                "name": "Unprepared Food",
+                "description": "Buy at the grocery store.",
                 "attribs": [],
                 "abilities": [],
                 "storage_type": "u",
-                "q_limit": 5.0,
+                "q_limit": 0.0,
                 "toplevel": false,
                 "masked": false,
-                "recipes": [
-                    {
-                        "id": 18,
-                        "rate_amount": 1.0,
-                        "rate_duration": 3.0,
-                        "instant": false,
-                        "sources": [
-                            {
-                                "item_id": 17,
-                                "q_required": 1.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 18,
-                                "q_required": 1.0,
-                                "preserve": true
-                            }
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
-                    }
-                ]
+                "recipes": []
             }
         ],
         "locations": [
             {
-                "id": 26,
-                "name": "Park",
-                "description": "Good place to hang out and reduce stress. Trees, basketball courts, skateboarding.",
+                "id": 30,
+                "name": "Greek House",
+                "description": "Fraternities and Sororities have the wildest parties.",
                 "attribs": [],
                 "abilities": [],
                 "dimensions": null,
@@ -463,7 +463,7 @@
                 "masked": false,
                 "items": [
                     {
-                        "item_id": 12,
+                        "item_id": 20,
                         "quantity": 1.0,
                         "position": null
                     }
@@ -472,32 +472,18 @@
                 "destinations": []
             },
             {
-                "id": 27,
-                "name": "Restaurant",
-                "description": "More expensive than the grocery store but doesn't require preparation and more filling than boxed food.",
+                "id": 31,
+                "name": "Grocery Store",
+                "description": "Buy either unprepared food or boxed meals.\r\n\r\nThere are several types of jobs available here:\r\n\u2022 Cashier\r\n\u2022 Bagger\r\n\u2022 Stocker\r\n\u2022 Manager",
                 "attribs": [],
                 "abilities": [],
                 "dimensions": null,
                 "excluded": null,
                 "toplevel": false,
                 "masked": false,
-                "items": [],
-                "item_refs": [],
-                "destinations": []
-            },
-            {
-                "id": 28,
-                "name": "School",
-                "description": "Full time is generally considered to be 2 classes, although classes vary as to how demanding they are. You could push and go up to 3, or take only 1 for a part-time load.",
-                "attribs": [],
-                "abilities": [],
-                "dimensions": null,
-                "excluded": null,
-                "toplevel": true,
-                "masked": false,
                 "items": [
                     {
-                        "item_id": 18,
+                        "item_id": 21,
                         "quantity": 1.0,
                         "position": null
                     }
@@ -546,9 +532,9 @@
                 ]
             },
             {
-                "id": 30,
-                "name": "Greek House",
-                "description": "Fraternities and Sororities have the wildest parties.",
+                "id": 26,
+                "name": "Park",
+                "description": "Good place to hang out and reduce stress. Trees, basketball courts, skateboarding.",
                 "attribs": [],
                 "abilities": [],
                 "dimensions": null,
@@ -557,7 +543,7 @@
                 "masked": false,
                 "items": [
                     {
-                        "item_id": 20,
+                        "item_id": 12,
                         "quantity": 1.0,
                         "position": null
                     }
@@ -566,18 +552,32 @@
                 "destinations": []
             },
             {
-                "id": 31,
-                "name": "Grocery Store",
-                "description": "Buy either unprepared food or boxed meals.\r\n\r\nThere are several types of jobs available here:\r\n\u2022 Cashier\r\n\u2022 Bagger\r\n\u2022 Stocker\r\n\u2022 Manager",
+                "id": 27,
+                "name": "Restaurant",
+                "description": "More expensive than the grocery store but doesn't require preparation and more filling than boxed food.",
                 "attribs": [],
                 "abilities": [],
                 "dimensions": null,
                 "excluded": null,
                 "toplevel": false,
                 "masked": false,
+                "items": [],
+                "item_refs": [],
+                "destinations": []
+            },
+            {
+                "id": 28,
+                "name": "School",
+                "description": "Full time is generally considered to be 2 classes, although classes vary as to how demanding they are. You could push and go up to 3, or take only 1 for a part-time load.",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": null,
+                "excluded": null,
+                "toplevel": true,
+                "masked": false,
                 "items": [
                     {
-                        "item_id": 21,
+                        "item_id": 18,
                         "quantity": 1.0,
                         "position": null
                     }

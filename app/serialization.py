@@ -12,6 +12,7 @@ from .models import (
     RecipeAttribReq, Progress, Overall, WinRequirement)
 from .src.logic_user_interaction import clear_session_logs
 from .src.logic_discovery import run_discovery_scan
+from app.utils import name_stripped
 
 logger = logging.getLogger(__name__)
 
@@ -206,7 +207,9 @@ def patch_from_dict(data):
         type_str = model_cls.__mapper_args__['polymorphic_identity']
         for entry in entities_data.get(key, []):
             old_id = entry.get('id')
-            existing = Entity.query.filter_by(game_token=game_token, id=old_id).first()
+            existing = Entity.query.filter_by(
+                game_token=game_token, id=old_id).order_by(
+                name_stripped()).first()
 
             # If type matches, update existing (ID stays same)
             if existing and existing.entity_type == type_str:
@@ -301,19 +304,22 @@ def export_to_dict():
     for key, model_cls in ENTITIES.items():
         entities = model_cls.query.filter(
             model_cls.game_token == game_token
-        ).all()
+        ).order_by(name_stripped()).all()
         
         output[JsonKeys.ENTITIES][key] = [ent.to_dict() for ent in entities]
 
     # General state
     gen_piles = Pile.query.filter_by(game_token=game_token, owner_id=GENERAL_ID).all()
     output[JsonKeys.GENERAL]["piles"] = [
-        {"item_id": p.item_id, "quantity": p.quantity} 
-        for p in gen_piles
+        {"item_id": p.item_id, "quantity": p.quantity}
+        for p in sorted(gen_piles, key=lambda p: (p.item_id, p.quantity))
     ]
-
-    gen_progress = Progress.query.filter_by(game_token=game_token, host_id=GENERAL_ID).all()
-    output[JsonKeys.GENERAL]["progress"] = [prog.to_dict() for prog in gen_progress]
+    gen_progress = Progress.query.filter_by(
+        game_token=game_token, host_id=GENERAL_ID).all()
+    output[JsonKeys.GENERAL]["progress"] = [
+        prog.to_dict()
+        for prog in sorted(gen_progress, key=lambda p: p.recipe_id)
+    ]
 
     return output
 
@@ -382,7 +388,8 @@ def serialize_smart(obj, indent=4, max_line_length=60, current_indent=0):
         return "{" + "".join(lines) + f"\n{padding}}}"
 
     # --- HANDLE PRIMITIVES ---
-    return json.dumps(obj)
+    # Prefer unicode symbols over escape sequences as they're easier to edit.
+    return json.dumps(obj, ensure_ascii=False)
 
 def range_to_list(r):
     """Converts a Postgres NumericRange to a [min, max] list."""

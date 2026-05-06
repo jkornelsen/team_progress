@@ -40,20 +40,6 @@
         ],
         "locations": [
             {
-                "id": 12,
-                "name": "Regolith Processing Plant",
-                "description": "An area rich in regolith with high concentrations of helium-3. The facility covers several acres and includes the processing equipment, storage units for helium-3, and solar panels for power.",
-                "attribs": [],
-                "abilities": [],
-                "dimensions": null,
-                "excluded": null,
-                "toplevel": false,
-                "masked": false,
-                "items": [],
-                "item_refs": [],
-                "destinations": []
-            },
-            {
                 "id": 13,
                 "name": "Base",
                 "description": "Food, bed, shower.  Life support systems, a greenhouse for food production, and laboratories for scientific research.",
@@ -68,9 +54,9 @@
                 "destinations": []
             },
             {
-                "id": 14,
-                "name": "Surface 1",
-                "description": "",
+                "id": 12,
+                "name": "Regolith Processing Plant",
+                "description": "An area rich in regolith with high concentrations of helium-3. The facility covers several acres and includes the processing equipment, storage units for helium-3, and solar panels for power.",
                 "attribs": [],
                 "abilities": [],
                 "dimensions": null,
@@ -100,6 +86,20 @@
                         "bidirectional": true
                     }
                 ]
+            },
+            {
+                "id": 14,
+                "name": "Surface 1",
+                "description": "",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": null,
+                "excluded": null,
+                "toplevel": false,
+                "masked": false,
+                "items": [],
+                "item_refs": [],
+                "destinations": []
             },
             {
                 "id": 16,
@@ -133,48 +133,6 @@
             }
         ],
         "characters": [
-            {
-                "id": 17,
-                "name": "Selen",
-                "description": "Renegade robot that lives underground. Solar powered.",
-                "attribs": [
-                    [
-                        2,
-                        3.0
-                    ],
-                    [
-                        3,
-                        1.0
-                    ],
-                    [
-                        4,
-                        3.0
-                    ],
-                    [
-                        8,
-                        10.0
-                    ],
-                    [
-                        7,
-                        10.0
-                    ],
-                    [
-                        5,
-                        10.0
-                    ],
-                    [
-                        6,
-                        3.0
-                    ]
-                ],
-                "abilities": [],
-                "toplevel": true,
-                "masked": false,
-                "location_id": 16,
-                "position": null,
-                "travel_party": "",
-                "items": []
-            },
             {
                 "id": 18,
                 "name": "Bill",
@@ -218,6 +176,48 @@
                         "slot": "hands"
                     }
                 ]
+            },
+            {
+                "id": 17,
+                "name": "Selen",
+                "description": "Renegade robot that lives underground. Solar powered.",
+                "attribs": [
+                    [
+                        2,
+                        3.0
+                    ],
+                    [
+                        3,
+                        1.0
+                    ],
+                    [
+                        4,
+                        3.0
+                    ],
+                    [
+                        8,
+                        10.0
+                    ],
+                    [
+                        7,
+                        10.0
+                    ],
+                    [
+                        5,
+                        10.0
+                    ],
+                    [
+                        6,
+                        3.0
+                    ]
+                ],
+                "abilities": [],
+                "toplevel": true,
+                "masked": false,
+                "location_id": 16,
+                "position": null,
+                "travel_party": "",
+                "items": []
             }
         ],
         "attribs": [
@@ -280,9 +280,9 @@
         ],
         "events": [
             {
-                "id": 19,
-                "name": "Keep Peaceful",
-                "description": "Failures are likely to increase hostility.",
+                "id": 23,
+                "name": "Attack Success",
+                "description": "Whether the attack misses or otherwise fails.",
                 "numeric_range": [
                     1,
                     20
@@ -308,9 +308,9 @@
                 "determining": []
             },
             {
-                "id": 21,
-                "name": "Repair or Heal",
-                "description": "Attempt to repair robot's body. Could also be used to treat a living creature's wounds.",
+                "id": 19,
+                "name": "Keep Peaceful",
+                "description": "Failures are likely to increase hostility.",
                 "numeric_range": [
                     1,
                     20
@@ -336,9 +336,9 @@
                 "determining": []
             },
             {
-                "id": 23,
-                "name": "Attack Success",
-                "description": "Whether the attack misses or otherwise fails.",
+                "id": 21,
+                "name": "Repair or Heal",
+                "description": "Attempt to repair robot's body. Could also be used to treat a living creature's wounds.",
                 "numeric_range": [
                     1,
                     20

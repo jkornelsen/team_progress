@@ -19,7 +19,7 @@ from app.serialization import (
     clear_game_data, export_game_to_json, export_to_dict)
 from app.utils import (
     LinkLetters, RequestHelper, parse_coords,
-    capture_origin, redirect_back)
+    capture_origin, redirect_back, name_stripped)
 from .logic_discovery import run_discovery_scan
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ def index():
     capture_origin("Main Setup")
 
     entities = {
-        name: model.query.filter_by(game_token=g.game_token).order_by(model.name).all()
+        name: model.query.filter_by(game_token=g.game_token).order_by(name_stripped()).all()
         for name, model in ENTITIES.items()
     }
     overall = Overall.query.get(g.game_token)
@@ -65,7 +65,7 @@ def edit_overall():
         return redirect(url_for('configure.index'))
         
     entities = {
-        name: model.query.filter_by(game_token=g.game_token).order_by(model.name).all()
+        name: model.query.filter_by(game_token=g.game_token).order_by(name_stripped()).all()
         for name, model in ENTITIES.items()
     }
     return render_template(
@@ -232,11 +232,11 @@ def edit_item(id):
         item=item, 
         initial_qty=gen_qty,
         all_items=Item.query.filter_by(
-            game_token=game_token).order_by(Item.name).all(),
+            game_token=game_token).order_by(name_stripped()).all(),
         all_attribs=Attrib.query.filter_by(
-            game_token=game_token).order_by(Attrib.name).all(),
+            game_token=game_token).order_by(name_stripped()).all(),
         all_events=Event.query.filter_by(
-            game_token=game_token).order_by(Event.name).all(),
+            game_token=game_token).order_by(name_stripped()).all(),
         recipes=item.recipes if item else []
     )
 
@@ -385,7 +385,7 @@ def edit_location(id):
         return redirect_back('configure.index') 
 
     all_items = Item.query.filter_by(
-        game_token=game_token).order_by(Item.name).all()
+        game_token=game_token).order_by(name_stripped()).all()
     universal_items = [
         i for i in all_items if i.storage_type == StorageType.UNIVERSAL]
     containable_items = [
@@ -417,11 +417,11 @@ def edit_location(id):
         inventory=Pile.query.filter_by(
             game_token=game_token, owner_id=id).all() if id != 'new' else [],
         all_locs=Location.query.filter_by(
-            game_token=game_token).order_by(Location.name).all(),
+            game_token=game_token).order_by(name_stripped()).all(),
         all_attribs=Attrib.query.filter_by(
-            game_token=game_token).order_by(Attrib.name).all(),
+            game_token=game_token).order_by(name_stripped()).all(),
         all_events=Event.query.filter_by(
-            game_token=game_token).order_by(Event.name).all(),
+            game_token=game_token).order_by(name_stripped()).all(),
         all_containable_items=containable_items,
         all_universal_items=universal_items,
     )
@@ -500,13 +500,13 @@ def edit_character(id):
     return render_template('configure/character.html', 
         character=char, 
         all_locs=Location.query.filter_by(
-            game_token=game_token).order_by(Location.name).all(),
+            game_token=game_token).order_by(name_stripped()).all(),
         all_attribs=Attrib.query.filter_by(
-            game_token=game_token).order_by(Attrib.name).all(),
+            game_token=game_token).order_by(name_stripped()).all(),
         all_items=Item.query.filter_by(
-            game_token=game_token).order_by(Item.name).all(),
+            game_token=game_token).order_by(name_stripped()).all(),
         all_events=Event.query.filter_by(
-            game_token=game_token).order_by(Event.name).all(),
+            game_token=game_token).order_by(name_stripped()).all(),
         overall=Overall.query.get(game_token)
     )
 
@@ -645,7 +645,7 @@ def edit_event(id):
 
     # Data for select boxes
     all_items = Item.query.filter_by(
-        game_token=game_token).order_by(Item.name).all()
+        game_token=game_token).order_by(name_stripped()).all()
     recipe_map = {}
     for item in all_items:
         recipe_map[item.id] = [
@@ -655,7 +655,7 @@ def edit_event(id):
     return render_template('configure/event.html', 
         event=event,
         all_attribs=Attrib.query.filter_by(
-            game_token=game_token).order_by(Attrib.name).all(),
+            game_token=game_token).order_by(name_stripped()).all(),
         all_items=all_items,
         recipe_map=recipe_map,
         OutcomeType=OutcomeType,

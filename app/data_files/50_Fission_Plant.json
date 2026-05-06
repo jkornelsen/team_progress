@@ -2,108 +2,6 @@
     "entities": {
         "items": [
             {
-                "id": 4,
-                "name": "Plutonium",
-                "description": "Valuable nuclear material used in a reactor to generate high energy levels.\r\n\r\nMeasured in units of 100 \u03bcg (0.0001 g). This amount causes 1e17 fission reactions, generating 1 kWh of energy.",
-                "attribs": [],
-                "abilities": [18],
-                "storage_type": "u",
-                "q_limit": 0.0,
-                "loc_hosted": false,
-                "toplevel": true,
-                "masked": false,
-                "recipes": []
-            },
-            {
-                "id": 5,
-                "name": "Radioactive Waste",
-                "description": "Glowing, greenish sludge. Stored in thick metal barrels\u2014just hope they don't spring a leak.\r\n\r\nCan be consumed and neutralized by bio-engineered bacteria.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "u",
-                "q_limit": 0.0,
-                "loc_hosted": false,
-                "toplevel": true,
-                "masked": true,
-                "recipes": [
-                    {
-                        "id": 16,
-                        "rate_amount": 1.0,
-                        "rate_duration": 8.0,
-                        "instant": false,
-                        "sources": [
-                            {"item_id": 5, "q_required": 2.0, "preserve": false}
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
-                    }
-                ]
-            },
-            {
-                "id": 6,
-                "name": "Reactor",
-                "description": "Accelerates atomic particles to collide with nuclei, splitting them into smaller parts and releasing energy.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "l",
-                "q_limit": 1.0,
-                "loc_hosted": true,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
-            },
-            {
-                "id": 8,
-                "name": "Thermal Waste",
-                "description": "Generated heat could turn nearby rivers into hot springs, upsetting \ud83d\udc1f fishes.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "u",
-                "q_limit": 0.0,
-                "loc_hosted": false,
-                "toplevel": true,
-                "masked": true,
-                "recipes": [
-                    {
-                        "id": 17,
-                        "rate_amount": 0.0,
-                        "rate_duration": 3.0,
-                        "instant": false,
-                        "sources": [
-                            {"item_id": 8, "q_required": 1.0, "preserve": false},
-                            {"item_id": 10, "q_required": 1.0, "preserve": true}
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
-                    }
-                ]
-            },
-            {
-                "id": 3,
-                "name": "Production Speed I",
-                "description": "+1 each to energy production speed. This improves speed but not efficiency, so also increase the waste generated and resources required.",
-                "attribs": [],
-                "abilities": [17],
-                "storage_type": "l",
-                "q_limit": 10.0,
-                "loc_hosted": false,
-                "toplevel": false,
-                "masked": false,
-                "recipes": [
-                    {
-                        "id": 19,
-                        "rate_amount": 1.0,
-                        "rate_duration": 300.0,
-                        "instant": false,
-                        "sources": [
-                            {"item_id": 11, "q_required": 100.0, "preserve": false}
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
-                    }
-                ]
-            },
-            {
                 "id": 10,
                 "name": "Cooling Tower",
                 "description": "Cycles water to cool through contact with air.",
@@ -117,40 +15,31 @@
                 "recipes": []
             },
             {
-                "id": 7,
-                "name": "Spent Fuel",
-                "description": "Nuclear fuel becomes inefficient and radioactive after use. Refine into fresh plutonium by atomic reclamation.",
+                "id": 9,
+                "name": "Energy",
+                "description": "Stored in a high-capacity battery. Quantity is measured in kilowatt-hours (kWh).\r\n\r\nA fully charged battery is enough to provide backup power for a city while the main supply is repaired. *IRL Note: Present-day batteries cannot hold such amounts.*",
                 "attribs": [],
-                "abilities": [18],
+                "abilities": [],
                 "storage_type": "u",
-                "q_limit": 0.0,
+                "q_limit": 10000000.0,
                 "loc_hosted": false,
-                "toplevel": false,
-                "masked": true,
-                "recipes": []
-            },
-            {
-                "id": 2,
-                "name": "Production Speed II",
-                "description": "Energy production speed \u00d7 (4 per) for a fairly steep linear increase. This improves speed but not efficiency, so also increase the waste generated and resources required.\r\n\r\nProducing the first increase makes 1.25 so round that value to 1 in [location settings](/configure/location/14) for quadruple effect.",
-                "attribs": [],
-                "abilities": [17],
-                "storage_type": "l",
-                "q_limit": 5.0,
-                "loc_hosted": false,
-                "toplevel": false,
+                "toplevel": true,
                 "masked": false,
                 "recipes": [
                     {
-                        "id": 20,
+                        "id": 14,
                         "rate_amount": 1.0,
-                        "rate_duration": 300.0,
+                        "rate_duration": 8.0,
                         "instant": false,
                         "sources": [
-                            {"item_id": 3, "q_required": 1.0, "preserve": true},
-                            {"item_id": 11, "q_required": 1000.0, "preserve": false}
+                            {"item_id": 4, "q_required": 1.0, "preserve": false},
+                            {"item_id": 6, "q_required": 1.0, "preserve": true}
                         ],
-                        "byproducts": [],
+                        "byproducts": [
+                            {"item_id": 5, "rate_amount": 2.0},
+                            {"item_id": 7, "rate_amount": 1.0},
+                            {"item_id": 8, "rate_amount": 2.0}
+                        ],
                         "attrib_reqs": []
                     }
                 ]
@@ -194,31 +83,142 @@
                 "recipes": []
             },
             {
-                "id": 9,
-                "name": "Energy",
-                "description": "Stored in a high-capacity battery. Quantity is measured in kilowatt-hours (kWh).\r\n\r\nA fully charged battery is enough to provide backup power for a city while the main supply is repaired. *IRL Note: Present-day batteries cannot hold such amounts.*",
+                "id": 4,
+                "name": "Plutonium",
+                "description": "Valuable nuclear material used in a reactor to generate high energy levels.\r\n\r\nMeasured in units of 100 \u03bcg (0.0001 g). This amount causes 1e17 fission reactions, generating 1 kWh of energy.",
                 "attribs": [],
-                "abilities": [],
+                "abilities": [18],
                 "storage_type": "u",
-                "q_limit": 10000000.0,
+                "q_limit": 0.0,
                 "loc_hosted": false,
                 "toplevel": true,
                 "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 3,
+                "name": "Production Speed I",
+                "description": "+1 each to energy production speed. This improves speed but not efficiency, so also increase the waste generated and resources required.",
+                "attribs": [],
+                "abilities": [17],
+                "storage_type": "l",
+                "q_limit": 10.0,
+                "loc_hosted": false,
+                "toplevel": false,
+                "masked": false,
                 "recipes": [
                     {
-                        "id": 14,
+                        "id": 19,
+                        "rate_amount": 1.0,
+                        "rate_duration": 300.0,
+                        "instant": false,
+                        "sources": [
+                            {"item_id": 11, "q_required": 100.0, "preserve": false}
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 2,
+                "name": "Production Speed II",
+                "description": "Energy production speed \u00d7 (4 per) for a fairly steep linear increase. This improves speed but not efficiency, so also increase the waste generated and resources required.\r\n\r\nProducing the first increase makes 1.25 so round that value to 1 in [location settings](/configure/location/14) for quadruple effect.",
+                "attribs": [],
+                "abilities": [17],
+                "storage_type": "l",
+                "q_limit": 5.0,
+                "loc_hosted": false,
+                "toplevel": false,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 20,
+                        "rate_amount": 1.0,
+                        "rate_duration": 300.0,
+                        "instant": false,
+                        "sources": [
+                            {"item_id": 3, "q_required": 1.0, "preserve": true},
+                            {"item_id": 11, "q_required": 1000.0, "preserve": false}
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 5,
+                "name": "Radioactive Waste",
+                "description": "Glowing, greenish sludge. Stored in thick metal barrels\u2014just hope they don't spring a leak.\r\n\r\nCan be consumed and neutralized by bio-engineered bacteria.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 0.0,
+                "loc_hosted": false,
+                "toplevel": true,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 16,
                         "rate_amount": 1.0,
                         "rate_duration": 8.0,
                         "instant": false,
                         "sources": [
-                            {"item_id": 4, "q_required": 1.0, "preserve": false},
-                            {"item_id": 6, "q_required": 1.0, "preserve": true}
+                            {"item_id": 5, "q_required": 2.0, "preserve": false}
                         ],
-                        "byproducts": [
-                            {"item_id": 5, "rate_amount": 2.0},
-                            {"item_id": 7, "rate_amount": 1.0},
-                            {"item_id": 8, "rate_amount": 2.0}
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 6,
+                "name": "Reactor",
+                "description": "Accelerates atomic particles to collide with nuclei, splitting them into smaller parts and releasing energy.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 1.0,
+                "loc_hosted": true,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 7,
+                "name": "Spent Fuel",
+                "description": "Nuclear fuel becomes inefficient and radioactive after use. Refine into fresh plutonium by atomic reclamation.",
+                "attribs": [],
+                "abilities": [18],
+                "storage_type": "u",
+                "q_limit": 0.0,
+                "loc_hosted": false,
+                "toplevel": false,
+                "masked": true,
+                "recipes": []
+            },
+            {
+                "id": 8,
+                "name": "Thermal Waste",
+                "description": "Generated heat could turn nearby rivers into hot springs, upsetting \ud83d\udc1f fishes.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 0.0,
+                "loc_hosted": false,
+                "toplevel": true,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 17,
+                        "rate_amount": 0.0,
+                        "rate_duration": 3.0,
+                        "instant": false,
+                        "sources": [
+                            {"item_id": 8, "q_required": 1.0, "preserve": false},
+                            {"item_id": 10, "q_required": 1.0, "preserve": true}
                         ],
+                        "byproducts": [],
                         "attrib_reqs": []
                     }
                 ]
@@ -334,6 +334,21 @@
         ],
         "events": [
             {
+                "id": 15,
+                "name": "Plant Problem Type",
+                "description": "Get more information about a problem that occurred. Possible outcomes:\r\n\r\n- **Unusable Amenities** \u2014 employees don't appreciate this kind of work environment\r\n- **Low Wages** \u2014 employees are unhappy and may go on strike\r\n- **Waste Bacteria Inert** \u2014 fail to reduce radioactive waste\r\n- **Radioactive Waste Leak** \u2014 significantly increases amount of radioactive waste (cleanup becomes a bigger job)\r\n- **Cooling System Leak** \u2014 less efficient thermal waste reduction, could potentially hit employees with scalding water\r\n- **Mechanical Failure** \u2014 temporarily prevents some systems from operating, may require mechanical repairs\r\n- **Electricity Down** \u2014 temporarily prevents some systems from operating, may require repairs to electrical system\r\n- **Energy Not Gained** \u2014 nothing to fix but roll back recent energy gains\r\n- **Excess Energy** \u2014 this is a bigger problem, damaging storage systems\r\n- **Core Meltdown** \u2014 the worst-case scenario\r\n\r\nIf the inciting roll was a major failure then consider the problem to be more severe.",
+                "attribs": [],
+                "abilities": [],
+                "toplevel": false,
+                "outcome_type": "selection",
+                "roller_type": "dnd",
+                "numeric_range": [0, 10],
+                "single_number": 0.0,
+                "selection_strings": "Radioactive Waste Leak\r\nWaste Bacteria Inert\r\nCooling System Leak\r\nMechanical Failure\r\nElectricity Down\r\nUnusable Amenities\r\nEnergy Not Gained\r\nExcess Energy\r\nCore Meltdown",
+                "determinants": [],
+                "effects": []
+            },
+            {
                 "id": 17,
                 "name": "Production Speed",
                 "description": "Determine production speed by taking upgrades into account.",
@@ -446,24 +461,9 @@
                 "effects": []
             },
             {
-                "id": 15,
-                "name": "Plant Problem Type",
-                "description": "Get more information about a problem that occurred. Possible outcomes:\r\n\r\n- **Unusable Amenities** \u2014 employees don't appreciate this kind of work environment\r\n- **Low Wages** \u2014 employees are unhappy and may go on strike\r\n- **Waste Bacteria Inert** \u2014 fail to reduce radioactive waste\r\n- **Radioactive Waste Leak** \u2014 significantly increases amount of radioactive waste (cleanup becomes a bigger job)\r\n- **Cooling System Leak** \u2014 less efficient thermal waste reduction, could potentially hit employees with scalding water\r\n- **Mechanical Failure** \u2014 temporarily prevents some systems from operating, may require mechanical repairs\r\n- **Electricity Down** \u2014 temporarily prevents some systems from operating, may require repairs to electrical system\r\n- **Energy Not Gained** \u2014 nothing to fix but roll back recent energy gains\r\n- **Excess Energy** \u2014 this is a bigger problem, damaging storage systems\r\n- **Core Meltdown** \u2014 the worst-case scenario\r\n\r\nIf the inciting roll was a major failure then consider the problem to be more severe.",
-                "attribs": [],
-                "abilities": [],
-                "toplevel": false,
-                "outcome_type": "selection",
-                "roller_type": "dnd",
-                "numeric_range": [0, 10],
-                "single_number": 0.0,
-                "selection_strings": "Radioactive Waste Leak\r\nWaste Bacteria Inert\r\nCooling System Leak\r\nMechanical Failure\r\nElectricity Down\r\nUnusable Amenities\r\nEnergy Not Gained\r\nExcess Energy\r\nCore Meltdown",
-                "determinants": [],
-                "effects": []
-            },
-            {
-                "id": 23,
-                "name": "Workers: Retain",
-                "description": "If they're not happy then they may decide to leave.",
+                "id": 25,
+                "name": "Workers: Fire",
+                "description": "Lower selected worker counts and set Layoffs to how many you just removed total.\r\n\r\nIf the outcome is successful, then the layoffs increase profits, resulting in a [pay raise](/play/attrib/24/subject/19).",
                 "attribs": [],
                 "abilities": [],
                 "toplevel": false,
@@ -472,56 +472,7 @@
                 "numeric_range": [1, 20],
                 "single_number": 0.0,
                 "selection_strings": "",
-                "determinants": [
-                    {
-                        "label": "",
-                        "val_src": "field",
-                        "infield": {
-                            "role": "at",
-                            "field_mode": "attr",
-                            "child_of_anchor": true,
-                            "item_id": 0,
-                            "attrib_id": 20
-                        },
-                        "outfield": null,
-                        "op_application": "+",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 0.0
-                    },
-                    {
-                        "label": "",
-                        "val_src": "field",
-                        "infield": {
-                            "role": "at",
-                            "field_mode": "qty",
-                            "child_of_anchor": false,
-                            "item_id": 22,
-                            "attrib_id": 0
-                        },
-                        "outfield": null,
-                        "op_application": "+",
-                        "op_transform": "scap",
-                        "val_transform": 0.5,
-                        "val_required": 0.0
-                    },
-                    {
-                        "label": "",
-                        "val_src": "field",
-                        "infield": {
-                            "role": "at",
-                            "field_mode": "qty",
-                            "child_of_anchor": false,
-                            "item_id": 19,
-                            "attrib_id": 0
-                        },
-                        "outfield": null,
-                        "op_application": "-",
-                        "op_transform": "scap",
-                        "val_transform": 0.5,
-                        "val_required": 0.0
-                    }
-                ],
+                "determinants": [],
                 "effects": []
             },
             {
@@ -589,9 +540,9 @@
                 "effects": []
             },
             {
-                "id": 25,
-                "name": "Workers: Fire",
-                "description": "Lower selected worker counts and set Layoffs to how many you just removed total.\r\n\r\nIf the outcome is successful, then the layoffs increase profits, resulting in a [pay raise](/play/attrib/24/subject/19).",
+                "id": 23,
+                "name": "Workers: Retain",
+                "description": "If they're not happy then they may decide to leave.",
                 "attribs": [],
                 "abilities": [],
                 "toplevel": false,
@@ -600,7 +551,56 @@
                 "numeric_range": [1, 20],
                 "single_number": 0.0,
                 "selection_strings": "",
-                "determinants": [],
+                "determinants": [
+                    {
+                        "label": "",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "at",
+                            "field_mode": "attr",
+                            "child_of_anchor": true,
+                            "item_id": 0,
+                            "attrib_id": 20
+                        },
+                        "outfield": null,
+                        "op_application": "+",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 0.0
+                    },
+                    {
+                        "label": "",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "at",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 22,
+                            "attrib_id": 0
+                        },
+                        "outfield": null,
+                        "op_application": "+",
+                        "op_transform": "scap",
+                        "val_transform": 0.5,
+                        "val_required": 0.0
+                    },
+                    {
+                        "label": "",
+                        "val_src": "field",
+                        "infield": {
+                            "role": "at",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 19,
+                            "attrib_id": 0
+                        },
+                        "outfield": null,
+                        "op_application": "-",
+                        "op_transform": "scap",
+                        "val_transform": 0.5,
+                        "val_required": 0.0
+                    }
+                ],
                 "effects": []
             }
         ]

@@ -11,7 +11,7 @@ from app.models import (
     GENERAL_ID, StorageType, Participant)
 from app.utils import (
     RequestHelper, ContextIds, format_num, parse_coords, LinkLetters,
-    capture_origin, redirect_back)
+    capture_origin, redirect_back, name_stripped, sort_by_name_stripped)
 from .logic_piles import transfer_item
 from .logic_event import (
     roll_for_outcome, roll_for_system_outcome, calculate_determinants,
@@ -42,13 +42,13 @@ def overview():
     
     # Fetch Top-Level Entities
     chars = Character.query.filter_by(
-        game_token=game_token, toplevel=True).order_by(Character.name).all()
+        game_token=game_token, toplevel=True).order_by(name_stripped()).all()
     locs = Location.query.filter_by(
-        game_token=game_token, toplevel=True).order_by(Location.name).all()
+        game_token=game_token, toplevel=True).order_by(name_stripped()).all()
     items = Item.query.filter_by(
-        game_token=game_token, toplevel=True).order_by(Item.name).all()
+        game_token=game_token, toplevel=True).order_by(name_stripped()).all()
     events = Event.query.filter_by(
-        game_token=game_token, toplevel=True).order_by(Event.name).all()
+        game_token=game_token, toplevel=True).order_by(name_stripped()).all()
     
     # Tick All Production
     tick_all_active()
@@ -100,12 +100,13 @@ def play_location(id):
     # 1. Fetch Characters & Items
     characters_here = Character.query.filter_by(
         game_token=game_token, location_id=id
-    ).order_by(Character.name).all()
+    ).order_by(name_stripped()).all()
     
     inventory_piles = Pile.query.filter_by(
         game_token=game_token, owner_id=id
     ).all()
-    inventory_piles.sort(key=lambda p: p.item.name.lower())
+    inventory_piles = sort_by_name_stripped(
+        inventory_piles, key=lambda p: p.item.name)
 
     # Validate the session's char_id
     current_char_id = session.get('old_char_id')
@@ -171,7 +172,8 @@ def play_location(id):
             'item': ref.item,
             'quantity': gen_pile.quantity if gen_pile else 0.0
         })
-    referenced_data = sorted(referenced_data, key=lambda x: x['item'].name)
+    referenced_data = sort_by_name_stripped(
+        referenced_data, key=lambda x: x['item'].name)
 
     # 5. Local attributes
     attrib_values = AttribVal.query.filter_by(
@@ -647,6 +649,8 @@ def play_item(id):
                 'url_params': ctx.get_params()
             })
             seen_ids.add(product.id)
+    used_for_production = sort_by_name_stripped(
+        used_for_production, key=lambda x: x['item'].name)
 
     # Recipes where this item is a BYPRODUCT
     byproduct_of = []
@@ -1047,7 +1051,7 @@ def play_event(id):
                             (Entity.game_token == EntityAbility.game_token))
         .filter(EntityAbility.event_id == id)
         .filter(EntityAbility.game_token == game_token)
-        .order_by(Entity.name.asc())
+        .order_by(name_stripped(Entity.name))
         .all()
     )
 

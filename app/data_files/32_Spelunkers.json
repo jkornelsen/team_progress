@@ -2,6 +2,18 @@
     "entities": {
         "items": [
             {
+                "id": 9,
+                "name": "Good Rope",
+                "description": "",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "c",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
                 "id": 7,
                 "name": "Headlamp",
                 "description": "",
@@ -24,75 +36,9 @@
                 "toplevel": false,
                 "masked": false,
                 "recipes": []
-            },
-            {
-                "id": 9,
-                "name": "Good Rope",
-                "description": "",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "c",
-                "q_limit": 1.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
             }
         ],
         "locations": [
-            {
-                "id": 10,
-                "name": "Room with Crystals on Ceiling",
-                "description": "Covering the crystals are Spectrum-Winged Bats with iridescent fur.\r\n\r\nAt the far end, forks into two paths. The walls on the left path are dripping water. On the right, a faint breeze carries a metallic scent.",
-                "attribs": [],
-                "abilities": [],
-                "dimensions": null,
-                "excluded": null,
-                "toplevel": false,
-                "masked": false,
-                "items": [],
-                "item_refs": [],
-                "destinations": [
-                    {
-                        "loc2_id": 11,
-                        "duration": 1,
-                        "bidirectional": true
-                    }
-                ]
-            },
-            {
-                "id": 11,
-                "name": "Path around Pool",
-                "description": "Slippery",
-                "attribs": [],
-                "abilities": [],
-                "dimensions": null,
-                "excluded": null,
-                "toplevel": false,
-                "masked": false,
-                "items": [],
-                "item_refs": [],
-                "destinations": [
-                    {
-                        "loc2_id": 13,
-                        "duration": 1,
-                        "bidirectional": true
-                    }
-                ]
-            },
-            {
-                "id": 12,
-                "name": "Outside Cave Entrance",
-                "description": "Tropical jungle, with a wide dirt path nearby. It looks like people visit the cave from time to time.",
-                "attribs": [],
-                "abilities": [],
-                "dimensions": null,
-                "excluded": null,
-                "toplevel": false,
-                "masked": false,
-                "items": [],
-                "item_refs": [],
-                "destinations": []
-            },
             {
                 "id": 13,
                 "name": "Big Room Inside Entrance",
@@ -114,9 +60,9 @@
                 ]
             },
             {
-                "id": 14,
-                "name": "Right Passage",
-                "description": "Slight breeze brings a faint metallic smell.",
+                "id": 16,
+                "name": "Chamber with Clinking Pillar",
+                "description": "Walls shine with metal in the light of their headlamps. The clinking sound is coming from the center, a pillar formation from floor to ceiling that doesn't completely look natural, but not constructed either.",
                 "attribs": [],
                 "abilities": [],
                 "dimensions": null,
@@ -127,7 +73,7 @@
                 "item_refs": [],
                 "destinations": [
                     {
-                        "loc2_id": 10,
+                        "loc2_id": 14,
                         "duration": 1,
                         "bidirectional": true
                     }
@@ -154,9 +100,23 @@
                 ]
             },
             {
-                "id": 16,
-                "name": "Chamber with Clinking Pillar",
-                "description": "Walls shine with metal in the light of their headlamps. The clinking sound is coming from the center, a pillar formation from floor to ceiling that doesn't completely look natural, but not constructed either.",
+                "id": 12,
+                "name": "Outside Cave Entrance",
+                "description": "Tropical jungle, with a wide dirt path nearby. It looks like people visit the cave from time to time.",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": null,
+                "excluded": null,
+                "toplevel": false,
+                "masked": false,
+                "items": [],
+                "item_refs": [],
+                "destinations": []
+            },
+            {
+                "id": 11,
+                "name": "Path around Pool",
+                "description": "Slippery",
                 "attribs": [],
                 "abilities": [],
                 "dimensions": null,
@@ -167,7 +127,47 @@
                 "item_refs": [],
                 "destinations": [
                     {
-                        "loc2_id": 14,
+                        "loc2_id": 13,
+                        "duration": 1,
+                        "bidirectional": true
+                    }
+                ]
+            },
+            {
+                "id": 14,
+                "name": "Right Passage",
+                "description": "Slight breeze brings a faint metallic smell.",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": null,
+                "excluded": null,
+                "toplevel": false,
+                "masked": false,
+                "items": [],
+                "item_refs": [],
+                "destinations": [
+                    {
+                        "loc2_id": 10,
+                        "duration": 1,
+                        "bidirectional": true
+                    }
+                ]
+            },
+            {
+                "id": 10,
+                "name": "Room with Crystals on Ceiling",
+                "description": "Covering the crystals are Spectrum-Winged Bats with iridescent fur.\r\n\r\nAt the far end, forks into two paths. The walls on the left path are dripping water. On the right, a faint breeze carries a metallic scent.",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": null,
+                "excluded": null,
+                "toplevel": false,
+                "masked": false,
+                "items": [],
+                "item_refs": [],
+                "destinations": [
+                    {
+                        "loc2_id": 11,
                         "duration": 1,
                         "bidirectional": true
                     }
@@ -374,167 +374,6 @@
         ],
         "events": [
             {
-                "id": 21,
-                "name": "Navigate",
-                "description": "Success in making it past a certain point, or walking on a path.",
-                "numeric_range": [
-                    1,
-                    20
-                ],
-                "outcome_type": "fourway",
-                "selection_strings": "",
-                "toplevel": true,
-                "triggers": [],
-                "determining": [
-                    {
-                        "entity_data": [
-                            "attrib",
-                            4
-                        ],
-                        "operation": "+",
-                        "label": ""
-                    }
-                ]
-            },
-            {
-                "id": 22,
-                "name": "Hold",
-                "description": "Holding delicate, slippery, or awkward items.",
-                "numeric_range": [
-                    1,
-                    20
-                ],
-                "outcome_type": "fourway",
-                "selection_strings": "",
-                "toplevel": true,
-                "triggers": [],
-                "determining": [
-                    {
-                        "entity_data": [
-                            "attrib",
-                            4
-                        ],
-                        "operation": "+",
-                        "label": ""
-                    }
-                ]
-            },
-            {
-                "id": 23,
-                "name": "Throw",
-                "description": "",
-                "numeric_range": [
-                    1,
-                    20
-                ],
-                "outcome_type": "fourway",
-                "selection_strings": "",
-                "toplevel": true,
-                "triggers": [],
-                "determining": [
-                    {
-                        "entity_data": [
-                            "attrib",
-                            4
-                        ],
-                        "operation": "+",
-                        "label": ""
-                    }
-                ]
-            },
-            {
-                "id": 24,
-                "name": "Seize",
-                "description": "Catch, grab, or restrain elusive targets.",
-                "numeric_range": [
-                    1,
-                    20
-                ],
-                "outcome_type": "fourway",
-                "selection_strings": "",
-                "toplevel": true,
-                "triggers": [],
-                "determining": [
-                    {
-                        "entity_data": [
-                            "attrib",
-                            4
-                        ],
-                        "operation": "+",
-                        "label": ""
-                    }
-                ]
-            },
-            {
-                "id": 25,
-                "name": "Perceive",
-                "description": "For example, discover details about an object by viewing it.",
-                "numeric_range": [
-                    1,
-                    20
-                ],
-                "outcome_type": "fourway",
-                "selection_strings": "",
-                "toplevel": true,
-                "triggers": [],
-                "determining": [
-                    {
-                        "entity_data": [
-                            "attrib",
-                            6
-                        ],
-                        "operation": "+",
-                        "label": ""
-                    }
-                ]
-            },
-            {
-                "id": 26,
-                "name": "Investigate",
-                "description": "Figure out how something works or what its purpose is.",
-                "numeric_range": [
-                    1,
-                    20
-                ],
-                "outcome_type": "fourway",
-                "selection_strings": "",
-                "toplevel": true,
-                "triggers": [],
-                "determining": [
-                    {
-                        "entity_data": [
-                            "attrib",
-                            5
-                        ],
-                        "operation": "+",
-                        "label": ""
-                    }
-                ]
-            },
-            {
-                "id": 27,
-                "name": "Operate",
-                "description": "Use or manipulate something to achieve an effect.",
-                "numeric_range": [
-                    1,
-                    20
-                ],
-                "outcome_type": "fourway",
-                "selection_strings": "",
-                "toplevel": true,
-                "triggers": [],
-                "determining": [
-                    {
-                        "entity_data": [
-                            "attrib",
-                            5
-                        ],
-                        "operation": "+",
-                        "label": ""
-                    }
-                ]
-            },
-            {
                 "id": 28,
                 "name": "Dig",
                 "description": "With a shovel, pickaxe for rock, or even bare hands. Primarily strength-based, but could require dexterity for certain targeted efforts.",
@@ -587,6 +426,121 @@
                 ]
             },
             {
+                "id": 22,
+                "name": "Hold",
+                "description": "Holding delicate, slippery, or awkward items.",
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": true,
+                "triggers": [],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            4
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    }
+                ]
+            },
+            {
+                "id": 26,
+                "name": "Investigate",
+                "description": "Figure out how something works or what its purpose is.",
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": true,
+                "triggers": [],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            5
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    }
+                ]
+            },
+            {
+                "id": 21,
+                "name": "Navigate",
+                "description": "Success in making it past a certain point, or walking on a path.",
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": true,
+                "triggers": [],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            4
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    }
+                ]
+            },
+            {
+                "id": 27,
+                "name": "Operate",
+                "description": "Use or manipulate something to achieve an effect.",
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": true,
+                "triggers": [],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            5
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    }
+                ]
+            },
+            {
+                "id": 25,
+                "name": "Perceive",
+                "description": "For example, discover details about an object by viewing it.",
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": true,
+                "triggers": [],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            6
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    }
+                ]
+            },
+            {
                 "id": 29,
                 "name": "Pull",
                 "description": "Such as hoisting a rope.",
@@ -608,6 +562,52 @@
                         "entity_data": [
                             "attrib",
                             2
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    }
+                ]
+            },
+            {
+                "id": 24,
+                "name": "Seize",
+                "description": "Catch, grab, or restrain elusive targets.",
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": true,
+                "triggers": [],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            4
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    }
+                ]
+            },
+            {
+                "id": 23,
+                "name": "Throw",
+                "description": "",
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": true,
+                "triggers": [],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            4
                         ],
                         "operation": "+",
                         "label": ""

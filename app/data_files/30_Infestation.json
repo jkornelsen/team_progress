@@ -2,19 +2,6 @@
     "entities": {
         "items": [
             {
-                "id": 6,
-                "name": "Recharging Station",
-                "description": "Click on *Energy* to power up the robot.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "l",
-                "q_limit": 0.0,
-                "loc_hosted": false,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
-            },
-            {
                 "id": 5,
                 "name": "Energy",
                 "description": "Must have at least 1 unit for fighting. A unit is 100 Kilojoules.\r\n\r\nAfter each fight, consume 1 energy with the recipe that shows a trash can. Restore by levelling up, or travel to the *Maintenance Building* and click on the *Recharging Station*.\r\n\r\nLimit is 5 + 2 * [XL](/play/attrib/4/subject/13), plus any special bonuses. Record the bonuses by editing this description:\r\n\r\n- No special bonuses yet",
@@ -62,9 +49,67 @@
                 "toplevel": false,
                 "masked": false,
                 "recipes": []
+            },
+            {
+                "id": 6,
+                "name": "Recharging Station",
+                "description": "Click on *Energy* to power up the robot.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 0.0,
+                "loc_hosted": false,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
             }
         ],
         "locations": [
+            {
+                "id": 10,
+                "name": "Baby Mice Area",
+                "description": "The weakest of the rodents can be found here, but the area is alarmingly close to the base. Populations must be controlled so they don't spread further.",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": null,
+                "excluded": null,
+                "toplevel": false,
+                "masked": false,
+                "items": [],
+                "progress": [],
+                "item_refs": [],
+                "destinations": [
+                    {
+                        "loc2_id": 7,
+                        "duration": 1,
+                        "door1": null,
+                        "door2": null,
+                        "bidirectional": true
+                    },
+                    {
+                        "loc2_id": 12,
+                        "duration": 1,
+                        "door1": null,
+                        "door2": null,
+                        "bidirectional": true
+                    }
+                ]
+            },
+            {
+                "id": 9,
+                "name": "Bad Hare Area",
+                "description": "",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": null,
+                "excluded": null,
+                "toplevel": false,
+                "masked": true,
+                "items": [],
+                "progress": [],
+                "item_refs": [],
+                "destinations": []
+            },
             {
                 "id": 7,
                 "name": "Grown Mice Area",
@@ -118,66 +163,6 @@
                 ]
             },
             {
-                "id": 9,
-                "name": "Bad Hare Area",
-                "description": "",
-                "attribs": [],
-                "abilities": [],
-                "dimensions": null,
-                "excluded": null,
-                "toplevel": false,
-                "masked": true,
-                "items": [],
-                "progress": [],
-                "item_refs": [],
-                "destinations": []
-            },
-            {
-                "id": 10,
-                "name": "Baby Mice Area",
-                "description": "The weakest of the rodents can be found here, but the area is alarmingly close to the base. Populations must be controlled so they don't spread further.",
-                "attribs": [],
-                "abilities": [],
-                "dimensions": null,
-                "excluded": null,
-                "toplevel": false,
-                "masked": false,
-                "items": [],
-                "progress": [],
-                "item_refs": [],
-                "destinations": [
-                    {
-                        "loc2_id": 7,
-                        "duration": 1,
-                        "door1": null,
-                        "door2": null,
-                        "bidirectional": true
-                    },
-                    {
-                        "loc2_id": 12,
-                        "duration": 1,
-                        "door1": null,
-                        "door2": null,
-                        "bidirectional": true
-                    }
-                ]
-            },
-            {
-                "id": 11,
-                "name": "Tainted Bunny Area",
-                "description": "",
-                "attribs": [],
-                "abilities": [],
-                "dimensions": null,
-                "excluded": null,
-                "toplevel": false,
-                "masked": true,
-                "items": [],
-                "progress": [],
-                "item_refs": [],
-                "destinations": []
-            },
-            {
                 "id": 12,
                 "name": "Maintenance Building",
                 "description": "An outpost in northern Florida set up to contain the infestation. Engineers perform upgrades and repairs as well as charging. This is also where robots are controlled from, and where intel is assessed.",
@@ -193,36 +178,40 @@
                 "progress": [],
                 "item_refs": [],
                 "destinations": []
+            },
+            {
+                "id": 11,
+                "name": "Tainted Bunny Area",
+                "description": "",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": null,
+                "excluded": null,
+                "toplevel": false,
+                "masked": true,
+                "items": [],
+                "progress": [],
+                "item_refs": [],
+                "destinations": []
             }
         ],
         "characters": [
             {
-                "id": 14,
-                "name": "\ud83d\udc07Tainted Bunny",
-                "description": "Fur is greenish and sticky, with a fuzzy white tail.",
+                "id": 16,
+                "name": "\ud83d\udc01Baby Mouse",
+                "description": "Mutant, rabid and green-eyed, burning from within due to toxic waste. Max 5 HP.",
                 "attribs": [
-                    [4, 8.0],
-                    [26, 0.0]
+                    [4, 2.0],
+                    [26, 0.0],
+                    [29, 1.0],
+                    [30, 3.0],
+                    [27, 5.0],
+                    [42, 1.0],
+                    [45, 0.0]
                 ],
-                "abilities": [],
+                "abilities": [39, 40, 41, 43],
                 "toplevel": false,
-                "location_id": 11,
-                "position": null,
-                "travel_party": "",
-                "items": [],
-                "progress": []
-            },
-            {
-                "id": 15,
-                "name": "\ud83d\udc2dFull-grown Mouse",
-                "description": "Okay, it's still kind of cute, despite the toxic green eyes.",
-                "attribs": [
-                    [4, 5.0],
-                    [26, 0.0]
-                ],
-                "abilities": [],
-                "toplevel": false,
-                "location_id": 7,
+                "location_id": 10,
                 "position": null,
                 "travel_party": "",
                 "items": [],
@@ -246,17 +235,16 @@
                 "progress": []
             },
             {
-                "id": 25,
-                "name": "\ud83d\udc74Old Fart Supreme",
-                "description": "Wearing a nametag with \"Gerry\" written on it.",
+                "id": 15,
+                "name": "\ud83d\udc2dFull-grown Mouse",
+                "description": "Okay, it's still kind of cute, despite the toxic green eyes.",
                 "attribs": [
-                    [3, 0.0],
-                    [4, 20.0],
-                    [26, 1.0]
+                    [4, 5.0],
+                    [26, 0.0]
                 ],
                 "abilities": [],
                 "toplevel": false,
-                "location_id": null,
+                "location_id": 7,
                 "position": null,
                 "travel_party": "",
                 "items": [],
@@ -285,21 +273,33 @@
                 "progress": []
             },
             {
-                "id": 16,
-                "name": "\ud83d\udc01Baby Mouse",
-                "description": "Mutant, rabid and green-eyed, burning from within due to toxic waste. Max 5 HP.",
+                "id": 25,
+                "name": "\ud83d\udc74Old Fart Supreme",
+                "description": "Wearing a nametag with \"Gerry\" written on it.",
                 "attribs": [
-                    [4, 2.0],
-                    [26, 0.0],
-                    [29, 1.0],
-                    [30, 3.0],
-                    [27, 5.0],
-                    [42, 1.0],
-                    [45, 0.0]
+                    [3, 0.0],
+                    [4, 20.0],
+                    [26, 1.0]
                 ],
-                "abilities": [39, 40, 41, 43],
+                "abilities": [],
                 "toplevel": false,
-                "location_id": 10,
+                "location_id": null,
+                "position": null,
+                "travel_party": "",
+                "items": [],
+                "progress": []
+            },
+            {
+                "id": 14,
+                "name": "\ud83d\udc07Tainted Bunny",
+                "description": "Fur is greenish and sticky, with a fuzzy white tail.",
+                "attribs": [
+                    [4, 8.0],
+                    [26, 0.0]
+                ],
+                "abilities": [],
+                "toplevel": false,
+                "location_id": 11,
                 "position": null,
                 "travel_party": "",
                 "items": [],
@@ -405,6 +405,467 @@
             }
         ],
         "events": [
+            {
+                "id": 39,
+                "name": "ATK Bite (To-Hit)",
+                "description": "Use teeth for a basic melee attack.\r\n\r\n- **Difficulty:** If you're significantly outleveled, for example level 1 or 2 to the enemy's 5, then set difficulty to *Easy*. If you significantly outlevel the enemy, then set difficulty to *Hard*.\r\n- **Damage:** If the attack hits then [Roll for Damage](/play/event/40?subject_id=${subject_id}).\r\n- **Major Success:** (Nat 20) Enemy gets two damage rolls instead of one.\r\n- **Major Failure:** Enemy loses a turn.",
+                "attribs": [],
+                "abilities": [],
+                "toplevel": false,
+                "outcome_type": "fourway",
+                "roller_type": "dnd",
+                "numeric_range": [1, 20],
+                "single_number": 0.0,
+                "selection_strings": "",
+                "determinants": [
+                    {
+                        "label": "Can Fight",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 27
+                        },
+                        "outfield": null,
+                        "op_application": ">=",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
+                    },
+                    {
+                        "label": "Target Can Fight",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "target",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 27
+                        },
+                        "outfield": null,
+                        "op_application": ">=",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
+                    },
+                    {
+                        "label": "Chance to Hit",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 30
+                        },
+                        "outfield": null,
+                        "op_application": "+",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
+                    },
+                    {
+                        "label": "Accuracy Bonus",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 45
+                        },
+                        "outfield": null,
+                        "op_application": "+",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
+                    },
+                    {
+                        "label": "Evasion",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "target",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 30
+                        },
+                        "outfield": null,
+                        "op_application": "-",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
+                    }
+                ],
+                "effects": []
+            },
+            {
+                "id": 40,
+                "name": "ATK Bite Dmg",
+                "description": "Roll, then decrease Robot HP by that amount.",
+                "attribs": [],
+                "abilities": [],
+                "toplevel": false,
+                "outcome_type": "numeric",
+                "roller_type": "dnd",
+                "numeric_range": [1, 6],
+                "single_number": 0.0,
+                "selection_strings": "",
+                "determinants": [
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 29
+                        },
+                        "outfield": null,
+                        "op_application": "+",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 0.0
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "target",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 27
+                        },
+                        "outfield": null,
+                        "op_application": ">=",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
+                    }
+                ],
+                "effects": []
+            },
+            {
+                "id": 28,
+                "name": "ATK Fist Pummel (To-Hit)",
+                "description": "Close grasping digits and swing robotic arm forward. Basic melee attack.\r\n\r\n- **Energy**: The robot must have at least 1 to start. After the attack, consume 1 [Energy](/play/item/5?owner_id=13).\r\n- **Difficulty:** If you're significantly outleveled, for example level 1 or 2 to the enemy's 5, then set difficulty to *Hard*. If you significantly outlevel the opponent, then set difficulty to *Easy*.\r\n- **Damage:** If the attack hits then [Roll for Damage](/play/event/38?subject_id=13).\r\n- **Major Success:** (Nat 20) Roll two damage rolls instead of one.\r\n- **Major Failure:** Consume 2 Energy instead of 1.\r\n\r\nAfter the swing, the enemy gets to [take an action](/play/event/41) if they're still alive.",
+                "attribs": [],
+                "abilities": [],
+                "toplevel": false,
+                "outcome_type": "fourway",
+                "roller_type": "dnd",
+                "numeric_range": [1, 20],
+                "single_number": 0.0,
+                "selection_strings": "",
+                "determinants": [
+                    {
+                        "label": "Can Operate",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "qty",
+                            "child_of_anchor": true,
+                            "item_id": 5,
+                            "attrib_id": 0
+                        },
+                        "outfield": null,
+                        "op_application": ">=",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
+                    },
+                    {
+                        "label": "Can Fight",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 27
+                        },
+                        "outfield": null,
+                        "op_application": ">=",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
+                    },
+                    {
+                        "label": "Enemy Can Fight",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "target",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 27
+                        },
+                        "outfield": null,
+                        "op_application": ">=",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
+                    },
+                    {
+                        "label": "Melee Range",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "target",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 42
+                        },
+                        "outfield": null,
+                        "op_application": "<",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 2.0
+                    },
+                    {
+                        "label": "Chance to Hit",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 30
+                        },
+                        "outfield": null,
+                        "op_application": "+",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
+                    },
+                    {
+                        "label": "Accuracy Bonus",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 45
+                        },
+                        "outfield": null,
+                        "op_application": "+",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
+                    },
+                    {
+                        "label": "Evasion",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "target",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 30
+                        },
+                        "outfield": null,
+                        "op_application": "-",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
+                    }
+                ],
+                "effects": []
+            },
+            {
+                "id": 38,
+                "name": "ATK Fist Pummel Dmg",
+                "description": "- Roll, then decrease Enemy HP by that amount.\r\n- If Enemy HP is reduced to 0 then [Finish Fight](/play/event/18?subject_id=13).\r\n\r\nDo we need a separate dmg roll? Ideally the hit roll would do everything. We could use determinate damage based on force and enemy resistance.",
+                "attribs": [],
+                "abilities": [],
+                "toplevel": false,
+                "outcome_type": "numeric",
+                "roller_type": "dnd",
+                "numeric_range": [1, 6],
+                "single_number": 0.0,
+                "selection_strings": "",
+                "determinants": [
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "target",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 27
+                        },
+                        "outfield": null,
+                        "op_application": ">=",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 29
+                        },
+                        "outfield": null,
+                        "op_application": "+",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 45
+                        },
+                        "outfield": null,
+                        "op_application": "+",
+                        "op_transform": "scap",
+                        "val_transform": 10.0,
+                        "val_required": 1.0
+                    }
+                ],
+                "effects": []
+            },
+            {
+                "id": 35,
+                "name": "ATK Ignite",
+                "description": "Burning enemies take damage each round. Typically lasts 3 rounds. Damage per round is decided by the original event outcome.\r\n\r\n- **Energy**: Make sure the robot has at least 1 to start.\r\n- **Difficulty:** If you're significantly outleveled, for example level 1 or 2 to the enemy's 5, then set difficulty to *Hard*. If you significantly outlevel the opponent, then set difficulty to *Easy*, although that is probably a good time to move on to the next location.\r\n\r\nRoll, then see [Finish Fight](/play/event/18?subject_id=13).",
+                "attribs": [],
+                "abilities": [],
+                "toplevel": false,
+                "outcome_type": "fourway",
+                "roller_type": "dnd",
+                "numeric_range": [1, 20],
+                "single_number": 0.0,
+                "selection_strings": "",
+                "determinants": [
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 4
+                        },
+                        "outfield": null,
+                        "op_application": "+",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "target",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 4
+                        },
+                        "outfield": null,
+                        "op_application": "-",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
+                    }
+                ],
+                "effects": []
+            },
+            {
+                "id": 41,
+                "name": "Choose Enemy Action",
+                "description": "Roll to determine what enemy does next. If there is a straightforward choice in the narrative then there is no need to roll.",
+                "attribs": [],
+                "abilities": [],
+                "toplevel": false,
+                "outcome_type": "selection",
+                "roller_type": "dnd",
+                "numeric_range": [1, 20],
+                "single_number": 0.0,
+                "selection_strings": "Bite\r\nHeal\r\nMove to Range",
+                "determinants": [],
+                "effects": []
+            },
+            {
+                "id": 36,
+                "name": "DEF Dodge",
+                "description": "Attempt to evade a hit entirely or partially.",
+                "attribs": [],
+                "abilities": [],
+                "toplevel": false,
+                "outcome_type": "fourway",
+                "roller_type": "dnd",
+                "numeric_range": [1, 20],
+                "single_number": 0.0,
+                "selection_strings": "",
+                "determinants": [],
+                "effects": []
+            },
+            {
+                "id": 37,
+                "name": "DEF Shock",
+                "description": "Attempt to resist getting shocked. Is this necessary or can the attack event do the necessary roll?",
+                "attribs": [],
+                "abilities": [],
+                "toplevel": false,
+                "outcome_type": "fourway",
+                "roller_type": "dnd",
+                "numeric_range": [1, 20],
+                "single_number": 0.0,
+                "selection_strings": "",
+                "determinants": [],
+                "effects": []
+            },
+            {
+                "id": 18,
+                "name": "Finish Fight",
+                "description": "If the fight ended in victory, then add the enemy's XL to [XP](/play/attrib/2/subject/13). To do this, press Calculate. Once the outcome is set, fill for XP and apply.\r\n\r\nTo fight the same kind of enemy again (not bosses which are unique), reset enemy stats.",
+                "attribs": [],
+                "abilities": [],
+                "toplevel": false,
+                "outcome_type": "determined",
+                "roller_type": "dnd",
+                "numeric_range": [0, 0],
+                "single_number": 0.0,
+                "selection_strings": "",
+                "determinants": [
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "target",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": 0,
+                            "attrib_id": 4
+                        },
+                        "outfield": null,
+                        "op_application": "+",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0
+                    }
+                ],
+                "effects": []
+            },
             {
                 "id": 43,
                 "name": "Move to Range",
@@ -546,467 +1007,6 @@
                 "single_number": 0.0,
                 "selection_strings": "Triple XP for the next three fights.\r\nGain 50% of XP towards the next level.\r\nIncrease Energy limit by 1.\r\nFor three fights, do not decrease Energy unless critical.\r\nNo Bonus.",
                 "determinants": [],
-                "effects": []
-            },
-            {
-                "id": 35,
-                "name": "ATK Ignite",
-                "description": "Burning enemies take damage each round. Typically lasts 3 rounds. Damage per round is decided by the original event outcome.\r\n\r\n- **Energy**: Make sure the robot has at least 1 to start.\r\n- **Difficulty:** If you're significantly outleveled, for example level 1 or 2 to the enemy's 5, then set difficulty to *Hard*. If you significantly outlevel the opponent, then set difficulty to *Easy*, although that is probably a good time to move on to the next location.\r\n\r\nRoll, then see [Finish Fight](/play/event/18?subject_id=13).",
-                "attribs": [],
-                "abilities": [],
-                "toplevel": false,
-                "outcome_type": "fourway",
-                "roller_type": "dnd",
-                "numeric_range": [1, 20],
-                "single_number": 0.0,
-                "selection_strings": "",
-                "determinants": [
-                    {
-                        "label": "",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "subject",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": 0,
-                            "attrib_id": 4
-                        },
-                        "outfield": null,
-                        "op_application": "+",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0
-                    },
-                    {
-                        "label": "",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "target",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": 0,
-                            "attrib_id": 4
-                        },
-                        "outfield": null,
-                        "op_application": "-",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0
-                    }
-                ],
-                "effects": []
-            },
-            {
-                "id": 36,
-                "name": "DEF Dodge",
-                "description": "Attempt to evade a hit entirely or partially.",
-                "attribs": [],
-                "abilities": [],
-                "toplevel": false,
-                "outcome_type": "fourway",
-                "roller_type": "dnd",
-                "numeric_range": [1, 20],
-                "single_number": 0.0,
-                "selection_strings": "",
-                "determinants": [],
-                "effects": []
-            },
-            {
-                "id": 37,
-                "name": "DEF Shock",
-                "description": "Attempt to resist getting shocked. Is this necessary or can the attack event do the necessary roll?",
-                "attribs": [],
-                "abilities": [],
-                "toplevel": false,
-                "outcome_type": "fourway",
-                "roller_type": "dnd",
-                "numeric_range": [1, 20],
-                "single_number": 0.0,
-                "selection_strings": "",
-                "determinants": [],
-                "effects": []
-            },
-            {
-                "id": 38,
-                "name": "ATK Fist Pummel Dmg",
-                "description": "- Roll, then decrease Enemy HP by that amount.\r\n- If Enemy HP is reduced to 0 then [Finish Fight](/play/event/18?subject_id=13).\r\n\r\nDo we need a separate dmg roll? Ideally the hit roll would do everything. We could use determinate damage based on force and enemy resistance.",
-                "attribs": [],
-                "abilities": [],
-                "toplevel": false,
-                "outcome_type": "numeric",
-                "roller_type": "dnd",
-                "numeric_range": [1, 6],
-                "single_number": 0.0,
-                "selection_strings": "",
-                "determinants": [
-                    {
-                        "label": "",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "target",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": 0,
-                            "attrib_id": 27
-                        },
-                        "outfield": null,
-                        "op_application": ">=",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0
-                    },
-                    {
-                        "label": "",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "subject",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": 0,
-                            "attrib_id": 29
-                        },
-                        "outfield": null,
-                        "op_application": "+",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0
-                    },
-                    {
-                        "label": "",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "subject",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": 0,
-                            "attrib_id": 45
-                        },
-                        "outfield": null,
-                        "op_application": "+",
-                        "op_transform": "scap",
-                        "val_transform": 10.0,
-                        "val_required": 1.0
-                    }
-                ],
-                "effects": []
-            },
-            {
-                "id": 40,
-                "name": "ATK Bite Dmg",
-                "description": "Roll, then decrease Robot HP by that amount.",
-                "attribs": [],
-                "abilities": [],
-                "toplevel": false,
-                "outcome_type": "numeric",
-                "roller_type": "dnd",
-                "numeric_range": [1, 6],
-                "single_number": 0.0,
-                "selection_strings": "",
-                "determinants": [
-                    {
-                        "label": "",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "subject",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": 0,
-                            "attrib_id": 29
-                        },
-                        "outfield": null,
-                        "op_application": "+",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 0.0
-                    },
-                    {
-                        "label": "",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "target",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": 0,
-                            "attrib_id": 27
-                        },
-                        "outfield": null,
-                        "op_application": ">=",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0
-                    }
-                ],
-                "effects": []
-            },
-            {
-                "id": 41,
-                "name": "Choose Enemy Action",
-                "description": "Roll to determine what enemy does next. If there is a straightforward choice in the narrative then there is no need to roll.",
-                "attribs": [],
-                "abilities": [],
-                "toplevel": false,
-                "outcome_type": "selection",
-                "roller_type": "dnd",
-                "numeric_range": [1, 20],
-                "single_number": 0.0,
-                "selection_strings": "Bite\r\nHeal\r\nMove to Range",
-                "determinants": [],
-                "effects": []
-            },
-            {
-                "id": 28,
-                "name": "ATK Fist Pummel (To-Hit)",
-                "description": "Close grasping digits and swing robotic arm forward. Basic melee attack.\r\n\r\n- **Energy**: The robot must have at least 1 to start. After the attack, consume 1 [Energy](/play/item/5?owner_id=13).\r\n- **Difficulty:** If you're significantly outleveled, for example level 1 or 2 to the enemy's 5, then set difficulty to *Hard*. If you significantly outlevel the opponent, then set difficulty to *Easy*.\r\n- **Damage:** If the attack hits then [Roll for Damage](/play/event/38?subject_id=13).\r\n- **Major Success:** (Nat 20) Roll two damage rolls instead of one.\r\n- **Major Failure:** Consume 2 Energy instead of 1.\r\n\r\nAfter the swing, the enemy gets to [take an action](/play/event/41) if they're still alive.",
-                "attribs": [],
-                "abilities": [],
-                "toplevel": false,
-                "outcome_type": "fourway",
-                "roller_type": "dnd",
-                "numeric_range": [1, 20],
-                "single_number": 0.0,
-                "selection_strings": "",
-                "determinants": [
-                    {
-                        "label": "Can Operate",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "subject",
-                            "field_mode": "qty",
-                            "child_of_anchor": true,
-                            "item_id": 5,
-                            "attrib_id": 0
-                        },
-                        "outfield": null,
-                        "op_application": ">=",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0
-                    },
-                    {
-                        "label": "Can Fight",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "subject",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": 0,
-                            "attrib_id": 27
-                        },
-                        "outfield": null,
-                        "op_application": ">=",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0
-                    },
-                    {
-                        "label": "Enemy Can Fight",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "target",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": 0,
-                            "attrib_id": 27
-                        },
-                        "outfield": null,
-                        "op_application": ">=",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0
-                    },
-                    {
-                        "label": "Melee Range",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "target",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": 0,
-                            "attrib_id": 42
-                        },
-                        "outfield": null,
-                        "op_application": "<",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 2.0
-                    },
-                    {
-                        "label": "Chance to Hit",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "subject",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": 0,
-                            "attrib_id": 30
-                        },
-                        "outfield": null,
-                        "op_application": "+",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0
-                    },
-                    {
-                        "label": "Accuracy Bonus",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "subject",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": 0,
-                            "attrib_id": 45
-                        },
-                        "outfield": null,
-                        "op_application": "+",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0
-                    },
-                    {
-                        "label": "Evasion",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "target",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": 0,
-                            "attrib_id": 30
-                        },
-                        "outfield": null,
-                        "op_application": "-",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0
-                    }
-                ],
-                "effects": []
-            },
-            {
-                "id": 39,
-                "name": "ATK Bite (To-Hit)",
-                "description": "Use teeth for a basic melee attack.\r\n\r\n- **Difficulty:** If you're significantly outleveled, for example level 1 or 2 to the enemy's 5, then set difficulty to *Easy*. If you significantly outlevel the enemy, then set difficulty to *Hard*.\r\n- **Damage:** If the attack hits then [Roll for Damage](/play/event/40?subject_id=${subject_id}).\r\n- **Major Success:** (Nat 20) Enemy gets two damage rolls instead of one.\r\n- **Major Failure:** Enemy loses a turn.",
-                "attribs": [],
-                "abilities": [],
-                "toplevel": false,
-                "outcome_type": "fourway",
-                "roller_type": "dnd",
-                "numeric_range": [1, 20],
-                "single_number": 0.0,
-                "selection_strings": "",
-                "determinants": [
-                    {
-                        "label": "Can Fight",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "subject",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": 0,
-                            "attrib_id": 27
-                        },
-                        "outfield": null,
-                        "op_application": ">=",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0
-                    },
-                    {
-                        "label": "Target Can Fight",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "target",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": 0,
-                            "attrib_id": 27
-                        },
-                        "outfield": null,
-                        "op_application": ">=",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0
-                    },
-                    {
-                        "label": "Chance to Hit",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "subject",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": 0,
-                            "attrib_id": 30
-                        },
-                        "outfield": null,
-                        "op_application": "+",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0
-                    },
-                    {
-                        "label": "Accuracy Bonus",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "subject",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": 0,
-                            "attrib_id": 45
-                        },
-                        "outfield": null,
-                        "op_application": "+",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0
-                    },
-                    {
-                        "label": "Evasion",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "target",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": 0,
-                            "attrib_id": 30
-                        },
-                        "outfield": null,
-                        "op_application": "-",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0
-                    }
-                ],
-                "effects": []
-            },
-            {
-                "id": 18,
-                "name": "Finish Fight",
-                "description": "If the fight ended in victory, then add the enemy's XL to [XP](/play/attrib/2/subject/13). To do this, press Calculate. Once the outcome is set, fill for XP and apply.\r\n\r\nTo fight the same kind of enemy again (not bosses which are unique), reset enemy stats.",
-                "attribs": [],
-                "abilities": [],
-                "toplevel": false,
-                "outcome_type": "determined",
-                "roller_type": "dnd",
-                "numeric_range": [0, 0],
-                "single_number": 0.0,
-                "selection_strings": "",
-                "determinants": [
-                    {
-                        "label": "",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "target",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": 0,
-                            "attrib_id": 4
-                        },
-                        "outfield": null,
-                        "op_application": "+",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0
-                    }
-                ],
                 "effects": []
             }
         ]

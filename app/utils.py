@@ -1,8 +1,9 @@
-import markdown
 import locale
 import logging
-import re
 from flask import g, session, request, url_for, redirect
+from sqlalchemy import func, literal_column, text
+import re
+import markdown
 from markupsafe import Markup
 import bleach
 from bleach.css_sanitizer import CSSSanitizer
@@ -403,6 +404,25 @@ class ContextIds:
                 seen.add(v)
                 result.append(v)
         return result
+
+# ------------------------------------------------------------------------
+# Sorting
+# ------------------------------------------------------------------------
+
+def name_stripped(col=None):
+    """
+    Order-by clause that sorts by name, ignoring leading special characters.
+    :param col: explicit column reference, e.g. model_cls.name — required when
+                joining tables or using aliases
+    """
+    if col is None:
+        col = text('name')
+    return func.lower(
+        func.regexp_replace(col, r'^\W+', '', 'g')
+    ).op('COLLATE')(literal_column('"C"'))
+
+def sort_by_name_stripped(items, key=lambda x: x.name):
+    return sorted(items, key=lambda x: re.sub(r'^\W+', '', key(x)).lower())
 
 # ------------------------------------------------------------------------
 # HTML Sanitization Filter

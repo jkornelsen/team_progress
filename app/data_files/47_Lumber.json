@@ -2,6 +2,91 @@
     "entities": {
         "items": [
             {
+                "id": 12,
+                "name": "Boards",
+                "description": "Cut from logs.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 0.0,
+                "toplevel": true,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 23,
+                        "rate_amount": 1.0,
+                        "rate_duration": 3.0,
+                        "instant": false,
+                        "sources": [
+                            {
+                                "item_id": 7,
+                                "q_required": 1.0,
+                                "preserve": false
+                            },
+                            {
+                                "item_id": 11,
+                                "q_required": 1.0,
+                                "preserve": true
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 8,
+                "name": "Cash",
+                "description": "Purchase new equipment, and eventually, a new plot of land.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 0.0,
+                "toplevel": true,
+                "masked": false,
+                "recipes": [
+                    {
+                        "id": 22,
+                        "rate_amount": 5.0,
+                        "rate_duration": 3.0,
+                        "instant": true,
+                        "sources": [
+                            {
+                                "item_id": 12,
+                                "q_required": 4.0,
+                                "preserve": false
+                            }
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    }
+                ]
+            },
+            {
+                "id": 11,
+                "name": "Circular Saw",
+                "description": "",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 13,
+                "name": "Honeycomb",
+                "description": "Looks tempting. Smoke may help drive the bees away.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
                 "id": 7,
                 "name": "Logs",
                 "description": "Idle chopping is for when no characters are actively chopping, either because they are doing something else, or while offline.",
@@ -53,127 +138,6 @@
                 ]
             },
             {
-                "id": 8,
-                "name": "Cash",
-                "description": "Purchase new equipment, and eventually, a new plot of land.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "u",
-                "q_limit": 0.0,
-                "toplevel": true,
-                "masked": false,
-                "recipes": [
-                    {
-                        "id": 22,
-                        "rate_amount": 5.0,
-                        "rate_duration": 3.0,
-                        "instant": true,
-                        "sources": [
-                            {
-                                "item_id": 12,
-                                "q_required": 4.0,
-                                "preserve": false
-                            }
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
-                    }
-                ]
-            },
-            {
-                "id": 9,
-                "name": "Rock",
-                "description": "Landscape feature that can get in the way of a lumber operation.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "l",
-                "q_limit": 0.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
-            },
-            {
-                "id": 10,
-                "name": "Plot 1 Trees",
-                "description": "How many trees are available on a plot.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "u",
-                "q_limit": 0.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
-            },
-            {
-                "id": 11,
-                "name": "Circular Saw",
-                "description": "",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "l",
-                "q_limit": 1.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
-            },
-            {
-                "id": 12,
-                "name": "Boards",
-                "description": "Cut from logs.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "u",
-                "q_limit": 0.0,
-                "toplevel": true,
-                "masked": false,
-                "recipes": [
-                    {
-                        "id": 23,
-                        "rate_amount": 1.0,
-                        "rate_duration": 3.0,
-                        "instant": false,
-                        "sources": [
-                            {
-                                "item_id": 7,
-                                "q_required": 1.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 11,
-                                "q_required": 1.0,
-                                "preserve": true
-                            }
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
-                    }
-                ]
-            },
-            {
-                "id": 13,
-                "name": "Honeycomb",
-                "description": "Looks tempting. Smoke may help drive the bees away.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "l",
-                "q_limit": 1.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
-            },
-            {
-                "id": 14,
-                "name": "Old Axe",
-                "description": "Handle has been reattached many times in the past.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "c",
-                "q_limit": 1.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
-            },
-            {
                 "id": 15,
                 "name": "Marked Tree",
                 "description": "Plots are full of trees, but mark only one at a time for harvesting.\r\n\r\n**{saddlebrown|When Marked Tree quantity is 0}**:\r\n1. Run [Mark a Tree](/play/event/3), select *Starting Plot* and roll for coordinates.\r\n2. In [Starting Plot setup](/configure/location/4), set the marked tree position to the new coordinates.\r\n3. Produce (below) a *Marked Tree* from *Plot 1 Trees* so quantity goes from 0 to 1.\r\n4. Set HP to 100.\r\n\r\nNow the tree is ready for a character such as the *Owner* to *Swing to Chop*.",
@@ -200,6 +164,42 @@
                         "attrib_reqs": []
                     }
                 ]
+            },
+            {
+                "id": 14,
+                "name": "Old Axe",
+                "description": "Handle has been reattached many times in the past.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "c",
+                "q_limit": 1.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 10,
+                "name": "Plot 1 Trees",
+                "description": "How many trees are available on a plot.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 0.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
+                "id": 9,
+                "name": "Rock",
+                "description": "Landscape feature that can get in the way of a lumber operation.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "l",
+                "q_limit": 0.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
             }
         ],
         "locations": [
@@ -222,43 +222,6 @@
                         "quantity": 1.0,
                         "position": [
                             3,
-                            2
-                        ]
-                    }
-                ],
-                "item_refs": [],
-                "destinations": [
-                    {
-                        "loc2_id": 18,
-                        "duration": 1,
-                        "bidirectional": true
-                    }
-                ]
-            },
-            {
-                "id": 17,
-                "name": "Tree \u2014 Climbing",
-                "description": "Use this view for characters to climb a tree, starting from the bottom.",
-                "attribs": [],
-                "abilities": [],
-                "dimensions": [
-                    4,
-                    20
-                ],
-                "excluded": [
-                    1,
-                    3,
-                    2,
-                    20
-                ],
-                "toplevel": false,
-                "masked": false,
-                "items": [
-                    {
-                        "item_id": 13,
-                        "quantity": 1.0,
-                        "position": [
-                            1,
                             2
                         ]
                     }
@@ -318,36 +281,46 @@
                 ],
                 "item_refs": [],
                 "destinations": []
+            },
+            {
+                "id": 17,
+                "name": "Tree \u2014 Climbing",
+                "description": "Use this view for characters to climb a tree, starting from the bottom.",
+                "attribs": [],
+                "abilities": [],
+                "dimensions": [
+                    4,
+                    20
+                ],
+                "excluded": [
+                    1,
+                    3,
+                    2,
+                    20
+                ],
+                "toplevel": false,
+                "masked": false,
+                "items": [
+                    {
+                        "item_id": 13,
+                        "quantity": 1.0,
+                        "position": [
+                            1,
+                            2
+                        ]
+                    }
+                ],
+                "item_refs": [],
+                "destinations": [
+                    {
+                        "loc2_id": 18,
+                        "duration": 1,
+                        "bidirectional": true
+                    }
+                ]
             }
         ],
         "characters": [
-            {
-                "id": 19,
-                "name": "Truck",
-                "description": "A run-down workhorse with a little left to give. \r\n\r\nCarries logs. Someone must drive (move/travel with) the truck.",
-                "attribs": [
-                    [
-                        6,
-                        2.0
-                    ]
-                ],
-                "abilities": [],
-                "toplevel": true,
-                "masked": false,
-                "location_id": 18,
-                "position": [
-                    4,
-                    2
-                ],
-                "travel_party": "",
-                "items": [
-                    {
-                        "item_id": 7,
-                        "quantity": 2.0,
-                        "slot": ""
-                    }
-                ]
-            },
             {
                 "id": 20,
                 "name": "Owner",
@@ -376,6 +349,33 @@
                         "item_id": 14,
                         "quantity": 1.0,
                         "slot": "Held"
+                    }
+                ]
+            },
+            {
+                "id": 19,
+                "name": "Truck",
+                "description": "A run-down workhorse with a little left to give. \r\n\r\nCarries logs. Someone must drive (move/travel with) the truck.",
+                "attribs": [
+                    [
+                        6,
+                        2.0
+                    ]
+                ],
+                "abilities": [],
+                "toplevel": true,
+                "masked": false,
+                "location_id": 18,
+                "position": [
+                    4,
+                    2
+                ],
+                "travel_party": "",
+                "items": [
+                    {
+                        "item_id": 7,
+                        "quantity": 2.0,
+                        "slot": ""
                     }
                 ]
             }
@@ -424,6 +424,59 @@
         ],
         "events": [
             {
+                "id": 26,
+                "name": "Chopping Mishap",
+                "description": "Chance of something bad, or possibly good, happening.  Use accuracy to modify both min and max if relevant for the situation, such as when attempting to land a blow.\r\n\r\nRun [Chopping Mishap Type](/play/event/7) for further details.",
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [],
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            4
+                        ],
+                        "operation": "+",
+                        "label": "Item"
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            4
+                        ],
+                        "operation": "*",
+                        "label": "Wielder \u2014 Die Max"
+                    },
+                    {
+                        "entity_data": [
+                            "attrib",
+                            4
+                        ],
+                        "operation": "/",
+                        "label": "Wielder \u2014 Die Min"
+                    }
+                ]
+            },
+            {
+                "id": 22,
+                "name": "Chopping Mishap Type",
+                "description": "Run to get details on what happened after a [Chopping Mishap](/play/event/6) occurs.",
+                "numeric_range": [
+                    0,
+                    10
+                ],
+                "outcome_type": "selection",
+                "selection_strings": "Tool damaged\r\nTool broken\r\nTool destroyed\r\nFewer resources gained\r\nResources lost\r\nNo progress\r\nMinor injury\r\nSevere injury",
+                "toplevel": false,
+                "triggers": [],
+                "determining": []
+            },
+            {
                 "id": 21,
                 "name": "Mark a Tree",
                 "description": "Choose the grid coordinates of the next tree to be actively harvested on a plot. See [Marked Tree](/play/item/15) for instructions.",
@@ -447,18 +500,50 @@
                 "determining": []
             },
             {
-                "id": 22,
-                "name": "Chopping Mishap Type",
-                "description": "Run to get details on what happened after a [Chopping Mishap](/play/event/6) occurs.",
+                "id": 25,
+                "name": "Operate saw",
+                "description": "Chance of success. Roll to determine how well a batch of logs turns into boards, or if something perhaps goes wrong.\r\n\r\nUse Easy difficulty. If there is a large number of logs to be processed, lower the die min a little, making success a bit less likely.",
                 "numeric_range": [
-                    0,
-                    10
+                    1,
+                    20
                 ],
-                "outcome_type": "selection",
-                "selection_strings": "Tool damaged\r\nTool broken\r\nTool destroyed\r\nFewer resources gained\r\nResources lost\r\nNo progress\r\nMinor injury\r\nSevere injury",
+                "outcome_type": "fourway",
+                "selection_strings": "",
+                "toplevel": false,
+                "triggers": [
+                    [
+                        "item",
+                        11
+                    ],
+                    [
+                        "loc",
+                        16
+                    ]
+                ],
+                "determining": []
+            },
+            {
+                "id": 24,
+                "name": "Start engine",
+                "description": "Not always a guarantee with old vehicles.\r\n\r\nUse Easy difficulty under normal circumstances, since it's somewhat routine. Also, add repair value to both min and max.",
+                "numeric_range": [
+                    1,
+                    20
+                ],
+                "outcome_type": "fourway",
+                "selection_strings": "",
                 "toplevel": false,
                 "triggers": [],
-                "determining": []
+                "determining": [
+                    {
+                        "entity_data": [
+                            "attrib",
+                            6
+                        ],
+                        "operation": "+",
+                        "label": ""
+                    }
+                ]
             },
             {
                 "id": 23,
@@ -497,91 +582,6 @@
                         ],
                         "operation": "*",
                         "label": "Wielder"
-                    }
-                ]
-            },
-            {
-                "id": 24,
-                "name": "Start engine",
-                "description": "Not always a guarantee with old vehicles.\r\n\r\nUse Easy difficulty under normal circumstances, since it's somewhat routine. Also, add repair value to both min and max.",
-                "numeric_range": [
-                    1,
-                    20
-                ],
-                "outcome_type": "fourway",
-                "selection_strings": "",
-                "toplevel": false,
-                "triggers": [],
-                "determining": [
-                    {
-                        "entity_data": [
-                            "attrib",
-                            6
-                        ],
-                        "operation": "+",
-                        "label": ""
-                    }
-                ]
-            },
-            {
-                "id": 25,
-                "name": "Operate saw",
-                "description": "Chance of success. Roll to determine how well a batch of logs turns into boards, or if something perhaps goes wrong.\r\n\r\nUse Easy difficulty. If there is a large number of logs to be processed, lower the die min a little, making success a bit less likely.",
-                "numeric_range": [
-                    1,
-                    20
-                ],
-                "outcome_type": "fourway",
-                "selection_strings": "",
-                "toplevel": false,
-                "triggers": [
-                    [
-                        "item",
-                        11
-                    ],
-                    [
-                        "loc",
-                        16
-                    ]
-                ],
-                "determining": []
-            },
-            {
-                "id": 26,
-                "name": "Chopping Mishap",
-                "description": "Chance of something bad, or possibly good, happening.  Use accuracy to modify both min and max if relevant for the situation, such as when attempting to land a blow.\r\n\r\nRun [Chopping Mishap Type](/play/event/7) for further details.",
-                "numeric_range": [
-                    1,
-                    20
-                ],
-                "outcome_type": "fourway",
-                "selection_strings": "",
-                "toplevel": false,
-                "triggers": [],
-                "determining": [
-                    {
-                        "entity_data": [
-                            "attrib",
-                            4
-                        ],
-                        "operation": "+",
-                        "label": "Item"
-                    },
-                    {
-                        "entity_data": [
-                            "attrib",
-                            4
-                        ],
-                        "operation": "*",
-                        "label": "Wielder \u2014 Die Max"
-                    },
-                    {
-                        "entity_data": [
-                            "attrib",
-                            4
-                        ],
-                        "operation": "/",
-                        "label": "Wielder \u2014 Die Min"
                     }
                 ]
             }

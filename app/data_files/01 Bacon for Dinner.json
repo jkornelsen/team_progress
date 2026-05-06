@@ -14,6 +14,18 @@
                 "recipes": []
             },
             {
+                "id": 22,
+                "name": "Branch",
+                "description": "Safer for fending off animals than a knife.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "c",
+                "q_limit": 0.0,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
                 "id": 6,
                 "name": "Cash",
                 "description": "Get paid for chores. Useful for purchasing pigs at the market in case breeding doesn't work out.",
@@ -183,9 +195,9 @@
                 ]
             },
             {
-                "id": 13,
-                "name": "Wood Stove",
-                "description": "For cooking in the kitchen.",
+                "id": 26,
+                "name": "Table",
+                "description": "At home, drop cooked bacon to go on the table.",
                 "attribs": [],
                 "abilities": [],
                 "storage_type": "l",
@@ -195,21 +207,9 @@
                 "recipes": []
             },
             {
-                "id": 22,
-                "name": "Branch",
-                "description": "Safer for fending off animals than a knife.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "c",
-                "q_limit": 0.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
-            },
-            {
-                "id": 26,
-                "name": "Table",
-                "description": "At home, drop cooked bacon to go on the table.",
+                "id": 13,
+                "name": "Wood Stove",
+                "description": "For cooking in the kitchen.",
                 "attribs": [],
                 "abilities": [],
                 "storage_type": "l",
@@ -221,21 +221,28 @@
         ],
         "locations": [
             {
-                "id": 14,
-                "name": "Uncle's Farm",
-                "description": "The property has a modestly inviting feel of fertile land.\r\n\r\nSuzy's uncle is okay with her butchering pigs, as long as there is a breeding pair left.",
+                "id": 24,
+                "name": "Farmhouse",
+                "description": "Board siding and coruscated metal roof — primitive construction.",
                 "attribs": [],
                 "abilities": [],
                 "dimensions": null,
                 "excluded": null,
                 "toplevel": false,
-                "masked": true,
-                "items": [
-                    {"item_id": 11, "quantity": 4.0, "position": null},
-                    {"item_id": 5, "quantity": 1.0, "position": null}
+                "masked": false,
+                "items": [],
+                "item_refs": [
+                    {"item_id": 7}
                 ],
-                "item_refs": [],
-                "destinations": []
+                "destinations": [
+                    {
+                        "loc2_id": 14,
+                        "duration": 1,
+                        "door1": null,
+                        "door2": null,
+                        "bidirectional": true
+                    }
+                ]
             },
             {
                 "id": 15,
@@ -290,31 +297,39 @@
                 ]
             },
             {
-                "id": 24,
-                "name": "Farmhouse",
-                "description": "Board siding and coruscated metal roof — primitive construction.",
+                "id": 14,
+                "name": "Uncle's Farm",
+                "description": "The property has a modestly inviting feel of fertile land.\r\n\r\nSuzy's uncle is okay with her butchering pigs, as long as there is a breeding pair left.",
                 "attribs": [],
                 "abilities": [],
                 "dimensions": null,
                 "excluded": null,
                 "toplevel": false,
-                "masked": false,
-                "items": [],
-                "item_refs": [
-                    {"item_id": 7}
+                "masked": true,
+                "items": [
+                    {"item_id": 11, "quantity": 4.0, "position": null},
+                    {"item_id": 5, "quantity": 1.0, "position": null}
                 ],
-                "destinations": [
-                    {
-                        "loc2_id": 14,
-                        "duration": 1,
-                        "door1": null,
-                        "door2": null,
-                        "bidirectional": true
-                    }
-                ]
+                "item_refs": [],
+                "destinations": []
             }
         ],
         "characters": [
+            {
+                "id": 18,
+                "name": "Mom",
+                "description": "Suzy's mother. Good understanding of the trails in the woods.",
+                "attribs": [
+                    [2, 10.0]
+                ],
+                "abilities": [25],
+                "toplevel": true,
+                "location_id": 15,
+                "position": null,
+                "travel_party": "",
+                "items": [],
+                "progress": []
+            },
             {
                 "id": 17,
                 "name": "Suzy",
@@ -332,21 +347,6 @@
                     {"item_id": 9, "quantity": 1.0, "slot": ""},
                     {"item_id": 10, "quantity": 1.0, "slot": ""}
                 ],
-                "progress": []
-            },
-            {
-                "id": 18,
-                "name": "Mom",
-                "description": "Suzy's mother. Good understanding of the trails in the woods.",
-                "attribs": [
-                    [2, 10.0]
-                ],
-                "abilities": [25],
-                "toplevel": true,
-                "location_id": 15,
-                "position": null,
-                "travel_party": "",
-                "items": [],
                 "progress": []
             },
             {

@@ -12,6 +12,12 @@ sqlalchemy.orm.exc.ObjectDeletedError: Instance '<Progress at 0x134226688c0>' ha
 
 ---- tightening and quality of life ----
 
+mask all entity names in events
+    changing shouldn't be worrisome if we don't even know what it is
+show links to all unmasked involved entities
+    below event callers and distinct from them
+    event callers can be masked (and therefore not linked)
+
 adding event factors with button at top is awkward
 
 producing 0 out of 0 requested is not a failure
@@ -88,13 +94,13 @@ saving grandfather clock resets hour, an enumerated attrib, to 12am
 
 ---- code ----
 
-refactor play_item
-some logic_ modules seem less useful
-consider manual refactoring or a list of summarized ai suggestions
-
 only put non-default values in json
     otherwise it makes huge lists of "= null" that are hard to read
     don't need auto_apply for eventfactors that are determinants
+
+refactor play_item
+some logic_ modules seem less useful
+consider manual refactoring or a list of summarized ai suggestions
 
 ---- doesn't seem important currently ----
 
