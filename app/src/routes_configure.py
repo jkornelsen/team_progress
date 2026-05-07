@@ -594,17 +594,22 @@ def edit_event(id):
         # 2. Process Determinants and Effects
         for usage in [Participant.DET, Participant.EFF]:
             for row in req.get_list(f"{usage}s"):
+                op_trans = row.get_str('op_transform')
+                get_val_from = row.get_str('get_val_from', Participant.INFIELD)
+                if op_trans == Operation.CONST and usage == Participant.EFF:
+                    get_val_from = Participant.OUTCOME
+
                 factor = EventFactor(
                     game_token=game_token,
                     event_id=event.id,
                     usage_type=usage,
                     order_index=row.get_int('order_index'),
                     label=row.get_str('label'),
-                    get_val_from=row.get_str('get_val_from', Participant.INFIELD),
+                    get_val_from=get_val_from,
                     outcome_success=row.get_str('outcome_success', Participant.ALWAYS),
                     auto_apply=row.get_bool('auto_apply'),
                     op_application=row.get_str('op_application'),
-                    op_transform=row.get_str('op_transform'),
+                    op_transform=op_trans,
                     val_transform=row.get_float('val_transform', 1.0),
                     val_required=row.get_float('val_required', 1.0)
                 )
@@ -617,7 +622,7 @@ def edit_event(id):
                         factor.outfield = None
                         continue
                     fld = row.get_map(field_key)
-                    if fld.data:
+                    if fld.get_str('role') and fld.get_str('field_mode'):
                         mode = fld.get_str('field_mode')
                         fld_attrib_id = fld.get_int('attrib_id') \
                             if mode == Participant.ATTR else None
@@ -636,6 +641,8 @@ def edit_event(id):
                             item_id=fld_item_id,
                             recipe_id=fld_recipe_id,
                         ))
+                    else:
+                        setattr(factor, field_key, None)
                 event.factors.append(factor)
 
         db.session.commit()

@@ -289,7 +289,6 @@
         const isAnotherField = (element.value === '{{ Participant.INFIELD }}');
         const sameAsOutfield = (element.value === '{{ Participant.OUTFIELD }}');
         const isOutcome = (element.value === '{{ Participant.OUTCOME }}');
-        const isFixedConstant = (element.value === '{{ Participant.CONST }}');
 
         if (sourceFieldBox) {
             sourceFieldBox.classList.toggle('hidden', !isAnotherField);
@@ -309,20 +308,12 @@
         }
 
         if (card.classList.contains('eff-card')) {
-            if (isFixedConstant) {
-                innerOpSelect.value = "{{ Operation.CONST }}";
-                innerOpSelect.disabled = true;
-                innerOpSelect.style.opacity = "0.7";
-                innerOpSelect.style.cursor = "not-allowed";
-            } else {
-                if (innerOpSelect.value === "{{ Operation.CONST }}") {
-                    innerOpSelect.value = "";
-                }
-                innerOpSelect.disabled = false;
-                innerOpSelect.style.opacity = "";
-                innerOpSelect.style.cursor = "";
+            innerOpSelect.disabled = false;
+            innerOpSelect.style.opacity = "";
+            innerOpSelect.style.cursor = "";
+            if (innerOpSelect && innerOpSelect.value !== '{{ Operation.CONST }}') {
+                syncInnerExprState(card);
             }
-            syncInnerExprState(card);
         }
 
         if (successFilter) {
@@ -515,43 +506,105 @@
     }
 
     function syncInnerExprState(card) {
-        const opSelector = card.querySelector('.op-inner-selector')
+        const opSelector = card.querySelector('.op-inner-selector');
+        if (!opSelector) return;
+
         const op = opSelector.value;
-        const lhs = card.querySelector('[data-slot-lhs]');
-        const rhsGroup = card.querySelector('[data-slot-rhs]');
-        const rhsInput = card.querySelector('[data-input-constant]');
+        const isConstant = (op === "{{ Operation.CONST }}");
+        const hasNoTransform = (op === ""); 
+        const isEff = card.classList.contains('eff-card');
+        
+        const lhs = card.querySelector('[data-slot-lhs]');       // "Fetched Value" / "Source"
+        const rhsGroup = card.querySelector('[data-slot-rhs]'); // The numeric input [ 1.0 ]
 
-        // Reset defaults
-        lhs.classList.remove('hidden');
-        rhsGroup.classList.remove('hidden');
-        lhs.style.order = "1";
-        card.querySelector('.op-inner-selector').style.order = "2";
-        rhsGroup.style.order = "3";
+        // --- 1. VISIBILITY RULES ---
+        
+        // Hide "Fetched Value" only if we are in "Constant" mode
+        if (lhs) lhs.classList.toggle('hidden', isConstant);
 
-        // Apply Logic based on OP
+        // Hide the numeric input if we are just using the raw value ("Use Value")
+        // but keep it for every other operation (including Constant)
+        if (rhsGroup) rhsGroup.classList.toggle('hidden', hasNoTransform);
+
+        // --- 2. ORDERING RULES (Visual Equation Flow) ---
+        
         let isFunctional = false;
-        if (!op) {
-            rhsGroup.classList.add('hidden');
-        } 
-        else if (op === "{{ Operation.CONST }}") { 
-            lhs.classList.add('hidden');
+
+        if (isConstant) {
+            // ( [ 10 ] )
             rhsGroup.style.order = "1";
             opSelector.style.order = "2";
-        }
+        } 
         else if (op === "{{ Operation.POW_OF_VAL }}") {
+            // ( [ 10 ] ^ Fetched Value )
             rhsGroup.style.order = "1";
+            opSelector.style.order = "2";
             lhs.style.order = "3";
         } 
         else if (op === "{{ Operation.SOFTCAP }}" || op === "{{ Operation.ROUND }}") {
+            // Round ( Fetched Value , [ 10 ] )
             opSelector.style.order = "1";
             lhs.style.order = "2";
             rhsGroup.style.order = "3";
             isFunctional = true;
-        }
+        } 
         else {
-            // STANDARD BINARY (+, -, *, /, x^ )
+            // Standard Binary: ( Fetched Value + [ 10 ] )
+            // Or "Use Value": ( Fetched Value )
+            lhs.style.order = "1";
+            opSelector.style.order = "2";
+            rhsGroup.style.order = "3";
         }
+
         card.classList.toggle('functional-layout', isFunctional);
+
+        // --- 3. SOURCE & TARGET LOGIC (📥 and 📤 sections) ---
+
+        if (isEff) {
+            const subSections = card.querySelectorAll('.card-body > .sub-section');
+            const outfieldSection = subSections[0]; 
+            const sourceSection = subSections[1];   
+            
+            const sourceTypeSelect = sourceSection.querySelector('.source-type-select');
+            const infieldBox = sourceSection.querySelector('.source-field-box');
+            const successFilter = sourceSection.querySelector('.success-filter-container');
+
+            if (isConstant) {
+                if (sourceTypeSelect && sourceTypeSelect.value !== "{{ Participant.OUTCOME }}") {
+                    sourceTypeSelect.value = "{{ Participant.OUTCOME }}";
+                    syncEffSourceState(sourceTypeSelect); 
+                }
+                if (sourceTypeSelect) sourceTypeSelect.disabled = true;
+
+                if (infieldBox) {
+                    infieldBox.querySelectorAll('select, input').forEach(i => i.disabled = true);
+                    infieldBox.style.opacity = "0.5";
+                    infieldBox.style.pointerEvents = "none";
+                }
+
+                if (successFilter) {
+                    successFilter.querySelectorAll('select, input').forEach(i => i.disabled = false);
+                    successFilter.style.opacity = "1";
+                    successFilter.style.pointerEvents = "auto";
+                }
+            } else {
+                if (sourceTypeSelect) sourceTypeSelect.disabled = false;
+                if (infieldBox) {
+                    infieldBox.querySelectorAll('select, input').forEach(i => i.disabled = false);
+                    infieldBox.style.opacity = "1";
+                    infieldBox.style.pointerEvents = "auto";
+                    const inMode = infieldBox.querySelector('.field-mode-select');
+                    if (inMode) syncFieldIdsState(inMode);
+                }
+            }
+        } else {
+            const detSourceSection = card.querySelector('.card-body .sub-section');
+            if (detSourceSection) {
+                detSourceSection.querySelectorAll('select, input').forEach(i => i.disabled = isConstant);
+                detSourceSection.style.opacity = isConstant ? "0.5" : "1";
+                detSourceSection.style.pointerEvents = isConstant ? "none" : "auto";
+            }
+        }
     }
 
     // Use Event Delegation for dynamic changes

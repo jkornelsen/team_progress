@@ -167,13 +167,14 @@ def calculate_determinants(event, role_entities):
     game_token = g.game_token
 
     field_name = "Value"
-    source_display = "(Constant)"
     for det in event.determinants:
         val = 0.0
+        breakdown_text = ""
         source_display = "Constant"
             
-        # Identify the Field Name (Pathfinding, Iron Ore, etc.)
-        if det.get_val_from == Participant.INFIELD and det.infield:
+        if det.op_transform == Operation.CONST:
+            val = det.val_transform
+        elif det.get_val_from == Participant.INFIELD and det.infield:
             anchor_id = resolve_anchor_id(det.infield.role, role_entities)
             if not anchor_id:
                 continue
@@ -216,17 +217,15 @@ def calculate_determinants(event, role_entities):
                 if pile:
                     child_name = maskable_name(pile.item)
                 source_display = f"{anchor_name}'s {child_name}"
-        elif det.get_val_from == Participant.CONST:
-            val = det.val_transform
 
-        breakdown_text = format_for_display(val)
+            breakdown_text = format_for_display(val)
 
-        # Inner Transform: (Val <op> Constant)
-        if det.op_transform:
-            breakdown_text = get_inner_breakdown(
-                val, det.val_transform, det.op_transform)
-            val = apply_operation(
-                val, det.val_transform, det.op_transform)
+            # Inner Transform: (Val <op> Constant)
+            if det.op_transform:
+                breakdown_text = get_inner_breakdown(
+                    val, det.val_transform, det.op_transform)
+                val = apply_operation(
+                    val, det.val_transform, det.op_transform)
 
         # Assemble the enriched dictionary
         modifiers.append({
@@ -287,25 +286,28 @@ def calculate_effects_targets(event, role_entities):
         else:
             source_val = eff.val_transform
 
-        # --- 3. NEW: CALCULATE PRE-ROLL IMPACT ---
-        # If the source is known (not the roll), we calculate the math on the server now.
+        # --- 3. CALCULATE PRE-ROLL IMPACT ---
         impact_value = None
-        is_known = False
-        if eff.get_val_from != Participant.OUTCOME:
-            is_known = True
+        if eff.get_val_from == Participant.OUTCOME and \
+                eff.op_transform != Operation.CONST:
+            relies_on_roll = True
+        else:
+            relies_on_roll = False
             impact_value = source_val
             if eff.op_transform:
-                impact_value = apply_operation(impact_value, eff.val_transform, eff.op_transform)
+                impact_value = apply_operation(
+                    impact_value, eff.val_transform, eff.op_transform)
 
         results.append({
             'effect_id': eff.id,
             'target_name': target_name,
             'current_value': current_val,
             'is_resolved': is_resolved,
-            'source_name': source_name,
+            'source_name':  "Constant" if eff.op_transform == Operation.CONST \
+                            else source_name,
             'source_value': source_val,
             'impact_value': impact_value, # The result of the inner math
-            'is_known': is_known,         # Result is independent of dice
+            'relies_on_roll': relies_on_roll,
             'op_app': eff.op_application,
             'op_trans': eff.op_transform,
             'val_trans': eff.val_transform,
@@ -360,6 +362,8 @@ def calculate_solved_effects(event, role_entities, roll_total):
 
 def apply_operation(current_val, mod_val, op):
     """Applies the specific operation and returns the new value."""
+    if op == Operation.CONST:
+        return mod_val
     if op == Operation.SOFTCAP:
         c = 50
         if current_val == 0:
@@ -373,7 +377,6 @@ def apply_operation(current_val, mod_val, op):
         ratio = math.log(1 + current_abs / c) / (
             1 + math.log(1 + current_abs / c))
         return sign * (1 + mod_val * ratio)
-
     if op == Operation.ROUND:
         # Round to nearest X
         try:
@@ -382,7 +385,6 @@ def apply_operation(current_val, mod_val, op):
             return float(round(current_val / mod_val) * mod_val)
         except (ValueError, TypeError, ZeroDivisionError):
             return float(round(current_val))
-
     if op == Operation.ADD:  return current_val + mod_val
     if op == Operation.SUB:  return current_val - mod_val
     if op == Operation.MULT: return current_val * mod_val
@@ -621,14 +623,14 @@ def effect_description(eff):
     # The Source
     if eff.get_val_from == Participant.OUTCOME:
         source_val = "[Roll Result]"
-    elif eff.get_val_from in (Participant.INFIELD, Participant.OUTFIELD):
+    else:
         field = eff.infield or eff.outfield
         source_val = field.get_field_name() if field else "Value"
-    else:
-        source_val = format_for_display(eff.val_transform)
 
     # The Inner Transform
-    if eff.op_transform and eff.get_val_from != Participant.CONST:
+    if eff.op_transform == Operation.CONST:
+        source_val = format_for_display(eff.val_transform)
+    elif eff.op_transform:
         # e.g., (Roll Result * 2)
         REPLACE = 135.79
         source_val = get_inner_breakdown(
@@ -639,17 +641,17 @@ def effect_description(eff):
     if eff.op_application == Operation.ASSIGN:
         op_app_repr = "→"
     else:
-        op_app_repr = Operation.Repr(eff.op_application)
+        op_app_repr = Operation.Repr[eff.op_application]
     
     return f"{op_app_repr} {source_val}"
 
-def process_all_effects(event, role_entities, roll_total, tier_key, force_auto_only=False):
+def process_all_effects(event, role_entities, roll_total, tier, force_auto_only=False):
     """
     Called by roll_event route. Scans all effects and triggers
     automatic ones that match the success tier.
     """
     for eff in event.effects:
-        if not check_outcome_success(eff.outcome_success, tier_key):
+        if not check_outcome_success(eff.outcome_success, tier):
             continue
         if force_auto_only and not eff.auto_apply:
             continue
@@ -658,7 +660,7 @@ def process_all_effects(event, role_entities, roll_total, tier_key, force_auto_o
 def check_outcome_success(filter_val, tier):
     if filter_val == Participant.ALWAYS:
         return True
-    if tier_key is None:
+    if tier is None:
         return False
     if filter_val == Participant.SUCCESS_ANY:
         return 'success' in tier

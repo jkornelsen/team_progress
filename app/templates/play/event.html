@@ -190,7 +190,7 @@
                     {% endif %}
                 </form>
                 {% if not fields_not_met %}
-                    {% set roll_text = ' calculate' if event.outcome_type == 'determined'
+                    {% set roll_text = 'esolve' if event.outcome_type == 'determined'
                         else 'oll for Outcome' %}
                     {% set roll_label = hk.bracket('r') ~ roll_text %}
                     <div class="spacious-top text-center">
@@ -221,7 +221,7 @@
             <section id="effects-section" class="outer-border {% if not effects_data %}hidden{% endif %}">
                 <div class="flex-between align-center">
                     <h3>Effects</h3>
-                    {% set roll_title = 'Calculate' if event.outcome_type == 'determined' else 'Roll' %}
+                    {% set roll_title = 'Resolve' if event.outcome_type == 'determined' else 'Roll' %}
                     {% set manual_count = effects_data | rejectattr('obj.auto_apply') | list | length %}
                     {% if manual_count > 1 %}
                         <div id="apply-all-container">
@@ -242,11 +242,15 @@
                         <div class="effect-row spacious-bottom" 
                              id="eff-row-{{ eff.id }}" 
                              data-role="{{ item.target_role }}"
-                             data-auto="{{ 'true' if eff.auto_apply else 'false' }}"
                              data-get-val-from="{{ eff.get_val_from }}"
+                             data-success-filter="{{ eff.outcome_success }}"
                              data-op-trans="{{ eff.op_transform or '' }}"
                              data-val-trans="{{ eff.val_transform }}"
-                             data-auto="{{ 'true' if eff.auto_apply else 'false' }}">
+                             data-auto="{{ 'true' if eff.auto_apply else 'false' }}"
+                             data-relies-on-roll="{{ 'true'
+                                if (eff.get_val_from == Participant.OUTCOME
+                                and eff.op_transform != Operation.CONST)
+                                else 'false' }}">
                             <div class="flex-between align-center">
                                 <div>
                                     <strong class="target-name-display">...</strong>
@@ -298,6 +302,14 @@
     const OP_MAP = {{ Operation.Repr | tojson | safe }};
     const COMPARISON_OPS = {{ Operation.COMPARISON_OPS | tojson }};
     const eventId = {{ event.id }};
+    const FILTER_LABELS = {
+        '{{ Participant.SUCCESS_ANY }}': 'If Successful',
+        '{{ Participant.SUCCESS_MAJOR }}': 'If Major Success',
+        '{{ Participant.SUCCESS_MINOR }}': 'If Minor Success',
+        '{{ Participant.FAILURE_ANY }}': 'If Failure',
+        '{{ Participant.FAILURE_MAJOR }}': 'If Major Failure',
+        '{{ Participant.FAILURE_MINOR }}': 'If Minor Failure'
+    };
 
     const diffSelect = document.getElementById('difficulty-select');
     const rollBtn = document.getElementById('submit-roll');
@@ -361,7 +373,7 @@
                 const displayOp = OP_MAP[m.op] || m.op;
 
                 const isComparison = COMPARISON_OPS.includes(m.op);
-                const hasInner = (m.breakdown !== m.value.toString());
+                const hasInner = (m.breakdown && m.breakdown !== m.value.toString());
                 const innerHtml = hasInner ? `<small class="text-dim">[${m.breakdown}]</small>` : "";
 
                 let contentHtml = "";
@@ -427,7 +439,7 @@
                 const row = document.getElementById(`eff-row-${eff.effect_id}`);
                 if (!row) return;
 
-                row.dataset.isKnown = eff.is_known ? "true" : "false";
+                row.dataset.reliesOnRoll = eff.relies_on_roll ? "true" : "false";
 
                 const equationEl = row.querySelector('.equation-display');
                 const getValFrom = row.dataset.getValFrom;
@@ -441,22 +453,40 @@
 
                 // Update Line 2: Logic description
                 const logicEl = row.querySelector('.source-logic-description');
+                const filterKey = row.dataset.successFilter;
+                const successFilterText = FILTER_LABELS[filterKey] || "";
 
                 const hasTransform = (
                     row.dataset.opTrans && row.dataset.opTrans !== ''
                     && row.dataset.opTrans !== '{{ Operation.CONST }}');
-                if (eff.source_name && (
-                    getValFrom !== '{{ Participant.OUTCOME }}' &&
-                    getValFrom !== '{{ Participant.CONST }}'))
-                {
-                    logicEl.innerText = formatImpactExpression(eff.source_name, row.dataset.valTrans, row.dataset.opTrans);
+
+                let logicParts = [];
+
+                // A. Add Filter Requirement (e.g., "If Major Success")
+                if (successFilterText && getValFrom === '{{ Participant.OUTCOME }}') {
+                    logicParts.push(`<span class="">${successFilterText}</span>`);
+                }
+
+                // B. Add Math Transform (e.g., "Roll Result × 2")
+                if (hasTransform && eff.source_name) {
+                    // If it's a roll result, we call the source "Roll Result" for the formula
+                    const sourceLabel = (getValFrom === '{{ Participant.OUTCOME }}') ? "Roll Result" : eff.source_name;
+                    logicParts.push(formatImpactExpression(sourceLabel, row.dataset.valTrans, row.dataset.opTrans));
+                }
+
+                if (logicParts.length > 0) {
+                    // Join with a space or separator
+                    logicEl.innerHTML = logicParts.join(" &mdash; ");
                     logicEl.classList.remove('hidden');
                 } else {
                     logicEl.classList.add('hidden');
                 }
 
                 // Update Line 3: The Equation (using placeholders)
-                if (eff.is_known) {
+                if (eff.relies_on_roll) {
+                    equationEl.innerText = formatImpactExpression(
+                        "Roll", row.dataset.valTrans, row.dataset.opTrans);
+                } else {
                     // Server has provided the impact_value because it's not dependent on the roll
                     const formattedImpact = `<span class="text-success" style="font-weight:bold;">${Math.round(eff.impact_value * 100) / 100}</span>`;
                     
@@ -468,9 +498,6 @@
                         // Show: 1 (green)
                         equationEl.innerHTML = formattedImpact;
                     }
-                } else {
-                    // Result depends on "Roll"
-                    equationEl.innerText = formatImpactExpression("Roll", row.dataset.valTrans, row.dataset.opTrans);
                 }
                 
                 // Hide results from previous rolls
@@ -509,6 +536,31 @@
         updateDieThresholds();
     }
 
+    /**
+     * Refreshes the visibility of the 'Apply All' button based on 
+     * how many manual apply buttons are currently visible and active.
+     */
+    function syncApplyAllState() {
+        const container = document.getElementById('apply-all-container');
+        if (!container) return;
+
+        // Count manual buttons that are in visible rows and haven't been clicked yet
+        const activeManualButtons = document.querySelectorAll(
+            '.effect-row:not(.hidden) .apply-eff-btn:not(.hidden):not(:disabled)'
+        );
+
+        if (activeManualButtons.length <= 1) {
+            container.classList.add('hidden');
+        } else {
+            container.classList.remove('hidden');
+            const btn = document.getElementById('apply-all-btn');
+            if (btn) btn.disabled = false;
+        }
+    }
+
+    /**
+     * The main roll button handler
+     */
     if (rollBtn) {
         rollBtn.onclick = async () => {
             const fd = getRoleIDs();
@@ -529,6 +581,7 @@
             // 1. Display the main outcome result
             lastRollValue = data.result_value;
             document.getElementById('outcome-text').innerHTML = data.display;
+            const resultTier = data.tier;
 
             // 2. Update Effects using the pre-calculated results from the server
             if (data.solved_effects) {
@@ -539,10 +592,10 @@
                     const impactRes = row.querySelector('.impact-result');
                     const newValEl = row.querySelector('.new-val');
                     const equationEl = row.querySelector('.equation-display');
-                    const isKnown = row.dataset.isKnown === "true";
+                    const filter = row.dataset.successFilter;
+                    const reliesOnRoll = row.dataset.reliesOnRoll === "true";
 
-                    if (!isKnown) {
-                        // This effect depended on the roll. 
+                    if (reliesOnRoll) {
                         // Update the "Roll" placeholder with the actual number
                         if (row.dataset.getValFrom === '{{ Participant.OUTCOME }}') {
                             equationEl.innerText = formatImpactExpression(
@@ -560,6 +613,19 @@
                         // It's already showing the correct green result in equationEl.
                         if (impactRes) impactRes.classList.add('hidden');
                     }
+                    if (row.dataset.getValFrom === '{{ Participant.OUTCOME }}') {
+                        let isEligible = (filter === 'always');
+                        if (resultTier) {
+                            if (filter === 'success_any') isEligible = resultTier.includes('success');
+                            else if (filter === 'failure_any') isEligible = resultTier.includes('failure');
+                            else if (filter === resultTier) isEligible = true;
+                        }
+                        if (!isEligible) {
+                            row.classList.add('hidden'); // Hide effects that didn't "trigger"
+                        } else {
+                            row.classList.remove('hidden');
+                        }
+                    }
 
                     // Handle button states
                     const isAuto = row.dataset.auto === "true";
@@ -573,12 +639,8 @@
                 });
             }
 
-            // 3. Enable "Apply All" if multiple manual buttons are now active
-            const applyAllBtn = document.getElementById('apply-all-btn');
-            if (applyAllBtn) {
-                const manualButtons = document.querySelectorAll('.apply-eff-btn:not(.hidden):not(:disabled)');
-                applyAllBtn.disabled = (manualButtons.length <= 1);
-            }
+            // Sync based on outcome
+            syncApplyAllState()
         };
     }
 
@@ -616,6 +678,8 @@
             row.querySelector('.apply-eff-btn').classList.add('hidden');
             row.querySelector('.check-mark').classList.remove('hidden');
             row.style.opacity = "0.7";
+
+            syncApplyAllState();
         }
     }
 

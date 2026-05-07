@@ -291,7 +291,7 @@ class Location(Entity):
                 for p in self.piles
             ],
             "progress": [p.to_dict() for p in self.progress_records],
-            "item_refs": [ir.to_dict() for ir in self.item_refs],
+            "item_refs": [ir.item_id for ir in self.item_refs],
             "destinations": [d.to_dict() for d in self.routes_forward],
         })
         return data
@@ -307,9 +307,13 @@ class Location(Entity):
         for p_data in data.get('progress', []):
             loc.progress_records.append(
                 Progress.from_dict(p_data, game_token))
-        for ir_data in data.get('item_refs', []):
-            loc.item_refs.append(
-                ItemRef.from_dict(ir_data, game_token, loc.id))
+        for item_id in data.get('item_refs', []):
+            new_ref = ItemRef(
+                game_token=game_token,
+                loc_id=loc.id,
+                item_id=item_id
+            )
+            loc.item_refs.append(new_ref)
         for d_data in data.get('destinations', []):
             loc.routes_forward.append(
                 LocDest.from_dict(d_data, game_token, loc.id))
@@ -775,7 +779,7 @@ class LocDest(db.Model, DictHydrator):
             ['locations.game_token', 'locations.id'], ondelete='CASCADE'),
     )
 
-class ItemRef(db.Model, DictHydrator):
+class ItemRef(db.Model):
     """Reference to an item shown when viewing that host.
     Such items aren't actually anchored there, only mentioned.
     This is a good way to organize a set of related universal items.
@@ -784,15 +788,6 @@ class ItemRef(db.Model, DictHydrator):
     game_token = db.Column(db.String(50), primary_key=True)
     loc_id = db.Column(db.Integer, primary_key=True)
     item_id = db.Column(db.Integer, primary_key=True)
-
-    def to_dict(self):
-        return {
-            "item_id": self.item_id
-        }
-
-    @classmethod
-    def from_dict(cls, data, game_token, loc_id):
-        return super().from_dict(data, game_token, loc_id=loc_id)
 
     location = db.relationship(
         'Location',

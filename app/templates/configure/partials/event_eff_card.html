@@ -51,9 +51,6 @@
                     <option value="{{ Participant.OUTFIELD }}" {{ 'selected'
                         if factor and factor.get_val_from == Participant.OUTFIELD
                         }}>The Field We're Changing</option>
-                    <option value="{{ Participant.CONST }}" {{ 'selected'
-                        if factor and factor.get_val_from == Participant.CONST
-                        }}>Fixed Constant</option>
                 </select>
 
                 <div class="success-filter-container {{
@@ -78,12 +75,12 @@
                         <option value="{{ Participant.FAILURE_ANY }}" 
                             {{ 'selected' if factor and factor.outcome_success ==
                                 Participant.FAILURE_ANY }}>Any Failure</option>
-                        <option value="{{ Participant.FAILURE_MAJOR }}" 
-                            {{ 'selected' if factor and factor.outcome_success ==
-                                Participant.FAILURE_MAJOR }}>Major Failure</option>
                         <option value="{{ Participant.FAILURE_MINOR }}" 
                             {{ 'selected' if factor and factor.outcome_success ==
                                 Participant.FAILURE_MINOR }}>Minor Failure</option>
+                        <option value="{{ Participant.FAILURE_MAJOR }}" 
+                            {{ 'selected' if factor and factor.outcome_success ==
+                                Participant.FAILURE_MAJOR }}>Major Failure</option>
                     </select>
                 </div>
 
