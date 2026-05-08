@@ -265,8 +265,32 @@ def calculate_effects_targets(event, role_entities):
         elif target_id is not None:
             is_resolved = True
             current_val = get_entity_value(target_id, field_def, subject_id)
-            target_name = "🌐" if target_id == GENERAL_ID else \
-                          Entity.query.get((game_token, target_id)).name
+
+            if field_def.child_of_anchor and \
+                    field_def.field_mode == Participant.ATTR:
+                pile = db.session.query(Pile).join(
+                    Item, 
+                    (Pile.item_id == Item.id) &
+                    (Pile.game_token == Item.game_token)
+                ).join(
+                    AttribVal, 
+                    (AttribVal.subject_id == Item.id) &
+                    (AttribVal.game_token == Item.game_token)
+                ).filter(
+                    Pile.game_token == game_token,
+                    Pile.owner_id == target_id,
+                    AttribVal.attrib_id == field_def.attrib_id
+                ).first()
+                if pile:
+                    parent_name = "🌐" if target_id == GENERAL_ID \
+                        else Entity.query.get((game_token, target_id)).name
+                    target_name = f"{parent_name}'s {pile.item.name}"
+                else:
+                    target_name = "🌐" if target_id == GENERAL_ID \
+                        else Entity.query.get((game_token, target_id)).name
+            else:
+                target_name = "🌐" if target_id == GENERAL_ID \
+                    else Entity.query.get((game_token, target_id)).name
         else:
             target_name = "(" + field_def.role + ")"
             is_resolved = False
@@ -702,6 +726,24 @@ def do_effect_change(eff, roll_total, role_entities):
 
     # Destination A: Attributes
     if field_def.field_mode == Participant.ATTR:
+        if field_def.child_of_anchor:
+            pile = db.session.query(Pile).join(
+                Item, 
+                (Pile.item_id == Item.id) & (Pile.game_token == Item.game_token)
+            ).join(
+                AttribVal, 
+                (AttribVal.subject_id == Item.id) & (AttribVal.game_token == Item.game_token)
+            ).filter(
+                Pile.game_token == game_token,
+                Pile.owner_id == target_id,
+                AttribVal.attrib_id == field_def.attrib_id
+            ).first()
+            if pile:
+                target_id = pile.item_id
+            else:
+                logger.warning(f"Could not resolve child item with attribute {field_def.attrib_id} for anchor {target_id}")
+                return
+
         record = AttribVal.query.filter_by(
             game_token=game_token, subject_id=target_id, attrib_id=field_def.attrib_id
         ).first()

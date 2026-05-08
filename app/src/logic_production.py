@@ -6,7 +6,7 @@ from app.models import (
     db, Entity, Item, Location, Character, Pile, Progress,
     Recipe, AttribVal, GENERAL_ID, StorageType)
 from app.utils import maskable_name
-from .logic_piles import adjust_quantity
+from .logic_piles import adjust_quantity, get_accessible_quantity
 from .logic_navigation import is_adjacent
 from .logic_user_interaction import add_message
 
@@ -116,17 +116,23 @@ def can_perform_recipe(
 
     # 3. Attribute Requirements
     scope = get_host_scope(host_id, ctx)
+    for res in resolved:
+        if res['total_available'] > 0:
+            scope.append(res['item'].id)
 
     for req in recipe.attrib_reqs:
         req_met = False
         for eid in scope:
             av = AttribVal.query.filter_by(
-                game_token=game_token, subject_id=eid, attrib_id=req.attrib_id).first()
+                game_token=game_token,
+                subject_id=eid,
+                attrib_id=req.attrib_id).first()
             if av and req.in_range(av.value):
                 req_met = True
                 break
         if not req_met:
-            return False, f"Requires {maskable_name(req.attrib)} {req.range_display}"
+            return False, \
+                f"Requires {maskable_name(req.attrib)} {req.range_display}"
 
     return True, ""
 
@@ -270,13 +276,15 @@ def execute_production(
             source_def = res['source_def']
             if not source_def.preserve and source_def.q_required > 0:
                 # How many batches can this specific ingredient support?
-                limit = math.floor(res['total_available'] / source_def.q_required)
+                limit = math.floor(
+                    res['total_available'] / source_def.q_required)
                 if limit < max_possible:
                     max_possible = limit
         
         # Also check Output Limit (q_limit)
         if recipe.rate_amount > 0 and recipe.product.q_limit > 0:
-            current_qty = get_accessible_quantity(recipe.product_id, target_owner_id)
+            current_qty = get_accessible_quantity(
+                recipe.product_id, target_owner_id)
             space_left = recipe.product.q_limit - current_qty
             limit = math.floor(space_left / recipe.rate_amount)
             if limit < max_possible:

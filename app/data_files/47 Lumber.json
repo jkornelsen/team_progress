@@ -9,25 +9,18 @@
                 "abilities": [],
                 "storage_type": "u",
                 "q_limit": 0.0,
+                "loc_hosted": false,
                 "toplevel": true,
                 "masked": false,
                 "recipes": [
                     {
                         "id": 23,
                         "rate_amount": 1.0,
-                        "rate_duration": 3.0,
+                        "rate_duration": 3,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 7,
-                                "q_required": 1.0,
-                                "preserve": false
-                            },
-                            {
-                                "item_id": 11,
-                                "q_required": 1.0,
-                                "preserve": true
-                            }
+                            {"item_id": 7, "q_required": 1.0, "preserve": false},
+                            {"item_id": 11, "q_required": 1.0, "preserve": true}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -42,20 +35,17 @@
                 "abilities": [],
                 "storage_type": "u",
                 "q_limit": 0.0,
+                "loc_hosted": false,
                 "toplevel": true,
                 "masked": false,
                 "recipes": [
                     {
                         "id": 22,
                         "rate_amount": 5.0,
-                        "rate_duration": 3.0,
+                        "rate_duration": 3,
                         "instant": true,
                         "sources": [
-                            {
-                                "item_id": 12,
-                                "q_required": 4.0,
-                                "preserve": false
-                            }
+                            {"item_id": 12, "q_required": 4.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -70,6 +60,7 @@
                 "abilities": [],
                 "storage_type": "l",
                 "q_limit": 1.0,
+                "loc_hosted": true,
                 "toplevel": false,
                 "masked": false,
                 "recipes": []
@@ -82,6 +73,7 @@
                 "abilities": [],
                 "storage_type": "l",
                 "q_limit": 1.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": false,
                 "recipes": []
@@ -94,43 +86,34 @@
                 "abilities": [],
                 "storage_type": "c",
                 "q_limit": 0.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": false,
                 "recipes": [
                     {
                         "id": 8,
                         "rate_amount": 10.0,
-                        "rate_duration": 15.0,
+                        "rate_duration": 15,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 15,
-                                "q_required": 1.0,
-                                "preserve": false
-                            }
+                            {"item_id": 15, "q_required": 1.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": [
                             {
                                 "attrib_id": 2,
-                                "value_range": [
-                                    null,
-                                    -1.0
-                                ]
+                                "value_range": [null, -1.0],
+                                "range_inclusive": [true, true]
                             }
                         ]
                     },
                     {
                         "id": 21,
                         "rate_amount": 10.0,
-                        "rate_duration": 1200.0,
+                        "rate_duration": 1200,
                         "instant": false,
                         "sources": [
-                            {
-                                "item_id": 10,
-                                "q_required": 1.0,
-                                "preserve": false
-                            }
+                            {"item_id": 10, "q_required": 1.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -145,20 +128,17 @@
                 "abilities": [],
                 "storage_type": "l",
                 "q_limit": 1.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": false,
                 "recipes": [
                     {
                         "id": 7,
                         "rate_amount": 1.0,
-                        "rate_duration": 3.0,
+                        "rate_duration": 3,
                         "instant": true,
                         "sources": [
-                            {
-                                "item_id": 10,
-                                "q_required": 1.0,
-                                "preserve": false
-                            }
+                            {"item_id": 10, "q_required": 1.0, "preserve": false}
                         ],
                         "byproducts": [],
                         "attrib_reqs": []
@@ -169,10 +149,14 @@
                 "id": 14,
                 "name": "Old Axe",
                 "description": "Handle has been reattached many times in the past.",
-                "attribs": [],
+                "attribs": [
+                    [5, 5.0],
+                    [4, 2.0]
+                ],
                 "abilities": [],
                 "storage_type": "c",
                 "q_limit": 1.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": false,
                 "recipes": []
@@ -185,6 +169,7 @@
                 "abilities": [],
                 "storage_type": "u",
                 "q_limit": 0.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": false,
                 "recipes": []
@@ -197,6 +182,7 @@
                 "abilities": [],
                 "storage_type": "l",
                 "q_limit": 0.0,
+                "loc_hosted": false,
                 "toplevel": false,
                 "masked": false,
                 "recipes": []
@@ -209,10 +195,7 @@
                 "description": "",
                 "attribs": [],
                 "abilities": [],
-                "dimensions": [
-                    7,
-                    3
-                ],
+                "dimensions": [7, 3],
                 "excluded": null,
                 "toplevel": false,
                 "masked": false,
@@ -220,17 +203,17 @@
                     {
                         "item_id": 11,
                         "quantity": 1.0,
-                        "position": [
-                            3,
-                            2
-                        ]
+                        "position": [3, 2]
                     }
                 ],
+                "progress": [],
                 "item_refs": [],
                 "destinations": [
                     {
                         "loc2_id": 18,
                         "duration": 1,
+                        "door1": [7, 2],
+                        "door2": [1, 2],
                         "bidirectional": true
                     }
                 ]
@@ -241,83 +224,59 @@
                 "description": "This plot of land is your family inheritance and the basis for setting up the company. There is a pond in the southeast.",
                 "attribs": [],
                 "abilities": [],
-                "dimensions": [
-                    20,
-                    20
-                ],
-                "excluded": [
-                    8,
-                    12,
-                    18,
-                    17
-                ],
+                "dimensions": [20, 20],
+                "excluded": [8, 12, 18, 17],
                 "toplevel": false,
                 "masked": false,
                 "items": [
                     {
                         "item_id": 7,
                         "quantity": 4.0,
-                        "position": [
-                            3,
-                            2
-                        ]
+                        "position": [3, 2]
                     },
                     {
                         "item_id": 15,
                         "quantity": 1.0,
-                        "position": [
-                            15,
-                            4
-                        ]
+                        "position": [15, 4]
                     },
                     {
                         "item_id": 9,
                         "quantity": 1.0,
-                        "position": [
-                            14,
-                            5
-                        ]
+                        "position": [14, 5]
                     }
                 ],
+                "progress": [],
                 "item_refs": [],
-                "destinations": []
+                "destinations": [
+                    {
+                        "loc2_id": 17,
+                        "duration": 1,
+                        "door1": [4, 9],
+                        "door2": [3, 20],
+                        "bidirectional": true
+                    }
+                ]
             },
             {
                 "id": 17,
-                "name": "Tree \u2014 Climbing",
+                "name": "Tree — Climbing",
                 "description": "Use this view for characters to climb a tree, starting from the bottom.",
                 "attribs": [],
                 "abilities": [],
-                "dimensions": [
-                    4,
-                    20
-                ],
-                "excluded": [
-                    1,
-                    3,
-                    2,
-                    20
-                ],
+                "dimensions": [4, 20],
+                "excluded": [1, 3, 2, 20],
                 "toplevel": false,
                 "masked": false,
                 "items": [
                     {
                         "item_id": 13,
                         "quantity": 1.0,
-                        "position": [
-                            1,
-                            2
-                        ]
+                        "position": [1, 2]
                     }
                 ],
+                "progress": [],
                 "item_refs": [],
-                "destinations": [
-                    {
-                        "loc2_id": 18,
-                        "duration": 1,
-                        "bidirectional": true
-                    }
-                ]
+                "destinations": []
             }
         ],
         "characters": [
@@ -326,77 +285,38 @@
                 "name": "Owner",
                 "description": "Player character who initially started the company.",
                 "attribs": [
-                    [
-                        3,
-                        1.1
-                    ],
-                    [
-                        4,
-                        1.1
-                    ]
+                    [3, 1.1],
+                    [4, 1.1]
                 ],
-                "abilities": [],
+                "abilities": [23, 25],
                 "toplevel": true,
-                "masked": false,
                 "location_id": 18,
-                "position": [
-                    4,
-                    3
-                ],
-                "travel_party": "",
+                "position": [4, 3],
+                "travel_party": "Driving",
                 "items": [
-                    {
-                        "item_id": 14,
-                        "quantity": 1.0,
-                        "slot": "Held"
-                    }
-                ]
+                    {"item_id": 14, "quantity": 1.0, "slot": "Held"}
+                ],
+                "progress": []
             },
             {
                 "id": 19,
                 "name": "Truck",
                 "description": "A run-down workhorse with a little left to give. \r\n\r\nCarries logs. Someone must drive (move/travel with) the truck.",
                 "attribs": [
-                    [
-                        6,
-                        2.0
-                    ]
+                    [6, 2.0]
                 ],
-                "abilities": [],
+                "abilities": [24],
                 "toplevel": true,
-                "masked": false,
                 "location_id": 18,
-                "position": [
-                    4,
-                    2
-                ],
-                "travel_party": "",
+                "position": [4, 2],
+                "travel_party": "Driving",
                 "items": [
-                    {
-                        "item_id": 7,
-                        "quantity": 2.0,
-                        "slot": ""
-                    }
-                ]
+                    {"item_id": 7, "quantity": 2.0, "slot": ""}
+                ],
+                "progress": []
             }
         ],
         "attribs": [
-            {
-                "id": 2,
-                "name": "HP",
-                "description": "How much chopping still needs to be done to finish chopping down the tree. Once HP is 0, the tree can be cut into logs.",
-                "abilities": [],
-                "is_binary": false,
-                "enum_list": []
-            },
-            {
-                "id": 3,
-                "name": "Strength",
-                "description": "Increases max cutting progress per chop.",
-                "abilities": [],
-                "is_binary": false,
-                "enum_list": []
-            },
             {
                 "id": 4,
                 "name": "Accuracy",
@@ -414,9 +334,25 @@
                 "enum_list": []
             },
             {
+                "id": 2,
+                "name": "HP",
+                "description": "How much chopping still needs to be done to finish chopping down the tree. Once HP is 0, the tree can be cut into logs.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
                 "id": 6,
                 "name": "Repair",
                 "description": "What shape a vehicle is in.",
+                "abilities": [],
+                "is_binary": false,
+                "enum_list": []
+            },
+            {
+                "id": 3,
+                "name": "Strength",
+                "description": "Increases max cutting progress per chop.",
                 "abilities": [],
                 "is_binary": false,
                 "enum_list": []
@@ -425,163 +361,221 @@
         "events": [
             {
                 "id": 26,
-                "name": "Chopping Mishap",
-                "description": "Chance of something bad, or possibly good, happening.  Use accuracy to modify both min and max if relevant for the situation, such as when attempting to land a blow.\r\n\r\nRun [Chopping Mishap Type](/play/event/7) for further details.",
-                "numeric_range": [
-                    1,
-                    20
-                ],
-                "outcome_type": "fourway",
-                "selection_strings": "",
+                "name": "Chopping Check",
+                "description": "- **Major Success:** Gain extra resources\r\n- **Minor Failure:** The attempt was unsuccessful\r\n- **Major Failure:** Run [Chopping Mishap Type](/play/event/22)",
+                "attribs": [],
+                "abilities": [],
                 "toplevel": false,
-                "triggers": [],
-                "determining": [
+                "outcome_type": "fourway",
+                "roller_type": null,
+                "numeric_range": [1, 20],
+                "single_number": 0.0,
+                "selection_strings": null,
+                "determinants": [
                     {
-                        "entity_data": [
-                            "attrib",
-                            4
-                        ],
-                        "operation": "+",
-                        "label": "Item"
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": true,
+                            "item_id": null,
+                            "attrib_id": 4,
+                            "recipe_id": null
+                        },
+                        "outfield": null,
+                        "op_application": "+",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
                     },
                     {
-                        "entity_data": [
-                            "attrib",
-                            4
-                        ],
-                        "operation": "*",
-                        "label": "Wielder \u2014 Die Max"
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": null,
+                            "attrib_id": 4,
+                            "recipe_id": null
+                        },
+                        "outfield": null,
+                        "op_application": "*",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
                     },
                     {
-                        "entity_data": [
-                            "attrib",
-                            4
-                        ],
-                        "operation": "/",
-                        "label": "Wielder \u2014 Die Min"
+                        "label": "Threshold for Typical",
+                        "get_val_from": "infield",
+                        "infield": null,
+                        "outfield": null,
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 1.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
                     }
-                ]
+                ],
+                "effects": []
             },
             {
                 "id": 22,
                 "name": "Chopping Mishap Type",
-                "description": "Run to get details on what happened after a [Chopping Mishap](/play/event/6) occurs.",
-                "numeric_range": [
-                    0,
-                    10
-                ],
-                "outcome_type": "selection",
-                "selection_strings": "Tool damaged\r\nTool broken\r\nTool destroyed\r\nFewer resources gained\r\nResources lost\r\nNo progress\r\nMinor injury\r\nSevere injury",
+                "description": "Run to get details on what happened after a [Chopping Mishap](/play/event/26) occurs.",
+                "attribs": [],
+                "abilities": [],
                 "toplevel": false,
-                "triggers": [],
-                "determining": []
+                "outcome_type": "selection",
+                "roller_type": null,
+                "numeric_range": null,
+                "single_number": 0.0,
+                "selection_strings": "Fewer resources gained\r\nResources lost\r\nNo progress\r\nTool damaged\r\nTool broken\r\nTool destroyed\r\nMinor injury\r\nSevere injury",
+                "determinants": [],
+                "effects": []
             },
             {
                 "id": 21,
                 "name": "Mark a Tree",
                 "description": "Choose the grid coordinates of the next tree to be actively harvested on a plot. See [Marked Tree](/play/item/15) for instructions.",
-                "numeric_range": [
-                    1,
-                    20
-                ],
-                "outcome_type": "coordinates",
-                "selection_strings": "",
+                "attribs": [],
+                "abilities": [],
                 "toplevel": false,
-                "triggers": [
-                    [
-                        "item",
-                        10
-                    ],
-                    [
-                        "loc",
-                        18
-                    ]
-                ],
-                "determining": []
+                "outcome_type": "coordinates",
+                "roller_type": null,
+                "numeric_range": [1, 20],
+                "single_number": 0.0,
+                "selection_strings": "",
+                "determinants": [],
+                "effects": []
             },
             {
                 "id": 25,
                 "name": "Operate saw",
-                "description": "Chance of success. Roll to determine how well a batch of logs turns into boards, or if something perhaps goes wrong.\r\n\r\nUse Easy difficulty. If there is a large number of logs to be processed, lower the die min a little, making success a bit less likely.",
-                "numeric_range": [
-                    1,
-                    20
-                ],
-                "outcome_type": "fourway",
-                "selection_strings": "",
+                "description": "Chance of success. Roll to determine how well a batch of logs turns into boards, or if something perhaps goes wrong.\r\n\r\nUse *Very Easy* difficulty, or *Moderate* if there is a large number of logs to be processed.",
+                "attribs": [],
+                "abilities": [],
                 "toplevel": false,
-                "triggers": [
-                    [
-                        "item",
-                        11
-                    ],
-                    [
-                        "loc",
-                        16
-                    ]
-                ],
-                "determining": []
+                "outcome_type": "fourway",
+                "roller_type": null,
+                "numeric_range": [1, 20],
+                "single_number": 0.0,
+                "selection_strings": null,
+                "determinants": [],
+                "effects": []
             },
             {
                 "id": 24,
                 "name": "Start engine",
-                "description": "Not always a guarantee with old vehicles.\r\n\r\nUse Easy difficulty under normal circumstances, since it's somewhat routine. Also, add repair value to both min and max.",
-                "numeric_range": [
-                    1,
-                    20
-                ],
-                "outcome_type": "fourway",
-                "selection_strings": "",
+                "description": "Not always a guarantee with old vehicles.\r\n\r\nUse Easy difficulty under normal circumstances, since it's somewhat routine.",
+                "attribs": [],
+                "abilities": [],
                 "toplevel": false,
-                "triggers": [],
-                "determining": [
+                "outcome_type": "fourway",
+                "roller_type": null,
+                "numeric_range": [1, 20],
+                "single_number": 0.0,
+                "selection_strings": null,
+                "determinants": [
                     {
-                        "entity_data": [
-                            "attrib",
-                            6
-                        ],
-                        "operation": "+",
-                        "label": ""
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": null,
+                            "attrib_id": 6,
+                            "recipe_id": null
+                        },
+                        "outfield": null,
+                        "op_application": "+",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
                     }
-                ]
+                ],
+                "effects": []
             },
             {
                 "id": 23,
                 "name": "Swing to Chop",
-                "description": "Adjust die max (not min) by axe power and wielder strength, giving -1 to -16 initially.\r\n\r\nAlso, run [Chopping Mishap](/play/event/6) when appropriate, such as after a poor damage roll, or for the final blow.",
-                "numeric_range": [
-                    -1,
-                    -10
-                ],
-                "outcome_type": "numeric",
-                "selection_strings": "",
+                "description": "For the final blow, or after rolling a natural 1, do a [Chopping Check](/play/event/26).",
+                "attribs": [],
+                "abilities": [],
                 "toplevel": false,
-                "triggers": [
-                    [
-                        "item",
-                        7
-                    ],
-                    [
-                        "item",
-                        15
-                    ]
-                ],
-                "determining": [
+                "outcome_type": "numeric",
+                "roller_type": null,
+                "numeric_range": [1, 10],
+                "single_number": 0.0,
+                "selection_strings": null,
+                "determinants": [
                     {
-                        "entity_data": [
-                            "attrib",
-                            5
-                        ],
-                        "operation": "-",
-                        "label": "Item"
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": true,
+                            "item_id": null,
+                            "attrib_id": 5,
+                            "recipe_id": null
+                        },
+                        "outfield": null,
+                        "op_application": "+",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
                     },
                     {
-                        "entity_data": [
-                            "attrib",
-                            3
-                        ],
-                        "operation": "*",
-                        "label": "Wielder"
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "subject",
+                            "field_mode": "attr",
+                            "child_of_anchor": false,
+                            "item_id": null,
+                            "attrib_id": 3,
+                            "recipe_id": null
+                        },
+                        "outfield": null,
+                        "op_application": "*",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    }
+                ],
+                "effects": [
+                    {
+                        "label": "",
+                        "get_val_from": "outcome",
+                        "infield": null,
+                        "outfield": {
+                            "role": "at",
+                            "field_mode": "attr",
+                            "child_of_anchor": true,
+                            "item_id": null,
+                            "attrib_id": 2,
+                            "recipe_id": null
+                        },
+                        "op_application": "-",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0,
+                        "outcome_success": "always",
+                        "auto_apply": true
                     }
                 ]
             }
@@ -589,18 +583,9 @@
     },
     "general data": {
         "piles": [
-            {
-                "item_id": 8,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 10,
-                "quantity": 98.0
-            },
-            {
-                "item_id": 12,
-                "quantity": 0.0
-            }
+            {"item_id": 8, "quantity": 0.0},
+            {"item_id": 10, "quantity": 98.0},
+            {"item_id": 12, "quantity": 0.0}
         ],
         "progress": []
     },
@@ -608,9 +593,7 @@
         "title": "Lumber",
         "description": "Run an outfit to {saddlebrown|gather resources} either actively or idly. Could be expanded for fishing and mining.",
         "number_format": "en_US",
-        "slots": [
-            "Held"
-        ],
+        "slots": ["Held"],
         "progress_type": "Hybrid",
         "multiplayer": true,
         "complete": "Starter Kit",

@@ -217,11 +217,13 @@
                                         {% endif %}
                                         {{ '✓' if req.min_val > 0 else '✗' }}
                                     {% else %}
-                                        {{ req.attrib.range_display }}
+                                        {{ req.range_display }}
                                     {% endif %}
                                     {% if not req.is_satisfied %}
                                         <span class="curr-val">
-                                        {% if req.attrib.is_binary %}
+                                        {% if req.current_val is none %}
+                                            (not found)
+                                        {% elif req.attrib.is_binary %}
                                             (currently {{ '✓' if req.current_val > 0 else '✗' }})
                                         {% else %}
                                             (currently {{ req.current_val | formatNum }})

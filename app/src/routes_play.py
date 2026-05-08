@@ -509,6 +509,9 @@ def play_item(id):
         all_attribreq_entity_ids.add(ctx.char_id)
     if ctx.addl_loc_id:
         all_attribreq_entity_ids.add(ctx.loc_id)
+    for r in item.recipes:
+        for source in r.sources:
+            all_attribreq_entity_ids.add(source.item_id)
 
     # Recipes that PRODUCE this item
     # Enriched allows UI to show 🚫 icon and specific reason tooltip.
@@ -571,25 +574,42 @@ def play_item(id):
             if res['anticipated_owner_id'] != GENERAL_ID:
                 attribreq_entity_ids.add(res['anticipated_owner_id'])
                 all_attribreq_entity_ids.add(res['anticipated_owner_id'])
+
+            # --- Also add the Item ID itself to the UI search scope ---
+            attribreq_entity_ids.add(res['item'].id)
+            all_attribreq_entity_ids.add(res['item'].id)
         
         attrib_reqs_ui_data = []
         for req in r.attrib_reqs:
             req_met = False
-            current_val = 0.0
+            current_val = None
             satisfying_entity = None
             entity_with_value = None
             
             for entity_id in attribreq_entity_ids:
-                av = attribval_lookup.get((entity_id, req.attrib_id), 0.0)
-                if av:
+                av = attribval_lookup.get((entity_id, req.attrib_id), None)
+                if av is not None:
                     if req.in_range(av.value):
                         req_met = True
                         current_val = av.value
                         satisfying_entity = entity_id
                         break
-                    elif av.value > current_val:
+
+                    # If we haven't found a winner, keep the first value 
+                    # we found (or the "best" one) to show the user why it's failing.
+                    if current_val is None:
                         current_val = av.value
-                        entity_with_value = entity_id
+                    else:
+                        # If the requirement has a max (like HP <= -1), 
+                        # we want to show the lowest value found.
+                        if req.max_val != float('inf') and req.max_val < 0:
+                            if av.value < current_val:
+                                current_val = av.value
+                                entity_with_value = entity_id
+                        # Otherwise, show the highest
+                        elif av.value > current_val:
+                            current_val = av.value
+                            entity_with_value = entity_id
             
             # Use satisfying entity if requirement met, otherwise entity with highest value
             link_entity_id = satisfying_entity or entity_with_value
@@ -598,6 +618,7 @@ def play_item(id):
                 'attrib': req.attrib,
                 'min_val': req.min_val,
                 'max_val': req.max_val,
+                'range_display': req.range_display,
                 'current_val': current_val,
                 'is_satisfied': req_met,
                 'link_entity_id': link_entity_id
