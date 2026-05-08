@@ -39,7 +39,7 @@ def is_in_grid(location, x, y):
     Exclusions are defined as [left, top, right, bottom].
     """
     if not location.dimensions or location.dimensions[0] == 0:
-        return True # Non-grid location
+        return True
 
     width, height = location.dimensions
     
@@ -47,12 +47,12 @@ def is_in_grid(location, x, y):
     if x < 1 or x > width or y < 1 or y > height:
         return False
         
-    # 2. Check Exclusion Rectangle (L, T, R, B)
-    if location.excluded and len(location.excluded) == 4:
-        l, t, r, b = location.excluded
-        # If the point falls inside the exclusion box, it is NOT in the grid
-        if l <= x <= r and t <= y <= b:
-            return False 
+    # 2. Check Exclusion Rectangles
+    for zone in location.zones:
+        if zone.prevents_travel:
+            l, t, r, b = zone.coords
+            if l <= x <= r and t <= y <= b:
+                return False 
             
     return True
 

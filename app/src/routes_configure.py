@@ -11,7 +11,8 @@ from app.models import (
     Entity, Item, Character, Location, Attrib, Event, 
     Pile, AttribVal, Operation, EntityAbility,
     Recipe, RecipeSource, RecipeByproduct, RecipeAttribReq,
-    LocDest, ItemRef, EventFactor, EventField, Participant, OutcomeType,
+    LocDest, LocZone, ItemRef,
+    EventFactor, EventField, Participant, OutcomeType,
     Overall, WinRequirement)
 from app.serialization import (
     init_game_session, load_scenario_from_path, DEFAULT_SCENARIO_FILE,
@@ -61,6 +62,34 @@ def edit_overall():
         slots_text = req.get_str('slots')
         overall.slots = [s.strip() for s in slots_text.split('\n') if s.strip()]
         
+        # Save Objectives
+        WinRequirement.query.filter_by(game_token=g.game_token).delete()
+        for row in req.get_list('winreqs'):
+            target_id = row.get_int('target_id')
+            loc_id = row.get_int('loc_id', None)
+            attrib_id = row.get_int('attrib_id', None)
+            val = row.get_float('quantity')
+            new_req = WinRequirement(game_token=g.game_token)
+            
+            # Determine if the target is an Item or Character
+            if target_id:
+                ent = Entity.query.get((g.game_token, target_id))
+                if ent and ent.entity_type == 'item':
+                    new_req.item_id = target_id
+                elif ent and ent.entity_type == 'character':
+                    new_req.char_id = target_id
+            new_req.loc_id = loc_id
+
+            # If an attribute is selected, it's an attribute requirement
+            # Otherwise, it's a quantity requirement
+            if attrib_id:
+                new_req.attrib_id = attrib_id
+                new_req.attrib_value = val
+            else:
+                new_req.quantity = val
+
+            db.session.add(new_req)
+
         db.session.commit()
         return redirect(url_for('configure.index'))
         
@@ -263,12 +292,20 @@ def edit_location(id):
         loc.toplevel = 'toplevel' in request.form
         loc.masked = 'masked' in request.form
 
-        lt_coords = parse_coords(req.get_str('excluded_left_top'))
-        rb_coords = parse_coords(req.get_str('excluded_right_bottom'))
-        if lt_coords and rb_coords:
-            loc.excluded = lt_coords + rb_coords
-        else:
-            loc.excluded = None
+        LocZone.query.filter_by(game_token=game_token, loc_id=loc.id).delete()
+        for row in req.get_list('zones'):
+            lt = row.get_coords('lt')
+            rb = row.get_coords('rb')
+            if lt and rb:
+                coords = lt + rb
+                db.session.add(LocZone(
+                    game_token=game_token,
+                    loc_id=loc.id,
+                    coords=coords,
+                    name=row.get_str('name'),
+                    color=row.get_str('color'),
+                    prevents_travel=row.get_bool('prevents_travel')
+                ))
 
         # Destinations (Exits) -- Symmetric Route Saving
         # 1. Fetch existing routes involving this location to determine what to delete/update
@@ -308,7 +345,6 @@ def edit_location(id):
                 route.door1 = row.get_coords('door_here')
                 route.door2 = old_there_door
 
-            route.duration = row.get_int('duration', 1)
             db.session.flush()
 
             d1_tuple = tuple(route.door1) if route.door1 else None
@@ -407,7 +443,6 @@ def edit_location(id):
             'id': r.id,
             'target_id': target.id,
             'door_here': r.door_at(id),
-            'duration': r.duration,
             'direction': direction
         })
 
@@ -741,8 +776,7 @@ def lookup_entity(ent_type, id):
             results[key_name].append({
                 'label': 'Linked to',
                 'name': other.name,
-                'link': url_for('play.play_location', id=other.id),
-                'meta': f'{d.duration}s travel'
+                'link': url_for('play.play_location', id=other.id)
             })
 
     # A. Check Entity Abilities (Who can trigger this?)
@@ -786,7 +820,10 @@ def lookup_entity(ent_type, id):
                 'link': url_for(f'play.play_{ent.entity_type}', id=ent.id),
             })
 
-    return render_template('configure/lookup.html', entity=entity, results=results)
+    return render_template(
+        'configure/lookup.html',
+        entity=entity,
+        results=results)
 
 # ------------------------------------------------------------------------
 # File Handling

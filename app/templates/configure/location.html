@@ -44,8 +44,6 @@
                    placeholder="x,y" size="8">
         </div>
 
-        <input type="number" name="dests[{{ index }}][duration]" value="{{ dest.duration or 1 }}">
-
         <div class="direction-toggle">
             <select name="dests[{{ index }}][direction]" class="input-sm">
                 <option value="two-way" {{ 'selected' if dest.direction == 'two-way' or not dest }}>
@@ -61,6 +59,23 @@
         </div>
 
         <button type="button" class="btn-sm dangerous-button" onclick="ConfigEditor.removeRow(this, 'dest-list')">×</button>
+    </div>
+{% endmacro %}
+
+{% macro zone_row(index, zone=None) %}
+    <div class="col-row zone-row">
+        <input type="text" name="zones[{{ index }}][lt]"
+            value="{{ zone.coords[:2]|join(',') if zone else '' }}" placeholder="1,1">
+        <input type="text" name="zones[{{ index }}][rb]"
+            value="{{ zone.coords[2:]|join(',') if zone else '' }}" placeholder="2,2">
+        <input type="text" name="zones[{{ index }}][name]"
+            value="{{ zone.name or '' }}" placeholder="Stone Wall">
+        <input type="text" name="zones[{{ index }}][color]"
+            value="{{ zone.color or '' }}" placeholder="rgba(0,0,0,0.5)">
+        <input type="checkbox" name="zones[{{ index }}][prevents_travel]"
+            {{ 'checked' if zone and zone.prevents_travel }}>
+        <button type="button" class="btn-sm dangerous-button"
+            onclick="ConfigEditor.removeRow(this, 'zone-list')">×</button>
     </div>
 {% endmacro %}
 
@@ -148,6 +163,10 @@
     {{ ref_row(None, all_universal_items) }}
 </template>
 
+<template id="zone-template">
+    {{ zone_row('__INDEX__') }}
+</template>
+
 <template id="event-template">
     {{ event_row('__INDEX__', None, all_events) }}
 </template>
@@ -188,27 +207,6 @@
                                 value="{{ location.dimensions | join('x') if location.dimensions else '' }}" 
                                placeholder="width x height" class="mini-input">
                     </div>
-                    <div class="form-group">
-                        <div class="coord-range-group" style="self-justify: center; gap: 0.5rem;">
-                            <label>Excluded:</label>
-                            <input type="text"
-                                   name="excluded_left_top"
-                                   value="{{ location.excluded[:2] | join(',') if location.excluded else '' }}"
-                                   placeholder="left,top"
-                                   size="7"
-                                   class="mini-input">
-                                   
-                            <span class="label-like">to</span>
-                            
-                            <input type="text"
-                                   name="excluded_right_bottom"
-                                   value="{{ location.excluded[2:] | join(',') if location.excluded and location.excluded|length == 4 else '' }}"
-                                   placeholder="right,bottom"
-                                   size="7"
-                                   class="mini-input">
-                                   
-                        </div>
-                    </div>
                 </div>
                 <div class="flex-column" style="padding-top: 5px;">
                     <label class="checkbox-label">
@@ -238,7 +236,6 @@
                 <div class="col-row dest-row header-style">
                     <span>Target Location</span>
                     <span>Door Here</span>
-                    <span>Duration</span>
                     <span style="white-space: nowrap;">Direction</span>
                     <span></span>
                 </div>
@@ -246,16 +243,6 @@
                     {{ dest_row(loop.index0, d, all_locs, location.id) }}
                 {% endfor %}
             </div>
-{#
-            <div id="pending-placement" class="spacious-top outer-border" style="background: #111;">
-                <h4 class="label-like">Pending Placement (No Coords)</h4>
-                <div id="unplaced-list">
-                    {% for d in destinations if not d.door_here %}
-                        {{ dest_row(loop.index0 + 100, d, all_locs, location.id) }}
-                    {% endfor %}
-                </div>
-            </div>
-#}
             <div id="dest-list-empty" class="no-entities {{ 'hidden' if destinations }}">
                 (No exits)
             </div>
@@ -314,6 +301,32 @@
             </div>
             <div id="ref-list-empty" class="no-entities {{ 'hidden' if location.item_refs }}">
                 (No referenced items)
+            </div>
+        </section>
+
+        <section class="outer-border">
+            <div class="flex-between">
+                <h3>Zones</h3>
+                <button type="button" class="btn-sm" onclick="ConfigEditor.addRow('zone-list', 'zone-template')">+ Add Zone</button>
+            </div>
+            <style>
+                .zone-row { --grid-cols: 2fr 2fr 3fr 2fr 1fr 0.5fr; }
+            </style>
+            <div id="zone-list" class="col-list {{ 'hidden' if not location.zones }}">
+                <div class="col-row zone-row header-style">
+                    <span>Left, Top</span>
+                    <span>Right, Bot</span>
+                    <span>Name</span>
+                    <span>Color</span>
+                    <span title="Prevents character movement">Block</span>
+                    <span></span>
+                </div>
+                {% for zone in location.zones %}
+                    {{ zone_row(loop.index0, zone) }}
+                {% endfor %}
+            </div>
+            <div id="zone-list-empty" class="no-entities {{ 'hidden' if location.zones }}">
+                (No zones defined)
             </div>
         </section>
 

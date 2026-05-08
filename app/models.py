@@ -277,13 +277,11 @@ class Location(Entity):
     toplevel = db.Column(db.Boolean, default=False)
     masked = db.Column(db.Boolean, default=False)
     dimensions = db.Column(ARRAY(db.Integer), default=None)
-    excluded = db.Column(ARRAY(db.Integer), default=None)
 
     def to_dict(self):
         data = super().to_dict()
         data.update({
             "dimensions": self.dimensions,
-            "excluded": self.excluded,
             "toplevel": self.toplevel,
             "masked": self.masked,
             "items": [
@@ -293,6 +291,7 @@ class Location(Entity):
             "progress": [p.to_dict() for p in self.progress_records],
             "item_refs": [ir.item_id for ir in self.item_refs],
             "destinations": [d.to_dict() for d in self.routes_forward],
+            "zones": [z.to_dict() for z in self.zones],
         })
         return data
 
@@ -317,6 +316,9 @@ class Location(Entity):
         for d_data in data.get('destinations', []):
             loc.routes_forward.append(
                 LocDest.from_dict(d_data, game_token, loc.id))
+        for z_data in data.get('zones', []):
+            loc.zones.append(
+                LocZone.from_dict(z_data, game_token, loc.id))
         return loc
 
     @property
@@ -350,6 +352,11 @@ class Location(Entity):
         foreign_keys="[LocDest.game_token, LocDest.loc2_id]",
         cascade="all, delete-orphan",
         overlaps="routes_forward")
+    zones = db.relationship(
+        'LocZone',
+        back_populates='location',
+        foreign_keys="[LocZone.game_token, LocZone.loc_id]",
+        cascade="all, delete-orphan")
 
     __table_args__ = (
         db.ForeignKeyConstraint(
@@ -604,15 +611,6 @@ class Pile(db.Model, DictHydrator):
     # optional for carried items (equipment)
     slot = db.Column(db.String(50))
 
-    def to_dict(self):
-        return {
-            "owner_id": self.owner_id,
-            "item_id": self.item_id,
-            "quantity": self.quantity,
-            "position": self.position,  # Will be a tuple/list or None
-            "slot": self.slot
-        }
-
     @classmethod
     def from_dict(cls, data, game_token, owner_id):
         scrub_array(data, 'position', 2)
@@ -727,13 +725,11 @@ class LocDest(db.Model, DictHydrator):
     loc2_id = db.Column(db.Integer, nullable=False)
     door1 = db.Column(ARRAY(db.Integer))
     door2 = db.Column(ARRAY(db.Integer))
-    duration = db.Column(db.Integer, nullable=False, default=1)
     bidirectional = db.Column(db.Boolean, default=True)
 
     def to_dict(self):
         return {
             "loc2_id": self.loc2_id,
-            "duration": self.duration,
             "door1": self.door1,
             "door2": self.door2,
             "bidirectional": self.bidirectional
@@ -776,6 +772,41 @@ class LocDest(db.Model, DictHydrator):
             ['locations.game_token', 'locations.id'], ondelete='CASCADE'),
         db.ForeignKeyConstraint(
             ['game_token', 'loc2_id'],
+            ['locations.game_token', 'locations.id'], ondelete='CASCADE'),
+    )
+
+class LocZone(db.Model, DictHydrator):
+    __tablename__ = 'loc_zones'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    game_token = db.Column(db.String(50), index=True, nullable=False)
+    loc_id = db.Column(db.Integer, nullable=False)
+    coords = db.Column(ARRAY(db.Integer), nullable=False) # l,t,r,b
+    
+    name = db.Column(db.String(100))
+    color = db.Column(db.String(20)) # e.g. "rgba(255,0,0,0.2)" or "#330000"
+    prevents_travel = db.Column(db.Boolean, default=True)
+
+    def to_dict(self):
+        return {
+            "coords": self.coords,
+            "name": self.name,
+            "color": self.color,
+            "prevents_travel": self.prevents_travel
+        }
+
+    @classmethod
+    def from_dict(cls, data, game_token, loc_id):
+        scrub_array(data, 'coords', 4)
+        return super().from_dict(data, game_token, loc_id=loc_id)
+
+    location = db.relationship(
+        'Location',
+        back_populates='zones',
+        foreign_keys=[game_token, loc_id])
+
+    __table_args__ = (
+        db.ForeignKeyConstraint(
+            ['game_token', 'loc_id'],
             ['locations.game_token', 'locations.id'], ondelete='CASCADE'),
     )
 
