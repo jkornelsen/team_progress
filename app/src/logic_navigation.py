@@ -1,7 +1,8 @@
 import logging
 from flask import g
 from sqlalchemy.orm.attributes import flag_modified
-from app.models import db, Character, Location, LocDest
+from app.models import (
+    db, StorageType, Character, Location, Item, Pile, LocDest)
 from app.src.logic_user_interaction import add_message
 
 logger = logging.getLogger(__name__)
@@ -33,10 +34,10 @@ def distance_between(pos, target_pos):
     ydist = abs(pos[1] - target_pos[1])
     return Math.floor(sqrt(xdist**2 + ydist**2))
 
-def is_in_grid(location, x, y):
+def is_in_grid(location, x, y, check_zones=True):
     """
-    Validates if a coordinate is within bounds and NOT in an excluded zone.
-    Exclusions are defined as [left, top, right, bottom].
+    Validates if a coordinate is within the location's physical boundaries.
+    If check_zones is True, it also validates against zones that prevent travel.
     """
     if not location.dimensions or location.dimensions[0] == 0:
         return True
@@ -47,14 +48,30 @@ def is_in_grid(location, x, y):
     if x < 1 or x > width or y < 1 or y > height:
         return False
         
-    # 2. Check Exclusion Rectangles
-    for zone in location.zones:
-        if zone.prevents_travel:
-            l, t, r, b = zone.coords
-            if l <= x <= r and t <= y <= b:
-                return False 
+    # 2. Check Zone Restrictions
+    if check_zones:
+        for zone in location.zones:
+            if zone.prevents_travel:
+                l, t, r, b = zone.coords
+                if l <= x <= r and t <= y <= b:
+                    return False 
             
     return True
+
+def blocked_by_local_item(loc_id, x, y):
+    """Returns True if a StorageType.LOCAL item exists at the given coordinate."""
+    game_token = g.game_token
+
+    blocking_pile = db.session.query(Pile).join(
+        Item, (Pile.item_id == Item.id) & (Pile.game_token == Item.game_token)
+    ).filter(
+        Pile.game_token == game_token,
+        Pile.owner_id == loc_id,
+        Pile.position == [x, y],
+        Item.storage_type == StorageType.LOCAL
+    ).first()
+    
+    return blocking_pile is not None
 
 def get_all_valid_coords(location):
     """Returns a list of all (x, y) tuples that are playable."""
@@ -121,7 +138,8 @@ def move_group(main_char_id, dx, dy, move_party=False):
         new_x = member.position[0] + dx
         new_y = member.position[1] + dy
 
-        if is_in_grid(loc, new_x, new_y):
+        if is_in_grid(loc, new_x, new_y) and \
+                not blocked_by_local_item(loc.id, new_x, new_y):
             member.position = [new_x, new_y]
             results[member.id] = member.position
     

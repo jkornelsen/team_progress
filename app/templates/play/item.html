@@ -222,11 +222,11 @@
                                     {% if not req.is_satisfied %}
                                         <span class="curr-val">
                                         {% if req.current_val is none %}
-                                            (not found)
+                                            (None nearby)
                                         {% elif req.attrib.is_binary %}
-                                            (currently {{ '✓' if req.current_val > 0 else '✗' }})
+                                            (Currently {{ '✓' if req.current_val > 0 else '✗' }})
                                         {% else %}
-                                            (currently {{ req.current_val | formatNum }})
+                                            (Currently {{ req.current_val | formatNum }})
                                         {% endif %}
                                         </span>
                                     {% endif %}

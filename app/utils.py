@@ -76,9 +76,9 @@ class BaseFieldMap:
             
         return default
 
-    def get_coords(self, key):
+    def get_coords(self, key, required_len=2):
         val = self._get_raw(key)
-        return parse_coords(val)
+        return parse_coords(val, required_len)
 
     def get_map(self, key):
         """Returns a nested BaseFieldMap for the given key."""

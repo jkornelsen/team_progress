@@ -25,7 +25,7 @@ from .logic_production import (
     execute_production)
 from .logic_navigation import (
     move_group, get_available_destinations, arrive_at_destination,
-    is_in_grid, get_default_position, is_adjacent)
+    is_in_grid, blocked_by_local_item, get_default_position, is_adjacent)
 from .logic_objectives import validate_requirements
 from .logic_user_interaction import add_message
 
@@ -130,7 +130,16 @@ def play_location(id):
 
             # Validate & Merge Items
             for pile in inventory_piles:
-                if not pile.position or not is_in_grid(location, *pile.position):
+                is_local = pile.item.storage_type == StorageType.LOCAL
+                out_of_bounds = not is_in_grid(
+                    location, *pile.position, check_zones=False)
+                blocked_by_zone = not is_local and not out_of_bounds and \
+                    not is_in_grid(location, *pile.position, check_zones=True)
+                overlap_collision = not is_local and blocked_by_local_item(
+                    id, *pile.position)
+
+                if not pile.position or out_of_bounds or blocked_by_zone \
+                        or overlap_collision:
                     pile.merge_to(default_pos)
                     needs_commit = True
 
@@ -153,7 +162,7 @@ def play_location(id):
     for dest in destinations:
         door = dest.door_at(id)
         if door and len(door) == 2:
-            if is_in_grid(location, door[0], door[1]):
+            if is_in_grid(location, door[0], door[1], check_zones=False):
                 target = dest.other_loc(id)
                 grid_exits.append({
                     'x': door[0],
@@ -490,11 +499,9 @@ def play_item(id):
         item_id=id, 
         owner_id=owner.id
     )
-    pos = None
-    raw_pos = request.args.getlist('pos[]')
-    if raw_pos:
-        pos = tuple(int(x) for x in raw_pos)
-        query = query.filter_by(position=pos)
+    pos = req.get_coords('pos')
+    if pos:
+        query = query.filter_by(position=list(pos))
     pile = query.first()
 
     # If no pile exists yet, create a virtual one

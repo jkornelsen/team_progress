@@ -782,14 +782,14 @@ class LocZone(db.Model, DictHydrator):
     loc_id = db.Column(db.Integer, nullable=False)
     coords = db.Column(ARRAY(db.Integer), nullable=False) # l,t,r,b
     
-    name = db.Column(db.String(100))
+    label = db.Column(db.String(100))
     color = db.Column(db.String(20)) # e.g. "rgba(255,0,0,0.2)" or "#330000"
     prevents_travel = db.Column(db.Boolean, default=True)
 
     def to_dict(self):
         return {
             "coords": self.coords,
-            "name": self.name,
+            "label": self.label,
             "color": self.color,
             "prevents_travel": self.prevents_travel
         }

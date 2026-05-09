@@ -92,7 +92,8 @@
                 {% for pile in inventory_piles %}
                     <div class="col-row item-here-row">
                         {% set target_url = url_for('play.play_item',
-                            id=pile.item_id, owner_id=location.id, pos=pile.position) %}
+                            id=pile.item_id, owner_id=location.id,
+                            pos=pile.position|join(',')) %}
                         {{ render.maskable_name(
                             pile.item, url=target_url, link_letters=link_letters) }}
                         
@@ -307,7 +308,8 @@
             y: {{ pile.position[1] if pile.position else 0 }},
             icon: getFirstGrapheme("{{ pile.item.name }}"),
             link: "{{ url_for('play.play_item',
-                id=pile.item_id, owner_id=location.id, pos=pile.position) }}"
+                id=pile.item_id, owner_id=location.id,
+                pos=pile.position|join(',')) | safe }}"
         },
         {% endfor %}
     ];
@@ -328,7 +330,7 @@
     const zones = [
         {% for zone in location.zones %}
         {
-            name: "{{ zone.name or '' }}",
+            name: "{{ zone.label or '' }}",
             color: "{{ zone.color or '' }}",
             prevents_travel: {{ 'true' if zone.prevents_travel else 'false' }},
             l: {{ zone.coords[0] }}, t: {{ zone.coords[1] }},
