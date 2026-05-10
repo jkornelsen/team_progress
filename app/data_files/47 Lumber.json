@@ -104,6 +104,19 @@
                 "recipes": []
             },
             {
+                "id": 30,
+                "name": "Log Bonus",
+                "description": "Set by *Chopping Check* on Major Success.",
+                "attribs": [],
+                "abilities": [],
+                "storage_type": "u",
+                "q_limit": 0.0,
+                "loc_hosted": false,
+                "toplevel": false,
+                "masked": false,
+                "recipes": []
+            },
+            {
                 "id": 7,
                 "name": "Logs",
                 "description": "Idle chopping is for when no characters are actively chopping, either because they are doing something else, or while offline.",
@@ -133,6 +146,17 @@
                         ]
                     },
                     {
+                        "id": 31,
+                        "rate_amount": 5.0,
+                        "rate_duration": 7,
+                        "instant": false,
+                        "sources": [
+                            {"item_id": 30, "q_required": 1.0, "preserve": false}
+                        ],
+                        "byproducts": [],
+                        "attrib_reqs": []
+                    },
+                    {
                         "id": 21,
                         "rate_amount": 10.0,
                         "rate_duration": 1200,
@@ -149,7 +173,9 @@
                 "id": 15,
                 "name": "Marked Tree",
                 "description": "Plots are full of trees, but mark only one at a time for harvesting.\r\n\r\n**{saddlebrown|When Marked Tree quantity is 0}**:\r\n1. Run [Mark a Tree](/play/event/3), select *Starting Plot* and roll for coordinates.\r\n2. In [Starting Plot setup](/configure/location/4), set the marked tree position to the new coordinates.\r\n3. Produce (below) a *Marked Tree* from *Plot 1 Trees* so quantity goes from 0 to 1.\r\n4. Set HP to 100.\r\n\r\nNow the tree is ready for a character such as the *Owner* to *Swing to Chop*.",
-                "attribs": [],
+                "attribs": [
+                    [2, 100.0]
+                ],
                 "abilities": [],
                 "storage_type": "l",
                 "q_limit": 1.0,
@@ -383,7 +409,7 @@
                     [3, 1.1],
                     [4, 1.1]
                 ],
-                "abilities": [23, 25],
+                "abilities": [21, 23, 25],
                 "toplevel": true,
                 "location_id": 18,
                 "position": [4, 3],
@@ -457,7 +483,7 @@
             {
                 "id": 26,
                 "name": "Chopping Check",
-                "description": "- **Major Success:** Gain extra resources\r\n- **Minor Failure:** The attempt was unsuccessful\r\n- **Major Failure:** Run [Chopping Mishap Type](/play/event/22)",
+                "description": "- **Major Success:** Gain 50% more logs\r\n- **Minor Failure:** The attempt was unsuccessful\r\n- **Major Failure:** Run [Chopping Mishap Type](/play/event/22)",
                 "attribs": [],
                 "abilities": [],
                 "toplevel": false,
@@ -518,7 +544,27 @@
                         "auto_apply": false
                     }
                 ],
-                "effects": []
+                "effects": [
+                    {
+                        "label": "",
+                        "get_val_from": "outcome",
+                        "infield": null,
+                        "outfield": {
+                            "role": "universal",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 30,
+                            "attrib_id": null,
+                            "recipe_id": null
+                        },
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 1.0,
+                        "val_required": 1.0,
+                        "outcome_success": "success_major",
+                        "auto_apply": true
+                    }
+                ]
             },
             {
                 "id": 22,
@@ -544,10 +590,30 @@
                 "toplevel": false,
                 "outcome_type": "coordinates",
                 "roller_type": null,
-                "numeric_range": [1, 20],
+                "numeric_range": null,
                 "single_number": 0.0,
-                "selection_strings": "",
-                "determinants": [],
+                "selection_strings": null,
+                "determinants": [
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "at",
+                            "field_mode": "attr",
+                            "child_of_anchor": true,
+                            "item_id": null,
+                            "attrib_id": 2,
+                            "recipe_id": null
+                        },
+                        "outfield": null,
+                        "op_application": "<",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 0.1,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    }
+                ],
                 "effects": []
             },
             {

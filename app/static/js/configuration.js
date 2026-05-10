@@ -49,86 +49,94 @@ const ConfigEditor = {
     },
     
     /**
-     * Attribute editing inputs: Numeric, Boolean, or Enum
-     * @param select - The <select> element for the attribute ID
-     * @param isRange - Set to true for Recipes (Min/Max), false for Character/Item Values
-     * @param forceNumeric -- e.g. event determiner item field (not attrib)
+     * Handle the dynamic injection of inputs (Checkboxes, Enums, Numbers).
      */
-    syncAttribState: function(select, isRange = false, forceNumeric = false) {
-        if (!select) { console.error("No select element"); return; }
-        const attribId = select.value;
-        const meta = ATTRIB_REGISTRY ? ATTRIB_REGISTRY[attribId] : null;
 
-        // Find the closest container
-        const row = select.closest('.factor-card') || select.closest('.col-row, .attrib-req-row, .flex-row');
-        const container = row.querySelector('.value-container, .range-container, [data-slot-required]');
-        if (!container) {
-            return;
-        }
+    // --- 1. THE ATTRIBUTE SYNCERS (Smart UI: Binary/Enum/Numeric) ---
 
-        // Hand-off from Jinja-rendered HTML data-attributes to JavaScript
-        const curMin = select.dataset.currentMin || select.dataset.currentValue || "0";
-        const curMax = select.dataset.currentMax || "0";
-
-        // Determine the base name (everything before [id])
-        const baseName = select.name
-            .split('[id]')[0]
-            .split('[attrib_id]')[0]
-            .split('[item_id]')[0];
-
-        // Field name -- 'val_required' for event factors
-        const fieldName = select.dataset.fieldName || 'value';
-
-        let html = '';
-
-        // If no attribute is selected (e.g., placeholder) or meta missing, 
-        // render a standard numeric input.
-        if (forceNumeric || !meta) {
-            if (isRange) {
-                html = `<span class="label-like">Min:</span><input type="number" name="${baseName}[min]" value="${curMin}" step="any" style="width:70px;">
-                        <span class="label-like">Max:</span><input type="number" name="${baseName}[max]" value="${curMax}" step="any" style="width:70px;">`;
-            } else {
-                html = `<input type="number" name="${baseName}[${fieldName}]" value="${curMin}" step="any" class="full-width" style="max-width: 8ch;" placeholder="Qty">`;
-            }
-        } else if (meta.is_binary) {
-            if (isRange) {
-                html = `<input type="hidden" name="${baseName}[min]" value="1">
-                        <input type="hidden" name="${baseName}[max]" value="1">
-                        <label class="checkbox-label">Required: <input type="checkbox" checked disabled></label>`;
-            } else {
-                const isChecked = parseFloat(curMin) > 0;
-                html = `<input type="hidden" name="${baseName}[${fieldName}]" value="${isChecked ? '1' : '0'}">
-                        <label class="checkbox-label"><input type="checkbox" ${isChecked ? 'checked' : ''} 
-                        onchange="this.parentElement.previousElementSibling.value = this.checked ? '1' : '0'"></label>`;
-            }
-        } else if (meta.enums) {
-            const options = (val) => meta.enums.map((label, i) => 
-                `<option value="${i}" ${parseInt(val) === i ? 'selected' : ''}>${label}</option>`).join('');
-            
-            if (isRange) {
-                html = `<span class="label-like">Min:</span><select name="${baseName}[min]">${options(curMin)}</select>
-                        <span class="label-like">Max:</span><select name="${baseName}[max]">${options(curMax)}</select>`;
-            } else {
-                html = `<select name="${baseName}[${fieldName}]" class="full-width">${options(curMin)}</select>`;
-            }
+    syncAttribVal: function(select) {
+        const { container, fieldName, attr } = this._getBasics(select);
+        if (!container) return;
+        const val = select.dataset.currentVal || "0";
+        
+        if (attr && attr.is_binary) {
+            const isChecked = parseFloat(val) > 0;
+            container.innerHTML = `
+                <input type="hidden" name="${fieldName}" value="${isChecked ? '1' : '0'}">
+                <input type="checkbox" ${isChecked ? 'checked' : ''} 
+                       onchange="this.previousElementSibling.value = this.checked ? '1' : '0'">`;
+        } else if (attr && attr.enums) {
+            const opts = attr.enums.map((l, i) => 
+                `<option value="${i}" ${parseInt(val) === i ? 'selected' : ''}>${l}</option>`).join('');
+            container.innerHTML = `<select name="${fieldName}">${opts}</select>`;
         } else {
-            // Standard Number
-            if (isRange) {
-                html = `<span class="label-like">Min:</span><input type="number" name="${baseName}[min]" value="${curMin}" step="any" style="width:70px;">
-                        <span class="label-like">Max:</span><input type="number" name="${baseName}[max]" value="${curMax}" step="any" style="width:70px;">`;
-            } else {
-                html = `<input type="number" name="${baseName}[${fieldName}]" value="${curMin}" step="any" class="full-width" style="max-width: 8ch;">`;
-            }
+            container.innerHTML = `<input type="number" name="${fieldName}" value="${val}" step="any" style="width:10ch;">`;
         }
+    },
 
-        container.innerHTML = html;
+    syncAttribRange: function(select) {
+        const { container, fieldName, attr } = this._getBasics(select);
+        if (!container) return;
+        const min = select.dataset.currentMin || "";
+        const max = select.dataset.currentMax || "";
+
+        if (attr && attr.is_binary) {
+            container.innerHTML = `
+                <input type="hidden" name="${fieldName}[min]" value="1">
+                <input type="hidden" name="${fieldName}[max]" value="1">
+                <label class="checkbox-label">Required: <input type="checkbox" checked disabled></label>`;
+        } else if (attr && attr.enums) {
+            const opts = (cur) => attr.enums.map((l, i) => 
+                `<option value="${i}" ${parseInt(cur) === i ? 'selected' : ''}>${l}</option>`).join('');
+            container.innerHTML = `
+                <span class="label-like">Min:</span> <select name="${fieldName}[min]">${opts(min)}</select>
+                <span class="label-like">Max:</span> <select name="${fieldName}[max]">${opts(max)}</select>`;
+        } else {
+            container.innerHTML = `
+                <span class="label-like">Min:</span> <input type="number" name="${fieldName}[min]" value="${min}" step="any" style="width:8ch;" placeholder="-∞">
+                <span class="label-like">Max:</span> <input type="number" name="${fieldName}[max]" value="${max}" step="any" style="width:8ch;" placeholder="∞">`;
+        }
+    },
+
+    // --- 2. THE NUMERIC SYNCERS (Simple UI: Always Numbers) ---
+
+    syncNumVal: function(select) {
+        const { container, fieldName } = this._getBasics(select);
+        if (!container) return;
+        const val = select.dataset.currentVal || "0";
+        container.innerHTML = `<input type="number" name="${fieldName}" value="${val}" step="any" style="width:10ch;">`;
+    },
+
+    syncNumRange: function(select) {
+        const { container, fieldName } = this._getBasics(select);
+        if (!container) return;
+        const min = select.dataset.currentMin || "";
+        const max = select.dataset.currentMax || "";
+        container.innerHTML = `
+            <span class="label-like">Min:</span> <input type="number" name="${fieldName}[min]" value="${min}" step="any" style="width:8ch;" placeholder="-∞">
+            <span class="label-like">Max:</span> <input type="number" name="${fieldName}[max]" value="${max}" step="any" style="width:8ch;" placeholder="∞">`;
+    },
+
+    // --- 3. INTERNAL HELPERS ---
+
+    _getBasics: function(select) {
+        const wrapper = select.closest('.attrib-wrapper');
+        const container = wrapper ? wrapper.querySelector('.attribval-container') : null;
+        const fieldName = container ? container.dataset.fieldName : "";
+        const attrId = select.value;
+        const attr = (typeof ATTRIB_REGISTRY !== 'undefined' && attrId) ? ATTRIB_REGISTRY[attrId] : null;
+        return { container, fieldName, attr };
+    },
+
+    /** Trigger all relevant selects on page load */
+    init: function() {
+        const selector = 'select[onchange*="ConfigEditor.sync"], select[onchange*="syncFieldAttribState"]';
+        document.querySelectorAll(selector).forEach(s => {
+            if (typeof s.onchange === 'function') {
+                s.onchange();
+            }
+        });
     }
 };
 
-// Global initializer for all config pages
-document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll(
-        'select[data-attrib-select="true"]').forEach(s => {
-        ConfigEditor.syncAttribState(s, isRange = (s.dataset.isRange === "true"));
-    });
-});
+document.addEventListener('DOMContentLoaded', () => ConfigEditor.init());

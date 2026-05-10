@@ -58,7 +58,9 @@
                 <div class="gap-10">
                     {% for role in role_entities %}
                     <div class="form-group">
-                        <label style="font-style: italic;">{{ role | replace('_', ' ') }}:</label>
+                        <label style="font-style: italic;">
+                            {{ role }}:
+                        </label>
 
                         {% set eligible = role_entities[role] %}
                         {% if eligible|length == 1 %}

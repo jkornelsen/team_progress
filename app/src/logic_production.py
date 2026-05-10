@@ -304,10 +304,13 @@ def execute_production(
     resolved = resolve_recipe_sources(host_id, recipe, ctx)
     for res in resolved:
         if not res['source_def'].preserve:
+            pile_pos = res['representative_pile'].position \
+                if res['representative_pile'] else None
             adjust_quantity(
                 res['item'].id,
                 res['anticipated_owner_id'],
-                -(res['source_def'].q_required * batches))
+                -(res['source_def'].q_required * batches),
+                pile_pos)
 
     # Produce
     adjust_quantity(

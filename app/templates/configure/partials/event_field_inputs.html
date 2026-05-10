@@ -25,11 +25,14 @@
         <div class="id-selectors">
             <!-- Attrib -->
             <select name="{{ field_prefix }}[attrib_id]" 
-                    data-attrib-select="true"
-                    data-field-name="val_required"
-                    data-is-range="false"
-                    data-current-value="{{ factor.val_required if factor else 1.0 }}"
-                    onchange="syncFieldAttribState(this, false)"
+                    data-current-val="{{ 
+                        factor.val_required if factor and
+                            factor.usage_type == Participant.DET else 
+                        factor.val_transform if factor and
+                            factor.usage_type == Participant.EFF else 
+                        1.0 
+                    }}"
+                    onchange="syncFieldAttribState(this)"
                     class="id-attr full-width {{
                         'hidden' if field_mode ==  Participant.QTY }}" 
                     style="max-width: 30ch;">
@@ -76,7 +79,7 @@
 
             <option value="{{ Participant.TARGET }}"
                 title="Another nearby or selected entity involved"
-                {{ 'selected' if role == Participant.TARGET }}>Target</option>
+                {{ 'selected' if role == Participant.TARGET }}>Target Char</option>
 
             <option value="{{ Participant.AT }}"
                 title="The location where this is happening"
@@ -89,7 +92,7 @@
             <option value="{{ Participant.BLUEPRINT }}"
                 hidden style="display: none;"
                 title="(Item Blueprint)"
-                {{ 'selected' if role == Participant.BLUEPRINT }}>Universal</option>
+                {{ 'selected' if role == Participant.BLUEPRINT }}>(Item Blueprint)</option>
         </select>
     </div>
 

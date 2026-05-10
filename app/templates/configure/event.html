@@ -431,6 +431,7 @@
             syncRecipesState(itemSelect);
         }
         syncEventFieldState(modeSelect);
+        syncFieldAttribState(attrSelect);
     }
 
     /**
@@ -485,7 +486,7 @@
                 requiredGroup.style.order = "3";
                 requiredGroup.classList.remove('hidden');
 
-                syncFieldAttribState(attrSelect, false);
+                syncFieldAttribState(attrSelect);
             } else {
                 // MATH: + ( Inner )
                 appSelector.style.order = "1";
@@ -499,10 +500,26 @@
     }
 
     function syncFieldAttribState(attrSelect) {
-        const card = attrSelect.closest('.factor-card');
-        const modeSelect = card.querySelector('select[name$="[field_mode]"]');
-        const isItemMode = modeSelect && modeSelect.value === 'qty';
-        ConfigEditor.syncAttribState(attrSelect, isRange=false, forceNumeric=isItemMode);
+        const eventField = attrSelect.closest('.field-input-group');
+        const modeSelect = eventField.querySelector('.field-mode-select');
+
+        if (modeSelect.value === '{{ Participant.ATTR }}') {
+            ConfigEditor.syncAttribVal(attrSelect);
+        } else {
+            ConfigEditor.syncNumVal(attrSelect);
+        }
+    }
+
+    function syncCardAttribState(card) {
+        let masterSelect = null;
+        if (card.classList.contains('eff-card')) {
+            masterSelect = card.querySelector('select[name$="[outfield][attrib_id]"]');
+        } else {
+            masterSelect = card.querySelector('select[name$="[infield][attrib_id]"]');
+        }
+        if (masterSelect) {
+            syncFieldAttribState(masterSelect);
+        }
     }
 
     function syncInnerExprState(card) {
@@ -629,26 +646,19 @@
     });
 
     document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll(
-                '.field-input-group select[name$="[field_mode]"]').forEach(select => {
-            syncFieldIdsState(select);
-        });
-        document.querySelectorAll('.source-type-select').forEach(select => {
-            syncEffSourceState(select);
-        });
+        document.querySelectorAll('.field-mode-select').forEach(syncFieldIdsState);
+        document.querySelectorAll('.source-type-select').forEach(syncEffSourceState);
         document.querySelectorAll('.factor-card').forEach(card => {
             syncInnerExprState(card);
             syncOuterExprState(card);
         });
-        document.querySelectorAll(
-                '.field-input-group .id-item').forEach(itemSelect => {
-            const container = itemSelect.closest('.field-input-group');
-            const mode = container.querySelector('select[name$="[field_mode]"]').value;
+        document.querySelectorAll('.field-input-group .id-item').forEach(itemSelect => {
+            const mode = itemSelect.closest('.field-input-group').querySelector('.field-mode-select').value;
             if (mode.startsWith('rate_')) {
                 syncRecipesState(itemSelect);
             }
         });
-        
+        document.querySelectorAll('.factor-card').forEach(syncCardAttribState);
         renumberLabels('det');
         renumberLabels('eff');
         syncOutcomeTypeState();

@@ -228,8 +228,13 @@ def edit_item(id):
                     continue
                 attrib_id = attrib_row.get_int('attrib_id')
                 if attrib_id:
-                    min_val = attrib_row.get_float('min')
-                    max_val = attrib_row.get_float('max')
+                    raw_min = attrib_row.get_str('min')
+                    raw_max = attrib_row.get_str('max')
+                    min_val = float('-inf') if raw_min == '' \
+                        else attrib_row.get_float('min')
+                    max_val = float('inf') if raw_max == '' \
+                        else attrib_row.get_float('max')
+
                     recipe.attrib_reqs.append(RecipeAttribReq(
                         game_token=game_token,
                         recipe_id=recipe_id,
@@ -302,7 +307,7 @@ def edit_location(id):
                     game_token=game_token,
                     loc_id=loc.id,
                     coords=coords,
-                    name=row.get_str('name'),
+                    label=row.get_str('label'),
                     color=row.get_str('color'),
                     prevents_travel=row.get_bool('prevents_travel')
                 ))

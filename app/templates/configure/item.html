@@ -145,12 +145,10 @@
                     <span>Attribute</span><span>Value</span><span></span>
                 </div>
                 {% for av in item.attrib_values %}
-                    <div class="col-row item-attrib-row">
+                    <div class="col-row item-attrib-row attrib-wrapper">
                         <select name="attribs[{{ loop.index0 }}][id]" 
-                                data-attrib-select="true" 
-                                data-is-range="false"
-                                onchange="ConfigEditor.syncAttribState(this)"
-                                data-current-value="{{ av.value }}">
+                                data-current-val="{{ av.value }}"
+                                onchange="ConfigEditor.syncAttribVal(this)">
                             {% for attr_def in all_attribs %}
                                 <option value="{{ attr_def.id }}" 
                                         {{ 'selected' if attr_def.id == av.attrib_id }}>
@@ -158,8 +156,9 @@
                                 </option>
                             {% endfor %}
                         </select>
-                        <div class="value-container">
-                            <!-- Filled by ConfigEditor.syncAttribState -->
+                        <div class="attribval-container"
+                            data-field-name="attribs[{{ loop.index0 }}][value]">
+                            <!-- Filled by ConfigEditor.syncAttribVal -->
                         </div>
                         <button type="button" class="btn-sm dangerous-button" onclick="ConfigEditor.removeRow(this, 'attrib-list')">×</button>
                     </div>
@@ -241,19 +240,20 @@
 
 <!-- Attribute Requirement Row -->
 <template id="attrib-req-template">
-    <div class="flex-row gap-10 align-center spacious-bottom attrib-req-row">
+    <div class="flex-row gap-10 align-center spacious-bottom attrib-req-row attrib-wrapper">
         <select name="recipes[RECIPE_INDEX][attrib_reqs][SUB_INDEX][attrib_id]" 
                 data-attrib-select="true"
                 data-is-range="true"
-                onchange="ConfigEditor.syncAttribState(this, isRange=true)">
+                onchange="ConfigEditor.syncAttribRange(this)">
             {% for a in all_attribs %}
                 <option value="{{ a.id }}">
                     {{ a.name }}
                 </option>
             {% endfor %}
         </select>
-        <div class="range-container">
-            <!-- Filled by ConfigEditor.syncAttribState -->
+        <div class="attribval-container"
+            data-field-name="recipes[RECIPE_INDEX][attrib_reqs][SUB_INDEX]">
+            <!-- Filled by ConfigEditor.syncAttribRange -->
         </div>
         <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
     </div>
@@ -261,19 +261,18 @@
 
 <!-- Item Attribute Row -->
 <template id="attrib-template">
-    <div class="col-row item-attrib-row">
+    <div class="col-row item-attrib-row attrib-wrapper">
         <select name="attribs[__INDEX__][id]" 
-                data-attrib-select="true" 
-                data-is-range="false"
-                onchange="ConfigEditor.syncAttribState(this)">
+                onchange="ConfigEditor.syncAttribVal(this)">
             {% for attr_def in all_attribs %}
                 <option value="{{ attr_def.id }}">
                     {{ attr_def.name }}
                 </option>
             {% endfor %}
         </select>
-        <div class="value-container">
-            <!-- Filled by ConfigEditor.syncAttribState -->
+        <div class="attribval-container"
+            data-field-name="attribs[__INDEX__][value]">
+            <!-- Filled by ConfigEditor.syncAttribVal -->
         </div>
         <button type="button" class="btn-sm dangerous-button" onclick="ConfigEditor.removeRow(this, 'attrib-list')">×</button>
     </div>
@@ -409,7 +408,7 @@
             const lastRow = container.lastElementChild;
             const selectElement = lastRow.querySelector('select');
             if (selectElement) {
-                ConfigEditor.syncAttribState(selectElement, isRange=true);
+                ConfigEditor.syncAttribRange(selectElement);
             }
         }, 0);
     }

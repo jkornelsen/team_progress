@@ -34,15 +34,17 @@ def distance_between(pos, target_pos):
     ydist = abs(pos[1] - target_pos[1])
     return Math.floor(sqrt(xdist**2 + ydist**2))
 
-def is_in_grid(location, x, y, check_zones=True):
+def is_in_grid(location, pos, check_zones=True):
     """
     Validates if a coordinate is within the location's physical boundaries.
     If check_zones is True, it also validates against zones that prevent travel.
     """
     if not location.dimensions or location.dimensions[0] == 0:
         return True
-
     width, height = location.dimensions
+    if not pos:
+        return False
+    x, y = pos
     
     # 1. Check Outer Bounds (1-based indexing)
     if x < 1 or x > width or y < 1 or y > height:
@@ -58,9 +60,12 @@ def is_in_grid(location, x, y, check_zones=True):
             
     return True
 
-def blocked_by_local_item(loc_id, x, y):
+def blocked_by_local_item(loc_id, pos):
     """Returns True if a StorageType.LOCAL item exists at the given coordinate."""
     game_token = g.game_token
+    if not pos:
+        return False
+    x, y = pos
 
     blocking_pile = db.session.query(Pile).join(
         Item, (Pile.item_id == Item.id) & (Pile.game_token == Item.game_token)
@@ -84,8 +89,9 @@ def get_all_valid_coords(location):
     # Iterate every square and check against exclusion logic
     for y in range(1, height + 1):
         for x in range(1, width + 1):
-            if is_in_grid(location, x, y):
-                valid_coords.append((x, y))
+            pos = x, y
+            if is_in_grid(location, pos):
+                valid_coords.append(pos)
     return valid_coords
 
 def get_default_position(location):
@@ -137,10 +143,10 @@ def move_group(main_char_id, dx, dy, move_party=False):
         
         new_x = member.position[0] + dx
         new_y = member.position[1] + dy
+        pos = [new_x, new_y]
 
-        if is_in_grid(loc, new_x, new_y) and \
-                not blocked_by_local_item(loc.id, new_x, new_y):
-            member.position = [new_x, new_y]
+        if is_in_grid(loc, pos) and not blocked_by_local_item(loc.id, pos):
+            member.position = pos
             results[member.id] = member.position
     
     db.session.commit()

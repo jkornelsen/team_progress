@@ -846,7 +846,7 @@ class Participant:
 
     # --- Context-Driven Roles of the Anchor Entity ---
     SUBJECT = 'subject'     # Entity that triggered the event
-    TARGET = 'target'       # Nearby entity or explicitly chosen other
+    TARGET = 'target char'  # Nearby or explicitly chosen other char
     AT = 'at'               # Current location
     OWNER = 'owner'         # Entity holding the item
     UNIVERSAL = 'universal' # Global items
@@ -964,7 +964,7 @@ class EventField(db.Model, DictHydrator):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     game_token = db.Column(db.String(50), index=True, nullable=False)
 
-    role = db.Column(db.String(50), nullable=False, default=Participant.SUBJECT)
+    role = db.Column(db.String(20), nullable=False, default=Participant.SUBJECT)
     field_mode = db.Column(db.String(10), nullable=False, default=Participant.ATTR)
     child_of_anchor = db.Column(db.Boolean, nullable=False, default=False)
 

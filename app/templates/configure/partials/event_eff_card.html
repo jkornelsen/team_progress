@@ -1,4 +1,4 @@
-<div class="factor-card outer-border eff-card" data-index="{{ index }}">
+<div class="factor-card outer-border eff-card attrib-wrapper" data-index="{{ index }}">
     <input type="hidden" name="effs[{{ index }}][order_index]" class="factor-order-input" value="{{ factor.order_index if factor else 0 }}">
 
     <!-- 1. Header: Label & Filter -->
@@ -141,13 +141,11 @@
                         {% endfor %}
                     </select>
 
-                    <div data-slot-rhs class="flex-row align-center gap-5" style="order: 3;">
-                        <input type="number" 
-                               name="effs[{{ index }}][val_transform]" 
-                               data-input-constant
-                               value="{{ factor.val_transform if factor else 1.0 }}" 
-                               step="any" 
-                               style="max-width: 12ch;">
+                    <div data-slot-rhs
+                        class="attribval-container flex-row align-center gap-5"
+                        data-field-name="effs[{{ index }}][val_transform]"
+                        style="order: 3;">
+                        <!-- Filled by ConfigEditor.syncAttribVal -->
                     </div>
 
                     <span style="font-size: 2em; order: 4;">)</span>

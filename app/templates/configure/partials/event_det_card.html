@@ -26,7 +26,7 @@
         </div>
     </div>
 
-    <div class="card-body">
+    <div class="card-body attrib-wrapper">
         <!-- 2. THE SOURCE (The "From") -->
         <h5>📥 Value Source</h5>
         <div class="flex-row align-center sub-section">
@@ -91,8 +91,10 @@
                     {% endfor %}
                 </select>
 
-                <div data-slot-required class="flex-row align-center gap-5 hidden">
-                    <!-- Filled by ConfigEditor.syncAttribState -->
+                <div data-slot-required
+                    class="attribval-container flex-row align-center gap-5 hidden"
+                    data-field-name="dets[{{ index }}][val_required]">
+                    <!-- Filled by ConfigEditor.syncAttribVal -->
                 </div>
             </div>
         </div>

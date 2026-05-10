@@ -123,7 +123,7 @@ def play_location(id):
         if default_pos:
             # Validate Characters
             for char in characters_here:
-                if not char.position or not is_in_grid(location, *char.position):
+                if not char.position or not is_in_grid(location, char.position):
                     char.position = default_pos
                     db.session.add(char)
                     needs_commit = True
@@ -132,11 +132,11 @@ def play_location(id):
             for pile in inventory_piles:
                 is_local = pile.item.storage_type == StorageType.LOCAL
                 out_of_bounds = not is_in_grid(
-                    location, *pile.position, check_zones=False)
+                    location, pile.position, check_zones=False)
                 blocked_by_zone = not is_local and not out_of_bounds and \
-                    not is_in_grid(location, *pile.position, check_zones=True)
+                    not is_in_grid(location, pile.position, check_zones=True)
                 overlap_collision = not is_local and blocked_by_local_item(
-                    id, *pile.position)
+                    id, pile.position)
 
                 if not pile.position or out_of_bounds or blocked_by_zone \
                         or overlap_collision:
@@ -162,7 +162,7 @@ def play_location(id):
     for dest in destinations:
         door = dest.door_at(id)
         if door and len(door) == 2:
-            if is_in_grid(location, door[0], door[1], check_zones=False):
+            if is_in_grid(location, door, check_zones=False):
                 target = dest.other_loc(id)
                 grid_exits.append({
                     'x': door[0],

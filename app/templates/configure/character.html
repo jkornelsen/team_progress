@@ -30,12 +30,10 @@
 {% macro attrib_row(index, av=None, all_attribs=[]) %}
     {% set selected_id = av.attrib_id if av else None %}
     {% set val = av.value if av else 0 %}
-    <div class="col-row attrib-row">
+    <div class="col-row attrib-row attrib-wrapper">
         <select name="attribs[{{ index }}][id]" 
-                data-attrib-select="true"
-                data-is-range="false"
-                onchange="ConfigEditor.syncAttribState(this)"
-                data-current-value="{{ val }}">
+                data-current-val="{{ val }}"
+                onchange="ConfigEditor.syncAttribVal(this)">
             {% for attr_def in all_attribs %}
                 <option value="{{ attr_def.id }}" 
                     {{ 'selected' if attr_def.id == selected_id }}>
@@ -43,8 +41,9 @@
                 </option>
             {% endfor %}
         </select>
-        <div class="value-container">
-            <!-- Filled by ConfigEditor.syncAttribState -->
+        <div class="attribval-container"
+            data-field-name="attribs[{{ index }}][value]">
+            <!-- Filled by ConfigEditor.syncAttribVal -->
         </div>
         <button type="button" class="btn-sm dangerous-button" 
                 onclick="ConfigEditor.removeRow(this, 'attrib-list')">×</button>
