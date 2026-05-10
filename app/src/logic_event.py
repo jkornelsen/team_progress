@@ -162,6 +162,7 @@ def can_use_field(field, entity):
 def calculate_determinants(event, role_entities):
     """
     Returns a list of calculated modifiers based on selected participants.
+        [{label, source_name, field_name, value, op}, ...]
     """
     modifiers = []
     game_token = g.game_token
@@ -234,6 +235,7 @@ def calculate_determinants(event, role_entities):
             'field_name': field_name,
             'value': val,
             'val_required': det.val_required,
+            'negate': det.negate,
             'op': det.op_application,
             'breakdown': breakdown_text,
         })
@@ -464,7 +466,7 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
         breakdown_parts = [f"Selection: <b>{choice}</b>"]
 
     elif event.outcome_type == 'coordinates':
-        loc_id = role_entities.get(Participant.SUBJECT)
+        loc_id = role_entities.get(Participant.AT)
         _, coord_str = roll_coordinate(loc_id)
         breakdown_parts = [coord_str]
 
@@ -474,7 +476,6 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
         breakdown_parts = [f"d{base_max - base_min + 1}(🎲{die_roll})"]
 
     # 2. Resolve and Apply every Determinant individually
-    # calculate_determinants returns list: [{label, source_name, field_name, value, op}, ...]
     modifiers = calculate_determinants(event, role_entities)
     
     PRECEDENCE = {

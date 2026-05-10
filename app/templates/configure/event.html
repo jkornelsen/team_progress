@@ -475,23 +475,25 @@
         const innerGroup = card.querySelector('[data-inner-group]');
         const requiredGroup = card.querySelector('[data-slot-required]');
         const attrSelect = card.querySelector('.id-attr');
+        const negateToggle = card.querySelector('.negate-toggle-container');
 
         const comparisonOps = ['==', '>', '<', '>=', '<='];
 
         if (requiredGroup) {
-            if (comparisonOps.includes(op)) {
+            const isComparison = comparisonOps.includes(op);
+            negateToggle.classList.toggle('hidden', !isComparison);
+            requiredGroup.classList.toggle('hidden', !isComparison);
+            if (isComparison) {
                 // COMPARISON: ( Inner ) == Target
                 innerGroup.style.order = "1";
                 appSelector.style.order = "2";
                 requiredGroup.style.order = "3";
-                requiredGroup.classList.remove('hidden');
-
                 syncFieldAttribState(attrSelect);
             } else {
-                // MATH: + ( Inner )
+                // CALCULATION: + ( Inner )
                 appSelector.style.order = "1";
                 innerGroup.style.order = "2";
-                requiredGroup.classList.add('hidden');
+                negateToggle.querySelector('input').checked = false;
             }
         } else {
             appSelector.parentElement.style.order = "1";

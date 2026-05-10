@@ -93,7 +93,7 @@
                     <div class="col-row item-here-row">
                         {% set target_url = url_for('play.play_item',
                             id=pile.item_id, owner_id=location.id,
-                            pos=pile.position|join(',')) %}
+                            pos=pile.position|join(',') if pile.position else None) %}
                         {{ render.maskable_name(
                             pile.item, url=target_url, link_letters=link_letters) }}
                         
@@ -107,7 +107,7 @@
                             {% endif %}
                         </div>
 
-                        {% if has_grid %}
+                        {% if has_grid and pile.position %}
                             <span class="label-like">[{{ pile.position | join(",") }}]</span>
                         {% endif %}
                     </div>
@@ -309,7 +309,7 @@
             icon: getFirstGrapheme("{{ pile.item.name }}"),
             link: "{{ url_for('play.play_item',
                 id=pile.item_id, owner_id=location.id,
-                pos=pile.position|join(',')) | safe }}"
+                pos=pile.position|join(',')) if pile.position else None }}"
         },
         {% endfor %}
     ];

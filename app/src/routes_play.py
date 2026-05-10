@@ -1002,33 +1002,28 @@ def play_event(id):
             .filter_by(game_token=game_token, location_id=ctx_loc_id) \
             .filter(Character.id != subject_id) \
             .all()
-
-        #TODO: can use quantities of other piles
-        #
-        #piles_here = Pile.query.filter_by(
-        #    game_token=game_token, owner_id=ctx_loc_id
-        #).all()
-        #subject_piles = [p for p in piles_here if p.item_id == subject_id]
-        #for p in piles_here:
-        #    if len(subject_piles) == 1 and p.item_id == subject_id:
-        #        subject_pile_qty = p.quantity
-        #        continue
-        #    other_piles_here.setdefault(p.item_id, []).append(p.quantity)
-
-    # Get available children
-
-    #TODO: handle qty fields
-    #
-    #children_piles = {}
-    #if ctx_char:
-    #    children_piles.setdefault(ctx_char.id, []).extend(ctx_char.piles)
         
     # Get factor fields for each role
-    role_fields = {}
+#    role_fields = {}
+#    for f in event.factors:
+#        for fld in filter(None, (f.infield, f.outfield)):
+#            if fld.role:
+#                if fld.role not in role_fields:
+#                    role_fields[fld.role] = {
+#                        'fields': set(),
+#                        'all_negated': True
+#                    }
+#                role_fields[fld.role]['fields'].add(fld)
+#                if not f.negate:
+#                    role_fields[fld.role]['all_negated'] = False
+
+    role_constraints = {}
     for f in event.factors:
         for fld in filter(None, (f.infield, f.outfield)):
             if fld.role:
-                role_fields.setdefault(fld.role, set()).add(fld)
+                if fld.role not in role_constraints:
+                    role_constraints[fld.role] = set()
+                role_constraints[fld.role].add((fld, f.negate))
 
     # Get list of nearby entities that have those attributes
     # to fill the select box for each role.
@@ -1038,7 +1033,7 @@ def play_event(id):
     
     eligible_role_entities = {}
     fields_not_met = {}
-    for role, fieldlist in role_fields.items():
+    for role, constraints in role_constraints.items():
         if role == Participant.BLUEPRINT:
             continue
         if role == Participant.UNIVERSAL:
@@ -1053,14 +1048,21 @@ def play_event(id):
             search_pool = other_entities_here
 
         role_candidates = None
-        for f in fieldlist:
-            can_use = {ent for ent in search_pool if can_use_field(f, ent)}
+        for field, is_negated in constraints:
+            def check(ent):
+                has_cap = can_use_field(field, ent)
+                return (not has_cap) if is_negated else has_cap
+
+            can_use = {ent for ent in search_pool if check(ent)}
+
             if role_candidates is None:
                 role_candidates = can_use
             else:
                 role_candidates &= can_use # Intersection
             if not can_use:
-                fields_not_met.setdefault(role, []).append(f)
+                logic_key = 'negated' if is_negated else 'positive'
+                fields_not_met.setdefault(
+                    role, {}).setdefault(logic_key, []).append(field)
 
         eligible_role_entities[role] = list(role_candidates) if role_candidates else []
 

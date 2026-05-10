@@ -906,8 +906,9 @@ class Participant:
 class Operation:
     CONST = 'c'
     EQ = '=='
-    GE = '>='
-    LT = '<'
+    GE = '>=' # often means having enough
+    LT = '<' # often means NOT having that amount
+    NE = '!=' # value must exist and be different (unlike EventFactor.negate)
     ASSIGN = ':='
     ADD = '+'
     SUB = '-'
@@ -923,6 +924,7 @@ class Operation:
         EQ:         '=',
         GE:         '≥',
         LT:         '<',
+        NE:         '≠',
         ASSIGN:     '≔',
         ADD:        '+',
         SUB:        '−',
@@ -935,8 +937,8 @@ class Operation:
     }
 
     # How the result applies to the total
-    APPLICATION_OPS = [ADD, SUB, MULT, DIV, EQ, GE, LT]
-    COMPARISON_OPS = [EQ, GE, LT]
+    APPLICATION_OPS = [ADD, SUB, MULT, DIV, EQ, GE, LT, NE]
+    COMPARISON_OPS = [EQ, GE, LT, NE]
 
     # Modify the Field Value before we apply it to the total
     TRANSFORM_OPS = [
@@ -1025,6 +1027,7 @@ class EventFactor(db.Model, DictHydrator):
     label = db.Column(db.String(50))
 
     # --- Filter & Workflow ---
+    negate = db.Column(db.Boolean, default=False) # = not(lookup && compare)
     outcome_success = db.Column(db.String(20), default=Participant.ALWAYS)
     auto_apply = db.Column(db.Boolean, default=False)
 
@@ -1057,6 +1060,7 @@ class EventFactor(db.Model, DictHydrator):
             "op_transform": self.op_transform,
             "val_transform": self.val_transform,
             "val_required": self.val_required,
+            "negate": self.negate,
             "outcome_success": self.outcome_success,
             "auto_apply": self.auto_apply
         }
@@ -1480,7 +1484,7 @@ class Overall(db.Model, DictHydrator):
     title = db.Column(db.String(255), nullable=False, default='New Scenario')
     description = db.Column(db.Text)
     number_format = db.Column(db.String(5), default='en_US')
-    slots = db.Column(ARRAY(db.Text))
+    slots = db.Column(ARRAY(db.Text), default=list)
     progress_type = db.Column(db.String(20))
     multiplayer = db.Column(db.Boolean, default=False)
     complete = db.Column(db.String(20), default='')

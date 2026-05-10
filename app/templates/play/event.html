@@ -86,12 +86,23 @@
 
                         {% else %}
                             {% if role in fields_not_met %}
-                                <span class="text-danger">Needs</span>
-                                {% for fld in fields_not_met[role] %}
-                                    {{ fld.get_field_name() }}{% if not loop.last %}, {% endif %}
-                                {% endfor %}
+                                {% set role_errors = fields_not_met[role] %}
+
+                                {% if role_errors.positive %}
+                                    <span class="text-danger">Needs</span>
+                                    {% for fld in role_errors.positive %}
+                                        {{ fld.get_field_name() }}{{ ", " if not loop.last }}
+                                    {% endfor %}
+                                {% endif %}
+                                {% if role_errors.positive and role_errors.negated %}<br>{% endif %}
+                                {% if role_errors.negated %}
+                                    <span class="text-danger">Can't have</span>
+                                    {% for fld in role_errors.negated %}
+                                        {{ fld.get_field_name() }}{{ ", " if not loop.last }}
+                                    {% endfor %}
+                                {% endif %}
                             {% else %}
-                                <span class="text-danger">None eligible nearby.</span>
+                                <span class="text-dim">None eligible nearby.</span>
                             {% endif %}
                         {% endif %}
                     </div>
@@ -383,20 +394,24 @@
                 if (isComparison) {
                     // FORMAT: Source Field (Breakdown) >= RequiredValue
                     // We use the 'value' to determine if the condition is currently met for coloring
-                    const isMet = eval(`${m.value} ${m.op.replace('==', '===')} ${m.val_required}`);
+                    let isMet = eval(`${m.value} ${m.op.replace('{{ Operation.EQ }}', '===')} ${m.val_required}`);
+                    if (m.negate) isMet = !isMet;
                     if (!isMet) allRequirementsMet = false;
                     const colorClass = isMet ? 'text-success' : 'text-danger';
+                    const negatePrefix = m.negate ? `<span class=${colorClass}>NOT</span>` : '';
 
                     let displayFormula;
-                    if (m.val_required === 1 && (m.op === '>=' || m.op === '==')) {
+                    if (m.val_required === 1 && (m.op === '{{ Operation.GE }}' || m.op === '{{ Operation.EQ }}')) {
                         const rawInner = hasInner ? ` (${m.breakdown})` : ""; 
                         displayFormula = `
-                            <span class="${colorClass}" style="margin: 0 4px;">${isMet ? "Has" : "Needs"}</span>
+                            ${negatePrefix}
+                            <span class="${colorClass}">${isMet ? "Has" : "Needs"}</span>
                             <small class="text-dim">[${displayVal}${rawInner} ${displayOp} ${m.val_required}]</small>
                         `;
                     } else {
                         displayFormula = `
-                            <span class="${colorClass}" style="margin: 0 4px;">${displayVal}</span>
+                            ${negatePrefix}
+                            <span class="${colorClass}">${displayVal}</span>
                             ${innerHtml}
                             <strong class="${colorClass}">${displayOp} ${m.val_required}</strong>
                         `;
@@ -405,7 +420,7 @@
                     contentHtml = `
                         <strong>${m.source_name}</strong>
                         <div style="padding-left: 1.5em;">
-                            <span class="text-dim">${m.field_name}:</span> 
+                            <span class="text-dim" style="margin: 0 4px;">${m.field_name}:</span> 
                             ${displayFormula}
                         </div>
                     `;

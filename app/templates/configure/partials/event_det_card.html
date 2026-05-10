@@ -96,6 +96,15 @@
                     data-field-name="dets[{{ index }}][val_required]">
                     <!-- Filled by ConfigEditor.syncAttribVal -->
                 </div>
+                <div class="negate-toggle-container">
+                    <label class="checkbox-label"
+                            title="True when value isn't found or doesn't match expression">
+                        <input type="checkbox" name="dets[{{ index }}][negate]"
+                            class="negate-checkbox"
+                            {{ 'checked' if factor.negate }}>
+                        NOT
+                    </label>
+                </div>
             </div>
         </div>
     </div>

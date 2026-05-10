@@ -646,6 +646,7 @@ def edit_event(id):
                     order_index=row.get_int('order_index'),
                     label=row.get_str('label'),
                     get_val_from=get_val_from,
+                    negate=row.get_bool('negate'),
                     outcome_success=row.get_str('outcome_success', Participant.ALWAYS),
                     auto_apply=row.get_bool('auto_apply'),
                     op_application=row.get_str('op_application'),

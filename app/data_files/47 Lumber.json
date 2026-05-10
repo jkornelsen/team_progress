@@ -606,10 +606,31 @@
                             "recipe_id": null
                         },
                         "outfield": null,
-                        "op_application": "<",
+                        "op_application": ">=",
                         "op_transform": "",
                         "val_transform": 1.0,
                         "val_required": 0.1,
+                        "negate": true,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "at",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 15,
+                            "attrib_id": null,
+                            "recipe_id": null
+                        },
+                        "outfield": null,
+                        "op_application": ">=",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0,
+                        "negate": true,
                         "outcome_success": "always",
                         "auto_apply": false
                     }
