@@ -159,6 +159,38 @@ def can_use_field(field, entity):
 
     return True
 
+# app/src/logic_event.py
+
+def is_factor_met(factor, entity, subject_id=None):
+    """
+    Evaluates if a specific entity satisfies the requirements of an EventFactor.
+    Used for UI validation and filtering.
+    """
+    game_token = g.game_token
+    field = factor.infield
+    
+    # 1. Check if the entity even has the field (The "Capability" check)
+    if not field or not can_use_field(field, entity):
+        return False if not factor.negate else True
+
+    # 2. If it's a calculation (+, *, /), existence is enough to be met
+    if factor.op_application not in Operation.COMPARISON_OPS:
+        return True if not factor.negate else False
+
+    # 3. If it's a comparison (==, >=, etc.), we must check the actual value
+    # Fetch the value from the entity
+    val = get_entity_value(entity.id, field, subject_id=subject_id)
+    
+    # Apply inner transform (e.g. Rounding or Softcap)
+    if factor.op_transform and factor.op_transform != Operation.CONST:
+        val = apply_operation(val, factor.val_transform, factor.op_transform)
+    elif factor.op_transform == Operation.CONST:
+        val = factor.val_transform
+
+    # Evaluate the comparison: (FetchedVal Op RequiredVal)
+    is_satisfied = apply_operation(val, factor.val_required, factor.op_application)
+    return is_satisfied if not factor.negate else not is_satisfied
+
 def calculate_determinants(event, role_entities):
     """
     Returns a list of calculated modifiers based on selected participants.
@@ -228,6 +260,17 @@ def calculate_determinants(event, role_entities):
                 val = apply_operation(
                     val, det.val_transform, det.op_transform)
 
+        # Check if this is a comparison or a calculation
+        is_comparison = det.op_application in Operation.COMPARISON_OPS
+        is_met = True
+        if is_comparison:
+            # Evaluate: (TransformedVal Op ValRequired)
+            raw_result = apply_operation(
+                val, det.val_required, det.op_application)
+            is_met = bool(raw_result)
+        if det.negate:
+            is_met = not is_met
+
         # Assemble the enriched dictionary
         modifiers.append({
             'label': det.label or "",
@@ -237,6 +280,8 @@ def calculate_determinants(event, role_entities):
             'val_required': det.val_required,
             'negate': det.negate,
             'op': det.op_application,
+            'is_comparison': is_comparison,
+            'is_met': is_met,
             'breakdown': breakdown_text,
         })
         
@@ -390,6 +435,8 @@ def apply_operation(current_val, mod_val, op):
     """Applies the specific operation and returns the new value."""
     if op == Operation.CONST:
         return mod_val
+
+    # Unary Functions
     if op == Operation.SOFTCAP:
         c = 50
         if current_val == 0:
@@ -404,13 +451,21 @@ def apply_operation(current_val, mod_val, op):
             1 + math.log(1 + current_abs / c))
         return sign * (1 + mod_val * ratio)
     if op == Operation.ROUND:
-        # Round to nearest X
         try:
             if mod_val == 0:
                 return current_val
+            # Round to nearest X
             return float(round(current_val / mod_val) * mod_val)
         except (ValueError, TypeError, ZeroDivisionError):
             return float(round(current_val))
+
+    # Comparisons
+    if op == Operation.EQ: return current_val == mod_val
+    if op == Operation.GE: return current_val >= mod_val
+    if op == Operation.LT: return current_val < mod_val
+    if op == Operation.NE: return current_val != mod_val
+
+    # Arithmetic
     if op == Operation.ADD:  return current_val + mod_val
     if op == Operation.SUB:  return current_val - mod_val
     if op == Operation.MULT: return current_val * mod_val
@@ -716,13 +771,12 @@ def do_effect_change(eff, roll_total, role_entities):
     # --- STEP 2: APPLY TO DATABASE (The "To") ---
     field_def = eff.outfield
     if not field_def:
-        return
+        return True, ''
 
     if field_def.field_mode not in [Participant.RATE_AMT, Participant.RATE_DUR]:
         target_id = resolve_anchor_id(field_def.role, role_entities)
         if target_id is None:
-            logger.warn(f"Could not resolve target role {field_def.role}")
-            return
+            return False, f"Nobody available for target role {field_def.role}"
     op = eff.op_application
 
     # Destination A: Attributes
@@ -742,8 +796,12 @@ def do_effect_change(eff, roll_total, role_entities):
             if pile:
                 target_id = pile.item_id
             else:
-                logger.warning(f"Could not resolve child item with attribute {field_def.attrib_id} for anchor {target_id}")
-                return
+                anchor = Entity.query.get((game_token, target_id))
+                anchor_name = anchor.name if anchor else "(Unknown)"
+                attr = Attrib.query.get((game_token, field_def.attrib_id))
+                attr_name = attr.name if attr else "(Unknown)"
+                return False, f"Could not find an item at {anchor_name}" \
+                              f" that has {attr_name}."
 
         record = AttribVal.query.filter_by(
             game_token=game_token, subject_id=target_id, attrib_id=field_def.attrib_id
@@ -789,3 +847,4 @@ def do_effect_change(eff, roll_total, role_entities):
             add_message(f"Set {recipe.product.name} {log_impact}")
 
     db.session.commit()
+    return True, ''

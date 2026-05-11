@@ -16,7 +16,7 @@ from .logic_piles import transfer_item
 from .logic_event import (
     roll_for_outcome, roll_for_system_outcome, calculate_determinants,
     calculate_effects_targets, calculate_solved_effects,
-    get_entity_value, can_use_field,
+    get_entity_value, is_factor_met,
     effect_description, do_effect_change, process_all_effects)
 from .logic_progress import (
     tick_all_active, start_production, stop_production)
@@ -1003,37 +1003,18 @@ def play_event(id):
             .filter(Character.id != subject_id) \
             .all()
         
-    # Get factor fields for each role
-#    role_fields = {}
-#    for f in event.factors:
-#        for fld in filter(None, (f.infield, f.outfield)):
-#            if fld.role:
-#                if fld.role not in role_fields:
-#                    role_fields[fld.role] = {
-#                        'fields': set(),
-#                        'all_negated': True
-#                    }
-#                role_fields[fld.role]['fields'].add(fld)
-#                if not f.negate:
-#                    role_fields[fld.role]['all_negated'] = False
+    # Identify all roles that need resolving
+    roles_to_resolve = {
+        fld.role for f in event.factors 
+        for fld in [f.infield, f.outfield] if fld and fld.role
+    }
+    if event.outcome_type == OutcomeType.COORDS:
+        roles_to_resolve.add(Participant.AT)
 
-    role_constraints = {}
-    for f in event.factors:
-        for fld in filter(None, (f.infield, f.outfield)):
-            if fld.role:
-                if fld.role not in role_constraints:
-                    role_constraints[fld.role] = set()
-                role_constraints[fld.role].add((fld, f.negate))
-
-    # Get list of nearby entities that have those attributes
-    # to fill the select box for each role.
-    # Display as text if only one option,
-    # and disallow event if no candidate for role.
-    # Include attr or qty value in the list.
-    
+    # Get list of available entities available for each role
     eligible_role_entities = {}
     fields_not_met = {}
-    for role, constraints in role_constraints.items():
+    for role in roles_to_resolve:
         if role == Participant.BLUEPRINT:
             continue
         if role == Participant.UNIVERSAL:
@@ -1047,24 +1028,22 @@ def play_event(id):
         else:
             search_pool = other_entities_here
 
-        role_candidates = None
-        for field, is_negated in constraints:
-            def check(ent):
-                has_cap = can_use_field(field, ent)
-                return (not has_cap) if is_negated else has_cap
-
-            can_use = {ent for ent in search_pool if check(ent)}
-
-            if role_candidates is None:
-                role_candidates = can_use
-            else:
-                role_candidates &= can_use # Intersection
+        role_candidates = set(search_pool)
+        factors = [
+            f for f in event.factors if f.infield and f.infield.role == role]
+        for factor in factors:
+            can_use = {
+                ent for ent in search_pool 
+                if is_factor_met(factor, ent, subject_id=subject_id)
+            }
+            role_candidates &= can_use # Intersection
             if not can_use:
-                logic_key = 'negated' if is_negated else 'positive'
+                logic_key = 'negated' if factor.negate else 'positive'
+                field = factor.infield
                 fields_not_met.setdefault(
                     role, {}).setdefault(logic_key, []).append(field)
 
-        eligible_role_entities[role] = list(role_candidates) if role_candidates else []
+        eligible_role_entities[role] = list(role_candidates)
 
     effects_data = []
     for eff in event.effects:
@@ -1167,8 +1146,12 @@ def apply_single_effect(factor_id):
         Participant.formkey_to_role(k): req.get_int(k)
         for k in req if k.endswith(Participant.FORM_SUFFIX)
     }
-    do_effect_change(eff, req.get_float('roll_total'), role_entities)
+    success, message = do_effect_change(
+        eff, req.get_float('roll_total'), role_entities)
     
+    if not success:
+        return jsonify({"message": message}), HTTPStatus.BAD_REQUEST
+
     return '', HTTPStatus.NO_CONTENT
 
 @play_bp.route('/play/attrib/<int:attrib_id>/subject/<int:subject_id>', methods=['GET', 'POST'])

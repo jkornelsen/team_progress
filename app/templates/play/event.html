@@ -313,7 +313,6 @@
 
 <script>
     const OP_MAP = {{ Operation.Repr | tojson | safe }};
-    const COMPARISON_OPS = {{ Operation.COMPARISON_OPS | tojson }};
     const eventId = {{ event.id }};
     const FILTER_LABELS = {
         '{{ Participant.SUCCESS_ANY }}': 'If Successful',
@@ -385,19 +384,15 @@
                 const displayVal = Math.round(Math.abs(m.value) * 100) / 100;
                 const displayOp = OP_MAP[m.op] || m.op;
 
-                const isComparison = COMPARISON_OPS.includes(m.op);
                 const hasInner = (m.breakdown && m.breakdown !== m.value.toString());
                 const innerHtml = hasInner ? `<small class="text-dim">[${m.breakdown}]</small>` : "";
 
                 let contentHtml = "";
 
-                if (isComparison) {
+                if (m.is_comparison) {
                     // FORMAT: Source Field (Breakdown) >= RequiredValue
-                    // We use the 'value' to determine if the condition is currently met for coloring
-                    let isMet = eval(`${m.value} ${m.op.replace('{{ Operation.EQ }}', '===')} ${m.val_required}`);
-                    if (m.negate) isMet = !isMet;
-                    if (!isMet) allRequirementsMet = false;
-                    const colorClass = isMet ? 'text-success' : 'text-danger';
+                    if (!m.is_met) allRequirementsMet = false;
+                    const colorClass = m.is_met ? 'text-success' : 'text-danger';
                     const negatePrefix = m.negate ? `<span class=${colorClass}>NOT</span>` : '';
 
                     let displayFormula;
@@ -405,7 +400,7 @@
                         const rawInner = hasInner ? ` (${m.breakdown})` : ""; 
                         displayFormula = `
                             ${negatePrefix}
-                            <span class="${colorClass}">${isMet ? "Has" : "Needs"}</span>
+                            <span class="${colorClass}">${m.is_met ? "Has" : "Needs"}</span>
                             <small class="text-dim">[${displayVal}${rawInner} ${displayOp} ${m.val_required}]</small>
                         `;
                     } else {
@@ -686,17 +681,20 @@
      */
     async function applySingleEffect(factorId) {
         const row = document.getElementById(`eff-row-${factorId}`);
+        const btn = row.querySelector('.apply-eff-btn');
         const fd = getRoleIDs();
         fd.append('roll_total', lastRollValue);
 
         const success = await apiPost(
             `/event/apply-effect/${factorId}`, fd, "Could not apply");
         if (success) {
-            row.querySelector('.apply-eff-btn').classList.add('hidden');
+            btn.classList.add('hidden');
             row.querySelector('.check-mark').classList.remove('hidden');
             row.style.opacity = "0.7";
 
             syncApplyAllState();
+        } else {
+            btn.innerText = "Retry";
         }
     }
 

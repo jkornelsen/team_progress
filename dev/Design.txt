@@ -26,13 +26,6 @@ pile event effects
         use the randomly chosen roll coords
         or calculate from participant position or constant
     typical use case would be to randomly spawn item loot or enemies in room
-    problem:
-        later effects can expect the pile
-        to be there, and while it will be because effects apply in order,
-        still the event won't be allowed to run at all
-        a quick fix would be when checking for fulfillable roles,
-        don't reject due to effect requirements other than the first eff in list
-        maybe being able to apply effects shouldn't be a run criteria anyway
 
 ---- tightening and quality of life ----
 

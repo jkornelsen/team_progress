@@ -635,7 +635,28 @@
                         "auto_apply": false
                     }
                 ],
-                "effects": []
+                "effects": [
+                    {
+                        "label": "",
+                        "get_val_from": "outcome",
+                        "infield": null,
+                        "outfield": {
+                            "role": "at",
+                            "field_mode": "attr",
+                            "child_of_anchor": true,
+                            "item_id": null,
+                            "attrib_id": 2,
+                            "recipe_id": null
+                        },
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 100.0,
+                        "val_required": 1.0,
+                        "negate": false,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    }
+                ]
             },
             {
                 "id": 25,
