@@ -172,7 +172,7 @@
             {
                 "id": 15,
                 "name": "Marked Tree",
-                "description": "Plots are full of trees, but mark only one at a time for harvesting.\r\n\r\n**{saddlebrown|When Marked Tree quantity is 0}**:\r\n1. Run [Mark a Tree](/play/event/3), select *Starting Plot* and roll for coordinates.\r\n2. In [Starting Plot setup](/configure/location/4), set the marked tree position to the new coordinates.\r\n3. Produce (below) a *Marked Tree* from *Plot 1 Trees* so quantity goes from 0 to 1.\r\n4. Set HP to 100.\r\n\r\nNow the tree is ready for a character such as the *Owner* to *Swing to Chop*.",
+                "description": "Plots are full of trees, but mark only one at a time for harvesting.",
                 "attribs": [
                     [2, 100.0]
                 ],
@@ -182,19 +182,7 @@
                 "loc_hosted": false,
                 "toplevel": false,
                 "masked": false,
-                "recipes": [
-                    {
-                        "id": 7,
-                        "rate_amount": 1.0,
-                        "rate_duration": 3,
-                        "instant": true,
-                        "sources": [
-                            {"item_id": 10, "q_required": 1.0, "preserve": false}
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
-                    }
-                ]
+                "recipes": []
             },
             {
                 "id": 14,
@@ -347,7 +335,7 @@
                     }
                 ],
                 "progress": [],
-                "item_refs": [],
+                "item_refs": [10],
                 "destinations": [
                     {
                         "loc2_id": 16,
@@ -584,7 +572,7 @@
             {
                 "id": 21,
                 "name": "Mark a Tree",
-                "description": "Choose the grid coordinates of the next tree to be actively harvested on a plot. See [Marked Tree](/play/item/15) for instructions.",
+                "description": "Choose the grid coordinates of the next tree to be actively harvested on a plot.\r\n\r\n**{saddlebrown|When Marked Tree quantity is 0}**:\r\n- Sets the marked tree position to the new coordinates at *Starting Plot*.\r\n- Produces a *Marked Tree* from *Plot 1 Trees* so quantity goes from 0 to 1.\r\n- Sets HP to 100.\r\n\r\nNow the tree is ready for *Swing to Chop*.",
                 "attribs": [],
                 "abilities": [],
                 "toplevel": false,
@@ -633,9 +621,49 @@
                         "negate": true,
                         "outcome_success": "always",
                         "auto_apply": false
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "infield",
+                        "infield": {
+                            "role": "universal",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 10,
+                            "attrib_id": null,
+                            "recipe_id": null
+                        },
+                        "outfield": null,
+                        "op_application": ">=",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0,
+                        "negate": false,
+                        "outcome_success": "always",
+                        "auto_apply": false
                     }
                 ],
                 "effects": [
+                    {
+                        "label": "",
+                        "get_val_from": "outcome",
+                        "infield": null,
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "place",
+                            "child_of_anchor": false,
+                            "item_id": 15,
+                            "attrib_id": null,
+                            "recipe_id": null
+                        },
+                        "op_application": ":=",
+                        "op_transform": "",
+                        "val_transform": 1.0,
+                        "val_required": 1.0,
+                        "negate": false,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    },
                     {
                         "label": "",
                         "get_val_from": "outcome",
@@ -651,6 +679,26 @@
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 100.0,
+                        "val_required": 1.0,
+                        "negate": false,
+                        "outcome_success": "always",
+                        "auto_apply": false
+                    },
+                    {
+                        "label": "",
+                        "get_val_from": "outcome",
+                        "infield": null,
+                        "outfield": {
+                            "role": "universal",
+                            "field_mode": "qty",
+                            "child_of_anchor": false,
+                            "item_id": 10,
+                            "attrib_id": null,
+                            "recipe_id": null
+                        },
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 1.0,
                         "val_required": 1.0,
                         "negate": false,
                         "outcome_success": "always",

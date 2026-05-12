@@ -7,15 +7,20 @@ from app.models import (
     StorageType, Operation, OutcomeType, RollerType, Participant,
     AttribVal, Pile, LocDest, Recipe)
 from app.utils import maskable_name
-from .logic_piles import set_quantity
+from app.serialization import clone_entity
+from .logic_piles import set_quantity, adjust_quantity
 from .logic_user_interaction import add_message
 from .logic_navigation import get_all_valid_coords, distance_between
 
 logger = logging.getLogger(__name__)
 
 def format_for_display(val):
-    """Round and strip trailing 0's"""
-    return f"{round(val, 2):g}"
+    if isinstance(val, (list, tuple)):
+        return str(tuple(val))
+    try:
+        return f"{round(val, 2):g}"
+    except (TypeError, ValueError):
+        return str(val)
 
 # ------------------------------------------------------------------------
 # Determinant Logic (Modifiers)
@@ -277,6 +282,7 @@ def calculate_determinants(event, role_entities):
             'source_name': source_display,
             'field_name': field_name,
             'value': val,
+            'value_display': format_for_display(val),
             'val_required': det.val_required,
             'negate': det.negate,
             'op': det.op_application,
@@ -305,7 +311,15 @@ def calculate_effects_targets(event, role_entities):
         target_name = ""
         is_resolved = False
 
-        if field_def.field_mode in [Participant.RATE_AMT, Participant.RATE_DUR]:
+        if field_def.field_mode == Participant.PLACE:
+            is_resolved = True
+            loc_id = resolve_anchor_id(Participant.AT, role_entities)
+            loc = Entity.query.get((game_token, loc_id))
+            item = Item.query.get((game_token, field_def.item_id))
+            target_name = f"{loc.name if loc else '? loc'}'s" \
+                          f" {item.name if item else '? item'}"
+            current_val = ""
+        elif field_def.field_mode in [Participant.RATE_AMT, Participant.RATE_DUR]:
             is_resolved = True 
             target_name = "📦"
             current_val = get_entity_value(None, field_def)
@@ -373,11 +387,15 @@ def calculate_effects_targets(event, role_entities):
             'effect_id': eff.id,
             'target_name': target_name,
             'current_value': current_val,
+            'current_display': format_for_display(current_val),
             'is_resolved': is_resolved,
             'source_name':  "Constant" if eff.op_transform == Operation.CONST \
                             else source_name,
             'source_value': source_val,
+            'source_display': format_for_display(source_val),
             'impact_value': impact_value, # The result of the inner math
+            'impact_display': format_for_display(impact_value) \
+                              if impact_value is not None else None,
             'relies_on_roll': relies_on_roll,
             'op_app': eff.op_application,
             'op_trans': eff.op_transform,
@@ -423,11 +441,17 @@ def calculate_solved_effects(event, role_entities, roll_total):
             final_val = impact
         else:
             final_val = apply_operation(current_val, impact, eff.op_application)
+        if eff.outfield and eff.outfield.field_mode == Participant.PLACE:
+            final_display = "Placed"
+        else:
+            final_display = format_for_display(final_val)
 
         results.append({
             'effect_id': eff.id,
             'impact_value': impact,
-            'final_value': final_val
+            'impact_display': format_for_display(impact),
+            'final_value': final_val,
+            'final_display': final_display
         })
     return results
 
@@ -522,7 +546,7 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
 
     elif event.outcome_type == 'coordinates':
         loc_id = role_entities.get(Participant.AT)
-        _, coord_str = roll_coordinate(loc_id)
+        total, coord_str = roll_coordinate(loc_id)
         breakdown_parts = [coord_str]
 
     else:
@@ -606,7 +630,7 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
         message_str = f"{format_for_display(total)} — {res}"
     else:
         display_str = breakdown_str
-        message_str = f"{format_for_display(total)}"
+        message_str = format_for_display(total)
 
     add_message(f"{event.name}: Outcome {message_str}")
     return total, display_str, tier
@@ -654,8 +678,8 @@ def roll_coordinate(loc_id):
         return 0, "No coordinates available."
 
     # 5. Pick random and return
-    chosen_x, chosen_y = random.choice(available)
-    return 0, f"Coordinates: [{chosen_x}, {chosen_y}]"
+    chosen_pos = random.choice(available)
+    return chosen_pos, f"Coordinates: {chosen_pos}"
 
 def roll_for_system_outcome(event_id, num_dice=1, sides=20, bonus=0):
     """
@@ -773,10 +797,12 @@ def do_effect_change(eff, roll_total, role_entities):
     if not field_def:
         return True, ''
 
-    if field_def.field_mode not in [Participant.RATE_AMT, Participant.RATE_DUR]:
-        target_id = resolve_anchor_id(field_def.role, role_entities)
-        if target_id is None:
-            return False, f"Nobody available for target role {field_def.role}"
+    # If the mode requires a specific instance (Character/Location/Pile), 
+    # validate that the participant role is resolved.
+    if field_def.field_mode not in Participant.USES_BLUEPRINT:
+        out_entity_id = resolve_anchor_id(field_def.role, role_entities)
+        if out_entity_id is None:
+            return False, f"No entity available for role {field_def.role}"
     op = eff.op_application
 
     # Destination A: Attributes
@@ -790,13 +816,13 @@ def do_effect_change(eff, roll_total, role_entities):
                 (AttribVal.subject_id == Item.id) & (AttribVal.game_token == Item.game_token)
             ).filter(
                 Pile.game_token == game_token,
-                Pile.owner_id == target_id,
+                Pile.owner_id == out_entity_id,
                 AttribVal.attrib_id == field_def.attrib_id
             ).first()
             if pile:
-                target_id = pile.item_id
+                out_entity_id = pile.item_id
             else:
-                anchor = Entity.query.get((game_token, target_id))
+                anchor = Entity.query.get((game_token, out_entity_id))
                 anchor_name = anchor.name if anchor else "(Unknown)"
                 attr = Attrib.query.get((game_token, field_def.attrib_id))
                 attr_name = attr.name if attr else "(Unknown)"
@@ -804,7 +830,9 @@ def do_effect_change(eff, roll_total, role_entities):
                               f" that has {attr_name}."
 
         record = AttribVal.query.filter_by(
-            game_token=game_token, subject_id=target_id, attrib_id=field_def.attrib_id
+            game_token=game_token,
+            subject_id=out_entity_id,
+            attrib_id=field_def.attrib_id
         ).first()
         current = record.value if record else 0.0
         new_val = impact if op == Operation.ASSIGN \
@@ -812,7 +840,7 @@ def do_effect_change(eff, roll_total, role_entities):
         
         if not record:
             db.session.add(AttribVal(
-                game_token=game_token, subject_id=target_id, 
+                game_token=game_token, subject_id=out_entity_id, 
                 attrib_id=field_def.attrib_id, value=new_val))
         else:
             record.value = new_val
@@ -822,10 +850,10 @@ def do_effect_change(eff, roll_total, role_entities):
         from .logic_piles import get_accessible_quantity, set_quantity
         # Items are a special case because we want to use the existing pile logic
         # that handles deleting empty piles.
-        current = get_accessible_quantity(field_def.item_id, target_id)
+        current = get_accessible_quantity(field_def.item_id, out_entity_id)
         new_val = impact if op == Operation.ASSIGN \
             else apply_operation(current, impact, op)
-        set_quantity(field_def.item_id, target_id, new_val)
+        set_quantity(field_def.item_id, out_entity_id, new_val)
 
     # Destination C: Recipe Efficiency (Global Blueprint Change)
     elif field_def.field_mode in [Participant.RATE_AMT, Participant.RATE_DUR]:
@@ -845,6 +873,60 @@ def do_effect_change(eff, roll_total, role_entities):
                 log_impact = "duration to {recipe.rate_duration:g}"
 
             add_message(f"Set {recipe.product.name} {log_impact}")
+
+    # Destination D: Physical Placement
+    elif field_def.field_mode == Participant.PLACE:
+        
+        # 1. Target must be a location (The 'At' participant)
+        loc_id = resolve_anchor_id(Participant.AT, role_entities)
+        if not loc_id:
+            return False, "No location (At) for placement."
+
+        # 2. Extract position from the roll result
+        if not isinstance(roll_total, list) or len(roll_total) != 2:
+            return False, "Expected a Coordinate outcome."
+
+        # 3. Create or increment the pile
+        new_qty = adjust_quantity(
+            field_def.item_id, 
+            loc_id, 
+            delta=1.0, 
+            position=roll_total
+        )
+        
+        item = Item.query.get((game_token, field_def.item_id))
+        add_message(f"Placed {item.name} at {roll_total}")
+
+    # Destination E: Teleportation (Move existing character)
+    elif field_def.field_mode == Participant.POS:
+        if not isinstance(roll_total, list) or len(roll_total) != 2:
+            return False, "Expected a Coordinate outcome."
+            
+        char = Character.query.get((game_token, out_entity_id))
+        if not char:
+            return False, "Expected a character."
+
+        loc_id = resolve_anchor_id(Participant.AT, role_entities)
+        loc = Location.query.get((game_token, loc_id))
+        char.location_id = loc_id
+        char.position = roll_total
+        add_message(f"Positioned {char.name} at {loc.name} {roll_total}")
+
+    # Destination F: Mob Spawning (Clone a character)
+    elif field_def.field_mode == Participant.SPAWN:
+        if not isinstance(roll_total, (list, tuple)) or len(roll_total) != 2:
+            return False, "Expected a Coordinate outcome."
+
+        char = clone_entity(field_def.char_id, 'character')
+        if not char:
+            return False, "Character not found."
+
+        # Position the clone at the rolled coordinates
+        loc_id = resolve_anchor_id(Participant.AT, role_entities)
+        loc = Location.query.get((game_token, loc_id))
+        char.location_id = loc_id
+        char.position = roll_total
+        add_message(f"Spawned {char.name} at {loc.name} {roll_total}")
 
     db.session.commit()
     return True, ''

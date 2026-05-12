@@ -14,8 +14,17 @@
                 if field_mode == Participant.ATTR }}>Attribute</option>
             <option value="{{ Participant.QTY }}" {{ 'selected'
                 if field_mode == Participant.QTY }}>Item Quantity</option>
+            {% if 'outfield' in field_prefix %}
+            <option value="{{ Participant.PLACE }}" {{ 'selected'
+                if field_mode == Participant.PLACE }}>Place Item</option>
+            <option value="{{ Participant.POS }}" {{ 'selected'
+                if field_mode == Participant.POS }}>Position Char</option>
+            <option value="{{ Participant.SPAWN }}" {{ 'selected'
+                if field_mode == Participant.SPAWN }}>Spawn Char</option>
+            {% elif 'infield' in field_prefix %}
             <option value="{{ Participant.DIST }}" {{ 'selected'
                 if field_mode == Participant.DIST }}>Distance</option>
+            {% endif %}
             <option value="{{ Participant.RATE_AMT }}" {{ 'selected'
                 if field_mode == Participant.RATE_AMT }}>Recipe Yield</option>
             <option value="{{ Participant.RATE_DUR }}" {{ 'selected'

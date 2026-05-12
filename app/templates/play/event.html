@@ -381,7 +381,7 @@
                 const labelHtml = (m.label && m.label.trim() !== "") 
                     ? `<span class="">${m.label}:</span>` 
                     : "";
-                const displayVal = Math.round(Math.abs(m.value) * 100) / 100;
+                const displayVal = m.value_display;
                 const displayOp = OP_MAP[m.op] || m.op;
 
                 const hasInner = (m.breakdown && m.breakdown !== m.value.toString());
@@ -460,7 +460,7 @@
                 row.style.opacity = eff.is_resolved ? "1" : "0.5";
 
                 // Update current value and operator
-                row.querySelector('.current-value-display').innerText = eff.is_resolved ? Math.round(eff.current_value * 100) / 100 : "?";
+                row.querySelector('.current-value-display').innerText = eff.is_resolved ? eff.current_display : "?";
                 row.querySelector('.op-display').innerText = (eff.op_app === '{{ Operation.ASSIGN }}') ? '→' : (OP_MAP[eff.op_app] || eff.op_app);
 
                 // Update Line 2: Logic description
@@ -500,11 +500,12 @@
                         "Roll", row.dataset.valTrans, row.dataset.opTrans);
                 } else {
                     // Server has provided the impact_value because it's not dependent on the roll
-                    const formattedImpact = `<span class="text-success" style="font-weight:bold;">${Math.round(eff.impact_value * 100) / 100}</span>`;
+                    const formattedImpact = `<span class="text-success" style="font-weight:bold;">${eff.impact_display}</span>`;
                     
                     if (hasTransform) {
                         // Show: (1 * 1.0) = 1 (green)
-                        const baseEq = formatImpactExpression(Math.round(eff.source_value * 100) / 100, row.dataset.valTrans, row.dataset.opTrans);
+                        const baseEq = formatImpactExpression(
+                            eff.source_display, row.dataset.valTrans, row.dataset.opTrans);
                         equationEl.innerHTML = `${baseEq} = ${formattedImpact}`;
                     } else {
                         // Show: 1 (green)
@@ -611,14 +612,14 @@
                         // Update the "Roll" placeholder with the actual number
                         if (row.dataset.getValFrom === '{{ Participant.OUTCOME }}') {
                             equationEl.innerText = formatImpactExpression(
-                                Math.round(lastRollValue * 100) / 100, 
+                                solved.impact_display, 
                                 row.dataset.valTrans, 
                                 row.dataset.opTrans
                             );
                         }
 
                         // Show the final value calculated by the server
-                        if (newValEl) newValEl.innerText = Math.round(solved.final_value * 100) / 100;
+                        if (newValEl) newValEl.innerText = solved.final_display;
                         if (impactRes) impactRes.classList.remove('hidden');
                     } else {
                         // This was a known value (e.g. Constant or Field).
@@ -683,7 +684,7 @@
         const row = document.getElementById(`eff-row-${factorId}`);
         const btn = row.querySelector('.apply-eff-btn');
         const fd = getRoleIDs();
-        fd.append('roll_total', lastRollValue);
+        fd.append('roll_total', JSON.stringify(lastRollValue));
 
         const success = await apiPost(
             `/event/apply-effect/${factorId}`, fd, "Could not apply");

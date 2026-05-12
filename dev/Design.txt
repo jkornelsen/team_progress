@@ -20,16 +20,9 @@ couldn't change attrib val in char config
 effect outcome filter isn't showing in play event
     shows "Major Failure" in dropdown in event config
 
-pile event effects
-    set position
-        create pile if it doesn't exist
-        use the randomly chosen roll coords
-        or calculate from participant position or constant
-    typical use case would be to randomly spawn item loot or enemies in room
-
 ---- tightening and quality of life ----
 
-mask all entity names in events
+mask entity names in events
     changing shouldn't be worrisome if we don't even know what it is
 show links to all unmasked involved entities
     below event callers and distinct from them
@@ -111,7 +104,8 @@ infestation
         so events can check for that attrib
 
 lumber
-    Mark a Tree event -- place Marked Tree pile
+    limit number of logs carried by owner
+    convert to (produce) stack of logs in truck
 
 tethered one epic
     set of quests

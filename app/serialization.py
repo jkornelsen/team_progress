@@ -399,3 +399,45 @@ def range_to_list(r):
     upper = r.upper if not r.upper_inf else None
     return [lower, upper]
 
+# ------------------------------------------------------------------------
+# Model Changes
+# ------------------------------------------------------------------------
+
+def increment_name(name):
+    """Adds ' 2' or increments a trailing number for duplicates."""
+    match = re.search(r'(.*?)(\d*)$', name.strip())
+    base, num = match.groups()
+    if num:
+        return f"{base.rstrip()}{int(num) + 1}"
+    return f"{name} 2"
+
+def clone_entity(source_id, entity_type):
+    """
+    Creates a deep copy of an entity and its related records.
+    Does NOT commit the session, allowing callers to modify 
+    the object before saving.
+    """
+    game_token = g.game_token
+    model_class = ENTITIES[f"{entity_type}s"]
+    src = model_class.query.get((game_token, source_id))
+    if not src:
+        return None
+    
+    data = src.to_dict()
+
+    # Recursive helper to strip 'id' so new IDs are generated
+    def strip_ids(obj):
+        if isinstance(obj, dict):
+            obj.pop('id', None)
+            for v in obj.values(): strip_ids(v)
+        elif isinstance(obj, list):
+            for item in obj: strip_ids(item)
+
+    strip_ids(data)
+    data['name'] = increment_name(src.name)
+    
+    # Re-hydrate into a new instance
+    new_obj = model_class.from_dict(data, game_token)
+    db.session.add(new_obj)
+    return new_obj
+

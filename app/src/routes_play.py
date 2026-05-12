@@ -1,4 +1,5 @@
 import logging
+import json
 from flask import (
     Blueprint, render_template, request, jsonify, g, session, current_app)
 from http import HTTPStatus
@@ -1146,8 +1147,13 @@ def apply_single_effect(factor_id):
         Participant.formkey_to_role(k): req.get_int(k)
         for k in req if k.endswith(Participant.FORM_SUFFIX)
     }
+    try:
+        roll_str = req.get_str('roll_total')
+        roll_total = json.loads(roll_str)
+    except (json.JSONDecodeError, TypeError):
+        roll_total = req.get_float('roll_total')
     success, message = do_effect_change(
-        eff, req.get_float('roll_total'), role_entities)
+        eff, roll_total, role_entities)
     
     if not success:
         return jsonify({"message": message}), HTTPStatus.BAD_REQUEST

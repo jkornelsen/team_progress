@@ -17,7 +17,7 @@ from app.models import (
 from app.serialization import (
     init_game_session, load_scenario_from_path, DEFAULT_SCENARIO_FILE,
     import_from_dict, patch_from_dict,
-    clear_game_data, export_game_to_json, export_to_dict)
+    clear_game_data, export_game_to_json, export_to_dict, clone_entity)
 from app.utils import (
     LinkLetters, RequestHelper, parse_coords,
     capture_origin, redirect_back, name_stripped)
@@ -663,20 +663,22 @@ def edit_event(id):
                         factor.outfield = None
                         continue
                     fld = row.get_map(field_key)
-                    if fld.get_str('role') and fld.get_str('field_mode'):
-                        mode = fld.get_str('field_mode')
+                    mode = fld.get_str('field_mode')
+                    role = fld.get_str('role')
+                    if mode in Participant.USES_BLUEPRINT:
+                        role = Participant.BLUEPRINT
+                    if role and mode:
                         fld_attrib_id = fld.get_int('attrib_id') \
-                            if mode == Participant.ATTR else None
+                            if mode in Participant.USES_ATTRIB else None
                         fld_item_id = fld.get_int('item_id') \
-                            if mode in [Participant.QTY, Participant.DIST] \
-                            or 'rate' in mode else None
+                            if mode in Participant.USES_ITEM else None
                         fld_recipe_id = fld.get_int('recipe_id') \
-                            if 'rate' in mode else None
+                            if mode in Participant.USES_RECIPE else None
 
                         setattr(factor, field_key, EventField(
                             game_token=game_token,
-                            role=fld.get_str('role'),
-                            field_mode=fld.get_str('field_mode'),
+                            role=role,
+                            field_mode=mode,
                             child_of_anchor=fld.get_bool('child_of_anchor'),
                             attrib_id=fld_attrib_id,
                             item_id=fld_item_id,
@@ -958,15 +960,6 @@ def clear_all():
 # Helpers
 # ------------------------------------------------------------------------
 
-def increment_name(name):
-    """Adds ' 2' or increments a trailing number for duplicates."""
-    import re
-    match = re.search(r'(.*?)(\d*)$', name)
-    base, num = match.groups()
-    if num:
-        return f"{base}{int(num) + 1}"
-    return f"{name} 2"
-
 def handle_deletion(entity):
     """Safely removes an entity and triggers cascade cleanup."""
     if entity:
@@ -980,40 +973,10 @@ def handle_deletion(entity):
     return False
 
 def duplicate_entity(source_id, entity_type):
-    """
-    Deep copies any game entity and its related records (Recipes, Attrs, etc.)
-    within the shared ID space.
-    """
-    game_token = g.game_token
-    model_class = ENTITIES[f"{entity_type}s"]
-    src = model_class.query.get((game_token, source_id))
-    
-    if not src:
-        return redirect(url_for('configure.index'))
-    
-    # 1. Get the data
-    data = src.to_dict()
-    
-    # 2. Recursive helper to strip 'id' from the dict and all nested objects
-    # This ensures Recipes, Factors, etc. all get brand new IDs
-    def strip_ids(obj):
-        if isinstance(obj, dict):
-            obj.pop('id', None)
-            for v in obj.values():
-                strip_ids(v)
-        elif isinstance(obj, list):
-            for item in obj:
-                strip_ids(item)
+    new_obj = clone_entity(source_id, entity_type)
+    if new_obj:
+        db.session.commit()
+        return redirect(url_for(
+            f'configure.edit_{entity_type}', id=new_obj.id))
+    return redirect(url_for('configure.index'))
 
-    strip_ids(data)
-    
-    # 3. Modify the name
-    data['name'] = increment_name(src.name)
-    
-    # 4. Re-hydrate by generating new IDs
-    new_obj = model_class.from_dict(data, game_token)
-    
-    db.session.add(new_obj)
-    db.session.commit()
-    
-    return redirect(url_for(f'configure.edit_{entity_type}', id=new_obj.id))

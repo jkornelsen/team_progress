@@ -190,6 +190,10 @@
         {% endfor %}
     };
     const RECIPE_MAP = {{ recipe_map | tojson | safe }};
+    const USES_ATTRIB = {{ Participant.USES_ATTRIB|list|tojson }};
+    const USES_ITEM = {{ Participant.USES_ITEM|list|tojson }};
+    const USES_RECIPE = {{ Participant.USES_RECIPE|list|tojson }};
+    const USES_BLUEPRINT = {{ Participant.USES_BLUEPRINT|list|tojson }};
 
     function addFactor(usage) {
         const list = document.getElementById(`${usage}-list`);
@@ -346,7 +350,7 @@
         const storageType = itemId ? ITEM_STORAGE_TYPE[itemId] : null;
 
         // Role Restrictions based on Storage Type
-        if (mode === "{{ Participant.RATE_AMT }}" || mode === "{{ Participant.RATE_DUR }}") {
+        if (USES_BLUEPRINT.includes(mode)) {
             roleSelect.value = "{{ Participant.BLUEPRINT }}";
             if (roleHidden) roleHidden.value = "{{ Participant.BLUEPRINT }}";
             roleRow.classList.add('hidden');
@@ -412,22 +416,11 @@
         const recipeSelect = container.querySelector('.id-recipe');
 
         // 1. Reset visibility
-        attrSelect?.classList.add('hidden');
-        itemSelect?.classList.add('hidden');
-        recipeSelect?.classList.add('hidden');
-
-        // 2. Show relevant boxes
-        if (mode === 'attr') {
-            attrSelect?.classList.remove('hidden');
-        } 
-        else if (mode === 'qty' || mode === 'dist') {
-            itemSelect?.classList.remove('hidden');
-        } 
-        else if (mode.startsWith('rate_')) {
-            // Recipe properties (Yield or Duration)
-            itemSelect?.classList.remove('hidden');
-            recipeSelect?.classList.remove('hidden');
-            // Trigger population of recipe list
+        attrSelect?.classList.toggle('hidden', !USES_ATTRIB.includes(mode));
+        itemSelect?.classList.toggle('hidden', !USES_ITEM.includes(mode));
+        const needsRecipe = USES_RECIPE.includes(mode);
+        recipeSelect?.classList.toggle('hidden', !needsRecipe);
+        if (needsRecipe) {
             syncRecipesState(itemSelect);
         }
         syncEventFieldState(modeSelect);

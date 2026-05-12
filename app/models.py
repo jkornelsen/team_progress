@@ -882,12 +882,20 @@ class Participant:
     CONST = 'const'       # Treat val_transform as the input
 
     # --- Field Mode ---
-    ATTR = 'attr'  # AttribVal
-    QTY  = 'qty'   # Pile quantity
-    DIST = 'dist'  # Distance from subject grid pos (read-only)
+    ATTR = 'attr'   # AttribVal
+    QTY  = 'qty'    # Pile quantity
+    DIST = 'dist'   # Distance from subject grid pos (read-only)
+    PLACE = 'place' # Create pile at position (write-only)
+    POS = 'pos'     # Teleport char to location and position
+    SPAWN = 'spawn' # Create numbered duplicate of char
     RATE_AMT = 'rate_amt' # Recipe.rate_amount
     RATE_DUR = 'rate_dur' # Recipe.rate_duration
-    ALL_MODES = [ATTR, QTY, DIST, RATE_AMT, RATE_DUR]
+    ALL_MODES = [ATTR, QTY, DIST, PLACE, POS, SPAWN, RATE_AMT, RATE_DUR]
+    USES_ATTRIB = {ATTR}
+    USES_ITEM = {QTY, RATE_AMT, RATE_DUR, PLACE}
+    USES_CHAR = {POS, SPAWN}
+    USES_RECIPE = {RATE_AMT, RATE_DUR}
+    USES_BLUEPRINT = {PLACE, SPAWN, RATE_AMT, RATE_DUR}
 
     # --- Outcome Success Filter ---
     ALWAYS = 'always'
@@ -972,6 +980,7 @@ class EventField(db.Model, DictHydrator):
 
     item_id = db.Column(db.Integer, nullable=True)
     attrib_id = db.Column(db.Integer, nullable=True)
+    char_id = db.Column(db.Integer, nullable=True)
     recipe_id = db.Column(db.Integer, nullable=True)
 
     def to_dict(self):
@@ -988,19 +997,18 @@ class EventField(db.Model, DictHydrator):
         if self.field_mode == Participant.ATTR and self.attrib_id:
             attrib = Attrib.query.get((self.game_token, self.attrib_id))
             return attrib.name
-        if self.field_mode == Participant.QTY and self.item_id:
+        if self.item_id:
             item = Item.query.get((self.game_token, self.item_id))
-            return f"{item.name} Qty"
-        if self.field_mode == Participant.DIST:
-           return f"Distance from Subject"
-        if self.field_mode == Participant.RATE_AMT and self.item_id \
-                and self.recipe_id:
-            item = Item.query.get((self.game_token, self.item_id))
-            return f"{item.name} Yield"
-        if self.field_mode == Participant.RATE_DUR and self.item_id \
-                and self.recipe_id:
-            item = Item.query.get((self.game_token, self.item_id))
-            return f"{item.name} Recipe Duration"
+            if self.field_mode == Participant.QTY:
+                return f"{item.name} Qty"
+            if self.field_mode == Participant.DIST:
+               return f"Distance from Subject"
+            if self.field_mode == Participant.RATE_AMT and self.recipe_id:
+                return f"{item.name} Yield"
+            if self.field_mode == Participant.RATE_DUR and self.recipe_id:
+                return f"{item.name} Recipe Duration"
+            if self.field_mode == Participant.PLACE:
+                return f"Place {item.name}"
         return ""
 
     __table_args__ = (
