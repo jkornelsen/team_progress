@@ -29,8 +29,10 @@
 <div class="configure-event">
     <h1>Event Setup</h1>
     <p class="info">
-        Chance or magnitude of something happening, such as getting lost or
+        Chance or magnitude of something happening, such as
         landing a certain type of attack.
+        Determinants are values to set up the roll, and an Effect could
+        apply damage by reducing enemy HP.
     </p>
     <p class="info">
         An example of a four-outcome roll is a 20-sided die
@@ -63,13 +65,13 @@
                             onchange="syncOutcomeTypeState()">
                         <option value="{{ OutcomeType.FOURWAY }}" {{ 'selected'
                             if event.outcome_type == OutcomeType.FOURWAY }}
-                            >Four-Way (Success/Fail)</option>
+                            >Four-Way Success/Fail</option>
                         <option value="{{ OutcomeType.NUMERIC }}" {{ 'selected'
                             if event.outcome_type == OutcomeType.NUMERIC }}
                             >Numeric Roll</option>
                         <option value="{{ OutcomeType.DETERMINED }}" {{ 'selected'
                             if event.outcome_type == OutcomeType.DETERMINED }}
-                            >Determined (Calculated)</option>
+                            >Logic (Not Chance)</option>
                         <option value="{{ OutcomeType.SELECT }}" {{ 'selected'
                             if event.outcome_type == OutcomeType.SELECT }}
                             >Random Selection</option>
@@ -78,7 +80,7 @@
                             >Random Coordinates</option>
                         <option value="{{ OutcomeType.ROLLER }}" {{ 'selected'
                             if event.outcome_type == OutcomeType.ROLLER }}
-                            >Dice System (Manual)</option>
+                            >Dice System (Custom Rolls)</option>
                     </select>
                 </div>
 
@@ -117,8 +119,8 @@
         </section>
 
         <!-- 3. Determinants -->
-        <section id="determinants" class="outer-border">
-            <div class="flex-between">
+        <section id="determinants" class="outer-border" style="background: #00334d">
+            <div class="flex-between sticky-header">
                 <h3>Values to Determine Roll</h3>
                 <button type="button" class="btn-sm" onclick="addFactor('det')">+ Add Determinant</button>
             </div>
@@ -139,10 +141,10 @@
             {% include 'configure/partials/event_det_card.html' %}
         </template>
 
-        <!-- 4. Values Changed -->
-        <section id="effects" class="outer-border">
-            <div class="flex-between">
-                <h3>Effects — Apply Changes After Roll</h3>
+        <!-- 4. Effects (Values Changed) -->
+        <section id="effects" class="outer-border" style="background: #004422">
+            <div class="flex-between sticky-header">
+                <h3>Apply Changes After Roll</h3>
                 <button type="button" class="btn-sm" onclick="addFactor('eff')">+ Add Effect</button>
             </div>
             <div id="eff-list" class="spacious-top">
@@ -258,6 +260,7 @@
             card.parentNode.insertBefore(card.nextElementSibling, card);
         }
         renumberLabels(usage);
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     function syncOutcomeTypeState() {
@@ -661,23 +664,38 @@
 </script>
 
 <style>
-    .factor-card { background: #1a1a1a; margin-bottom: 15px; border-left: 4px solid var(--accent); }
-    .card-header { padding: 0px 12px; }
-    .card-body { padding: 2px; gap: 5px; }
-    .input-header { background: transparent; border: none; border-bottom: 1px solid #444; color: var(--accent); font-weight: bold; font-size: 1.1em; }
-    .input-header:focus { border-bottom-color: var(--accent); outline: none; }
-    .sub-section { background: #333; padding: 10px; border-radius: 4px; }
-    h5 { margin-bottom: 8px; font-size: 0.8em; color: var(--text-dim); text-transform: uppercase; }
+.factor-card {
+    background: #1a1a1a;
+    margin-bottom: 15px;
+    border-left: 4px solid var(--accent);
+}
 
-    #fields-dice:not(.hidden), 
-    #fields-range:not(.hidden) {
-        display: grid !important;
-    }
+.sticky-header {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: inherit; 
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px 0;
+}
 
-    .factor-card.functional-layout [data-slot-lhs]::after {
-        content: ",";
-        margin-right: 4px;
-        font-weight: bold;
-    }
+.card-header { padding: 0px 12px; }
+.card-body { padding: 2px; gap: 5px; }
+.input-header { background: transparent; border: none; border-bottom: 1px solid #444; color: var(--accent); font-weight: bold; font-size: 1.1em; }
+.input-header:focus { border-bottom-color: var(--accent); outline: none; }
+.sub-section { background: #333; padding: 10px; border-radius: 4px; }
+h5 { margin-bottom: 8px; font-size: 0.8em; color: var(--text-dim); text-transform: uppercase; }
+
+#fields-dice:not(.hidden), 
+#fields-range:not(.hidden) {
+    display: grid !important;
+}
+
+.factor-card.functional-layout [data-slot-lhs]::after {
+    content: ",";
+    margin-right: 4px;
+    font-weight: bold;
+}
 </style>
 {% endblock %}

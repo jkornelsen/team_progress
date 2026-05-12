@@ -15,8 +15,6 @@ sqlalchemy.orm.exc.ObjectDeletedError: Instance '<Progress at 0x134226688c0>' ha
     logic_progress.py", line 133, in tick_all_active
     db.session.commit()
 
-couldn't change attrib val in char config
-
 effect outcome filter isn't showing in play event
     shows "Major Failure" in dropdown in event config
 
@@ -27,8 +25,6 @@ mask entity names in events
 show links to all unmasked involved entities
     below event callers and distinct from them
     event callers can be masked (and therefore not linked)
-
-adding event factors with button at top is awkward
 
 link events to other events
     e.g. from "swing to chop" click on (or hotkey) "chopping check"
@@ -137,9 +133,11 @@ only put non-default values in json
     otherwise it makes huge lists of "= null" that are hard to read
     don't need auto_apply for eventfactors that are determinants
 
+can doors be owned deterministically so they don't move around in diffs
+
 refactor play_item
 some logic_ modules seem less useful
-consider manual refactoring or a list of summarized ai suggestions
+consider manual refactoring choices or a list of summarized ai suggestions
 
 ---- doesn't seem important currently ----
 

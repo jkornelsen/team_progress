@@ -23,12 +23,7 @@ const ConfigEditor = {
         const emptyMsg = document.getElementById(containerId + '-empty');
         if (emptyMsg) emptyMsg.classList.add('hidden');
 
-        // Find any attribute selects in the new row and sync them
-        newRow.querySelectorAll(
-            'select[data-attrib-select="true"]').forEach(s => {
-            this.syncAttribState(s, isRange = (s.dataset.isRange === "true"));
-        });
-
+        this.applyInitialState(newRow);
         if (customCallback) customCallback(newRow);
     },
 
@@ -48,6 +43,19 @@ const ConfigEditor = {
         }
     },
     
+    /**
+     * Finds and triggers smart inputs (Binary/Enum/Numeric syncers).
+     * @param {HTMLElement} context - The element to search within.
+     */
+    applyInitialState: function(context = document) {
+        const selector = 'select[onchange*="ConfigEditor.sync"], select[onchange*="syncFieldAttribState"]';
+        context.querySelectorAll(selector).forEach(s => {
+            if (typeof s.onchange === 'function') {
+                s.onchange();
+            }
+        });
+    },
+
     /**
      * Handle the dynamic injection of inputs (Checkboxes, Enums, Numbers).
      */
@@ -127,16 +135,6 @@ const ConfigEditor = {
         const attr = (typeof ATTRIB_REGISTRY !== 'undefined' && attrId) ? ATTRIB_REGISTRY[attrId] : null;
         return { container, fieldName, attr };
     },
-
-    /** Trigger all relevant selects on page load */
-    init: function() {
-        const selector = 'select[onchange*="ConfigEditor.sync"], select[onchange*="syncFieldAttribState"]';
-        document.querySelectorAll(selector).forEach(s => {
-            if (typeof s.onchange === 'function') {
-                s.onchange();
-            }
-        });
-    }
 };
 
-document.addEventListener('DOMContentLoaded', () => ConfigEditor.init());
+document.addEventListener('DOMContentLoaded', () => ConfigEditor.applyInitialState());
