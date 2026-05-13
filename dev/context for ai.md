@@ -30,9 +30,22 @@ Focus:
 
 ## Generating JSON Using Instructions
 
-generate a json file according to the attached instructions. topic is an undersea quest rpg.
+basic prompt:
+    generate a json file according to the attached instructions. topic is an undersea quest rpg.
 
-probably should have at least two steps, including a second one to make corrections
+multiple passes:
+    generate basic concept
+    add locations
+    connect locations
+    add and place characters
+    add items
+    add piles
+    add attribs
+    assign attribs
+    add events
+    assign abilities
+    revise plot
+    functional corrections
 
 attempt 1: **Target Entity Count**: Typically 15-30 Items, 10–15 Locations, 6–12 Characters.
 issues:

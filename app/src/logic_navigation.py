@@ -2,7 +2,8 @@ import logging
 from flask import g
 from sqlalchemy.orm.attributes import flag_modified
 from app.models import (
-    db, StorageType, Character, Location, Item, Pile, LocDest)
+    db, GENERAL_ID, StorageType, Character, Location, Item, Pile, LocDest)
+from app.utils import format_num, maskable_name
 from app.src.logic_user_interaction import add_message
 
 logger = logging.getLogger(__name__)
@@ -180,6 +181,38 @@ def get_available_destinations(char):
             
     return reachable, has_nonadjacent
 
+def check_location_access(char, loc):
+    """Returns (True, "") or (False, "Reason") based on travel requirements."""
+    game_token = char.game_token
+    
+    for req in loc.entrance_reqs:
+        # 1. Check Universal Item (General Storage)
+        if req.item_id:
+            pile = Pile.query.filter_by(
+                game_token=game_token, item_id=req.item_id, owner_id=GENERAL_ID
+            ).first()
+            current_qty = pile.quantity if pile else 0
+            if current_qty < req.quantity:
+                return False, f"Requires {format_num(req.quantity)}" \
+                              f" {maskable_name(req.item)}"
+
+        # 2. Check Character Attribute
+        elif req.attrib_id:
+            val_rec = AttribVal.query.filter_by(
+                game_token=game_token, subject_id=char.id, attrib_id=req.attrib_id
+            ).first()
+            current_val = val_rec.value if val_rec else 0
+            
+            if req.attrib.is_binary or req.attrib.enum_list:
+                if current_val != req.attrib_value:
+                    return False, f"{char.name} must have {req.attrib.name}" \
+                                  f" {req.attrib_value}"
+            else:
+                if current_val < req.attrib_value:
+                    return False, f"{char.name} must have {req.attrib.name}" \
+                                  f" {req.attrib_value}"
+    return True, ""
+
 def arrive_at_destination(main_char_id, dest_loc_id, move_party=False):
     """
     Teleports a party to a specific location if next to a door.
@@ -206,8 +239,12 @@ def arrive_at_destination(main_char_id, dest_loc_id, move_party=False):
         return False, f"You are too far from the exit to {target_name}." \
                       " Move closer to the door icon."
 
-    new_pos = best_link.door_at(dest_loc_id)
     target_loc = best_link.other_loc(loc_here.id)
+    can_enter, reason = check_location_access(main_char, target_loc)
+    if not can_enter:
+        return False, reason
+
+    new_pos = best_link.door_at(dest_loc_id)
     if not new_pos:
         new_pos = get_default_position(target_loc)
 

@@ -23,7 +23,7 @@ const ConfigEditor = {
         const emptyMsg = document.getElementById(containerId + '-empty');
         if (emptyMsg) emptyMsg.classList.add('hidden');
 
-        this.applyInitialState(newRow);
+        this.triggerInitialState(newRow);
         if (customCallback) customCallback(newRow);
     },
 
@@ -47,7 +47,7 @@ const ConfigEditor = {
      * Finds and triggers smart inputs (Binary/Enum/Numeric syncers).
      * @param {HTMLElement} context - The element to search within.
      */
-    applyInitialState: function(context = document) {
+    triggerInitialState: function(context = document) {
         const selector = 'select[onchange*="ConfigEditor.sync"], select[onchange*="syncFieldAttribState"]';
         context.querySelectorAll(selector).forEach(s => {
             if (typeof s.onchange === 'function') {
@@ -137,4 +137,4 @@ const ConfigEditor = {
     },
 };
 
-document.addEventListener('DOMContentLoaded', () => ConfigEditor.applyInitialState());
+document.addEventListener('DOMContentLoaded', () => ConfigEditor.triggerInitialState());

@@ -25,8 +25,8 @@ def validate_requirements(game_token):
             ).first()
             current_qty = pile.quantity if pile else 0
             is_fulfilled = current_qty >= r.quantity
-            desc = f"Collect {format_num(r.quantity)} " \
-                   f" {maskable_name(r.item)} in General Storage"
+            desc = f"🌐 {format_num(r.quantity)} " \
+                   f"{maskable_name(r.item)}"
 
         # Condition 2: Item at a specific Location
         elif r.item_id and r.loc_id and not r.char_id:
@@ -36,7 +36,7 @@ def validate_requirements(game_token):
             ).all()
             current_qty = sum(p.quantity for p in piles)
             is_fulfilled = current_qty >= r.quantity
-            desc = f"{format_num(r.quantity)} {maskable_name(r.item)}" \
+            desc = f"📍 {format_num(r.quantity)} {maskable_name(r.item)}" \
                    f" at {maskable_name(r.loc)}"
 
         # Condition 3: Item owned by a Character
@@ -46,14 +46,14 @@ def validate_requirements(game_token):
             ).first()
             current_qty = pile.quantity if pile else 0
             is_fulfilled = current_qty >= r.quantity
-            desc = f"{r.char.name} must carry {format_num(r.quantity)}" \
+            desc = f"👤 {r.char.name} must carry {format_num(r.quantity)}" \
                    f" {maskable_name(r.item)}"
 
         # Condition 4: Character at a Location
         elif r.char_id and r.loc_id and not r.item_id:
             char = Character.query.get((game_token, r.char_id))
             is_fulfilled = char.location_id == r.loc_id
-            desc = f"{char.name} must be at {maskable_name(r.loc)}"
+            desc = f"👤 {char.name} must be at {maskable_name(r.loc)}"
 
         # Condition 5: Character Attribute Level
         elif r.char_id and r.attrib_id:
@@ -61,8 +61,21 @@ def validate_requirements(game_token):
                 game_token=game_token, subject_id=r.char_id, attrib_id=r.attrib_id
             ).first()
             current_val = val_rec.value if val_rec else 0
-            is_fulfilled = current_val >= r.attrib_value
-            desc = f"{r.char.name} needs {r.attrib.name} ≥ {format_num(r.attrib_value)}"
+
+            if r.attrib.is_binary:
+                is_fulfilled = (current_val == r.attrib_value)
+                have = "must have" if r.attrib_value > 0 else "cannot have"
+                desc = f"👤 {r.char.name} {have} {r.attrib.name}"
+            elif r.attrib.enum_list:
+                is_fulfilled = (current_val == r.attrib_value)
+                try:
+                    state_name = r.attrib.enum_list[int(r.attrib_value)]
+                except:
+                    state_name = str(r.attrib_value)
+                desc = f"👤 {r.char.name} must have {r.attrib.name} set to '{state_name}'"
+            else:
+                is_fulfilled = current_val >= r.attrib_value
+                desc = f"👤 {r.char.name} needs {r.attrib.name} ≥ {format_num(r.attrib_value)}"
 
         if not is_fulfilled:
             all_met = False

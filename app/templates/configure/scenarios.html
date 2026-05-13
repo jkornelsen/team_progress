@@ -40,7 +40,7 @@
             
             <div class="scenario-body spacious-top">
                 <div class="description-preview">
-                    {{ scenario.description | htmlify }}
+                    {{ scenario.description | htmlify(allow_links=False) }}
                 </div>
             </div>
 

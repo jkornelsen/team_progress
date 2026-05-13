@@ -291,6 +291,7 @@ class Location(Entity):
             "progress": [p.to_dict() for p in self.progress_records],
             "item_refs": [ir.item_id for ir in self.item_refs],
             "destinations": [d.to_dict() for d in self.routes_forward],
+            "entrance_reqs": [r.to_dict() for r in self.entrance_reqs],
             "zones": [z.to_dict() for z in self.zones],
         })
         return data
@@ -300,12 +301,12 @@ class Location(Entity):
         scrub_array(data, 'dimensions', 2)
         scrub_array(data, 'excluded', 4)
         loc = super().from_dict(data, game_token)
-        for i_data in data.get('items', []):
+        for i in data.get('items', []):
             loc.piles.append(
-                Pile.from_dict(i_data, game_token, loc.id))
-        for p_data in data.get('progress', []):
+                Pile.from_dict(i, game_token, loc.id))
+        for p in data.get('progress', []):
             loc.progress_records.append(
-                Progress.from_dict(p_data, game_token))
+                Progress.from_dict(p, game_token))
         for item_id in data.get('item_refs', []):
             new_ref = ItemRef(
                 game_token=game_token,
@@ -313,12 +314,15 @@ class Location(Entity):
                 item_id=item_id
             )
             loc.item_refs.append(new_ref)
-        for d_data in data.get('destinations', []):
+        for d in data.get('destinations', []):
             loc.routes_forward.append(
-                LocDest.from_dict(d_data, game_token, loc.id))
-        for z_data in data.get('zones', []):
+                LocDest.from_dict(d, game_token, loc.id))
+        for r in data.get('entrance_reqs', []):
+            loc.entrance_reqs.append(
+                EntranceReq.from_dict(d, game_token, loc.id))
+        for z in data.get('zones', []):
             loc.zones.append(
-                LocZone.from_dict(z_data, game_token, loc.id))
+                LocZone.from_dict(z, game_token, loc.id))
         return loc
 
     @property
@@ -352,6 +356,11 @@ class Location(Entity):
         foreign_keys="[LocDest.game_token, LocDest.loc2_id]",
         cascade="all, delete-orphan",
         overlaps="routes_forward")
+    entrance_reqs = db.relationship(
+        'EntranceReq',
+        back_populates='location',
+        cascade="all, delete-orphan",
+        foreign_keys="[EntranceReq.game_token, EntranceReq.loc_id]")
     zones = db.relationship(
         'LocZone',
         back_populates='location',
@@ -715,6 +724,49 @@ class AttribVal(db.Model):
         db.ForeignKeyConstraint(
             ['game_token', 'subject_id'],
             ['entities.game_token', 'entities.id'], ondelete='CASCADE'),
+    )
+
+class EntranceReq(db.Model, DictHydrator):
+    """Requirements that must be met for a char to arrive at this location."""
+    __tablename__ = 'entrance_reqs'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    game_token = db.Column(db.String(50), index=True, nullable=False)
+    loc_id = db.Column(db.Integer, nullable=False)
+    
+    item_id = db.Column(db.Integer)
+    quantity = db.Column(db.Float)
+    attrib_id = db.Column(db.Integer)
+    attrib_value = db.Column(db.Float)
+
+    def to_dict(self):
+        return {
+            "item_id": self.item_id,
+            "quantity": self.quantity,
+            "attrib_id": self.attrib_id,
+            "attrib_value": self.attrib_value
+        }
+
+    location = db.relationship(
+        'Location',
+        back_populates='entrance_reqs',
+        foreign_keys=[game_token, loc_id])
+    item = db.relationship(
+        'Item',
+        foreign_keys=[game_token, item_id])
+    attrib = db.relationship(
+        'Attrib',
+        foreign_keys=[game_token, attrib_id])
+
+    __table_args__ = (
+        db.ForeignKeyConstraint(
+            ['game_token', 'loc_id'],
+            ['locations.game_token', 'locations.id'], ondelete='CASCADE'),
+        db.ForeignKeyConstraint(
+            ['game_token', 'item_id'],
+            ['items.game_token', 'items.id'], ondelete='CASCADE'),
+        db.ForeignKeyConstraint(
+            ['game_token', 'attrib_id'],
+            ['attribs.game_token', 'attribs.id'], ondelete='CASCADE'),
     )
 
 class LocDest(db.Model, DictHydrator):

@@ -2,7 +2,9 @@
 - issues and proposed changes
 -------------------------------------------------------------------------------
 
----- functional ----
+---- functional, tightening, quality of life ----
+
+pressing "duplicate" saved char but didn't duplicate
 
 ended up with a pile of -16 logs near saw and 16 at 1,1
     shouldn't have allowed production if it wasn't going to use the pile
@@ -18,8 +20,6 @@ sqlalchemy.orm.exc.ObjectDeletedError: Instance '<Progress at 0x134226688c0>' ha
 effect outcome filter isn't showing in play event
     shows "Major Failure" in dropdown in event config
 
----- tightening and quality of life ----
-
 mask entity names in events
     changing shouldn't be worrisome if we don't even know what it is
 show links to all unmasked involved entities
@@ -30,6 +30,14 @@ link events to other events
     e.g. from "swing to chop" click on (or hotkey) "chopping check"
     show below or above calling entities?
     backlinks would just go in calling entities list -- should be useful
+
+effect constant showed checkbox for item qty until mode select changed
+
+auto effect (universal item qty) didn't show checkbox even though it applied
+    start convo k1
+
+universal item production isn't giving up at limit although it keeps failing
+    convo kormak 1a 2/2
 
 producing 0 out of 0 requested is not a failure
 
@@ -47,8 +55,6 @@ default to travelling with party on char page when moving with that same party o
     as well as of course moving the same primary char
 
 show updated item quantities in locations like overview and sources do
-
-restrict location access by item qty or attribreq
 
 prompt before overwriting another character action in progress
 

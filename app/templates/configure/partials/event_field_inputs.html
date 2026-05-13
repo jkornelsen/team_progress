@@ -105,12 +105,13 @@
         </select>
     </div>
 
-    <div class="child-toggle-container">
+    <div class="child-toggle-container flex-row align-center gap-5">
         <label class="checkbox-label">
             <input type="checkbox" name="{{ field_prefix }}[child_of_anchor]" 
                    class="child-item-checkbox"
                    {{ 'checked' if field_data and field_data.child_of_anchor }}>
-            Attribute of an item inside inventory/floor of participant
+                Inventory
         </label>
+        <span class="label-like">— Attribute of an item at/carried by this participant</span>
     </div>
 </div>

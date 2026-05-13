@@ -51,8 +51,8 @@ def create_app():
         return format_num(value, g.get('number_format', 'en_US'))
 
     @app.template_filter('htmlify')
-    def filter_htmlify(html):
-        return htmlify_filter(html)
+    def filter_htmlify(html, allow_links=True):
+        return htmlify_filter(html, allow_links)
 
     @app.template_filter('mask_string')
     def filter_mask_string(s):

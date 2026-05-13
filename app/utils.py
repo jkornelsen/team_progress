@@ -430,7 +430,7 @@ def sort_by_name_stripped(items, key=lambda x: x.name):
 
 ALLOWED_DESC_VARS = {'char_id', 'loc_id', 'subject_id', 'owner_id', 'host_id'}
 
-def htmlify_filter(text):
+def htmlify_filter(text, allow_links=True):
     """
     Converts newline to <br> and handles custom <c=color> tags safely.
     Uses Bleach for security.
@@ -448,6 +448,14 @@ def htmlify_filter(text):
 
     # 2. Convert Markdown (Standard Links: [Text](/url))
     html = markdown.markdown(text, extensions=['extra', 'nl2br'])
+
+    if not allow_links:
+        # Replace <a> tags with colored <span> tags instead of links
+        html = re.sub(
+            r'<a\s+href="[^"]+">([^<]+)</a>', 
+            r'<span style="color:#88dddd; font-weight:bold;">\1</span>', 
+            html
+        )
 
     # 3. LaTeX-Style Superscript Support e.g. $^{2}$
     html = re.sub(r'\$\^\{([^}]+)\}\$', r'<sup>\1</sup>', html)

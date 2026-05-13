@@ -11,7 +11,7 @@ from app.models import (
     Entity, Item, Character, Location, Attrib, Event, 
     Pile, AttribVal, Operation, EntityAbility,
     Recipe, RecipeSource, RecipeByproduct, RecipeAttribReq,
-    LocDest, LocZone, ItemRef,
+    LocDest, LocZone, EntranceReq, ItemRef,
     EventFactor, EventField, Participant, OutcomeType,
     Overall, WinRequirement)
 from app.serialization import (
@@ -297,23 +297,8 @@ def edit_location(id):
         loc.toplevel = 'toplevel' in request.form
         loc.masked = 'masked' in request.form
 
-        LocZone.query.filter_by(game_token=game_token, loc_id=loc.id).delete()
-        for row in req.get_list('zones'):
-            lt = row.get_coords('lt')
-            rb = row.get_coords('rb')
-            if lt and rb:
-                coords = lt + rb
-                db.session.add(LocZone(
-                    game_token=game_token,
-                    loc_id=loc.id,
-                    coords=coords,
-                    label=row.get_str('label'),
-                    color=row.get_str('color'),
-                    prevents_travel=row.get_bool('prevents_travel')
-                ))
-
         # Destinations (Exits) -- Symmetric Route Saving
-        # 1. Fetch existing routes involving this location to determine what to delete/update
+        # Fetch existing routes involving this location to determine what to delete/update
         existing_routes = LocDest.query.filter(
             (LocDest.game_token == game_token) & 
             ((LocDest.loc1_id == loc.id) | (LocDest.loc2_id == loc.id))
@@ -393,6 +378,37 @@ def edit_location(id):
                     loc_id=loc.id, 
                     item_id=int(ref_id)
                 ))
+
+        # Zones
+        LocZone.query.filter_by(game_token=game_token, loc_id=loc.id).delete()
+        for row in req.get_list('zones'):
+            lt = row.get_coords('lt')
+            rb = row.get_coords('rb')
+            if lt and rb:
+                coords = lt + rb
+                db.session.add(LocZone(
+                    game_token=game_token,
+                    loc_id=loc.id,
+                    coords=coords,
+                    label=row.get_str('label'),
+                    color=row.get_str('color'),
+                    prevents_travel=row.get_bool('prevents_travel')
+                ))
+
+        # Entrance Requirements
+        EntranceReq.query.filter_by(
+            game_token=game_token, loc_id=loc.id).delete()
+        for row in req.get_list('entrance_reqs'):
+            attr_id = row.get_int('attrib_id', None)
+            val = row.get_float('value')
+            new_req = EntranceReq(game_token=game_token, loc_id=loc.id)
+            if attr_id:
+                new_req.attrib_id = attr_id
+                new_req.attrib_value = val
+            else:
+                new_req.item_id = row.get_int('item_id')
+                new_req.quantity = val
+            db.session.add(new_req)
 
         # Local Events
         EntityAbility.query.filter_by(game_token=game_token, entity_id=loc.id).delete()

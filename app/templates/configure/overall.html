@@ -12,6 +12,16 @@
 
 {% block content %}
 
+<script>
+    const ATTRIB_REGISTRY = {
+        {% for a in attribs %}
+        "{{ a.id }}": {
+            "is_binary": {{ 'true' if a.is_binary else 'false' }},
+            "enums": {{ a.enum_list | tojson | safe if a.enum_list else 'null' }}
+        }{{ "," if not loop.last }}
+        {% endfor %}
+    };
+</script>
 <script src="{{ url_for('static', filename='js/configuration.js') }}"></script>
 
 <div class="configure-overall">
@@ -79,7 +89,7 @@
                                     {% for i in items %}<option value="{{ i.id }}" {{ 'selected' if i.id == req.item_id }}>{{ i.name }}</option>{% endfor %}
                                 </optgroup>
                                 <optgroup label="Characters">
-                                    {% for c in chars %}<option value="{{ c.id }}" {{ 'selected' if c.id == req.char_id }}>{{ c.name }}</option>{% endfor %}
+                                    {% for c in characters %}<option value="{{ c.id }}" {{ 'selected' if c.id == req.char_id }}>{{ c.name }}</option>{% endfor %}
                                 </optgroup>
                             </select>
                         </div>
@@ -98,14 +108,21 @@
                         <!-- Requirements (Quantity or Attribute) -->
                         <div class="form-group" style="background-color: #222">
                             <label>Required Value</label>
-                            <div class="flex-row gap-5">
-                                <input type="number" name="winreqs[{{ loop.index0 }}][quantity]" value="{{ req.quantity or req.attrib_value or 0 }}" step="any">
-                                <select name="winreqs[{{ loop.index0 }}][attrib_id]" style="width: 100px;">
+                            <div class="flex-row gap-5 attrib-wrapper">
+                                <select name="winreqs[{{ loop.index0 }}][attrib_id]"
+                                        style="width: 12ch;"
+                                        onchange="ConfigEditor.syncAttribVal(this)">
                                     <option value="">(Qty)</option>
                                     {% for a in attribs %}
-                                        <option value="{{ a.id }}" {{ 'selected' if a.id == req.attrib_id }}>{{ a.name }}</option>
+                                        <option value="{{ a.id }}"
+                                            {{ 'selected' if a.id == req.attrib_id }}>{{ a.name }}</option>
                                     {% endfor %}
                                 </select>
+                                <div class="attribval-container flex-grow" 
+                                     data-field-name="winreqs[{{ loop.index0 }}][quantity]"
+                                     data-current-val="{{ req.quantity or req.attrib_value or 0 }}">
+                                    <!-- Populated by ConfigEditor.syncAttribVal -->
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -144,12 +161,19 @@
             </div>
             <div class="form-group">
                 <label>Required Value:</label>
-                <div class="flex-row gap-5">
-                    <input type="number" name="winreqs[__INDEX__][quantity]" value="1" step="any">
-                    <select name="winreqs[__INDEX__][attrib_id]" style="width: 100px;">
+                <div class="flex-row gap-5 attrib-wrapper">
+                    <select name="winreqs[__INDEX__][attrib_id]" 
+                            style="width: 12ch;"
+                            onchange="ConfigEditor.syncAttribVal(this)">
                         <option value="">(Qty)</option>
-                        {% for a in attribs %}<option value="{{ a.id }}">{{ a.name }}</option>{% endfor %}
+                        {% for a in attribs %}
+                            <option value="{{ a.id }}">{{ a.name }}</option>
+                        {% endfor %}
                     </select>
+                    <div class="attribval-container flex-grow" 
+                         data-field-name="winreqs[__INDEX__][quantity]">
+                         <!-- Initialized as numeric by ConfigEditor -->
+                    </div>
                 </div>
             </div>
         </div>

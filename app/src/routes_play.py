@@ -1044,7 +1044,8 @@ def play_event(id):
                 fields_not_met.setdefault(
                     role, {}).setdefault(logic_key, []).append(field)
 
-        eligible_role_entities[role] = list(role_candidates)
+        eligible_role_entities[role] = sort_by_name_stripped(
+            list(role_candidates))
 
     effects_data = []
     for eff in event.effects:

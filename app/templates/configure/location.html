@@ -111,6 +111,33 @@
     </div>
 {% endmacro %}
 
+{% macro req_row(index, req=None, all_attribs=[], all_universal_items=[]) %}
+<div class="flex-row gap-5 align-center spacious-bottom attrib-wrapper entrance-req-row">
+    <select name="entrance_reqs[{{ index }}][attrib_id]" 
+            onchange="ConfigEditor.syncAttribVal(this); syncReqItemVisibility(this)"
+            style="width: 15ch;">
+        <option value="">(Universal Item)</option>
+        {% for a in all_attribs %}
+            <option value="{{ a.id }}" {{ 'selected' if req and a.id == req.attrib_id }}>{{ a.name }}</option>
+        {% endfor %}
+    </select>
+
+    <div class="attribval-container flex-grow" 
+         data-field-name="entrance_reqs[{{ index }}][value]"
+         data-current-val="{{ req.quantity or req.attrib_value or 0 if req else 0 }}">
+    </div>
+    
+    <select name="entrance_reqs[{{ index }}][item_id]" 
+            class="req-item-select {{ 'hidden' if req and req.attrib_id }}">
+        {% for i in all_universal_items %}
+            <option value="{{ i.id }}" {{ 'selected' if req and i.id == req.item_id }}>{{ i.name }}</option>
+        {% endfor %}
+    </select>
+
+    <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
+</div>
+{% endmacro %}
+
 {% macro event_row(index, selected_id=None, all_events=[]) %}
     <div class="col-row event-row">
         <select name="events[{{ index }}][id]">
@@ -164,6 +191,10 @@
 
 <template id="zone-template">
     {{ zone_row('__INDEX__') }}
+</template>
+
+<template id="entrance-req-template">
+    {{ req_row('__INDEX__', None, all_attribs, all_universal_items) }}
 </template>
 
 <template id="event-template">
@@ -351,6 +382,18 @@
 
         <section class="outer-border">
             <div class="flex-between">
+                <h3>Entrance Requirements</h3>
+                <button type="button" class="btn-sm" onclick="ConfigEditor.addRow('entrance-req-list', 'entrance-req-template')">+ Add Req</button>
+            </div>
+            <div id="entrance-req-list" class="spacious-top">
+                {% for req in location.entrance_reqs %}
+                    {{ req_row(loop.index0, req, all_attribs, all_universal_items) }}
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="outer-border">
+            <div class="flex-between">
                 <h3>Attributes</h3>
                 {% if all_attribs %}
                     <button type="button" class="btn-sm" onclick="ConfigEditor.addRow('attrib-list', 'attrib-template')">+ Add Attribute</button>
@@ -383,6 +426,13 @@
 </div>
 
 <script>
+function syncReqItemVisibility(select) {
+    const row = select.closest('.entrance-req-row');
+    const itemSelect = row.querySelector('.req-item-select');
+    if (itemSelect) {
+        itemSelect.classList.toggle('hidden', select.value !== "");
+    }
+}
 </script>
 
 <style>
