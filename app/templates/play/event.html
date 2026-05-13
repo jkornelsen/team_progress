@@ -90,15 +90,15 @@
 
                                 {% if role_errors.positive %}
                                     <span class="text-danger">Needs</span>
-                                    {% for fld in role_errors.positive %}
-                                        {{ fld.get_field_name() }}{{ ", " if not loop.last }}
+                                    {% for factor, fld in role_errors.positive %}
+                                        {{ fld.get_field_name() }}{{ " " ~ factor.op_application ~ " " ~ factor.val_required if factor.is_comparison }}{{ ", " if not loop.last }}
                                     {% endfor %}
                                 {% endif %}
                                 {% if role_errors.positive and role_errors.negated %}<br>{% endif %}
                                 {% if role_errors.negated %}
                                     <span class="text-danger">Can't have</span>
                                     {% for fld in role_errors.negated %}
-                                        {{ fld.get_field_name() }}{{ ", " if not loop.last }}
+                                        {{ fld.get_field_name() }}{{ " " ~ factor.op_application ~ " " ~ factor.val_required if factor.is_comparison }}{{ ", " if not loop.last }}
                                     {% endfor %}
                                 {% endif %}
                             {% else %}

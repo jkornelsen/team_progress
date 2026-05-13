@@ -319,7 +319,7 @@ class Location(Entity):
                 LocDest.from_dict(d, game_token, loc.id))
         for r in data.get('entrance_reqs', []):
             loc.entrance_reqs.append(
-                EntranceReq.from_dict(d, game_token, loc.id))
+                EntranceReq.from_dict(r, game_token, loc.id))
         for z in data.get('zones', []):
             loc.zones.append(
                 LocZone.from_dict(z, game_token, loc.id))
@@ -746,6 +746,10 @@ class EntranceReq(db.Model, DictHydrator):
             "attrib_value": self.attrib_value
         }
 
+    @classmethod
+    def from_dict(cls, data, game_token, loc_id):
+        return super().from_dict(data, game_token, loc_id=loc_id)
+
     location = db.relationship(
         'Location',
         back_populates='entrance_reqs',
@@ -1140,6 +1144,10 @@ class EventFactor(db.Model, DictHydrator):
     @property
     def role(self):
         return self.infield.role if self.infield else None
+
+    @property
+    def is_comparison(self):
+        return self.op_application in Operation.COMPARISON_OPS
 
     # Relationships
     event = db.relationship(

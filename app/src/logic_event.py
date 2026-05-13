@@ -178,8 +178,8 @@ def is_factor_met(factor, entity, subject_id=None):
     if not field or not can_use_field(field, entity):
         return False if not factor.negate else True
 
-    # 2. If it's a calculation (+, *, /), existence is enough to be met
-    if factor.op_application not in Operation.COMPARISON_OPS:
+    # 2. If it's a calculation existence is enough to be met
+    if not factor.is_comparison:
         return True if not factor.negate else False
 
     # 3. If it's a comparison (==, >=, etc.), we must check the actual value
@@ -266,9 +266,8 @@ def calculate_determinants(event, role_entities):
                     val, det.val_transform, det.op_transform)
 
         # Check if this is a comparison or a calculation
-        is_comparison = det.op_application in Operation.COMPARISON_OPS
         is_met = True
-        if is_comparison:
+        if det.is_comparison:
             # Evaluate: (TransformedVal Op ValRequired)
             raw_result = apply_operation(
                 val, det.val_required, det.op_application)
@@ -286,7 +285,7 @@ def calculate_determinants(event, role_entities):
             'val_required': det.val_required,
             'negate': det.negate,
             'op': det.op_application,
-            'is_comparison': is_comparison,
+            'is_comparison': det.is_comparison,
             'is_met': is_met,
             'breakdown': breakdown_text,
         })
@@ -568,7 +567,7 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
     for m in modifiers:
         val = m['value']
         op = m['op']
-        if op in Operation.COMPARISON_OPS:
+        if m['is_comparison']:
             continue
 
         symbol = Operation.Repr[op]

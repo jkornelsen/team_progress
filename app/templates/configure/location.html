@@ -114,6 +114,7 @@
 {% macro req_row(index, req=None, all_attribs=[], all_universal_items=[]) %}
 <div class="flex-row gap-5 align-center spacious-bottom attrib-wrapper entrance-req-row">
     <select name="entrance_reqs[{{ index }}][attrib_id]" 
+            data-current-val="{{ req.quantity or req.attrib_value or 0 if req else 0 }}"
             onchange="ConfigEditor.syncAttribVal(this); syncReqItemVisibility(this)"
             style="width: 15ch;">
         <option value="">(Universal Item)</option>
@@ -123,8 +124,7 @@
     </select>
 
     <div class="attribval-container flex-grow" 
-         data-field-name="entrance_reqs[{{ index }}][value]"
-         data-current-val="{{ req.quantity or req.attrib_value or 0 if req else 0 }}">
+         data-field-name="entrance_reqs[{{ index }}][value]">
     </div>
     
     <select name="entrance_reqs[{{ index }}][item_id]" 

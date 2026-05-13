@@ -1042,7 +1042,7 @@ def play_event(id):
                 logic_key = 'negated' if factor.negate else 'positive'
                 field = factor.infield
                 fields_not_met.setdefault(
-                    role, {}).setdefault(logic_key, []).append(field)
+                    role, {}).setdefault(logic_key, []).append((factor, field))
 
         eligible_role_entities[role] = sort_by_name_stripped(
             list(role_candidates))
