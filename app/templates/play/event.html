@@ -150,14 +150,25 @@
             {% endif %}
             </section>
 
-            {% if caller_entities %}
+            {% if caller_entities or parent_events %}
             <section class="outer-border">
                 <h3>Called From</h3>
-                <div class="col-list" style="--col-list-max-width: 250px;">
+                <div>
+                    {% for p_event in parent_events %}
+                        <div>
+                            <span class="label-like" title="Parent Event">⚡</span>
+                            {% set target_url = url_for('play.play_event', id=p_event.id) %}
+                            {% call hk.hotlink(target_url, link_letters) %}
+                                {{ p_event.name }}
+                            {% endcall %}
+                        </div>
+                    {% endfor %}
                     {% for entity in caller_entities %}
-                        <div class="col-row" style="--grid-cols: 1fr auto;">
+                        <div>
+                            <span class="label-like">
+                                {{ '👤' if entity.entity_type == 'character' else '📍' if entity.entity_type == 'location' else '📦' }}
+                            </span>
                             {% set target_url = url_for('play.play_' ~ entity.entity_type, id=entity.id) %}
-                            
                             {% call hk.hotlink(target_url, link_letters) %}
                                 {{ entity.name }} 
                             {% endcall %}
@@ -279,10 +290,10 @@
                                             onclick="applySingleEffect({{ eff.id }})">
                                             Apply
                                         </button>
-                                        <span class="check-mark hidden text-success">✓ Changed</span>
                                     {% else %}
                                         <span class="auto-gear" title="Automatically applied by {{ roll_title }} button">⚙️</span>
                                     {% endif %}
+                                    <span class="check-mark hidden text-success">✓ Changed</span>
                                 </div>
                             </div>
 
@@ -305,6 +316,13 @@
                 </div>
             </section>
             {% endif %}
+
+            <section id="follow-up-section" class="outer-border hidden">
+                <h3>Follow-up Event</h3>
+                <div id="follow-up-buttons" class="flex-row gap-10">
+                    <!-- JS will inject buttons here -->
+                </div>
+            </section>
         </div>
     </div>
 </div>
@@ -322,6 +340,15 @@
         '{{ Participant.FAILURE_MAJOR }}': 'If Major Failure',
         '{{ Participant.FAILURE_MINOR }}': 'If Minor Failure'
     };
+    const CHAINED_EVENTS = [
+        {% for link in event.chained_events %}
+        {
+            "child_id": {{ link.child_id }},
+            "child_name": "{{ link.child.name }}",
+            "success_filter": "{{ link.success_filter }}"
+        }{{ "," if not loop.last }}
+        {% endfor %}
+    ];
 
     const diffSelect = document.getElementById('difficulty-select');
     const rollBtn = document.getElementById('submit-roll');
@@ -643,17 +670,76 @@
                     // Handle button states
                     const isAuto = row.dataset.auto === "true";
                     const btn = row.querySelector('.apply-eff-btn');
+                    const checkMark = row.querySelector('.check-mark');
+                    const autoGear = row.querySelector('.auto-gear');
+
                     if (isAuto) {
-                        row.style.opacity = "0.7";
-                    } else if (btn) {
-                        btn.disabled = false;
-                        btn.title = "Apply this change";
+                        if (!row.classList.contains('hidden')) {
+                            row.style.opacity = "0.7";
+                            if (checkMark) checkMark.classList.remove('hidden');
+                            if (autoGear) autoGear.classList.add('hidden');
+                        }
+                    } else {
+                        row.style.opacity = "1";
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.classList.remove('hidden');
+                            btn.title = "Apply this change";
+                        }
+                        if (checkMark) checkMark.classList.add('hidden');
                     }
                 });
             }
 
             // Sync based on outcome
             syncApplyAllState()
+
+            const chainSection = document.getElementById('follow-up-section');
+            const chainButtons = document.getElementById('follow-up-buttons');
+
+            if (chainButtons) {
+                chainButtons.innerHTML = '';
+                let visibleChainCount = 0;
+
+                CHAINED_EVENTS.forEach(link => {
+                    let isEligible = (link.success_filter === 'always');
+                    if (resultTier) {
+                        if (link.success_filter === 'success_any') {
+                            isEligible = resultTier.includes('success');
+                        } else if (link.success_filter === 'failure_any') {
+                            isEligible = resultTier.includes('failure');
+                        } else if (link.success_filter === resultTier) {
+                            isEligible = true;
+                        }
+                    }
+                    if (isEligible) {
+                        visibleChainCount++;
+                        const idx = visibleChainCount - 1;
+                        const letters = ['i', 'j', 'k'];
+
+                        const url = new URL(`/play/event/${link.child_id}`, window.location.origin);
+                        const fd = getRoleIDs();
+                        for (let [key, value] of fd.entries()) {
+                            url.searchParams.append(key, value);
+                        }
+
+                        const a = document.createElement('a');
+                        a.href = url.toString();
+                        if (idx < letters.length) {
+                            const letter = letters[idx];
+                            linkForKey[letter] = url.toString();
+                            a.innerHTML = `<span class="hotkey-indicator">${letter}</span> ${link.child_name}`;
+                        } else {
+                            a.innerText = link.child_name;
+                        }
+                        chainButtons.appendChild(a);
+                    }
+                });
+
+                if (visibleChainCount > 0) {
+                    chainSection.classList.remove('hidden');
+                }
+            }
         };
     }
 

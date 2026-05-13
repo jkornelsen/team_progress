@@ -14,6 +14,30 @@
 
 <!-- TEMPLATES FOR DYNAMIC ROWS -->
 
+{% macro chained_row(index, link=None, all_events=[], parent_id=None) %}
+<div class="col-row chained-row">
+    <select name="chained_events[{{ index }}][child_id]">
+        <option value="" disabled {{ 'selected' if not link }}>Select...</option>
+        {% for e in all_events if e.id != parent_id %}
+            <option value="{{ e.id }}" {{ 'selected' if link and e.id == link.child_id }}>{{ e.name }}</option>
+        {% endfor %}
+    </select>
+    
+    <select name="chained_events[{{ index }}][success_filter]">
+        <option value="always" {{ 'selected' if not link or link.success_filter == 'always' }}>Show Always</option>
+        <option value="success_any" {{ 'selected' if link and link.success_filter == 'success_any' }}>On Any Success</option>
+        <option value="success_major" {{ 'selected' if link and link.success_filter == 'success_major' }}>On Major Success</option>
+        <option value="failure_any" {{ 'selected' if link and link.success_filter == 'failure_any' }}>On Any Failure</option>
+    </select>
+
+    <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
+</div>
+{% endmacro %}
+
+<template id="chained-template">
+    {{ chained_row('__INDEX__', None, all_events, event.id) }}
+</template>
+
 <script>
     const ATTRIB_REGISTRY = {
         {% for a in all_attribs %}
@@ -164,6 +188,23 @@
             {% set factor = None %}
             {% include 'configure/partials/event_eff_card.html' %}
         </template>
+
+        <!-- 5. Follow-up Events -->
+        <section class="outer-border">
+            <div class="flex-between">
+                <h3>Follow-up Events</h3>
+                <button type="button" class="btn-sm" onclick="ConfigEditor.addRow('chained-list', 'chained-template')">+ Add Follow-up</button>
+            </div>
+            <style>
+                .chained-row { --grid-cols: 5fr 3fr 1fr; }
+                .chained-list { --col-list-max-width: 400px; }
+            </style>
+            <div id="chained-list" class="col-list chained-list">
+                {% for link in event.chained_events %}
+                    {{ chained_row(loop.index0, link, all_events, event.id) }}
+                {% endfor %}
+            </div>
+        </section>
 
         <!-- Footer Actions -->
         {{ footer_actions(

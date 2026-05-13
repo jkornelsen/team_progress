@@ -7,7 +7,7 @@ from sqlalchemy.orm import joinedload
 from app.models import (
     db, Entity, Item, Character, Location, Attrib, Event,
     Pile, AttribVal, Operation, OutcomeType, EventFactor,
-    Recipe, RecipeAttribReq, LocDest, EntityAbility,
+    Recipe, RecipeAttribReq, LocDest, EventLink, EntityAbility,
     Progress, Overall, WinRequirement, GameMessage,
     GENERAL_ID, StorageType, Participant)
 from app.utils import (
@@ -1065,6 +1065,15 @@ def play_event(id):
         .order_by(name_stripped(Entity.name))
         .all()
     )
+    parent_events = (
+        db.session.query(Event)
+        .join(EventLink, (Event.id == EventLink.parent_id) & 
+                         (Event.game_token == EventLink.game_token))
+        .filter(EventLink.child_id == id)
+        .filter(EventLink.game_token == game_token)
+        .order_by(name_stripped(Event.name))
+        .all()
+    )
 
     return render_template(
         'play/event.html',
@@ -1076,9 +1085,10 @@ def play_event(id):
         fields_not_met=fields_not_met,
         effects_data=effects_data,
         caller_entities=caller_entities,
+        parent_events=parent_events,
         Participant=Participant,
         Operation=Operation,
-        link_letters=LinkLetters(excluded='moer')
+        link_letters=LinkLetters(excluded='moerijk')
     )
 
 @play_bp.route('/event/preview/<int:id>', methods=['POST'])

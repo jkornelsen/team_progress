@@ -537,6 +537,7 @@ class Event(Entity):
             "selection_strings": self.selection_strings,
             "determinants": [d.to_dict() for d in self.determinants],
             "effects": [e.to_dict() for e in self.effects],
+            "chained_events": [l.to_dict() for l in self.chained_events],
         })
         return data
 
@@ -556,6 +557,9 @@ class Event(Entity):
                 usage_type=Participant.EFF, order_index=idx) 
             for idx, e in enumerate(effects)
         ]
+        for child_data in data.get('chained_events', []):
+            event.chained_events.append(
+                EventLink.from_dict(child_data, game_token, event.id))
         return event
 
     @property
@@ -575,6 +579,11 @@ class Event(Entity):
     factors = db.relationship(
         'EventFactor',
         back_populates='event',
+        cascade="all, delete-orphan")
+    chained_events = db.relationship(
+        'EventLink',
+        back_populates='parent',
+        foreign_keys="[EventLink.game_token, EventLink.parent_id]",
         cascade="all, delete-orphan")
 
     __table_args__ = (
@@ -1168,13 +1177,55 @@ class EventFactor(db.Model, DictHydrator):
             ['game_token', 'event_id'],
             ['events.game_token', 'events.id'], ondelete='CASCADE'),
         db.ForeignKeyConstraint(
-                ['infield_id'], 
-                ['event_fields.id'], ondelete='CASCADE'),
+            ['infield_id'], 
+            ['event_fields.id'], ondelete='CASCADE'),
         db.ForeignKeyConstraint(
-                ['outfield_id'], 
-                ['event_fields.id'], ondelete='CASCADE'),
+            ['outfield_id'], 
+            ['event_fields.id'], ondelete='CASCADE'),
         db.CheckConstraint(
             usage_type.in_(Participant.ALL_USAGE), name='check_usage_type_valid'),
+    )
+
+class EventLink(db.Model, DictHydrator):
+    """Connections between events to create chains/sequences.
+    Semantically different from EntityAbility because the caller isn't
+    the subject.
+    """
+    __tablename__ = 'event_links'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    game_token = db.Column(db.String(50), index=True, nullable=False)
+    
+    parent_id = db.Column(db.Integer, nullable=False)
+    child_id = db.Column(db.Integer, nullable=False)
+    
+    success_filter = db.Column(db.String(20), default=Participant.ALWAYS)
+
+    def to_dict(self):
+        return {
+            "child_id": self.child_id,
+            "success_filter": self.success_filter
+        }
+
+    @classmethod
+    def from_dict(cls, data, game_token, parent_id):
+        return super().from_dict(data, game_token, parent_id=parent_id)
+
+    parent = db.relationship(
+        'Event',
+        foreign_keys=[game_token, parent_id],
+        back_populates='chained_events')
+    child = db.relationship(
+        'Event',
+        foreign_keys=[game_token, child_id],
+        viewonly=True)
+
+    __table_args__ = (
+        db.ForeignKeyConstraint(
+            ['game_token', 'parent_id'],
+            ['events.game_token', 'events.id'], ondelete='CASCADE'),
+        db.ForeignKeyConstraint(
+            ['game_token', 'child_id'],
+            ['events.game_token', 'events.id'], ondelete='CASCADE'),
     )
 
 class EntityAbility(db.Model):

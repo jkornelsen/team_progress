@@ -12,7 +12,7 @@ from app.models import (
     Pile, AttribVal, Operation, EntityAbility,
     Recipe, RecipeSource, RecipeByproduct, RecipeAttribReq,
     LocDest, LocZone, EntranceReq, ItemRef,
-    EventFactor, EventField, Participant, OutcomeType,
+    Participant, OutcomeType, EventFactor, EventField, EventLink,
     Overall, WinRequirement)
 from app.serialization import (
     init_game_session, load_scenario_from_path, DEFAULT_SCENARIO_FILE,
@@ -550,7 +550,7 @@ def edit_character(id):
         run_discovery_scan(game_token)
 
         if 'duplicate' in request.form:
-            return duplicate_entity(char.id, 'location')
+            return duplicate_entity(char.id, 'character')
         return redirect_back('configure.index') 
 
     return render_template('configure/character.html', 
@@ -704,6 +704,17 @@ def edit_event(id):
                         setattr(factor, field_key, None)
                 event.factors.append(factor)
 
+        event.chained_events = []
+        for row in req.get_list('chained_events'):
+            child_id = row.get_int('child_id')
+            if child_id:
+                event.chained_events.append(EventLink(
+                    game_token=game_token,
+                    parent_id=event.id,
+                    child_id=child_id,
+                    success_filter=row.get_str('success_filter', 'always')
+                ))
+
         db.session.commit()
         if 'duplicate' in request.form:
             return duplicate_entity(event.id, 'event')
@@ -723,6 +734,8 @@ def edit_event(id):
         all_attribs=Attrib.query.filter_by(
             game_token=game_token).order_by(name_stripped()).all(),
         all_items=all_items,
+        all_events=Event.query.filter_by(
+            game_token=game_token).order_by(name_stripped()).all(),
         recipe_map=recipe_map,
         OutcomeType=OutcomeType,
         Operation=Operation,
@@ -994,5 +1007,9 @@ def duplicate_entity(source_id, entity_type):
         db.session.commit()
         return redirect(url_for(
             f'configure.edit_{entity_type}', id=new_obj.id))
-    return redirect(url_for('configure.index'))
+    return render_template(
+        'error.html',
+        message="Duplication Failed",
+        details=f"Unable to create a copy of {entity_type} (ID: {source_id})."
+    ), HTTPStatus.BAD_REQUEST
 

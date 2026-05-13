@@ -88,7 +88,8 @@ def can_perform_recipe(
             item_id=recipe.product_id,
             owner_id=target_owner_id
         )
-        if host_pos is not None:
+        if host_pos is not None and \
+                recipe.product.storage_type != StorageType.UNIVERSAL:
             query = query.filter_by(position=host_pos)
         current_pile = query.first()
 
