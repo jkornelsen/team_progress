@@ -5,46 +5,27 @@
                 "id": 5,
                 "name": "Barn",
                 "description": "Where chores are done.",
-                "attribs": [],
-                "abilities": [],
                 "storage_type": "l",
-                "q_limit": 1.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
+                "q_limit": 1.0
             },
             {
                 "id": 22,
                 "name": "Branch",
-                "description": "Better for fending off animals than a knife.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "c",
-                "q_limit": 0.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
+                "description": "Better for fending off animals than a knife."
             },
             {
                 "id": 6,
                 "name": "Cash",
                 "description": "Getting paid doesn't take any particular amount of time, so there's a *Gain* button instead of *Start*, but otherwise, it works the same. To get paid all at once, enter a higher number such as 11 — it won't do more than what you have available. \r\n\r\nIf you don't have enough cash to buy a pig yet, go back to *Chores* and repeat this process. Also, of course, you'll need more than one pig in order to get baby pigs.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "c",
                 "q_limit": 100.0,
-                "toplevel": false,
-                "masked": false,
                 "recipes": [
                     {
                         "id": 1,
                         "rate_amount": 3.0,
-                        "rate_duration": 3.0,
                         "instant": true,
                         "sources": [
-                            {"item_id": 7, "q_required": 1.0, "preserve": false}
+                            {"item_id": 7, "q_required": 1.0}
                         ],
-                        "byproducts": [],
                         "attrib_reqs": [
                             {
                                 "attrib_id": 3,
@@ -59,22 +40,14 @@
                 "id": 7,
                 "name": "Chores",
                 "description": "In this scenario, Chores and Cash are *general storage* items (or *universal*), meaning that they can be used anywhere and don't have to be carried by a specific person.\r\n\r\nPress *Start* to do some chores. There's no limit to the chores that can be done, but you can only get paid for 10 at a time. Move Suzy to the *Farmhouse* and go to *Uncle* to get your earnings.",
-                "attribs": [],
-                "abilities": [],
                 "storage_type": "u",
                 "q_limit": 10.0,
-                "toplevel": false,
-                "masked": false,
                 "recipes": [
                     {
                         "id": 2,
-                        "rate_amount": 1.0,
-                        "rate_duration": 3.0,
-                        "instant": false,
                         "sources": [
                             {"item_id": 5, "q_required": 1.0, "preserve": true}
                         ],
-                        "byproducts": [],
                         "attrib_reqs": [
                             {
                                 "attrib_id": 4,
@@ -89,24 +62,15 @@
                 "id": 8,
                 "name": "Cooked Bacon",
                 "description": "\"0 / 20\" means that although there are none yet, we can have up to 20 at a time.\r\n\r\nLooks like crafting requires *Raw Bacon*, but we do not start with any in stock. Where could that be found? Keep an eye out for possible sources as you investigate and travel.\r\n\r\nWe'll also need the *Wood Stove* to cook the bacon, which means Suzy will need to be at home to do so. Notice that the *Where* column for the wood stove shows *Home*, indicating that it's currently available.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "c",
                 "q_limit": 20.0,
-                "toplevel": false,
-                "masked": false,
                 "recipes": [
                     {
                         "id": 3,
-                        "rate_amount": 1.0,
-                        "rate_duration": 2.0,
-                        "instant": false,
+                        "rate_duration": 2,
                         "sources": [
-                            {"item_id": 12, "q_required": 1.0, "preserve": false},
+                            {"item_id": 12, "q_required": 1.0},
                             {"item_id": 13, "q_required": 1.0, "preserve": true}
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
+                        ]
                     }
                 ]
             },
@@ -114,58 +78,34 @@
                 "id": 9,
                 "name": "Knife",
                 "description": "For butchering. Not much of a weapon, at least not in the hands of a young girl.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "c",
-                "q_limit": 1.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
+                "q_limit": 1.0
             },
             {
                 "id": 10,
                 "name": "Phone",
                 "description": "Suzy's mother is the first number on the contacts list.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "c",
-                "q_limit": 1.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
+                "q_limit": 1.0
             },
             {
                 "id": 11,
                 "name": "Pigs",
                 "description": "The most efficient plan would be to raise more pigs after butchering only 2 of them, by pressing *Start* on the row where pigs are the *Source* (as well as the result). However, let's do it the hard way this time. Go to *Raw Bacon* and slaughter all of them!\r\n\r\nAfter you've dispatched the original herd, it's time to get some cash to buy more. Click on *Cash* and then *Chores* to continue.\r\n\r\nWhen you've bought a new pair of pigs, reload the page to be able to raise more. Then, finish the stack of *Raw Bacon*, leaving at least a pair left.",
-                "attribs": [],
-                "abilities": [],
                 "storage_type": "l",
                 "q_limit": 4.0,
-                "toplevel": false,
-                "masked": false,
                 "recipes": [
                     {
                         "id": 4,
-                        "rate_amount": 1.0,
-                        "rate_duration": 8.0,
-                        "instant": false,
+                        "rate_duration": 8,
                         "sources": [
                             {"item_id": 11, "q_required": 2.0, "preserve": true}
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
+                        ]
                     },
                     {
                         "id": 5,
-                        "rate_amount": 1.0,
-                        "rate_duration": 3.0,
                         "instant": true,
                         "sources": [
-                            {"item_id": 6, "q_required": 60.0, "preserve": false}
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
+                            {"item_id": 6, "q_required": 60.0}
+                        ]
                     }
                 ]
             },
@@ -173,24 +113,16 @@
                 "id": 12,
                 "name": "Raw Bacon",
                 "description": "Now we can make use of that *Knife* Suzy has been carrying. There are 4 pigs currently at the farm. Press *Start* and wait while she turns them into neatly sized pieces of meat.\r\n\r\nIf Suzy is not shown under *Where* as carrying the knife, you may need to go back to her screen and click on the knife to get to this raw bacon screen. Similarly, if the pigs are at the farm but not shown, navigate back to the farm and then click through the pigs to get here.\r\n\r\nLooks like we ran out. Go back to *Pigs* and see how to get more.\r\n\r\nOnce you have a full load of raw bacon (20), it's time for Suzy to start the perilous trip back home. Navigate to her page to do so.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "c",
                 "q_limit": 20.0,
-                "toplevel": false,
-                "masked": false,
                 "recipes": [
                     {
                         "id": 6,
                         "rate_amount": 4.0,
-                        "rate_duration": 8.0,
-                        "instant": false,
+                        "rate_duration": 8,
                         "sources": [
                             {"item_id": 9, "q_required": 1.0, "preserve": true},
-                            {"item_id": 11, "q_required": 1.0, "preserve": false}
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
+                            {"item_id": 11, "q_required": 1.0}
+                        ]
                     }
                 ]
             },
@@ -198,25 +130,15 @@
                 "id": 26,
                 "name": "Table",
                 "description": "At home, drop cooked bacon to go on the table.",
-                "attribs": [],
-                "abilities": [],
                 "storage_type": "l",
-                "q_limit": 1.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
+                "q_limit": 1.0
             },
             {
                 "id": 13,
                 "name": "Wood Stove",
                 "description": "This item functions as a crafting station, fixed at the *Home* location. Useful for producing items from recipes, namely, *Cooked Bacon* — go ahead and click on it.",
-                "attribs": [],
-                "abilities": [],
                 "storage_type": "l",
-                "q_limit": 1.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
+                "q_limit": 1.0
             }
         ],
         "locations": [
@@ -224,46 +146,25 @@
                 "id": 24,
                 "name": "Farmhouse",
                 "description": "Board siding and coruscated metal roof — primitive construction.",
-                "attribs": [],
-                "abilities": [],
-                "dimensions": null,
-                "toplevel": false,
-                "masked": false,
-                "items": [],
                 "item_refs": [7],
                 "destinations": [
-                    {
-                        "loc2_id": 14,
-                        "door1": null,
-                        "door2": null,
-                        "bidirectional": true
-                    }
+                    {"loc2_id": 14}
                 ]
             },
             {
                 "id": 15,
                 "name": "Home",
                 "description": "First, take a look around. Click on her Mom and then Suzy to see that both have *Pathfinding*, but Suzy's is lower. This means she'll be more likely to get lost or have other trouble in events that may happen in the woods if her Mom isn't there.\r\n\r\nAlso, right-click on the *Wood Stove* to open it in a new tab. After finishing those instructions, close the tab to return to this page.\r\n\r\nNext, it's time to explore. The only destination we can get to from home shows *Somewhere not yet visited*, meaning we don't know anything about it yet. Bring up *Suzy*'s page again to travel.",
-                "attribs": [],
-                "abilities": [],
-                "dimensions": null,
-                "toplevel": false,
-                "masked": false,
                 "items": [
                     {"item_id": 13, "quantity": 1.0, "position": null},
                     {"item_id": 26, "quantity": 1.0, "position": null}
-                ],
-                "item_refs": [],
-                "destinations": []
+                ]
             },
             {
                 "id": 16,
                 "name": "Sketchy-Path Forest",
                 "description": "The notable thing about this forest is the *Navigate Woods* event. There is a chance of automatically triggering while characters travel in this area.\r\n\r\nSince there is no delay on the way to *Uncle's Farm*, the event will not trigger yet. Go ahead and bring Suzy to the farm if you haven't done so. Then continue with the instructions described under *Uncle's Farm*.",
-                "attribs": [],
-                "abilities": [],
                 "dimensions": [10, 5],
-                "toplevel": false,
                 "masked": true,
                 "items": [
                     {
@@ -272,46 +173,31 @@
                         "position": [8, 1]
                     }
                 ],
-                "item_refs": [],
                 "destinations": [
                     {
                         "loc2_id": 15,
-                        "door1": [1, 2],
-                        "door2": null,
-                        "bidirectional": true
+                        "door1": [1, 2]
                     },
                     {
                         "loc2_id": 14,
-                        "door1": [10, 4],
-                        "door2": null,
-                        "bidirectional": true
+                        "door1": [10, 4]
                     }
                 ],
                 "zones": [
                     {
-                        "coords": [3, 4, 7, 5],
-                        "label": "",
-                        "color": "",
-                        "prevents_travel": true
+                        "coords": [3, 4, 7, 5]
                     }
                 ]
             },
             {
                 "id": 14,
                 "name": "Uncle's Farm",
-                "description": "The property has a modestly inviting feel of fertile land.\r\n\r\nSuzy's uncle is okay with her butchering pigs, as long as there is a breeding pair left.",
                 "description": "Hopefully, you immediately recognized that *Pigs* mean *bacon*, which is what we're after. Click on them to continue.",
-                "attribs": [],
-                "abilities": [],
-                "dimensions": null,
-                "toplevel": false,
                 "masked": true,
                 "items": [
                     {"item_id": 11, "quantity": 4.0, "position": null},
                     {"item_id": 5, "quantity": 1.0, "position": null}
-                ],
-                "item_refs": [],
-                "destinations": []
+                ]
             }
         ],
         "characters": [
@@ -325,11 +211,7 @@
                 ],
                 "abilities": [25],
                 "toplevel": true,
-                "location_id": 15,
-                "position": null,
-                "travel_party": "",
-                "items": [],
-                "progress": []
+                "location_id": 15
             },
             {
                 "id": 17,
@@ -343,13 +225,10 @@
                 "abilities": [21, 25, 27],
                 "toplevel": true,
                 "location_id": 15,
-                "position": null,
-                "travel_party": "",
                 "items": [
                     {"item_id": 9, "quantity": 1.0, "slot": ""},
                     {"item_id": 10, "quantity": 1.0, "slot": ""}
-                ],
-                "progress": []
+                ]
             },
             {
                 "id": 19,
@@ -358,60 +237,37 @@
                 "attribs": [
                     [3, 1.0]
                 ],
-                "abilities": [],
-                "toplevel": false,
-                "location_id": 24,
-                "position": null,
-                "travel_party": "",
-                "items": [],
-                "progress": []
+                "location_id": 24
             },
             {
                 "id": 23,
                 "name": "Wolf",
                 "description": "Shaggy forest dweller with teeth and a snarl.\r\n\r\nTo appear, set location to *Sketchy-Path Forest* and grid position for example `4,1`.",
-                "attribs": [],
-                "abilities": [],
-                "toplevel": false,
-                "location_id": null,
-                "position": [4, 1],
-                "travel_party": "",
-                "items": [],
-                "progress": []
+                "position": [4, 1]
             }
         ],
         "attribs": [
             {
                 "id": 28,
                 "name": "Climbing",
-                "description": "Often easier for kids than adults.",
-                "abilities": [],
-                "is_binary": false,
-                "enum_list": []
+                "description": "Often easier for kids than adults."
             },
             {
                 "id": 2,
                 "name": "Pathfinding",
-                "description": "Knowledge of the woods.",
-                "abilities": [],
-                "is_binary": false,
-                "enum_list": []
+                "description": "Knowledge of the woods."
             },
             {
                 "id": 3,
                 "name": "Pays for Odd Jobs",
                 "description": "Has money to pay for chores.",
-                "abilities": [],
-                "is_binary": true,
-                "enum_list": []
+                "is_binary": true
             },
             {
                 "id": 4,
                 "name": "Willing to do Odd Jobs",
                 "description": "Can do chores.",
-                "abilities": [],
-                "is_binary": true,
-                "enum_list": []
+                "is_binary": true
             }
         ],
         "events": [
@@ -419,63 +275,24 @@
                 "id": 21,
                 "name": "Connect to Service",
                 "description": "Suzy needs to call her Mother for help of some kind. Choose Easy difficulty since we won't be far from civilization, then roll.\r\n\r\nFor a major success, Mother will explain to Suzy how to get home, meaning that she will arrive home without further incident. For a minor success, Mother can travel to the woods and lead Suzy out, using her higher *Pathfinding* skill so that *Navigate Woods* has a better chance to succeed.\r\n\r\nFor a single minor failure, Suzy can probably just try to call again (wouldn't you, if you were her?) But if things get worse, you might have to go to setup and add a *Wolf* character, then roll either *Navigate Woods* or a new event such as *Danger Interaction* to see if it is close enough to be threatening. If push comes to shove, maybe she can grab a fallen branch to fend it off (set up as a new item), or climb a tree, or yell.\r\n\r\nThis is the end of the walkthrough explanation. After returning home, Suzy can cook the bacon. Once the win condition described under *Overall Settings* is met, a green checkmark should show in the log on the overview page, indicating that the scenario is successfully completed.",
-                "attribs": [],
-                "abilities": [],
-                "toplevel": false,
-                "outcome_type": "fourway",
-                "roller_type": "dnd",
-                "numeric_range": [1, 20],
-                "single_number": 0.0,
-                "selection_strings": "",
-                "determinants": [],
-                "effects": []
+                "numeric_range": [1, 20]
             },
             {
                 "id": 27,
                 "name": "Contest Enemy",
                 "description": "Run, hide, frighten, fight—the choice is up to you.\r\n\r\nEdit this event to add **Climbing** as a *Determinant*. Or, [create an attribute](/configure/#attrib), such as **Strength** for fighting, and assign Suzy a value (she would be weak).",
-                "attribs": [],
-                "abilities": [],
-                "toplevel": false,
-                "outcome_type": "fourway",
-                "roller_type": null,
-                "numeric_range": [1, 20],
-                "single_number": 0.0,
-                "selection_strings": null,
-                "determinants": [],
-                "effects": []
+                "numeric_range": [1, 20]
             },
             {
                 "id": 25,
                 "name": "Navigate Woods",
                 "description": "Set difficulty to Moderate, meaning the chance of getting lost or eaten by wolves in this particular forest is decent but not overwhelming. If Suzy is alone in the forest, select her name with stat 2 and press *Add*. Otherwise, use her Mother's stat. Then press *Roll*.\r\n\r\nBecause she's tired after all those chores, play at a disadvantage, which means we take the worst of two rolls. So, remember the first result and then press Roll again.\r\n\r\nActually, in this case, we need it to be a *Minor Failure*, so keep rolling until that happens. We'll take that to mean she's lost but there are no wolves or twisted ankles.\r\n\r\nTo get out of this pickle, go to Suzy's page and and find the *Connect to Service* event.",
-                "attribs": [],
-                "abilities": [],
-                "toplevel": false,
-                "outcome_type": "fourway",
-                "roller_type": "dnd",
                 "numeric_range": [1, 20],
-                "single_number": 0.0,
-                "selection_strings": "",
                 "determinants": [
                     {
-                        "label": null,
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "subject",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": null,
-                            "attrib_id": 2
-                        },
-                        "outfield": null,
-                        "op_application": "+",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0
+                        "infield": {"attrib_id": 2}
                     }
-                ],
-                "effects": []
+                ]
             }
         ]
     },
@@ -495,22 +312,8 @@
         "multiplayer": false,
         "complete": "Complete",
         "win_reqs": [
-            {
-                "item_id": 8,
-                "quantity": 20.0,
-                "char_id": null,
-                "loc_id": 15,
-                "attrib_id": null,
-                "attrib_value": 0.0
-            },
-            {
-                "item_id": 11,
-                "quantity": 2.0,
-                "char_id": null,
-                "loc_id": 14,
-                "attrib_id": null,
-                "attrib_value": 0.0
-            }
+            {"item_id": 8, "quantity": 20.0, "loc_id": 15, "attrib_value": 0.0},
+            {"item_id": 11, "quantity": 2.0, "loc_id": 14, "attrib_value": 0.0}
         ]
     }
 }

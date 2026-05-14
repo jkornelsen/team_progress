@@ -5,23 +5,14 @@
                 "id": 16,
                 "name": "Convo Kormak 1a",
                 "description": "Lyria's not too keen on prolonged incarceration, but she might just kill Kormak instead. She pulls him under, threatening.\r\n\r\nHe gasps for air, offering information in exchange for his life. She agrees, listening.",
-                "attribs": [],
-                "abilities": [],
                 "storage_type": "u",
                 "q_limit": 2.0,
-                "loc_hosted": false,
-                "toplevel": false,
-                "masked": false,
                 "recipes": [
                     {
                         "id": 17,
-                        "rate_amount": 1.0,
-                        "rate_duration": 3,
-                        "instant": false,
                         "sources": [
                             {"item_id": 16, "q_required": 1.0, "preserve": true}
                         ],
-                        "byproducts": [],
                         "attrib_reqs": [
                             {
                                 "attrib_id": 14,
@@ -36,23 +27,14 @@
                 "id": 19,
                 "name": "Convo Kormak 1b",
                 "description": "Kormak tells Lyria about the **Tethered One** who he had heard about while in **Blackvein Hold**.\r\n\r\nAfter the conversation, Lyria lets him go, sensing that he's not particularly villainous. He scrambles to the bank and leaves quickly. (Set Kormak's current location to *Inactive*)",
-                "attribs": [],
-                "abilities": [],
                 "storage_type": "u",
                 "q_limit": 1.0,
-                "loc_hosted": false,
-                "toplevel": false,
-                "masked": false,
                 "recipes": [
                     {
                         "id": 20,
-                        "rate_amount": 1.0,
-                        "rate_duration": 3,
-                        "instant": false,
                         "sources": [
                             {"item_id": 16, "q_required": 2.0, "preserve": true}
                         ],
-                        "byproducts": [],
                         "attrib_reqs": [
                             {
                                 "attrib_id": 14,
@@ -66,25 +48,13 @@
             {
                 "id": 45,
                 "name": "Cordage",
-                "description": "",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "c",
-                "q_limit": 0.0,
-                "loc_hosted": false,
-                "toplevel": false,
-                "masked": false,
                 "recipes": [
                     {
                         "id": 48,
-                        "rate_amount": 1.0,
                         "rate_duration": 8,
-                        "instant": false,
                         "sources": [
-                            {"item_id": 46, "q_required": 1.0, "preserve": false}
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
+                            {"item_id": 46, "q_required": 1.0}
+                        ]
                     }
                 ]
             },
@@ -92,24 +62,14 @@
                 "id": 37,
                 "name": "Flint Knife",
                 "description": "Useful for cutting crafted materials",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "c",
                 "q_limit": 1.0,
-                "loc_hosted": false,
-                "toplevel": false,
-                "masked": false,
                 "recipes": [
                     {
                         "id": 39,
-                        "rate_amount": 1.0,
                         "rate_duration": 15,
-                        "instant": false,
                         "sources": [
-                            {"item_id": 38, "q_required": 1.0, "preserve": false}
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
+                            {"item_id": 38, "q_required": 1.0}
+                        ]
                     }
                 ]
             },
@@ -121,13 +81,7 @@
                     [28, 2.0],
                     [29, 1.0]
                 ],
-                "abilities": [],
-                "storage_type": "c",
-                "q_limit": 1.0,
-                "loc_hosted": false,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
+                "q_limit": 1.0
             },
             {
                 "id": 36,
@@ -137,80 +91,36 @@
                     [28, 1.0],
                     [29, 1.0]
                 ],
-                "abilities": [],
-                "storage_type": "c",
                 "q_limit": 1.0,
-                "loc_hosted": false,
-                "toplevel": false,
-                "masked": false,
                 "recipes": [
                     {
                         "id": 50,
-                        "rate_amount": 1.0,
                         "rate_duration": 15,
-                        "instant": false,
                         "sources": [
-                            {"item_id": 40, "q_required": 10.0, "preserve": false},
+                            {"item_id": 40, "q_required": 10.0},
                             {"item_id": 37, "q_required": 1.0, "preserve": true}
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
+                        ]
                     }
                 ]
             },
-            {
-                "id": 38,
-                "name": "Stone",
-                "description": "",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "c",
-                "q_limit": 0.0,
-                "loc_hosted": false,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
-            },
+            {"id": 38, "name": "Stone"},
             {
                 "id": 43,
                 "name": "Stone Axe",
-                "description": "",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "c",
                 "q_limit": 1.0,
-                "loc_hosted": false,
-                "toplevel": false,
-                "masked": false,
                 "recipes": [
                     {
                         "id": 44,
-                        "rate_amount": 1.0,
                         "rate_duration": 15,
-                        "instant": false,
                         "sources": [
-                            {"item_id": 37, "q_required": 1.0, "preserve": false},
-                            {"item_id": 40, "q_required": 3.0, "preserve": false},
-                            {"item_id": 45, "q_required": 3.0, "preserve": false}
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
+                            {"item_id": 37, "q_required": 1.0},
+                            {"item_id": 40, "q_required": 3.0},
+                            {"item_id": 45, "q_required": 3.0}
+                        ]
                     }
                 ]
             },
-            {
-                "id": 41,
-                "name": "Trees",
-                "description": "",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "l",
-                "q_limit": 0.0,
-                "loc_hosted": false,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
-            },
+            {"id": 41, "name": "Trees", "storage_type": "l"},
             {
                 "id": 32,
                 "name": "Unarmed",
@@ -219,74 +129,40 @@
                     [28, 0.0],
                     [29, 0.0]
                 ],
-                "abilities": [],
-                "storage_type": "c",
-                "q_limit": 1.0,
-                "loc_hosted": false,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
+                "q_limit": 1.0
             },
             {
                 "id": 46,
                 "name": "Vines",
-                "description": "",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "c",
                 "q_limit": 1.0,
-                "loc_hosted": false,
-                "toplevel": false,
-                "masked": false,
                 "recipes": [
                     {
                         "id": 47,
-                        "rate_amount": 1.0,
-                        "rate_duration": 3,
-                        "instant": false,
                         "sources": [
                             {"item_id": 41, "q_required": 1.0, "preserve": true}
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
+                        ]
                     }
                 ]
             },
             {
                 "id": 40,
                 "name": "Wood",
-                "description": "",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "c",
-                "q_limit": 0.0,
-                "loc_hosted": false,
-                "toplevel": false,
-                "masked": false,
                 "recipes": [
                     {
                         "id": 42,
-                        "rate_amount": 1.0,
                         "rate_duration": 25,
-                        "instant": false,
                         "sources": [
                             {"item_id": 37, "q_required": 1.0, "preserve": true},
                             {"item_id": 41, "q_required": 1.0, "preserve": true}
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
+                        ]
                     },
                     {
                         "id": 49,
-                        "rate_amount": 1.0,
                         "rate_duration": 12,
-                        "instant": false,
                         "sources": [
                             {"item_id": 41, "q_required": 1.0, "preserve": true},
                             {"item_id": 43, "q_required": 1.0, "preserve": true}
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
+                        ]
                     }
                 ]
             },
@@ -298,111 +174,51 @@
                     [28, 1.0],
                     [29, 2.0]
                 ],
-                "abilities": [],
-                "storage_type": "c",
-                "q_limit": 1.0,
-                "loc_hosted": false,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
+                "q_limit": 1.0
             },
-            {
-                "id": 18,
-                "name": "Worldbridge Repaired",
-                "description": "",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "u",
-                "q_limit": 0.0,
-                "loc_hosted": false,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
-            }
+            {"id": 18, "name": "Worldbridge Repaired", "storage_type": "u"}
         ],
         "locations": [
             {
                 "id": 34,
                 "name": "Blackvein Gate",
-                "description": "The guards determine who to let in and out. After hearing that a Nalaran woman helped free **Kormak**, they'll interrogate **Lyria** if she approaches.",
-                "attribs": [],
-                "abilities": [],
-                "dimensions": null,
-                "toplevel": false,
-                "masked": false,
-                "items": [],
-                "progress": [],
-                "item_refs": [],
-                "destinations": [],
-                "entrance_reqs": [],
-                "zones": []
+                "description": "The guards determine who to let in and out. After hearing that a Nalaran woman helped free **Kormak**, they'll interrogate **Lyria** if she approaches."
             },
             {
                 "id": 17,
                 "name": "Blackvein Hold Approach",
                 "description": "Looking down from the crest of a hill, you can see the **Blackvein Hold** gate ahead.",
-                "attribs": [],
-                "abilities": [],
-                "dimensions": null,
-                "toplevel": false,
                 "masked": true,
-                "items": [],
-                "progress": [],
-                "item_refs": [],
                 "destinations": [
-                    {"loc2_id": 34, "door1": null, "door2": null, "bidirectional": true},
-                    {"loc2_id": 35, "door1": null, "door2": null, "bidirectional": true}
+                    {"loc2_id": 34},
+                    {"loc2_id": 35}
                 ],
                 "entrance_reqs": [
-                    {
-                        "item_id": 19,
-                        "quantity": 1.0,
-                        "attrib_id": null,
-                        "attrib_value": null
-                    }
-                ],
-                "zones": []
+                    {"item_id": 19, "quantity": 1.0}
+                ]
             },
             {
                 "id": 35,
                 "name": "Deep Rocky Pool",
                 "description": "Near Blackvein Hold, off of the main road. Trees at the water's edge available for crafting, to prepare for whatever lies in the depths.",
-                "attribs": [],
-                "abilities": [],
-                "dimensions": null,
-                "toplevel": false,
-                "masked": false,
                 "items": [
                     {"item_id": 38, "quantity": 2.0, "position": null},
                     {"item_id": 41, "quantity": 1.0, "position": null}
-                ],
-                "progress": [],
-                "item_refs": [],
-                "destinations": [],
-                "entrance_reqs": [],
-                "zones": []
+                ]
             },
             {
                 "id": 3,
                 "name": "Narrow Glade",
                 "description": "A day's journey southeast of **Blackvein Hold.**\r\n\r\nThe guards are starting the long march back with the prisoners, worried they're too far away.  Looking at the pond, **Kormak** considers that if he could free his hands, this might be a chance to escape by swimming. Suddenly, he notices a creature in green briefly popping above the pond surface before re-emerging. Curious, he looks carefully and discovers it's a young woman.",
-                "attribs": [],
-                "abilities": [],
                 "dimensions": [10, 10],
-                "toplevel": false,
                 "masked": true,
-                "items": [],
-                "progress": [],
-                "item_refs": [],
                 "destinations": [
                     {
                         "loc2_id": 9,
                         "door1": [9, 10],
-                        "door2": [2, 1],
-                        "bidirectional": true
+                        "door2": [2, 1]
                     }
                 ],
-                "entrance_reqs": [],
                 "zones": [
                     {
                         "coords": [1, 2, 5, 3],
@@ -437,8 +253,7 @@
                     {
                         "coords": [1, 1, 10, 1],
                         "label": "Dense Trees",
-                        "color": "#240",
-                        "prevents_travel": true
+                        "color": "#240"
                     },
                     {
                         "coords": [1, 5, 4, 7],
@@ -452,23 +267,14 @@
                 "id": 9,
                 "name": "Pond",
                 "description": "On a hot afternoon, Lyria decides to cool off with a swim. She doesn't really mind that the pond is murky, and her dress sheds the grime.",
-                "attribs": [],
-                "abilities": [],
                 "dimensions": [5, 8],
-                "toplevel": false,
-                "masked": false,
-                "items": [],
-                "progress": [],
-                "item_refs": [],
                 "destinations": [
                     {
                         "loc2_id": 17,
                         "door1": [1, 7],
-                        "door2": null,
                         "bidirectional": false
                     }
                 ],
-                "entrance_reqs": [],
                 "zones": [
                     {
                         "coords": [1, 1, 4, 6],
@@ -489,14 +295,12 @@
                     [22, 12.0]
                 ],
                 "abilities": [24],
-                "toplevel": false,
                 "location_id": 3,
                 "position": [10, 3],
                 "travel_party": "Chain Gang",
                 "items": [
                     {"item_id": 8, "quantity": 1.0, "slot": ""}
-                ],
-                "progress": []
+                ]
             },
             {
                 "id": 6,
@@ -507,14 +311,12 @@
                     [22, 20.0]
                 ],
                 "abilities": [33, 27],
-                "toplevel": false,
                 "location_id": 3,
                 "position": [10, 4],
                 "travel_party": "Chain Gang",
                 "items": [
                     {"item_id": 23, "quantity": 1.0, "slot": ""}
-                ],
-                "progress": []
+                ]
             },
             {
                 "id": 4,
@@ -530,12 +332,9 @@
                     [22, 10.0]
                 ],
                 "abilities": [10, 13],
-                "toplevel": false,
                 "location_id": 3,
                 "position": [9, 3],
-                "travel_party": "Chain Gang",
-                "items": [],
-                "progress": []
+                "travel_party": "Chain Gang"
             },
             {
                 "id": 2,
@@ -549,212 +348,67 @@
                 "toplevel": true,
                 "location_id": 9,
                 "position": [3, 5],
-                "travel_party": "With Lyria",
-                "items": [],
-                "progress": []
+                "travel_party": "With Lyria"
             }
         ],
         "attribs": [
-            {
-                "id": 28,
-                "name": "Base Accuracy",
-                "description": "",
-                "abilities": [],
-                "is_binary": false,
-                "enum_list": []
-            },
-            {
-                "id": 29,
-                "name": "Base Damage",
-                "description": "",
-                "abilities": [],
-                "is_binary": false,
-                "enum_list": []
-            },
+            {"id": 28, "name": "Base Accuracy"},
+            {"id": 29, "name": "Base Damage"},
             {
                 "id": 7,
                 "name": "Bound",
                 "description": "For example, hands tied. Limits movement or other actions.",
-                "abilities": [],
-                "is_binary": true,
-                "enum_list": []
+                "is_binary": true
             },
-            {
-                "id": 25,
-                "name": "Conscious",
-                "description": "",
-                "abilities": [],
-                "is_binary": false,
-                "enum_list": []
-            },
-            {
-                "id": 14,
-                "name": "Convo Kormak",
-                "description": "",
-                "abilities": [],
-                "is_binary": true,
-                "enum_list": []
-            },
-            {
-                "id": 15,
-                "name": "Convo Lyria",
-                "description": "",
-                "abilities": [],
-                "is_binary": true,
-                "enum_list": []
-            },
-            {
-                "id": 31,
-                "name": "Dex",
-                "description": "Accuracy, evasion",
-                "abilities": [],
-                "is_binary": false,
-                "enum_list": []
-            },
-            {
-                "id": 22,
-                "name": "HP",
-                "description": "",
-                "abilities": [],
-                "is_binary": false,
-                "enum_list": []
-            },
+            {"id": 25, "name": "Conscious"},
+            {"id": 14, "name": "Convo Kormak", "is_binary": true},
+            {"id": 15, "name": "Convo Lyria", "is_binary": true},
+            {"id": 31, "name": "Dex", "description": "Accuracy, evasion"},
+            {"id": 22, "name": "HP"},
             {
                 "id": 12,
                 "name": "Perception",
-                "description": "Awareness, stealth detection",
-                "abilities": [],
-                "is_binary": false,
-                "enum_list": []
+                "description": "Awareness, stealth detection"
             },
-            {
-                "id": 30,
-                "name": "Str",
-                "description": "Physical dmg",
-                "abilities": [],
-                "is_binary": false,
-                "enum_list": []
-            },
+            {"id": 30, "name": "Str", "description": "Physical dmg"},
             {
                 "id": 11,
                 "name": "Trickery",
-                "description": "Stealing (including locks), knots, stealth, deception.",
-                "abilities": [],
-                "is_binary": false,
-                "enum_list": []
+                "description": "Stealing (including locks), knots, stealth, deception."
             }
         ],
         "events": [
             {
                 "id": 10,
                 "name": "Attempt Trickery",
-                "description": "",
-                "attribs": [],
-                "abilities": [],
-                "toplevel": false,
-                "outcome_type": "fourway",
-                "roller_type": null,
                 "numeric_range": [1, 20],
-                "single_number": 0.0,
-                "selection_strings": null,
                 "determinants": [
                     {
-                        "label": "",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "subject",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": null,
-                            "attrib_id": 11,
-                            "recipe_id": null
-                        },
-                        "outfield": null,
-                        "op_application": "+",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0,
-                        "negate": false,
-                        "outcome_success": "always",
-                        "auto_apply": false
+                        "infield": {"attrib_id": 11}
                     },
                     {
-                        "label": "",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "target char",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": null,
-                            "attrib_id": 12,
-                            "recipe_id": null
-                        },
-                        "outfield": null,
-                        "op_application": "-",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0,
-                        "negate": false,
-                        "outcome_success": "always",
-                        "auto_apply": false
+                        "infield": {"role": "target char", "attrib_id": 12},
+                        "op_application": "-"
                     }
-                ],
-                "effects": []
+                ]
             },
             {
                 "id": 24,
                 "name": "Burning Bundle",
                 "description": "- Held, not thrown (melee range)\r\n- Requires a turn to light before using\r\n- Requires kindling such as branches, or cloth fabric could do the job in a pinch",
-                "attribs": [],
-                "abilities": [],
-                "toplevel": false,
                 "outcome_type": "numeric",
-                "roller_type": null,
                 "numeric_range": [1, 10],
-                "single_number": 0.0,
-                "selection_strings": null,
                 "determinants": [
                     {
-                        "label": "",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "target char",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": null,
-                            "attrib_id": 22,
-                            "recipe_id": null
-                        },
-                        "outfield": null,
-                        "op_application": ">=",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0,
-                        "negate": false,
-                        "outcome_success": "always",
-                        "auto_apply": false
+                        "infield": {"role": "target char", "attrib_id": 22},
+                        "op_application": ">="
                     }
                 ],
                 "effects": [
                     {
-                        "label": "",
                         "get_val_from": "outcome",
-                        "infield": null,
-                        "outfield": {
-                            "role": "target char",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": null,
-                            "attrib_id": 22,
-                            "recipe_id": null
-                        },
-                        "op_application": "-",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0,
-                        "negate": false,
-                        "outcome_success": "always",
-                        "auto_apply": false
+                        "outfield": {"role": "target char", "attrib_id": 22},
+                        "op_application": "-"
                     }
                 ]
             },
@@ -762,192 +416,59 @@
                 "id": 26,
                 "name": "Death's Door",
                 "description": "HP reduced to 0 puts main characters in a state of unconsciousness, where they have 3 turns to try to revive, unless they're healed by someone else.",
-                "attribs": [],
-                "abilities": [],
-                "toplevel": false,
-                "outcome_type": "fourway",
-                "roller_type": null,
                 "numeric_range": [1, 20],
-                "single_number": 0.0,
-                "selection_strings": null,
                 "determinants": [
                     {
-                        "label": "",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "subject",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": null,
-                            "attrib_id": 22,
-                            "recipe_id": null
-                        },
-                        "outfield": null,
-                        "op_application": "<",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0,
-                        "negate": false,
-                        "outcome_success": "always",
-                        "auto_apply": false
+                        "infield": {"attrib_id": 22},
+                        "op_application": "<"
                     }
                 ],
                 "effects": [
                     {
-                        "label": "",
                         "get_val_from": "outcome",
-                        "infield": null,
-                        "outfield": {
-                            "role": "subject",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": null,
-                            "attrib_id": 25,
-                            "recipe_id": null
-                        },
-                        "op_application": "+",
+                        "outfield": {"attrib_id": 25},
                         "op_transform": "c",
-                        "val_transform": 1.0,
-                        "val_required": 1.0,
-                        "negate": false,
-                        "outcome_success": "success_any",
-                        "auto_apply": false
+                        "outcome_success": "success_any"
                     },
                     {
-                        "label": "",
                         "get_val_from": "outcome",
-                        "infield": null,
-                        "outfield": {
-                            "role": "subject",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": null,
-                            "attrib_id": 25,
-                            "recipe_id": null
-                        },
+                        "outfield": {"attrib_id": 25},
                         "op_application": "-",
                         "op_transform": "c",
-                        "val_transform": 1.0,
-                        "val_required": 1.0,
-                        "negate": false,
-                        "outcome_success": "failure_any",
-                        "auto_apply": false
+                        "outcome_success": "failure_any"
                     }
                 ]
             },
             {
                 "id": 13,
                 "name": "Start Convo K1",
-                "description": "",
-                "attribs": [],
-                "abilities": [],
-                "toplevel": false,
                 "outcome_type": "determined",
-                "roller_type": null,
-                "numeric_range": null,
-                "single_number": 0.0,
-                "selection_strings": null,
                 "determinants": [
                     {
-                        "label": "",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "subject",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": null,
-                            "attrib_id": 14,
-                            "recipe_id": null
-                        },
-                        "outfield": null,
-                        "op_application": "==",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0,
-                        "negate": false,
-                        "outcome_success": "always",
-                        "auto_apply": false
+                        "infield": {"attrib_id": 14},
+                        "op_application": "=="
                     },
                     {
-                        "label": "",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "target char",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": null,
-                            "attrib_id": 15,
-                            "recipe_id": null
-                        },
-                        "outfield": null,
-                        "op_application": "==",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0,
-                        "negate": false,
-                        "outcome_success": "always",
-                        "auto_apply": false
+                        "infield": {"role": "target char", "attrib_id": 15},
+                        "op_application": "=="
                     },
                     {
-                        "label": "",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "subject",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": null,
-                            "attrib_id": 7,
-                            "recipe_id": null
-                        },
-                        "outfield": null,
+                        "infield": {"attrib_id": 7},
                         "op_application": "==",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 0.0,
-                        "negate": false,
-                        "outcome_success": "always",
-                        "auto_apply": false
+                        "val_required": 0.0
                     },
                     {
-                        "label": "",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "universal",
-                            "field_mode": "qty",
-                            "child_of_anchor": false,
-                            "item_id": 16,
-                            "attrib_id": null,
-                            "recipe_id": null
-                        },
-                        "outfield": null,
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 16},
                         "op_application": "==",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 0.0,
-                        "negate": false,
-                        "outcome_success": "always",
-                        "auto_apply": false
+                        "val_required": 0.0
                     }
                 ],
                 "effects": [
                     {
-                        "label": "",
                         "get_val_from": "outcome",
-                        "infield": null,
-                        "outfield": {
-                            "role": "universal",
-                            "field_mode": "qty",
-                            "child_of_anchor": false,
-                            "item_id": 16,
-                            "attrib_id": null,
-                            "recipe_id": null
-                        },
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 16},
                         "op_application": ":=",
                         "op_transform": "c",
-                        "val_transform": 1.0,
-                        "val_required": 1.0,
-                        "negate": false,
-                        "outcome_success": "always",
                         "auto_apply": true
                     }
                 ]
@@ -956,56 +477,19 @@
                 "id": 21,
                 "name": "Water Bolt",
                 "description": "- As used by the Nalaran, needs water — natural rather than studied magic\r\n- Guaranteed success if water is available, variable damage (cantrip)\r\n- Blunt force dmg, knockback\r\n- Almost no dmg against enemies in water although the current pushes them back",
-                "attribs": [],
-                "abilities": [],
-                "toplevel": false,
                 "outcome_type": "numeric",
-                "roller_type": null,
                 "numeric_range": [1, 6],
-                "single_number": 0.0,
-                "selection_strings": null,
                 "determinants": [
                     {
-                        "label": "",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "target char",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": null,
-                            "attrib_id": 22,
-                            "recipe_id": null
-                        },
-                        "outfield": null,
-                        "op_application": ">=",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0,
-                        "negate": false,
-                        "outcome_success": "always",
-                        "auto_apply": false
+                        "infield": {"role": "target char", "attrib_id": 22},
+                        "op_application": ">="
                     }
                 ],
                 "effects": [
                     {
-                        "label": "",
                         "get_val_from": "outcome",
-                        "infield": null,
-                        "outfield": {
-                            "role": "target char",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": null,
-                            "attrib_id": 22,
-                            "recipe_id": null
-                        },
-                        "op_application": "-",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0,
-                        "negate": false,
-                        "outcome_success": "always",
-                        "auto_apply": false
+                        "outfield": {"role": "target char", "attrib_id": 22},
+                        "op_application": "-"
                     }
                 ]
             },
@@ -1013,76 +497,21 @@
                 "id": 33,
                 "name": "Weapon Dmg",
                 "description": "If to-hit succeeds then roll to determine dmg.",
-                "attribs": [],
-                "abilities": [],
-                "toplevel": false,
                 "outcome_type": "numeric",
-                "roller_type": null,
                 "numeric_range": [1, 6],
-                "single_number": 0.0,
-                "selection_strings": null,
                 "determinants": [
                     {
-                        "label": "",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "subject",
-                            "field_mode": "attr",
-                            "child_of_anchor": true,
-                            "item_id": null,
-                            "attrib_id": 29,
-                            "recipe_id": null
-                        },
-                        "outfield": null,
-                        "op_application": "+",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0,
-                        "negate": false,
-                        "outcome_success": "always",
-                        "auto_apply": false
+                        "infield": {"child_of_anchor": true, "attrib_id": 29}
                     },
                     {
-                        "label": "",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "subject",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": null,
-                            "attrib_id": 30,
-                            "recipe_id": null
-                        },
-                        "outfield": null,
-                        "op_application": "+",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0,
-                        "negate": false,
-                        "outcome_success": "always",
-                        "auto_apply": false
+                        "infield": {"attrib_id": 30}
                     }
                 ],
                 "effects": [
                     {
-                        "label": "",
                         "get_val_from": "outcome",
-                        "infield": null,
-                        "outfield": {
-                            "role": "subject",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": null,
-                            "attrib_id": 22,
-                            "recipe_id": null
-                        },
-                        "op_application": "-",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0,
-                        "negate": false,
-                        "outcome_success": "always",
-                        "auto_apply": false
+                        "outfield": {"attrib_id": 22},
+                        "op_application": "-"
                     }
                 ]
             },
@@ -1090,97 +519,23 @@
                 "id": 27,
                 "name": "Weapon To-Hit",
                 "description": "Attempt to land a physical blow, either melee or ranged depending on the weapon. Could also be unarmed.",
-                "attribs": [],
-                "abilities": [],
-                "toplevel": false,
-                "outcome_type": "fourway",
-                "roller_type": null,
                 "numeric_range": [1, 20],
-                "single_number": 0.0,
-                "selection_strings": null,
                 "determinants": [
                     {
-                        "label": "",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "subject",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": null,
-                            "attrib_id": 31,
-                            "recipe_id": null
-                        },
-                        "outfield": null,
-                        "op_application": "+",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0,
-                        "negate": false,
-                        "outcome_success": "always",
-                        "auto_apply": false
+                        "infield": {"attrib_id": 31}
                     },
                     {
-                        "label": "",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "subject",
-                            "field_mode": "attr",
-                            "child_of_anchor": true,
-                            "item_id": null,
-                            "attrib_id": 28,
-                            "recipe_id": null
-                        },
-                        "outfield": null,
-                        "op_application": "+",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0,
-                        "negate": false,
-                        "outcome_success": "always",
-                        "auto_apply": false
+                        "infield": {"child_of_anchor": true, "attrib_id": 28}
                     },
                     {
-                        "label": "",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "target char",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": null,
-                            "attrib_id": 31,
-                            "recipe_id": null
-                        },
-                        "outfield": null,
-                        "op_application": "-",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0,
-                        "negate": false,
-                        "outcome_success": "always",
-                        "auto_apply": false
+                        "infield": {"role": "target char", "attrib_id": 31},
+                        "op_application": "-"
                     },
                     {
-                        "label": "",
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "target char",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": null,
-                            "attrib_id": 22,
-                            "recipe_id": null
-                        },
-                        "outfield": null,
-                        "op_application": ">=",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0,
-                        "negate": false,
-                        "outcome_success": "always",
-                        "auto_apply": false
+                        "infield": {"role": "target char", "attrib_id": 22},
+                        "op_application": ">="
                     }
-                ],
-                "effects": []
+                ]
             }
         ]
     },
@@ -1197,22 +552,8 @@
         "multiplayer": false,
         "complete": "Under Construction",
         "win_reqs": [
-            {
-                "item_id": null,
-                "quantity": null,
-                "char_id": 4,
-                "loc_id": null,
-                "attrib_id": 7,
-                "attrib_value": 0.0
-            },
-            {
-                "item_id": 18,
-                "quantity": 1.0,
-                "char_id": null,
-                "loc_id": null,
-                "attrib_id": null,
-                "attrib_value": null
-            }
+            {"char_id": 4, "attrib_id": 7, "attrib_value": 0.0},
+            {"item_id": 18, "quantity": 1.0}
         ]
     }
 }

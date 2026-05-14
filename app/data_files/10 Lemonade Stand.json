@@ -4,24 +4,16 @@
             {
                 "id": 2,
                 "name": "Dollars",
-                "description": "",
-                "attribs": [],
-                "abilities": [],
                 "storage_type": "u",
-                "q_limit": 0.0,
                 "toplevel": true,
-                "masked": false,
                 "recipes": [
                     {
                         "id": 1,
                         "rate_amount": 0.5,
-                        "rate_duration": 8.0,
-                        "instant": false,
+                        "rate_duration": 8,
                         "sources": [
-                            {"item_id": 3, "q_required": 1.0, "preserve": false}
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
+                            {"item_id": 3, "q_required": 1.0}
+                        ]
                     }
                 ]
             },
@@ -29,49 +21,32 @@
                 "id": 3,
                 "name": "Lemonade",
                 "description": "number of glasses",
-                "attribs": [],
-                "abilities": [],
                 "storage_type": "u",
-                "q_limit": 0.0,
                 "toplevel": true,
-                "masked": false,
                 "recipes": [
                     {
                         "id": 2,
-                        "rate_amount": 1.0,
-                        "rate_duration": 5.0,
-                        "instant": false,
+                        "rate_duration": 5,
                         "sources": [
-                            {"item_id": 4, "q_required": 1.0, "preserve": false},
-                            {"item_id": 5, "q_required": 1.0, "preserve": false},
-                            {"item_id": 7, "q_required": 2.0, "preserve": false}
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
+                            {"item_id": 4, "q_required": 1.0},
+                            {"item_id": 5, "q_required": 1.0},
+                            {"item_id": 7, "q_required": 2.0}
+                        ]
                     }
                 ]
             },
             {
                 "id": 4,
                 "name": "Lemons",
-                "description": "",
-                "attribs": [],
-                "abilities": [],
                 "storage_type": "u",
-                "q_limit": 0.0,
-                "toplevel": false,
-                "masked": false,
                 "recipes": [
                     {
                         "id": 3,
                         "rate_amount": 5.0,
-                        "rate_duration": 3.0,
                         "instant": true,
                         "sources": [
-                            {"item_id": 2, "q_required": 1.0, "preserve": false}
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
+                            {"item_id": 2, "q_required": 1.0}
+                        ]
                     }
                 ]
             },
@@ -79,23 +54,15 @@
                 "id": 5,
                 "name": "Sugar",
                 "description": "Counted in cups, bought in bags.",
-                "attribs": [],
-                "abilities": [],
                 "storage_type": "u",
-                "q_limit": 0.0,
-                "toplevel": false,
-                "masked": false,
                 "recipes": [
                     {
                         "id": 4,
                         "rate_amount": 10.0,
-                        "rate_duration": 3.0,
                         "instant": true,
                         "sources": [
-                            {"item_id": 2, "q_required": 1.0, "preserve": false}
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
+                            {"item_id": 2, "q_required": 1.0}
+                        ]
                     }
                 ]
             },
@@ -103,35 +70,21 @@
                 "id": 6,
                 "name": "Tap",
                 "description": "source of water",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "u",
-                "q_limit": 0.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
+                "storage_type": "u"
             },
             {
                 "id": 7,
                 "name": "Water",
                 "description": "cups",
-                "attribs": [],
-                "abilities": [],
                 "storage_type": "u",
                 "q_limit": 10.0,
-                "toplevel": false,
-                "masked": false,
                 "recipes": [
                     {
                         "id": 5,
-                        "rate_amount": 1.0,
-                        "rate_duration": 2.0,
-                        "instant": false,
+                        "rate_duration": 2,
                         "sources": [
                             {"item_id": 6, "q_required": 1.0, "preserve": true}
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
+                        ]
                     }
                 ]
             }
@@ -161,14 +114,7 @@
         "multiplayer": false,
         "complete": "Complete",
         "win_reqs": [
-            {
-                "item_id": 2,
-                "quantity": 50.0,
-                "char_id": null,
-                "loc_id": null,
-                "attrib_id": null,
-                "attrib_value": 0.0
-            }
+            {"item_id": 2, "quantity": 50.0, "attrib_value": 0.0}
         ]
     }
 }

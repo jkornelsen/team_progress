@@ -5,46 +5,27 @@
                 "id": 5,
                 "name": "Barn",
                 "description": "Where chores are done.",
-                "attribs": [],
-                "abilities": [],
                 "storage_type": "l",
-                "q_limit": 1.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
+                "q_limit": 1.0
             },
             {
                 "id": 22,
                 "name": "Branch",
-                "description": "Better for fending off animals than a knife.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "c",
-                "q_limit": 0.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
+                "description": "Better for fending off animals than a knife."
             },
             {
                 "id": 6,
                 "name": "Cash",
                 "description": "Get paid for chores. Useful for purchasing pigs at the market in case breeding doesn't work out.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "c",
                 "q_limit": 100.0,
-                "toplevel": false,
-                "masked": false,
                 "recipes": [
                     {
                         "id": 1,
                         "rate_amount": 3.0,
-                        "rate_duration": 3.0,
                         "instant": true,
                         "sources": [
-                            {"item_id": 7, "q_required": 1.0, "preserve": false}
+                            {"item_id": 7, "q_required": 1.0}
                         ],
-                        "byproducts": [],
                         "attrib_reqs": [
                             {
                                 "attrib_id": 3,
@@ -59,22 +40,14 @@
                 "id": 7,
                 "name": "Chores",
                 "description": "Pitchforking hay to feed animals. Mucking manure. Milking cows.\r\n\r\nFind Uncle to get paid.",
-                "attribs": [],
-                "abilities": [],
                 "storage_type": "u",
                 "q_limit": 10.0,
-                "toplevel": false,
-                "masked": false,
                 "recipes": [
                     {
                         "id": 2,
-                        "rate_amount": 1.0,
-                        "rate_duration": 3.0,
-                        "instant": false,
                         "sources": [
                             {"item_id": 5, "q_required": 1.0, "preserve": true}
                         ],
-                        "byproducts": [],
                         "attrib_reqs": [
                             {
                                 "attrib_id": 4,
@@ -89,24 +62,15 @@
                 "id": 8,
                 "name": "Cooked Bacon",
                 "description": "Cooked on the wood stove in a cast iron skillet at home.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "c",
                 "q_limit": 20.0,
-                "toplevel": false,
-                "masked": false,
                 "recipes": [
                     {
                         "id": 3,
-                        "rate_amount": 1.0,
-                        "rate_duration": 2.0,
-                        "instant": false,
+                        "rate_duration": 2,
                         "sources": [
-                            {"item_id": 12, "q_required": 1.0, "preserve": false},
+                            {"item_id": 12, "q_required": 1.0},
                             {"item_id": 13, "q_required": 1.0, "preserve": true}
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
+                        ]
                     }
                 ]
             },
@@ -114,58 +78,34 @@
                 "id": 9,
                 "name": "Knife",
                 "description": "For butchering. Not much of a weapon, at least not in the hands of a young girl.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "c",
-                "q_limit": 1.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
+                "q_limit": 1.0
             },
             {
                 "id": 10,
                 "name": "Phone",
                 "description": "Suzy's mother is the first number on the contacts list.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "c",
-                "q_limit": 1.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
+                "q_limit": 1.0
             },
             {
                 "id": 11,
                 "name": "Pigs",
                 "description": "Can be raised or else bought from the market. Being near them makes your clothes smell for hours afterwards.\r\n{pink|\r\n```\r\n   (\\____/)\r\n   / P  P \\\r\n  (  (oo)  )\r\n   `-.__.-'\r\n```\r\n}",
-                "attribs": [],
-                "abilities": [],
                 "storage_type": "l",
                 "q_limit": 4.0,
-                "toplevel": false,
-                "masked": false,
                 "recipes": [
                     {
                         "id": 4,
-                        "rate_amount": 1.0,
-                        "rate_duration": 8.0,
-                        "instant": false,
+                        "rate_duration": 8,
                         "sources": [
                             {"item_id": 11, "q_required": 2.0, "preserve": true}
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
+                        ]
                     },
                     {
                         "id": 5,
-                        "rate_amount": 1.0,
-                        "rate_duration": 3.0,
                         "instant": true,
                         "sources": [
-                            {"item_id": 6, "q_required": 60.0, "preserve": false}
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
+                            {"item_id": 6, "q_required": 60.0}
+                        ]
                     }
                 ]
             },
@@ -173,24 +113,16 @@
                 "id": 12,
                 "name": "Raw Bacon",
                 "description": "Straight from the pig.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "c",
                 "q_limit": 20.0,
-                "toplevel": false,
-                "masked": false,
                 "recipes": [
                     {
                         "id": 6,
                         "rate_amount": 4.0,
-                        "rate_duration": 8.0,
-                        "instant": false,
+                        "rate_duration": 8,
                         "sources": [
                             {"item_id": 9, "q_required": 1.0, "preserve": true},
-                            {"item_id": 11, "q_required": 1.0, "preserve": false}
-                        ],
-                        "byproducts": [],
-                        "attrib_reqs": []
+                            {"item_id": 11, "q_required": 1.0}
+                        ]
                     }
                 ]
             },
@@ -198,25 +130,15 @@
                 "id": 26,
                 "name": "Table",
                 "description": "At home, drop cooked bacon to go on the table.",
-                "attribs": [],
-                "abilities": [],
                 "storage_type": "l",
-                "q_limit": 1.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
+                "q_limit": 1.0
             },
             {
                 "id": 13,
                 "name": "Wood Stove",
                 "description": "For cooking in the kitchen.",
-                "attribs": [],
-                "abilities": [],
                 "storage_type": "l",
-                "q_limit": 1.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
+                "q_limit": 1.0
             }
         ],
         "locations": [
@@ -224,46 +146,25 @@
                 "id": 24,
                 "name": "Farmhouse",
                 "description": "Board siding and coruscated metal roof — primitive construction.",
-                "attribs": [],
-                "abilities": [],
-                "dimensions": null,
-                "toplevel": false,
-                "masked": false,
-                "items": [],
                 "item_refs": [7],
                 "destinations": [
-                    {
-                        "loc2_id": 14,
-                        "door1": null,
-                        "door2": null,
-                        "bidirectional": true
-                    }
+                    {"loc2_id": 14}
                 ]
             },
             {
                 "id": 15,
                 "name": "Home",
                 "description": "Faded red bricks cover the front.",
-                "attribs": [],
-                "abilities": [],
-                "dimensions": null,
-                "toplevel": false,
-                "masked": false,
                 "items": [
                     {"item_id": 13, "quantity": 1.0, "position": null},
                     {"item_id": 26, "quantity": 1.0, "position": null}
-                ],
-                "item_refs": [],
-                "destinations": []
+                ]
             },
             {
                 "id": 16,
                 "name": "Sketchy-Path Forest",
                 "description": "Easy to get lost in. Any character attempting to cross the forest must do a *Navigate Woods* check.",
-                "attribs": [],
-                "abilities": [],
                 "dimensions": [10, 5],
-                "toplevel": false,
                 "masked": true,
                 "items": [
                     {
@@ -272,27 +173,19 @@
                         "position": [8, 1]
                     }
                 ],
-                "item_refs": [],
                 "destinations": [
                     {
                         "loc2_id": 15,
-                        "door1": [1, 2],
-                        "door2": null,
-                        "bidirectional": true
+                        "door1": [1, 2]
                     },
                     {
                         "loc2_id": 14,
-                        "door1": [10, 4],
-                        "door2": null,
-                        "bidirectional": true
+                        "door1": [10, 4]
                     }
                 ],
                 "zones": [
                     {
-                        "coords": [3, 4, 7, 5],
-                        "label": "",
-                        "color": "",
-                        "prevents_travel": true
+                        "coords": [3, 4, 7, 5]
                     }
                 ]
             },
@@ -300,17 +193,11 @@
                 "id": 14,
                 "name": "Uncle's Farm",
                 "description": "The property has a modestly inviting feel of fertile land.\r\n\r\nSuzy's uncle is okay with her butchering pigs, as long as there is a breeding pair left.",
-                "attribs": [],
-                "abilities": [],
-                "dimensions": null,
-                "toplevel": false,
                 "masked": true,
                 "items": [
                     {"item_id": 11, "quantity": 4.0, "position": null},
                     {"item_id": 5, "quantity": 1.0, "position": null}
-                ],
-                "item_refs": [],
-                "destinations": []
+                ]
             }
         ],
         "characters": [
@@ -324,11 +211,7 @@
                 ],
                 "abilities": [25],
                 "toplevel": true,
-                "location_id": 15,
-                "position": null,
-                "travel_party": "",
-                "items": [],
-                "progress": []
+                "location_id": 15
             },
             {
                 "id": 17,
@@ -342,13 +225,10 @@
                 "abilities": [21, 25, 27],
                 "toplevel": true,
                 "location_id": 15,
-                "position": null,
-                "travel_party": "",
                 "items": [
                     {"item_id": 9, "quantity": 1.0, "slot": ""},
                     {"item_id": 10, "quantity": 1.0, "slot": ""}
-                ],
-                "progress": []
+                ]
             },
             {
                 "id": 19,
@@ -357,60 +237,37 @@
                 "attribs": [
                     [3, 1.0]
                 ],
-                "abilities": [],
-                "toplevel": false,
-                "location_id": 24,
-                "position": null,
-                "travel_party": "",
-                "items": [],
-                "progress": []
+                "location_id": 24
             },
             {
                 "id": 23,
                 "name": "Wolf",
                 "description": "Shaggy forest dweller with teeth and a snarl.\r\n\r\nTo appear, set location to *Sketchy-Path Forest* and grid position for example `4,1`.",
-                "attribs": [],
-                "abilities": [],
-                "toplevel": false,
-                "location_id": null,
-                "position": [4, 1],
-                "travel_party": "",
-                "items": [],
-                "progress": []
+                "position": [4, 1]
             }
         ],
         "attribs": [
             {
                 "id": 28,
                 "name": "Climbing",
-                "description": "Often easier for kids than adults.",
-                "abilities": [],
-                "is_binary": false,
-                "enum_list": []
+                "description": "Often easier for kids than adults."
             },
             {
                 "id": 2,
                 "name": "Pathfinding",
-                "description": "Knowledge of the woods.",
-                "abilities": [],
-                "is_binary": false,
-                "enum_list": []
+                "description": "Knowledge of the woods."
             },
             {
                 "id": 3,
                 "name": "Pays for Odd Jobs",
                 "description": "Has money to pay for chores.",
-                "abilities": [],
-                "is_binary": true,
-                "enum_list": []
+                "is_binary": true
             },
             {
                 "id": 4,
                 "name": "Willing to do Odd Jobs",
                 "description": "Can do chores.",
-                "abilities": [],
-                "is_binary": true,
-                "enum_list": []
+                "is_binary": true
             }
         ],
         "events": [
@@ -418,63 +275,24 @@
                 "id": 21,
                 "name": "Connect to Service",
                 "description": "Attempt to connect a device. Choose *Very Easy* difficulty since we won't be far from civilization.",
-                "attribs": [],
-                "abilities": [],
-                "toplevel": false,
-                "outcome_type": "fourway",
-                "roller_type": "dnd",
-                "numeric_range": [1, 20],
-                "single_number": 0.0,
-                "selection_strings": "",
-                "determinants": [],
-                "effects": []
+                "numeric_range": [1, 20]
             },
             {
                 "id": 27,
                 "name": "Contest Enemy",
                 "description": "Run, hide, frighten, fight—the choice is up to you.\r\n\r\nEdit this event to add **Climbing** as a *Determinant*. Or, [create an attribute](/configure/#attrib), such as **Strength** for fighting, and assign Suzy a value (she would be weak).",
-                "attribs": [],
-                "abilities": [],
-                "toplevel": false,
-                "outcome_type": "fourway",
-                "roller_type": null,
-                "numeric_range": [1, 20],
-                "single_number": 0.0,
-                "selection_strings": null,
-                "determinants": [],
-                "effects": []
+                "numeric_range": [1, 20]
             },
             {
                 "id": 25,
                 "name": "Navigate Woods",
-                "description": "- Set **Difficulty:** *Very Easy* during the day, *Hard* after working at the farm (tired / dark).\r\n- On **Minor failure:** Lost \u2014 [Call for Help](/play/event/21?subject_id=17)\r\n- On **Major failure:** [Enemy](/configure/character/23) appears",
-                "attribs": [],
-                "abilities": [],
-                "toplevel": false,
-                "outcome_type": "fourway",
-                "roller_type": "dnd",
+                "description": "- Set **Difficulty:** *Very Easy* during the day, *Hard* after working at the farm (tired / dark).\r\n- On **Minor failure:** Lost — [Call for Help](/play/event/21?subject_id=17)\r\n- On **Major failure:** [Enemy](/configure/character/23) appears",
                 "numeric_range": [1, 20],
-                "single_number": 0.0,
-                "selection_strings": "",
                 "determinants": [
                     {
-                        "label": null,
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "subject",
-                            "field_mode": "attr",
-                            "child_of_anchor": false,
-                            "item_id": null,
-                            "attrib_id": 2
-                        },
-                        "outfield": null,
-                        "op_application": "+",
-                        "op_transform": "",
-                        "val_transform": 1.0,
-                        "val_required": 1.0
+                        "infield": {"attrib_id": 2}
                     }
-                ],
-                "effects": []
+                ]
             }
         ]
     },
@@ -494,22 +312,8 @@
         "multiplayer": false,
         "complete": "Complete",
         "win_reqs": [
-            {
-                "item_id": 8,
-                "quantity": 20.0,
-                "char_id": null,
-                "loc_id": 15,
-                "attrib_id": null,
-                "attrib_value": 0.0
-            },
-            {
-                "item_id": 11,
-                "quantity": 2.0,
-                "char_id": null,
-                "loc_id": 14,
-                "attrib_id": null,
-                "attrib_value": 0.0
-            }
+            {"item_id": 8, "quantity": 20.0, "loc_id": 15, "attrib_value": 0.0},
+            {"item_id": 11, "quantity": 2.0, "loc_id": 14, "attrib_value": 0.0}
         ]
     }
 }

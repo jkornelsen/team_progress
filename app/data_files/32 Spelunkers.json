@@ -1,41 +1,13 @@
 {
     "entities": {
         "items": [
-            {
-                "id": 9,
-                "name": "Good Rope",
-                "description": "",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "c",
-                "q_limit": 1.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
-            },
-            {
-                "id": 7,
-                "name": "Headlamp",
-                "description": "",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "c",
-                "q_limit": 1.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
-            },
+            {"id": 9, "name": "Good Rope", "q_limit": 1.0},
+            {"id": 7, "name": "Headlamp", "q_limit": 1.0},
             {
                 "id": 8,
                 "name": "Refined Steel Pickaxe",
                 "description": "For digging into rock. Primarily about brute force, but certain jobs may require some delicate hits.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "c",
-                "q_limit": 1.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
+                "q_limit": 1.0
             }
         ],
         "locations": [
@@ -43,121 +15,53 @@
                 "id": 13,
                 "name": "Big Room Inside Entrance",
                 "description": "High ceiling, with a large underground pool at the far end. Some light comes in from the entrance, noticeable especially if there are no other lights on.",
-                "attribs": [],
-                "abilities": [],
-                "dimensions": null,
-                "toplevel": false,
-                "masked": false,
-                "items": [],
-                "item_refs": [],
                 "destinations": [
-                    {
-                        "loc2_id": 12,
-                        "bidirectional": true
-                    }
+                    {"loc2_id": 12}
                 ]
             },
             {
                 "id": 16,
                 "name": "Chamber with Clinking Pillar",
                 "description": "Walls shine with metal in the light of their headlamps. The clinking sound is coming from the center, a pillar formation from floor to ceiling that doesn't completely look natural, but not constructed either.",
-                "attribs": [],
-                "abilities": [],
-                "dimensions": null,
-                "toplevel": false,
-                "masked": false,
-                "items": [],
-                "item_refs": [],
                 "destinations": [
-                    {
-                        "loc2_id": 14,
-                        "bidirectional": true
-                    }
+                    {"loc2_id": 14}
                 ]
             },
             {
                 "id": 15,
                 "name": "Left Passage",
                 "description": "Water dribbling down walls.",
-                "attribs": [],
-                "abilities": [],
-                "dimensions": null,
-                "toplevel": false,
-                "masked": false,
-                "items": [],
-                "item_refs": [],
                 "destinations": [
-                    {
-                        "loc2_id": 10,
-                        "bidirectional": true
-                    }
+                    {"loc2_id": 10}
                 ]
             },
             {
                 "id": 12,
                 "name": "Outside Cave Entrance",
-                "description": "Tropical jungle, with a wide dirt path nearby. It looks like people visit the cave from time to time.",
-                "attribs": [],
-                "abilities": [],
-                "dimensions": null,
-                "toplevel": false,
-                "masked": false,
-                "items": [],
-                "item_refs": [],
-                "destinations": []
+                "description": "Tropical jungle, with a wide dirt path nearby. It looks like people visit the cave from time to time."
             },
             {
                 "id": 11,
                 "name": "Path around Pool",
                 "description": "Slippery",
-                "attribs": [],
-                "abilities": [],
-                "dimensions": null,
-                "toplevel": false,
-                "masked": false,
-                "items": [],
-                "item_refs": [],
                 "destinations": [
-                    {
-                        "loc2_id": 13,
-                        "bidirectional": true
-                    }
+                    {"loc2_id": 13}
                 ]
             },
             {
                 "id": 14,
                 "name": "Right Passage",
                 "description": "Slight breeze brings a faint metallic smell.",
-                "attribs": [],
-                "abilities": [],
-                "dimensions": null,
-                "toplevel": false,
-                "masked": false,
-                "items": [],
-                "item_refs": [],
                 "destinations": [
-                    {
-                        "loc2_id": 10,
-                        "bidirectional": true
-                    }
+                    {"loc2_id": 10}
                 ]
             },
             {
                 "id": 10,
                 "name": "Room with Crystals on Ceiling",
                 "description": "Covering the crystals are Spectrum-Winged Bats with iridescent fur.\r\n\r\nAt the far end, forks into two paths. The walls on the left path are dripping water. On the right, a faint breeze carries a metallic scent.",
-                "attribs": [],
-                "abilities": [],
-                "dimensions": null,
-                "toplevel": false,
-                "masked": false,
-                "items": [],
-                "item_refs": [],
                 "destinations": [
-                    {
-                        "loc2_id": 11,
-                        "bidirectional": true
-                    }
+                    {"loc2_id": 11}
                 ]
             }
         ],
@@ -167,35 +71,15 @@
                 "name": "Adam",
                 "description": "POV character. Middle aged caucasian, medium build. Can easily get tired, but may also be feeling unexpectedly energetic.",
                 "attribs": [
-                    [
-                        6,
-                        2.0
-                    ],
-                    [
-                        5,
-                        2.0
-                    ],
-                    [
-                        2,
-                        2.0
-                    ],
-                    [
-                        4,
-                        2.0
-                    ]
+                    [6, 2.0],
+                    [5, 2.0],
+                    [2, 2.0],
+                    [4, 2.0]
                 ],
-                "abilities": [],
                 "toplevel": true,
-                "masked": false,
                 "location_id": 16,
-                "position": null,
-                "travel_party": "",
                 "items": [
-                    {
-                        "item_id": 7,
-                        "quantity": 1.0,
-                        "slot": "Head"
-                    }
+                    {"item_id": 7, "quantity": 1.0, "slot": "Head"}
                 ]
             },
             {
@@ -203,45 +87,17 @@
                 "name": "Karl",
                 "description": "Volleyball coach. Strong, best for lifting. Apparently Eastern European ethnicity, noticeable accent but with no difficulties speaking English in most contexts.",
                 "attribs": [
-                    [
-                        6,
-                        2.0
-                    ],
-                    [
-                        5,
-                        1.0
-                    ],
-                    [
-                        4,
-                        1.0
-                    ],
-                    [
-                        2,
-                        4.0
-                    ]
+                    [6, 2.0],
+                    [5, 1.0],
+                    [4, 1.0],
+                    [2, 4.0]
                 ],
-                "abilities": [],
                 "toplevel": true,
-                "masked": false,
                 "location_id": 16,
-                "position": null,
-                "travel_party": "",
                 "items": [
-                    {
-                        "item_id": 9,
-                        "quantity": 1.0,
-                        "slot": ""
-                    },
-                    {
-                        "item_id": 7,
-                        "quantity": 1.0,
-                        "slot": "Head"
-                    },
-                    {
-                        "item_id": 8,
-                        "quantity": 1.0,
-                        "slot": "Right Hand"
-                    }
+                    {"item_id": 9, "quantity": 1.0, "slot": ""},
+                    {"item_id": 7, "quantity": 1.0, "slot": "Head"},
+                    {"item_id": 8, "quantity": 1.0, "slot": "Right Hand"}
                 ]
             },
             {
@@ -249,35 +105,15 @@
                 "name": "Melaka",
                 "description": "Waitress, in charge of food. With African features, wearing red polo shirt and jean shorts.",
                 "attribs": [
-                    [
-                        5,
-                        4.0
-                    ],
-                    [
-                        2,
-                        1.0
-                    ],
-                    [
-                        4,
-                        3.0
-                    ],
-                    [
-                        6,
-                        4.0
-                    ]
+                    [5, 4.0],
+                    [2, 1.0],
+                    [4, 3.0],
+                    [6, 4.0]
                 ],
-                "abilities": [],
                 "toplevel": true,
-                "masked": false,
                 "location_id": 16,
-                "position": null,
-                "travel_party": "",
                 "items": [
-                    {
-                        "item_id": 7,
-                        "quantity": 1.0,
-                        "slot": "Head"
-                    }
+                    {"item_id": 7, "quantity": 1.0, "slot": "Head"}
                 ]
             },
             {
@@ -285,321 +121,99 @@
                 "name": "Tsayh",
                 "description": "Guide. Spelunking expert, brings equipment. With broadly Latin American features, wearing loose green shirt and khaki shorts.",
                 "attribs": [
-                    [
-                        6,
-                        2.0
-                    ],
-                    [
-                        2,
-                        1.0
-                    ],
-                    [
-                        5,
-                        3.0
-                    ],
-                    [
-                        4,
-                        4.0
-                    ]
+                    [6, 2.0],
+                    [2, 1.0],
+                    [5, 3.0],
+                    [4, 4.0]
                 ],
-                "abilities": [],
                 "toplevel": true,
-                "masked": false,
                 "location_id": 16,
-                "position": null,
-                "travel_party": "",
                 "items": [
-                    {
-                        "item_id": 7,
-                        "quantity": 1.0,
-                        "slot": "Head"
-                    }
+                    {"item_id": 7, "quantity": 1.0, "slot": "Head"}
                 ]
             }
         ],
         "attribs": [
-            {
-                "id": 2,
-                "name": "Strength",
-                "description": "",
-                "abilities": [],
-                "is_binary": false,
-                "enum_list": []
-            },
-            {
-                "id": 3,
-                "name": "Battery",
-                "description": "",
-                "abilities": [],
-                "is_binary": false,
-                "enum_list": []
-            },
+            {"id": 3, "name": "Battery"},
             {
                 "id": 4,
                 "name": "Dexterity",
-                "description": "Accuracy, balance, reflexes, precision tasks.\r\n\r\nFor characters:\r\n+1 (bulky)\r\n+2 (average, cautious)\r\n+3 (nimble, alert)\r\n+4 (experienced)\r\n\r\nModifier for roll success. +2 is pretty good for an item, could possibly go up to +5.",
-                "abilities": [],
-                "is_binary": false,
-                "enum_list": []
+                "description": "Accuracy, balance, reflexes, precision tasks.\r\n\r\nFor characters:\r\n+1 (bulky)\r\n+2 (average, cautious)\r\n+3 (nimble, alert)\r\n+4 (experienced)\r\n\r\nModifier for roll success. +2 is pretty good for an item, could possibly go up to +5."
             },
             {
                 "id": 5,
                 "name": "Intelligence",
-                "description": "For example, figuring out how to work mechanisms.",
-                "abilities": [],
-                "is_binary": false,
-                "enum_list": []
+                "description": "For example, figuring out how to work mechanisms."
             },
             {
                 "id": 6,
                 "name": "Perception",
-                "description": "Sharp-eyed, experienced: +2 to +4\r\nExceptionally perceptive: +5 to +6 (trained, naturally gifted)",
-                "abilities": [],
-                "is_binary": false,
-                "enum_list": []
-            }
+                "description": "Sharp-eyed, experienced: +2 to +4\r\nExceptionally perceptive: +5 to +6 (trained, naturally gifted)"
+            },
+            {"id": 2, "name": "Strength"}
         ],
         "events": [
             {
                 "id": 28,
                 "name": "Dig",
                 "description": "With a shovel, pickaxe for rock, or even bare hands. Primarily strength-based, but could require dexterity for certain targeted efforts.",
-                "numeric_range": [
-                    1,
-                    20
-                ],
-                "outcome_type": "fourway",
-                "selection_strings": "",
                 "toplevel": true,
-                "triggers": [
-                    [
-                        "item",
-                        8
-                    ]
-                ],
-                "determining": [
-                    {
-                        "entity_data": [
-                            "attrib",
-                            2
-                        ],
-                        "operation": "+",
-                        "label": "Wielder"
-                    },
-                    {
-                        "entity_data": [
-                            "attrib",
-                            4
-                        ],
-                        "operation": "+",
-                        "label": "Wielder"
-                    },
-                    {
-                        "entity_data": [
-                            "attrib",
-                            2
-                        ],
-                        "operation": "+",
-                        "label": "Tool"
-                    },
-                    {
-                        "entity_data": [
-                            "attrib",
-                            4
-                        ],
-                        "operation": "+",
-                        "label": "Tool"
-                    }
-                ]
+                "numeric_range": [1, 20]
             },
             {
                 "id": 22,
                 "name": "Hold",
                 "description": "Holding delicate, slippery, or awkward items.",
-                "numeric_range": [
-                    1,
-                    20
-                ],
-                "outcome_type": "fourway",
-                "selection_strings": "",
                 "toplevel": true,
-                "triggers": [],
-                "determining": [
-                    {
-                        "entity_data": [
-                            "attrib",
-                            4
-                        ],
-                        "operation": "+",
-                        "label": ""
-                    }
-                ]
+                "numeric_range": [1, 20]
             },
             {
                 "id": 26,
                 "name": "Investigate",
                 "description": "Figure out how something works or what its purpose is.",
-                "numeric_range": [
-                    1,
-                    20
-                ],
-                "outcome_type": "fourway",
-                "selection_strings": "",
                 "toplevel": true,
-                "triggers": [],
-                "determining": [
-                    {
-                        "entity_data": [
-                            "attrib",
-                            5
-                        ],
-                        "operation": "+",
-                        "label": ""
-                    }
-                ]
+                "numeric_range": [1, 20]
             },
             {
                 "id": 21,
                 "name": "Navigate",
                 "description": "Success in making it past a certain point, or walking on a path.",
-                "numeric_range": [
-                    1,
-                    20
-                ],
-                "outcome_type": "fourway",
-                "selection_strings": "",
                 "toplevel": true,
-                "triggers": [],
-                "determining": [
-                    {
-                        "entity_data": [
-                            "attrib",
-                            4
-                        ],
-                        "operation": "+",
-                        "label": ""
-                    }
-                ]
+                "numeric_range": [1, 20]
             },
             {
                 "id": 27,
                 "name": "Operate",
                 "description": "Use or manipulate something to achieve an effect.",
-                "numeric_range": [
-                    1,
-                    20
-                ],
-                "outcome_type": "fourway",
-                "selection_strings": "",
                 "toplevel": true,
-                "triggers": [],
-                "determining": [
-                    {
-                        "entity_data": [
-                            "attrib",
-                            5
-                        ],
-                        "operation": "+",
-                        "label": ""
-                    }
-                ]
+                "numeric_range": [1, 20]
             },
             {
                 "id": 25,
                 "name": "Perceive",
                 "description": "For example, discover details about an object by viewing it.",
-                "numeric_range": [
-                    1,
-                    20
-                ],
-                "outcome_type": "fourway",
-                "selection_strings": "",
                 "toplevel": true,
-                "triggers": [],
-                "determining": [
-                    {
-                        "entity_data": [
-                            "attrib",
-                            6
-                        ],
-                        "operation": "+",
-                        "label": ""
-                    }
-                ]
+                "numeric_range": [1, 20]
             },
             {
                 "id": 29,
                 "name": "Pull",
                 "description": "Such as hoisting a rope.",
-                "numeric_range": [
-                    1,
-                    20
-                ],
-                "outcome_type": "fourway",
-                "selection_strings": "",
                 "toplevel": true,
-                "triggers": [
-                    [
-                        "item",
-                        9
-                    ]
-                ],
-                "determining": [
-                    {
-                        "entity_data": [
-                            "attrib",
-                            2
-                        ],
-                        "operation": "+",
-                        "label": ""
-                    }
-                ]
+                "numeric_range": [1, 20]
             },
             {
                 "id": 24,
                 "name": "Seize",
                 "description": "Catch, grab, or restrain elusive targets.",
-                "numeric_range": [
-                    1,
-                    20
-                ],
-                "outcome_type": "fourway",
-                "selection_strings": "",
                 "toplevel": true,
-                "triggers": [],
-                "determining": [
-                    {
-                        "entity_data": [
-                            "attrib",
-                            4
-                        ],
-                        "operation": "+",
-                        "label": ""
-                    }
-                ]
+                "numeric_range": [1, 20]
             },
             {
                 "id": 23,
                 "name": "Throw",
-                "description": "",
-                "numeric_range": [
-                    1,
-                    20
-                ],
-                "outcome_type": "fourway",
-                "selection_strings": "",
                 "toplevel": true,
-                "triggers": [],
-                "determining": [
-                    {
-                        "entity_data": [
-                            "attrib",
-                            4
-                        ],
-                        "operation": "+",
-                        "label": ""
-                    }
-                ]
+                "numeric_range": [1, 20]
             }
         ]
     },
@@ -611,11 +225,7 @@
         "title": "Spelunkers",
         "description": "Story-driven {gold|exploration} with fixed stats for rolls.\r\n\r\nEasier to manage than the *Dungeon Crawl* scenario because XP is not tracked.",
         "number_format": "en_US",
-        "slots": [
-            "Right Hand",
-            "Left Hand",
-            "Head"
-        ],
+        "slots": ["Right Hand", "Left Hand", "Head"],
         "progress_type": "RPG",
         "multiplayer": true,
         "complete": "Starter Kit",

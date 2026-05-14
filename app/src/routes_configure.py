@@ -968,6 +968,7 @@ def upload():
             raise
         except Exception as e:
             db.session.rollback()
+            logger.exception(e)
             return render_template(
                 'error.html',
                 message="Couldn't Import",

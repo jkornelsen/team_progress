@@ -97,6 +97,26 @@ class DictHydrator:
 
         return cls(game_token=game_token, **fields)
 
+    def _get_column_default(self, col_name):
+        """Return the default value for a column, or a sentinel if none."""
+        _MISSING = object()  # defined at module level, not inline
+        column = self.__table__.columns.get(col_name)
+        if column is None or column.default is None:
+            return _MISSING
+        arg = column.default.arg
+        return arg(None) if callable(arg) else arg
+
+    def to_dict_sparse(self, data: dict) -> dict:
+        """Strip keys whose values are empty or match the column default."""
+        return {
+            k: v for k, v in data.items()
+            if v is not None
+            and v != ""
+            and v != []
+            and v != {}
+            and v != self._get_column_default(k)
+        }
+
 def timeToStr(dt_obj):
     return dt_obj.isoformat() if dt_obj else None
 
@@ -124,7 +144,7 @@ class Entity(db.Model, DictHydrator):
 
     def to_dict(self):
         """Base export for shared entity fields."""
-        return {
+        data = {
             "id": self.id,
             "name": self.name,
             "description": self.description,
@@ -134,6 +154,7 @@ class Entity(db.Model, DictHydrator):
             ],
             "abilities": [link.event_id for link in self._ability_links]
         }
+        return self.to_dict_sparse(data)
 
     @classmethod
     def from_dict(cls, data, game_token):
@@ -235,7 +256,7 @@ class Item(Entity):
                 sorted(self.recipes, key=lambda r: r.order_index)
             ],
         })
-        return data
+        return self.to_dict_sparse(data)
 
     @classmethod
     def from_dict(cls, data, game_token):
@@ -310,7 +331,7 @@ class Location(Entity):
             "entrance_reqs": [r.to_dict() for r in self.entrance_reqs],
             "zones": [z.to_dict() for z in self.zones],
         })
-        return data
+        return self.to_dict_sparse(data)
 
     @classmethod
     def from_dict(cls, data, game_token):
@@ -420,7 +441,7 @@ class Character(Entity):
             ],
             "progress": [p.to_dict() for p in self.progress_records],
         })
-        return data
+        return self.to_dict_sparse(data)
 
     @classmethod
     def from_dict(cls, data, game_token):
@@ -475,7 +496,7 @@ class Attrib(Entity):
             "is_binary": self.is_binary,
             "enum_list": self.enum_list or []
         })
-        return data
+        return self.to_dict_sparse(data)
 
     @classmethod
     def from_dict(cls, data, game_token):
@@ -554,7 +575,7 @@ class Event(Entity):
             "effects": [e.to_dict() for e in self.effects],
             "chained_events": [l.to_dict() for l in self.chained_events],
         })
-        return data
+        return self.to_dict_sparse(data)
 
     @classmethod
     def from_dict(cls, data, game_token):
@@ -763,12 +784,13 @@ class EntranceReq(db.Model, DictHydrator):
     attrib_value = db.Column(db.Float)
 
     def to_dict(self):
-        return {
+        data = {
             "item_id": self.item_id,
             "quantity": self.quantity,
             "attrib_id": self.attrib_id,
             "attrib_value": self.attrib_value
         }
+        return self.to_dict_sparse(data)
 
     @classmethod
     def from_dict(cls, data, game_token, loc_id):
@@ -808,12 +830,13 @@ class LocDest(db.Model, DictHydrator):
     bidirectional = db.Column(db.Boolean, default=True)
 
     def to_dict(self):
-        return {
+        data = {
             "loc2_id": self.loc2_id,
             "door1": self.door1,
             "door2": self.door2,
             "bidirectional": self.bidirectional
         }
+        return self.to_dict_sparse(data)
 
     @classmethod
     def from_dict(cls, data, game_token, loc1_id):
@@ -867,12 +890,13 @@ class LocZone(db.Model, DictHydrator):
     prevents_travel = db.Column(db.Boolean, default=True)
 
     def to_dict(self):
-        return {
+        data = {
             "coords": self.coords,
             "label": self.label,
             "color": self.color,
             "prevents_travel": self.prevents_travel
         }
+        return self.to_dict_sparse(data)
 
     @classmethod
     def from_dict(cls, data, game_token, loc_id):
@@ -1064,7 +1088,7 @@ class EventField(db.Model, DictHydrator):
     recipe_id = db.Column(db.Integer, nullable=True)
 
     def to_dict(self):
-        return {
+        data = {
             "role": self.role,
             "field_mode": self.field_mode,
             "child_of_anchor": self.child_of_anchor,
@@ -1072,6 +1096,7 @@ class EventField(db.Model, DictHydrator):
             "attrib_id": self.attrib_id,
             "recipe_id": self.recipe_id
         }
+        return self.to_dict_sparse(data)
 
     def get_field_name(self):
         from .utils import maskable_name
@@ -1140,7 +1165,7 @@ class EventFactor(db.Model, DictHydrator):
     val_required = db.Column(db.Float, default=1.0) # comparison RHS
 
     def to_dict(self):
-        return {
+        data = {
             "label": self.label,
             "get_val_from": self.get_val_from,
             "infield": self.infield.to_dict() if self.infield else None,
@@ -1153,6 +1178,7 @@ class EventFactor(db.Model, DictHydrator):
             "outcome_success": self.outcome_success,
             "auto_apply": self.auto_apply
         }
+        return self.to_dict_sparse(data)
 
     @classmethod
     def from_dict(cls, data, game_token, event_id, **overrides):
@@ -1217,10 +1243,11 @@ class EventLink(db.Model, DictHydrator):
     success_filter = db.Column(db.String(20), default=Participant.ALWAYS)
 
     def to_dict(self):
-        return {
+        data = {
             "child_id": self.child_id,
             "success_filter": self.success_filter
         }
+        return self.to_dict_sparse(data)
 
     @classmethod
     def from_dict(cls, data, game_token, parent_id):
@@ -1252,11 +1279,6 @@ class EntityAbility(db.Model):
     game_token = db.Column(db.String(50), primary_key=True)
     entity_id = db.Column(db.Integer, primary_key=True) # The Caller (Char/Loc/Item)
     event_id = db.Column(db.Integer, primary_key=True)  # The Event being called
-
-    def to_dict(self):
-        return {
-            "event_id": self.event_id
-        }
 
     entity = db.relationship(
         'Entity',
@@ -1292,7 +1314,7 @@ class Recipe(db.Model, DictHydrator):
     instant = db.Column(db.Boolean, default=False)
 
     def to_dict(self):
-        return {
+        data = {
             "id": self.id,
             "rate_amount": self.rate_amount,
             "rate_duration": self.rate_duration,
@@ -1301,6 +1323,7 @@ class Recipe(db.Model, DictHydrator):
             "byproducts": [b.to_dict() for b in self.byproducts],
             "attrib_reqs": [ar.to_dict() for ar in self.attrib_reqs]
         }
+        return self.to_dict_sparse(data)
 
     @classmethod
     def from_dict(cls, data, game_token, order_index):
@@ -1308,10 +1331,10 @@ class Recipe(db.Model, DictHydrator):
             data, game_token, order_index=order_index)
         recipe.sources = [
             RecipeSource(game_token=game_token, **s)
-            for s in data.get('sources')]
+            for s in data.get('sources', [])]
         recipe.byproducts = [
             RecipeByproduct(game_token=game_token, **b)
-            for b in data.get('byproducts')]
+            for b in data.get('byproducts', [])]
         recipe.attrib_reqs = [
             RecipeAttribReq.from_dict(ar, game_token, recipe_id=recipe.id) 
             for ar in data.get('attrib_reqs', [])
@@ -1376,11 +1399,12 @@ class RecipeSource(db.Model, DictHydrator):
     preserve = db.Column(db.Boolean, default=False)
 
     def to_dict(self):
-        return {
+        data = {
             "item_id": self.item_id,
             "q_required": self.q_required,
             "preserve": self.preserve
         }
+        return self.to_dict_sparse(data)
 
     @classmethod
     def from_dict(cls, data, game_token, recipe_id):
@@ -1414,10 +1438,11 @@ class RecipeByproduct(db.Model, DictHydrator):
     rate_amount = db.Column(db.Float, nullable=False)
 
     def to_dict(self):
-        return {
+        data = {
             "item_id": self.item_id,
             "rate_amount": self.rate_amount
         }
+        return self.to_dict_sparse(data)
 
     @classmethod
     def from_dict(cls, data, game_token, recipe_id):
@@ -1473,7 +1498,7 @@ class RecipeAttribReq(db.Model, DictHydrator):
             data, game_token, recipe_id=recipe_id, **updates)
 
     def to_dict(self):
-        return {
+        data = {
             "attrib_id": self.attrib_id,
             "value_range": [
                 None if self.min_val == float('-inf') else self.min_val,
@@ -1481,6 +1506,7 @@ class RecipeAttribReq(db.Model, DictHydrator):
             ],
             "range_inclusive": [self.inclusive_min, self.inclusive_max]
         }
+        return self.to_dict_sparse(data)
 
     def in_range(self, val):
         if self.inclusive_min:
@@ -1558,7 +1584,7 @@ class Progress(db.Model, DictHydrator):
     batches_processed = db.Column(db.Integer, default=0)
 
     def to_dict(self):
-        return {
+        data = {
             "recipe_id": self.recipe_id,
             "owner_id": self.owner_id,
             "host_id": self.host_id,
@@ -1567,6 +1593,7 @@ class Progress(db.Model, DictHydrator):
             "start_time": timeToStr(self.start_time),
             "batches_processed": self.batches_processed,
         }
+        return self.to_dict_sparse(data)
 
     @classmethod
     def from_dict(cls, data, game_token):
@@ -1628,7 +1655,7 @@ class Overall(db.Model, DictHydrator):
     next_entity_id = db.Column(db.Integer, default=2)
 
     def to_dict(self):
-        return {
+        data = {
             "title": self.title,
             "description": self.description,
             "number_format": self.number_format,
@@ -1638,6 +1665,7 @@ class Overall(db.Model, DictHydrator):
             "complete": self.complete,
             "win_reqs": [wr.to_dict() for wr in self.win_reqs]
         }
+        return data
 
     @classmethod
     def from_dict(cls, data, game_token):
@@ -1680,7 +1708,7 @@ class WinRequirement(db.Model, DictHydrator):
     attrib_value = db.Column(db.Float)
 
     def to_dict(self):
-        return {
+        data = {
             "item_id": self.item_id,
             "quantity": self.quantity,
             "char_id": self.char_id,
@@ -1688,6 +1716,7 @@ class WinRequirement(db.Model, DictHydrator):
             "attrib_id": self.attrib_id,
             "attrib_value": self.attrib_value
         }
+        return self.to_dict_sparse(data)
 
     @classmethod
     def from_dict(cls, data, game_token):

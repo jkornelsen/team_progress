@@ -1,125 +1,49 @@
 {
     "entities": {
         "items": [
-            {
-                "id": 9,
-                "name": "Empty Helium-3 Container",
-                "description": "",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "u",
-                "q_limit": 0.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
-            },
+            {"id": 9, "name": "Empty Helium-3 Container", "storage_type": "u"},
             {
                 "id": 10,
                 "name": "Filled Helium-3 Container",
                 "description": "Transfer the extracted helium-3 from the processor into storage containers. Helium-3 is used in fusion reactions, perhaps for general power or advanced weapons.",
-                "attribs": [],
-                "abilities": [],
                 "storage_type": "u",
-                "q_limit": 0.0,
-                "toplevel": true,
-                "masked": false,
-                "recipes": []
+                "toplevel": true
             },
             {
                 "id": 11,
                 "name": "Metal Pole",
                 "description": "Can be used as a two-handed weapon like a bat.",
-                "attribs": [],
-                "abilities": [],
-                "storage_type": "u",
-                "q_limit": 0.0,
-                "toplevel": false,
-                "masked": false,
-                "recipes": []
+                "storage_type": "u"
             }
         ],
         "locations": [
             {
                 "id": 13,
                 "name": "Base",
-                "description": "Food, bed, shower.  Life support systems, a greenhouse for food production, and laboratories for scientific research.",
-                "attribs": [],
-                "abilities": [],
-                "dimensions": null,
-                "toplevel": false,
-                "masked": false,
-                "items": [],
-                "item_refs": [],
-                "destinations": []
+                "description": "Food, bed, shower.  Life support systems, a greenhouse for food production, and laboratories for scientific research."
             },
             {
                 "id": 12,
                 "name": "Regolith Processing Plant",
-                "description": "An area rich in regolith with high concentrations of helium-3. The facility covers several acres and includes the processing equipment, storage units for helium-3, and solar panels for power.",
-                "attribs": [],
-                "abilities": [],
-                "dimensions": null,
-                "toplevel": false,
-                "masked": false,
-                "items": [],
-                "item_refs": [],
-                "destinations": []
+                "description": "An area rich in regolith with high concentrations of helium-3. The facility covers several acres and includes the processing equipment, storage units for helium-3, and solar panels for power."
             },
             {
                 "id": 15,
                 "name": "Robot Home",
                 "description": "Underground.",
-                "attribs": [],
-                "abilities": [],
-                "dimensions": null,
-                "toplevel": false,
-                "masked": false,
-                "items": [],
-                "item_refs": [],
                 "destinations": [
-                    {
-                        "loc2_id": 14,
-                        "bidirectional": true
-                    }
+                    {"loc2_id": 14}
                 ]
             },
-            {
-                "id": 14,
-                "name": "Surface 1",
-                "description": "",
-                "attribs": [],
-                "abilities": [],
-                "dimensions": null,
-                "toplevel": false,
-                "masked": false,
-                "items": [],
-                "item_refs": [],
-                "destinations": []
-            },
+            {"id": 14, "name": "Surface 1"},
             {
                 "id": 16,
                 "name": "Track",
                 "description": "Electric vehicle on a simple pressurized track system to protect against lunar dust.",
-                "attribs": [],
-                "abilities": [],
-                "dimensions": null,
-                "toplevel": false,
-                "masked": false,
-                "items": [],
-                "item_refs": [],
                 "destinations": [
-                    {
-                        "loc2_id": 13,
-                        "bidirectional": true
-                    },
-                    {
-                        "loc2_id": 12,
-                        "bidirectional": true
-                    },
-                    {
-                        "loc2_id": 14,
-                        "bidirectional": true
-                    }
+                    {"loc2_id": 13},
+                    {"loc2_id": 12},
+                    {"loc2_id": 14}
                 ]
             }
         ],
@@ -129,43 +53,17 @@
                 "name": "Bill",
                 "description": "Astronaut",
                 "attribs": [
-                    [
-                        3,
-                        3.0
-                    ],
-                    [
-                        4,
-                        1.0
-                    ],
-                    [
-                        8,
-                        10.0
-                    ],
-                    [
-                        7,
-                        1.0
-                    ],
-                    [
-                        5,
-                        10.0
-                    ],
-                    [
-                        6,
-                        10.0
-                    ]
+                    [3, 3.0],
+                    [4, 1.0],
+                    [8, 10.0],
+                    [7, 1.0],
+                    [5, 10.0],
+                    [6, 10.0]
                 ],
-                "abilities": [],
                 "toplevel": true,
-                "masked": false,
                 "location_id": 13,
-                "position": null,
-                "travel_party": "",
                 "items": [
-                    {
-                        "item_id": 11,
-                        "quantity": 1.0,
-                        "slot": "hands"
-                    }
+                    {"item_id": 11, "quantity": 1.0, "slot": "hands"}
                 ]
             },
             {
@@ -173,195 +71,85 @@
                 "name": "Selen",
                 "description": "Renegade robot that lives underground. Solar powered.",
                 "attribs": [
-                    [
-                        2,
-                        3.0
-                    ],
-                    [
-                        3,
-                        1.0
-                    ],
-                    [
-                        4,
-                        3.0
-                    ],
-                    [
-                        8,
-                        10.0
-                    ],
-                    [
-                        7,
-                        10.0
-                    ],
-                    [
-                        5,
-                        10.0
-                    ],
-                    [
-                        6,
-                        3.0
-                    ]
+                    [2, 3.0],
+                    [3, 1.0],
+                    [4, 3.0],
+                    [8, 10.0],
+                    [7, 10.0],
+                    [5, 10.0],
+                    [6, 3.0]
                 ],
-                "abilities": [],
                 "toplevel": true,
-                "masked": false,
-                "location_id": 16,
-                "position": null,
-                "travel_party": "",
-                "items": []
+                "location_id": 16
             }
         ],
         "attribs": [
             {
-                "id": 2,
-                "name": "Hostility",
-                "description": "Whether a minor character sees a main character as an enemy.",
-                "abilities": [],
-                "is_binary": false,
-                "enum_list": []
-            },
-            {
-                "id": 3,
-                "name": "Strength",
-                "description": "Affects damage.",
-                "abilities": [],
-                "is_binary": false,
-                "enum_list": []
-            },
-            {
                 "id": 4,
                 "name": "Dexterity",
-                "description": "Affects accuracy. Hampered by space suits.",
-                "abilities": [],
-                "is_binary": false,
-                "enum_list": []
+                "description": "Affects accuracy. Hampered by space suits."
             },
             {
-                "id": 5,
-                "name": "HP Head",
-                "description": "",
-                "abilities": [],
-                "is_binary": false,
-                "enum_list": []
+                "id": 2,
+                "name": "Hostility",
+                "description": "Whether a minor character sees a main character as an enemy."
             },
-            {
-                "id": 6,
-                "name": "HP Legs",
-                "description": "health of legs",
-                "abilities": [],
-                "is_binary": false,
-                "enum_list": []
-            },
-            {
-                "id": 7,
-                "name": "HP Arm Left",
-                "description": "left arm's health",
-                "abilities": [],
-                "is_binary": false,
-                "enum_list": []
-            },
-            {
-                "id": 8,
-                "name": "HP Arm Right",
-                "description": "",
-                "abilities": [],
-                "is_binary": false,
-                "enum_list": []
-            }
+            {"id": 7, "name": "HP Arm Left", "description": "left arm's health"},
+            {"id": 8, "name": "HP Arm Right"},
+            {"id": 5, "name": "HP Head"},
+            {"id": 6, "name": "HP Legs", "description": "health of legs"},
+            {"id": 3, "name": "Strength", "description": "Affects damage."}
         ],
         "events": [
             {
                 "id": 23,
                 "name": "Attack Success",
                 "description": "Whether the attack misses or otherwise fails.",
-                "numeric_range": [
-                    1,
-                    20
-                ],
-                "outcome_type": "fourway",
-                "selection_strings": "",
                 "toplevel": true,
-                "triggers": [],
-                "determining": []
+                "numeric_range": [1, 20]
             },
             {
                 "id": 20,
                 "name": "Damage",
                 "description": "Damage done by an attack.",
-                "numeric_range": [
-                    1,
-                    10
-                ],
-                "outcome_type": "numeric",
-                "selection_strings": "",
                 "toplevel": true,
-                "triggers": [],
-                "determining": []
+                "outcome_type": "numeric",
+                "numeric_range": [1, 10]
             },
             {
                 "id": 19,
                 "name": "Keep Peaceful",
                 "description": "Failures are likely to increase hostility.",
-                "numeric_range": [
-                    1,
-                    20
-                ],
-                "outcome_type": "fourway",
-                "selection_strings": "",
                 "toplevel": true,
-                "triggers": [],
-                "determining": []
+                "numeric_range": [1, 20]
             },
             {
                 "id": 22,
                 "name": "Move",
                 "description": "Escape or advance",
-                "numeric_range": [
-                    1,
-                    20
-                ],
-                "outcome_type": "fourway",
-                "selection_strings": "",
                 "toplevel": true,
-                "triggers": [],
-                "determining": []
+                "numeric_range": [1, 20]
             },
             {
                 "id": 21,
                 "name": "Repair or Heal",
                 "description": "Attempt to repair robot's body. Could also be used to treat a living creature's wounds.",
-                "numeric_range": [
-                    1,
-                    20
-                ],
-                "outcome_type": "fourway",
-                "selection_strings": "",
                 "toplevel": true,
-                "triggers": [],
-                "determining": []
+                "numeric_range": [1, 20]
             }
         ]
     },
     "general data": {
         "piles": [
-            {
-                "item_id": 9,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 10,
-                "quantity": 0.0
-            },
-            {
-                "item_id": 11,
-                "quantity": 0.0
-            }
+            {"item_id": 9, "quantity": 0.0},
+            {"item_id": 10, "quantity": 0.0},
+            {"item_id": 11, "quantity": 0.0}
         ],
         "progress": []
     },
     "overall settings": {
         "title": "Moon Base",
-        "description": "Start with a small {#779|base} that supports helium-3 mining, with plans to add more rooms for living and working. Investigate {#779|Selenids} to determine their purpose and where they are coming from.\r\n\r\nCombat imagined by the initial setup is low-key, such as grabbing a nearby iron rod and swinging to dissuade or disable an enemy. It's also detailed, with ways to keep track of injuries to various body parts. *Be mindful of your suit\u2014survival requires oxygen!*",
+        "description": "Start with a small {#779|base} that supports helium-3 mining, with plans to add more rooms for living and working. Investigate {#779|Selenids} to determine their purpose and where they are coming from.\r\n\r\nCombat imagined by the initial setup is low-key, such as grabbing a nearby iron rod and swinging to dissuade or disable an enemy. It's also detailed, with ways to keep track of injuries to various body parts. *Be mindful of your suit—survival requires oxygen!*",
         "number_format": "en_US",
         "slots": [],
         "progress_type": "Hybrid",
