@@ -160,7 +160,7 @@
                                     {% set target_url = url_for('play.play_item', 
                                         id=s.ingredient.id, **s.url_params) %}
                                     {{ render.maskable_name(
-                                        s.ingredient, url=target_url, link_letters=link_letters) }}
+                                        s.ingredient, target_url, link_letters) }}
                                     {{ s.q_required | formatNum }}
                                     (Have <span id="source-qty-{{ s.ingredient.id }}"
                                         class="{{ 'text-danger' if s.current_stock < s.q_required else '' }}"
@@ -176,7 +176,7 @@
                             {% for bp in r.byproducts %}
                                 <span class="byproduct-tag label-like">
                                     {% set bp_url = url_for('play.play_item', id=bp.item.id, **bp.url_params) %}
-                                    {{ render.maskable_name(bp.item, url=bp_url, link_letters=link_letters) }}
+                                    {{ render.maskable_name(bp.item, bp_url, link_letters) }}
                                     ({{ bp.rate_amount | formatNum }})
                                 </span>
                                 {% if not loop.last %}<span class="text-dim">,</span>{% endif %}
@@ -343,7 +343,7 @@
                             {% set target_url = url_for('play.play_item',
                                 id=entry.item.id, **entry.url_params) %}
                             {{ render.maskable_name(
-                                entry.item, url=target_url, link_letters=link_letters) }}
+                                entry.item, target_url, link_letters) }}
 
                             <span class="label-like used-yield-box" 
                                   id="used-yield-{{ entry.item.id }}" 
@@ -375,7 +375,7 @@
                             {% set target_url = url_for('play.play_item',
                                 id=entry.item.id, **entry.url_params) %}
                             {{ render.maskable_name(
-                                entry.item, url=target_url, link_letters=link_letters) }}
+                                entry.item, target_url, link_letters) }}
                         </div>
                     {% endfor %}
                 </div>

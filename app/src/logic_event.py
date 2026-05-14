@@ -224,7 +224,7 @@ def calculate_determinants(event, role_entities):
                 field_name = attr.name if attr else "Attribute"
             elif infield.field_mode == Participant.QTY:
                 item = Item.query.get((game_token, infield.item_id))
-                field_name = item.name if item else "Quantity"
+                field_name = maskable_name(item) if item else "Quantity"
 
             anchor = Entity.query.get((game_token, anchor_id))
             anchor_name = '' if anchor_id == GENERAL_ID \
@@ -315,8 +315,8 @@ def calculate_effects_targets(event, role_entities):
             loc_id = resolve_anchor_id(Participant.AT, role_entities)
             loc = Entity.query.get((game_token, loc_id))
             item = Item.query.get((game_token, field_def.item_id))
-            target_name = f"{loc.name if loc else '? loc'}'s" \
-                          f" {item.name if item else '? item'}"
+            target_name = f"{maskable_name(loc) if loc else '? loc'}'s" \
+                          f" {maskable_name(item) if item else '? item'}"
             current_val = ""
         elif field_def.field_mode in [Participant.RATE_AMT, Participant.RATE_DUR]:
             is_resolved = True 
@@ -343,14 +343,17 @@ def calculate_effects_targets(event, role_entities):
                 ).first()
                 if pile:
                     parent_name = "🌐" if target_id == GENERAL_ID \
-                        else Entity.query.get((game_token, target_id)).name
-                    target_name = f"{parent_name}'s {pile.item.name}"
+                        else maskable_name(
+                            Entity.query.get((game_token, target_id)))
+                    target_name = f"{parent_name}'s {maskable_name(pile.item)}"
                 else:
                     target_name = "🌐" if target_id == GENERAL_ID \
-                        else Entity.query.get((game_token, target_id)).name
+                        else maskable_name(
+                            Entity.query.get((game_token, target_id)))
             else:
                 target_name = "🌐" if target_id == GENERAL_ID \
-                    else Entity.query.get((game_token, target_id)).name
+                    else maskable_name(
+                        Entity.query.get((game_token, target_id)))
         else:
             target_name = "(" + field_def.role + ")"
             is_resolved = False
@@ -822,7 +825,7 @@ def do_effect_change(eff, roll_total, role_entities):
                 out_entity_id = pile.item_id
             else:
                 anchor = Entity.query.get((game_token, out_entity_id))
-                anchor_name = anchor.name if anchor else "(Unknown)"
+                anchor_name = maskable_name(anchor) if anchor else "(Unknown)"
                 attr = Attrib.query.get((game_token, field_def.attrib_id))
                 attr_name = attr.name if attr else "(Unknown)"
                 return False, f"Could not find an item at {anchor_name}" \
@@ -871,7 +874,8 @@ def do_effect_change(eff, roll_total, role_entities):
                 recipe.rate_duration = max(1, int(impact))
                 log_impact = "duration to {recipe.rate_duration:g}"
 
-            add_message(f"Set {recipe.product.name} {log_impact}")
+            add_message(
+                f"Set {maskable_name(recipe.product)} {log_impact}")
 
     # Destination D: Physical Placement
     elif field_def.field_mode == Participant.PLACE:
@@ -894,7 +898,7 @@ def do_effect_change(eff, roll_total, role_entities):
         )
         
         item = Item.query.get((game_token, field_def.item_id))
-        add_message(f"Placed {item.name} at {roll_total}")
+        add_message(f"Placed {maskable_name(item)} at {roll_total}")
 
     # Destination E: Teleportation (Move existing character)
     elif field_def.field_mode == Participant.POS:
@@ -909,7 +913,8 @@ def do_effect_change(eff, roll_total, role_entities):
         loc = Location.query.get((game_token, loc_id))
         char.location_id = loc_id
         char.position = roll_total
-        add_message(f"Positioned {char.name} at {loc.name} {roll_total}")
+        add_message(
+            f"Positioned {char.name} at {maskable_name(loc)} {roll_total}")
 
     # Destination F: Mob Spawning (Clone a character)
     elif field_def.field_mode == Participant.SPAWN:
@@ -925,7 +930,7 @@ def do_effect_change(eff, roll_total, role_entities):
         loc = Location.query.get((game_token, loc_id))
         char.location_id = loc_id
         char.position = roll_total
-        add_message(f"Spawned {char.name} at {loc.name} {roll_total}")
+        add_message(f"Spawned {char.name} at {maskable_name(loc)} {roll_total}")
 
     db.session.commit()
     return True, ''

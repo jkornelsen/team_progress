@@ -1,5 +1,6 @@
 {% extends 'layout/base.html' %}
 {% import 'macros/hotkeys.html' as hk %}
+{% import 'macros/render.html' as render %}
 
 {% block upper_left %}
     <nav class="nav-container">
@@ -71,16 +72,15 @@
                                 🌐
                             {% else %}
                                 {% set target_url = url_for('play.play_' + ent.entity_type, id=ent.id) %}
-                                {% call hk.hotlink(target_url, link_letters) %}
-                                    {{ ent.name }}
-                                {% endcall %}
+                                {{ render.maskable_name(
+                                    ent, target_url, link_letters) }}
                             {% endif %}
 
                         {% elif eligible|length > 1 %}
                             <select name="{{ role }}{{ Participant.FORM_SUFFIX }}" class="full-width themed-input participant-trigger">
                                 <option value="">-- Select {{ role }} --</option>
                                 {% for ent in eligible %}
-                                    <option value="{{ ent.id }}">{{ ent.name }}</option>
+                                    <option value="{{ ent.id }}">{{ render.maskable_name(ent) }}</option>
                                 {% endfor %}
                             </select>
 
@@ -163,15 +163,14 @@
                             {% endcall %}
                         </div>
                     {% endfor %}
-                    {% for entity in caller_entities %}
+                    {% for ent in caller_entities %}
                         <div>
                             <span class="label-like">
-                                {{ '👤' if entity.entity_type == 'character' else '📍' if entity.entity_type == 'location' else '📦' }}
+                                {{ '👤' if ent.entity_type == 'character' else '📍' if ent.entity_type == 'location' else '📦' }}
                             </span>
-                            {% set target_url = url_for('play.play_' ~ entity.entity_type, id=entity.id) %}
-                            {% call hk.hotlink(target_url, link_letters) %}
-                                {{ entity.name }} 
-                            {% endcall %}
+                            {% set target_url = url_for('play.play_' ~ ent.entity_type, id=ent.id) %}
+                            {{ render.maskable_name(
+                                ent, target_url, link_letters) }}
                         </div>
                     {% endfor %}
                 </div>

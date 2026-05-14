@@ -3,6 +3,7 @@ from flask import g
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import desc
 from app.models import db, GameMessage, UserInteraction, Entity
+from app.utils import maskable_name
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +130,7 @@ def format_action_string(game_token, interaction):
         entity = Entity.query.get((int(eid), game_token))
         if entity:
             type_label = entity.entity_type.capitalize()
-            return f"Viewing {type_label}: {entity.name}"
+            return f"Viewing {type_label}: {maskable_name(entity)}"
             
     return "Exploring"
 

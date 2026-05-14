@@ -3,8 +3,9 @@ import json
 import os
 import re
 from flask import g, current_app, session
-from sqlalchemy import func
+from sqlalchemy import func, inspect as sa_inspect
 from sqlalchemy.dialects.postgresql import Range
+from sqlalchemy.orm import identity
 from .models import (
     GENERAL_ID, ENTITIES, JsonKeys, db,
     Entity, Item, Character, Location, Attrib, Event, 
@@ -15,6 +16,26 @@ from .src.logic_discovery import run_discovery_scan
 from app.utils import name_stripped
 
 logger = logging.getLogger(__name__)
+
+original_init = identity.IdentityMap.__init__
+
+def patched_init(self, *args, **kwargs):
+    """Catch unexpected JSON dicts in keys."""
+    original_init(self, *args, **kwargs)
+    original_dict = self._dict
+    
+    class TrappingDict(dict):
+        def __contains__(self, key):
+            try:
+                return super().__contains__(key)
+            except TypeError:
+                logger.error(f"Unhashable Identity Key: {repr(key)}")
+                raise
+    
+    trapping = TrappingDict(original_dict)
+    self._dict = trapping
+
+identity.IdentityMap.__init__ = patched_init
 
 # ------------------------------------------------------------------------
 # Load or Reset Model
@@ -61,7 +82,7 @@ def load_scenario_from_path(filename):
             data = json.load(f)
             return import_from_dict(data)
     except Exception as e:
-        logger.error(f"Failed to load scenario {filename}: {e}")
+        logger.exception(e)
         return False
 
 def import_from_dict(data):

@@ -1,7 +1,10 @@
+import logging
 from datetime import datetime
-from sqlalchemy import event
+from sqlalchemy import event, inspect as sa_inspect
 from sqlalchemy.dialects.postgresql import ARRAY, NUMRANGE
 from .database import db
+
+logger = logging.getLogger(__name__)
 
 # Reserved ID in Entity table for universal storage.
 # Can have up to one general pile for each Item.
@@ -62,6 +65,19 @@ class DictHydrator:
         if not isinstance(data, dict):
             raise ValueError(
                 f"Expected a dict but got {type(data).__name__}: {repr(data)}")
+
+        # Log any unrecognized scalar fields
+        insp = sa_inspect(cls).mapper
+        column_names = {col.key for col in insp.column_attrs}
+        relationship_names = {rel.key for rel in insp.relationships}
+        known_names = column_names | relationship_names
+        for k in data:
+            if k not in known_names and not isinstance(data[k], (list, dict)):
+                logger.warning(
+                    f"[{cls.__name__}.from_dict] Unrecognized field '{k}' "
+                    f"({data[k]!r})."
+                )
+
         for k, v in data.items():
             if hasattr(cls, k):
                 column = cls.__table__.columns.get(k)
@@ -299,7 +315,6 @@ class Location(Entity):
     @classmethod
     def from_dict(cls, data, game_token):
         scrub_array(data, 'dimensions', 2)
-        scrub_array(data, 'excluded', 4)
         loc = super().from_dict(data, game_token)
         for i in data.get('items', []):
             loc.piles.append(
@@ -1059,21 +1074,22 @@ class EventField(db.Model, DictHydrator):
         }
 
     def get_field_name(self):
+        from .utils import maskable_name
         if self.field_mode == Participant.ATTR and self.attrib_id:
             attrib = Attrib.query.get((self.game_token, self.attrib_id))
             return attrib.name
         if self.item_id:
             item = Item.query.get((self.game_token, self.item_id))
             if self.field_mode == Participant.QTY:
-                return f"{item.name} Qty"
+                return f"{maskable_name(item)} Qty"
             if self.field_mode == Participant.DIST:
                return f"Distance from Subject"
             if self.field_mode == Participant.RATE_AMT and self.recipe_id:
-                return f"{item.name} Yield"
+                return f"{maskable_name(item)} Yield"
             if self.field_mode == Participant.RATE_DUR and self.recipe_id:
-                return f"{item.name} Recipe Duration"
+                return f"{maskable_name(item)} Recipe Duration"
             if self.field_mode == Participant.PLACE:
-                return f"Place {item.name}"
+                return f"Place {maskable_name(item)}"
         return ""
 
     __table_args__ = (

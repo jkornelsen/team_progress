@@ -326,7 +326,7 @@ def execute_production(
     game_token = g.game_token
     gain_qty = recipe.rate_amount * batches
     host_ent = Entity.query.get((game_token, host_id))
-    log_msg = f"{gain_qty:g} {recipe.product.name}"
+    log_msg = f"{gain_qty:g} {maskable_name(recipe.product)}"
     if host_id == GENERAL_ID:
         host_info = "GENERAL/SYSTEM"
         log_msg = f"{log_msg} gained"
@@ -341,7 +341,7 @@ def execute_production(
     add_message(log_msg)
     logger.debug(
         f"[PRODUCTION] Host: {host_info} | "
-        f"Result: +{gain_qty:g} {recipe.product.name} "
+        f"Result: +{gain_qty:g} {maskable_name(recipe.product)} "
         f"({batches} batches)"
     )
     return batches, None

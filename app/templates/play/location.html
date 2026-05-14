@@ -95,7 +95,7 @@
                             id=pile.item_id, owner_id=location.id,
                             pos=pile.position|join(',') if pile.position else None) %}
                         {{ render.maskable_name(
-                            pile.item, url=target_url, link_letters=link_letters) }}
+                            pile.item, target_url, link_letters) }}
                         
                         <div class="qty-col">
                             {% if not (pile.item.q_limit == 1 and pile.quantity == 1) %}
@@ -124,7 +124,7 @@
                         {% set target_url = url_for('play.play_item',
                             id=ref.item.id, owner_id=GENERAL_ID) %}
                         {{ render.maskable_name(
-                            ref.item, url=target_url, link_letters=link_letters) }}
+                            ref.item, target_url, link_letters) }}
                         <div>
                         {% if not (ref.item.q_limit == 1 and ref.quantity == 1) %}
                             <span>{{ ref.quantity | formatNum }}</span>
@@ -183,7 +183,7 @@
                     <div class="col-row twocol-row">
                     {% set target_url = url_for('play.play_location', id=target.id) %}
                     {{ render.maskable_name(
-                        target, url=target_url, link_letters=link_letters) }}
+                        target, target_url, link_letters) }}
                     {% if target.masked %}
                         (not yet visited)
                     {% endif %}

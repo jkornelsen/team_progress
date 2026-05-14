@@ -100,7 +100,7 @@
                             {% set target_url = url_for('play.play_item',
                                 id=item.id) %}
                             {% call hk.hotlink(target_url, link_letters) %}
-                                {{ item.name if not item.masked else (item.name | mask_string) }}
+                                {{ render.maskable_name(item) }}
                             {% endcall %}
                         </li>
                     {% endfor %}
