@@ -1,5 +1,6 @@
 import logging
 from flask import g
+from sqlalchemy import or_
 from sqlalchemy.orm.attributes import flag_modified
 from app.models import (
     db, GENERAL_ID, StorageType, Character, Location, Item, Pile, LocDest)
@@ -108,20 +109,31 @@ def get_moving_party(main_char, move_party=False):
     """
     Determines which characters are moving:
     - The main character.
-    - Any characters at the same location with the same 'travel_party' name.
+    - Any characters sharing the same 'travel_party' string.
+    - Any character whose 'name' is the 'travel_party' of the main character.
+    - Any character whose 'travel_party' is the 'name' of the main character.
     """
-    game_token = main_char.game_token
+    if not move_party:
+        return [main_char]
+    game_token = g.game_token
+
+    party_name = main_char.travel_party
+    my_name = main_char.name
+
+    filters = []
+    if party_name:
+        filters.append(Character.travel_party == party_name) # Shared group name
+        filters.append(Character.name == party_name)         # I am following them
+    filters.append(Character.travel_party == my_name)        # They are following me
+
+    group_members = Character.query.filter(
+        Character.game_token == game_token,
+        Character.location_id == main_char.location_id,
+        or_(*filters)
+    ).all()
+
     party = {main_char}
-
-    # If the user checked "Move with Party" and the character belongs to one
-    if move_party and main_char.travel_party:
-        group_members = Character.query.filter_by(
-            game_token=game_token,
-            travel_party=main_char.travel_party,
-            location_id=main_char.location_id
-        ).all()
-        party.update(group_members)
-
+    party.update(group_members)
     return list(party)
 
 # ------------------------------------------------------------------------

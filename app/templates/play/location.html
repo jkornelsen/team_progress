@@ -405,21 +405,39 @@
 
     function syncPartyState() {
         const container = document.getElementById('party-move-container');
+        const chk = document.getElementById('move-with-party-chk');
         if (!container) return;
         
         const active = getActiveChar();
-        if (!active || !active.char.travel_party) {
-            container.style.display = 'none';
-            return;
-        }
+        const myName = active.char.name.toLowerCase();
+        const myParty = (active.char.travel_party || "").toLowerCase();
 
         // Check if there's at least one OTHER character in the same party here
-        const partyName = active.char.travel_party;
-        const otherMembers = Object.keys(chars).filter(id => 
-            id !== active.char_id && chars[id].travel_party === partyName
-        );
+        const otherMembers = Object.keys(chars).filter(id => {
+            if (id == active.char_id) return false; // Skip self
+            
+            const other = chars[id];
+            const otherName = other.name.toLowerCase();
+            const otherParty = (other.travel_party || "").toLowerCase();
 
-        container.style.display = otherMembers.length > 0 ? 'block' : 'none';
+            const isSharedGroup = (myParty !== "" && otherParty === myParty);
+            const iFollowThem = (myParty !== "" && otherName === myParty);
+            const theyFollowMe = (otherParty !== "" && otherParty === myName);
+
+            return isSharedGroup || iFollowThem || theyFollowMe;
+        });
+
+        if (otherMembers.length > 0) {
+            container.style.display = 'block';
+            const displayName = active.char.travel_party || "Followers";
+            const label = container.querySelector('.checkbox-label');
+            label.innerHTML = `
+                <input type="checkbox" id="move-with-party-chk" onchange="this.blur();" ${chk?.checked ? 'checked' : ''}> 
+                Move with <i>${displayName}</i>
+            `;
+        } else {
+            container.style.display = 'none';
+        }
         syncTravelPromptState(); // Refresh the door prompts too
     }
 
@@ -552,16 +570,18 @@
         // 2. Active character screen
         const active = getActiveChar();
         if (active) {
-            if (event.key.toLowerCase() === 'c') {
-                window.location.href = `/play/char/${active.char_id}`;
+            const moveWithParty = document.getElementById('move-with-party-chk')?.checked;
+            const url = new URL(`${window.location.origin}/play/char/${active.char_id}`);
+            if (moveWithParty) {
+                url.searchParams.set('move_party', '1');
             }
-            if (event.key.toLowerCase() === 't') {
+            if (key === 'c') {
+                window.location.href = url.toString();
+            } 
+            else if (key === 't') {
                 const exitByPos = getActiveExit();
                 if (exitByPos) {
-                    const target_loc_id = exitByPos.target_id;
-                    let url = new URL(
-                        `${window.location.origin}/play/char/${active.char_id}`);
-                    url.searchParams.append('auto_select_exit', target_loc_id);
+                    url.searchParams.set('auto_select_exit', exitByPos.target_id);
                     window.location.href = url.toString();
                 }
             }
@@ -583,9 +603,13 @@
 
     // Initial Load
     $(document).ready(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('move_party') === '1') {
+            const chk = document.getElementById('move-with-party-chk');
+            if (chk) chk.checked = true;
+        }
         fillGrid();
         syncPartyState();
-        //setTimeout(() => scrollToActiveChar(true), 100);
         requestAnimationFrame(() => {
             scrollToActiveChar();
         });

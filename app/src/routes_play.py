@@ -3,6 +3,7 @@ import json
 from flask import (
     Blueprint, render_template, request, jsonify, g, session, current_app)
 from http import HTTPStatus
+from sqlalchemy import or_
 from sqlalchemy.orm import joinedload
 from app.models import (
     db, Entity, Item, Character, Location, Attrib, Event,
@@ -221,11 +222,17 @@ def play_character(id):
     
     # Identify other party members at this location
     party_members = []
+    party_criteria = []
     if character.travel_party:
+        party_criteria.append(Character.travel_party == character.travel_party)
+        party_criteria.append(Character.name == character.travel_party)
+    party_criteria.append(Character.travel_party == character.name)
+
+    if party_criteria:
         party_members = Character.query.filter(
             Character.game_token == game_token,
             Character.location_id == character.location_id,
-            Character.travel_party == character.travel_party,
+            or_(*party_criteria),
             Character.id != character.id
         ).all()
 

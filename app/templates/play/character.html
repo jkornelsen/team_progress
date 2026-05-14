@@ -77,8 +77,12 @@
                     {% if party_members %}
                     <div id="party-travel-container" style="margin-top: 10px;">
                         <label class="checkbox-label">
-                            <input type="checkbox" id="travel-with-party-chk" onchange="this.blur()">
-                            Travel with Party ({{ party_members | length }} other{{ 's' if party_members | length != 1 }} nearby)
+                            <input type="checkbox"
+                                   id="travel-with-party-chk"
+                                   onchange="this.blur()"
+                                   {{ 'checked' if request.args.get('move_party') == '1' }}>
+                                Travel with <i>{{ character.travel_party if character.travel_party else 'Followers' }}</i> 
+                                ({{ party_members | length }} other{{ 's' if party_members | length != 1 }} nearby)
                         </label>
                     </div>
                     {% endif %}
@@ -209,7 +213,6 @@
 <script>
     const charId = {{ character.id }};
     
-    // Travel
     document.getElementById('do-travel-btn')?.addEventListener('click', async () => {
         const destId = document.getElementById('dest-select').value;
         if (!destId) return;
@@ -223,7 +226,12 @@
         const data = await apiPost(url, fd, "Could not travel.");
         if (!data) return;
 
-        window.location.href = `/play/location/${destId}?active_char_id={{ character.id }}`;
+        const redirectUrl = new URL(`${window.location.origin}/play/location/${destId}`);
+        redirectUrl.searchParams.set('active_char_id', charId);
+        if (moveParty) {
+            redirectUrl.searchParams.set('move_party', '1');
+        }
+        window.location.href = redirectUrl.toString();
     });
 </script>
 
