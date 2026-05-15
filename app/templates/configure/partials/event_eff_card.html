@@ -66,6 +66,9 @@
                         <option value="{{ Participant.SUCCESS_ANY }}" 
                             {{ 'selected' if factor and factor.outcome_success ==
                                 Participant.SUCCESS_ANY }}>Any Success</option>
+                        <option value="{{ Participant.SUCCESS_NAT_MAX }}" 
+                            {{ 'selected' if factor and factor.outcome_success ==
+                                Participant.SUCCESS_NAT_MAX }}>Natural Max</option>
                         <option value="{{ Participant.SUCCESS_MAJOR }}" 
                             {{ 'selected' if factor and factor.outcome_success ==
                                 Participant.SUCCESS_MAJOR }}>Major Success</option>
@@ -81,6 +84,9 @@
                         <option value="{{ Participant.FAILURE_MAJOR }}" 
                             {{ 'selected' if factor and factor.outcome_success ==
                                 Participant.FAILURE_MAJOR }}>Major Failure</option>
+                        <option value="{{ Participant.SUCCESS_NAT_MIN }}" 
+                            {{ 'selected' if factor and factor.outcome_success ==
+                                Participant.SUCCESS_NAT_MIN }}>Natural Min</option>
                     </select>
                 </div>
 

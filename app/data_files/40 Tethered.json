@@ -2,6 +2,11 @@
     "entities": {
         "items": [
             {
+                "id": 78,
+                "name": "Charcoal",
+                "description": "Made from wood, needed to fuel forge."
+            },
+            {
                 "id": 16,
                 "name": "Convo Kormak 1a",
                 "description": "Lyria's not too keen on prolonged incarceration, but she might just kill Kormak instead. She pulls him under, threatening.\r\n\r\nHe gasps for air, offering information in exchange for his life. She agrees, listening.",
@@ -74,6 +79,11 @@
                 ]
             },
             {
+                "id": 68,
+                "name": "Harmony Pick",
+                "description": "Can mine spectrum ore."
+            },
+            {
                 "id": 8,
                 "name": "Iron Dagger",
                 "description": "Piercing dmg",
@@ -81,6 +91,12 @@
                     [28, 2.0],
                     [29, 1.0]
                 ],
+                "q_limit": 1.0
+            },
+            {
+                "id": 77,
+                "name": "Needle",
+                "description": "Sharp fragile blade made of **Spectrum Bars**. Stitch an earthly soul to the steel.",
                 "q_limit": 1.0
             },
             {
@@ -103,6 +119,19 @@
                     }
                 ]
             },
+            {
+                "id": 79,
+                "name": "Refractive Stealth Cloak",
+                "description": "Made from **Shadow Silk**",
+                "q_limit": 1.0
+            },
+            {
+                "id": 80,
+                "name": "Shadow Silk",
+                "description": "Made from **Spectrum Bars**"
+            },
+            {"id": 70, "name": "Spectrum Bar"},
+            {"id": 69, "name": "Spectrum Ore"},
             {"id": 38, "name": "Stone"},
             {
                 "id": 43,
@@ -179,6 +208,21 @@
             {"id": 18, "name": "Worldbridge Repaired", "storage_type": "u"}
         ],
         "locations": [
+            {"id": 56, "name": "BH Cell D1"},
+            {
+                "id": 53,
+                "name": "BH Cell D2",
+                "description": "Barred window that looks out into a small cave ceiling over water."
+            },
+            {
+                "id": 60,
+                "name": "BH D Wing",
+                "destinations": [
+                    {"loc2_id": 56},
+                    {"loc2_id": 53},
+                    {"loc2_id": 34}
+                ]
+            },
             {
                 "id": 34,
                 "name": "Blackvein Gate",
@@ -198,6 +242,11 @@
                 ]
             },
             {
+                "id": 50,
+                "name": "Danglars House",
+                "description": "Dug from snow or built with ice blocks."
+            },
+            {
                 "id": 35,
                 "name": "Deep Rocky Pool",
                 "description": "Near Blackvein Hold, off of the main road. Trees at the water's edge available for crafting, to prepare for whatever lies in the depths.",
@@ -207,18 +256,75 @@
                 ]
             },
             {
+                "id": 87,
+                "name": "Desert",
+                "description": "Impractical to traverse except for the Firebranded.",
+                "destinations": [
+                    {"loc2_id": 84}
+                ]
+            },
+            {
+                "id": 64,
+                "name": "Dustridge",
+                "destinations": [
+                    {"loc2_id": 61},
+                    {"loc2_id": 34}
+                ]
+            },
+            {
+                "id": 61,
+                "name": "Dustridge Tavern",
+                "description": "Cozy, dimly lit tavern with a roaring fireplace."
+            },
+            {
+                "id": 65,
+                "name": "East Coast",
+                "destinations": [
+                    {"loc2_id": 64},
+                    {"loc2_id": 48},
+                    {"loc2_id": 50}
+                ]
+            },
+            {"id": 72, "name": "Jungle", "description": "Home of many Treemates."},
+            {
+                "id": 66,
+                "name": "Mine",
+                "destinations": [
+                    {"loc2_id": 64}
+                ]
+            },
+            {
+                "id": 9,
+                "name": "Murky Pond",
+                "description": "On a hot afternoon, Lyria decides to cool off with a swim. She doesn't really mind the algae — the scum slips from her dress.",
+                "dimensions": [5, 8],
+                "destinations": [
+                    {
+                        "loc2_id": 3,
+                        "door1": [2, 1],
+                        "door2": [9, 10]
+                    },
+                    {
+                        "loc2_id": 17,
+                        "door1": [1, 7],
+                        "bidirectional": false
+                    }
+                ],
+                "zones": [
+                    {
+                        "coords": [1, 1, 4, 6],
+                        "label": "Pond",
+                        "color": "#07a",
+                        "prevents_travel": false
+                    }
+                ]
+            },
+            {
                 "id": 3,
                 "name": "Narrow Glade",
                 "description": "A day's journey southeast of **Blackvein Hold.**\r\n\r\nThe guards are starting the long march back with the prisoners, worried they're too far away.  Looking at the pond, **Kormak** considers that if he could free his hands, this might be a chance to escape by swimming. Suddenly, he notices a creature in green briefly popping above the pond surface before re-emerging. Curious, he looks carefully and discovers it's a young woman.",
                 "dimensions": [10, 10],
                 "masked": true,
-                "destinations": [
-                    {
-                        "loc2_id": 9,
-                        "door1": [9, 10],
-                        "door2": [2, 1]
-                    }
-                ],
                 "zones": [
                     {
                         "coords": [1, 2, 5, 3],
@@ -263,33 +369,73 @@
                     }
                 ]
             },
+            {"id": 73, "name": "Plains"},
+            {"id": 85, "name": "Sheer Pole"},
             {
-                "id": 9,
-                "name": "Pond",
-                "description": "On a hot afternoon, Lyria decides to cool off with a swim. She doesn't really mind that the pond is murky, and her dress sheds the grime.",
-                "dimensions": [5, 8],
+                "id": 82,
+                "name": "Sky Ship",
                 "destinations": [
-                    {
-                        "loc2_id": 17,
-                        "door1": [1, 7],
-                        "bidirectional": false
-                    }
-                ],
-                "zones": [
-                    {
-                        "coords": [1, 1, 4, 6],
-                        "label": "Pond",
-                        "color": "#07a",
-                        "prevents_travel": false
-                    }
+                    {"loc2_id": 73}
+                ]
+            },
+            {
+                "id": 81,
+                "name": "Snow Cave",
+                "destinations": [
+                    {"loc2_id": 50}
+                ]
+            },
+            {
+                "id": 48,
+                "name": "Sunken Library",
+                "description": "Dome with entrance at top."
+            },
+            {
+                "id": 75,
+                "name": "Vuldelf",
+                "description": "Ancient cavern deep underground.",
+                "destinations": [
+                    {"loc2_id": 60}
+                ]
+            },
+            {
+                "id": 84,
+                "name": "Western End",
+                "description": "Sparsely populated -- horse nomad people comfortable in the thin dusty air.",
+                "destinations": [
+                    {"loc2_id": 82},
+                    {"loc2_id": 85}
+                ]
+            },
+            {
+                "id": 71,
+                "name": "Western Road",
+                "description": "Goes from Dustridge in the east, through the plains, and to the western jungle.",
+                "destinations": [
+                    {"loc2_id": 64},
+                    {"loc2_id": 72},
+                    {"loc2_id": 73}
+                ]
+            },
+            {
+                "id": 86,
+                "name": "Worldbridge",
+                "destinations": [
+                    {"loc2_id": 85}
                 ]
             }
         ],
         "characters": [
             {
+                "id": 47,
+                "name": "Atlanth Tiderender",
+                "description": "Sea deity, keeper of drowned truths",
+                "location_id": 48
+            },
+            {
                 "id": 5,
                 "name": "Chain Gang Guard 1",
-                "description": "- **Ancestry:** {orange|Firebranded}, quarrelsome\r\n- **Class:** melee mage, incompetent and unobservant but suspicious\r\n- **Appearance:** dark skin good for intense sunny climates",
+                "description": "- **Ancestry:** {orange|Firebranded}, quarrelsome\r\n- **Specialties:** melee mage, incompetent at watching yet suspicious\r\n- **Appearance:** dark skin good for intense sunny climates",
                 "attribs": [
                     [12, 2.0],
                     [22, 12.0]
@@ -305,7 +451,7 @@
             {
                 "id": 6,
                 "name": "Chain Gang Guard 2",
-                "description": "- **Ancestry:** {pink|Jovial}, unmotivated but not easily intimidated or panicked\r\n- **Class:** fighter, resistant to blunt force, slightly more incompetent than his fellow guard\r\n- **Appearance:** large and fat\r\n\r\nHe is the primary cause of the delay, having said shortly before the opening scene: \"Hey, don't worry, we'll have plenty of time to finish the card game and still get back before nightfall.\" Holding ropes that bind **Kormak**.",
+                "description": "- **Ancestry:** {pink|Jovial}, unmotivated but not easily intimidated or panicked\r\n- **Specialties:** fighter, resistant to blunt force, slightly more incompetent than his fellow guard\r\n- **Appearance:** large and fat\r\n\r\nHe is the primary cause of the delay, having said shortly before the opening scene: \"Hey, don't worry, we'll have plenty of time to finish the card game and still get back before nightfall.\" Holding ropes that bind **Kormak**.",
                 "attribs": [
                     [12, 1.0],
                     [22, 20.0]
@@ -319,9 +465,51 @@
                 ]
             },
             {
+                "id": 52,
+                "name": "Crush",
+                "description": "- **Ancestry:** {peru|Stonereach}, taciturn, can shape stone, from Dustridge\r\n- **Specialties:** lumberjack, axe proficency, boxing skill\r\n- **Appearance:** thick and sturdy, dark gray skin",
+                "location_id": 64
+            },
+            {
+                "id": 49,
+                "name": "Danglars",
+                "description": "- **Ancestry:** {CornflowerBlue|Frostblended}, reserved, inviting\r\n- **Specialties:** seal hunter, ice hook proficiency\r\n- **Appearance:** fur clothing, bonelike skin not susceptible to frostbite, does not sweat\r\n\r\nPlot points\r\n- brings Lyria on a romantic wolf sled ride\r\n- helps her find the drowned library\r\n- later betrays her after meeting with Atlanth",
+                "location_id": 50
+            },
+            {
+                "id": 74,
+                "name": "Daphnia",
+                "description": "- **Ancestry:** {peru|Stonereach}\r\n- **Specialties:** milk maid, family owns livestock",
+                "location_id": 73
+            },
+            {
+                "id": 63,
+                "name": "Darla",
+                "description": "- **Ancestry:** {pink|Jovial}\r\n- **Specialties:** tavern prostitute",
+                "location_id": 61
+            },
+            {
+                "id": 62,
+                "name": "Dulcie",
+                "description": "- **Ancestry:** {pink|Jovial}\r\n- **Specialties:** brings drinks and entertains tavern goers, usually men, not paid to be a prostitute although her job has at times led to sleeping with patrons\r\n- **Appearance:** age 30, soft and curvy build, light chocolate skin, low-cut bodice, messy layered colorful skirts",
+                "location_id": 61
+            },
+            {
+                "id": 59,
+                "name": "Evelyn",
+                "description": "- **Ancestry:** {yellow|Anorkind}\r\n- **Specialties:** legal clerk, divorced\r\n- **Appearance:** early 40's, wheelchair, business suit, blouse not fully buttoned, skirt",
+                "location_id": 56
+            },
+            {
+                "id": 58,
+                "name": "Galebane",
+                "description": "- **Ancestry:** {LemonChiffon|Aetherian}, aloof\r\n- **Specialties:** sorcerer, prison life skills instructor ostensibly to integrate into society\r\n\r\nEnjoys tormenting prisoners. Knowledge of the occult used to summon **Suhkh** through hell plane.",
+                "location_id": 56
+            },
+            {
                 "id": 4,
                 "name": "Kormak",
-                "description": "- **Ancestry:** {darkgray|Ithilborn}\r\n- **Class:** thief, archer\r\n\r\nEdit character and set *Leader* to \"Lyria\" to move with her.",
+                "description": "- **Ancestry:** {darkgray|Ithilborn}\r\n- **Specialties:** thief, archer\r\n\r\nEdit character and set *Leader* to \"Lyria\" to move with her.",
                 "attribs": [
                     [11, 7.0],
                     [12, 6.0],
@@ -337,9 +525,15 @@
                 "travel_party": "Chain Gang"
             },
             {
+                "id": 55,
+                "name": "Lorcan",
+                "description": "- **Ancestry:** {yellow|Anorkind}\r\n- **Specialties:** corrupt lawyer who twisted law for personal financial gain\r\n\r\nPrisoner.",
+                "location_id": 56
+            },
+            {
                 "id": 2,
                 "name": "Lyria",
-                "description": "- **Ancestry:** {blue|Nalaran}, water affinity\r\n- **Class:** huntress, spear proficiency, young and brave explorer\r\n- **Appearance:** soft coral colored skin, slightly webbed fingers, popup fin flaps, lovely thin figure, tight dark green kelp-hide dress (sturdy leather), luminescent freckles across her nose and shoulders",
+                "description": "- **Ancestry:** {blue|Nalaran}, water affinity\r\n- **Specialties:** huntress, spear proficiency, young and brave explorer\r\n- **Appearance:** soft coral colored skin, slightly webbed fingers, popup fin flaps, lovely thin figure, tight dark green kelp-hide dress (sturdy leather), luminescent freckles across her nose and shoulders",
                 "attribs": [
                     [15, 1.0],
                     [22, 12.0]
@@ -348,6 +542,44 @@
                 "toplevel": true,
                 "location_id": 9,
                 "position": [3, 5]
+            },
+            {
+                "id": 83,
+                "name": "Sky Pirate 1",
+                "description": "- **Ancestry:** {LemonChiffon|Aetherian}, wings to prevent injury from falling and facilitate jumps\r\n- **Specialties:** scimitar proficiency",
+                "location_id": 82
+            },
+            {
+                "id": 57,
+                "name": "Suhkh",
+                "description": "- **Ancestry:** {purple|Demon} (minor), succubus\r\n- **Specialties:** derives power from enticing and tormenting\r\n- **Appearance:** not visible in earthly plane, when seen in hell: orange pupils, blackened rotting bare flesh, whip-like tail, bodily fluids dripping, sulfur smell",
+                "location_id": 56
+            },
+            {
+                "id": 51,
+                "name": "Swirly (Sutherdepth)",
+                "description": "- **Ancestry:** {blue|Nalaran}\r\n- **Specialties:** pipe maintenance worker\r\n\r\nLyria's likely match for marriage."
+            },
+            {
+                "id": 54,
+                "name": "Tethered One",
+                "description": "- **Ancestry:** not earthly, possibly celestial or demon\r\n- **Specialties:** partial existence in both spiritual and physical plane, dagger/knives proficiency, rogue, can slip through cracks, reportedly can stitch souls onto physical surfaces\r\n- **Appearance:** extroardinarily thin, a purple glow rather than irises comes from within eye sockets, long smooth dark pants and shirt, pale face, slick hair\r\n\r\nPlot Points\r\n- caught in backlash when the gods destroyed the worldbridge\r\n- imprisoned underground in Blackvein Hold for many years",
+                "location_id": 53
+            },
+            {
+                "id": 67,
+                "name": "Thaddeus",
+                "description": "- **Ancestry:** {peru|Stonereach}\r\n- **Specialties:** wealthy mining foreman, somewhat of a bully",
+                "location_id": 66,
+                "items": [
+                    {"item_id": 68, "quantity": 1.0, "slot": ""}
+                ]
+            },
+            {
+                "id": 76,
+                "name": "Vull",
+                "description": "- god of molten rock, forges\r\n- passively upholds seal of Blackvein Hold\r\n- teamed up with Sunderforge to build the bridge in the depths of time",
+                "location_id": 75
             }
         ],
         "attribs": [

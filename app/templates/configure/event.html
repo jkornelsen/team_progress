@@ -25,11 +25,34 @@
     
     <select name="chained_events[{{ index }}][success_filter]">
         <option value="always" {{ 'selected' if not link or link.success_filter == 'always' }}>Show Always</option>
-        <option value="success_any" {{ 'selected' if link and link.success_filter == 'success_any' }}>On Any Success</option>
-        <option value="success_major" {{ 'selected' if link and link.success_filter == 'success_major' }}>On Major Success</option>
-        <option value="failure_any" {{ 'selected' if link and link.success_filter == 'failure_any' }}>On Any Failure</option>
+        <option value="{{ Participant.ALWAYS }}" 
+            {{ 'selected' if not link or link.success_filter ==
+                Participant.ALWAYS }}>Any Outcome</option>
+        <option value="{{ Participant.SUCCESS_ANY }}" 
+            {{ 'selected' if link and link.success_filter ==
+                Participant.SUCCESS_ANY }}>Any Success</option>
+        <option value="{{ Participant.SUCCESS_NAT_MAX }}" 
+            {{ 'selected' if link and link.success_filter ==
+                Participant.SUCCESS_NAT_MAX }}>Natural Max</option>
+        <option value="{{ Participant.SUCCESS_MAJOR }}" 
+            {{ 'selected' if link and link.success_filter ==
+                Participant.SUCCESS_MAJOR }}>Major Success</option>
+        <option value="{{ Participant.SUCCESS_MINOR }}" 
+            {{ 'selected' if link and link.success_filter ==
+                Participant.SUCCESS_MINOR }}>Minor Success</option>
+        <option value="{{ Participant.FAILURE_ANY }}" 
+            {{ 'selected' if link and link.success_filter ==
+                Participant.FAILURE_ANY }}>Any Failure</option>
+        <option value="{{ Participant.FAILURE_MINOR }}" 
+            {{ 'selected' if link and link.success_filter ==
+                Participant.FAILURE_MINOR }}>Minor Failure</option>
+        <option value="{{ Participant.FAILURE_MAJOR }}" 
+            {{ 'selected' if link and link.success_filter ==
+                Participant.FAILURE_MAJOR }}>Major Failure</option>
+        <option value="{{ Participant.SUCCESS_NAT_MIN }}" 
+            {{ 'selected' if link and link.success_filter ==
+                Participant.SUCCESS_NAT_MIN }}>Natural Min</option>
     </select>
-
     <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
 </div>
 {% endmacro %}

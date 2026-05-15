@@ -91,14 +91,14 @@
                                 {% if role_errors.positive %}
                                     <span class="text-danger">Needs</span>
                                     {% for factor, fld in role_errors.positive %}
-                                        {{ fld.get_field_name() }}{{ " " ~ factor.op_application ~ " " ~ factor.val_required if factor.is_comparison }}{{ ", " if not loop.last }}
+                                        {{ fld.get_field_name() }}{{ " " ~ factor.op_app_display ~ " " ~ factor.val_required if factor.is_comparison }}{{ ", " if not loop.last }}
                                     {% endfor %}
                                 {% endif %}
                                 {% if role_errors.positive and role_errors.negated %}<br>{% endif %}
                                 {% if role_errors.negated %}
                                     <span class="text-danger">Can't have</span>
-                                    {% for fld in role_errors.negated %}
-                                        {{ fld.get_field_name() }}{{ " " ~ factor.op_application ~ " " ~ factor.val_required if factor.is_comparison }}{{ ", " if not loop.last }}
+                                    {% for factor, fld in role_errors.negated %}
+                                        {{ fld.get_field_name() }}{{ " " ~ factor.op_app_display ~ " " ~ factor.val_required if factor.is_comparison }}{{ ", " if not loop.last }}
                                     {% endfor %}
                                 {% endif %}
                             {% else %}
@@ -171,6 +171,32 @@
                             {% set target_url = url_for('play.play_' ~ ent.entity_type, id=ent.id) %}
                             {{ render.maskable_name(
                                 ent, target_url, link_letters) }}
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
+            {% if involved_entities %}
+            <section class="outer-border">
+                <h3>Involved</h3>
+                <div>
+                    {% for ent in involved_entities %}
+                        <div>
+                            <span class="label-like">
+                                {% if ent.entity_type == 'character' %}👤
+                                {% elif ent.entity_type == 'item' %}📦
+                                {% elif ent.entity_type == 'attrib' %}📊
+                                {% endif %}
+                            </span>
+                            {% set target_url = url_for('play.play_' ~ ent.entity_type, id=ent.id)
+                                    if ent.entity_type != 'attrib' 
+                               else url_for('play.play_attrib', attrib_id=ent.id, subject_id=(subject.id
+                                    if subject else ctx_char.id if ctx_char else 1)) %}
+                            
+                            {% call hk.hotlink(target_url, link_letters) %}
+                                {{ ent.name }}
+                            {% endcall %}
                         </div>
                     {% endfor %}
                 </div>
@@ -333,9 +359,11 @@
     const eventId = {{ event.id }};
     const FILTER_LABELS = {
         '{{ Participant.SUCCESS_ANY }}': 'If Successful',
+        '{{ Participant.SUCCESS_NAT_MAX }}': 'If Natural Max',
         '{{ Participant.SUCCESS_MAJOR }}': 'If Major Success',
         '{{ Participant.SUCCESS_MINOR }}': 'If Minor Success',
         '{{ Participant.FAILURE_ANY }}': 'If Failure',
+        '{{ Participant.SUCCESS_NAT_MIN }}': 'If Natural Min',
         '{{ Participant.FAILURE_MAJOR }}': 'If Major Failure',
         '{{ Participant.FAILURE_MINOR }}': 'If Minor Failure'
     };
@@ -376,13 +404,16 @@
         if (!op || op === '{{ Operation.CONST }}') return source;
 
         const opSymbol = OP_MAP[op] || op;
-        const isFunctional = (op === '{{ Operation.ROUND }}' || op === '{{ Operation.SOFTCAP }}');
-
-        if (isFunctional) {
+        if (op === '{{ Operation.ROUND }}' || op === '{{ Operation.SOFTCAP }}') {
             return `${opSymbol}(${source}, ${constant})`;
-        } else {
-            return `(${source} ${opSymbol} ${constant})`;
         }
+        if (op === '{{ Operation.VAL_TO_POW }}') {
+            return `${source}<sup>${constant}</sup>`;
+        }
+        if (op === '{{ Operation.POW_OF_VAL }}') {
+            return `${constant}<sup>${source}</sup>`;
+        }
+        return `(${source} ${opSymbol} ${constant})`;
     }
 
     /**
@@ -408,7 +439,7 @@
                     ? `<span class="">${m.label}:</span>` 
                     : "";
                 const displayVal = m.value_display;
-                const displayOp = OP_MAP[m.op] || m.op;
+                const displayOp = m.op_app_display;
 
                 const hasInner = (m.breakdown && m.breakdown !== m.value.toString());
                 const innerHtml = hasInner ? `<small class="text-dim">[${m.breakdown}]</small>` : "";
@@ -482,12 +513,12 @@
                 const equationEl = row.querySelector('.equation-display');
                 const getValFrom = row.dataset.getValFrom;
 
-                row.querySelector('.target-name-display').innerText = eff.target_name;
+                row.querySelector('.target-name-display').innerText = eff.target_name || "?";
                 row.style.opacity = eff.is_resolved ? "1" : "0.5";
 
                 // Update current value and operator
                 row.querySelector('.current-value-display').innerText = eff.is_resolved ? eff.current_display : "?";
-                row.querySelector('.op-display').innerText = (eff.op_app === '{{ Operation.ASSIGN }}') ? '→' : (OP_MAP[eff.op_app] || eff.op_app);
+                row.querySelector('.op-display').innerText = eff.op_app_display;
 
                 // Update Line 2: Logic description
                 const logicEl = row.querySelector('.source-logic-description');
@@ -509,7 +540,8 @@
                 if (hasTransform && eff.source_name) {
                     // If it's a roll result, we call the source "Roll Result" for the formula
                     const sourceLabel = (getValFrom === '{{ Participant.OUTCOME }}') ? "Roll Result" : eff.source_name;
-                    logicParts.push(formatImpactExpression(sourceLabel, row.dataset.valTrans, row.dataset.opTrans));
+                    logicParts.push(formatImpactExpression(
+                        sourceLabel, row.dataset.valTrans, row.dataset.opTrans));
                 }
 
                 if (logicParts.length > 0) {
@@ -806,11 +838,8 @@
                 let name = "Target";
                 if (select) {
                     name = select.options[select.selectedIndex].text;
-                } else {
-                    const hidden = document.querySelector(`input[name="${roleIdField}"]`);
-                    name = "";
+                    nameDisplay.innerText = name;
                 }
-                nameDisplay.innerText = name;
             } else {
                 nameDisplay.innerText = "(" + role + ")";
             }

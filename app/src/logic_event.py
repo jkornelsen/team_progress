@@ -284,7 +284,8 @@ def calculate_determinants(event, role_entities):
             'value_display': format_for_display(val),
             'val_required': det.val_required,
             'negate': det.negate,
-            'op': det.op_application,
+            'op_app': det.op_application,
+            'op_app_display': det.op_app_display,
             'is_comparison': det.is_comparison,
             'is_met': is_met,
             'breakdown': breakdown_text,
@@ -400,6 +401,7 @@ def calculate_effects_targets(event, role_entities):
                               if impact_value is not None else None,
             'relies_on_roll': relies_on_roll,
             'op_app': eff.op_application,
+            'op_app_display': eff.op_app_display,
             'op_trans': eff.op_transform,
             'val_trans': eff.val_transform,
             'get_val_from': eff.get_val_from
@@ -610,11 +612,11 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
             base_max - math.floor(span * 0.15)) + math.floor(shift * 0.40)
 
         if die_roll == base_max:
-            res = "Major Success (Natural)"
-            tier = Participant.SUCCESS_MAJOR
+            res = "Natural Max!"
+            tier = Participant.SUCCESS_NAT_MAX
         elif die_roll == base_min:
-            res = "Major Failure (Natural)"
-            tier = Participant.FAILURE_MAJOR
+            res = "Natural Min!"
+            tier = Participant.FAILURE_NAT_MIN
         elif total >= major_success_min:
             res = "Major Success"
             tier = Participant.SUCCESS_MAJOR
@@ -769,9 +771,23 @@ def check_outcome_success(filter_val, tier):
     if tier is None:
         return False
     if filter_val == Participant.SUCCESS_ANY:
-        return 'success' in tier
+        return tier in [
+            Participant.SUCCESS_NAT_MAX, 
+            Participant.SUCCESS_MAJOR, 
+            Participant.SUCCESS_MINOR
+        ]
     if filter_val == Participant.FAILURE_ANY:
-        return 'failure' in tier
+        return tier in [
+            Participant.FAILURE_NAT_MIN, 
+            Participant.FAILURE_MAJOR, 
+            Participant.FAILURE_MINOR
+        ]
+    if filter_val == Participant.SUCCESS_MAJOR:
+        return tier in [Participant.SUCCESS_NAT_MAX, Participant.SUCCESS_MAJOR]
+    if filter_val == Participant.FAILURE_MAJOR:
+        return tier in [Participant.FAILURE_NAT_MIN, Participant.FAILURE_MAJOR]
+
+    # Exact matches: Natural Max, Natural Min, Minor Success, Minor Failure
     return filter_val == tier
 
 def do_effect_change(eff, roll_total, role_entities):

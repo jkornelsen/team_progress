@@ -107,6 +107,22 @@
                 </ul>
             </section>
             {% endif %}
+
+            {% if events_using_this %}
+            <section class="outer-border">
+                <h3>Used in Events</h3>
+                <ul class="clean-list">
+                    {% for evt in events_using_this %}
+                        <li>
+                            {% set target_url = url_for('play.play_event', id=evt.id) %}
+                            {% call hk.hotlink(target_url, link_letters) %}
+                                ⚡ {{ evt.name }}
+                            {% endcall %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </section>
+            {% endif %}
         </div>
     </div>
 </div>

@@ -8,7 +8,7 @@ from sqlalchemy.orm import joinedload
 from app.models import (
     db, Entity, Item, Character, Location, Attrib, Event,
     Pile, AttribVal, Operation, OutcomeType, EventFactor,
-    Recipe, RecipeAttribReq, LocDest, EventLink, EntityAbility,
+    Recipe, RecipeAttribReq, LocDest, EventLink, EntityAbility, EventField,
     Progress, Overall, WinRequirement, GameMessage,
     GENERAL_ID, StorageType, Participant)
 from app.utils import (
@@ -1082,6 +1082,35 @@ def play_event(id):
         .all()
     )
 
+    # Identify Involved Blueprint Entities (scan factors as before)
+    attrib_ids = set()
+    item_ids = set()
+    char_ids = set()
+    for f in event.factors:
+        for field in [f.infield, f.outfield]:
+            if not field: continue
+            if field.attrib_id: attrib_ids.add(field.attrib_id)
+            if field.item_id: item_ids.add(field.item_id)
+            if field.char_id: char_ids.add(field.char_id)
+            if field.recipe_id:
+                rec = Recipe.query.get((game_token, field.recipe_id))
+                if rec: item_ids.add(rec.product_id)
+
+    raw_involved = []
+    if attrib_ids:
+        raw_involved += Attrib.query.filter(Attrib.game_token == game_token, Attrib.id.in_(list(attrib_ids))).all()
+    if item_ids:
+        raw_involved += Item.query.filter(Item.game_token == game_token, Item.id.in_(list(item_ids)), Item.masked == False).all()
+    if char_ids:
+        raw_involved += Character.query.filter(Character.game_token == game_token, Character.id.in_(list(char_ids))).all()
+
+    caller_keys = {(c.id, c.entity_type) for c in caller_entities}
+    involved_filtered = [
+        ent for ent in raw_involved 
+        if (ent.id, ent.entity_type) not in caller_keys
+    ]
+    involved_entities = sort_by_name_stripped(involved_filtered)
+
     return render_template(
         'play/event.html',
         event=event,
@@ -1092,6 +1121,7 @@ def play_event(id):
         fields_not_met=fields_not_met,
         effects_data=effects_data,
         caller_entities=caller_entities,
+        involved_entities=involved_entities,
         parent_events=parent_events,
         Participant=Participant,
         Operation=Operation,
@@ -1243,10 +1273,24 @@ def play_attrib(attrib_id, subject_id):
         Item.game_token == game_token
     ).all()
 
+    # Get events using this attribute
+    events_raw = Event.query.join(EventFactor).join(
+        EventField, or_(
+            EventFactor.infield_id == EventField.id,
+            EventFactor.outfield_id == EventField.id
+        )
+    ).filter(
+        EventField.attrib_id == attrib_id,
+        Event.game_token == game_token
+    ).distinct().all()
+    events_using_this = sort_by_name_stripped(events_raw)
+
     return render_template(
         'play/attrib.html', 
         attribute=attribute, 
         subject=subject, 
         attrib_value=val_record,
         items_requiring_this=items_requiring_this,
+        events_using_this=events_using_this,
         link_letters=LinkLetters(excluded='moesct'))
+

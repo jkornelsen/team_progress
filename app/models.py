@@ -1004,9 +1004,11 @@ class Participant:
     # --- Outcome Success Filter ---
     ALWAYS = 'always'
     SUCCESS_ANY = 'success_any'
+    SUCCESS_NAT_MAX = 'natural_max'
     SUCCESS_MAJOR = 'success_major'
     SUCCESS_MINOR = 'success_minor'
     FAILURE_ANY = 'failure_any'
+    FAILURE_NAT_MIN = 'natural_min'
     FAILURE_MAJOR = 'failure_major'
     FAILURE_MINOR = 'failure_minor'
 
@@ -1037,7 +1039,7 @@ class Operation:
         GE:         '≥',
         LT:         '<',
         NE:         '≠',
-        ASSIGN:     '≔',
+        ASSIGN:     '→',
         ADD:        '+',
         SUB:        '−',
         MULT:       '×',
@@ -1199,6 +1201,18 @@ class EventFactor(db.Model, DictHydrator):
     @property
     def is_comparison(self):
         return self.op_application in Operation.COMPARISON_OPS
+
+    @property
+    def op_app_display(self):
+        if not self.op_application:
+            return ""
+        return Operation.Repr.get(self.op_application, self.op_application)
+
+    @property
+    def op_inner_display(self):
+        if not self.op_transform:
+            return ""
+        return Operation.Repr.get(self.op_transform, self.op_transform)
 
     # Relationships
     event = db.relationship(
