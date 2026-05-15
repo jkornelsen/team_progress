@@ -12,7 +12,7 @@
             <span class="index-display label-like">#{{ index }}</span>
             <input type="text" 
                    name="dets[{{ index }}][label]" 
-                   value="{{ factor.label if factor and factor.label else '' }}" 
+                   value="{{ factor.label or '' }}" 
                    placeholder="Label e.g. Evasion (Optional)">
         </div>
         <!-- Move/Delete buttons -->

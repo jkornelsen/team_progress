@@ -4,19 +4,11 @@
 
 ---- functional, tightening, quality of life ----
 
-ended up with a pile of -16 logs near saw and 16 at 1,1
-    shouldn't have allowed production if it wasn't going to use the pile
-    seems to be two different versions of code for determining vs displaying
-    we should probably unify that logic instead of trying to keep it in sync
-
 sqlalchemy.orm.exc.ObjectDeletedError: Instance '<Progress at 0x134226688c0>' has been deleted, or its row is otherwise not present.
     routes_play.py", line 767, in item_production_status
     tick_all_active()
     logic_progress.py", line 133, in tick_all_active
     db.session.commit()
-
-check det reqs again after rolling and disable button if needed
-    e.g. swing to chop
 
 effect outcome filter isn't showing in play event
     shows "Major Failure" in dropdown in event config

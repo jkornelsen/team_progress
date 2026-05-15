@@ -557,6 +557,9 @@
         const fd = new FormData();
         fd.append('char_id', charId);
         fd.append('loc_id', locId);
+        const urlParams = new URLSearchParams(window.location.search);
+        const pos = urlParams.get('pos');
+        if (pos) fd.append('pos', pos);
 
         // 2. Fetch the complete state snapshot for this context
         const url = `/production/status/item/${itemId}/owner/${ownerId}`;
@@ -920,6 +923,9 @@
         fd.append('owner_id', ownerId);
         fd.append('recipe_id', recipeId);
         fd.append('batches', batches);
+        const urlParams = new URLSearchParams(window.location.search);
+        const pos = urlParams.get('pos');
+        if (pos) fd.append('pos', pos);
 
         const url = `/production/instant/host/${targetHostId}`;
         const data = await apiPost(url, fd, "Could not gain.");

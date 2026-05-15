@@ -83,7 +83,7 @@
                         "attrib_reqs": [
                             {
                                 "attrib_id": 2,
-                                "value_range": [null, -1.0],
+                                "value_range": [null, 0.1],
                                 "range_inclusive": [true, true]
                             }
                         ]
@@ -328,7 +328,7 @@
             {
                 "id": 26,
                 "name": "Chopping Check",
-                "description": "- **Major Success:** Gain 50% more logs\r\n- **Minor Failure:** The attempt was unsuccessful\r\n- **Major Failure:** Run [Chopping Mishap Type](/play/event/22)",
+                "description": "- **Major Success:** Gain 50% more logs\r\n- **Minor Failure:** The attempt was unsuccessful — [add back HP from the swing](/play/attrib/2/subject/15)\r\n- **Major Failure:** Run *Chopping Mishap Type*",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -353,6 +353,9 @@
                         "outcome_success": "success_major",
                         "auto_apply": true
                     }
+                ],
+                "chained_events": [
+                    {"child_id": 22, "success_filter": "failure_major"}
                 ]
             },
             {
@@ -425,7 +428,7 @@
             {
                 "id": 23,
                 "name": "Swing to Chop",
-                "description": "For the final blow, or after rolling a natural 1, do a [Chopping Check](/play/event/26).",
+                "description": "For the final blow, or after rolling a natural 1, do a *Chopping Check*.",
                 "outcome_type": "numeric",
                 "numeric_range": [1, 10],
                 "determinants": [
@@ -435,6 +438,11 @@
                     {
                         "infield": {"attrib_id": 3},
                         "op_application": "*"
+                    },
+                    {
+                        "infield": {"role": "at", "child_of_anchor": true, "attrib_id": 2},
+                        "op_application": ">=",
+                        "val_required": 0.01
                     }
                 ],
                 "effects": [
@@ -444,6 +452,9 @@
                         "op_application": "-",
                         "auto_apply": true
                     }
+                ],
+                "chained_events": [
+                    {"child_id": 26}
                 ]
             }
         ]

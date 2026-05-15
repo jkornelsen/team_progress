@@ -452,6 +452,8 @@ def calculate_solved_effects(event, role_entities, roll_total):
 
         results.append({
             'effect_id': eff.id,
+            'current_value': current_val,
+            'current_display': format_for_display(current_val),
             'impact_value': impact,
             'impact_display': format_for_display(impact),
             'final_value': final_val,
@@ -571,7 +573,7 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
 
     for m in modifiers:
         val = m['value']
-        op = m['op']
+        op = m['op_app']
         if m['is_comparison']:
             continue
 
@@ -770,6 +772,9 @@ def check_outcome_success(filter_val, tier):
         return True
     if tier is None:
         return False
+    if filter_val == tier:
+        # Exact Match
+        return True
     if filter_val == Participant.SUCCESS_ANY:
         return tier in [
             Participant.SUCCESS_NAT_MAX, 
@@ -783,12 +788,11 @@ def check_outcome_success(filter_val, tier):
             Participant.FAILURE_MINOR
         ]
     if filter_val == Participant.SUCCESS_MAJOR:
-        return tier in [Participant.SUCCESS_NAT_MAX, Participant.SUCCESS_MAJOR]
+        return tier == Participant.SUCCESS_NAT_MAX
     if filter_val == Participant.FAILURE_MAJOR:
-        return tier in [Participant.FAILURE_NAT_MIN, Participant.FAILURE_MAJOR]
+        return tier == Participant.FAILURE_NAT_MIN
 
-    # Exact matches: Natural Max, Natural Min, Minor Success, Minor Failure
-    return filter_val == tier
+    return False
 
 def do_effect_change(eff, roll_total, role_entities):
     """

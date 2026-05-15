@@ -252,7 +252,7 @@
                                 <label class="checkbox-label">
                                     <input type="checkbox" id="move-with-party-chk"
                                         onchange="this.blur();"> 
-                                    Move with Party
+                                    Move {{ hk.bracket('w') }}ith Party
                                 </label>
                             </div>
 
@@ -433,7 +433,7 @@
             const label = container.querySelector('.checkbox-label');
             label.innerHTML = `
                 <input type="checkbox" id="move-with-party-chk" onchange="this.blur();" ${chk?.checked ? 'checked' : ''}> 
-                Move with <i>${displayName}</i>
+                Move {{ hk.bracket('w') }}ith <i>${displayName}</i>
             `;
         } else {
             container.style.display = 'none';
@@ -583,6 +583,14 @@
                 if (exitByPos) {
                     url.searchParams.set('auto_select_exit', exitByPos.target_id);
                     window.location.href = url.toString();
+                }
+            }
+            else if (key === 'w') {
+                const chk = document.getElementById('move-with-party-chk');
+                if (chk && chk.closest('#party-move-container')?.style.display !== 'none') {
+                    chk.checked = !chk.checked;
+                    chk.dispatchEvent(new Event('change'));
+                    event.preventDefault();
                 }
             }
         }

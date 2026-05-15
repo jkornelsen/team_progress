@@ -380,7 +380,7 @@
     const diffSelect = document.getElementById('difficulty-select');
     const rollBtn = document.getElementById('submit-roll');
 
-    let lastRollValue = 0;
+    let lastRollValue = null;
 
     // Gather selected IDs from the dropdowns
     function getRoleIDs() {
@@ -517,7 +517,13 @@
                 row.style.opacity = eff.is_resolved ? "1" : "0.5";
 
                 // Update current value and operator
-                row.querySelector('.current-value-display').innerText = eff.is_resolved ? eff.current_display : "?";
+                if (lastRollValue === null) {
+                    const currentValEl = row.querySelector('.current-value-display');
+                    currentValEl.innerText = eff.current_display;
+
+                    const impactRes = row.querySelector('.impact-result');
+                    if (impactRes) impactRes.classList.add('hidden');
+                }
                 row.querySelector('.op-display').innerText = eff.op_app_display;
 
                 // Update Line 2: Logic description
@@ -570,9 +576,6 @@
                         equationEl.innerHTML = formattedImpact;
                     }
                 }
-                
-                // Hide results from previous rolls
-                row.querySelector('.impact-result').classList.add('hidden');
             });
         }
     }
@@ -630,10 +633,42 @@
     }
 
     /**
+     * Mirrors backend check_outcome_success logic.
+     */
+    function tierMatch(filter, tier) {
+        if (filter === 'always') return true;
+        if (!tier) return false;
+        if (filter === tier) return true;
+        if (filter === '{{ Participant.SUCCESS_ANY }}') {
+            return [
+                '{{ Participant.SUCCESS_NAT_MAX }}',
+                '{{ Participant.SUCCESS_MAJOR }}',
+                '{{ Participant.SUCCESS_MINOR }}'].includes(tier);
+        }
+        if (filter === '{{ Participant.SUCCESS_MAJOR }}') {
+            return tier === '{{ Participant.SUCCESS_NAT_MAX }}';
+        }
+        if (filter === '{{ Participant.FAILURE_ANY }}') {
+            return [
+                '{{ Participant.FAILURE_NAT_MIN }}',
+                '{{ Participant.FAILURE_MAJOR }}',
+                '{{ Participant.FAILURE_MINOR }}'].includes(tier);
+        }
+        if (filter === '{{ Participant.FAILURE_MAJOR }}') {
+            return tier === '{{ Participant.FAILURE_NAT_MIN }}';
+        }
+        return false;
+    }
+
+    /**
      * The main roll button handler
      */
     if (rollBtn) {
         rollBtn.onclick = async () => {
+            document.querySelectorAll('.check-mark').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.auto-gear').forEach(el => el.classList.remove('hidden'));
+            lastRollValue = null;
+
             const fd = getRoleIDs();
             const diff = document.getElementById('difficulty-select')?.value;
             if (diff) fd.append('difficulty', diff);
@@ -656,15 +691,20 @@
 
             // 2. Update Effects using the pre-calculated results from the server
             if (data.solved_effects) {
+                lastRollValue = data.result_value;
+
                 data.solved_effects.forEach(solved => {
                     const row = document.getElementById(`eff-row-${solved.effect_id}`);
                     if (!row) return;
 
                     const impactRes = row.querySelector('.impact-result');
+                    const currentValEl = row.querySelector('.current-value-display');
                     const newValEl = row.querySelector('.new-val');
                     const equationEl = row.querySelector('.equation-display');
                     const filter = row.dataset.successFilter;
                     const reliesOnRoll = row.dataset.reliesOnRoll === "true";
+
+                    currentValEl.innerText = solved.current_display;
 
                     if (reliesOnRoll) {
                         // Update the "Roll" placeholder with the actual number
@@ -683,14 +723,10 @@
                         // This was a known value (e.g. Constant or Field).
                         // It's already showing the correct green result in equationEl.
                         if (impactRes) impactRes.classList.add('hidden');
+                        equationEl.innerHTML = `<span class="text-success" style="font-weight:bold;">${solved.impact_display}</span>`;
                     }
                     if (row.dataset.getValFrom === '{{ Participant.OUTCOME }}') {
-                        let isEligible = (filter === 'always');
-                        if (resultTier) {
-                            if (filter === 'success_any') isEligible = resultTier.includes('success');
-                            else if (filter === 'failure_any') isEligible = resultTier.includes('failure');
-                            else if (filter === resultTier) isEligible = true;
-                        }
+                        const isEligible = tierMatch(filter, resultTier);
                         if (!isEligible) {
                             row.classList.add('hidden'); // Hide effects that didn't "trigger"
                         } else {
@@ -723,6 +759,7 @@
             }
 
             // Sync based on outcome
+            await refreshModifiers();
             syncApplyAllState()
 
             const chainSection = document.getElementById('follow-up-section');
@@ -733,16 +770,7 @@
                 let visibleChainCount = 0;
 
                 CHAINED_EVENTS.forEach(link => {
-                    let isEligible = (link.success_filter === 'always');
-                    if (resultTier) {
-                        if (link.success_filter === 'success_any') {
-                            isEligible = resultTier.includes('success');
-                        } else if (link.success_filter === 'failure_any') {
-                            isEligible = resultTier.includes('failure');
-                        } else if (link.success_filter === resultTier) {
-                            isEligible = true;
-                        }
-                    }
+                    const isEligible = tierMatch(link.success_filter, resultTier);
                     if (isEligible) {
                         visibleChainCount++;
                         const idx = visibleChainCount - 1;
@@ -810,6 +838,8 @@
             row.querySelector('.check-mark').classList.remove('hidden');
             row.style.opacity = "0.7";
 
+            lastRollValue = null;
+            await refreshModifiers();
             syncApplyAllState();
         } else {
             btn.innerText = "Retry";

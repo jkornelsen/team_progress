@@ -208,7 +208,7 @@ def play_location(id):
         attrib_values=attrib_values,
         active_char_id=active_char_id,
         ctx_char=current_char,
-        link_letters=LinkLetters(excluded='ctmoed')
+        link_letters=LinkLetters(excluded='ctmoedw')
     )
 
 @play_bp.route('/play/char/<int:id>')
@@ -795,6 +795,7 @@ def item_production_status(item_id, owner_id):
     """
     game_token = g.game_token
     req = RequestHelper('form')
+    pos = req.get_coords('pos')
     
     # Contextual IDs
     char_id = req.get_int('char_id')
@@ -806,18 +807,21 @@ def item_production_status(item_id, owner_id):
         f"Item:{item_id} | Owner:{owner_id}"
         f" | Char:{ctx.char_id} | Loc:{ctx.loc_id}")
 
-    # 1. TICK THE WORLD
+    # 1. Tick the world
     tick_all_active()
 
-    # 2. GATHER DATA FOR THE SPECIFIC PILE WE ARE VIEWING
+    # 2. Gather data for the specific pile we are viewing
     main_item = Item.query.get((game_token, item_id))
     if not main_item:
         return jsonify({"message": "Item not found"}), HTTPStatus.NOT_FOUND
 
-    main_pile = Pile.query.filter_by(
-        game_token=game_token, owner_id=owner_id, item_id=item_id).first()
+    pile_query = Pile.query.filter_by(
+        game_token=game_token, owner_id=owner_id, item_id=item_id)
+    if pos:
+        pile_query = pile_query.filter_by(position=list(pos))
+    main_pile = pile_query.first()
     
-    # 3. GATHER PROGRESS FOR ALL POSSIBLE HOSTS
+    # 3. Gather progress for all possible hosts
     # We check if any of our context entities are currently making this item
     potential_hosts = [GENERAL_ID, char_id, loc_id]
     all_progs = Progress.query.filter_by(
@@ -833,7 +837,7 @@ def item_production_status(item_id, owner_id):
     # Create a map so the UI knows which recipe is running on which host
     prog_map = {p.host_id: p for p in all_progs}
 
-    # 4. GATHER RECIPES & INGREDIENT TOTALS
+    # 4. Gather recipes & ingredient totals
     recipe_data = []
     source_quantities = {}
     attrib_data = []
@@ -870,7 +874,7 @@ def item_production_status(item_id, owner_id):
                         "value": format_num(av.value)
                     })
 
-    # 5. GATHER "USED TO PRODUCE" DATA
+    # 5. Gather "used to produce" data
     # Assume same owner/context as current page.
     used_for_data = []
     for source_link in main_item.as_ingredient:

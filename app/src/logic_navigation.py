@@ -101,6 +101,56 @@ def get_default_position(location):
     valid = get_all_valid_coords(location)
     return list(valid[0]) if valid else None
 
+def find_best_output_pos(item_id, loc_id, anchor_pos):
+    """
+    Finds the best coordinate adjacent to anchor_pos to place item_id.
+    1. Checks for existing piles of item_id in adjacent squares.
+    2. Finds first unblocked adjacent square (Clockwise from East).
+    """
+    if not anchor_pos or len(anchor_pos) != 2:
+        return None
+
+    game_token = g.game_token
+    loc = Location.query.get((game_token, loc_id))
+    if not loc or not loc.dimensions:
+        return None
+
+    x, y = anchor_pos
+    # Clockwise offsets starting East (x+1, y)
+    offsets = [
+        (1, 0),   # East
+        (1, 1),   # South-East
+        (0, 1),   # South
+        (-1, 1),  # South-West
+        (-1, 0),  # West
+        (-1, -1), # North-West
+        (0, -1),  # North
+        (1, -1)   # North-East
+    ]
+
+    # PHASE 1: Search for existing pile of the same item to merge into
+    for dx, dy in offsets:
+        candidate = [x + dx, y + dy]
+        if is_in_grid(loc, candidate):
+            existing = Pile.query.filter_by(
+                game_token=game_token,
+                owner_id=loc_id,
+                item_id=item_id,
+                position=candidate
+            ).first()
+            if existing:
+                return candidate
+
+    # PHASE 2: Find first unblocked square
+    for dx, dy in offsets:
+        candidate = [x + dx, y + dy]
+        if is_in_grid(loc, candidate) and not blocked_by_local_item(loc_id, candidate):
+            return candidate
+
+    # Fallback: If everything is blocked, return the anchor position itself
+    # so we don't end up at [1, 1]
+    return anchor_pos
+
 # ------------------------------------------------------------------------
 # Party
 # ------------------------------------------------------------------------

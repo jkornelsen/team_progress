@@ -7,7 +7,7 @@ from app.models import (
     Recipe, AttribVal, GENERAL_ID, StorageType)
 from app.utils import maskable_name
 from .logic_piles import adjust_quantity, get_accessible_quantity
-from .logic_navigation import is_adjacent
+from .logic_navigation import is_adjacent, find_best_output_pos
 from .logic_user_interaction import add_message
 
 logger = logging.getLogger(__name__)
@@ -260,6 +260,11 @@ def execute_production(
 
     if batches <= 0:
         return 0, None
+    game_token = g.game_token
+
+    # If a recipe is location-hosted, the Location is the owner.
+    if recipe.is_location_hosted:
+        target_owner_id = host_id
 
     # Validate if we can perform at least ONE
     possible, reason = can_perform_recipe(
@@ -269,10 +274,9 @@ def execute_production(
         return 0, reason
 
     # Calculate the real ceiling based on current ingredients
+    resolved = resolve_recipe_sources(host_id, recipe, ctx)
     if catching_up and batches > 1:
-        resolved = resolve_recipe_sources(host_id, recipe, ctx)
         max_possible = batches
-        
         for res in resolved:
             source_def = res['source_def']
             if not source_def.preserve and source_def.q_required > 0:
@@ -301,8 +305,33 @@ def execute_production(
         if not possible:
             return 0, reason
 
+    # Grid Position
+    target_pos = None
+    target_owner_ent = Entity.query.get((game_token, target_owner_id))
+    if target_owner_ent and target_owner_ent.entity_type == Location.TYPENAME:
+        # Find the Machine's location
+        if recipe.is_location_hosted:
+            machine_pos = None
+            for res in resolved:
+                if res['item'].storage_type == StorageType.LOCAL \
+                        and res['representative_pile']:
+                    machine_pos = res['representative_pile'].position
+                    break
+            if machine_pos:
+                target_pos = find_best_output_pos(
+                    recipe.product_id, target_owner_id, machine_pos)
+        
+        # Character crafting
+        if not target_pos:
+            host_ent = Entity.query.get((g.game_token, host_id))
+            if host_ent and host_ent.entity_type == Character.TYPENAME:
+                target_pos = host_ent.position
+
+    # Ensure position is a list (Postgres ARRAY compatibility)
+    if target_pos and isinstance(target_pos, tuple):
+        target_pos = list(target_pos)
+
     # Consume
-    resolved = resolve_recipe_sources(host_id, recipe, ctx)
     for res in resolved:
         if not res['source_def'].preserve:
             pile_pos = res['representative_pile'].position \
@@ -315,12 +344,14 @@ def execute_production(
 
     # Produce
     adjust_quantity(
-        recipe.product_id, target_owner_id, recipe.rate_amount * batches)
+        recipe.product_id, target_owner_id, recipe.rate_amount * batches,
+        position=target_pos)
     
     for bp in recipe.byproducts:
         bp_target_id = get_byproduct_target(
             bp.item_id, target_owner_id, host_id, ctx)
-        adjust_quantity(bp.item_id, bp_target_id, bp.rate_amount * batches)
+        adjust_quantity(bp.item_id, bp_target_id, bp.rate_amount * batches,
+            position=target_pos)
 
     # Log who did the production
     game_token = g.game_token
