@@ -26,10 +26,13 @@ def tick_all_active(messages_host_id=None):
 
     # DB lock to prevent concurrent access to this game token
     lock_id = zlib.adler32(game_token.encode())
-    db.session.execute(
-        text("SELECT pg_advisory_xact_lock(:id)"), 
-        {"id": lock_id}
-    )
+    try:
+        db.session.execute(
+            text("SELECT pg_advisory_xact_lock(:id)"), 
+            {"id": lock_id}
+        )
+    except Exception as e:
+        logger.exception(e)
 
     all_active_records = Progress.query.filter_by(game_token=game_token).all()
     

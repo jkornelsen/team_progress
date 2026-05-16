@@ -47,6 +47,7 @@ def log_user_activity(endpoint, entity_id=None):
         db.session.add(interaction)
     
     try:
+        db.session.flush()
         db.session.commit()
     except Exception as e:
         db.session.rollback()

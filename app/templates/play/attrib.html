@@ -114,7 +114,7 @@
                 <ul class="clean-list">
                     {% for evt in events_using_this %}
                         <li>
-                            {% set target_url = url_for('play.play_event', id=evt.id) %}
+                            {% set target_url = url_for('play.play_event', id=evt.id, subject_id=subject.id) %}
                             {% call hk.hotlink(target_url, link_letters) %}
                                 ⚡ {{ evt.name }}
                             {% endcall %}

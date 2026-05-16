@@ -1,5 +1,5 @@
 from .testing_utils import BaseTestCase
-from app.models import db, Item, Pile
+from app.models import db, Item, Pile, StorageType
 from app.src.logic_piles import adjust_quantity, transfer_item, GENERAL_ID
 
 class TestPileLogic(BaseTestCase):
@@ -7,7 +7,7 @@ class TestPileLogic(BaseTestCase):
     def setUp(self):
         super().setUp()
         # Create a dummy item for testing
-        self.item = Item(id=10, game_token=self.game_token, name="Iron", storage_type="universal")
+        self.item = Item(id=10, game_token=self.game_token, name="Iron", storage_type=StorageType.UNIVERSAL)
         db.session.add(self.item)
         db.session.commit()
 

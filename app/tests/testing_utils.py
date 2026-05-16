@@ -1,6 +1,7 @@
 import unittest
+from flask import g
 from app import create_app, db
-from app.database_setup import init_game_session
+from app.serialization import init_game_session
 
 class BaseTestCase(unittest.TestCase):
     def setUp(self):
@@ -19,7 +20,8 @@ class BaseTestCase(unittest.TestCase):
         
         # Bootstrap the session
         self.game_token = "test-token-123"
-        init_game_session(self.game_token)
+        g.game_token = self.game_token 
+        init_game_session()
 
     def tearDown(self):
         """Cleans up the database and context."""

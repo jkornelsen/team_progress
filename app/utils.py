@@ -196,7 +196,7 @@ def redirect_back(default='play.overview'):
     """
     target = session.pop('origin_url', request.referrer)
     if not target or target == request.url:
-        return redirect(url_for(default))
+        target = url_for(default)
     return redirect(target)
 
 # ------------------------------------------------------------------------

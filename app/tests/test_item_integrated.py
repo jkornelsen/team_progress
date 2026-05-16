@@ -14,7 +14,7 @@ class TestItemIntegrated(BaseTestCase):
             game_token=self.game_token, 
             name="Steel Ingot", 
             entity_type="item",
-            storage_type="universal"
+            storage_type=StorageType.UNIVERSAL
         )
         db.session.add(new_item)
         db.session.commit()
@@ -31,9 +31,9 @@ class TestItemIntegrated(BaseTestCase):
     def test_recipe_dependency_logic(self):
         """Test if production logic correctly sees ingredients across the relational tables."""
         # 1. Setup: Create Item A (Tool), Item B (Resource), and Item C (Product)
-        tool = Item(id=10, game_token=self.game_token, name="Hammer", storage_type="universal")
-        resource = Item(id=11, game_token=self.game_token, name="Wood", storage_type="universal")
-        product = Item(id=12, game_token=self.game_token, name="Plank", storage_type="universal")
+        tool = Item(id=10, game_token=self.game_token, name="Hammer", storage_type=StorageType.UNIVERSAL)
+        resource = Item(id=11, game_token=self.game_token, name="Wood", storage_type=StorageType.UNIVERSAL)
+        product = Item(id=12, game_token=self.game_token, name="Plank", storage_type=StorageType.UNIVERSAL)
         db.session.add_all([tool, resource, product])
         
         # 2. Setup: Create a Recipe for Plank
@@ -67,7 +67,7 @@ class TestItemIntegrated(BaseTestCase):
 
     def test_item_deletion_cascade(self):
         """Verify that deleting an item scrubs its recipes and inventory piles."""
-        item = Item(id=50, game_token=self.game_token, name="DeleteMe", storage_type="universal")
+        item = Item(id=50, game_token=self.game_token, name="DeleteMe", storage_type=StorageType.UNIVERSAL)
         db.session.add(item)
         db.session.flush()
         
@@ -94,7 +94,7 @@ class TestItemIntegrated(BaseTestCase):
                 {
                     "id": 200,
                     "name": "Magic Wand",
-                    "storage_type": "universal",
+                    "storage_type": StorageType.UNIVERSAL,
                     "quantity": 5.0,
                     "recipes": [
                         {
@@ -108,7 +108,7 @@ class TestItemIntegrated(BaseTestCase):
                 {
                     "id": 201,
                     "name": "Stick",
-                    "storage_type": "universal",
+                    "storage_type": StorageType.UNIVERSAL,
                     "quantity": 0
                 }
             ]

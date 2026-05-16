@@ -952,5 +952,5 @@ def do_effect_change(eff, roll_total, role_entities):
         char.position = roll_total
         add_message(f"Spawned {char.name} at {maskable_name(loc)} {roll_total}")
 
-    db.session.commit()
+    db.session.flush()
     return True, ''

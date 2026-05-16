@@ -1,7 +1,8 @@
 import logging
 import json
 from flask import (
-    Blueprint, render_template, request, jsonify, g, session, current_app)
+    Blueprint, render_template, request, redirect, jsonify,
+    g, session, current_app)
 from http import HTTPStatus
 from sqlalchemy import or_
 from sqlalchemy.orm import joinedload
@@ -432,6 +433,7 @@ def char_move(id):
     
     success, results = move_group(id, dx, dy, move_party)
     if success:
+        db.session.commit()
         return jsonify({"positions": results}), HTTPStatus.OK
     return jsonify({"message": results}), HTTPStatus.BAD_REQUEST
 
@@ -442,6 +444,7 @@ def char_travel(id):
     move_party = req.get_bool('move_party')
     success, message = arrive_at_destination(id, dest_loc_id, move_party)
     if success:
+        db.session.commit()
         return '', HTTPStatus.NO_CONTENT
     return jsonify({"message": message}), HTTPStatus.BAD_REQUEST
 
@@ -1182,6 +1185,7 @@ def roll_event(id):
         event, role_entities, result_num)
     process_all_effects(
         event, role_entities, result_num, tier, force_auto_only=True)
+    db.session.commit()
     
     return jsonify({
         "result_value": result_num,
@@ -1206,6 +1210,7 @@ def apply_single_effect(factor_id):
         roll_total = req.get_float('roll_total')
     success, message = do_effect_change(
         eff, roll_total, role_entities)
+    db.session.commit()
     
     if not success:
         return jsonify({"message": message}), HTTPStatus.BAD_REQUEST
@@ -1217,6 +1222,7 @@ def play_attrib(attrib_id, subject_id):
     game_token = g.game_token
     attribute = Attrib.query.get_or_404((game_token, attrib_id))
     subject = Entity.query.get_or_404((game_token, subject_id))
+    capture_origin(name=f"{subject.name} {attribute.name}")
     
     val_record = AttribVal.query.filter_by(
         game_token=game_token, attrib_id=attrib_id, subject_id=subject_id
@@ -1269,7 +1275,7 @@ def play_attrib(attrib_id, subject_id):
             f"{op_words['verb']} {subject.name} {attribute.name}"
             f" {op_words['prep']} {val_str}"
         )
-        return redirect_back()
+        return redirect(request.url)
 
     # Get reverse dependencies (items needing this for recipes)
     items_requiring_this = Item.query.join(Recipe).join(RecipeAttribReq).filter(

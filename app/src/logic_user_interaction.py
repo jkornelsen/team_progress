@@ -44,7 +44,7 @@ def add_message(text):
     
     # 3. Occasional pruning: keep only last 100 messages for this token
     # (Simplified: in a high-traffic app, move to a background task)
-    db.session.commit()
+    db.session.flush()
 
 def get_chronicle(game_token, limit=50):
     """Fetches the most recent messages for the UI."""
@@ -82,7 +82,7 @@ def log_activity(game_token, username, route, entity_id=None):
         )
         db.session.add(interaction)
     
-    db.session.commit()
+    db.session.flush()
 
 def get_active_sessions(game_token, minutes=5):
     """
@@ -141,7 +141,7 @@ def clear_session_logs(game_token):
     """
     GameMessage.query.filter_by(game_token=game_token).delete()
     UserInteraction.query.filter_by(game_token=game_token).delete()
-    db.session.commit()
+    db.session.flush()
     logger.info(f"Logs cleared for token: {game_token}")
 
 def clear_old_data(days=1):

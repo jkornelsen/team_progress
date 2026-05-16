@@ -212,7 +212,7 @@ def move_group(main_char_id, dx, dy, move_party=False):
             member.position = pos
             results[member.id] = member.position
     
-    db.session.commit()
+    db.session.flush()
     return True, results
 
 # ------------------------------------------------------------------------
@@ -319,7 +319,7 @@ def arrive_at_destination(main_char_id, dest_loc_id, move_party=False):
     if target_loc.masked:
         target_loc.masked = False
 
-    db.session.commit()
+    db.session.flush()
     party = " and party" if main_char.travel_party and move_party else ''
     add_message(f"{main_char.name}{party} traveled to {target_loc.name}.")
     return True, "Arrived."

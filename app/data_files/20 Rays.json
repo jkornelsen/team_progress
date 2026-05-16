@@ -58,9 +58,9 @@
             {
                 "id": 41,
                 "name": "🏁Base Speed Factor",
-                "description": "Set this quantity (*{lemonchiffon|BSF}*) to a multiplier such as:\r\n```\r\n0.5   : slow\r\n1     : normal — no change\r\n2     : somewhat faster\r\n10    : fast\r\n100   : practically no idling — incremental only\r\n```\r\nYou'll be using this to multiply gains for bars and elements, starting with *Red Bar Rate*.\r\n\r\nFor upgrades and other low-quantity items, you can also reduce how long it takes. Set *Duration Multiplier* and then go to *Recipe Durations*.",
+                "description": "1. Edit to set this quantity (the **{lemonchiffon|BSF}**) to a multiplier such as:\r\n\r\n    {lemonchiffon|0.5} : *slow*\r\n    {lemonchiffon|1} : *normal*\r\n    {lemonchiffon|2} : *somewhat faster and easier*\r\n    {lemonchiffon|10} : *very fast — not much strategy*\r\n    {lemonchiffon|100} : *practically no idling — incremental only*\r\n\r\n2. You'll be using this to multiply gains for bars and elements, starting with **Red Bar Rate**.\r\n3. Then, go to **Duration Multiplier** to reduce the duration for upgrades.",
                 "attribs": [
-                    [53, 0.75]
+                    [53, 1.0]
                 ],
                 "abilities": [46, 51],
                 "storage_type": "u",
@@ -69,7 +69,7 @@
             {
                 "id": 16,
                 "name": "⬛Black Bar",
-                "description": "It seems like you shouldn't be able to see a black bar in space. Doesn't black absorb all light?\r\n```\r\n  {black|_____________}\r\n{gray|/}{black|/____________/}{gray|/}\r\n```\r\n{lemonchiffon|Requires a reset:}\r\n1. Press *Max* and *Gain Instant* to produce as many black bars as possible.\r\n2. Then, do *Black Bar Reset*.",
+                "description": "It seems like you shouldn't be able to see a black bar in space. Doesn't black absorb all light?\r\n```\r\n  {black|_____________}\r\n{gray|/}{black|/____________/}{gray|/}\r\n```\r\n{lemonchiffon|Requires a reset:}\r\n1. Press *Max* and *Gain Instant* to produce as many black bars as possible.\r\n2. Then, do **Black Bar Reset**.",
                 "abilities": [49, 55],
                 "storage_type": "u",
                 "toplevel": true,
@@ -89,7 +89,7 @@
             {
                 "id": 15,
                 "name": "Black Bar Boost I",
-                "description": "Gain per Batch +1 each",
+                "description": "*Gain per Batch* +1 each",
                 "abilities": [55],
                 "storage_type": "u",
                 "q_limit": 2.0,
@@ -152,7 +152,7 @@
             {
                 "id": 21,
                 "name": "Blue Bar Boost I",
-                "description": "Gain per Batch +0.5 each",
+                "description": "*Gain per Batch* +0.5 each",
                 "abilities": [50],
                 "storage_type": "u",
                 "q_limit": 10.0,
@@ -303,7 +303,7 @@
             {
                 "id": 2,
                 "name": "Green Bar Boost I",
-                "description": "Increases gain per batch by +0.5 each. Go to *Green Bar Rate* to perform the upgrade.",
+                "description": "Increases *Gain per Batch* by +0.5 each. Go to **Green Bar Rate** to perform the upgrade.",
                 "abilities": [45],
                 "storage_type": "u",
                 "q_limit": 10.0,
@@ -321,7 +321,7 @@
             {
                 "id": 33,
                 "name": "Green Bar Boost II",
-                "description": "Gain per Batch × 1.5\r\n\r\nThis means increasing by 50% each, exponentially. So, the green bar gain per batch with all boosts I and II is:\r\n```5 × 1.5$^{6}$ = 57 per 8 seconds```",
+                "description": "*Gain per Batch* × 1.5\r\n\r\nThis means increasing by 50% each, exponentially. So, the green bar gain per batch with all boosts I and II is:\r\n```5 × 1.5$^{6}$ = 57 per 8 seconds```",
                 "abilities": [45],
                 "storage_type": "u",
                 "q_limit": 6.0,
@@ -398,7 +398,7 @@
             {
                 "id": 25,
                 "name": "Orange Bar Boost I",
-                "description": "Gain per Batch +1 each",
+                "description": "*Gain per Batch* +1 each",
                 "abilities": [52],
                 "storage_type": "u",
                 "q_limit": 10.0,
@@ -465,7 +465,7 @@
             {
                 "id": 3,
                 "name": "Red Bar Boost I",
-                "description": "*Gain per batch* 1 each. See *Red Bar Rate* to perform the upgrade.",
+                "description": "*Gain per Batch* 1 each. See **Red Bar Rate** to perform the upgrade.",
                 "abilities": [46],
                 "storage_type": "u",
                 "q_limit": 20.0,
@@ -483,7 +483,7 @@
             {
                 "id": 4,
                 "name": "Red Bar Boost II",
-                "description": "Gain per Batch × 1.5\r\n\r\nMultiplying for each upgrade means the total benefit is exponential, so with a base of 20 from all *Red Bar Boost I* upgrades, the gain per batch becomes:\r\n```20 × 1.5$^{6}$ = 228```",
+                "description": "*Gain per Batch* × 1.5\r\n\r\nMultiplying for each upgrade means the total benefit is exponential, so with a base of 20 from all **Red Bar Boost I** upgrades, the gain per batch becomes:\r\n```20 × 1.5$^{6}$ = 228```",
                 "abilities": [46],
                 "storage_type": "u",
                 "q_limit": 6.0,
@@ -542,7 +542,7 @@
             {
                 "id": 35,
                 "name": "Star",
-                "description": "Gigantic heat-generating sphere on a scale that even imagining threatens to overwhelm the mind.\r\n\r\n{lemonchiffon|After constructing:}\r\n• Configure [this location](/configure/location/43) to unmask and show in Overview.\r\n• Hide the [Local Solar System](/configure/location/44) from Overview by unchecking the box.\r\n• Go to *Solar Rates* to apply *{lemonchiffon|BSF}* if changed from default setting.",
+                "description": "Gigantic heat-generating sphere on a scale that even imagining threatens to overwhelm the mind.\r\n\r\n{lemonchiffon|After constructing:}\r\n• Configure [this location](/configure/location/43) to unmask and show in Overview.\r\n• Hide the [Local Solar System](/configure/location/44) from Overview by unchecking the box.\r\n• Go to **Solar Rates** to apply the **{lemonchiffon|BSF}** if changed from default setting.",
                 "abilities": [56],
                 "storage_type": "u",
                 "q_limit": 1.0,
@@ -613,6 +613,7 @@
                 "id": 10,
                 "name": "🟪Violet Bar",
                 "description": "At the end of the visible spectrum.\r\n{violet|\r\n```\r\n _____________\r\n/____________/\r\n```\r\n}",
+                "abilities": [57],
                 "storage_type": "u",
                 "toplevel": true,
                 "masked": true,
@@ -690,7 +691,7 @@
             {
                 "id": 9,
                 "name": "White Bar Boost I",
-                "description": "Gain per Batch +1 each",
+                "description": "*Gain per Batch* +1 each",
                 "abilities": [54],
                 "storage_type": "u",
                 "q_limit": 10.0,
@@ -744,7 +745,7 @@
             {
                 "id": 20,
                 "name": "Yellow Bar Boost I",
-                "description": "Gain per Batch +1 each",
+                "description": "*Gain per Batch* +1 each",
                 "abilities": [47],
                 "storage_type": "u",
                 "q_limit": 10.0,
@@ -762,7 +763,7 @@
             {
                 "id": 22,
                 "name": "Yellow Bar Boost II",
-                "description": "Gain per Batch × 1.5\r\n```Total: 10 × 1.5$^{6}$ = 114```",
+                "description": "*Gain per Batch* × 1.5\r\n```Total: 10 × 1.5$^{6}$ = 114```",
                 "abilities": [47],
                 "storage_type": "u",
                 "q_limit": 6.0,
@@ -816,14 +817,14 @@
             {
                 "id": 53,
                 "name": "Duration Multiplier",
-                "description": "Set this multiplier according to the table below, generally 5% less per *{lemonchiffon|BSF}* above 1. Then apply the [Recipe Durations](/play/event/51?subject_id=41) changes.\r\n\r\n```\r\n{lemonchiffon|BSF}    multiplier\r\n---    ----------\r\n0.5    1.1\r\n1      no change\r\n2      0.9\r\n4      0.8\r\n5      0.75\r\n8      0.6\r\n10     0.5\r\n```"
+                "description": "For upgrades and other low-quantity items, you can reduce how long production takes. Set this multiplier according to the table below, generally 5% less per **{lemonchiffon|BSF}** above 1. Then, do **Recipe Durations** to apply the changes.\r\n\r\n```\r\n{lemonchiffon|BSF}    multiplier\r\n---    -------------\r\n0.5    1.1\r\n1      1 (no change)\r\n2      0.9\r\n4      0.8\r\n5      0.75\r\n8      0.6\r\n10     0.5\r\n```"
             }
         ],
         "events": [
             {
                 "id": 55,
                 "name": "Black Bar Rate",
-                "description": "Does **not** get directly increased by the {lemonchiffon|BSF}.",
+                "description": "Does **NOT** get directly increased by the **{lemonchiffon|BSF}**.",
                 "outcome_type": "determined",
                 "single_number": 1.0,
                 "determinants": [
@@ -849,7 +850,7 @@
             {
                 "id": 49,
                 "name": "Black Bar Reset",
-                "description": "After gaining the max Black Bars possible, press *Resolve*. Then, press *Apply All* to do the following:\r\n\r\n- Reset rates and boosts of {red|#} (1/8s, [I](/play/item/3), [II](/play/item/4)) and {green|#} (0.5/8s, [I](/play/item/2), [II](/play/item/33))\r\n- Set quantities of {red|#}, {green|#}, and {yellow|#} to 0",
+                "description": "After gaining the max Black Bars possible, press *Resolve*. Then, press *Apply All* to do the following:\r\n\r\n- Reset rates and boosts of {red|#} (1/8s, I, II) and {green|#} (0.5/8s, I, II)\r\n- Set quantities of {red|#}, {green|#}, and {yellow|#} to 0",
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -963,7 +964,7 @@
             {
                 "id": 45,
                 "name": "Green Bar Rate",
-                "description": "Press **Resolve** to determine the rate and set *Gain per Batch* for *Green Bar*.",
+                "description": "Press *Resolve* to determine the rate and set *Gain per Batch* for **Green Bar**.",
                 "outcome_type": "determined",
                 "single_number": 0.5,
                 "determinants": [
@@ -1030,7 +1031,7 @@
             {
                 "id": 51,
                 "name": "Recipe Durations",
-                "description": "After choosing the BSF, set the [Duration Multiplier](/play/attrib/53/subject/41). \r\n\r\nThen press *Resolve* and use the *Apply* buttons.",
+                "description": "After choosing the **{lemonchiffon|BSF}**, set the **Duration Multiplier**. \r\n\r\nThen, press *Resolve* and *Apply All*.",
                 "outcome_type": "determined",
                 "effects": [
                     {
@@ -1302,7 +1303,7 @@
             {
                 "id": 46,
                 "name": "Red Bar Rate",
-                "description": "Press **Resolve** to determine the rate and set *Gain per Batch* for *Red Bar*.",
+                "description": "Press *Resolve* to determine the rate and set *Gain per Batch* for **Red Bar**.",
                 "outcome_type": "determined",
                 "single_number": 1.0,
                 "determinants": [
@@ -1415,6 +1416,32 @@
                 ]
             },
             {
+                "id": 57,
+                "name": "Violet Bar Rate",
+                "description": "No upgrades other than the **{lemonchiffon|BSF}**.",
+                "outcome_type": "determined",
+                "single_number": 1.0,
+                "determinants": [
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 41},
+                        "op_application": "*"
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "rate_amt",
+                            "item_id": 10,
+                            "recipe_id": 39
+                        },
+                        "op_application": ":=",
+                        "auto_apply": true
+                    }
+                ]
+            },
+            {
                 "id": 54,
                 "name": "White Bar Rate",
                 "outcome_type": "determined",
@@ -1446,7 +1473,7 @@
             {
                 "id": 47,
                 "name": "Yellow Bar Rate",
-                "description": "Sets *Yellow Bar* rate.",
+                "description": "Sets **Yellow Bar** rate.",
                 "outcome_type": "determined",
                 "single_number": 1.0,
                 "determinants": [
