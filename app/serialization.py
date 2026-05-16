@@ -41,7 +41,7 @@ identity.IdentityMap.__init__ = patched_init
 # Load or Reset Model
 # ------------------------------------------------------------------------
 
-DEFAULT_SCENARIO_FILE = "00 Default.json"
+DEFAULT_SCENARIO_FILE = "_Default.json"
 
 def init_game_session():
     """Bootstraps a specific game session."""

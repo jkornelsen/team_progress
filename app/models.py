@@ -1104,7 +1104,8 @@ class EventField(db.Model, DictHydrator):
         from .utils import maskable_name
         if self.field_mode == Participant.ATTR and self.attrib_id:
             attrib = Attrib.query.get((self.game_token, self.attrib_id))
-            return attrib.name
+            inventory_item = "Item " if self.child_of_anchor else ""
+            return f"{inventory_item}{attrib.name}"
         if self.item_id:
             item = Item.query.get((self.game_token, self.item_id))
             if self.field_mode == Participant.QTY:

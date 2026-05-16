@@ -1,12 +1,24 @@
 {
     "entities": {
         "items": [
+            {
+                "id": 32,
+                "name": "Bare Hands",
+                "attribs": [
+                    [2, 0.0],
+                    [4, 0.0]
+                ]
+            },
             {"id": 9, "name": "Good Rope", "q_limit": 1.0},
             {"id": 7, "name": "Headlamp", "q_limit": 1.0},
             {
                 "id": 8,
                 "name": "Refined Steel Pickaxe",
                 "description": "For digging into rock. Primarily about brute force, but certain jobs may require some delicate hits.",
+                "attribs": [
+                    [2, 1.0],
+                    [4, 1.0]
+                ],
                 "q_limit": 1.0
             }
         ],
@@ -14,10 +26,7 @@
             {
                 "id": 13,
                 "name": "Big Room Inside Entrance",
-                "description": "High ceiling, with a large underground pool at the far end. Some light comes in from the entrance, noticeable especially if there are no other lights on.",
-                "destinations": [
-                    {"loc2_id": 12}
-                ]
+                "description": "High ceiling, with a large underground pool at the far end. Some light comes in from the entrance, noticeable especially if there are no other lights on."
             },
             {
                 "id": 16,
@@ -38,7 +47,10 @@
             {
                 "id": 12,
                 "name": "Outside Cave Entrance",
-                "description": "Tropical jungle, with a wide dirt path nearby. It looks like people visit the cave from time to time."
+                "description": "Tropical jungle, with a wide dirt path nearby. It looks like people visit the cave from time to time.",
+                "destinations": [
+                    {"loc2_id": 13}
+                ]
             },
             {
                 "id": 11,
@@ -69,17 +81,19 @@
             {
                 "id": 17,
                 "name": "Adam",
-                "description": "POV character. Middle aged caucasian, medium build. Can easily get tired, but may also be feeling unexpectedly energetic.",
+                "description": "Middle aged australian, heavy build. Average stats. Unpredictable—tendency to oscillate between being lazy or wildly daring.",
                 "attribs": [
                     [6, 2.0],
                     [5, 2.0],
                     [2, 2.0],
                     [4, 2.0]
                 ],
+                "abilities": [28, 22, 31, 26, 21, 27, 25, 29, 24, 23],
                 "toplevel": true,
-                "location_id": 16,
+                "location_id": 12,
                 "items": [
-                    {"item_id": 7, "quantity": 1.0, "slot": "Head"}
+                    {"item_id": 7, "quantity": 1.0, "slot": "Head"},
+                    {"item_id": 32, "quantity": 1.0, "slot": "Right Hand"}
                 ]
             },
             {
@@ -92,8 +106,9 @@
                     [4, 1.0],
                     [2, 4.0]
                 ],
+                "abilities": [28, 22, 26, 21, 27, 25, 29, 24, 23, 31],
                 "toplevel": true,
-                "location_id": 16,
+                "location_id": 12,
                 "items": [
                     {"item_id": 9, "quantity": 1.0, "slot": ""},
                     {"item_id": 7, "quantity": 1.0, "slot": "Head"},
@@ -110,10 +125,12 @@
                     [4, 3.0],
                     [6, 4.0]
                 ],
+                "abilities": [28, 22, 31, 26, 21, 27, 25, 29, 24, 23],
                 "toplevel": true,
-                "location_id": 16,
+                "location_id": 12,
                 "items": [
-                    {"item_id": 7, "quantity": 1.0, "slot": "Head"}
+                    {"item_id": 7, "quantity": 1.0, "slot": "Head"},
+                    {"item_id": 32, "quantity": 1.0, "slot": "Right Hand"}
                 ]
             },
             {
@@ -126,10 +143,12 @@
                     [5, 3.0],
                     [4, 4.0]
                 ],
+                "abilities": [28, 22, 31, 26, 21, 27, 25, 29, 24, 23],
                 "toplevel": true,
-                "location_id": 16,
+                "location_id": 12,
                 "items": [
-                    {"item_id": 7, "quantity": 1.0, "slot": "Head"}
+                    {"item_id": 7, "quantity": 1.0, "slot": "Head"},
+                    {"item_id": 32, "quantity": 1.0, "slot": "Right Hand"}
                 ]
             }
         ],
@@ -157,63 +176,119 @@
                 "id": 28,
                 "name": "Dig",
                 "description": "With a shovel, pickaxe for rock, or even bare hands. Primarily strength-based, but could require dexterity for certain targeted efforts.",
-                "toplevel": true,
-                "numeric_range": [1, 20]
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 2}
+                    },
+                    {
+                        "infield": {"attrib_id": 4},
+                        "op_transform": "*",
+                        "val_transform": 0.5
+                    },
+                    {
+                        "infield": {"child_of_anchor": true, "attrib_id": 2}
+                    },
+                    {
+                        "infield": {"child_of_anchor": true, "attrib_id": 4},
+                        "op_transform": "*",
+                        "val_transform": 0.5
+                    }
+                ]
             },
             {
                 "id": 22,
                 "name": "Hold",
                 "description": "Holding delicate, slippery, or awkward items.",
-                "toplevel": true,
-                "numeric_range": [1, 20]
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 4}
+                    }
+                ]
+            },
+            {
+                "id": 31,
+                "name": "How Feeling",
+                "description": "Use to help decide next course of action.",
+                "outcome_type": "selection",
+                "selection_strings": "Lazy\r\nAfraid\r\nMischievous\r\nCautious\r\nSteady\r\nHelpful\r\nCurious\r\nEnergetic\r\nImpatient\r\nWildly Daring"
             },
             {
                 "id": 26,
                 "name": "Investigate",
                 "description": "Figure out how something works or what its purpose is.",
-                "toplevel": true,
-                "numeric_range": [1, 20]
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 5}
+                    }
+                ]
             },
             {
                 "id": 21,
                 "name": "Navigate",
                 "description": "Success in making it past a certain point, or walking on a path.",
-                "toplevel": true,
-                "numeric_range": [1, 20]
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 4}
+                    }
+                ]
             },
             {
                 "id": 27,
                 "name": "Operate",
                 "description": "Use or manipulate something to achieve an effect.",
-                "toplevel": true,
-                "numeric_range": [1, 20]
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 5}
+                    }
+                ]
             },
             {
                 "id": 25,
                 "name": "Perceive",
                 "description": "For example, discover details about an object by viewing it.",
-                "toplevel": true,
-                "numeric_range": [1, 20]
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 6}
+                    }
+                ]
             },
             {
                 "id": 29,
                 "name": "Pull",
                 "description": "Such as hoisting a rope.",
-                "toplevel": true,
-                "numeric_range": [1, 20]
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 2}
+                    }
+                ]
             },
             {
                 "id": 24,
                 "name": "Seize",
                 "description": "Catch, grab, or restrain elusive targets.",
-                "toplevel": true,
-                "numeric_range": [1, 20]
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 4}
+                    }
+                ]
             },
             {
                 "id": 23,
                 "name": "Throw",
-                "toplevel": true,
-                "numeric_range": [1, 20]
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 4}
+                    }
+                ]
             }
         ]
     },
@@ -223,12 +298,14 @@
     },
     "overall settings": {
         "title": "Spelunkers",
-        "description": "Story-driven {gold|exploration} with fixed stats for rolls.\r\n\r\nEasier to manage than the *Dungeon Crawl* scenario because XP is not tracked.",
+        "description": "Story-driven {gold|exploration} with simple stat-based rolls for the type of action.",
         "number_format": "en_US",
         "slots": ["Right Hand", "Left Hand", "Head"],
-        "progress_type": "RPG",
-        "multiplayer": true,
-        "complete": "Starter Kit",
-        "win_reqs": []
+        "win_reqs": [],
+        "tag_introduce_order": "25",
+        "tag_favorite_order": "80",
+        "tag_progress_type": "RPG",
+        "tag_multiplayer": true,
+        "tag_complete": "Starter Kit"
     }
 }

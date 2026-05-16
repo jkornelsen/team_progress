@@ -19,7 +19,7 @@ from app.serialization import (
     import_from_dict, patch_from_dict,
     clear_game_data, export_game_to_json, export_to_dict, clone_entity)
 from app.utils import (
-    LinkLetters, RequestHelper, parse_coords,
+    LinkLetters, RequestHelper, BaseFieldMap, parse_coords,
     capture_origin, redirect_back, name_stripped)
 from .logic_discovery import run_discovery_scan
 
@@ -890,7 +890,7 @@ def browse_scenarios():
 
     # GET logic: List files
     scenarios = []
-    sort_by = request.args.get('sort_by', 'filename')
+    sort_by = request.args.get('sort_by', 'introduce')
 
     for filename in os.listdir(data_dir):
         if filename == DEFAULT_SCENARIO_FILE:
@@ -900,23 +900,25 @@ def browse_scenarios():
             with open(path, 'r', encoding='utf-8') as f:
                 try:
                     data = json.load(f)
-                    overall = data.get(JsonKeys.OVERALL, {})
-                    complete = overall.get('complete', 'Under Construction')
+                    overall = BaseFieldMap(data.get(JsonKeys.OVERALL, {}))
+                    complete = overall.get_str('tag_complete', 'Under Construction')
                     scenarios.append({
                         'filename': filename,
-                        'title': overall.get('title', filename),
-                        'description': overall.get('description', ''),
-                        'progress_type': overall.get('progress_type', 'Idle'),
-                        'multiplayer': overall.get('multiplayer', False),
+                        'title': overall.get_str('title', filename),
+                        'description': overall.get_str('description', ''),
+                        'introduce': overall.get_int('tag_introduce_order', 50),
+                        'favorite': overall.get_int('tag_favorite_order', 50),
+                        'progress_type': overall.get_str('tag_progress_type', 'Idle'),
+                        'multiplayer': overall.get_bool('tag_multiplayer', False),
                         'complete': complete,
                         'complete_rank': COMPLETENESS_LEVELS.get(complete, 2),
                         'filesize': os.path.getsize(path)
                     })
                 except Exception as e:
-                    logger.error(f"Error parsing {filename}: {e}")
+                    logger.exception(e)
 
     # Sorting
-    if sort_by in ('filename', 'title', 'progress_type'):
+    if sort_by in ('introduce', 'favorite', 'title', 'progress_type'):
         reverse = False  # Ascending
     elif sort_by in ('filesize', 'complete_rank', 'multiplayer'):
         reverse = True  # Descending

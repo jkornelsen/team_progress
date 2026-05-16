@@ -67,6 +67,8 @@ class BaseFieldMap:
         value_str = self._get_raw(key)
         if value_str == '':
             return default
+        if isinstance(value_str, bool):
+            return value_str
 
         normalized = value_str.lower().strip()
         if normalized in ('true', '1', 't', 'y', 'yes', 'on'):
