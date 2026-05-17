@@ -685,6 +685,8 @@ def edit_event(id):
                             if mode in Participant.USES_ITEM else None
                         fld_recipe_id = fld.get_int('recipe_id') \
                             if mode in Participant.USES_RECIPE else None
+                        fld_loc_id = fld.get_int('loc_id') \
+                            if mode in Participant.USES_LOC else None
 
                         setattr(factor, field_key, EventField(
                             game_token=game_token,
@@ -694,6 +696,7 @@ def edit_event(id):
                             attrib_id=fld_attrib_id,
                             item_id=fld_item_id,
                             recipe_id=fld_recipe_id,
+                            loc_id=fld_loc_id,
                         ))
                     else:
                         setattr(factor, field_key, None)
@@ -729,6 +732,8 @@ def edit_event(id):
         all_attribs=Attrib.query.filter_by(
             game_token=game_token).order_by(name_stripped()).all(),
         all_items=all_items,
+        all_locs=Location.query.filter_by(
+            game_token=game_token).order_by(name_stripped()).all(),
         all_events=Event.query.filter_by(
             game_token=game_token).order_by(name_stripped()).all(),
         recipe_map=recipe_map,

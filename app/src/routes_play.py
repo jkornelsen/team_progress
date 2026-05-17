@@ -18,7 +18,7 @@ from app.utils import (
 from .logic_piles import transfer_item
 from .logic_event import (
     roll_for_outcome, roll_for_system_outcome, calculate_determinants,
-    calculate_effects_targets, calculate_solved_effects,
+    preview_effects, resolve_effects,
     get_entity_value, is_factor_met,
     effect_description, do_effect_change, process_all_effects)
 from .logic_progress import (
@@ -977,7 +977,98 @@ def instant_item_production(host_id):
         }), HTTPStatus.BAD_REQUEST
 
 # ------------------------------------------------------------------------
-# Events & Dice
+# Attributes
+# ------------------------------------------------------------------------
+
+@play_bp.route('/play/attrib/<int:attrib_id>/subject/<int:subject_id>', methods=['GET', 'POST'])
+def play_attrib(attrib_id, subject_id):
+    game_token = g.game_token
+    attribute = Attrib.query.get_or_404((game_token, attrib_id))
+    subject = Entity.query.get_or_404((game_token, subject_id))
+    capture_origin(name=f"{subject.name} {attribute.name}")
+    
+    val_record = AttribVal.query.filter_by(
+        game_token=game_token, attrib_id=attrib_id, subject_id=subject_id
+    ).first()
+    if not val_record:
+        val_record = AttribVal(
+            game_token=game_token, attrib_id=attrib_id,
+            subject_id=subject_id, value=0.0)
+        db.session.add(val_record)
+
+    if request.method == 'POST':
+        req = RequestHelper('form')
+        op = req.get_str('operator')
+        
+        if op == Operation.ASSIGN:
+            new_val = req.get_float('value') or req.get_float('operand')
+        else:
+            operand = req.get_float('operand')
+            if op == Operation.ADD:     new_val = val_record.value + operand
+            elif op == Operation.SUB:   new_val = val_record.value - operand
+            elif op == Operation.MULT:  new_val = val_record.value * operand
+            elif op == Operation.DIV:   new_val = val_record.value / operand \
+                                        if operand != 0 else val_record.value
+
+        val_record.value = new_val
+        db.session.commit()
+
+        # Log
+        op_wording = {
+            Operation.ADD:    {"verb": "Increased",  "prep": "by"},
+            Operation.SUB:    {"verb": "Reduced",    "prep": "by"},
+            Operation.MULT:   {"verb": "Multiplied", "prep": "by"},
+            Operation.DIV:    {"verb": "Divided",    "prep": "by"},
+            Operation.ASSIGN: {"verb": "Set",        "prep": "to"},
+        }
+        op_words = op_wording.get(op, {"verb": "Modified", "prep": "to"})
+        if op == Operation.ASSIGN:
+            if attribute.is_binary:
+                val_str = "ON" if new_val > 0 else "OFF"
+            elif attribute.enum_list:
+                try:
+                    val_str = attribute.enum_list[int(new_val)]
+                except:
+                    val_str = f"{new_val:g}"
+            else:
+                val_str = f"{new_val:g}"
+        else:
+            val_str = f"{round(abs(operand), 2):g} = {round(new_val, 2):g}"
+        add_message(
+            f"{op_words['verb']} {subject.name} {attribute.name}"
+            f" {op_words['prep']} {val_str}"
+        )
+        return redirect(request.url)
+
+    # Get reverse dependencies (items needing this for recipes)
+    items_requiring_this = Item.query.join(Recipe).join(RecipeAttribReq).filter(
+        RecipeAttribReq.attrib_id == attrib_id,
+        Item.game_token == game_token
+    ).all()
+
+    # Get events using this attribute
+    events_raw = Event.query.join(EventFactor).join(
+        EventField, or_(
+            EventFactor.infield_id == EventField.id,
+            EventFactor.outfield_id == EventField.id
+        )
+    ).filter(
+        EventField.attrib_id == attrib_id,
+        Event.game_token == game_token
+    ).distinct().all()
+    events_using_this = sort_by_name_stripped(events_raw)
+
+    return render_template(
+        'play/attrib.html', 
+        attribute=attribute, 
+        subject=subject, 
+        attrib_value=val_record,
+        items_requiring_this=items_requiring_this,
+        events_using_this=events_using_this,
+        link_letters=LinkLetters(excluded='moesct'))
+
+# ------------------------------------------------------------------------
+# Events
 # ------------------------------------------------------------------------
 
 @play_bp.route('/play/event/<int:id>', methods=['GET'])
@@ -1105,11 +1196,17 @@ def play_event(id):
 
     raw_involved = []
     if attrib_ids:
-        raw_involved += Attrib.query.filter(Attrib.game_token == game_token, Attrib.id.in_(list(attrib_ids))).all()
+        raw_involved += Attrib.query.filter(
+            Attrib.game_token == game_token, Attrib.id.in_(
+            list(attrib_ids))).all()
     if item_ids:
-        raw_involved += Item.query.filter(Item.game_token == game_token, Item.id.in_(list(item_ids)), Item.masked == False).all()
+        raw_involved += Item.query.filter(
+            Item.game_token == game_token, Item.id.in_(
+            list(item_ids)), Item.masked == False).all()
     if char_ids:
-        raw_involved += Character.query.filter(Character.game_token == game_token, Character.id.in_(list(char_ids))).all()
+        raw_involved += Character.query.filter(
+            Character.game_token == game_token, Character.id.in_(
+            list(char_ids))).all()
 
     caller_keys = {(c.id, c.entity_type) for c in caller_entities}
     involved_filtered = [
@@ -1151,10 +1248,10 @@ def event_preview(id):
             role_entities[role_name] = req.get_int(key)
     
     modifiers = calculate_determinants(event, role_entities)
-    effect_targets = calculate_effects_targets(event, role_entities)
+    effect_previews = preview_effects(event, role_entities)
     return jsonify({
         "modifiers": modifiers,
-        "effect_targets": effect_targets
+        "effect_previews": effect_previews
     })
 
 @play_bp.route('/event/roll/<int:id>', methods=['POST'])
@@ -1181,7 +1278,7 @@ def roll_event(id):
         result_num, result_str, tier = roll_for_outcome(
             id, role_entities, difficulty)
 
-    solved_effects = calculate_solved_effects(
+    resolved_effects = resolve_effects(
         event, role_entities, result_num)
     process_all_effects(
         event, role_entities, result_num, tier, force_auto_only=True)
@@ -1191,7 +1288,7 @@ def roll_event(id):
         "result_value": result_num,
         "tier": tier,
         "display": result_str,
-        "solved_effects": solved_effects
+        "resolved_effects": resolved_effects
     })
 
 @play_bp.route('/event/apply-effect/<int:factor_id>', methods=['POST'])
@@ -1216,91 +1313,4 @@ def apply_single_effect(factor_id):
         return jsonify({"message": message}), HTTPStatus.BAD_REQUEST
 
     return '', HTTPStatus.NO_CONTENT
-
-@play_bp.route('/play/attrib/<int:attrib_id>/subject/<int:subject_id>', methods=['GET', 'POST'])
-def play_attrib(attrib_id, subject_id):
-    game_token = g.game_token
-    attribute = Attrib.query.get_or_404((game_token, attrib_id))
-    subject = Entity.query.get_or_404((game_token, subject_id))
-    capture_origin(name=f"{subject.name} {attribute.name}")
-    
-    val_record = AttribVal.query.filter_by(
-        game_token=game_token, attrib_id=attrib_id, subject_id=subject_id
-    ).first()
-    if not val_record:
-        val_record = AttribVal(
-            game_token=game_token, attrib_id=attrib_id,
-            subject_id=subject_id, value=0.0)
-        db.session.add(val_record)
-
-    if request.method == 'POST':
-        req = RequestHelper('form')
-        op = req.get_str('operator')
-        
-        if op == Operation.ASSIGN:
-            new_val = req.get_float('value') or req.get_float('operand')
-        else:
-            operand = req.get_float('operand')
-            if op == Operation.ADD:     new_val = val_record.value + operand
-            elif op == Operation.SUB:   new_val = val_record.value - operand
-            elif op == Operation.MULT:  new_val = val_record.value * operand
-            elif op == Operation.DIV:   new_val = val_record.value / operand \
-                                        if operand != 0 else val_record.value
-
-        val_record.value = new_val
-        db.session.commit()
-
-        # Log
-        op_wording = {
-            Operation.ADD:    {"verb": "Increased",  "prep": "by"},
-            Operation.SUB:    {"verb": "Reduced",    "prep": "by"},
-            Operation.MULT:   {"verb": "Multiplied", "prep": "by"},
-            Operation.DIV:    {"verb": "Divided",    "prep": "by"},
-            Operation.ASSIGN: {"verb": "Set",        "prep": "to"},
-        }
-        op_words = op_wording.get(op, {"verb": "Modified", "prep": "to"})
-        if op == Operation.ASSIGN:
-            if attribute.is_binary:
-                val_str = "ON" if new_val > 0 else "OFF"
-            elif attribute.enum_list:
-                try:
-                    val_str = attribute.enum_list[int(new_val)]
-                except:
-                    val_str = f"{new_val:g}"
-            else:
-                val_str = f"{new_val:g}"
-        else:
-            val_str = f"{round(abs(operand), 2):g} = {round(new_val, 2):g}"
-        add_message(
-            f"{op_words['verb']} {subject.name} {attribute.name}"
-            f" {op_words['prep']} {val_str}"
-        )
-        return redirect(request.url)
-
-    # Get reverse dependencies (items needing this for recipes)
-    items_requiring_this = Item.query.join(Recipe).join(RecipeAttribReq).filter(
-        RecipeAttribReq.attrib_id == attrib_id,
-        Item.game_token == game_token
-    ).all()
-
-    # Get events using this attribute
-    events_raw = Event.query.join(EventFactor).join(
-        EventField, or_(
-            EventFactor.infield_id == EventField.id,
-            EventFactor.outfield_id == EventField.id
-        )
-    ).filter(
-        EventField.attrib_id == attrib_id,
-        Event.game_token == game_token
-    ).distinct().all()
-    events_using_this = sort_by_name_stripped(events_raw)
-
-    return render_template(
-        'play/attrib.html', 
-        attribute=attribute, 
-        subject=subject, 
-        attrib_value=val_record,
-        items_requiring_this=items_requiring_this,
-        events_using_this=events_using_this,
-        link_letters=LinkLetters(excluded='moesct'))
 

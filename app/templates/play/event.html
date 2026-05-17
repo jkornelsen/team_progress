@@ -419,7 +419,7 @@
     /**
      * Fetches calculated modifiers from the server and updates the UI
      */
-    async function refreshModifiers() {
+    async function refreshModifiers(updateEffectCurrentValues = true) {
         const previewDiv = document.getElementById('modifier-preview');
         const fd = getRoleIDs();
         const url = `/event/preview/${eventId}`;
@@ -503,8 +503,8 @@
         }
 
         // --- Handle Effect Previews (Right Column) ---
-        if (data.effect_targets) {
-            data.effect_targets.forEach(eff => {
+        if (data.effect_previews) {
+            data.effect_previews.forEach(eff => {
                 const row = document.getElementById(`eff-row-${eff.effect_id}`);
                 if (!row) return;
 
@@ -517,7 +517,7 @@
                 row.style.opacity = eff.is_resolved ? "1" : "0.5";
 
                 // Update current value and operator
-                if (lastRollValue === null) {
+                if (updateEffectCurrentValues) {
                     const currentValEl = row.querySelector('.current-value-display');
                     currentValEl.innerText = eff.current_display;
 
@@ -559,7 +559,7 @@
                 }
 
                 // Update Line 3: The Equation (using placeholders)
-                if (eff.relies_on_roll) {
+                if (eff.relies_on_roll && !eff.impact_display) {
                     equationEl.innerText = formatImpactExpression(
                         "Roll", row.dataset.valTrans, row.dataset.opTrans);
                 } else {
@@ -690,11 +690,11 @@
             const resultTier = data.tier;
 
             // 2. Update Effects using the pre-calculated results from the server
-            if (data.solved_effects) {
+            if (data.resolved_effects) {
                 lastRollValue = data.result_value;
 
-                data.solved_effects.forEach(solved => {
-                    const row = document.getElementById(`eff-row-${solved.effect_id}`);
+                data.resolved_effects.forEach(eff => {
+                    const row = document.getElementById(`eff-row-${eff.effect_id}`);
                     if (!row) return;
 
                     const impactRes = row.querySelector('.impact-result');
@@ -704,26 +704,26 @@
                     const filter = row.dataset.successFilter;
                     const reliesOnRoll = row.dataset.reliesOnRoll === "true";
 
-                    currentValEl.innerText = solved.current_display;
+                    currentValEl.innerText = eff.current_display;
 
-                    if (reliesOnRoll) {
+                    if (reliesOnRoll && eff.final_display) {
                         // Update the "Roll" placeholder with the actual number
                         if (row.dataset.getValFrom === '{{ Participant.OUTCOME }}') {
                             equationEl.innerText = formatImpactExpression(
-                                solved.impact_display, 
+                                eff.impact_display, 
                                 row.dataset.valTrans, 
                                 row.dataset.opTrans
                             );
                         }
 
                         // Show the final value calculated by the server
-                        if (newValEl) newValEl.innerText = solved.final_display;
+                        if (newValEl) newValEl.innerText = eff.final_display;
                         if (impactRes) impactRes.classList.remove('hidden');
                     } else {
                         // This was a known value (e.g. Constant or Field).
                         // It's already showing the correct green result in equationEl.
                         if (impactRes) impactRes.classList.add('hidden');
-                        equationEl.innerHTML = `<span class="text-success" style="font-weight:bold;">${solved.impact_display}</span>`;
+                        equationEl.innerHTML = `<span class="text-success" style="font-weight:bold;">${eff.impact_display}</span>`;
                     }
                     if (row.dataset.getValFrom === '{{ Participant.OUTCOME }}') {
                         const isEligible = tierMatch(filter, resultTier);
@@ -838,8 +838,7 @@
             row.querySelector('.check-mark').classList.remove('hidden');
             row.style.opacity = "0.7";
 
-            lastRollValue = null;
-            await refreshModifiers();
+            await refreshModifiers(false);
             syncApplyAllState();
         } else {
             btn.innerText = "Retry";

@@ -995,7 +995,8 @@ class Participant:
     ALL_MODES = [ATTR, QTY, DIST, PLACE, POS, SPAWN, RATE_AMT, RATE_DUR]
     USES_ATTRIB = {ATTR}
     USES_ITEM = {QTY, RATE_AMT, RATE_DUR, PLACE}
-    USES_CHAR = {POS, SPAWN}
+    USES_CHAR = {SPAWN}
+    USES_LOC = {POS, SPAWN, PLACE}
     USES_RECIPE = {RATE_AMT, RATE_DUR}
     USES_BLUEPRINT = {PLACE, SPAWN, RATE_AMT, RATE_DUR}
 
@@ -1085,6 +1086,7 @@ class EventField(db.Model, DictHydrator):
     item_id = db.Column(db.Integer, nullable=True)
     attrib_id = db.Column(db.Integer, nullable=True)
     char_id = db.Column(db.Integer, nullable=True)
+    loc_id = db.Column(db.Integer, nullable=True)
     recipe_id = db.Column(db.Integer, nullable=True)
 
     def to_dict(self):
@@ -1094,6 +1096,8 @@ class EventField(db.Model, DictHydrator):
             "child_of_anchor": self.child_of_anchor,
             "item_id": self.item_id,
             "attrib_id": self.attrib_id,
+            "char_id": self.char_id,
+            "loc_id": self.loc_id,
             "recipe_id": self.recipe_id
         }
         return self.to_dict_sparse(data)

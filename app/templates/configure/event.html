@@ -258,6 +258,7 @@
     const RECIPE_MAP = {{ recipe_map | tojson | safe }};
     const USES_ATTRIB = {{ Participant.USES_ATTRIB|list|tojson }};
     const USES_ITEM = {{ Participant.USES_ITEM|list|tojson }};
+    const USES_LOC = {{ Participant.USES_LOC|list|tojson }};
     const USES_RECIPE = {{ Participant.USES_RECIPE|list|tojson }};
     const USES_BLUEPRINT = {{ Participant.USES_BLUEPRINT|list|tojson }};
 
@@ -481,13 +482,14 @@
         const attrSelect = container.querySelector('.id-attr');
         const itemSelect = container.querySelector('.id-item');
         const recipeSelect = container.querySelector('.id-recipe');
+        const locSelect = container.querySelector('.id-loc');
 
         // 1. Reset visibility
         attrSelect?.classList.toggle('hidden', !USES_ATTRIB.includes(mode));
         itemSelect?.classList.toggle('hidden', !USES_ITEM.includes(mode));
-        const needsRecipe = USES_RECIPE.includes(mode);
-        recipeSelect?.classList.toggle('hidden', !needsRecipe);
-        if (needsRecipe) {
+        locSelect?.classList.toggle('hidden', !USES_LOC.includes(mode));
+        recipeSelect?.classList.toggle('hidden', !USES_RECIPE.includes(mode));
+        if (USES_RECIPE.includes(mode)) {
             syncRecipesState(itemSelect);
         }
         syncEventFieldState(modeSelect);

@@ -43,7 +43,7 @@
                     }}"
                     onchange="syncFieldAttribState(this)"
                     class="id-attr full-width {{
-                        'hidden' if field_mode ==  Participant.QTY }}" 
+                        'hidden' if field_mode not in Participant.USES_ATTRIB }}" 
                     style="min-width: 20ch; max-width: 30ch;">
                 {% for a in all_attribs %}
                     <option value="{{ a.id }}" {{ 'selected' if attrib_id == a.id }}>{{ a.name }}</option>
@@ -53,8 +53,7 @@
             <!-- Item -->
             <select name="{{ field_prefix }}[item_id]" 
                     class="id-item full-width {{
-                        'hidden' if field_mode ==  Participant.ATTR
-                        or field_mode ==  Participant.DIST }}"
+                        'hidden' if field_mode not in Participant.USES_ITEM }}" 
                     style="min-width: 20ch; max-width: 30ch;"
                     onchange="syncRecipesState(this); syncEventFieldState(this)">
                 {% for i in all_items %}
@@ -65,9 +64,21 @@
             <!-- Recipe -->
             <select name="{{ field_prefix }}[recipe_id]"
                     class="id-recipe {{
-                        'hidden' if 'rate' not in field_mode }}"
+                        'hidden' if field_mode not in Participant.USES_RECIPE }}" 
                     data-current-id="{{ field_data.recipe_id or '' }}">
                 <!-- Populated by syncRecipesState() -->
+            </select>
+
+            <!-- Location -->
+            <select name="{{ field_prefix }}[loc_id]" 
+                    class="id-loc full-width {{
+                        'hidden' if field_mode not in Participant.USES_LOC }}" 
+                    style="min-width: 20ch; max-width: 30ch;">
+                <option value="">(Inactive / Nowhere)</option>
+                {% for l in all_locs %}
+                    <option value="{{ l.id }}" {{ 'selected'
+                        if field_data.loc_id == l.id }}>{{ l.name }}</option>
+                {% endfor %}
             </select>
         </div>
     </div>
