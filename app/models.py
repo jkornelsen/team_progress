@@ -779,16 +779,14 @@ class EntranceReq(db.Model, DictHydrator):
     loc_id = db.Column(db.Integer, nullable=False)
     
     item_id = db.Column(db.Integer)
-    quantity = db.Column(db.Float)
     attrib_id = db.Column(db.Integer)
-    attrib_value = db.Column(db.Float)
+    val_required = db.Column(db.Float)
 
     def to_dict(self):
         data = {
             "item_id": self.item_id,
-            "quantity": self.quantity,
             "attrib_id": self.attrib_id,
-            "attrib_value": self.attrib_value
+            "val_required": self.val_required
         }
         return self.to_dict_sparse(data)
 
@@ -1662,9 +1660,13 @@ class Overall(db.Model, DictHydrator):
     description = db.Column(db.Text)
     number_format = db.Column(db.String(5), default='en_US')
     slots = db.Column(ARRAY(db.Text), default=list)
-    progress_type = db.Column(db.String(20))
-    multiplayer = db.Column(db.Boolean, default=False)
-    complete = db.Column(db.String(20), default='')
+
+    # Metadata tags for scenario browsing
+    tag_introduce_order = db.Column(db.Integer, default=50)
+    tag_best_order = db.Column(db.Integer, default=50)
+    tag_progress_type = db.Column(db.String(20))
+    tag_multiplayer = db.Column(db.Boolean, default=False)
+    tag_complete = db.Column(db.String(20), default='')
 
     # Used to generate unique IDs per game token
     next_entity_id = db.Column(db.Integer, default=2)
@@ -1675,10 +1677,12 @@ class Overall(db.Model, DictHydrator):
             "description": self.description,
             "number_format": self.number_format,
             "slots": self.slots or [],
-            "progress_type": self.progress_type,
-            "multiplayer": self.multiplayer,
-            "complete": self.complete,
-            "win_reqs": [wr.to_dict() for wr in self.win_reqs]
+            "win_reqs": [wr.to_dict() for wr in self.win_reqs],
+            "tag_introduce_order": self.tag_introduce_order,
+            "tag_best_order": self.tag_best_order,
+            "tag_progress_type": self.tag_progress_type,
+            "tag_multiplayer": self.tag_multiplayer,
+            "tag_complete": self.tag_complete,
         }
         return data
 

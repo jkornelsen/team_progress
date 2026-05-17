@@ -3,7 +3,8 @@ from flask import g
 from sqlalchemy import or_
 from sqlalchemy.orm.attributes import flag_modified
 from app.models import (
-    db, GENERAL_ID, StorageType, Character, Location, Item, Pile, LocDest)
+    db, GENERAL_ID, StorageType, Character, Location, Item, Pile,
+    AttribVal, LocDest)
 from app.utils import format_num, maskable_name
 from app.src.logic_user_interaction import add_message
 
@@ -243,36 +244,65 @@ def get_available_destinations(char):
             
     return reachable, has_nonadjacent
 
-def check_location_access(char, loc):
+def check_location_access(party, loc):
     """Returns (True, "") or (False, "Reason") based on travel requirements."""
-    game_token = char.game_token
+    game_token = g.game_token
     
     for req in loc.entrance_reqs:
-        # 1. Check Universal Item (General Storage)
-        if req.item_id:
+        # Universal Items
+        if req.item_id and req.item.storage_type == StorageType.UNIVERSAL:
             pile = Pile.query.filter_by(
-                game_token=game_token, item_id=req.item_id, owner_id=GENERAL_ID
+                game_token=game_token,
+                item_id=req.item_id,
+                owner_id=GENERAL_ID
             ).first()
             current_qty = pile.quantity if pile else 0
-            if current_qty < req.quantity:
-                return False, f"Requires {format_num(req.quantity)}" \
+            if current_qty < req.val_required:
+                return False, f"Requires {format_num(req.val_required)}" \
                               f" {maskable_name(req.item)}"
+            continue
 
-        # 2. Check Character Attribute
-        elif req.attrib_id:
-            val_rec = AttribVal.query.filter_by(
-                game_token=game_token, subject_id=char.id, attrib_id=req.attrib_id
-            ).first()
-            current_val = val_rec.value if val_rec else 0
-            
-            if req.attrib.is_binary or req.attrib.enum_list:
-                if current_val != req.attrib_value:
-                    return False, f"{char.name} must have {req.attrib.name}" \
-                                  f" {req.attrib_value}"
-            else:
-                if current_val < req.attrib_value:
-                    return False, f"{char.name} must have {req.attrib.name}" \
-                                  f" {req.attrib_value}"
+        satisfied = False
+        error_msg = ""
+
+        for char in party:
+            # Carried Item Check: One member must have a pile >= requirement
+            if req.item_id and req.item.storage_type == StorageType.CARRIED:
+                pile = Pile.query.filter_by(
+                    game_token=game_token,
+                    item_id=req.item_id,
+                    owner_id=char.id
+                ).first()
+                if pile and pile.quantity >= req.val_required:
+                    satisfied = True
+                    break
+                error_msg = f"Must carry {format_num(req.val_required)}" \
+                            f" {maskable_name(req.item)}."
+
+            # Character Attributes
+            elif req.attrib_id:
+                av = AttribVal.query.filter_by(
+                    game_token=game_token,
+                    subject_id=char.id,
+                    attrib_id=req.attrib_id
+                ).first()
+                current_val = av.value if av else 0
+                
+                if req.attrib.is_binary or req.attrib.enum_list:
+                    if current_val == req.val_required:
+                        satisfied = True
+                        break
+                else:
+                    if current_val >= req.val_required:
+                        satisfied = True
+                        break
+                req_val_display = req.attrib.enum_list[int(req.val_required)] \
+                    if req.attrib.enum_list else req.val_required
+                error_msg = f"Must have {req.attrib.name} {req_val_display}"
+
+        if not satisfied:
+            return False, error_msg
+
     return True, ""
 
 def arrive_at_destination(main_char_id, dest_loc_id, move_party=False):
@@ -301,8 +331,9 @@ def arrive_at_destination(main_char_id, dest_loc_id, move_party=False):
         return False, f"You are too far from the exit to {target_name}." \
                       " Move closer to the door icon."
 
+    party = get_moving_party(main_char, move_party)
     target_loc = best_link.other_loc(loc_here.id)
-    can_enter, reason = check_location_access(main_char, target_loc)
+    can_enter, reason = check_location_access(party, target_loc)
     if not can_enter:
         return False, reason
 
@@ -310,7 +341,6 @@ def arrive_at_destination(main_char_id, dest_loc_id, move_party=False):
     if not new_pos:
         new_pos = get_default_position(target_loc)
 
-    party = get_moving_party(main_char, move_party)
     for member in party:
         member.location_id = dest_loc_id
         member.position = new_pos
@@ -323,3 +353,4 @@ def arrive_at_destination(main_char_id, dest_loc_id, move_party=False):
     party = " and party" if main_char.travel_party and move_party else ''
     add_message(f"{main_char.name}{party} traveled to {target_loc.name}.")
     return True, "Arrived."
+

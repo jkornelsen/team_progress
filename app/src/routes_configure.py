@@ -399,16 +399,18 @@ def edit_location(id):
         EntranceReq.query.filter_by(
             game_token=game_token, loc_id=loc.id).delete()
         for row in req.get_list('entrance_reqs'):
-            attr_id = row.get_int('attrib_id', None)
-            val = row.get_float('value')
-            new_req = EntranceReq(game_token=game_token, loc_id=loc.id)
-            if attr_id:
-                new_req.attrib_id = attr_id
-                new_req.attrib_value = val
-            else:
-                new_req.item_id = row.get_int('item_id')
-                new_req.quantity = val
-            db.session.add(new_req)
+            entity_id = row.get_int('entity_id', None)
+            attrib_id = row.get_int('attrib_id', None)
+            val_required = row.get_float('val_required')
+            if entity_id or attrib_id:
+                new_req = EntranceReq(
+                    game_token=game_token,
+                    loc_id=loc.id,
+                    item_id=entity_id,
+                    attrib_id=attrib_id,
+                    val_required=val_required
+                )
+                db.session.add(new_req)
 
         # Local Events
         EntityAbility.query.filter_by(game_token=game_token, entity_id=loc.id).delete()
@@ -441,13 +443,6 @@ def edit_location(id):
             return duplicate_entity(loc.id, 'location')
         return redirect_back('configure.index') 
 
-    all_items = Item.query.filter_by(
-        game_token=game_token).order_by(name_stripped()).all()
-    universal_items = [
-        i for i in all_items if i.storage_type == StorageType.UNIVERSAL]
-    containable_items = [
-        i for i in all_items if i.storage_type != StorageType.UNIVERSAL]
-
     routes = LocDest.query.filter(
         (LocDest.game_token == game_token) & 
         ((LocDest.loc1_id == id) | (LocDest.loc2_id == id))
@@ -474,12 +469,12 @@ def edit_location(id):
             game_token=game_token, owner_id=id).all() if id != 'new' else [],
         all_locs=Location.query.filter_by(
             game_token=game_token).order_by(name_stripped()).all(),
+        all_items=Item.query.filter_by(
+            game_token=game_token).order_by(name_stripped()).all(),
         all_attribs=Attrib.query.filter_by(
             game_token=game_token).order_by(name_stripped()).all(),
         all_events=Event.query.filter_by(
-            game_token=game_token).order_by(name_stripped()).all(),
-        all_containable_items=containable_items,
-        all_universal_items=universal_items,
+            game_token=game_token).order_by(name_stripped()).all()
     )
 
 @configure_bp.route('/character/<int:id>', methods=['GET', 'POST'])
@@ -907,7 +902,7 @@ def browse_scenarios():
                         'title': overall.get_str('title', filename),
                         'description': overall.get_str('description', ''),
                         'introduce': overall.get_int('tag_introduce_order', 50),
-                        'favorite': overall.get_int('tag_favorite_order', 50),
+                        'best': overall.get_int('tag_best_order', 50),
                         'progress_type': overall.get_str('tag_progress_type', 'Idle'),
                         'multiplayer': overall.get_bool('tag_multiplayer', False),
                         'complete': complete,
@@ -918,7 +913,7 @@ def browse_scenarios():
                     logger.exception(e)
 
     # Sorting
-    if sort_by in ('introduce', 'favorite', 'title', 'progress_type'):
+    if sort_by in ('introduce', 'best', 'title', 'progress_type'):
         reverse = False  # Ascending
     elif sort_by in ('filesize', 'complete_rank', 'multiplayer'):
         reverse = True  # Descending

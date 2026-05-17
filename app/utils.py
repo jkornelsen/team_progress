@@ -46,10 +46,12 @@ class BaseFieldMap:
         return (self._get_raw(key) or default).strip()
 
     def get_int(self, key, default=0):
-        formatted_str = self._get_raw(key)
-        if formatted_str == '':
+        val_raw = self._get_raw(key)
+        if val_raw == '':
             return default
-        float_value = unformat_num(formatted_str)
+        if isinstance(val_raw, (int, float)):
+            return int(val_raw)
+        float_value = unformat_num(val_raw)
         try:
             return int(float_value)
         except (ValueError, TypeError):
@@ -57,10 +59,12 @@ class BaseFieldMap:
 
     def get_float(self, key, default=0.0):
         """Retrieve a floating point value using unformat_num logic."""
-        formatted_str = self._get_raw(key)
-        if formatted_str == '':
+        val_raw = self._get_raw(key)
+        if val_raw == '':
             return default
-        return unformat_num(formatted_str)
+        if isinstance(val_raw, (int, float)):
+            return float(val_raw)
+        return unformat_num(val_raw)
 
     def get_bool(self, key, default=False):
         """Retrieve a boolean value from the request."""

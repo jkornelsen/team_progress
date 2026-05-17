@@ -44,7 +44,7 @@
                     onchange="syncFieldAttribState(this)"
                     class="id-attr full-width {{
                         'hidden' if field_mode ==  Participant.QTY }}" 
-                    style="max-width: 30ch;">
+                    style="min-width: 20ch; max-width: 30ch;">
                 {% for a in all_attribs %}
                     <option value="{{ a.id }}" {{ 'selected' if attrib_id == a.id }}>{{ a.name }}</option>
                 {% endfor %}
@@ -55,7 +55,7 @@
                     class="id-item full-width {{
                         'hidden' if field_mode ==  Participant.ATTR
                         or field_mode ==  Participant.DIST }}"
-                    style="max-width: 30ch;"
+                    style="min-width: 20ch; max-width: 30ch;"
                     onchange="syncRecipesState(this); syncEventFieldState(this)">
                 {% for i in all_items %}
                     <option value="{{ i.id }}" {{ 'selected' if item_id == i.id }}>{{ i.name }}</option>

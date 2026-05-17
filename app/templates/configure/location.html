@@ -25,9 +25,14 @@
 </script>
 <script src="{{ url_for('static', filename='js/configuration.js') }}"></script>
 
+{% set universal_items = all_items |
+    selectattr("storage_type", "equalto", StorageType.UNIVERSAL) | list %}
+{% set containable_items = all_items |
+    rejectattr("storage_type", "equalto", StorageType.UNIVERSAL) | list %}
+
 <!-- TEMPLATES FOR DYNAMIC ROWS -->
 
-{% macro dest_row(index, dest=None, all_locs=[], current_loc_id=None) %}
+{% macro dest_row(index, dest=None, current_loc_id=None) %}
     <div class="col-row dest-row {{ 'unplaced-route' if not dest.door_here }}" style="align-items: center;">
         <input type="hidden" name="dests[{{ index }}][id]" value="{{ dest.id or '' }}">
         
@@ -68,18 +73,18 @@
             value="{{ zone.coords[:2]|join(',') if zone else '' }}" placeholder="1,1">
         <input type="text" name="zones[{{ index }}][rb]"
             value="{{ zone.coords[2:]|join(',') if zone else '' }}" placeholder="2,2">
-        <input type="text" name="zones[{{ index }}][label]"
-            value="{{ zone.label or '' }}" placeholder="Stone Wall">
         <input type="text" name="zones[{{ index }}][color]"
             value="{{ zone.color or '' }}" placeholder="rgba(0,0,0,0.5)">
         <input type="checkbox" name="zones[{{ index }}][prevents_travel]"
             {{ 'checked' if zone and zone.prevents_travel }}>
+        <input type="text" name="zones[{{ index }}][label]"
+            value="{{ zone.label or '' }}" placeholder="Stone Wall">
         <button type="button" class="btn-sm dangerous-button"
             onclick="ConfigEditor.removeRow(this, 'zone-list')">×</button>
     </div>
 {% endmacro %}
 
-{% macro item_row(index, item_obj=None, containable_items=[]) %}
+{% macro item_row(index, item_obj=None) %}
     {% set selected_id = item_obj.item_id if item_obj else None %}
     {% set qty = item_obj.quantity if item_obj else 1 %}
     {% set pos = item_obj.pos if item_obj else '' %}
@@ -98,7 +103,7 @@
     </div>
 {% endmacro %}
 
-{% macro ref_row(selected_id=None, universal_items=[]) %}
+{% macro ref_row(selected_id=None) %}
     <div class="col-row item-ref-row">
         <select name="item_refs[]">
             {% for item in universal_items %}
@@ -111,34 +116,37 @@
     </div>
 {% endmacro %}
 
-{% macro req_row(index, req=None, all_attribs=[], all_universal_items=[]) %}
+{% macro req_row(index, req=None) %}
 <div class="flex-row gap-5 align-center spacious-bottom attrib-wrapper entrance-req-row">
+    <select name="entrance_reqs[{{ index }}][entity_id]">
+        <option value="" {{ 'selected' if not req or not req.item_id }}>👤 (Character)</option>
+        {% for i in all_items if i.storage_type in [StorageType.UNIVERSAL, StorageType.CARRIED] %}
+            <option value="{{ i.id }}" {{ 'selected' if req and req.item_id == i.id }}>
+                {{ i.name }}
+            </option>
+        {% endfor %}
+    </select>
+
     <select name="entrance_reqs[{{ index }}][attrib_id]" 
-            data-current-val="{{ req.quantity or req.attrib_value or 0 if req else 0 }}"
-            onchange="ConfigEditor.syncAttribVal(this); syncReqItemVisibility(this)"
+            data-current-val="{{ req.val_required if req else 0 }}"
+            onchange="ConfigEditor.syncAttribVal(this)"
             style="width: 15ch;">
-        <option value="">(Universal Item)</option>
+        <option value="">(Quantity)</option>
         {% for a in all_attribs %}
             <option value="{{ a.id }}" {{ 'selected' if req and a.id == req.attrib_id }}>{{ a.name }}</option>
         {% endfor %}
     </select>
 
     <div class="attribval-container flex-grow" 
-         data-field-name="entrance_reqs[{{ index }}][value]">
+         data-field-name="entrance_reqs[{{ index }}][val_required]">
     </div>
     
-    <select name="entrance_reqs[{{ index }}][item_id]" 
-            class="req-item-select {{ 'hidden' if req and req.attrib_id }}">
-        {% for i in all_universal_items %}
-            <option value="{{ i.id }}" {{ 'selected' if req and i.id == req.item_id }}>{{ i.name }}</option>
-        {% endfor %}
-    </select>
-
-    <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
+    <button type="button" class="btn-sm dangerous-button"
+        onclick="ConfigEditor.removeRow(this, 'entrance-req-list')">×</button>
 </div>
 {% endmacro %}
 
-{% macro event_row(index, selected_id=None, all_events=[]) %}
+{% macro event_row(index, selected_id=None) %}
     <div class="col-row event-row">
         <select name="events[{{ index }}][id]">
             <option value="" disabled {{ 'selected' if not selected_id }}>Select an Event...</option>
@@ -153,7 +161,7 @@
     </div>
 {% endmacro %}
 
-{% macro attrib_row(index, av=None, all_attribs=[]) %}
+{% macro attrib_row(index, av=None) %}
     {% set selected_id = av.attrib_id if av else None %}
     {% set val = av.value if av else 0 %}
     
@@ -178,15 +186,15 @@
 {% endmacro %}
 
 <template id="dest-template">
-    {{ dest_row('__INDEX__', None, all_locs, location.id) }}
+    {{ dest_row('__INDEX__', None, location.id) }}
 </template>
 
 <template id="item-template">
-    {{ item_row('__INDEX__', None, all_containable_items) }}
+    {{ item_row('__INDEX__', None) }}
 </template>
 
 <template id="ref-template">
-    {{ ref_row(None, all_universal_items) }}
+    {{ ref_row(None) }}
 </template>
 
 <template id="zone-template">
@@ -194,15 +202,15 @@
 </template>
 
 <template id="entrance-req-template">
-    {{ req_row('__INDEX__', None, all_attribs, all_universal_items) }}
+    {{ req_row('__INDEX__', None) }}
 </template>
 
 <template id="event-template">
-    {{ event_row('__INDEX__', None, all_events) }}
+    {{ event_row('__INDEX__', None) }}
 </template>
 
 <template id="attrib-template">
-    {{ attrib_row('__INDEX__', None, all_attribs) }}
+    {{ attrib_row('__INDEX__', None) }}
 </template>
 
 <!-- MAIN CONTENT -->
@@ -270,7 +278,7 @@
                     <span></span>
                 </div>
                 {% for d in destinations %}
-                    {{ dest_row(loop.index0, d, all_locs, location.id) }}
+                    {{ dest_row(loop.index0, d, location.id) }}
                 {% endfor %}
             </div>
             <div id="dest-list-empty" class="no-entities {{ 'hidden' if destinations }}">
@@ -281,7 +289,7 @@
         <section class="outer-border">
             <div class="flex-between">
                 <h3>Items Here</h3>
-                {% if all_containable_items %}
+                {% if containable_items %}
                     <button type="button" class="btn-sm" onclick="ConfigEditor.addRow('item-list', 'item-template')">+ Place Item</button>
                 {% endif %}
             </div>
@@ -301,11 +309,11 @@
                         'quantity': pile.quantity,
                         'pos': pile.position|join(',') if pile.position else ''
                     } %}
-                    {{ item_row(loop.index0, normalized_pile, all_containable_items) }}
+                    {{ item_row(loop.index0, normalized_pile) }}
                 {% endfor %}
             </div>
             <div id="item-list-empty" class="no-entities {{ 'hidden' if inventory }}">
-                {% if all_containable_items %}
+                {% if containable_items %}
                     (No items currently placed)
                 {% else %}
                     (No placeable items)
@@ -316,7 +324,7 @@
         <section class="outer-border">
             <div class="flex-between">
                 <h3>Referenced Universal Items</h3>
-                {% if all_universal_items %}
+                {% if universal_items %}
                     <button type="button" class="btn-sm" onclick="ConfigEditor.addRow('ref-list', 'ref-template')">+ Add Reference</button>
                 {% endif %}
             </div>
@@ -326,7 +334,7 @@
             </style>
             <div id="ref-list" class="col-list item-ref-list {{ 'hidden' if not location.item_refs }}">
                 {% for item_ref in location.item_refs %}
-                    {{ ref_row(item_ref.item_id, all_universal_items) }}
+                    {{ ref_row(item_ref.item_id) }}
                 {% endfor %}
             </div>
             <div id="ref-list-empty" class="no-entities {{ 'hidden' if location.item_refs }}">
@@ -340,15 +348,15 @@
                 <button type="button" class="btn-sm" onclick="ConfigEditor.addRow('zone-list', 'zone-template')">+ Add Zone</button>
             </div>
             <style>
-                .zone-row { --grid-cols: 2fr 2fr 3fr 2fr 1fr 0.5fr; }
+                .zone-row { --grid-cols: 2fr 2fr 2fr 1fr 3fr 0.5fr; }
             </style>
             <div id="zone-list" class="col-list {{ 'hidden' if not location.zones }}">
                 <div class="col-row zone-row header-style">
                     <span>Left, Top</span>
                     <span>Right, Bot</span>
-                    <span>Label</span>
                     <span>Color</span>
                     <span title="Prevents character movement">Block</span>
+                    <span>Label</span>
                     <span></span>
                 </div>
                 {% for zone in location.zones %}
@@ -372,7 +380,7 @@
                     .event-row { --grid-cols: 11fr 1fr; }
                 </style>
                 {% for evt in location.abilities %}
-                    {{ event_row(loop.index0, evt.id, all_events) }}
+                    {{ event_row(loop.index0, evt.id) }}
                 {% endfor %}
             </div>
             <div id="event-list-empty" class="no-entities {{ 'hidden' if location.abilities }}">
@@ -387,7 +395,7 @@
             </div>
             <div id="entrance-req-list" class="spacious-top">
                 {% for req in location.entrance_reqs %}
-                    {{ req_row(loop.index0, req, all_attribs, all_universal_items) }}
+                    {{ req_row(loop.index0, req) }}
                 {% endfor %}
             </div>
         </section>
@@ -409,7 +417,7 @@
                     <span></span>
                 </div>
                 {% for av in location.attrib_values %}
-                    {{ attrib_row(loop.index0, av, all_attribs) }}
+                    {{ attrib_row(loop.index0, av) }}
                 {% endfor %}
             </div>
             <div id="attrib-list-empty" class="no-entities {{ 'hidden' if location.attrib_values }}">
@@ -426,13 +434,6 @@
 </div>
 
 <script>
-function syncReqItemVisibility(select) {
-    const row = select.closest('.entrance-req-row');
-    const itemSelect = row.querySelector('.req-item-select');
-    if (itemSelect) {
-        itemSelect.classList.toggle('hidden', select.value !== "");
-    }
-}
 </script>
 
 <style>
