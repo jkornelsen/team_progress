@@ -80,39 +80,43 @@ def set_quantity(item_id, owner_id, new_value, position=None, slot=None):
 
 def adjust_quantity(item_id, owner_id, delta, position=None, slot=None):
     """
-    Increments or decrements an item quantity for a specific owner.
-    - delta: positive to add, negative to subtract.
-    - Returns: The new quantity.
+    Increases or decreases an item quantity for a specific owner.
+    - delta: positive to add, negative to subtract
+    - Returns: unplaced overflow
     """
+    game_token = g.game_token
     pile = get_or_create_pile(item_id, owner_id, position, slot)
+    item = Item.query.get((g.game_token, item_id))
+    overflow = 0.0
 
     logger.debug(
-        f"[QTY CHANGE] Item:{item_id} | Owner:{owner_id}"
+        f"adjust_quantity() Item:{item.name} | Owner:{owner_id}"
         f" | Delta:{delta} | Current:{pile.quantity}")
     
     # Check Item limits if increasing
     if delta > 0:
-        item_def = Item.query.get((g.game_token, item_id))
-        if item_def and item_def.q_limit > 0:
-            if (pile.quantity + delta) > item_def.q_limit:
-                logger.warning(f"Item {item_id} exceeds limit {item_def.q_limit}")
-                pile.quantity = item_def.q_limit
-                return pile.quantity
+        if item.q_limit > 0:
+            space_left = max(0.0, item.q_limit - pile.quantity)
+            if delta > space_left:
+                overflow = delta - space_left
+                amount_to_add = space_left
+                delta = amount_to_add
 
     old_qty = pile.quantity
     pile.quantity += delta
     
     if old_qty <= 0 and pile.quantity > 0:
-        # gained an item for the first time
-        check_item_unmasking(g.game_token, item_id, was_gained=True)
+        # gained an item possibly for the first time
+        check_item_unmasking(game_token, item_id, was_gained=True)
     
-    # Cleanup: remove empty rows to keep the DB small
+    # Cleanup empty rows
     if pile.quantity == 0:
-        logger.info(f"[QTY DELETE] Removing empty pile for Item:{item_id} Owner:{owner_id}")
+        logger.info(
+            f"Removing empty pile for Item:{item.name} Owner:{owner_id}")
         safe_remove(pile)
         return 0.0
         
-    return pile.quantity
+    return overflow
 
 def transfer_item(item_id, from_owner_id, to_owner_id, quantity, 
                   from_pos=None, to_pos=None, to_slot=None):

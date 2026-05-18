@@ -12,9 +12,9 @@
 {% block content %}
 
 <script>
-    window.linkForKey['p'] = "{{ url_for('configure.browse_scenarios') }}";
-    window.linkForKey['s'] = "{{ url_for('configure.save_to_file') }}";
-    window.linkForKey['u'] = "{{ url_for('configure.upload') }}";
+    window.linkForKey['p'] = "{{ url_for('session.browse_scenarios') }}";
+    window.linkForKey['s'] = "{{ url_for('session.save_to_file') }}";
+    window.linkForKey['u'] = "{{ url_for('session.upload') }}";
     window.linkForKey['t'] = "{{ url_for('configure.edit_overall') }}";
 
     document.addEventListener('keydown', function(e) {
@@ -64,13 +64,13 @@
             </div>
 
             <div class="file-stack flex-col gap-5">
-                <button onclick="location.href='{{ url_for('configure.browse_scenarios') }}'" class="btn">
+                <button onclick="location.href='{{ url_for('session.browse_scenarios') }}'" class="btn">
                     <span class="hotkey-indicator">p</span> Pre-built Scenarios
                 </button>
-                <button onclick="location.href='{{ url_for('configure.save_to_file') }}'" class="btn">
+                <button onclick="location.href='{{ url_for('session.save_to_file') }}'" class="btn">
                     <span class="hotkey-indicator">s</span> Save to File
                 </button>
-                <button onclick="location.href='{{ url_for('configure.upload') }}'" class="btn">
+                <button onclick="location.href='{{ url_for('session.upload') }}'" class="btn">
                     <span class="hotkey-indicator">u</span> Upload / New
                 </button>
             </div>

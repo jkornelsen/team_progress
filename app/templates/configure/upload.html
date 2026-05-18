@@ -34,7 +34,7 @@
     </div>
 
     <div class="upload-zone spacious-top" id="drop-zone">
-        <form id="upload-form" action="{{ url_for('configure.upload') }}" method="POST" enctype="multipart/form-data">
+        <form id="upload-form" action="{{ url_for('session.upload') }}" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="active_mode" id="active-mode" value="overwrite">
             
             <div class="flex-column align-center gap-10">
@@ -51,7 +51,7 @@
     </div>
 
     <div id="clear-zone" class="spacious-top" style="display: none; text-align: center;">
-        <form action="{{ url_for('configure.clear_all') }}" method="POST">
+        <form action="{{ url_for('session.clear_all') }}" method="POST">
             <br/>
             <button type="submit" class="dangerous-button">
                 🧹 Wipe & Initialize Blank World

@@ -10,6 +10,19 @@ from app.src.logic_user_interaction import add_message
 
 logger = logging.getLogger(__name__)
 
+CENTER = (0, 0)
+OFFSETS = [
+    (1, 0),   # East
+    (1, 1),   # SE
+    (0, 1),   # South
+    (-1, 1),  # SW
+    (-1, 0),  # West
+    (-1, -1), # NW
+    (0, -1),  # North
+    (1, -1)   # NE
+]
+NEIGHBORHOOD = [CENTER] + OFFSETS
+
 # ------------------------------------------------------------------------
 # Coordinate & Grid Math
 # ------------------------------------------------------------------------
@@ -37,14 +50,14 @@ def distance_between(pos, target_pos):
     ydist = abs(pos[1] - target_pos[1])
     return Math.floor(sqrt(xdist**2 + ydist**2))
 
-def is_in_grid(location, pos, check_zones=True):
+def is_in_grid(loc, pos, check_zones=True):
     """
     Validates if a coordinate is within the location's physical boundaries.
     If check_zones is True, it also validates against zones that prevent travel.
     """
-    if not location.dimensions or location.dimensions[0] == 0:
+    if not loc.dimensions or loc.dimensions[0] == 0:
         return True
-    width, height = location.dimensions
+    width, height = loc.dimensions
     if not pos:
         return False
     x, y = pos
@@ -55,7 +68,7 @@ def is_in_grid(location, pos, check_zones=True):
         
     # 2. Check Zone Restrictions
     if check_zones:
-        for zone in location.zones:
+        for zone in loc.zones:
             if zone.prevents_travel:
                 l, t, r, b = zone.coords
                 if l <= x <= r and t <= y <= b:
@@ -81,32 +94,47 @@ def blocked_by_local_item(loc_id, pos):
     
     return blocking_pile is not None
 
-def get_all_valid_coords(location):
+def get_all_valid_coords(loc):
     """Returns a list of all (x, y) tuples that are playable."""
-    if not location.dimensions or location.dimensions[0] == 0:
+    if not loc.has_grid:
         return []
 
     valid_coords = []
-    width, height = location.dimensions
+    width, height = loc.dimensions
     
     # Iterate every square and check against exclusion logic
     for y in range(1, height + 1):
         for x in range(1, width + 1):
             pos = x, y
-            if is_in_grid(location, pos):
+            if is_in_grid(loc, pos):
                 valid_coords.append(pos)
     return valid_coords
 
-def get_default_position(location):
+def get_default_position(loc):
     """Finds the first available non-excluded square."""
-    valid = get_all_valid_coords(location)
+    valid = get_all_valid_coords(loc)
     return list(valid[0]) if valid else None
+
+def get_output_positions(loc, anchor_pos):
+    """Returns an ordered list of [x, y] coordinates for placing an item."""
+    if not anchor_pos or len(anchor_pos) != 2:
+        return [None]
+    x, y = anchor_pos
+
+    candidates = []
+
+    for dx, dy in NEIGHBORHOOD:
+        cand = [x + dx, y + dy]
+        if is_in_grid(loc, cand) and not blocked_by_local_item(loc.id, cand):
+            candidates.append(cand)
+    
+    return candidates
 
 def find_best_output_pos(item_id, loc_id, anchor_pos):
     """
     Finds the best coordinate adjacent to anchor_pos to place item_id.
     1. Checks for existing piles of item_id in adjacent squares.
-    2. Finds first unblocked adjacent square (Clockwise from East).
+    2. Finds first unblocked adjacent square.
     """
     if not anchor_pos or len(anchor_pos) != 2:
         return None
@@ -116,36 +144,22 @@ def find_best_output_pos(item_id, loc_id, anchor_pos):
     if not loc or not loc.dimensions:
         return None
 
-    x, y = anchor_pos
-    # Clockwise offsets starting East (x+1, y)
-    offsets = [
-        (1, 0),   # East
-        (1, 1),   # South-East
-        (0, 1),   # South
-        (-1, 1),  # South-West
-        (-1, 0),  # West
-        (-1, -1), # North-West
-        (0, -1),  # North
-        (1, -1)   # North-East
-    ]
+    candidates = get_output_positions(loc, anchor_pos)
 
     # PHASE 1: Search for existing pile of the same item to merge into
-    for dx, dy in offsets:
-        candidate = [x + dx, y + dy]
-        if is_in_grid(loc, candidate):
-            existing = Pile.query.filter_by(
-                game_token=game_token,
-                owner_id=loc_id,
-                item_id=item_id,
-                position=candidate
-            ).first()
-            if existing:
-                return candidate
+    for candidate in candidates:
+        existing = Pile.query.filter_by(
+            game_token=game_token,
+            owner_id=loc_id,
+            item_id=item_id,
+            position=candidate
+        ).first()
+        if existing:
+            return candidate
 
     # PHASE 2: Find first unblocked square
-    for dx, dy in offsets:
-        candidate = [x + dx, y + dy]
-        if is_in_grid(loc, candidate) and not blocked_by_local_item(loc_id, candidate):
+    for candidate in candidates:
+        if not blocked_by_local_item(loc_id, candidate):
             return candidate
 
     # Fallback: If everything is blocked, return the anchor position itself

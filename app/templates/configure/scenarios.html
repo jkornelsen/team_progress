@@ -13,15 +13,15 @@
 <div class="scenarios-browser">
     <header class="flex-between align-center">
         <h1>Pre-built Scenarios</h1>
-        <form method="GET" action="{{ url_for('configure.browse_scenarios') }}" id="sort-form">
+        <form method="GET" action="{{ url_for('session.browse_scenarios') }}" id="sort-form">
             <label class="label-like">Sort by:</label>
             <select name="sort_by" onchange="this.form.submit()" class="mini-select">
                 <option value="introduce" {{ 'selected' if sort_by == 'introduce' }}>Introduce Concepts</option>
                 <option value="best" {{ 'selected' if sort_by == 'best' }}>Best</option>
                 <option value="progress_type" {{ 'selected' if sort_by == 'progress_type' }}>Progress Type</option>
+                <option value="multiplayer" {{ 'selected' if sort_by == 'multiplayer' }}>Multiplayer Design</option>
                 <option value="complete_rank" {{ 'selected' if sort_by == 'complete_rank' }}>Completeness</option>
                 <option value="filesize" {{ 'selected' if sort_by == 'filesize' }}>Size</option>
-                <option value="multiplayer" {{ 'selected' if sort_by == 'multiplayer' }}>Multiplayer Design</option>
                 <option value="title" {{ 'selected' if sort_by == 'title' }}>Alphabetical</option>
             </select>
         </form>
@@ -54,7 +54,7 @@
                     {% endif %}
                 </div>
 
-                <form method="POST" action="{{ url_for('configure.browse_scenarios') }}">
+                <form method="POST" action="{{ url_for('session.browse_scenarios') }}">
                     <input type="hidden" name="scenario_file" value="{{ scenario.filename }}">
                     {{ hk.submit(loop.index, link_letters, "Launch Scenario") }}
                 </form>

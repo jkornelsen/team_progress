@@ -767,7 +767,7 @@ def do_effect_change(eff, roll_total, role_entities):
             return False, "Expected a Coordinate outcome."
 
         # 3. Create or increment the pile
-        new_qty = adjust_quantity(
+        adjust_quantity(
             field_def.item_id, 
             loc_id, 
             delta=1.0, 

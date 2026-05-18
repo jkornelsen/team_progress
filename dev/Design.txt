@@ -4,6 +4,11 @@
 
 ---- functional, tightening, quality of life ----
 
+producing "logs on truck" left logs qty -4 in truck
+    need to adjust quantity of multiple source piles rather than sum
+
+press t to travel when no grid
+
 Value: -4.500000000000018
     truncate floating point limits with epsilon or whatever it was
 
@@ -23,6 +28,12 @@ don't show duplicate destinations in play location
     maybe shouldn't allow in database
 
 ---- scenario ----
+
+tethered one epic
+    when lyria stuck in snow cave
+        pike village entrance req to not be trapped in cave
+    somewhat sandboxy rather than completely linear,
+        when it comes time for multiple chars to go different directions
 
 infestation
     repair cost + reload cost can reduce xp to 0 (but never below)
@@ -57,16 +68,6 @@ infestation
     later enemies bigger than rodents e.g. alligators -- only final boss human
     store attrib "Boss I Defeated" in universal item "Enemies Defeated"
         so events can check for that attrib
-
-lumber
-    limit number of logs carried by owner
-    convert to (produce) stack of logs in truck
-
-tethered one epic
-    when lyria stuck in snow cave
-        pike village entrance req to not be trapped in cave
-    somewhat sandboxy rather than completely linear,
-        when it comes time for multiple chars to go different directions
 
 dungeon crawl
     3 levels up and down of location grids -- 7 total floors

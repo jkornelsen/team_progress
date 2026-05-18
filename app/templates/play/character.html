@@ -127,8 +127,6 @@
                             <div class="col-list eqipped-list">
                                 {% for pile in equipped %}
                                     <div class="col-row eqipped-row">
-                                        <span class="label-like">[{{ pile.slot }}]</span>
-                                        
                                         {% set item_url = url_for('play.play_item',
                                             id=pile.item_id, owner_id=character.id) %}
                                         {% call hk.hotlink(item_url, link_letters) %}
@@ -136,6 +134,7 @@
                                         {% endcall %}
                                         
                                         <span>{{ pile.quantity | formatNum if pile.quantity >= 2 else '' }}</span>
+                                        <span class="label-like">[{{ pile.slot }}]</span>
                                     </div>
                                 {% endfor %}
                             </div>

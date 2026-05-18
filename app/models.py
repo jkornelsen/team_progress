@@ -362,6 +362,10 @@ class Location(Entity):
         return loc
 
     @property
+    def has_grid(self):
+        return self.dimensions and self.dimensions[0] > 0
+
+    @property
     def exits(self):
         """
         Any route where we are loc1 (always an exit)

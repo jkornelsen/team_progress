@@ -1,25 +1,20 @@
-import os
 import logging
 import json
-import tempfile
 from flask import (
     Blueprint, request, session, flash, redirect, url_for, render_template,
-    g, send_file, jsonify, current_app)
+    g, jsonify)
 from http import HTTPStatus
 from app.models import (
-    GENERAL_ID, StorageType, JsonKeys, ENTITIES, db,
+    GENERAL_ID, StorageType, ENTITIES, db,
     Entity, Item, Character, Location, Attrib, Event, 
     Pile, AttribVal, Operation, EntityAbility,
     Recipe, RecipeSource, RecipeByproduct, RecipeAttribReq,
     LocDest, LocZone, EntranceReq, ItemRef,
     Participant, OutcomeType, EventFactor, EventField, EventLink,
     Overall, WinRequirement)
-from app.serialization import (
-    init_game_session, load_scenario_from_path, DEFAULT_SCENARIO_FILE,
-    import_from_dict, patch_from_dict,
-    clear_game_data, export_game_to_json, export_to_dict, clone_entity)
+from app.serialization import clone_entity
 from app.utils import (
-    LinkLetters, RequestHelper, BaseFieldMap, parse_coords,
+    LinkLetters, RequestHelper, parse_coords,
     capture_origin, redirect_back, name_stripped)
 from .logic_discovery import run_discovery_scan
 
@@ -861,132 +856,6 @@ def lookup_entity(ent_type, id):
         'configure/lookup.html',
         entity=entity,
         results=results)
-
-# ------------------------------------------------------------------------
-# File Handling
-# ------------------------------------------------------------------------
-
-COMPLETENESS_LEVELS = {
-    "Idea Only": 1,
-    "Under Construction": 2,
-    "Starter Kit": 3,
-    "Has Objectives": 4,
-    "Complete": 5
-}
-
-@configure_bp.route('/scenarios', methods=['GET', 'POST'])
-def browse_scenarios():
-    data_dir = current_app.config['DATA_DIR']
-    
-    if request.method == 'POST':
-        req = RequestHelper('form')
-        filename = req.get_str('scenario_file')
-        if load_scenario_from_path(filename):
-            return redirect(url_for('play.overview'))
-        return render_template(
-            'error.html',
-            message="Error loading pre-built scenario.",
-            ), HTTPStatus.INTERNAL_SERVER_ERROR
-
-    # GET logic: List files
-    scenarios = []
-    sort_by = request.args.get('sort_by', 'introduce')
-
-    for filename in os.listdir(data_dir):
-        if filename == DEFAULT_SCENARIO_FILE:
-            continue
-        if filename.endswith('.json'):
-            path = os.path.join(data_dir, filename)
-            with open(path, 'r', encoding='utf-8') as f:
-                try:
-                    data = json.load(f)
-                    overall = BaseFieldMap(data.get(JsonKeys.OVERALL, {}))
-                    complete = overall.get_str('tag_complete', 'Under Construction')
-                    scenarios.append({
-                        'filename': filename,
-                        'title': overall.get_str('title', filename),
-                        'description': overall.get_str('description', ''),
-                        'introduce': overall.get_int('tag_introduce_order', 50),
-                        'best': overall.get_int('tag_best_order', 50),
-                        'progress_type': overall.get_str('tag_progress_type', 'Idle'),
-                        'multiplayer': overall.get_bool('tag_multiplayer', False),
-                        'complete': complete,
-                        'complete_rank': COMPLETENESS_LEVELS.get(complete, 2),
-                        'filesize': os.path.getsize(path)
-                    })
-                except Exception as e:
-                    logger.exception(e)
-
-    # Sorting
-    if sort_by in ('introduce', 'best', 'title', 'progress_type'):
-        reverse = False  # Ascending
-    elif sort_by in ('filesize', 'complete_rank', 'multiplayer'):
-        reverse = True  # Descending
-    else:
-        raise ValueError(f"Unexpected sort_by {sort_by}")
-    scenarios = sorted(
-        scenarios,
-        key=lambda x: x.get(sort_by, ''),
-        reverse=reverse)
-    
-    return render_template(
-        'configure/scenarios.html', 
-        scenarios=scenarios, 
-        sort_by=sort_by,
-        link_letters=LinkLetters(excluded='om') # Reserve 'o' and 'm' for nav
-    )
-
-@configure_bp.route('/save')
-def save_to_file():
-    """Exports the current game token state to a JSON file."""
-    json_data = export_game_to_json()
-    
-    overall = Overall.query.get(g.game_token)
-    title = (overall.title or '').strip() or 'scenario'
-    filename = f"{title}.json"
-
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json') as tmp:
-        tmp.write(json_data)
-        path = tmp.name
-        
-    return send_file(path, as_attachment=True, download_name=filename)
-
-@configure_bp.route('/upload', methods=['GET', 'POST'])
-def upload():
-    """Processes an uploaded JSON and updates the DB."""
-    if request.method == 'POST':
-        if 'file' not in request.files:
-            return "No file uploaded", 400
-        file = request.files['file']
-        json_data = json.load(file)
-        try:
-            mode = request.form.get('active_mode')
-            if mode == 'patch':
-                patch_from_dict(json_data)
-            else:
-                import_from_dict(json_data)
-            return redirect(url_for('play.overview'))
-        except (SyntaxError, NameError, AttributeError):
-            raise
-        except Exception as e:
-            db.session.rollback()
-            logger.exception(e)
-            return render_template(
-                'error.html',
-                message="Couldn't Import",
-                details=str(e)
-                ), HTTPStatus.INTERNAL_SERVER_ERROR
-
-    return render_template(
-        'configure/upload.html', 
-    )
-
-@configure_bp.route('/clear-all', methods=['POST'])
-def clear_all():
-    """Wipes data and re-applies the default scenario."""
-    clear_game_data()
-    init_game_session() 
-    return redirect(url_for('play.overview'))
 
 # ------------------------------------------------------------------------
 # Helpers

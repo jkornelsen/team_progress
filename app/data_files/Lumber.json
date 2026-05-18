@@ -72,6 +72,7 @@
                 "id": 7,
                 "name": "Logs",
                 "description": "Idle chopping is for when no characters are actively chopping, either because they are doing something else, or while offline.",
+                "q_limit": 8.0,
                 "recipes": [
                     {
                         "id": 8,
@@ -102,6 +103,42 @@
                         "rate_duration": 1200,
                         "sources": [
                             {"item_id": 10, "q_required": 1.0}
+                        ]
+                    },
+                    {
+                        "id": 34,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 31, "q_required": 1.0}
+                        ],
+                        "attrib_reqs": [
+                            {
+                                "attrib_id": 33,
+                                "value_range": [1.0, 1.0],
+                                "range_inclusive": [true, true]
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 31,
+                "name": "Logs — On Truck",
+                "description": "The truck can carry more logs at a time.",
+                "q_limit": 200.0,
+                "recipes": [
+                    {
+                        "id": 32,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 7, "q_required": 1.0}
+                        ],
+                        "attrib_reqs": [
+                            {
+                                "attrib_id": 33,
+                                "value_range": [1.0, 1.0],
+                                "range_inclusive": [true, true]
+                            }
                         ]
                     }
                 ]
@@ -285,7 +322,8 @@
                 "name": "Truck",
                 "description": "A run-down workhorse with a little left to give. \r\n\r\nCarries logs. Someone must drive (move/travel with) the truck.",
                 "attribs": [
-                    [6, 2.0]
+                    [6, 2.0],
+                    [33, 1.0]
                 ],
                 "abilities": [24],
                 "toplevel": true,
@@ -313,6 +351,7 @@
                 "name": "HP",
                 "description": "How much chopping still needs to be done to finish chopping down the tree. Once HP is 0, the tree can be cut into logs."
             },
+            {"id": 33, "name": "Is Truck", "is_binary": true},
             {
                 "id": 6,
                 "name": "Repair",
@@ -328,7 +367,7 @@
             {
                 "id": 26,
                 "name": "Chopping Check",
-                "description": "- **Major Success:** Gain 50% more logs\r\n- **Minor Failure:** The attempt was unsuccessful — [add back HP from the swing](/play/attrib/2/subject/15)\r\n- **Major Failure:** Run *Chopping Mishap Type*",
+                "description": "- **Major Success:** Gain 50% more logs\r\n- **Minor Failure:** The attempt was unsuccessful — [add back HP from the swing](/play/attrib/2/subject/15) (see [game log](/overview))\r\n- **Major Failure:** Run *Chopping Mishap Type*",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {

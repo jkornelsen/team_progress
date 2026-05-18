@@ -98,8 +98,6 @@ def play_location(id):
     capture_origin(name=location.name)
     session['old_loc_id'] = id
     
-    has_grid = bool(location.dimensions and location.dimensions[0] > 0)
-    
     # 1. Fetch Characters & Items
     characters_here = Character.query.filter_by(
         game_token=game_token, location_id=id
@@ -119,7 +117,7 @@ def play_location(id):
         session.pop('old_char_id', None)
 
     # 2. Fix Incorrectly Positioned Entities
-    if has_grid:
+    if location:
         default_pos = get_default_position(location)
         needs_commit = False
 
@@ -200,7 +198,6 @@ def play_location(id):
     return render_template(
         'play/location.html',
         location=location,
-        has_grid=has_grid,
         inventory_piles=inventory_piles,
         characters_here=characters_here,
         destinations=destinations,

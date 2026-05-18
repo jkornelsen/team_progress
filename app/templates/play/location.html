@@ -55,7 +55,7 @@
                         {% set target_url = url_for('play.play_character', id=char.id) %}
                         {% call hk.hotlink(target_url, link_letters) %}
                             {{ char.name }}
-                            {% if has_grid and char.position %}
+                            {% if location.has_grid and char.position %}
                                 <span class="label-like char-pos-display"
                                       data-char-id="{{ char.id }}">
                                     [{{ char.position | join(",") }}]
@@ -73,7 +73,7 @@
             <style>
                 .twocol-row, .item-here-row { --grid-cols: 1fr auto; }
                 .twocol-list, .item-here-list { --col-list-max-width: 40ch; }
-                {% if has_grid %}
+                {% if location.has_grid %}
                 .item-here-row { --grid-cols: 4fr 1fr 1fr; }
                 .item-here-list { --col-list-max-width: 50ch; }
                 {% endif %}
@@ -107,7 +107,7 @@
                             {% endif %}
                         </div>
 
-                        {% if has_grid and pile.position %}
+                        {% if location.has_grid and pile.position %}
                             <span class="label-like">[{{ pile.position | join(",") }}]</span>
                         {% endif %}
                     </div>
@@ -199,7 +199,7 @@
 
         <!-- RIGHT COLUMN: Tactical Grid & Navigation Controls -->
         <div class="tactgrid-column">
-            {% if has_grid %}
+            {% if location.has_grid %}
                 <section class="outer-border tactgrid-wrapper">
                     <div class="grid-scroll-container">
                       <div class="tactgrid-layout" id="location-grid" 
@@ -545,7 +545,7 @@
             return;
         }
 
-        {% if has_grid %}
+        {% if location.has_grid %}
         // 1. Handle Movement (Arrows & Numpad)
         const moveKeys = {
             // Cardinal
