@@ -321,8 +321,10 @@
             x: {{ e.x }}, 
             y: {{ e.y }}, 
             target_id: {{ e.target_id }},
+            masked: {{ e.masked | tojson }},
             icon: "🚪", 
-            link: "{{ url_for('play.play_location', id=e.target_id) }}" 
+            link: {% if e.masked %}null{% else %}"{{
+                url_for('play.play_location', id=e.target_id) }}"{% endif %}
         },
         {% endfor %}
     ];
@@ -353,7 +355,7 @@
                     if (z.color) $cell.css('background-color', z.color);
                     if (z.name) {
                         const currentTitle = $cell.attr('title') || '';
-                        $cell.attr('title', currentTitle ? `${currentTitle} (${z.name})` : z.name);
+                        $cell.attr('title', z.name);
                     }
                     if (z.prevents_travel && !z.color) {
                         $cell.addClass('excluded').removeClass('included');
@@ -365,12 +367,14 @@
         const renderToken = (obj, typeClass) => {
             const $cell = $(`#cell-${obj.x}-${obj.y}`);
             if ($cell.length && $cell.is(':empty')) {
-                const $link = $('<a></a>')
-                    .attr('href', obj.link)
+                const $inner = obj.masked || !obj.link
+                    ? $('<span></span>')
+                    : $('<a></a>').attr('href', obj.link);
+                $inner
                     .attr('title', obj.name)
                     .addClass(`grid-token ${typeClass}`)
                     .text(obj.icon);
-                $cell.append($link);
+                $cell.append($inner);
             }
         };
 

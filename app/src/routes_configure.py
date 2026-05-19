@@ -376,7 +376,9 @@ def edit_location(id):
 
         # Zones
         LocZone.query.filter_by(game_token=game_token, loc_id=loc.id).delete()
-        for row in req.get_list('zones'):
+        zone_rows = req.get_list('zones')
+        zone_rows.sort(key=lambda row: row.get_int('order_index', 0))
+        for idx, row in enumerate(zone_rows):
             lt = row.get_coords('lt')
             rb = row.get_coords('rb')
             if lt and rb:
@@ -387,7 +389,8 @@ def edit_location(id):
                     coords=coords,
                     label=row.get_str('label'),
                     color=row.get_str('color'),
-                    prevents_travel=row.get_bool('prevents_travel')
+                    prevents_travel=row.get_bool('prevents_travel'),
+                    order_index=idx
                 ))
 
         # Entrance Requirements

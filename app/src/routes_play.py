@@ -14,7 +14,8 @@ from app.models import (
     GENERAL_ID, StorageType, Participant)
 from app.utils import (
     RequestHelper, ContextIds, format_num, parse_coords, LinkLetters,
-    capture_origin, redirect_back, name_stripped, sort_by_name_stripped)
+    capture_origin, redirect_back, name_stripped, sort_by_name_stripped,
+    maskable_name)
 from .logic_piles import transfer_item
 from .logic_event import (
     roll_for_outcome, roll_for_system_outcome, calculate_determinants,
@@ -168,8 +169,9 @@ def play_location(id):
                 grid_exits.append({
                     'x': door[0],
                     'y': door[1],
-                    'name': target.name,
-                    'target_id': target.id
+                    'name': maskable_name(target),
+                    'target_id': target.id,
+                    'masked': target.masked
                 })
 
     # 4. Fetch Referenced Items

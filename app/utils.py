@@ -453,7 +453,8 @@ def htmlify_filter(text, allow_links=True):
     text = re.sub(r'\$\{([^}]+)\}', sub_vars, text)
 
     # 2. Convert Markdown (Standard Links: [Text](/url))
-    html = markdown.markdown(text, extensions=['extra', 'nl2br'])
+    html = markdown.markdown(
+        text, extensions=['extra', 'nl2br', 'pymdownx.betterem'])
 
     if not allow_links:
         # Replace <a> tags with colored <span> tags instead of links

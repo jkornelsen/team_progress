@@ -9,11 +9,11 @@
         </h4>
         <div class="flex-row gap-10">
             <button type="button" class="btn-sm btn-recipe-up"
-                onclick="moveRecipe(this, -1)">↑</button>
+                onclick="adjustRecipe('moveRow', this, -1)">↑</button>
             <button type="button" class="btn-sm btn-recipe-down"
-                onclick="moveRecipe(this, 1)">↓</button>
+                onclick="adjustRecipe('moveRow', this, 1)">↓</button>
             <button type="button" class="btn-sm dangerous-button"
-                onclick="this.closest('.recipe-card').remove(); updateOrderIndices();">Remove</button>
+                onclick="this.closest('.recipe-card').remove(); adjustRecipe('renumberRows');">Remove</button>
         </div>
     </div>
 

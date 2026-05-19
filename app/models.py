@@ -405,7 +405,8 @@ class Location(Entity):
         'LocZone',
         back_populates='location',
         foreign_keys="[LocZone.game_token, LocZone.loc_id]",
-        cascade="all, delete-orphan")
+        cascade="all, delete-orphan",
+        order_by="LocZone.order_index")
 
     __table_args__ = (
         db.ForeignKeyConstraint(
@@ -890,6 +891,7 @@ class LocZone(db.Model, DictHydrator):
     label = db.Column(db.String(100))
     color = db.Column(db.String(20)) # e.g. "rgba(255,0,0,0.2)" or "#330000"
     prevents_travel = db.Column(db.Boolean, default=True)
+    order_index = db.Column(db.Integer, default=0)
 
     def to_dict(self):
         data = {

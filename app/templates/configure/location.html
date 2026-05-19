@@ -69,6 +69,8 @@
 
 {% macro zone_row(index, zone=None) %}
     <div class="col-row zone-row">
+        <input type="hidden" name="zones[{{ index }}][order_index]"
+            class="zone-order-input" value="{{ index }}">
         <input type="text" name="zones[{{ index }}][lt]"
             value="{{ zone.coords[:2]|join(',') if zone else '' }}" placeholder="1,1">
         <input type="text" name="zones[{{ index }}][rb]"
@@ -79,8 +81,15 @@
             {{ 'checked' if zone and zone.prevents_travel }}>
         <input type="text" name="zones[{{ index }}][label]"
             value="{{ zone.label or '' }}" placeholder="Stone Wall">
-        <button type="button" class="btn-sm dangerous-button"
-            onclick="ConfigEditor.removeRow(this, 'zone-list')">×</button>
+        <div class="flex-row">
+            <button type="button" class="btn-sm btn-zone-up"
+                onclick="adjustZone('moveRow', this, -1)">↑</button>
+            <button type="button" class="btn-sm btn-zone-down"
+                onclick="adjustZone('moveRow', this, 1)">↓</button>
+            <button type="button" class="btn-sm dangerous-button"
+                style="margin-left: 10px;"
+                onclick="ConfigEditor.removeRow(this, 'zone-list'); adjustZone('renumberRows')">×</button>
+        </div>
     </div>
 {% endmacro %}
 
@@ -345,10 +354,12 @@
         <section class="outer-border">
             <div class="flex-between">
                 <h3>Zones</h3>
-                <button type="button" class="btn-sm" onclick="ConfigEditor.addRow('zone-list', 'zone-template')">+ Add Zone</button>
+                <button type="button" class="btn-sm"
+                    onclick="ConfigEditor.addRow('zone-list', 'zone-template',
+                    () => doZone('renumberRows'))">+ Add Zone</button>
             </div>
             <style>
-                .zone-row { --grid-cols: 2fr 2fr 2fr 1fr 3fr 0.5fr; }
+                .zone-row { --grid-cols: 2fr 2fr 2fr 1fr 3fr 3fr; }
             </style>
             <div id="zone-list" class="col-list {{ 'hidden' if not location.zones }}">
                 <div class="col-row zone-row header-style">
@@ -434,6 +445,14 @@
 </div>
 
 <script>
+    function adjustZone(method, ...args) {
+        const options = {
+            inputClass: '.zone-order-input',
+            upClass: '.btn-zone-up',
+            downClass: '.btn-zone-down'
+        };
+        ConfigEditor[method](...args, 'zone-list', options);
+    }
 </script>
 
 <style>

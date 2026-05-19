@@ -111,6 +111,7 @@
                             <div class="flex-row gap-5 attrib-wrapper">
                                 <select name="winreqs[{{ loop.index0 }}][attrib_id]"
                                         style="width: 12ch;"
+                                        data-current-val="{{ req.quantity or req.attrib_value or 0 }}"
                                         onchange="ConfigEditor.syncAttribVal(this)">
                                     <option value="">(Qty)</option>
                                     {% for a in attribs %}
@@ -120,7 +121,6 @@
                                 </select>
                                 <div class="attribval-container flex-grow" 
                                      data-field-name="winreqs[{{ loop.index0 }}][quantity]"
-                                     data-current-val="{{ req.quantity or req.attrib_value or 0 }}">
                                     <!-- Populated by ConfigEditor.syncAttribVal -->
                                 </div>
                             </div>

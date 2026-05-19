@@ -337,7 +337,7 @@
         const html = template.replace(/RECIPE_INDEX/g, newIndex);
         
         container.insertAdjacentHTML('beforeend', html);
-        updateOrderIndices();
+        adjustRecipe('renumberRows');
 
         // Get the newly added checkbox and sync it
         const newCard = container.lastElementChild;
@@ -348,37 +348,16 @@
     /**
      * Change sort order of recipes
      */
-    function moveRecipe(button, direction) {
-        const card = button.closest('.recipe-card');
-        if (direction === -1 && card.previousElementSibling) {
-            card.parentNode.insertBefore(card, card.previousElementSibling);
-        } else if (direction === 1 && card.nextElementSibling) {
-            card.parentNode.insertBefore(card.nextElementSibling, card);
-        }
-        updateOrderIndices();
-    }
-
-    /**
-     * Updates all recipe indices in the DOM to match their current visual order.
-     * This ensures the server receives them in the order the user expects.
-     */
-    function updateOrderIndices() {
-        const cards = document.querySelectorAll('#recipes-container .recipe-card');
-        const total = cards.length;
-
-        cards.forEach((card, index) => {
-            // 1. Update visual # and hidden field
-            const display = card.querySelector('.recipe-display-number');
-            if (display) display.textContent = `#${index + 1}`;
-            const orderInput = card.querySelector('.recipe-order-input');
-            if (orderInput) orderInput.value = index;
-
-            // 2. Handle Button Disabling
-            const upBtn = card.querySelector('.btn-recipe-up');
-            const downBtn = card.querySelector('.btn-recipe-down');
-            if (upBtn) upBtn.disabled = (index === 0);
-            if (downBtn) downBtn.disabled = (index === total - 1);
-        });
+    function adjustRecipe(method, ...args) {
+        const options = {
+            rowSelector: '.recipe-card',
+            inputClass: '.recipe-order-input',
+            displayClass: '.recipe-display-number',
+            upClass: '.btn-recipe-up',
+            downClass: '.btn-recipe-down',
+            emptyMsgId: 'recipes-container-empty'
+        };
+        ConfigEditor[method](...args, 'recipes-container', options);
     }
 
     /**
@@ -443,7 +422,7 @@
     // Run on page load
     document.addEventListener('DOMContentLoaded', () => {
         syncStorageState();
-        updateOrderIndices();
+        adjustRecipe('renumberRows');
 
         document.querySelectorAll('.instant-checkbox').forEach(cb => {
             syncInstantState(cb);

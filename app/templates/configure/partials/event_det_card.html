@@ -18,11 +18,11 @@
         <!-- Move/Delete buttons -->
         <div class="flex-row gap-10">
             <button type="button" class="btn-sm btn-det-up"
-                onclick="moveFactor(this, -1)">↑</button>
+                onclick="adjustDet('moveRow', this, -1)">↑</button>
             <button type="button" class="btn-sm btn-det-down"
-                onclick="moveFactor(this, 1)">↓</button>
+                onclick="adjustDet('moveRow', this, 1)">↓</button>
             <button type="button" class="btn-sm dangerous-button"
-                onclick="this.closest('.factor-card').remove(); renumberLabels('det');">×</button>
+                onclick="this.closest('.factor-card').remove(); adjustDet('renumberRows');">×</button>
         </div>
     </div>
 

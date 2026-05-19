@@ -277,7 +277,10 @@
         list.insertAdjacentHTML('beforeend', html);
         emptyMsg.classList.add('hidden');
 
-        renumberLabels(usage);
+        if (usage === '{{ Participant.DET }}')
+            adjustDet('renumberRows');
+        else
+            adjustEff('renumberRows');
 
         const newCard = list.lastElementChild;
 
@@ -295,37 +298,26 @@
         syncOuterExprState(newCard);
     }
 
-    function renumberLabels(usage) {
-        const cards = document.querySelectorAll(`#${usage}-list .factor-card`);
-        const total = cards.length;
-
-        cards.forEach((card, i) => {
-            card.querySelector('.index-display').textContent = `#${i + 1}`;
-            const orderInput = card.querySelector('.factor-order-input');
-            if (orderInput) orderInput.value = i;
-
-            const upBtn = card.querySelector(`.btn-${usage}-up`);
-            const downBtn = card.querySelector(`.btn-${usage}-down`);
-
-            if (upBtn) upBtn.disabled = (i === 0);
-            if (downBtn) downBtn.disabled = (i === total - 1);
+    function adjustDet(method, ...args) {
+        ConfigEditor[method](...args, 'det-list', {
+            rowSelector: '.factor-card',
+            inputClass: '.factor-order-input',
+            displayClass: '.index-display',
+            upClass: '.btn-det-up',
+            downClass: '.btn-det-down',
+            emptyMsgId: 'det-list-empty'
         });
-
-        const emptyMsg = document.getElementById(`${usage}-list-empty`);
-        if (emptyMsg) emptyMsg.classList.toggle('hidden', total > 0);
     }
 
-    function moveFactor(button, direction) {
-        const card = button.closest('.factor-card');
-        const usage = card.closest('#det-list') ? 'det' : 'eff';
-
-        if (direction === -1 && card.previousElementSibling) {
-            card.parentNode.insertBefore(card, card.previousElementSibling);
-        } else if (direction === 1 && card.nextElementSibling) {
-            card.parentNode.insertBefore(card.nextElementSibling, card);
-        }
-        renumberLabels(usage);
-        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    function adjustEff(method, ...args) {
+        ConfigEditor[method](...args, 'eff-list', {
+            rowSelector: '.factor-card',
+            inputClass: '.factor-order-input',
+            displayClass: '.index-display',
+            upClass: '.btn-eff-up',
+            downClass: '.btn-eff-down',
+            emptyMsgId: 'eff-list-empty'
+        });
     }
 
     function syncOutcomeTypeState() {
@@ -723,8 +715,8 @@
             }
         });
         document.querySelectorAll('.factor-card').forEach(syncCardAttribState);
-        renumberLabels('det');
-        renumberLabels('eff');
+        adjustDet('renumberRows');
+        adjustEff('renumberRows');
         syncOutcomeTypeState();
     });
 </script>

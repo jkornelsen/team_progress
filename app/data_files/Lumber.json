@@ -2,23 +2,9 @@
     "entities": {
         "items": [
             {
-                "id": 12,
-                "name": "Boards",
-                "description": "Cut from logs.",
-                "recipes": [
-                    {
-                        "id": 23,
-                        "sources": [
-                            {"item_id": 7, "q_required": 1.0},
-                            {"item_id": 11, "q_required": 1.0, "preserve": true}
-                        ]
-                    }
-                ]
-            },
-            {
                 "id": 28,
                 "name": "Bridge Framework",
-                "description": "Under construction. Requires lumber.\r\n\r\nWhen finished (i.e. limit reached), [edit bridge site zone](/configure/location/27) to allow passage and change color to {saddlebrown|saddlebrown}.",
+                "description": "Under construction. Requires lumber.\r\n\r\nWhen finished (limit reached), [edit **\"Bridge Site\"** zone](/configure/location/27) to allow passage and clear the color.",
                 "storage_type": "l",
                 "q_limit": 20.0,
                 "recipes": [
@@ -27,6 +13,13 @@
                         "rate_duration": 300,
                         "sources": [
                             {"item_id": 12, "q_required": 50.0}
+                        ],
+                        "attrib_reqs": [
+                            {
+                                "attrib_id": 51,
+                                "value_range": [1.0, 1.0],
+                                "range_inclusive": [true, true]
+                            }
                         ]
                     }
                 ]
@@ -43,7 +36,27 @@
                         "rate_amount": 5.0,
                         "instant": true,
                         "sources": [
-                            {"item_id": 12, "q_required": 4.0}
+                            {"item_id": 12, "q_required": 4.0},
+                            {"item_id": 35, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 55,
+                "name": "Chainsaw",
+                "attribs": [
+                    [4, 2.0],
+                    [5, 20.0]
+                ],
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 56,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 8, "q_required": 40.0},
+                            {"item_id": 35, "q_required": 1.0, "preserve": true}
                         ]
                     }
                 ]
@@ -56,6 +69,13 @@
                 "loc_hosted": true
             },
             {
+                "id": 35,
+                "name": "General Store Clerk",
+                "description": "\"Hello, what can I get you today? If you're after something outside the current selection, we can work out a deal at standard prices.\"\r\n\r\n*To add a new listing, [create the item](/configure), then set **General Store Clerk** and the price as the new item's recipe sources.*",
+                "storage_type": "l",
+                "q_limit": 1.0
+            },
+            {
                 "id": 13,
                 "name": "Honeycomb",
                 "description": "Looks tempting. Smoke may help drive the bees away.",
@@ -63,14 +83,74 @@
                 "q_limit": 1.0
             },
             {
+                "id": 15,
+                "name": "Marked Pine",
+                "description": "Plots are full of trees, but mark only one at a time for harvesting.",
+                "attribs": [
+                    [2, 100.0]
+                ],
+                "storage_type": "l",
+                "q_limit": 1.0
+            },
+            {
+                "id": 14,
+                "name": "Old Axe",
+                "description": "Handle has been reattached many times in the past.",
+                "attribs": [
+                    [4, 2.0],
+                    [5, 5.0]
+                ],
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 36,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 8, "q_required": 10.0},
+                            {"item_id": 35, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 37,
+                "name": "Old Truck — Bill of Sale",
+                "description": "After purchasing this item, set the truck's *Mileage Left* to 20 and *Repair* to 3.",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 38,
+                        "sources": [
+                            {"item_id": 8, "q_required": 100.0},
+                            {"item_id": 35, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 12,
+                "name": "Pine Boards",
+                "description": "Cut from logs.",
+                "recipes": [
+                    {
+                        "id": 23,
+                        "sources": [
+                            {"item_id": 7, "q_required": 1.0},
+                            {"item_id": 11, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
                 "id": 30,
-                "name": "Log Bonus",
+                "name": "Pine Log Bonus",
                 "description": "Set by *Chopping Check* on Major Success.",
                 "storage_type": "u"
             },
             {
                 "id": 7,
-                "name": "Logs",
+                "name": "Pine Logs",
                 "description": "Idle chopping is for when no characters are actively chopping, either because they are doing something else, or while offline.",
                 "q_limit": 8.0,
                 "recipes": [
@@ -123,7 +203,7 @@
             },
             {
                 "id": 31,
-                "name": "Logs — On Truck",
+                "name": "Pine Logs — On Truck",
                 "description": "The truck can carry more logs at a time.",
                 "q_limit": 200.0,
                 "recipes": [
@@ -144,30 +224,56 @@
                 ]
             },
             {
-                "id": 15,
-                "name": "Marked Tree",
-                "description": "Plots are full of trees, but mark only one at a time for harvesting.",
-                "attribs": [
-                    [2, 100.0]
-                ],
-                "storage_type": "l",
-                "q_limit": 1.0
+                "id": 41,
+                "name": "Pine Saplings",
+                "description": "It takes awhile before they are ready to be harvested, but it's better than planting pinecones.",
+                "recipes": [
+                    {
+                        "id": 42,
+                        "sources": [
+                            {"item_id": 8, "q_required": 2.0},
+                            {"item_id": 35, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
             },
             {
-                "id": 14,
-                "name": "Old Axe",
-                "description": "Handle has been reattached many times in the past.",
-                "attribs": [
-                    [4, 2.0],
-                    [5, 5.0]
-                ],
-                "q_limit": 1.0
+                "id": 43,
+                "name": "Pinecones",
+                "description": "More difficult to grow than saplings.",
+                "q_limit": 20.0,
+                "recipes": [
+                    {
+                        "id": 46,
+                        "rate_duration": 15,
+                        "sources": [
+                            {"item_id": 10, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
             },
             {
                 "id": 10,
-                "name": "Plot 1 Trees",
+                "name": "Plot 1 Pine Trees",
                 "description": "How many trees are available on a plot.",
-                "storage_type": "u"
+                "storage_type": "u",
+                "q_limit": 100.0,
+                "recipes": [
+                    {
+                        "id": 44,
+                        "rate_duration": 180,
+                        "sources": [
+                            {"item_id": 41, "q_required": 1.0}
+                        ]
+                    },
+                    {
+                        "id": 45,
+                        "rate_duration": 600,
+                        "sources": [
+                            {"item_id": 43, "q_required": 1.0}
+                        ]
+                    }
+                ]
             },
             {
                 "id": 9,
@@ -177,6 +283,32 @@
             }
         ],
         "locations": [
+            {
+                "id": 59,
+                "name": "California",
+                "description": "Now that the railway has access to the gold mines, your company grows like wildfire.",
+                "masked": true
+            },
+            {
+                "id": 34,
+                "name": "Hardware Store",
+                "description": "Talk to the clerk to exchange goods.",
+                "dimensions": [5, 4],
+                "items": [
+                    {
+                        "item_id": 35,
+                        "quantity": 1.0,
+                        "position": [2, 3]
+                    }
+                ],
+                "zones": [
+                    {
+                        "coords": [1, 1, 2, 4],
+                        "label": "Store Front",
+                        "color": "orange"
+                    }
+                ]
+            },
             {
                 "id": 16,
                 "name": "Lumber Yard",
@@ -192,57 +324,133 @@
             {
                 "id": 27,
                 "name": "River",
-                "description": "A gravel road goes to to the water's edge, but there is no way to cross without swimming. A partially constructed bridge sits at the narrowest point.",
-                "dimensions": [5, 9],
+                "description": "There is no way to cross without swimming. A partially constructed railway bridge sits at the narrowest point.",
+                "dimensions": [8, 7],
                 "items": [
                     {
                         "item_id": 28,
                         "quantity": 0.0,
-                        "position": [4, 4]
+                        "position": [4, 3]
                     }
                 ],
                 "destinations": [
                     {
-                        "loc2_id": 18,
-                        "door1": [3, 9],
-                        "door2": [18, 1]
+                        "loc2_id": 58,
+                        "door1": [6, 7],
+                        "door2": [5, 1]
+                    },
+                    {
+                        "loc2_id": 59,
+                        "door1": [1, 3]
                     }
                 ],
                 "zones": [
                     {
-                        "coords": [1, 2, 3, 3],
-                        "label": "River",
-                        "color": "#55a"
+                        "coords": [1, 3, 8, 3],
+                        "label": "Railroad Tracks",
+                        "color": "saddlebrown",
+                        "prevents_travel": false
                     },
                     {
-                        "coords": [5, 3, 5, 4],
-                        "label": "River",
-                        "color": "#55a"
-                    },
-                    {
-                        "coords": [4, 5, 4, 9],
+                        "coords": [6, 5, 6, 7],
                         "label": "Gravel Road",
                         "color": "gray",
                         "prevents_travel": false
                     },
                     {
-                        "coords": [3, 4, 3, 4],
+                        "coords": [3, 2, 3, 2],
                         "label": "River",
                         "color": "#55a"
                     },
                     {
-                        "coords": [4, 3, 4, 4],
+                        "coords": [3, 4, 4, 6],
+                        "label": "River",
+                        "color": "#55a"
+                    },
+                    {
+                        "coords": [4, 1, 5, 2],
+                        "label": "River",
+                        "color": "#55a"
+                    },
+                    {
+                        "coords": [2, 5, 3, 7],
+                        "label": "River",
+                        "color": "#55a"
+                    },
+                    {
+                        "coords": [1, 7, 1, 7],
+                        "label": "River",
+                        "color": "#55a"
+                    },
+                    {
+                        "coords": [2, 7, 2, 7],
+                        "label": "River",
+                        "color": "blue"
+                    },
+                    {
+                        "coords": [3, 3, 4, 3],
                         "label": "Bridge Site",
                         "color": "#339"
                     }
                 ]
             },
             {
+                "id": 58,
+                "name": "Road",
+                "dimensions": [6, 5],
+                "destinations": [
+                    {
+                        "loc2_id": 18,
+                        "door1": [4, 5],
+                        "door2": [18, 1]
+                    }
+                ],
+                "zones": [
+                    {
+                        "coords": [1, 1, 2, 3],
+                        "label": "River",
+                        "color": "#55a"
+                    },
+                    {
+                        "coords": [3, 1, 3, 2],
+                        "label": "River",
+                        "color": "#55a"
+                    },
+                    {
+                        "coords": [2, 1, 2, 1],
+                        "label": "River",
+                        "color": "blue"
+                    },
+                    {
+                        "coords": [1, 1, 1, 2],
+                        "label": "River",
+                        "color": "blue"
+                    },
+                    {
+                        "coords": [4, 4, 4, 5],
+                        "label": "Gravel Road",
+                        "color": "gray",
+                        "prevents_travel": false
+                    },
+                    {
+                        "coords": [5, 1, 5, 4],
+                        "label": "Gravel Road",
+                        "color": "gray",
+                        "prevents_travel": false
+                    }
+                ]
+            },
+            {
                 "id": 18,
                 "name": "Starting Plot",
-                "description": "This plot of land is your family inheritance and the basis for setting up the company. There is a pond in the southeast.",
+                "description": "This plot of land is your family inheritance and the basis for setting up the company. Pine trees have been planted.",
                 "dimensions": [20, 20],
                 "items": [
+                    {
+                        "item_id": 9,
+                        "quantity": 1.0,
+                        "position": [14, 5]
+                    },
                     {
                         "item_id": 7,
                         "quantity": 4.0,
@@ -252,11 +460,6 @@
                         "item_id": 15,
                         "quantity": 1.0,
                         "position": [15, 4]
-                    },
-                    {
-                        "item_id": 9,
-                        "quantity": 1.0,
-                        "position": [14, 5]
                     }
                 ],
                 "item_refs": [10],
@@ -268,8 +471,13 @@
                     },
                     {
                         "loc2_id": 17,
-                        "door1": [4, 9],
+                        "door1": [12, 9],
                         "door2": [3, 20]
+                    },
+                    {
+                        "loc2_id": 34,
+                        "door1": [1, 11],
+                        "door2": [5, 2]
                     }
                 ],
                 "zones": [
@@ -301,14 +509,41 @@
         ],
         "characters": [
             {
+                "id": 49,
+                "name": "Bridge Engineer",
+                "attribs": [
+                    [51, 1.0],
+                    [53, 1000.0]
+                ]
+            },
+            {
+                "id": 50,
+                "name": "HR Manager",
+                "attribs": [
+                    [53, 50.0],
+                    [54, 1.0]
+                ],
+                "abilities": [52]
+            },
+            {
+                "id": 48,
+                "name": "Lumberjack",
+                "attribs": [
+                    [3, 2.0],
+                    [4, 2.0],
+                    [53, 200.0]
+                ]
+            },
+            {
                 "id": 20,
                 "name": "Owner",
                 "description": "Player character who initially started the company.",
                 "attribs": [
                     [3, 1.1],
-                    [4, 1.1]
+                    [4, 1.1],
+                    [54, 2.0]
                 ],
-                "abilities": [21, 23, 25],
+                "abilities": [21, 23, 25, 52],
                 "toplevel": true,
                 "location_id": 18,
                 "position": [4, 3],
@@ -318,12 +553,20 @@
                 ]
             },
             {
+                "id": 47,
+                "name": "Planter",
+                "attribs": [
+                    [53, 100.0]
+                ]
+            },
+            {
                 "id": 19,
                 "name": "Truck",
-                "description": "A run-down workhorse with a little left to give. \r\n\r\nCarries logs. Someone must drive (move/travel with) the truck.",
+                "description": "A run-down workhorse with a little left to give. If it breaks down, you may have to buy another vehicle.\r\n\r\nCarries logs. Someone must drive (move/travel with) the truck.",
                 "attribs": [
-                    [6, 2.0],
-                    [33, 1.0]
+                    [6, 20.0],
+                    [33, 1.0],
+                    [40, 3.0]
                 ],
                 "abilities": [24],
                 "toplevel": true,
@@ -346,6 +589,13 @@
                 "name": "Base Power",
                 "description": "Values are negative, to change a tree's HP. Similar to *Strength* but additive."
             },
+            {"id": 51, "name": "Can Build Bridge", "is_binary": true},
+            {"id": 57, "name": "Hired", "is_binary": true},
+            {
+                "id": 54,
+                "name": "Hiring Capability",
+                "description": "1 for standard rate, while higher numbers make it cost more to hire people."
+            },
             {
                 "id": 2,
                 "name": "HP",
@@ -354,8 +604,18 @@
             {"id": 33, "name": "Is Truck", "is_binary": true},
             {
                 "id": 6,
-                "name": "Repair",
+                "name": "Mileage Left",
                 "description": "What shape a vehicle is in."
+            },
+            {
+                "id": 53,
+                "name": "Price to Hire",
+                "description": "One-time fee (no upkeep required in this scenario)"
+            },
+            {
+                "id": 40,
+                "name": "Repair",
+                "description": "What shape a vehicle is in. Higher numbers mean more reliable."
             },
             {
                 "id": 3,
@@ -405,9 +665,37 @@
                 "selection_strings": "Fewer resources gained\r\nResources lost\r\nNo progress\r\nTool damaged\r\nTool broken\r\nTool destroyed\r\nMinor injury\r\nSevere injury"
             },
             {
+                "id": 52,
+                "name": "Hire",
+                "description": "You must have the required funds in order to hire someone (do not go into debt by hiring).",
+                "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "infield": {"role": "target char", "attrib_id": 53}
+                    },
+                    {
+                        "infield": {"attrib_id": 54},
+                        "op_application": "*"
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 8},
+                        "op_application": "-"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 57},
+                        "op_application": ":=",
+                        "op_transform": "c"
+                    }
+                ]
+            },
+            {
                 "id": 21,
-                "name": "Mark a Tree",
-                "description": "Choose the grid coordinates of the next tree to be actively harvested on a plot.\r\n\r\n**{saddlebrown|When Marked Tree quantity is 0}**:\r\n- Sets the marked tree position to the new coordinates at *Starting Plot*.\r\n- Produces a *Marked Tree* from *Plot 1 Trees* so quantity goes from 0 to 1.\r\n- Sets HP to 100.\r\n\r\nNow the tree is ready for *Swing to Chop*.",
+                "name": "Mark a Pine",
+                "description": "Choose the grid coordinates of the next tree to be actively harvested on a plot.\r\n\r\n**{saddlebrown|When Marked Pine quantity is 0}**:\r\n- Sets the marked tree position to the new coordinates at *Starting Plot*.\r\n- Produces a *Marked Pine* from *Plot 1 Trees* so quantity goes from 0 to 1.\r\n- Sets HP to 100.\r\n\r\nNow the tree is ready for *Swing to Chop*.",
                 "outcome_type": "coordinates",
                 "determinants": [
                     {
@@ -429,7 +717,12 @@
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "blueprint", "field_mode": "place", "item_id": 15},
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "place",
+                            "item_id": 15,
+                            "loc_id": 0
+                        },
                         "op_application": ":="
                     },
                     {
@@ -455,12 +748,30 @@
             },
             {
                 "id": 24,
-                "name": "Start engine",
-                "description": "Not always a guarantee with old vehicles.\r\n\r\nUse Easy difficulty under normal circumstances, since it's somewhat routine.",
+                "name": "Start Engine",
+                "description": "Start the engine once per trip — leave it running while you work at the current location.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
-                        "infield": {"attrib_id": 6}
+                        "infield": {"attrib_id": 40}
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 6},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "outcome_success": "failure_any",
+                        "auto_apply": true
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 40},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "outcome_success": "failure_major",
+                        "auto_apply": true
                     }
                 ]
             },
@@ -500,15 +811,14 @@
     },
     "general data": {
         "piles": [
-            {"item_id": 8, "quantity": 0.0},
-            {"item_id": 10, "quantity": 98.0},
+            {"item_id": 10, "quantity": 49.0},
             {"item_id": 12, "quantity": 0.0}
         ],
         "progress": []
     },
     "overall settings": {
         "title": "Lumber",
-        "description": "Run an outfit to {saddlebrown|gather resources} either actively or idly. Could be expanded for fishing and mining.",
+        "description": "Run an outfit to {saddlebrown|harvest resources} with a vehicle for transport.",
         "number_format": "en_US",
         "slots": ["Held"],
         "win_reqs": [

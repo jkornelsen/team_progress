@@ -42,6 +42,70 @@ const ConfigEditor = {
             if (emptyMsg) emptyMsg.classList.remove('hidden');
         }
     },
+
+    /**
+     * Moves a row up or down and re-sequences the entire list.
+     * @param {HTMLElement} btn - The button clicked.
+     * @param {number} direction - -1 for Up, 1 for Down.
+     * @param {string} containerId - ID of the list container.
+     * @param {object} options - { rowSelector, inputClass, displayClass, upClass, downClass }
+     */
+    moveRow: function(btn, direction, containerId, options = {}) {
+        const rowSelector = options.rowSelector || '.col-row';
+        const row = btn.closest(rowSelector);
+        if (!row) return;
+
+        if (direction === -1 && row.previousElementSibling &&
+                !row.previousElementSibling.classList.contains('header-style')) {
+            row.parentNode.insertBefore(row, row.previousElementSibling);
+        } else if (direction === 1 && row.nextElementSibling) {
+            row.parentNode.insertBefore(row.nextElementSibling, row);
+        }
+
+        this.renumberRows(containerId, options);
+        
+        // Keep the moved item in view
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    },
+
+    /**
+     * Resequences order inputs and UI labels for a list.
+     */
+    renumberRows: function(containerId, options = {}) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        const rowSelector = options.rowSelector || '.col-row:not(.header-style)';
+        const rows = container.querySelectorAll(rowSelector);
+
+        rows.forEach((row, i) => {
+            // 1. Update hidden input
+            if (options.inputClass) {
+                const input = row.querySelector(options.inputClass);
+                if (input) input.value = i;
+            }
+            // 2. Update # label
+            if (options.displayClass) {
+                const display = row.querySelector(options.displayClass);
+                if (display) display.textContent = `#${i + 1}`;
+            }
+            // 3. Boundary buttons
+            if (options.upClass) {
+                const btn = row.querySelector(options.upClass);
+                if (btn) btn.disabled = (i === 0);
+            }
+            if (options.downClass) {
+                const btn = row.querySelector(options.downClass);
+                if (btn) btn.disabled = (i === rows.length - 1);
+            }
+        });
+
+        // 4. Handle "No items" message toggle
+        if (options.emptyMsgId) {
+            const emptyMsg = document.getElementById(options.emptyMsgId);
+            if (emptyMsg) emptyMsg.classList.toggle('hidden', rows.length > 0);
+        }
+    },
     
     /**
      * Finds and triggers smart inputs (Binary/Enum/Numeric syncers).
