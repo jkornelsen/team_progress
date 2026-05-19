@@ -24,6 +24,35 @@
 </script>
 <script src="{{ url_for('static', filename='js/configuration.js') }}"></script>
 
+{% macro limit_row(index, limit_obj=None) %}
+    <div class="col-row limit-row">
+        <select name="limits_for[{{ index }}][owner_id]">
+            <option value="" disabled {{ 'selected'
+                if not limit_obj }}>(Select Owner)</option>
+            <optgroup label="Characters">
+                {% for c in all_chars %}
+                    <option value="{{ c.id }}" {{ 'selected'
+                        if limit_obj and limit_obj.owner_id == c.id }}>{{ c.name }}</option>
+                {% endfor %}
+            </optgroup>
+            <optgroup label="Locations">
+                {% for l in all_locs %}
+                    <option value="{{ l.id }}" {{ 'selected'
+                        if limit_obj and limit_obj.owner_id == l.id }}>{{ l.name }}</option>
+                {% endfor %}
+            </optgroup>
+        </select>
+        <input type="number" name="limits_for[{{ index }}][q_limit]" 
+               value="{{ limit_obj.q_limit if limit_obj else 0 }}" step="any">
+        <button type="button" class="btn-sm dangerous-button" 
+                onclick="ConfigEditor.removeRow(this, 'limit-list')">×</button>
+    </div>
+{% endmacro %}
+
+<template id="limit-template">
+    {{ limit_row('__INDEX__', None) }}
+</template>
+
 <div class="configure-item">
     <h1>Item Setup</h1>
     <p class="info">
@@ -96,23 +125,48 @@
                             {{ 'checked' if item.loc_hosted }}> 
                         Local Automation Only 🏭
                     </label><br>
+                
+                    <div id="universal-qty-box" class="form-group" style="margin-top: 20px;">
+                        <label>
+                            Quantity:
+                            <input type="number" id="quantity-input" name="quantity" value="{{ initial_qty or 0 }}" step="any" style="max-width: 20ch;">
+                        </label>
+                    </div>
                 </div>
             </div>
 
             <div class="column-container">
-                <div class="form-group">
-                    <label>
-                        Limit per Pile:
-                        <input type="number" id="q_limit" name="q_limit" value="{{ item.q_limit }}" step="any" placeholder="0 for unlimited" style="max-width: 20ch;">
-                    </label>
-                </div>
-                
-                <div id="universal-qty-box" class="form-group">
-                    <label>
-                        Quantity:
-                        <input type="number" id="quantity-input" name="quantity" value="{{ initial_qty or 0 }}" step="any" style="max-width: 20ch;">
-                    </label>
-                </div>
+                <fieldset class="group-box">
+                    <legend>Limit per Pile</legend>
+                    <style>
+                        .limit-row { --grid-cols: 6fr 4fr 1fr; max-width: 400px; }
+                    </style>
+
+                    <div class="col-list">
+                        <div class="col-row limit-row">
+                            <div class="label-like" style="padding-left: 10px;">(Default)</div>
+                            <input type="number" name="q_limit"
+                                   value="{{ item.q_limit }}" step="any"
+                                   placeholder="0 for unlimited"
+                                   style="max-width: 20ch;">
+                            <span></span> <!-- Empty span for grid alignment -->
+                        </div>
+
+                        <!-- Dynamic Specific Limits -->
+                        <div id="limit-list">
+                            {% for limit_for in item.limits_for %}
+                                {{ limit_row(loop.index0, limit_for) }}
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="">
+                        <button type="button" id="add-limit-btn" class="btn-sm" 
+                                onclick="ConfigEditor.addRow('limit-list', 'limit-template')">
+                            + Add Specific Limit
+                        </button>
+                    </div>
+                </fieldset>
             </div>
         </section>
 
@@ -294,30 +348,30 @@
         const topLevelCheckbox = document.getElementById('toplevel');
         const locHostedCheckbox = document.getElementById('loc-hosted');
         const locHostedLabel = document.getElementById('loc-hosted-label');
+        const limitList = document.getElementById('limit-list');
+        const addLimitBtn = document.getElementById('add-limit-btn');
         
         const isUniversal = (selectedType === '{{ StorageType.UNIVERSAL }}');
         const isLocal = (selectedType === '{{ StorageType.LOCAL }}');
 
-        if (isUniversal) {
-            // Enable and Show
-            quantityInput.disabled = false;
-            topLevelCheckbox.disabled = false;
-        } else {
-            // Disable and Hide/Reset
-            quantityInput.disabled = true;
+        quantityInput.disabled = !isUniversal;
+        topLevelCheckbox.disabled = !isUniversal;
+        if (!isUniversal) {
             quantityInput.value = 0;
-            topLevelCheckbox.disabled = true;
             topLevelCheckbox.checked = false;
         }
-        if (isLocal) {
-            // Enable and Show
-            locHostedCheckbox.disabled = false;
-            locHostedLabel.classList.remove('disabled');
-        } else {
-            // Disable and Hide/Reset
-            locHostedCheckbox.disabled = true;
+
+        limitList.classList.toggle('hidden', isUniversal);
+        addLimitBtn.classList.toggle('hidden', isUniversal);
+        addLimitBtn.disabled = isUniversal;
+        limitList.querySelectorAll('input, select, button').forEach(el => {
+            el.disabled = isUniversal;
+        });
+
+        locHostedCheckbox.disabled = !isLocal;
+        locHostedLabel.classList.toggle('disabled', !isLocal);
+        if (!isLocal) {
             locHostedCheckbox.checked = false;
-            locHostedLabel.classList.add('disabled');
         }
     }
 

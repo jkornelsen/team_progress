@@ -4,24 +4,18 @@
 
 ---- functional, tightening, quality of life ----
 
-producing "logs on truck" left logs qty -4 in truck
-    need to adjust quantity of multiple source piles rather than sum
-
-press t to travel when no grid
-
 Value: -4.500000000000018
     truncate floating point limits with epsilon or whatever it was
 
-show updated item quantities in locations like overview and sources do
-
 prompt before overwriting another character action in progress
 
-win condition quantity min and max, like attribs for recipes
-or "at least" / "at most" toggle
-Fission Plant: no more than a certain amount of pollution
+win condition op_compare selectbox: ">=", "=" (e.g. enum), "<"
+    Fission Plant: no more than a certain amount of pollution
 
 sessions should be easier to connect to
-    maybe remember game token on client side
+    remember game token on client side
+session settings
+    allow arrow key navigation
 
 don't show duplicate destinations in play location
     same door positions (null in the example)
@@ -29,7 +23,35 @@ don't show duplicate destinations in play location
 
 ---- scenario ----
 
-tethered one epic
+lumber
+    oak also on main lot -- maybe just "oak trees" rather than "plot 1 oak"
+    cedar on additional smaller lot -- buy with property deed
+    buildings (mux location)
+        offices -- sales over time at better prices
+            not worth it for just owner unless possibly for heavy idling
+            sales manager
+        racks to store large quantities of boards while they sell
+        tool shed to minimize rust
+            chance of rust whenever you pick up a tool
+            convenient to not carry around old axe
+    could make sales manager a universal item for idling
+        how to get access to rack storage if not
+        or put at a desktop computer local item
+    HR manager might be better as universal item
+        because we don't want to track employee happiness, hours etc
+        maybe don't need then -- hiring boost alone is not that interesting
+        makes sense that owner could hire
+    hire employees at town hall as well as handling any legal paperwork
+    getting boards should be practical to idle eventually,
+        although manual chopping is still always going to be meaningful
+    idle only certain steps at first, starting with chopping (splitter)
+    idle a certain number of batches that require fuel
+        can either burn wood or purchased gasoline
+    silver axe is highly accurate although not as powerful as chainsaw
+        steel axe is the standard tool
+    add status attrib (flag) on natural 1 that must be cleared by event
+
+tethered one
     when lyria stuck in snow cave
         pike village entrance req to not be trapped in cave
     somewhat sandboxy rather than completely linear,
@@ -41,6 +63,7 @@ infestation
     0 energy means another bot has to come and get you
         at least for the highway
         perhaps increases repair cost
+    require level 2 or 3 to enter highway
     combat events at different levels
         electric shock -- stun and damage
         chainsaw -- won't work if repairs needed is too high
@@ -91,7 +114,6 @@ saving grandfather clock resets hour, an enumerated attrib, to 12am
 can doors be owned deterministically so they don't move around in diffs
 
 refactor play_item
-some logic_ modules seem less useful
 consider manual refactoring choices or a list of summarized ai suggestions
 
 ---- doesn't seem important currently ----

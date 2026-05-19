@@ -1,8 +1,8 @@
 import logging
 from flask import g
 from app.models import (
-    db, Pile, Entity, Item, Character, Location, StorageType, GENERAL_ID,
-    Progress)
+    db, StorageType, GENERAL_ID, Entity, Item, Character, Location,
+    Pile, ItemLimit, Progress)
 from app.database import safe_remove
 from .logic_discovery import check_item_unmasking
 
@@ -78,54 +78,77 @@ def set_quantity(item_id, owner_id, new_value, position=None, slot=None):
         
     return pile.quantity
 
+def get_quantity_limit(item_id, owner_id):
+    """
+    Returns the specific limit for an item/owner pair if it exists,
+    otherwise returns the item's default q_limit.
+    """
+    game_token = g.game_token
+    
+    # Check for a specific override
+    specific_limit = ItemLimit.query.filter_by(
+        game_token=game_token, 
+        item_id=item_id, 
+        owner_id=owner_id
+    ).first()
+    if specific_limit:
+        return specific_limit.q_limit
+        
+    # Fallback to Item default
+    item = Item.query.get((game_token, item_id))
+    return item.q_limit if item else 0.0
+
 def adjust_quantity(item_id, owner_id, delta, position=None, slot=None):
     """
     Increases or decreases an item quantity for a specific owner.
     - delta: positive to add, negative to subtract
-    - Returns: unplaced overflow
+    - Returns: Remainder that could not be processed (overflow or unpaid debt).
     """
     game_token = g.game_token
     pile = get_or_create_pile(item_id, owner_id, position, slot)
     item = Item.query.get((g.game_token, item_id))
-    overflow = 0.0
+    remainder = 0.0
 
     logger.debug(
         f"adjust_quantity() Item:{item.name} | Owner:{owner_id}"
         f" | Delta:{delta} | Current:{pile.quantity}")
     
-    # Check Item limits if increasing
+    # Case A: Adding items
     if delta > 0:
-        if item.q_limit > 0:
-            space_left = max(0.0, item.q_limit - pile.quantity)
+        limit = get_quantity_limit(item_id, owner_id)
+        if limit > 0:
+            space_left = max(0.0, limit - pile.quantity)
             if delta > space_left:
-                overflow = delta - space_left
-                amount_to_add = space_left
-                delta = amount_to_add
+                # This much won't fit
+                remainder = delta - space_left
+                delta = space_left
+        pile.quantity += delta
 
-    old_qty = pile.quantity
-    pile.quantity += delta
-    
-    if old_qty <= 0 and pile.quantity > 0:
-        # gained an item possibly for the first time
+    # Case B: Removing items
+    elif delta < 0:
+        amount_to_remove = abs(delta)
+        if pile.quantity >= 0 and amount_to_remove > pile.quantity:
+            # Debt we couldn't pay
+            remainder = -(amount_to_remove - pile.quantity)
+            pile.quantity = 0
+        else:
+            pile.quantity -= amount_to_remove
+
+    # Gained an item for the first time
+    if delta > 0 and (pile.quantity - delta) <= 0:
         check_item_unmasking(game_token, item_id, was_gained=True)
     
     # Cleanup empty rows
-    if pile.quantity == 0:
-        logger.info(
-            f"Removing empty pile for Item:{item.name} Owner:{owner_id}")
+    if pile.quantity <= 0:
         safe_remove(pile)
-        return 0.0
         
-    return overflow
+    return remainder
 
 def transfer_item(item_id, from_owner_id, to_owner_id, quantity, 
                   from_pos=None, to_pos=None, to_slot=None):
-    """
-    Moves quantity from one Entity to another.
-    Handles 'Drop', 'Pick Up', 'Deposit', and 'Withdraw'.
-    """
+    """Moves quantity from one Entity to another."""
     if quantity <= 0:
-        return False
+        return False, ''
 
     # 1. Check if source has enough
     source_pile = Pile.query.filter_by(
@@ -135,17 +158,20 @@ def transfer_item(item_id, from_owner_id, to_owner_id, quantity,
         position=from_pos
     ).first()
 
-    if not source_pile or source_pile.quantity < quantity:
-        logger.error(
-            f"Transfer failed: Owner {from_owner_id} lacks"
-            f" {quantity} of item {item_id}")
-        return False
-
-    # 2. Perform the logic atomicly
+    # 2. Remove requested amount from source
     adjust_quantity(item_id, from_owner_id, -quantity, position=from_pos)
-    adjust_quantity(item_id, to_owner_id, quantity, position=to_pos, slot=to_slot)
 
-    return True
+    # 3. Add to target and capture how much didn't fit
+    overflow = adjust_quantity(
+        item_id, to_owner_id, quantity, position=to_pos, slot=to_slot)
+
+    # 4. If target full/partially full, put remainder back where it came from
+    if overflow > 0:
+        adjust_quantity(item_id, from_owner_id, overflow, position=from_pos)
+        actual_moved = quantity - overflow
+        return True, f"Inventory full: only took {actual_moved:g}."
+
+    return True, ''
 
 # ------------------------------------------------------------------------
 # Convenience Accessors

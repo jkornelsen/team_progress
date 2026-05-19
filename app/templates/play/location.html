@@ -267,6 +267,25 @@
                     </div>
                     {% endif %}
                 </section>
+            {% else %}
+                <!-- Minimal controls for non-grid locations -->
+                {% if characters_here %}
+                <section class="outer-border">
+                    <div class="control-meta">
+                        <label class="label-like">Active Character:</label>
+                        <select id="active-char-select" class="mini-select" onchange="syncPartyState(); this.blur();">
+                            {% for char in characters_here %}
+                                <option value="{{ char.id }}" {{ 'selected' if char.id == active_char_id }}>
+                                    {{ char.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="label-like spacious-top">
+                            view [c]haracter, arrange [t]ravel
+                        </div>
+                    </div>
+                </section>
+                {% endif %}
             {% endif %}
         </div>
     </div>
@@ -315,18 +334,29 @@
     ];
 
     const exits = [
-        {% for e in grid_exits %}
-        { 
-            name: "{{ e.name }}", 
-            x: {{ e.x }}, 
-            y: {{ e.y }}, 
-            target_id: {{ e.target_id }},
-            masked: {{ e.masked | tojson }},
-            icon: "🚪", 
-            link: {% if e.masked %}null{% else %}"{{
-                url_for('play.play_location', id=e.target_id) }}"{% endif %}
-        },
-        {% endfor %}
+        {% if location.has_grid %}
+            {% for e in grid_exits %}
+            { 
+                name: "{{ e.name }}", 
+                x: {{ e.x }}, 
+                y: {{ e.y }}, 
+                target_id: {{ e.target_id }},
+                masked: {{ e.masked | tojson }},
+                icon: "🚪", 
+                link: {% if e.masked %}null{% else %}"{{
+                    url_for('play.play_location', id=e.target_id) }}"{% endif %}
+            },
+            {% endfor %}
+        {% else %}
+            {% for route in destinations %}
+                {% set target = route.other_loc(location.id) %}
+                { 
+                    name: "{{ target.name }}", 
+                    target_id: {{ target.id }},
+                    masked: {{ target.masked | tojson }}
+                },
+            {% endfor %}
+        {% endif %}
     ];
 
     const zones = [
@@ -394,17 +424,13 @@
         const travelPrompt = document.getElementById('travel-prompt');
         if (!travelPrompt) return;
 
-        const nearbyExit = getActiveExit();
-
-        if (nearbyExit) {
+        {% if location.has_grid %}
+            const nearbyExit = getActiveExit();
+            travelPrompt.style.opacity = nearbyExit ? "1" : "0.5";
+            travelPrompt.style.color = nearbyExit ? "inherit" : "gray";
+        {% else %}
             travelPrompt.style.opacity = "1";
-            travelPrompt.style.color = "inherit"; // Or your standard highlight color
-            travelPrompt.style.textDecoration = "none";
-        } else {
-            travelPrompt.style.opacity = "0.5";
-            travelPrompt.style.color = "gray";
-            // Optional: travelPrompt.style.textDecoration = "line-through";
-        }
+        {% endif %}
     }
 
     function syncPartyState() {
@@ -565,11 +591,10 @@
         if (moveKeys[key]) {
             event.preventDefault();
             const [dx, dy] = moveKeys[key];
-            if (typeof move === "function") {
-                move(dx, dy);
-            }
+            move(dx, dy);
             return; // Exit so it doesn't check linkForKey
         }
+        {% endif %}
 
         // 2. Active character screen
         const active = getActiveChar();
@@ -581,13 +606,21 @@
             }
             if (key === 'c') {
                 window.location.href = url.toString();
+                return;
             } 
             else if (key === 't') {
+                {% if location.has_grid %}
                 const exitByPos = getActiveExit();
                 if (exitByPos) {
                     url.searchParams.set('auto_select_exit', exitByPos.target_id);
-                    window.location.href = url.toString();
                 }
+                {% else %}
+                if (exits && exits.length >= 1) {
+                    url.searchParams.set('auto_select_exit', exits[0].target_id);
+                }
+                {% endif %}
+                window.location.href = url.toString();
+                return;
             }
             else if (key === 'w') {
                 const chk = document.getElementById('move-with-party-chk');
@@ -595,10 +628,10 @@
                     chk.checked = !chk.checked;
                     chk.dispatchEvent(new Event('change'));
                     event.preventDefault();
+                    return;
                 }
             }
         }
-        {% endif %}
 
         // 3. Handle Global Hotkeys
         const target = window.linkForKey[key];

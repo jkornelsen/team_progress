@@ -271,7 +271,7 @@ def drop_item(id):
     char = Character.query.get((g.game_token, id))
     
     # Transfer from Char to Location at current Char position
-    success = transfer_item(
+    success, msg = transfer_item(
         item_id, from_owner_id=id, to_owner_id=char.location_id,
         quantity=qty, to_pos=char.position)
     
@@ -279,7 +279,7 @@ def drop_item(id):
     if success:
         db.session.commit()
         add_message(f"{char.name} dropped {qty:g} {item.name}")
-        return '', HTTPStatus.NO_CONTENT
+        return jsonify({"message": msg}), HTTPStatus.OK
     return jsonify(
         {"message": f"Could not drop {item.name}."}
     ), HTTPStatus.BAD_REQUEST
@@ -302,7 +302,7 @@ def pickup_item(id):
             }), HTTPStatus.BAD_REQUEST
 
     # Transfer from Location to Char
-    success = transfer_item(
+    success, msg = transfer_item(
         item_id, from_owner_id=char.location_id, to_owner_id=id,
         quantity=qty, from_pos=pos
     )
@@ -311,7 +311,7 @@ def pickup_item(id):
     if success:
         db.session.commit()
         add_message(f"{char.name} picked up {qty:g} {item.name}")
-        return '', HTTPStatus.NO_CONTENT
+        return jsonify({"message": msg}), HTTPStatus.OK
 
     return jsonify(
         {"message": "{char.name} could not pick up {item.name}."}
@@ -336,7 +336,7 @@ def give_item(id):
             }), HTTPStatus.BAD_REQUEST
 
     # Transfer from Char to Target Char
-    success = transfer_item(
+    success, msg = transfer_item(
         item_id, from_owner_id=id, to_owner_id=target_char_id,
         quantity=qty
     )
@@ -345,7 +345,7 @@ def give_item(id):
     if success:
         db.session.commit()
         add_message(f"{char.name} gave {qty:g} {item.name} to {target_char.name}")
-        return '', HTTPStatus.NO_CONTENT
+        return jsonify({"message": msg}), HTTPStatus.OK
     return jsonify(
         {"message": "Could not transfer {item.name} to {target_char.name}."}
     ), HTTPStatus.BAD_REQUEST
@@ -555,8 +555,8 @@ def play_item(id):
                 url_params['char_id'] = ctx.char_id
             elif ctx.addl_loc_id and res['anticipated_owner_id'] == GENERAL_ID:
                 url_params['loc_id'] = ctx.loc_id
-            if res['representative_pile'] and res['representative_pile'].position:
-                url_params['pos[]'] = res['representative_pile'].position
+            if res['best_pile'] and res['best_pile'].position:
+                url_params['pos[]'] = res['best_pile'].position
 
             sources_ui_data.append({
                 'ingredient': res['item'],

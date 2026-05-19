@@ -153,6 +153,9 @@
                 "name": "Pine Logs",
                 "description": "Idle chopping is for when no characters are actively chopping, either because they are doing something else, or while offline.",
                 "q_limit": 8.0,
+                "limits_for": [
+                    {"owner_id": 19, "q_limit": 100.0}
+                ],
                 "recipes": [
                     {
                         "id": 8,
@@ -183,42 +186,6 @@
                         "rate_duration": 1200,
                         "sources": [
                             {"item_id": 10, "q_required": 1.0}
-                        ]
-                    },
-                    {
-                        "id": 34,
-                        "instant": true,
-                        "sources": [
-                            {"item_id": 31, "q_required": 1.0}
-                        ],
-                        "attrib_reqs": [
-                            {
-                                "attrib_id": 33,
-                                "value_range": [1.0, 1.0],
-                                "range_inclusive": [true, true]
-                            }
-                        ]
-                    }
-                ]
-            },
-            {
-                "id": 31,
-                "name": "Pine Logs — On Truck",
-                "description": "The truck can carry more logs at a time.",
-                "q_limit": 200.0,
-                "recipes": [
-                    {
-                        "id": 32,
-                        "instant": true,
-                        "sources": [
-                            {"item_id": 7, "q_required": 1.0}
-                        ],
-                        "attrib_reqs": [
-                            {
-                                "attrib_id": 33,
-                                "value_range": [1.0, 1.0],
-                                "range_inclusive": [true, true]
-                            }
                         ]
                     }
                 ]
@@ -565,7 +532,6 @@
                 "description": "A run-down workhorse with a little left to give. If it breaks down, you may have to buy another vehicle.\r\n\r\nCarries logs. Someone must drive (move/travel with) the truck.",
                 "attribs": [
                     [6, 20.0],
-                    [33, 1.0],
                     [40, 3.0]
                 ],
                 "abilities": [24],
@@ -601,7 +567,6 @@
                 "name": "HP",
                 "description": "How much chopping still needs to be done to finish chopping down the tree. Once HP is 0, the tree can be cut into logs."
             },
-            {"id": 33, "name": "Is Truck", "is_binary": true},
             {
                 "id": 6,
                 "name": "Mileage Left",

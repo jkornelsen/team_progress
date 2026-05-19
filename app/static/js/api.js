@@ -65,12 +65,16 @@ async function apiRequest(
         }
 
         if (got_json) {
-            return await res.json();
+            const data = await res.json();
+            if (data.message && typeof flashMessage === 'function') {
+                flashMessage(data.message);
+            }
+            return data;
         }
         return true;
     } catch (err) {
         if (typeof flashMessage === 'function') {
-            flashMessage(err.message);
+            flashMessage(err.message, "error");
         }
         return null;
     }

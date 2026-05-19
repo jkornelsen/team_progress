@@ -1061,6 +1061,10 @@
         const data = await apiPost(url, fd, "Could not drop.");
         if (!data) return;
 
+        if (data.message) {
+            window.location.reload(); 
+            return;
+        }
         window.location.href = "{{ url_for('play.play_character', id=owner.id) }}";
     });
 
@@ -1077,6 +1081,10 @@
         const data = await apiPost(url, fd, "Could not pick up.");
         if (!data) return;
 
+        if (data.message) {
+            window.location.reload(); 
+            return;
+        }
         window.location.href = "{{ url_for('play.play_location', id=owner.id) }}";
     });
 
@@ -1091,6 +1099,10 @@
         const data = await apiPost(url, fd, "Could not give.");
         if (!data) return;
 
+        if (data.message) {
+            window.location.reload(); 
+            return;
+        }
         window.location.href = "{{ url_for('play.play_character', id=owner.id) }}";
     });
 

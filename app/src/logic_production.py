@@ -6,7 +6,8 @@ from app.models import (
     db, Entity, Item, Location, Character, Pile, Progress,
     Recipe, AttribVal, GENERAL_ID, StorageType)
 from app.utils import maskable_name
-from .logic_piles import adjust_quantity, get_accessible_quantity
+from .logic_piles import (
+    adjust_quantity, get_accessible_quantity, get_quantity_limit)
 from .logic_navigation import (
     is_adjacent, get_output_positions, find_best_output_pos)
 from .logic_user_interaction import add_message
@@ -76,8 +77,8 @@ def resolve_host_pos(host_id, recipe, sources=None):
     if recipe.is_location_hosted and sources:
         for src in sources:
             if src['item'].storage_type == StorageType.LOCAL \
-                    and src['representative_pile']:
-                anchor_pos = src['representative_pile'].position
+                    and src['best_pile']:
+                anchor_pos = src['best_pile'].position
                 break
     return loc_id, anchor_pos
 
@@ -127,18 +128,21 @@ def can_perform_recipe(
         return False, "No appropriate host."
 
     # Output Limit
-    if not ignore_limit and recipe.rate_amount > 0 \
-            and recipe.product.q_limit > 0:
+    if not ignore_limit and recipe.rate_amount > 0:
         placements = get_eligible_placements(
             recipe, target_owner_id, host_id, sources)
         total_capacity = 0.0
         
         for owner_id, pos in placements:
+            q_limit = get_quantity_limit(recipe.product_id, owner_id)
+            if q_limit == 0:
+                total_capacity = float('inf')
+                break
             pile = Pile.query.filter_by(
                 game_token=game_token, owner_id=owner_id, 
                 item_id=recipe.product_id, position=pos).first()
             current_qty = pile.quantity if pile else 0.0
-            total_capacity += max(0.0, recipe.product.q_limit - current_qty)
+            total_capacity += max(0.0, q_limit - current_qty)
 
         if total_capacity < (recipe.rate_amount * batches):
             # If catching up, we just want to know if we can do AT LEAST one
@@ -275,15 +279,15 @@ def resolve_recipe_sources(host_id, recipe, ctx):
         total_qty = sum(p.quantity for p in valid_piles)
         
         # Determine anticipated target for UI help
-        representative_pile = None
+        best_pile = None
         if valid_piles:
             def sort_priority(p):
                 if p.owner_id == host_id: return 0
                 if p.owner_id == ctx.loc_id: return 1
                 return 2
             sorted_piles = sorted(valid_piles, key=sort_priority)
-            representative_pile = sorted_piles[0]
-            owner_id = representative_pile.owner_id
+            best_pile = sorted_piles[0]
+            owner_id = best_pile.owner_id
             ent = Entity.query.get((game_token, owner_id))
             owner_type = ent.entity_type if ent else Entity.TYPENAME
         else:
@@ -294,7 +298,8 @@ def resolve_recipe_sources(host_id, recipe, ctx):
             'source_def': source,
             'item': item,
             'total_available': total_qty,
-            'representative_pile': representative_pile,
+            'best_pile': best_pile,
+            'all_candidate_piles': valid_piles,
             'anticipated_owner_id': owner_id,
             'anticipated_owner_type': owner_type
         })
@@ -358,13 +363,16 @@ def execute_production(
     # Consume
     for src in sources:
         if not src['source_def'].preserve:
-            pile_pos = src['representative_pile'].position \
-                if src['representative_pile'] else None
-            adjust_quantity(
-                src['item'].id,
-                src['anticipated_owner_id'],
-                -(src['source_def'].q_required * batches),
-                pile_pos)
+            debt = src['source_def'].q_required * batches
+            
+            # Drain from candidates one by one
+            for p in src['all_candidate_piles']:
+                if debt <= 0: break
+                
+                # Try to take the debt from this specific pile
+                unpaid = adjust_quantity(
+                    src['item'].id, p.owner_id, -debt, p.position)
+                debt = abs(unpaid) 
 
     # Produce
     _, anchor_pos = resolve_host_pos(host_id, recipe, sources)

@@ -7,7 +7,7 @@ from http import HTTPStatus
 from app.models import (
     GENERAL_ID, StorageType, ENTITIES, db,
     Entity, Item, Character, Location, Attrib, Event, 
-    Pile, AttribVal, Operation, EntityAbility,
+    Pile, ItemLimit, AttribVal, Operation, EntityAbility,
     Recipe, RecipeSource, RecipeByproduct, RecipeAttribReq,
     LocDest, LocZone, EntranceReq, ItemRef,
     Participant, OutcomeType, EventFactor, EventField, EventLink,
@@ -131,7 +131,21 @@ def edit_item(id):
         val = req.get_str('storage_type')
         item.storage_type = (
             val if val in StorageType.ALL_CODES else StorageType.UNIVERSAL)
+
         item.q_limit = req.get_float('q_limit')
+        ItemLimit.query.filter_by(
+            game_token=game_token, item_id=item.id).delete()
+        for limit_row in req.get_list('limits_for'):
+            owner_id = limit_row.get_int('owner_id')
+            q_limit = limit_row.get_float('q_limit')
+            if owner_id:
+                db.session.add(ItemLimit(
+                    game_token=game_token,
+                    item_id=item.id,
+                    owner_id=owner_id,
+                    q_limit=q_limit
+                ))
+
         item.toplevel = 'toplevel' in request.form
         item.loc_hosted = 'loc_hosted' in request.form
         item.masked = 'masked' in request.form
@@ -263,6 +277,10 @@ def edit_item(id):
         all_items=Item.query.filter_by(
             game_token=game_token).order_by(name_stripped()).all(),
         all_attribs=Attrib.query.filter_by(
+            game_token=game_token).order_by(name_stripped()).all(),
+        all_chars=Character.query.filter_by(
+            game_token=game_token).order_by(name_stripped()).all(),
+        all_locs=Location.query.filter_by(
             game_token=game_token).order_by(name_stripped()).all(),
         all_events=Event.query.filter_by(
             game_token=game_token).order_by(name_stripped()).all(),

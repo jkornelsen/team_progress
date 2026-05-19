@@ -248,6 +248,7 @@ class Item(Entity):
         data.update({
             "storage_type": self.storage_type,
             "q_limit": self.q_limit,
+            "limits_for": [l.to_dict() for l in self.limits_for],
             "loc_hosted": self.loc_hosted,
             "toplevel": self.toplevel,
             "masked": self.masked,
@@ -261,6 +262,9 @@ class Item(Entity):
     @classmethod
     def from_dict(cls, data, game_token):
         item = super().from_dict(data, game_token)
+        for l_data in data.get('limits_for', []):
+            item.limits_for.append(
+                ItemLimit(game_token=game_token, item_id=item.id, **l_data))
         for order_index, r_data in enumerate(data.get('recipes', [])):
             item.recipes.append(
                 Recipe.from_dict(r_data, game_token, order_index))
@@ -271,6 +275,10 @@ class Item(Entity):
         back_populates='item',
         foreign_keys="[Pile.game_token, Pile.item_id]",
         viewonly=True)
+    limits_for = db.relationship(
+        'ItemLimit',
+        back_populates='item',
+        cascade="all, delete-orphan")
     recipes = db.relationship(
         'Recipe', 
         back_populates='product', 
@@ -746,6 +754,38 @@ class Pile(db.Model, DictHydrator):
         db.ForeignKeyConstraint(
             ['game_token', 'item_id'],
             ['items.game_token', 'items.id'], ondelete='CASCADE'),
+    )
+
+class ItemLimit(db.Model, DictHydrator):
+    """Overrides the default item q_limit for a specific owner."""
+    __tablename__ = 'item_limits'
+    game_token = db.Column(db.String(50), primary_key=True)
+    item_id = db.Column(db.Integer, primary_key=True)
+    owner_id = db.Column(db.Integer, primary_key=True)
+    q_limit = db.Column(db.Float, nullable=False, default=0.0)
+
+    def to_dict(self):
+        return {
+            "owner_id": self.owner_id,
+            "q_limit": self.q_limit
+        }
+
+    item = db.relationship(
+        'Item', 
+        back_populates='limits_for',
+        foreign_keys=[game_token, item_id])
+    owner = db.relationship(
+        'Entity',
+        foreign_keys=[game_token, owner_id],
+        overlaps="item,limits_for")
+
+    __table_args__ = (
+        db.ForeignKeyConstraint(
+            ['game_token', 'item_id'],
+            ['items.game_token', 'items.id'], ondelete='CASCADE'),
+        db.ForeignKeyConstraint(
+            ['game_token', 'owner_id'],
+            ['entities.game_token', 'entities.id'], ondelete='CASCADE'),
     )
 
 class AttribVal(db.Model):

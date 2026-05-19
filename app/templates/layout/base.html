@@ -52,27 +52,63 @@
             }
         });
 
-        function flashMessage(message) {
-            console.log(`[UI Flash]: ${message}`);
-            let pending = JSON.parse(sessionStorage.getItem('pending_logs') || "[]");
-            pending.push(message);
-            sessionStorage.setItem('pending_logs', JSON.stringify(pending));
+        /**
+         * Display a message on screen immediately.
+         */
+        function showFlashUI(message, type = "") {
             let $container = $('.flash-messages');
             if ($container.length === 0) {
                 $container = $('<div class="flash-messages"></div>');
                 $('main.container').prepend($container);
             }
-            const $item = $(`<div class="flash-item">${message}</div>`);
+
+            // Don't show the exact same message twice at the same time
+            let isDuplicate = false;
+            $container.find('.flash-item').each(function() {
+                if ($(this).text() === message) isDuplicate = true;
+            });
+            if (isDuplicate) return;
+
+            const $item = $(`<div class="flash-item ${type}">${message}</div>`);
             $container.append($item);
+
             setTimeout(() => {
                 $item.fadeOut(500, function() { $(this).remove(); });
             }, 5000);
         }
 
+        let isUnloading = false;
+        window.addEventListener('beforeunload', () => {
+            isUnloading = true;
+        });
+
+        /**
+         * Global entry point: saves message for next reload AND shows it now.
+         */
+        function flashMessage(message, type = "") {
+            if (!message) return;
+
+            // 1. Save to session storage for the NEXT page load
+            let pending = JSON.parse(sessionStorage.getItem('pending_logs') || "[]");
+            pending.push({ message, type });
+            sessionStorage.setItem('pending_logs', JSON.stringify(pending));
+
+            // 2. Try to show it on the CURRENT page.
+            setTimeout(() => {
+                // If we are currently unloading or the page has already started 
+                // navigating, don't draw the UI on this "dead" page.
+                if (isUnloading) return;
+
+                showFlashUI(message, type);
+            }, 100);
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             let pending = JSON.parse(sessionStorage.getItem('pending_logs') || "[]");
             if (pending.length > 0) {
-                pending.forEach(msg => console.log(`[Persisted UI Flash]: ${msg}`));
+                pending.forEach(item => {
+                    showFlashUI(item.message, item.type);
+                });
                 sessionStorage.removeItem('pending_logs');
             }
         });
