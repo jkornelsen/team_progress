@@ -269,10 +269,10 @@ def calculate_determinants(event, role_entities):
     modifiers = []
     game_token = g.game_token
 
-    field_name = "Value"
     for det in event.determinants:
         val = 0.0
         breakdown_text = ""
+        field_name = "Value"
         source_display = "Constant"
             
         if det.op_transform == Operation.CONST:

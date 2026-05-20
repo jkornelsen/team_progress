@@ -442,7 +442,7 @@
                 const displayOp = m.op_app_display;
 
                 const hasInner = (m.breakdown && m.breakdown !== m.value.toString());
-                const innerHtml = hasInner ? `<small class="text-dim">[${m.breakdown}]</small>` : "";
+                const innerExpr = hasInner ? `<small class="text-dim">[${m.breakdown}]</small>` : "";
 
                 let contentHtml = "";
 
@@ -464,7 +464,7 @@
                         displayFormula = `
                             ${negatePrefix}
                             <span class="${colorClass}">${displayVal}</span>
-                            ${innerHtml}
+                            ${innerExpr}
                             <strong class="${colorClass}">${displayOp} ${m.val_required}</strong>
                         `;
                     }
@@ -472,19 +472,28 @@
                     contentHtml = `
                         <strong>${m.source_name}</strong>
                         <div style="padding-left: 1.5em;">
-                            <span class="text-dim" style="margin: 0 4px;">${m.field_name}:</span> 
+                            <span class="text-dim" style="margin-right: 4px;">${m.field_name}:</span> 
                             ${displayFormula}
                         </div>
+                    `;
+                } else if (m.source_name === 'Constant') {
+                    const colorClass = 'text-success';
+                    contentHtml = `
+                        <span>[Preset]:</span>
+                        <strong class="${colorClass}" style="margin-right: 4px;">${displayOp} ${displayVal}</strong>
                     `;
                 } else {
                     // FORMAT: Source Field: +Value (Breakdown)
                     const colorClass = m.value >= 0 ? 'text-success' : 'text-danger';
+                    const fieldPart = (m.field_name && m.field_name !== "Value") 
+                        ? `<span class="text-dim">${m.field_name}:</span> ` : "";
+
                     contentHtml = `
                         <strong>${m.source_name}</strong>
                         <div style="padding-left: 1.5em;">
-                            <span class="text-dim">${m.field_name}:</span> 
-                            <strong class="${colorClass}" style="margin: 0 4px;">${displayOp} ${displayVal}</strong>
-                            ${innerHtml}
+                            ${fieldPart}
+                            <strong class="${colorClass}" style="margin-right: 4px;">${displayOp} ${displayVal}</strong>
+                            ${innerExpr}
                         </div>
                     `;
                 }
@@ -759,7 +768,6 @@
             }
 
             // Sync based on outcome
-            await refreshModifiers();
             syncApplyAllState()
 
             const chainSection = document.getElementById('follow-up-section');

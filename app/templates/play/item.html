@@ -365,7 +365,6 @@
             {% if byproduct_of %}
             <section class="outer-border">
                 <h3>Byproduct Of</h3>
-                <p class="label-like text-dim">Obtained while producing:</p>
                 <div class="col-list reverse-lookup-list">
                     {% for entry in byproduct_of | sort(attribute='item.name') %}
                         <div class="col-row byproduct-of-row">

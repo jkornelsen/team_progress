@@ -36,6 +36,7 @@
                 "id": 11,
                 "name": "Funds",
                 "description": "Money is required for research &amp; development.",
+                "storage_type": "u",
                 "recipes": [
                     {
                         "id": 18,
@@ -46,6 +47,13 @@
                         ]
                     }
                 ]
+            },
+            {
+                "id": 27,
+                "name": "Lab",
+                "description": "Desks, wires, and tools clutter this area.",
+                "storage_type": "l",
+                "loc_hosted": true
             },
             {
                 "id": 22,
@@ -62,28 +70,45 @@
                 "toplevel": true
             },
             {
-                "id": 3,
-                "name": "Production Speed I",
-                "description": "+1 each to energy production speed. This improves speed but not efficiency, so also increase the waste generated and resources required.",
-                "abilities": [17],
-                "storage_type": "l",
+                "id": 31,
+                "name": "Plutonium Purchase I",
+                "description": "+1 to how much fuel is available per production cycle.",
                 "q_limit": 10.0,
                 "recipes": [
                     {
-                        "id": 19,
+                        "id": 32,
                         "rate_duration": 300,
                         "sources": [
+                            {"item_id": 27, "q_required": 1.0, "preserve": true},
                             {"item_id": 11, "q_required": 100.0}
                         ]
                     }
                 ]
             },
             {
-                "id": 2,
-                "name": "Production Speed II",
-                "description": "Energy production speed × (4 per) for a fairly steep linear increase. This improves speed but not efficiency, so also increase the waste generated and resources required.\r\n\r\nProducing the first increase makes 1.25 so round that value to 1 in [location settings](/configure/location/14) for quadruple effect.",
+                "id": 3,
+                "name": "Production Rate I",
+                "description": "+1 each to energy production rate. This does not improve efficiency, so also increase the waste generated and resources required.",
                 "abilities": [17],
-                "storage_type": "l",
+                "storage_type": "u",
+                "q_limit": 10.0,
+                "recipes": [
+                    {
+                        "id": 19,
+                        "rate_duration": 300,
+                        "sources": [
+                            {"item_id": 11, "q_required": 200.0},
+                            {"item_id": 27, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 2,
+                "name": "Production Rate II",
+                "description": "Energy production rate × (4 per) for a fairly steep linear increase. This does not improve efficiency, so also increase the waste generated and resources required.\r\n\r\nProducing the first increase makes an uneven 1.25 — edit this item and set quantity to 1 for quadruple effect.",
+                "abilities": [17],
+                "storage_type": "u",
                 "q_limit": 5.0,
                 "recipes": [
                     {
@@ -91,7 +116,26 @@
                         "rate_duration": 300,
                         "sources": [
                             {"item_id": 3, "q_required": 1.0, "preserve": true},
-                            {"item_id": 11, "q_required": 1000.0}
+                            {"item_id": 11, "q_required": 2000.0},
+                            {"item_id": 27, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 29,
+                "name": "Radioactive Contamination",
+                "description": "There's really no way to get rid of it other than to wait for materials to dissipate. Requires full evacuation, unless you want to roll and see which workers survive.\r\n\r\n- Set quantity to max.\r\n- Produce until quantity returns to 0, then you may resume normal plant operation.",
+                "storage_type": "u",
+                "q_limit": 60.0,
+                "toplevel": true,
+                "recipes": [
+                    {
+                        "id": 30,
+                        "rate_amount": 0.0,
+                        "rate_duration": 60,
+                        "sources": [
+                            {"item_id": 29, "q_required": 1.0}
                         ]
                     }
                 ]
@@ -102,7 +146,6 @@
                 "description": "Glowing, greenish sludge. Stored in thick metal barrels—just hope they don't spring a leak.\r\n\r\nCan be consumed and neutralized by bio-engineered bacteria.",
                 "storage_type": "u",
                 "toplevel": true,
-                "masked": true,
                 "recipes": [
                     {
                         "id": 16,
@@ -117,6 +160,7 @@
                 "id": 6,
                 "name": "Reactor",
                 "description": "Accelerates atomic particles to collide with nuclei, splitting them into smaller parts and releasing energy.",
+                "abilities": [28],
                 "storage_type": "l",
                 "q_limit": 1.0,
                 "loc_hosted": true
@@ -127,7 +171,7 @@
                 "description": "Nuclear fuel becomes inefficient and radioactive after use. Refine into fresh plutonium by atomic reclamation.",
                 "abilities": [18],
                 "storage_type": "u",
-                "masked": true
+                "q_limit": 10.0
             },
             {
                 "id": 8,
@@ -135,7 +179,6 @@
                 "description": "Generated heat could turn nearby rivers into hot springs, upsetting 🐟 fishes.",
                 "storage_type": "u",
                 "toplevel": true,
-                "masked": true,
                 "recipes": [
                     {
                         "id": 17,
@@ -191,10 +234,9 @@
                 "description": "Design and build upgrades to improve production.",
                 "toplevel": true,
                 "items": [
-                    {"item_id": 2, "quantity": 0.25},
-                    {"item_id": 3, "quantity": 1.0},
                     {"item_id": 19, "quantity": 1.0},
-                    {"item_id": 22, "quantity": 2.0}
+                    {"item_id": 22, "quantity": 2.0},
+                    {"item_id": 27, "quantity": 1.0}
                 ]
             }
         ],
@@ -221,25 +263,23 @@
             {
                 "id": 15,
                 "name": "Plant Problem Type",
-                "description": "Get more information about a problem that occurred. Possible outcomes:\r\n\r\n- **Unusable Amenities** — employees don't appreciate this kind of work environment\r\n- **Low Wages** — employees are unhappy and may go on strike\r\n- **Waste Bacteria Inert** — fail to reduce radioactive waste\r\n- **Radioactive Waste Leak** — significantly increases amount of radioactive waste (cleanup becomes a bigger job)\r\n- **Cooling System Leak** — less efficient thermal waste reduction, could potentially hit employees with scalding water\r\n- **Mechanical Failure** — temporarily prevents some systems from operating, may require mechanical repairs\r\n- **Electricity Down** — temporarily prevents some systems from operating, may require repairs to electrical system\r\n- **Energy Not Gained** — nothing to fix but roll back recent energy gains\r\n- **Excess Energy** — this is a bigger problem, damaging storage systems\r\n- **Core Meltdown** — the worst-case scenario\r\n\r\nIf the inciting roll was a major failure then consider the problem to be more severe.",
+                "description": "Get more information about a problem that occurred. Possible outcomes:\r\n\r\n- **Unusable Amenities** — employees don't appreciate this kind of work environment\r\n- **Low Wages** — employees are unhappy and may go on strike\r\n- **Waste Bacteria Inert** — fail to reduce radioactive waste\r\n- **Radioactive Waste Leak** — significantly increases amount of radioactive waste (cleanup becomes a bigger job)\r\n- **Cooling System Leak** — less efficient thermal waste reduction, could potentially hit employees with scalding water\r\n- **Mechanical Failure** — temporarily prevents some systems from operating (3 production cycles), may require mechanical repairs\r\n- **Electricity Down** — temporarily prevents some systems from operating (3 production cycles), may require repairs to electrical system\r\n- **Energy Not Gained** — nothing to fix but roll back recent energy gains\r\n- **Excess Energy** — this is a bigger problem, damaging storage systems\r\n- **Battery Power Loss** — reduce [stored energy quantity](/configure/item/9) by 5%\r\n- **Core Meltdown — Reactor Damage** — cannot produce energy until [repairs are made](/play/item/6)\r\n- **Core Meltdown — Radioactive Contamination** — worst-case scenario, [wait for it to dissipate](/play/item/29)\r\n\r\nIf the inciting roll was a major failure then consider the problem to be more severe.",
                 "outcome_type": "selection",
-                "selection_strings": "Radioactive Waste Leak\r\nWaste Bacteria Inert\r\nCooling System Leak\r\nMechanical Failure\r\nElectricity Down\r\nUnusable Amenities\r\nEnergy Not Gained\r\nExcess Energy\r\nCore Meltdown"
+                "selection_strings": "Radioactive Waste Leak\r\nWaste Bacteria Inert\r\nCooling System Leak\r\nMechanical Failure\r\nElectricity Down\r\nUnusable Amenities\r\nEnergy Not Gained\r\nExcess Energy\r\nBattery Power Loss\r\nCore Meltdown — Reactor Damage\r\nCore Meltdown — Radioactive Contamination"
             },
             {
                 "id": 17,
-                "name": "Production Speed",
-                "description": "Determine production speed by taking upgrades into account.",
+                "name": "Production Rate",
+                "description": "Determine production rate by taking upgrades into account.",
                 "outcome_type": "determined",
                 "fixed_base": 1.0,
                 "determinants": [
                     {
-                        "get_val_from": "infield",
-                        "infield": {"role": "at", "field_mode": "qty", "item_id": 3, "attrib_id": 0},
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 3},
                         "op_application": "*"
                     },
                     {
-                        "get_val_from": "infield",
-                        "infield": {"role": "at", "field_mode": "qty", "item_id": 2, "attrib_id": 0},
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 2},
                         "op_application": "*",
                         "op_transform": "*",
                         "val_transform": 4.0
@@ -249,40 +289,76 @@
             {
                 "id": 18,
                 "name": "Reclaim Spent Fuel",
-                "description": "- Set *Difficulty* to *Easy*.\r\n- Waste buildup increases the chance of something going wrong.\r\n- Set [Spent Fuel](/play/item/7) to 0 and set plutonium quantity to that amount instead.\r\n- If there is a failure then you still get the reclaimed fuel, but something goes wrong—determine [Plant Problem Type](/play/event/15).",
+                "description": "- Waste buildup increases the chance of something going wrong.\r\n- Sets **Spent Fuel** to 0 and set plutonium quantity to that amount instead, plus 25% on major success.\r\n- If there is a failure then you still get the reclaimed fuel, but something goes wrong—determine **Plant Problem Type**.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "universal",
-                            "field_mode": "qty",
-                            "item_id": 7,
-                            "attrib_id": 0
-                        },
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 7},
                         "op_application": ">="
                     },
                     {
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "universal",
-                            "field_mode": "qty",
-                            "item_id": 5,
-                            "attrib_id": 0
-                        },
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 5},
                         "op_application": "-",
                         "op_transform": "scap"
                     },
                     {
-                        "get_val_from": "infield",
-                        "infield": {
-                            "role": "universal",
-                            "field_mode": "qty",
-                            "item_id": 8,
-                            "attrib_id": 0
-                        },
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 8},
                         "op_application": "-",
                         "op_transform": "scap"
+                    },
+                    {
+                        "label": "Base Threshold",
+                        "op_transform": "c",
+                        "val_transform": 12.0
+                    }
+                ],
+                "effects": [
+                    {
+                        "label": "Standard Gain",
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 7},
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 4},
+                        "op_application": ":=",
+                        "auto_apply": true
+                    },
+                    {
+                        "label": "+25% Gain",
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 4},
+                        "op_transform": "c",
+                        "val_transform": 2.5,
+                        "outcome_success": "success_major",
+                        "auto_apply": true
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 7},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0,
+                        "auto_apply": true
+                    }
+                ],
+                "chained_events": [
+                    {"child_id": 15, "success_filter": "failure_any"}
+                ]
+            },
+            {
+                "id": 28,
+                "name": "Repair Reactor",
+                "description": "Not cheap. Costs more for more advanced equipment. May have to go into debt if you don't have the funds available, or choose not to restore all upgrades yet.\r\n\r\nDeduct this results from [funds quantity](/configure/item/11), then you may use the reactor again.",
+                "outcome_type": "determined",
+                "fixed_base": 100.0,
+                "determinants": [
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 3},
+                        "op_application": "*",
+                        "val_transform": 0.5
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 2},
+                        "op_application": "*",
+                        "op_transform": "*",
+                        "val_transform": 4.0
                     }
                 ]
             },
@@ -299,19 +375,16 @@
                 "numeric_range": [-10, 10],
                 "determinants": [
                     {
-                        "get_val_from": "infield",
                         "infield": {"role": "at", "field_mode": "qty", "item_id": 22, "attrib_id": 0},
                         "op_transform": "scap"
                     },
                     {
                         "label": "Crowded",
-                        "get_val_from": "infield",
                         "infield": {"role": "at", "field_mode": "qty", "item_id": 19, "attrib_id": 0},
                         "op_application": "-",
                         "op_transform": "scap"
                     },
                     {
-                        "get_val_from": "infield",
                         "infield": {"role": "at", "item_id": 19, "attrib_id": 20},
                         "op_transform": "scap",
                         "val_transform": 0.5
@@ -325,17 +398,14 @@
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
-                        "get_val_from": "infield",
                         "infield": {"role": "at", "child_of_anchor": true, "item_id": 0, "attrib_id": 20}
                     },
                     {
-                        "get_val_from": "infield",
                         "infield": {"role": "at", "field_mode": "qty", "item_id": 22, "attrib_id": 0},
                         "op_transform": "scap",
                         "val_transform": 0.5
                     },
                     {
-                        "get_val_from": "infield",
                         "infield": {"role": "at", "field_mode": "qty", "item_id": 19, "attrib_id": 0},
                         "op_application": "-",
                         "op_transform": "scap",
@@ -347,6 +417,8 @@
     },
     "general data": {
         "piles": [
+            {"item_id": 2, "quantity": 0.25},
+            {"item_id": 3, "quantity": 1.0},
             {"item_id": 4, "quantity": 10.0}
         ],
         "progress": []
@@ -361,7 +433,7 @@
         ],
         "tag_introduce_order": 50,
         "tag_best_order": 35,
-        "tag_progress_type": "Idle",
+        "tag_progress_type": "Incremental",
         "tag_multiplayer": true,
         "tag_complete": "Has Objectives"
     }

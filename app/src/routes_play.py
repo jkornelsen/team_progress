@@ -966,10 +966,12 @@ def instant_item_production(host_id):
     
     if actual_done > 0:
         db.session.commit()
-        msg = f"Obtained {actual_done} batch{'es' if actual_done > 1 else ''}."
         if halt_reason:
-            msg += f" Stopped early: {halt_reason}"
-        return jsonify({"message": msg}), HTTPStatus.OK
+            msg = f"Obtained {actual_done}" \
+                  f" batch{'es' if actual_done > 1 else ''}." \
+                  f" Stopped early: {halt_reason}"
+            return jsonify({"message": msg}), HTTPStatus.OK
+        return '', HTTPStatus.NO_CONTENT
     
     return jsonify({
             "message": halt_reason or "Production failed."

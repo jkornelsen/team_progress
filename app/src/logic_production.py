@@ -68,19 +68,21 @@ def find_best_host(recipe, owner_id, ctx):
 def resolve_host_pos(host_id, recipe, sources=None):
     """Returns (loc_id, anchor_pos) for a host."""
     host_ent = Entity.query.get((g.game_token, host_id))
-    if not host_ent: return None, None
+    if not host_ent or host_ent.entity_type not in [
+            Character.TYPENAME, Location.TYPENAME]:
+        return None, None
 
-    loc_id = host_ent.location_id \
-        if host_ent.entity_type == Character.TYPENAME else host_ent.id
-    anchor_pos = host_ent.position
+    if host_ent.entity_type == Character.TYPENAME:
+        return host_ent.location_id, host_ent.position
 
+    anchor_pos = None
     if recipe.is_location_hosted and sources:
         for src in sources:
             if src['item'].storage_type == StorageType.LOCAL \
                     and src['best_pile']:
                 anchor_pos = src['best_pile'].position
                 break
-    return loc_id, anchor_pos
+    return host_ent.id, anchor_pos
 
 def get_eligible_placements(recipe, target_owner_id, host_id, sources=None):
     """
