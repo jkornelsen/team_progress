@@ -637,10 +637,6 @@ def edit_event(id):
         event.toplevel = 'toplevel' in request.form
         event.outcome_type = req.get_str('outcome_type')
 
-        event.roller_type = None
-        event.numeric_range = None
-        event.single_number = 0.0
-        event.selection_strings = None
         if event.outcome_type == OutcomeType.ROLLER:
             event.roller_type = req.get_str('roller_type')
         elif event.outcome_type in [OutcomeType.FOURWAY, OutcomeType.NUMERIC]:
@@ -649,7 +645,7 @@ def edit_event(id):
                 req.get_int('range_max')
             ]
         elif event.outcome_type == OutcomeType.DETERMINED:
-            event.single_number = req.get_float('single_number')
+            event.fixed_base = req.get_float('fixed_base')
         elif event.outcome_type == OutcomeType.SELECT:
             event.selection_strings = req.get_str('selection_strings')
 

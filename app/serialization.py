@@ -330,9 +330,10 @@ def export_to_dict():
         output[JsonKeys.ENTITIES][key] = [ent.to_dict() for ent in entities]
 
     # General state
-    gen_piles = Pile.query.filter_by(game_token=game_token, owner_id=GENERAL_ID).all()
+    gen_piles = Pile.query.filter_by(
+        game_token=game_token, owner_id=GENERAL_ID).all()
     output[JsonKeys.GENERAL]["piles"] = [
-        {"item_id": p.item_id, "quantity": p.quantity}
+        p.to_dict()
         for p in sorted(gen_piles, key=lambda p: (p.item_id, p.quantity))
     ]
     gen_progress = Progress.query.filter_by(

@@ -56,6 +56,13 @@ def scrub_array(data, field_name, min_length=2):
 
 class DictHydrator:
     """Map JSON keys to DB columns."""
+    LEGACY_KEYS = {
+        # e.g. 'old_key': 'new_key',
+    }
+    LEGACY_VALUES = {
+        # e.g. 'key': {'old_value': 'new_value'},
+    }
+
     @classmethod
     def from_dict(cls, data, game_token, **overrides):
         # Skip lists and dicts because they may be nested relationships,
@@ -78,6 +85,17 @@ class DictHydrator:
                     f"({data[k]!r})."
                 )
 
+        # Legacy self-healing
+        for old_key, new_key in cls.LEGACY_KEYS.items():
+            if old_key in data:
+                data[new_key] = data.pop(old_key)
+        for key, values_map in cls.LEGACY_VALUES.items():
+            if key in data:
+                current_val = data[key]
+                if current_val in values_map:
+                    data[key] = values_map[current_val]
+
+        # Set simple values
         for k, v in data.items():
             if hasattr(cls, k):
                 column = cls.__table__.columns.get(k)
@@ -329,10 +347,7 @@ class Location(Entity):
             "dimensions": self.dimensions,
             "toplevel": self.toplevel,
             "masked": self.masked,
-            "items": [
-                {"item_id": p.item_id, "quantity": p.quantity, "position": p.position} 
-                for p in self.piles
-            ],
+            "items": [p.to_dict() for p in self.piles],
             "progress": [p.to_dict() for p in self.progress_records],
             "item_refs": [ir.item_id for ir in self.item_refs],
             "destinations": [d.to_dict() for d in self.routes_forward],
@@ -448,10 +463,7 @@ class Character(Entity):
             "location_id": self.location_id,
             "position": self.position,
             "travel_party": self.travel_party,
-            "items": [
-                {"item_id": p.item_id, "quantity": p.quantity, "slot": p.slot} 
-                for p in self.piles
-            ],
+            "items": [p.to_dict() for p in self.piles],
             "progress": [p.to_dict() for p in self.progress_records],
         })
         return self.to_dict_sparse(data)
@@ -461,7 +473,8 @@ class Character(Entity):
         scrub_array(data, 'position', 2)
         char = super().from_dict(data, game_token)
         for i_data in data.get('items', []):
-            char.piles.append(Pile(game_token=game_token, **i_data))
+            char.piles.append(
+                Pile.from_dict(i_data, game_token, char.id))
         for p_data in data.get('progress', []):
             char.progress_records.append(
                 Progress.from_dict(p_data, game_token))
@@ -571,19 +584,23 @@ class Event(Entity):
         db.String(20), nullable=False, default=OutcomeType.FOURWAY)
     roller_type = db.Column(db.String(20))
     numeric_range = db.Column(ARRAY(db.Integer)) # [min, max]
-    single_number = db.Column(db.Float, default=0.0)
+    fixed_base = db.Column(db.Float, default=0.0)
     selection_strings = db.Column(db.Text)
 
     def to_dict(self):
-        """Exports the event logic including dice ranges and modifiers."""
         data = super().to_dict()
         data.update({
             "toplevel": self.toplevel,
             "outcome_type": self.outcome_type,
-            "roller_type": self.roller_type,
-            "numeric_range": self.numeric_range,
-            "single_number": self.single_number,
-            "selection_strings": self.selection_strings,
+            "roller_type": self.roller_type \
+                if self.outcome_type == OutcomeType.ROLLER else None,
+            "numeric_range": self.numeric_range \
+                if self.outcome_type in (
+                OutcomeType.FOURWAY, OutcomeType.NUMERIC) else None,
+            "fixed_base": self.fixed_base \
+                if self.outcome_type == OutcomeType.DETERMINED else None,
+            "selection_strings": self.selection_strings \
+                if self.outcome_type == OutcomeType.SELECT else None,
             "determinants": [d.to_dict() for d in self.determinants],
             "effects": [e.to_dict() for e in self.effects],
             "chained_events": [l.to_dict() for l in self.chained_events],
@@ -672,11 +689,20 @@ class Pile(db.Model, DictHydrator):
     game_token = db.Column(db.String(50), index=True, nullable=False)
     owner_id = db.Column(db.Integer, nullable=False)
     item_id = db.Column(db.Integer, nullable=False)
-    # not relevant for universal storage
+    # Not relevant for universal storage
     position = db.Column(ARRAY(db.Integer), default=None)
     quantity = db.Column(db.Float, nullable=False, default=0.0)
-    # optional for carried items (equipment)
+    # Optional for carried items (equipment)
     slot = db.Column(db.String(50))
+
+    def to_dict(self):
+        data = {
+            "item_id": self.item_id,
+            "quantity": self.quantity,
+            "position": self.position,
+            "slot": self.slot
+        }
+        return self.to_dict_sparse(data)
 
     @classmethod
     def from_dict(cls, data, game_token, owner_id):
@@ -1224,7 +1250,7 @@ class EventFactor(db.Model, DictHydrator):
             "op_application": self.op_application,
             "op_transform": self.op_transform,
             "val_transform": self.val_transform,
-            "val_required": self.val_required,
+            "val_required": self.val_required if self.is_comparison else None,
             "negate": self.negate,
             "outcome_success": self.outcome_success,
             "auto_apply": self.auto_apply

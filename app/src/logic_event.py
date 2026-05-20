@@ -834,10 +834,10 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
     base_min = event.numeric_range[0] if event.numeric_range else 1
     base_max = event.numeric_range[1] if event.numeric_range else 20
 
-    # "Determined" events don't roll; they use the single_number as the start.
+    # Determined events don't roll; they use the fixed_base as the start.
     total = 0
     if event.outcome_type == 'determined':
-        total = event.single_number
+        total = event.fixed_base
         breakdown_parts = [format_for_display(total)]
 
     elif event.outcome_type == 'selection':
