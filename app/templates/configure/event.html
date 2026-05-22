@@ -379,15 +379,6 @@
                 syncInnerExprState(card);
             }
         }
-
-        if (successFilter) {
-            if (isOutcome && (eventOutcomeType === "{{ OutcomeType.FOURWAY }}")) {
-                successFilter.classList.remove('hidden');
-            } else {
-                successFilter.classList.add('hidden');
-                if (tierSelect) tierSelect.value = 'always';
-            }
-        }
     }
 
     function syncEventFieldState(element) {
@@ -653,12 +644,6 @@
                     infieldBox.querySelectorAll('select, input').forEach(i => i.disabled = true);
                     infieldBox.style.opacity = "0.5";
                     infieldBox.style.pointerEvents = "none";
-                }
-
-                if (successFilter) {
-                    successFilter.querySelectorAll('select, input').forEach(i => i.disabled = false);
-                    successFilter.style.opacity = "1";
-                    successFilter.style.pointerEvents = "auto";
                 }
             } else {
                 if (sourceTypeSelect) sourceTypeSelect.disabled = false;

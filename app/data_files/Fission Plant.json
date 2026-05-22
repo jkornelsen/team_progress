@@ -5,6 +5,7 @@
                 "id": 10,
                 "name": "Cooling Tower",
                 "description": "Cycles water to cool through contact with air.",
+                "abilities": [32],
                 "storage_type": "l",
                 "q_limit": 1.0,
                 "loc_hosted": true
@@ -12,21 +13,23 @@
             {
                 "id": 9,
                 "name": "Energy",
-                "description": "Stored in a high-capacity battery. Quantity is measured in kilowatt-hours (kWh).\r\n\r\nA fully charged battery is enough to provide backup power for a city while the main supply is repaired. *IRL Note: Present-day batteries cannot hold such amounts.*",
+                "description": "Stored in a high-capacity battery. Quantity is measured in kilowatt-hours (kWh).\r\n\r\nA fully charged battery is enough to provide backup power for a city while the main supply is repaired. *IRL Note: Present-day batteries cannot hold such large amounts.*",
+                "abilities": [33, 18],
                 "storage_type": "u",
                 "q_limit": 10000000.0,
                 "toplevel": true,
                 "recipes": [
                     {
                         "id": 14,
-                        "rate_duration": 8,
+                        "rate_amount": 1.0,
+                        "rate_duration": 4,
                         "sources": [
-                            {"item_id": 4, "q_required": 1.0},
-                            {"item_id": 6, "q_required": 1.0, "preserve": true}
+                            {"item_id": 6, "q_required": 1.0, "preserve": true},
+                            {"item_id": 4, "q_required": 1.0}
                         ],
                         "byproducts": [
-                            {"item_id": 5, "rate_amount": 2.0},
-                            {"item_id": 7, "rate_amount": 1.0},
+                            {"item_id": 5, "rate_amount": 1.0},
+                            {"item_id": 7, "rate_amount": 2.0},
                             {"item_id": 8, "rate_amount": 2.0}
                         ]
                     }
@@ -35,8 +38,9 @@
             {
                 "id": 11,
                 "name": "Funds",
-                "description": "Money is required for research &amp; development.",
+                "description": "Money is required for research &amp; development and certain repairs.",
                 "storage_type": "u",
+                "toplevel": true,
                 "recipes": [
                     {
                         "id": 18,
@@ -58,8 +62,26 @@
             {
                 "id": 22,
                 "name": "Offices",
-                "description": "More offices makes it easier to have more employees.",
+                "description": "More offices makes it easier to have more workers.",
                 "storage_type": "l"
+            },
+            {
+                "id": 37,
+                "name": "Petri Dishes I",
+                "description": "Increase the number of cultured dishes to grow bacteria faster. Agar gel provides the nutrition they need.",
+                "abilities": [38],
+                "storage_type": "u",
+                "q_limit": 10.0,
+                "recipes": [
+                    {
+                        "id": 39,
+                        "rate_duration": 300,
+                        "sources": [
+                            {"item_id": 27, "q_required": 1.0, "preserve": true},
+                            {"item_id": 11, "q_required": 2500.0}
+                        ]
+                    }
+                ]
             },
             {
                 "id": 4,
@@ -72,15 +94,35 @@
             {
                 "id": 31,
                 "name": "Plutonium Purchase I",
-                "description": "+1 to how much fuel is available per production cycle.",
-                "q_limit": 10.0,
+                "description": "+5 to how much fuel is available per production cycle. Go to **Spent Fuel Limit** when changed.",
+                "abilities": [35],
+                "storage_type": "u",
+                "q_limit": 20.0,
                 "recipes": [
                     {
                         "id": 32,
+                        "rate_duration": 120,
+                        "sources": [
+                            {"item_id": 11, "q_required": 50.0},
+                            {"item_id": 27, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 40,
+                "name": "Plutonium Purchase II",
+                "description": "Fuel limit × (5 per qty). Go to **Spent Fuel Limit** when changed.",
+                "abilities": [35],
+                "storage_type": "u",
+                "q_limit": 5.0,
+                "recipes": [
+                    {
+                        "id": 41,
                         "rate_duration": 300,
                         "sources": [
                             {"item_id": 27, "q_required": 1.0, "preserve": true},
-                            {"item_id": 11, "q_required": 100.0}
+                            {"item_id": 11, "q_required": 1500.0}
                         ]
                     }
                 ]
@@ -88,7 +130,7 @@
             {
                 "id": 3,
                 "name": "Production Rate I",
-                "description": "+1 each to energy production rate. This does not improve efficiency, so also increase the waste generated and resources required.",
+                "description": "+1 each to energy production rate. This does not improve efficiency.\r\n\r\nTo implement, go to **Production Rate** (event).",
                 "abilities": [17],
                 "storage_type": "u",
                 "q_limit": 10.0,
@@ -97,7 +139,7 @@
                         "id": 19,
                         "rate_duration": 300,
                         "sources": [
-                            {"item_id": 11, "q_required": 200.0},
+                            {"item_id": 11, "q_required": 100.0},
                             {"item_id": 27, "q_required": 1.0, "preserve": true}
                         ]
                     }
@@ -106,18 +148,18 @@
             {
                 "id": 2,
                 "name": "Production Rate II",
-                "description": "Energy production rate × (4 per) for a fairly steep linear increase. This does not improve efficiency, so also increase the waste generated and resources required.\r\n\r\nProducing the first increase makes an uneven 1.25 — edit this item and set quantity to 1 for quadruple effect.",
+                "description": "Energy production rate × (4 per qty) for a fairly steep linear increase. This does not improve efficiency, so also increase the waste generated and resources required.\r\n\r\nProducing the first increase makes an uneven 1.25 — edit this item and set quantity to 1 for quadruple effect.",
                 "abilities": [17],
                 "storage_type": "u",
                 "q_limit": 5.0,
                 "recipes": [
                     {
                         "id": 20,
-                        "rate_duration": 300,
+                        "rate_duration": 400,
                         "sources": [
-                            {"item_id": 3, "q_required": 1.0, "preserve": true},
                             {"item_id": 11, "q_required": 2000.0},
-                            {"item_id": 27, "q_required": 1.0, "preserve": true}
+                            {"item_id": 27, "q_required": 1.0, "preserve": true},
+                            {"item_id": 3, "q_required": 1.0, "preserve": true}
                         ]
                     }
                 ]
@@ -125,9 +167,9 @@
             {
                 "id": 29,
                 "name": "Radioactive Contamination",
-                "description": "There's really no way to get rid of it other than to wait for materials to dissipate. Requires full evacuation, unless you want to roll and see which workers survive.\r\n\r\n- Set quantity to max.\r\n- Produce until quantity returns to 0, then you may resume normal plant operation.",
+                "description": "There's really no way to get rid of it other than to wait for materials to dissipate. Requires full evacuation, unless you want to roll and see which workers survive.\r\n\r\n- Set quantity to 60 for minor failure or 90 for major failure.\r\n- Produce until quantity returns to 0, then you may resume normal plant operation.",
+                "abilities": [15],
                 "storage_type": "u",
-                "q_limit": 60.0,
                 "toplevel": true,
                 "recipes": [
                     {
@@ -141,9 +183,10 @@
                 ]
             },
             {
-                "id": 5,
+                "id": 7,
                 "name": "Radioactive Waste",
                 "description": "Glowing, greenish sludge. Stored in thick metal barrels—just hope they don't spring a leak.\r\n\r\nCan be consumed and neutralized by bio-engineered bacteria.",
+                "abilities": [38],
                 "storage_type": "u",
                 "toplevel": true,
                 "recipes": [
@@ -151,7 +194,7 @@
                         "id": 16,
                         "rate_duration": 8,
                         "sources": [
-                            {"item_id": 5, "q_required": 2.0}
+                            {"item_id": 7, "q_required": 3.0}
                         ]
                     }
                 ]
@@ -166,10 +209,17 @@
                 "loc_hosted": true
             },
             {
-                "id": 7,
+                "id": 34,
+                "name": "Reclaiming Machinery",
+                "description": "Dismantles spent fuel and extracts reusable plutonium. Includes transfer arms, conveyor belts, and centrifuges.",
+                "storage_type": "l",
+                "q_limit": 1.0
+            },
+            {
+                "id": 5,
                 "name": "Spent Fuel",
                 "description": "Nuclear fuel becomes inefficient and radioactive after use. Refine into fresh plutonium by atomic reclamation.",
-                "abilities": [18],
+                "abilities": [18, 35],
                 "storage_type": "u",
                 "q_limit": 10.0
             },
@@ -212,7 +262,8 @@
                 "items": [
                     {"item_id": 6, "quantity": 1.0},
                     {"item_id": 19, "quantity": 1.0},
-                    {"item_id": 22, "quantity": 2.0}
+                    {"item_id": 22, "quantity": 2.0},
+                    {"item_id": 34, "quantity": 1.0}
                 ],
                 "item_refs": [9]
             },
@@ -234,14 +285,19 @@
                 "description": "Design and build upgrades to improve production.",
                 "toplevel": true,
                 "items": [
-                    {"item_id": 19, "quantity": 1.0},
                     {"item_id": 22, "quantity": 2.0},
-                    {"item_id": 27, "quantity": 1.0}
+                    {"item_id": 27, "quantity": 1.0},
+                    {"item_id": 19, "quantity": 1.0}
                 ]
             }
         ],
         "characters": [],
         "attribs": [
+            {
+                "id": 43,
+                "name": "Calculated Upgrade",
+                "description": "Used in events to show calculated values."
+            },
             {
                 "id": 26,
                 "name": "Layoffs",
@@ -261,28 +317,56 @@
         ],
         "events": [
             {
+                "id": 42,
+                "name": "Battery Power Loss",
+                "description": "5% loss",
+                "outcome_type": "determined",
+                "fixed_base": 0.05,
+                "determinants": [
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 9},
+                        "op_application": "*"
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 9},
+                        "op_application": "-"
+                    }
+                ]
+            },
+            {
                 "id": 15,
                 "name": "Plant Problem Type",
-                "description": "Get more information about a problem that occurred. Possible outcomes:\r\n\r\n- **Unusable Amenities** — employees don't appreciate this kind of work environment\r\n- **Low Wages** — employees are unhappy and may go on strike\r\n- **Waste Bacteria Inert** — fail to reduce radioactive waste\r\n- **Radioactive Waste Leak** — significantly increases amount of radioactive waste (cleanup becomes a bigger job)\r\n- **Cooling System Leak** — less efficient thermal waste reduction, could potentially hit employees with scalding water\r\n- **Mechanical Failure** — temporarily prevents some systems from operating (3 production cycles), may require mechanical repairs\r\n- **Electricity Down** — temporarily prevents some systems from operating (3 production cycles), may require repairs to electrical system\r\n- **Energy Not Gained** — nothing to fix but roll back recent energy gains\r\n- **Excess Energy** — this is a bigger problem, damaging storage systems\r\n- **Battery Power Loss** — reduce [stored energy quantity](/configure/item/9) by 5%\r\n- **Core Meltdown — Reactor Damage** — cannot produce energy until [repairs are made](/play/item/6)\r\n- **Core Meltdown — Radioactive Contamination** — worst-case scenario, [wait for it to dissipate](/play/item/29)\r\n\r\nIf the inciting roll was a major failure then consider the problem to be more severe.",
+                "description": "Get information about a problem that occurred. If the inciting roll was a major failure then consider the problem to be more severe.\r\n\r\n- **Unusable Amenities** — lower [worker mood](/configure/item/19) by 2 for 3 cycles\r\n- **Low Wages** — [workers may react badly](/play/event/23)\r\n- **Waste Bacteria Inert** — fail to reduce radioactive waste for 3 production cycles\r\n- **Radioactive Waste Leak** — significantly increases amount of radioactive waste; cleanup becomes a bigger job\r\n- **Cooling System Leak** — [double the duration](/configure/item/8) of thermal waste reduction for 3 production cycles, major failure hits employees with scalding water\r\n- **Machinery Jam** — problem with [reclaiming machinery](/play/item/34?owner_id=12); set reclaim difficulty to *Hard* for 2 production cycles or *Very Hard* for major failure\r\n- **Electricity Down** — prevents cooling tower from operating for 3 production cycles, major failure requires repairs to [electrical system](/play/item/10)\r\n- **Fuel Spill** — lose 1 count of your best [Plutonium Purchase](/play/item/27?owner_id=14) quantity on major failure, or second best for minor failure\r\n- **Energy Not Gained** — nothing to fix but roll back recent energy gains\r\n- **Excess Energy** — damages storage systems, reduce [battery](/configure/item/9) *Limit per Pile* by 100,000; [can be repaired](/play/event/33)\r\n- **Battery Power Loss** — see [battery power loss](/play/event/42) (event)\r\n- **Core Meltdown — Reactor Damage** — cannot produce energy until [repairs are made](/play/item/6)\r\n- **Core Meltdown — Radioactive Contamination** — worst-case scenario, [wait for it to dissipate](/play/item/29)",
                 "outcome_type": "selection",
-                "selection_strings": "Radioactive Waste Leak\r\nWaste Bacteria Inert\r\nCooling System Leak\r\nMechanical Failure\r\nElectricity Down\r\nUnusable Amenities\r\nEnergy Not Gained\r\nExcess Energy\r\nBattery Power Loss\r\nCore Meltdown — Reactor Damage\r\nCore Meltdown — Radioactive Contamination"
+                "selection_strings": "Unusable Amenities\r\nLow Wages\r\nWaste Bacteria Inert\r\nRadioactive Waste Leak\r\nCooling System Leak\r\nMachinery Jam\r\nElectricity Down\r\nFuel Spill\r\nEnergy Not Gained\r\nExcess Energy\r\nBattery Power Loss\r\nCore Meltdown — Reactor Damage\r\nCore Meltdown — Radioactive Contamination"
             },
             {
                 "id": 17,
                 "name": "Production Rate",
-                "description": "Determine production rate by taking upgrades into account.",
+                "description": "Determine production rate by taking upgrades into account.\r\n\r\nAfter rolling, [edit energy](/configure/item/9) and find the recipe section. Do NOT press *Apply* on the effect — the number is for reference only.\r\n\r\n- Set *Gain per Batch*, required **Plutonium**, and **Spent Fuel** byproduct to the result.\r\n- Set **Radioactive Waste** and **Thermal Waste** byproducts to 2 × the result.",
                 "outcome_type": "determined",
-                "fixed_base": 1.0,
                 "determinants": [
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 3},
-                        "op_application": "*"
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 3}
                     },
                     {
                         "infield": {"role": "universal", "field_mode": "qty", "item_id": 2},
                         "op_application": "*",
                         "op_transform": "*",
                         "val_transform": 4.0
+                    }
+                ],
+                "effects": [
+                    {
+                        "label": "Calculate × 2",
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "attrib_id": 43},
+                        "op_application": ":=",
+                        "op_transform": "*",
+                        "val_transform": 2.0
                     }
                 ]
             },
@@ -293,11 +377,11 @@
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 7},
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 5},
                         "op_application": ">="
                     },
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 5},
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 7},
                         "op_application": "-",
                         "op_transform": "scap"
                     },
@@ -315,23 +399,23 @@
                 "effects": [
                     {
                         "label": "Standard Gain",
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 7},
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 5},
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 4},
                         "op_application": ":=",
                         "auto_apply": true
                     },
                     {
                         "label": "+25% Gain",
-                        "get_val_from": "outcome",
+                        "get_val_from": "outfield",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 4},
-                        "op_transform": "c",
-                        "val_transform": 2.5,
+                        "op_transform": "*",
+                        "val_transform": 0.25,
                         "outcome_success": "success_major",
                         "auto_apply": true
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 7},
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 5},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 0.0,
@@ -343,11 +427,64 @@
                 ]
             },
             {
+                "id": 33,
+                "name": "Repair Battery",
+                "description": "To repair the battery, deduct this result from [funds quantity](/configure/item/11), then set [stored energy limit](/configure/item/9) back to 10,000,000.",
+                "outcome_type": "determined",
+                "fixed_base": 40.0,
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 11},
+                        "op_application": "-"
+                    }
+                ]
+            },
+            {
+                "id": 32,
+                "name": "Repair Cooling System",
+                "description": "Costs more for more advanced equipment. If you don't have any funds for repairs, then [undo cooling system upgrades](/play/item/27?owner_id=14) (do partially if you have some funds or minor failure). Or, decide to go into debt instead.\r\n\r\nDeduct this result from [funds quantity](/configure/item/11), then you may use the cooling facility again.",
+                "outcome_type": "determined",
+                "fixed_base": 10.0,
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 11},
+                        "op_application": "-"
+                    }
+                ]
+            },
+            {
                 "id": 28,
                 "name": "Repair Reactor",
-                "description": "Not cheap. Costs more for more advanced equipment. May have to go into debt if you don't have the funds available, or choose not to restore all upgrades yet.\r\n\r\nDeduct this results from [funds quantity](/configure/item/11), then you may use the reactor again.",
+                "description": "Not cheap. Costs more for more advanced equipment. If you don't have any funds for repairs, then [undo upgrades](/play/item/27?owner_id=14) (do partially if you have some funds or minor failure). Or, decide to go into debt instead.\r\n\r\nDeduct this result from [funds quantity](/configure/item/11), then you may use the reactor again.",
                 "outcome_type": "determined",
-                "fixed_base": 100.0,
+                "determinants": [
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 3},
+                        "op_transform": "*",
+                        "val_transform": 50.0
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 2},
+                        "op_transform": "*",
+                        "val_transform": 1000.0
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 11},
+                        "op_application": "-"
+                    }
+                ]
+            },
+            {
+                "id": 36,
+                "name": "Repair Reactor 2",
+                "description": "Not cheap. Costs more for more advanced equipment. If you don't have any funds for repairs, then [undo upgrades](/play/item/27?owner_id=14) (do partially if you have some funds or minor failure). Or, decide to go into debt instead.\r\n\r\nDeduct this result from [funds quantity](/configure/item/11), then you may use the reactor again.",
+                "outcome_type": "determined",
+                "fixed_base": 50.0,
                 "determinants": [
                     {
                         "infield": {"role": "universal", "field_mode": "qty", "item_id": 3},
@@ -359,6 +496,50 @@
                         "op_application": "*",
                         "op_transform": "*",
                         "val_transform": 4.0
+                    }
+                ]
+            },
+            {
+                "id": 35,
+                "name": "Spent Fuel Limit",
+                "description": "Roll, then [edit Spent Fuel](/configure/item/5):\r\n- Set *Limit per Pile* to this result.\r\n- Change quantity by increasing similarly. Doesn't have to be perfect because the limit regulates quantity eventually.",
+                "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 31},
+                        "val_transform": 5.0
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 40},
+                        "op_application": "*",
+                        "op_transform": "*",
+                        "val_transform": 5.0
+                    }
+                ]
+            },
+            {
+                "id": 38,
+                "name": "Waste Consumption Speed",
+                "description": "- [Edit Radioactive Waste](/configure/item/7). Under *Sources*, set the consumed **Radioactive Waste** quantity to this result.\r\n- Press apply to set *Gain per Batch* to half of this result.",
+                "outcome_type": "determined",
+                "fixed_base": 0.0,
+                "determinants": [
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 37}
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "rate_amt",
+                            "item_id": 7,
+                            "recipe_id": 16
+                        },
+                        "op_application": ":=",
+                        "op_transform": "/",
+                        "val_transform": 2.0
                     }
                 ]
             },
@@ -394,19 +575,19 @@
             {
                 "id": 23,
                 "name": "Workers: Retain",
-                "description": "If they're not happy then they may decide to leave.",
+                "description": "If they're not happy then they may decide to go on strike or quit.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
-                        "infield": {"role": "at", "child_of_anchor": true, "item_id": 0, "attrib_id": 20}
+                        "infield": {"role": "at", "child_of_anchor": true, "attrib_id": 20}
                     },
                     {
-                        "infield": {"role": "at", "field_mode": "qty", "item_id": 22, "attrib_id": 0},
+                        "infield": {"role": "at", "field_mode": "qty", "item_id": 22},
                         "op_transform": "scap",
                         "val_transform": 0.5
                     },
                     {
-                        "infield": {"role": "at", "field_mode": "qty", "item_id": 19, "attrib_id": 0},
+                        "infield": {"role": "at", "field_mode": "qty", "item_id": 19},
                         "op_application": "-",
                         "op_transform": "scap",
                         "val_transform": 0.5
@@ -419,7 +600,10 @@
         "piles": [
             {"item_id": 2, "quantity": 0.25},
             {"item_id": 3, "quantity": 1.0},
-            {"item_id": 4, "quantity": 10.0}
+            {"item_id": 4, "quantity": 10.0},
+            {"item_id": 31, "quantity": 2.0},
+            {"item_id": 37, "quantity": 2.0},
+            {"item_id": 40, "quantity": 1.0}
         ],
         "progress": []
     },
@@ -432,7 +616,7 @@
             {"item_id": 9, "quantity": 10000000.0, "attrib_value": 0.0}
         ],
         "tag_introduce_order": 50,
-        "tag_best_order": 35,
+        "tag_best_order": 25,
         "tag_progress_type": "Incremental",
         "tag_multiplayer": true,
         "tag_complete": "Has Objectives"

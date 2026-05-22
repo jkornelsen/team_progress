@@ -40,57 +40,58 @@
         <!-- 3. THE SOURCE (The "From") -->
         <h5>📥 Get Value From</h5>
         <div class="sub-section">
-            <div class="">
-                <span>Source:</span>
-                <select name="effs[{{ index }}][get_val_from]"
-                        class="source-type-select"
-                        onchange="syncEffSourceState(this)">
-                    <option value="{{ Participant.OUTCOME }}" {{ 'selected'
-                        if factor and factor.get_val_from == Participant.OUTCOME
-                        }}>Result of Roll</option>
-                    <option value="{{ Participant.INFIELD }}" {{ 'selected'
-                        if factor and factor.get_val_from == Participant.INFIELD
-                        }}>Another Field</option>
-                    <option value="{{ Participant.OUTFIELD }}" {{ 'selected'
-                        if factor and factor.get_val_from == Participant.OUTFIELD
-                        }}>The Field We're Changing</option>
-                </select>
-
-                <div class="success-filter-container {{
-                        'hidden' if not (factor
-                            and factor.get_val_from == Participant.OUTCOME
-                            and event.outcome_type == OutcomeType.FOURWAY) }}">
-                    <span>Fourway Outcome Filter:</span>
-                    <select name="effs[{{ index }}][outcome_success]"
-                            class="mini-select success-tier-select">
-                        <option value="{{ Participant.ALWAYS }}" 
-                            {{ 'selected' if factor and factor.outcome_success ==
-                                Participant.ALWAYS }}>Always</option>
-                        <option value="{{ Participant.SUCCESS_ANY }}" 
-                            {{ 'selected' if factor and factor.outcome_success ==
-                                Participant.SUCCESS_ANY }}>Any Success</option>
-                        <option value="{{ Participant.SUCCESS_NAT_MAX }}" 
-                            {{ 'selected' if factor and factor.outcome_success ==
-                                Participant.SUCCESS_NAT_MAX }}>Natural Max</option>
-                        <option value="{{ Participant.SUCCESS_MAJOR }}" 
-                            {{ 'selected' if factor and factor.outcome_success ==
-                                Participant.SUCCESS_MAJOR }}>Major Success</option>
-                        <option value="{{ Participant.SUCCESS_MINOR }}" 
-                            {{ 'selected' if factor and factor.outcome_success ==
-                                Participant.SUCCESS_MINOR }}>Minor Success</option>
-                        <option value="{{ Participant.FAILURE_ANY }}" 
-                            {{ 'selected' if factor and factor.outcome_success ==
-                                Participant.FAILURE_ANY }}>Any Failure</option>
-                        <option value="{{ Participant.FAILURE_MINOR }}" 
-                            {{ 'selected' if factor and factor.outcome_success ==
-                                Participant.FAILURE_MINOR }}>Minor Failure</option>
-                        <option value="{{ Participant.FAILURE_MAJOR }}" 
-                            {{ 'selected' if factor and factor.outcome_success ==
-                                Participant.FAILURE_MAJOR }}>Major Failure</option>
-                        <option value="{{ Participant.SUCCESS_NAT_MIN }}" 
-                            {{ 'selected' if factor and factor.outcome_success ==
-                                Participant.SUCCESS_NAT_MIN }}>Natural Min</option>
+            <div>
+                <div class="flex-row">
+                    <span>Source:</span>
+                    <select name="effs[{{ index }}][get_val_from]"
+                            class="source-type-select"
+                            onchange="syncEffSourceState(this)">
+                        <option value="{{ Participant.OUTCOME }}" {{ 'selected'
+                            if factor and factor.get_val_from == Participant.OUTCOME
+                            }}>Result of Roll</option>
+                        <option value="{{ Participant.INFIELD }}" {{ 'selected'
+                            if factor and factor.get_val_from == Participant.INFIELD
+                            }}>Another Field</option>
+                        <option value="{{ Participant.OUTFIELD }}" {{ 'selected'
+                            if factor and factor.get_val_from == Participant.OUTFIELD
+                            }}>The Field We're Changing</option>
                     </select>
+
+                    <div class="success-filter-container {{
+                            'hidden' if not event.outcome_type == OutcomeType.FOURWAY }}"
+                            style="margin-left: 20px;">
+                        <span>Fourway Filter:</span>
+                        <select name="effs[{{ index }}][outcome_success]"
+                                class="mini-select success-tier-select">
+                            <option value="{{ Participant.ALWAYS }}" 
+                                {{ 'selected' if factor and factor.outcome_success ==
+                                    Participant.ALWAYS }}>Always</option>
+                            <option value="{{ Participant.SUCCESS_ANY }}" 
+                                {{ 'selected' if factor and factor.outcome_success ==
+                                    Participant.SUCCESS_ANY }}>Any Success</option>
+                            <option value="{{ Participant.SUCCESS_NAT_MAX }}" 
+                                {{ 'selected' if factor and factor.outcome_success ==
+                                    Participant.SUCCESS_NAT_MAX }}>Natural Max</option>
+                            <option value="{{ Participant.SUCCESS_MAJOR }}" 
+                                {{ 'selected' if factor and factor.outcome_success ==
+                                    Participant.SUCCESS_MAJOR }}>Major Success</option>
+                            <option value="{{ Participant.SUCCESS_MINOR }}" 
+                                {{ 'selected' if factor and factor.outcome_success ==
+                                    Participant.SUCCESS_MINOR }}>Minor Success</option>
+                            <option value="{{ Participant.FAILURE_ANY }}" 
+                                {{ 'selected' if factor and factor.outcome_success ==
+                                    Participant.FAILURE_ANY }}>Any Failure</option>
+                            <option value="{{ Participant.FAILURE_MINOR }}" 
+                                {{ 'selected' if factor and factor.outcome_success ==
+                                    Participant.FAILURE_MINOR }}>Minor Failure</option>
+                            <option value="{{ Participant.FAILURE_MAJOR }}" 
+                                {{ 'selected' if factor and factor.outcome_success ==
+                                    Participant.FAILURE_MAJOR }}>Major Failure</option>
+                            <option value="{{ Participant.SUCCESS_NAT_MIN }}" 
+                                {{ 'selected' if factor and factor.outcome_success ==
+                                    Participant.SUCCESS_NAT_MIN }}>Natural Min</option>
+                        </select>
+                    </div>
                 </div>
 
                 <!-- Field Inputs (Hidden if not in 'infield' mode) -->

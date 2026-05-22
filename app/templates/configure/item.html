@@ -282,7 +282,7 @@
 <!-- Byproduct Row -->
 <template id="byproduct-template">
     <div class="flex-row gap-5 align-center spacious-bottom">
-        <select name="recipes[RECIPE_INDEX][byproducts][SUB_INDEX][item_id]">
+        <select name="recipes[RECIPE_INDEX][byproducts][SUB_INDEX][item_id]" style="max-width: 11ch;">
             {% for i in all_items %}
                 <option value="{{ i.id }}">{{ i.name }}</option>
             {% endfor %}

@@ -111,7 +111,7 @@
             </section>
 
             <section class="outer-border">
-            {% if event.outcome_type == 'dice_system' %}
+            {% if event.outcome_type == OutcomeType.ROLLER %}
                 <h3>Roll Setup</h3>
                 {% if event.roller_type == 'dnd' %}
                 <div class="system-controls dnd-fields">
@@ -137,7 +137,7 @@
                 {% endif %}
             {% else %}
                 <h3>Modifiers</h3>
-                {% if event.outcome_type == 'determined' %}
+                {% if event.outcome_type == OutcomeType.DETERMINED %}
                 <div>
                     <span class="text-dim" style="font-weight: bold;">Fixed Base:</span>
                     <span class="text-success">{{ event.fixed_base }}</span>
@@ -150,9 +150,9 @@
             {% endif %}
             </section>
 
-            {% if caller_entities or parent_events %}
+            {% if caller_entities or parent_events or involved_entities %}
             <section class="outer-border">
-                <h3>Called From</h3>
+                <h3>Called From / Involved</h3>
                 <div>
                     {% for p_event in parent_events %}
                         <div>
@@ -173,14 +173,6 @@
                                 ent, target_url, link_letters) }}
                         </div>
                     {% endfor %}
-                </div>
-            </section>
-            {% endif %}
-
-            {% if involved_entities %}
-            <section class="outer-border">
-                <h3>Involved</h3>
-                <div>
                     {% for ent in involved_entities %}
                         <div>
                             <span class="label-like">
@@ -207,18 +199,17 @@
         <!-- RIGHT COLUMN: Results & Application -->
         <div class="right-column">
             <section class="outer-border">
-                <h3>Range</h3>
                 <form id="event-form">
-                    {% if event.outcome_type in ['fourway', 'numeric'] %}
+                    {% if event.outcome_type in [OutcomeType.FOURWAY, OutcomeType.NUMERIC] %}
                     <div class="die-adjustment-grid">
                         <div class="form-group">
-                            <label>Die: {{ event.numeric_range[0] }} to {{ event.numeric_range[1] }}</label>
+                            <label><strong>Die</strong>: {{ event.numeric_range[0] }} to {{ event.numeric_range[1] }}</label>
                         </div>
                     </div>
                     {% endif %}
-                    {% if event.outcome_type == 'fourway' %}
+                    {% if event.outcome_type == OutcomeType.FOURWAY %}
                     <div class="flex-row spacious-bottom">
-                        <label for="difficulty-select">Difficulty:</label>
+                        <label for="difficulty-select" style="font-weight: bold;">Difficulty:</label>
                         <select id="difficulty-select">
                             <option value="0.10">Very Easy</option>
                             <option value="0.30">Easy</option>
@@ -234,12 +225,12 @@
                         Major Failure <span id="major-failure-threshold" class="text-accent">--</span>
                     </div>
                     {% endif %}
-                    {% if event.outcome_type == 'determined' %}
+                    {% if event.outcome_type == OutcomeType.DETERMINED %}
                         <span style="font-style: italic;">(fixed&mdash;no random dice roll)</span>
                     {% endif %}
                 </form>
                 {% if not fields_not_met %}
-                    {% set roll_text = 'esolve' if event.outcome_type == 'determined'
+                    {% set roll_text = 'esolve' if event.outcome_type == OutcomeType.DETERMINED
                         else 'oll' %}
                     {% set roll_label = hk.bracket('r') ~ roll_text %}
                     <div class="spacious-top text-center">
@@ -260,7 +251,6 @@
             </section>
 
             <section class="outer-border result-box" id="result-display">
-                <h3>Outcome</h3>
                 <div id="outcome-text" style="text-align: center;">
                      <div class="outcome-placeholder">Roll to see result...</div>
                 </div>
@@ -270,7 +260,7 @@
             <section id="effects-section" class="outer-border {% if not effects_data %}hidden{% endif %}">
                 <div class="flex-between align-center">
                     <h3>Effects</h3>
-                    {% set roll_title = 'Resolve' if event.outcome_type == 'determined' else 'Roll' %}
+                    {% set roll_title = 'Resolve' if event.outcome_type == OutcomeType.DETERMINED else 'Roll' %}
                     {% set manual_count = effects_data | rejectattr('obj.auto_apply') | list | length %}
                     {% if manual_count > 1 %}
                         <div id="apply-all-container">
@@ -547,7 +537,7 @@
                 let logicParts = [];
 
                 // A. Add Filter Requirement (e.g., "If Major Success")
-                if (successFilterText && getValFrom === '{{ Participant.OUTCOME }}') {
+                if (successFilterText) {
                     logicParts.push(`<span class="">${successFilterText}</span>`);
                 }
 
@@ -710,7 +700,7 @@
                     const currentValEl = row.querySelector('.current-value-display');
                     const newValEl = row.querySelector('.new-val');
                     const equationEl = row.querySelector('.equation-display');
-                    const filter = row.dataset.successFilter;
+                    const successFilter = row.dataset.successFilter;
                     const reliesOnRoll = row.dataset.reliesOnRoll === "true";
 
                     currentValEl.innerText = eff.current_display;
@@ -734,14 +724,14 @@
                         if (impactRes) impactRes.classList.add('hidden');
                         equationEl.innerHTML = `<span class="text-success" style="font-weight:bold;">${eff.impact_display}</span>`;
                     }
-                    if (row.dataset.getValFrom === '{{ Participant.OUTCOME }}') {
-                        const isEligible = tierMatch(filter, resultTier);
+                    {% if event.outcome_type == OutcomeType.FOURWAY %}
+                        const isEligible = tierMatch(successFilter, resultTier);
                         if (!isEligible) {
-                            row.classList.add('hidden'); // Hide effects that didn't "trigger"
+                            row.classList.add('hidden'); // Hide effects that didn't trigger
                         } else {
                             row.classList.remove('hidden');
                         }
-                    }
+                    {% endif %}
 
                     // Handle button states
                     const isAuto = row.dataset.auto === "true";

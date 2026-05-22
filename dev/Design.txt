@@ -4,18 +4,13 @@
 
 ---- functional, tightening, quality of life ----
 
-softcap display doesn't seem to be working right
+softcap effects display doesn't seem to be working right
     make event with fixed base 100, effect softcap rollvalue
-
-show text in log for selection rolls
 
 Value: -4.500000000000018
     truncate floating point limits with epsilon or whatever it was
 
 prompt before overwriting another character action in progress
-
-win condition op_compare selectbox: ">=", "=" (e.g. enum), "<"
-    Fission Plant: no more than a certain amount of pollution
 
 sessions should be easier to connect to
     remember game token on client side
@@ -26,7 +21,24 @@ don't show duplicate destinations in play location
     same door positions (null in the example)
     maybe shouldn't allow in database
 
+new completeness type: incomplete starting kit
+    e.g. dating currently lacks logic to gain equipment
+
 ---- scenario ----
+
+fission plant
+    research workers increase research speed
+        soft requirement for higher upgrades as they have high base durations
+    mood affects retention but not their activity unless they strike
+        nor does getting more workers increase production
+    workers should also be involved in repairs somehow
+    and a minimum staff requirement to avoid production penalties
+        maybe an event to calculate penalty multiplier if minimums aren't met
+    spend funds to throw a party for mood increase
+    characters to give (assign) individual workers (carried items) to different jobs?
+        instead of doing it on the configure screen
+        maybe workers universal item and worker carried item
+        the char could also be the hr manager who drops off workers at their loc
 
 lumber
     oak also on main lot -- maybe just "oak trees" rather than "plot 1 oak"
@@ -122,6 +134,9 @@ refactor play_item
 consider manual refactoring choices or a list of summarized ai suggestions
 
 ---- doesn't seem important currently ----
+
+win condition op_compare selectbox: ">=", "=" (e.g. enum), "<"
+    Fission Plant: no more than a certain amount of pollution
 
 prompt each player to save to their PC occasionally
     only if no one recently saved from that session

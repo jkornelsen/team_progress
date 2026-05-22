@@ -85,7 +85,7 @@
             <div class="byproduct-list" id="byproducts-{{ recipe_index }}">
                 {% for byproduct in recipe.byproducts if recipe %}
                 <div class="flex-row gap-5 align-center spacious-bottom">
-                    <select name="recipes[{{ recipe_index }}][byproducts][{{ loop.index0 }}][item_id]">
+                    <select name="recipes[{{ recipe_index }}][byproducts][{{ loop.index0 }}][item_id]" style="max-width: 11ch;">
                         {% for i in all_items %}
                         <option value="{{ i.id }}" {{ 'selected' if i.id == byproduct.item_id }}>{{ i.name }}</option>
                         {% endfor %}

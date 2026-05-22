@@ -836,14 +836,15 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
 
     # Determined events don't roll; they use the fixed_base as the start.
     total = 0
+    choice_str = ''
     if event.outcome_type == 'determined':
         total = event.fixed_base
         breakdown_parts = [format_for_display(total)]
 
     elif event.outcome_type == 'selection':
         options = [s.strip() for s in event.selection_strings.split('\n') if s.strip()]
-        choice = random.choice(options) if options else "Nothing"
-        breakdown_parts = [f"Selection: <b>{choice}</b>"]
+        choice_str = random.choice(options) if options else "Nothing"
+        breakdown_parts = [f"Selection: <b>{choice_str}</b>"]
 
     elif event.outcome_type == 'coordinates':
         loc_id = role_entities.get(Participant.AT)
@@ -929,11 +930,14 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
 
         display_str = f"<b>{res}</b><br><small>{breakdown_str}</small>"
         message_str = f"{format_for_display(total)} — {res}"
+    elif event.outcome_type == 'selection':
+        display_str = breakdown_str
+        message_str = choice_str
     else:
         display_str = breakdown_str
-        message_str = format_for_display(total)
+        message_str = f"Outcome {format_for_display(total)}"
 
-    add_message(f"{event.name}: Outcome {message_str}")
+    add_message(f"{event.name}: {message_str}")
     return total, display_str, tier
 
 def roll_coordinate(loc_id):

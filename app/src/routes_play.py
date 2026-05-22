@@ -1228,6 +1228,7 @@ def play_event(id):
         caller_entities=caller_entities,
         involved_entities=involved_entities,
         parent_events=parent_events,
+        OutcomeType=OutcomeType,
         Participant=Participant,
         Operation=Operation,
         link_letters=LinkLetters(excluded='moerijk')
