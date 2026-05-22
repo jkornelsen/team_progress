@@ -67,7 +67,7 @@
                         {% if eligible|length == 1 %}
                             {# Single option: display name as text and pass ID via hidden input #}
                             {% set ent = eligible[0] %}
-                            <input type="hidden" name="{{ role }}{{ Participant.FORM_SUFFIX }}" value="{{ ent.id }}">
+                            <input type="hidden" name="{{ role }}{{ Participant.ROLE_SUFFIX }}" value="{{ ent.id }}">
                             {% if ent.id == 1 %}
                                 🌐
                             {% else %}
@@ -77,7 +77,9 @@
                             {% endif %}
 
                         {% elif eligible|length > 1 %}
-                            <select name="{{ role }}{{ Participant.FORM_SUFFIX }}" class="full-width themed-input participant-trigger">
+                            <select name="{{ role }}{{ Participant.ROLE_SUFFIX }}"
+                                    class="full-width themed-input"
+                                    onchange="refreshModifiers()">
                                 <option value="">-- Select {{ role }} --</option>
                                 {% for ent in eligible %}
                                     <option value="{{ ent.id }}">{{ render.maskable_name(ent) }}</option>
@@ -210,7 +212,8 @@
                     {% if event.outcome_type == OutcomeType.FOURWAY %}
                     <div class="flex-row spacious-bottom">
                         <label for="difficulty-select" style="font-weight: bold;">Difficulty:</label>
-                        <select id="difficulty-select">
+                        <select id="difficulty-select"
+                                onchange="updateDieThresholds()">
                             <option value="0.10">Very Easy</option>
                             <option value="0.30">Easy</option>
                             <option value="0.50" selected>Moderate</option>
@@ -257,11 +260,11 @@
             </section>
                 
             {% if event.effects %}
-            <section id="effects-section" class="outer-border {% if not effects_data %}hidden{% endif %}">
+            <section id="effects-section" class="outer-border {% if not event.effects %}hidden{% endif %}">
                 <div class="flex-between align-center">
                     <h3>Effects</h3>
                     {% set roll_title = 'Resolve' if event.outcome_type == OutcomeType.DETERMINED else 'Roll' %}
-                    {% set manual_count = effects_data | rejectattr('obj.auto_apply') | list | length %}
+                    {% set manual_count = event.effects | rejectattr('auto_apply') | list | length %}
                     {% if manual_count > 1 %}
                         <div id="apply-all-container">
                             <button type="button"
@@ -276,11 +279,10 @@
                     {% endif %}
                 </div>
                 <div id="effects-list">
-                    {% for item in effects_data %}
-                        {% set eff = item.obj %}
+                    {% for eff in event.effects %}
                         <div class="effect-row spacious-bottom" 
                              id="eff-row-{{ eff.id }}" 
-                             data-role="{{ item.target_role }}"
+                             data-role="{{ eff.outfield.role }}"
                              data-get-val-from="{{ eff.get_val_from }}"
                              data-success-filter="{{ eff.outcome_success }}"
                              data-op-trans="{{ eff.op_transform or '' }}"
@@ -353,7 +355,7 @@
         '{{ Participant.SUCCESS_MAJOR }}': 'If Major Success',
         '{{ Participant.SUCCESS_MINOR }}': 'If Minor Success',
         '{{ Participant.FAILURE_ANY }}': 'If Failure',
-        '{{ Participant.SUCCESS_NAT_MIN }}': 'If Natural Min',
+        '{{ Participant.FAILURE_NAT_MIN }}': 'If Natural Min',
         '{{ Participant.FAILURE_MAJOR }}': 'If Major Failure',
         '{{ Participant.FAILURE_MINOR }}': 'If Minor Failure'
     };
@@ -372,12 +374,14 @@
 
     let lastRollValue = null;
 
-    // Gather selected IDs from the dropdowns
+    /**
+     * Gather the selected Participant ID for each role
+     */
     function getRoleIDs() {
-        const ROLE_SUFF = "{{ Participant.FORM_SUFFIX }}";
         const fd = new FormData();
         const inputs = document.querySelectorAll(
-            `input[name$="${ROLE_SUFF}"], select[name$="${ROLE_SUFF}"]`);
+            'input[name$="{{ Participant.ROLE_SUFFIX }}"], ' +
+            'select[name$="{{ Participant.ROLE_SUFFIX }}"]');
         inputs.forEach(el => {
             if (el.value) {
                 fd.append(el.name, el.value);
@@ -387,10 +391,18 @@
     }
 
     /**
-     * Formatting helper for Line 2 (Logic) and Line 3 (Numbers).
-     * Uses functional notation for Round/SoftCap, binary for others.
+     * Formats the inner expression that calculates the impact,
+     * i.e. the magnitude of change being applied to a target.
+     * (Source <op> Constant) = Impact
+     * 
+     * Used for Effect Line 2 (Logic/Labels) and Line 3 (Actual Numbers).
+     * Functional notation for Round/SoftCap, binary for others.
+     *
+     * @param {string|number} source - The raw input (e.g., "Roll Result" or 100)
+     * @param {number} constant - The inner transform value (e.g., 2.0)
+     * @param {string} op - The operator key (e.g., '*', 'scap')
      */
-    function formatImpactExpression(source, constant, op) {
+    function formatInnerFormula(source, constant, op) {
         if (!op || op === '{{ Operation.CONST }}') return source;
 
         const opSymbol = OP_MAP[op] || op;
@@ -409,7 +421,7 @@
     /**
      * Fetches calculated modifiers from the server and updates the UI
      */
-    async function refreshModifiers(updateEffectCurrentValues = true) {
+    async function refreshModifiers(updateEffectVals = true) {
         const previewDiv = document.getElementById('modifier-preview');
         const fd = getRoleIDs();
         const url = `/event/preview/${eventId}`;
@@ -515,8 +527,8 @@
                 row.querySelector('.target-name-display').innerText = eff.target_name || "?";
                 row.style.opacity = eff.is_resolved ? "1" : "0.5";
 
-                // Update current value and operator
-                if (updateEffectCurrentValues) {
+                // Update current value and operator for a new roll
+                if (updateEffectVals) {
                     const currentValEl = row.querySelector('.current-value-display');
                     currentValEl.innerText = eff.current_display;
 
@@ -543,9 +555,8 @@
 
                 // B. Add Math Transform (e.g., "Roll Result × 2")
                 if (hasTransform && eff.source_name) {
-                    // If it's a roll result, we call the source "Roll Result" for the formula
                     const sourceLabel = (getValFrom === '{{ Participant.OUTCOME }}') ? "Roll Result" : eff.source_name;
-                    logicParts.push(formatImpactExpression(
+                    logicParts.push(formatInnerFormula(
                         sourceLabel, row.dataset.valTrans, row.dataset.opTrans));
                 }
 
@@ -559,7 +570,7 @@
 
                 // Update Line 3: The Equation (using placeholders)
                 if (eff.relies_on_roll && !eff.impact_display) {
-                    equationEl.innerText = formatImpactExpression(
+                    equationEl.innerText = formatInnerFormula(
                         "Roll", row.dataset.valTrans, row.dataset.opTrans);
                 } else {
                     // Server has provided the impact_value because it's not dependent on the roll
@@ -567,7 +578,7 @@
                     
                     if (hasTransform) {
                         // Show: (1 * 1.0) = 1 (green)
-                        const baseEq = formatImpactExpression(
+                        const baseEq = formatInnerFormula(
                             eff.source_display, row.dataset.valTrans, row.dataset.opTrans);
                         equationEl.innerHTML = `${baseEq} = ${formattedImpact}`;
                     } else {
@@ -600,13 +611,6 @@
         document.getElementById('minor-success-threshold').innerText = minorSuccessDisplay;
         document.getElementById('major-success-threshold').innerText = majorSuccessDisplay;
         document.getElementById('major-failure-threshold').innerText = majorFailureDisplay;
-    }
-
-    if (diffSelect) {
-        diffSelect.addEventListener('change', updateDieThresholds);
-        
-        // Initial run
-        updateDieThresholds();
     }
 
     /**
@@ -664,6 +668,8 @@
      */
     if (rollBtn) {
         rollBtn.onclick = async () => {
+            refreshModifiers();
+
             document.querySelectorAll('.check-mark').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.auto-gear').forEach(el => el.classList.remove('hidden'));
             lastRollValue = null;
@@ -708,8 +714,11 @@
                     if (reliesOnRoll && eff.final_display) {
                         // Update the "Roll" placeholder with the actual number
                         if (row.dataset.getValFrom === '{{ Participant.OUTCOME }}') {
-                            equationEl.innerText = formatImpactExpression(
-                                eff.impact_display, 
+                            const displayRoll = Array.isArray(data.result_value) 
+                                ? `(${data.result_value.join(',')})` 
+                                : data.result_value;
+                            equationEl.innerText = formatInnerFormula(
+                                displayRoll,
                                 row.dataset.valTrans, 
                                 row.dataset.opTrans
                             );
@@ -843,46 +852,9 @@
         }
     }
 
-    /**
-     * Updates the names and current values for the Effects section
-     */
-    function updateEffectList() {
-        const roleIds = getRoleIDs();
-        const ROLE_SUFF = "{{ Participant.FORM_SUFFIX }}";
-        
-        document.querySelectorAll('.effect-row').forEach(async (row) => {
-            const role = row.dataset.role;
-            const roleIdField = `${role}${ROLE_SUFF}`;
-            const targetId = roleIds.get(roleIdField);
-            const nameDisplay = row.querySelector('.target-name-display');
-            
-            if (role === "{{ Participant.UNIVERSAL }}") {
-                nameDisplay.innerText = "🌐";
-            } else if (role === "{{ Participant.BLUEPRINT }}") {
-                nameDisplay.innerText = "📦";
-            } else if (targetId) {
-                const select = document.querySelector(`select[name="${roleIdField}"]`);
-                let name = "Target";
-                if (select) {
-                    name = select.options[select.selectedIndex].text;
-                    nameDisplay.innerText = name;
-                }
-            } else {
-                nameDisplay.innerText = "(" + role + ")";
-            }
-        });
-    }
-
-    document.querySelectorAll('.participant-trigger').forEach(el => {
-        el.addEventListener('change', () => {
-            refreshModifiers();
-            updateEffectList();
-        });
-    });
-
     document.addEventListener('DOMContentLoaded', function() {
+        updateDieThresholds();
         refreshModifiers();
-        updateEffectList();
     });
 </script>
 

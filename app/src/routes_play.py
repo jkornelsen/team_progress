@@ -21,7 +21,7 @@ from .logic_event import (
     roll_for_outcome, roll_for_system_outcome, calculate_determinants,
     preview_effects, resolve_effects,
     get_entity_value, is_factor_met,
-    effect_description, do_effect_change, process_all_effects)
+    do_effect_change, process_all_effects)
 from .logic_progress import (
     tick_all_active, start_production, stop_production)
 from .logic_production import (
@@ -1153,14 +1153,6 @@ def play_event(id):
         eligible_role_entities[role] = sort_by_name_stripped(
             list(role_candidates))
 
-    effects_data = []
-    for eff in event.effects:
-        effects_data.append({
-            'obj': eff,
-            'formula': effect_description(eff),
-            'target_role': eff.outfield.role
-        })
-
     # Entities that call this event
     caller_entities = (
         db.session.query(Entity)
@@ -1224,7 +1216,6 @@ def play_event(id):
         ctx_loc=ctx_loc,
         role_entities=eligible_role_entities,
         fields_not_met=fields_not_met,
-        effects_data=effects_data,
         caller_entities=caller_entities,
         involved_entities=involved_entities,
         parent_events=parent_events,
@@ -1245,7 +1236,7 @@ def event_preview(id):
     
     role_entities = {}
     for key in req:
-        if key.endswith(Participant.FORM_SUFFIX):
+        if key.endswith(Participant.ROLE_SUFFIX):
             role_name = Participant.formkey_to_role(key)
             role_entities[role_name] = req.get_int(key)
     
@@ -1264,7 +1255,7 @@ def roll_event(id):
 
     role_entities = {}
     for key in req:
-        if key.endswith(Participant.FORM_SUFFIX):
+        if key.endswith(Participant.ROLE_SUFFIX):
             role_name = Participant.formkey_to_role(key)
             role_entities[role_name] = req.get_int(key)
 
@@ -1300,7 +1291,7 @@ def apply_single_effect(factor_id):
     
     role_entities = {
         Participant.formkey_to_role(k): req.get_int(k)
-        for k in req if k.endswith(Participant.FORM_SUFFIX)
+        for k in req if k.endswith(Participant.ROLE_SUFFIX)
     }
     try:
         roll_str = req.get_str('roll_total')

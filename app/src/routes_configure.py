@@ -89,7 +89,8 @@ def edit_overall():
         return redirect(url_for('configure.index'))
         
     entities = {
-        name: model.query.filter_by(game_token=g.game_token).order_by(name_stripped()).all()
+        name: model.query.filter_by(
+            game_token=g.game_token).order_by(name_stripped()).all()
         for name, model in ENTITIES.items()
     }
     return render_template(

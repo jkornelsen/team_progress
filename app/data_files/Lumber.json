@@ -296,7 +296,6 @@
                 "items": [
                     {
                         "item_id": 28,
-                        "quantity": 0.0,
                         "position": [4, 3]
                     }
                 ],
@@ -540,7 +539,7 @@
                 "position": [4, 2],
                 "travel_party": "Driving",
                 "items": [
-                    {"item_id": 7, "quantity": 2.0, "slot": ""}
+                    {"item_id": 7, "quantity": 2.0}
                 ]
             }
         ],
@@ -743,7 +742,7 @@
             {
                 "id": 23,
                 "name": "Swing to Chop",
-                "description": "For the final blow, or after rolling a natural 1, do a *Chopping Check*.",
+                "description": "For the final blow, or after rolling a natural 1, do a [Chopping Check](/play/event/26).",
                 "outcome_type": "numeric",
                 "numeric_range": [1, 10],
                 "determinants": [
@@ -769,7 +768,7 @@
                     }
                 ],
                 "chained_events": [
-                    {"child_id": 26}
+                    {"child_id": 26, "success_filter": "natural_min"}
                 ]
             }
         ]
@@ -793,6 +792,6 @@
         "tag_best_order": 20,
         "tag_progress_type": "Incremental",
         "tag_multiplayer": true,
-        "tag_complete": "Has Objectives"
+        "tag_complete": "07 Playable / Under Construction"
     }
 }

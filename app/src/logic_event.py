@@ -362,34 +362,7 @@ def calculate_determinants(event, role_entities):
 # Effects
 # ------------------------------------------------------------------------
 
-def effect_description(eff):
-    """Returns a string describing the math logic of an effect."""
-    # The Source
-    if eff.get_val_from == Participant.OUTCOME:
-        source_val = "[Roll Result]"
-    else:
-        field = eff.infield or eff.outfield
-        source_val = field.get_field_name() if field else "Value"
-
-    # The Inner Transform
-    if eff.op_transform == Operation.CONST:
-        source_val = format_for_display(eff.val_transform)
-    elif eff.op_transform:
-        # e.g., (Roll Result * 2)
-        REPLACE = 135.79
-        source_val = get_inner_breakdown(
-            REPLACE, eff.val_transform, eff.op_transform).replace(
-            str(REPLACE), source_val)
-
-    # The Outer Application
-    if eff.op_application == Operation.ASSIGN:
-        op_app_repr = "→"
-    else:
-        op_app_repr = Operation.Repr[eff.op_application]
-    
-    return f"{op_app_repr} {source_val}"
-
-def _calculate_numeric_impact(eff, role_entities, roll_total=None):
+def calculate_numeric_impact(eff, role_entities, roll_total=None):
     """
     Shared helper: computes the numeric impact value for an effect.
     This is the 'From' side — source value after the inner transform.
@@ -530,7 +503,7 @@ def preview_effects(event, role_entities):
             source_val = eff.val_transform
 
         # --- 3. CALCULATE PRE-ROLL IMPACT ---
-        impact_value, relies_on_roll = _calculate_numeric_impact(
+        impact_value, relies_on_roll = calculate_numeric_impact(
             eff, role_entities, roll_total=None)
 
         # Output looks generally like:
@@ -566,7 +539,7 @@ def resolve_effects(event, role_entities, roll_total):
     has occurred, but before it is applied.
 
     Calls preview_effects for all structural/display info, then fills in
-    the now-known roll_total via _calculate_numeric_impact.
+    the now-known roll_total.
     """
     game_token = g.game_token
     previews = preview_effects(event, role_entities)
@@ -578,7 +551,7 @@ def resolve_effects(event, role_entities, roll_total):
             continue
  
         # --- 1. FILL IN IMPACT now that roll_total is known ---
-        impact, _ = _calculate_numeric_impact(eff, role_entities, roll_total)
+        impact, _ = calculate_numeric_impact(eff, role_entities, roll_total)
  
         # --- 2. COMPUTE FINAL VALUE ---
         current_val = preview['current_value']
@@ -663,7 +636,7 @@ def do_effect_change(eff, roll_total, role_entities):
     game_token = g.game_token
 
     # --- STEP 1: CALCULATE IMPACT (The "From") ---
-    impact, _ = _calculate_numeric_impact(eff, role_entities, roll_total)
+    impact, _ = calculate_numeric_impact(eff, role_entities, roll_total)
 
     # --- STEP 2: APPLY TO DATABASE (The "To") ---
     field_def = eff.outfield

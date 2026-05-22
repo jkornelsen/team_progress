@@ -4,6 +4,7 @@ import uuid
 from flask import (
     Flask, g, session, request, redirect, render_template, url_for)
 from flask_migrate import Migrate
+from jinja2 import StrictUndefined
 
 from .database import db, get_db_uri
 from .models import GENERAL_ID, StorageType
@@ -35,6 +36,7 @@ def create_app():
     # ------------------------------------------------------------------------
     db.init_app(app)
     Migrate(app, db)
+    app.jinja_env.undefined = StrictUndefined
 
     # ------------------------------------------------------------------------
     # 3. Blueprints Registration

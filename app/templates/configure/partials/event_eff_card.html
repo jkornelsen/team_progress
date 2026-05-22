@@ -7,7 +7,7 @@
             <span class="index-display label-like">#{{ index }}</span>
             <input type="text"
                    name="effs[{{ index }}][label]"
-                   value="{{ factor.label or '' }}" 
+                   value="{{ factor.label if factor else '' }}" 
                    placeholder="Effect Label">
             
         </div>
@@ -87,9 +87,9 @@
                             <option value="{{ Participant.FAILURE_MAJOR }}" 
                                 {{ 'selected' if factor and factor.outcome_success ==
                                     Participant.FAILURE_MAJOR }}>Major Failure</option>
-                            <option value="{{ Participant.SUCCESS_NAT_MIN }}" 
+                            <option value="{{ Participant.FAILURE_NAT_MIN }}" 
                                 {{ 'selected' if factor and factor.outcome_success ==
-                                    Participant.SUCCESS_NAT_MIN }}>Natural Min</option>
+                                    Participant.FAILURE_NAT_MIN }}>Natural Min</option>
                         </select>
                     </div>
                 </div>

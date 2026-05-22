@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from flask import (
     g, Blueprint, request, session, redirect, url_for, render_template, json,
     current_app, send_file)
+from http import HTTPStatus
 from app.models import db, JsonKeys, UserInteraction, Character, Overall
 from app.serialization import (
     init_game_session, load_scenario_from_path, DEFAULT_SCENARIO_FILE,
@@ -21,16 +22,6 @@ session_bp = Blueprint('session', __name__)
 # ------------------------------------------------------------------------
 # File Handling
 # ------------------------------------------------------------------------
-
-COMPLETENESS_LEVELS = [
-    "Idea Only",
-    "Under Construction",
-    "Starter Kit",
-    "Has Objectives",
-    "Complete",
-    "Polished"
-]
-UNDER_CONSTRUCTION_INDEX = 1
 
 @session_bp.route('/scenarios', methods=['GET', 'POST'])
 def browse_scenarios():
@@ -59,21 +50,22 @@ def browse_scenarios():
                 try:
                     data = json.load(f)
                     overall = BaseFieldMap(data.get(JsonKeys.OVERALL, {}))
-                    complete = overall.get_str('tag_complete', 'Under Construction')
-                    try:
-                        complete_rank = COMPLETENESS_LEVELS.index(complete)
-                    except ValueError:
-                        complete_rank = UNDER_CONSTRUCTION_INDEX
                     scenarios.append({
                         'filename': filename,
-                        'title': overall.get_str('title', filename),
-                        'description': overall.get_str('description', ''),
-                        'introduce': overall.get_int('tag_introduce_order', 50),
-                        'best': overall.get_int('tag_best_order', 50),
-                        'progress_type': overall.get_str('tag_progress_type', 'Idle'),
-                        'multiplayer': overall.get_bool('tag_multiplayer', False),
-                        'complete': complete,
-                        'complete_rank': complete_rank,
+                        'title': overall.get_str(
+                            'title', filename),
+                        'description': overall.get_str(
+                            'description', ''),
+                        'introduce': overall.get_int(
+                            'tag_introduce_order', 50),
+                        'best': overall.get_int(
+                            'tag_best_order', 50),
+                        'progress_type': overall.get_str(
+                            'tag_progress_type', 'Idle'),
+                        'multiplayer': overall.get_bool(
+                            'tag_multiplayer', False),
+                        'completeness': overall.get_str(
+                            'tag_complete', '02 Under Construction'),
                         'filesize': os.path.getsize(path)
                     })
                 except Exception as e:
@@ -82,7 +74,7 @@ def browse_scenarios():
     # Sorting
     if sort_by in ('introduce', 'best', 'title', 'progress_type'):
         reverse = False  # Ascending
-    elif sort_by in ('filesize', 'complete_rank', 'multiplayer'):
+    elif sort_by in ('filesize', 'completeness', 'multiplayer'):
         reverse = True  # Descending
     else:
         raise ValueError(f"Unexpected sort_by {sort_by}")
@@ -95,7 +87,7 @@ def browse_scenarios():
         'configure/scenarios.html', 
         scenarios=scenarios, 
         sort_by=sort_by,
-        link_letters=LinkLetters(excluded='om') # Reserve 'o' and 'm' for nav
+        link_letters=LinkLetters(excluded='om')
     )
 
 @session_bp.route('/save')

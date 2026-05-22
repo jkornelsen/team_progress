@@ -65,7 +65,7 @@
             <select name="{{ field_prefix }}[recipe_id]"
                     class="id-recipe {{
                         'hidden' if field_mode not in Participant.USES_RECIPE }}" 
-                    data-current-id="{{ field_data.recipe_id or '' }}">
+                    data-current-id="{{ field_data.recipe_id if field_data else '' }}">
                 <!-- Populated by syncRecipesState() -->
             </select>
 
@@ -77,7 +77,7 @@
                 <option value="">(Inactive / Nowhere)</option>
                 {% for l in all_locs %}
                     <option value="{{ l.id }}" {{ 'selected'
-                        if field_data.loc_id == l.id }}>{{ l.name }}</option>
+                        if field_data and field_data.loc_id == l.id }}>{{ l.name }}</option>
                 {% endfor %}
             </select>
         </div>

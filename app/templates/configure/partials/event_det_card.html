@@ -12,7 +12,7 @@
             <span class="index-display label-like">#{{ index }}</span>
             <input type="text" 
                    name="dets[{{ index }}][label]" 
-                   value="{{ factor.label or '' }}" 
+                   value="{{ factor.label if factor else '' }}" 
                    placeholder="Label e.g. Evasion (Optional)">
         </div>
         <!-- Move/Delete buttons -->
@@ -101,7 +101,7 @@
                             title="True when value isn't found or doesn't match expression">
                         <input type="checkbox" name="dets[{{ index }}][negate]"
                             class="negate-checkbox"
-                            {{ 'checked' if factor.negate }}>
+                            {{ 'checked' if factor and factor.negate }}>
                         NOT
                     </label>
                 </div>

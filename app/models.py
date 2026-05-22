@@ -1027,20 +1027,20 @@ class Participant:
     BLUEPRINT = 'blueprint' # Item blueprint (not pile) e.g. Recipes
     CONTEXT_ROLES = [SUBJECT, TARGET, AT, OWNER, UNIVERSAL, BLUEPRINT]
 
-    FORM_SUFFIX = '_role_id'
+    ROLE_SUFFIX = '_role_id'
 
     @staticmethod
     def formkey_to_role(key):
-        if key and key.endswith(Participant.FORM_SUFFIX):
-            return key[:-len(Participant.FORM_SUFFIX)]
+        if key and key.endswith(Participant.ROLE_SUFFIX):
+            return key[:-len(Participant.ROLE_SUFFIX)]
         return key
 
     @staticmethod
     def role_to_formkey(role):
         if role:
-            if role.endswith(Participant.FORM_SUFFIX):
+            if role.endswith(Participant.ROLE_SUFFIX):
                 return role
-            return f"{role}{Participant.FORM_SUFFIX}"
+            return f"{role}{Participant.ROLE_SUFFIX}"
         return role
 
     # --- Depth Traversal ---
@@ -1740,9 +1740,9 @@ class Overall(db.Model, DictHydrator):
     # Metadata tags for scenario browsing
     tag_introduce_order = db.Column(db.Integer, default=50)
     tag_best_order = db.Column(db.Integer, default=50)
-    tag_progress_type = db.Column(db.String(20))
+    tag_progress_type = db.Column(db.String(20), default='RPG')
     tag_multiplayer = db.Column(db.Boolean, default=False)
-    tag_complete = db.Column(db.String(20), default='')
+    tag_complete = db.Column(db.String(50), default='02 Under Construction')
 
     # Used to generate unique IDs per game token
     next_entity_id = db.Column(db.Integer, default=2)

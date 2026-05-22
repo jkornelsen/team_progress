@@ -49,9 +49,9 @@
         <option value="{{ Participant.FAILURE_MAJOR }}" 
             {{ 'selected' if link and link.success_filter ==
                 Participant.FAILURE_MAJOR }}>Major Failure</option>
-        <option value="{{ Participant.SUCCESS_NAT_MIN }}" 
+        <option value="{{ Participant.FAILURE_NAT_MIN }}" 
             {{ 'selected' if link and link.success_filter ==
-                Participant.SUCCESS_NAT_MIN }}>Natural Min</option>
+                Participant.FAILURE_NAT_MIN }}>Natural Min</option>
     </select>
     <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
 </div>

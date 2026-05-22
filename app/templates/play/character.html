@@ -96,7 +96,7 @@
             </div>
 
             <div>
-                {% set active_job = character.progress_records | first %}
+                {% set active_job = character.progress_records | first | default(none) %}
                 {% if active_job %}
                     <span class="text-accent">Working: {{ active_job.product.name }}</span>
                 {% else %}

@@ -33,8 +33,8 @@
 <!-- TEMPLATES FOR DYNAMIC ROWS -->
 
 {% macro dest_row(index, dest=None, current_loc_id=None) %}
-    <div class="col-row dest-row {{ 'unplaced-route' if not dest.door_here }}" style="align-items: center;">
-        <input type="hidden" name="dests[{{ index }}][id]" value="{{ dest.id or '' }}">
+    <div class="col-row dest-row {{ 'unplaced-route' if not dest or not dest.door_here }}" style="align-items: center;">
+        <input type="hidden" name="dests[{{ index }}][id]" value="{{ dest.id if dest else '' }}">
         
         <select name="dests[{{ index }}][target_id]">
             {% for loc in all_locs if loc.id != current_loc_id %}
@@ -45,19 +45,19 @@
         <!-- Door Here (Exit/Arrival Point) -->
         <div class="coord-input-group">
             <input type="text" name="dests[{{ index }}][door_here]" 
-                   value="{{ dest.door_here|join(',') if dest.door_here else '' }}" 
+                   value="{{ dest.door_here|join(',') if dest and dest.door_here else '' }}" 
                    placeholder="x,y" size="8">
         </div>
 
         <div class="direction-toggle">
             <select name="dests[{{ index }}][direction]" class="input-sm">
-                <option value="two-way" {{ 'selected' if dest.direction == 'two-way' or not dest }}>
+                <option value="two-way" {{ 'selected' if dest and dest.direction == 'two-way' or not dest }}>
                     ↔ Two-Way
                 </option>
-                <option value="forward" {{ 'selected' if dest.direction == 'forward' }}>
+                <option value="forward" {{ 'selected' if dest and dest.direction == 'forward' }}>
                     → Exit Only
                 </option>
-                <option value="backward" {{ 'selected' if dest.direction == 'backward' }}>
+                <option value="backward" {{ 'selected' if dest and dest.direction == 'backward' }}>
                     ← Entrance Only
                 </option>
             </select>
@@ -76,11 +76,11 @@
         <input type="text" name="zones[{{ index }}][rb]"
             value="{{ zone.coords[2:]|join(',') if zone else '' }}" placeholder="2,2">
         <input type="text" name="zones[{{ index }}][color]"
-            value="{{ zone.color or '' }}" placeholder="rgba(0,0,0,0.5)">
+            value="{{ zone.color if zone else '' }}" placeholder="rgba(0,0,0,0.5)">
         <input type="checkbox" name="zones[{{ index }}][prevents_travel]"
             {{ 'checked' if zone and zone.prevents_travel }}>
         <input type="text" name="zones[{{ index }}][label]"
-            value="{{ zone.label or '' }}" placeholder="Stone Wall">
+            value="{{ zone.label if zone else '' }}" placeholder="Stone Wall">
         <div class="flex-row">
             <button type="button" class="btn-sm btn-zone-up"
                 onclick="adjustZone('moveRow', this, -1)">↑</button>
