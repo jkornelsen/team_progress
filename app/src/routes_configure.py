@@ -57,26 +57,42 @@ def edit_overall():
         slots_text = req.get_str('slots')
         overall.slots = [s.strip() for s in slots_text.split('\n') if s.strip()]
         
-        # Save Objectives
+        # Save Win Conditions
         WinRequirement.query.filter_by(game_token=g.game_token).delete()
-        for row in req.get_list('winreqs'):
+        win_req_rows = req.get_list('winreqs')
+        win_req_rows.sort(key=lambda r: r.get_int('order_index', 0))
+        for idx, row in enumerate(win_req_rows):
             target_id = row.get_int('target_id')
-            loc_id = row.get_int('loc_id', None)
+            owner_id = row.get_int('owner_id', None)
             attrib_id = row.get_int('attrib_id', None)
             val = row.get_float('quantity')
-            new_req = WinRequirement(game_token=g.game_token)
+            if not target_id and not attrib_id:
+                continue
+            new_req = WinRequirement(
+                game_token=g.game_token,
+                order_index=idx
+            )
             
-            # Determine if the target is an Item or Character
+            # Resolve target
             if target_id:
-                ent = Entity.query.get((g.game_token, target_id))
-                if ent and ent.entity_type == 'item':
-                    new_req.item_id = target_id
-                elif ent and ent.entity_type == 'character':
-                    new_req.char_id = target_id
-            new_req.loc_id = loc_id
+                target = Entity.query.get((g.game_token, target_id))
+                if target:
+                    if target.entity_type == Item.TYPENAME:
+                        new_req.item_id = target_id
+                    elif target.entity_type == Character.TYPENAME:
+                        new_req.char_id = target_id
 
-            # If an attribute is selected, it's an attribute requirement
-            # Otherwise, it's a quantity requirement
+            # Resolve owner
+            if owner_id:
+                owner = Entity.query.get((g.game_token, owner_id))
+                if owner:
+                    if owner.entity_type == Location.TYPENAME:
+                        new_req.loc_id = owner_id
+                    elif owner.entity_type == Character.TYPENAME:
+                        if not new_req.char_id:
+                            new_req.char_id = owner_id
+
+            # Resolve field
             if attrib_id:
                 new_req.attrib_id = attrib_id
                 new_req.attrib_value = val

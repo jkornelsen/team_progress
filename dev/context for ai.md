@@ -1,15 +1,13 @@
 ## Goals
 
 - How to get results grounded in source of truth
-
 - Provide a bit of stable guidance along with fresh, task-specific context
-
 - Bundle new code, old code, json data files
 
 ## Ideas
 
+- Tell me when there's some reason that you believe what I ask isn't a good idea or is incorrect.
 - Use inline constants from model e.g. '{{ Participant.OUTCOME }}' in javascript rather than hardcoded literal 'outcome'
-
 - Do math on server rather than calculating 'current_val op val_transform' in javascript
 
 ## Repeatable Mini-Template

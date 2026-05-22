@@ -24,6 +24,101 @@
 </script>
 <script src="{{ url_for('static', filename='js/configuration.js') }}"></script>
 
+{% macro winreq_card(index, req=None) %}
+<div class="winreq-card outer-border spacious-bottom factor-card"
+        data-index="{{ index }}">
+    <input type="hidden"
+        name="winreqs[{{ index }}][order_index]"
+        class="winreq-order-input"
+        value="{{ index }}">
+
+    <div class="flex-between">
+        <span class="text-accent">
+            Condition <span class="winreq-display-number">{{ '#' ~ (index + 1) if index is number else '' }}</span>
+        </span>
+        <div class="flex-row gap-10">
+            <button type="button" class="btn-sm btn-winreq-up"
+                onclick="adjustWinReq('moveRow', this, -1)">↑</button>
+            <button type="button" class="btn-sm btn-winreq-down"
+                onclick="adjustWinReq('moveRow', this, 1)">↓</button>
+            <button type="button" class="btn-sm dangerous-button"
+                onclick="ConfigEditor.removeRow(this, 'winreq-list'); adjustWinReq('renumberRows')">Remove</button>
+        </div>
+    </div>
+    
+    <div class="grid-3-col spacious-top">
+        <!-- Target Entity (Item or Character) -->
+        <div class="flex-row">
+        <div class="form-group">
+            <label>Target</label>
+            <select name="winreqs[{{ index }}][target_id]"
+                    class="winreq-target-select"
+                    onchange="syncWinReqContext(this)">
+                <option value="" data-type="none">(None)</option>
+                <optgroup label="Items">
+                    {% for i in items %}
+                        <option value="{{ i.id }}" data-type="item" {{ 'selected'
+                            if req and i.id == req.item_id }}>{{ i.name }}</option>
+                    {% endfor %}
+                </optgroup>
+                <optgroup label="Characters">
+                    {% for c in characters %}
+                        <option value="{{ c.id }}" data-type="character" {{ 'selected'
+                            if req and c.id == req.char_id and not req.item_id }}>{{ c.name }}</option>
+                    {% endfor %}
+                </optgroup>
+            </select>
+        </div>
+
+        <!-- Target Context (Location or Character) -->
+        <div class="form-group" style="margin-left: 15px;">
+            <label>At / Carried By</label>
+            <select name="winreqs[{{ index }}][owner_id]"
+                    class="winreq-context-select"
+                    style="width: 24ch;">
+                <option value="">(Anywhere)</option>
+                <optgroup label="Locations">
+                    {% for l in locations %}
+                        <option value="{{ l.id }}" {{ 'selected'
+                            if req and l.id == req.loc_id }}>{{ l.name }}</option>
+                    {% endfor %}
+                </optgroup>
+                <optgroup label="Characters" class="context-char-group">
+                    {% for c in characters %}
+                        <option value="{{ c.id }}" {{ 'selected'
+                            if req and c.id == req.char_id and req.item_id }}>{{ c.name }}</option>
+                    {% endfor %}
+                </optgroup>
+            </select>
+        </div>
+        </div>
+
+        <!-- Requirements (Quantity or Attribute) -->
+        <div class="form-group flex-row gap-5 attrib-wrapper">
+            <label>Required Value</label>
+            <select name="winreqs[{{ index }}][attrib_id]"
+                    style="width: 18ch;"
+                    data-current-val="{{ req.quantity or req.attrib_value or 0 if req else 0 }}"
+                    onchange="ConfigEditor.syncAttribVal(this)">
+                <option value="">(Qty)</option>
+                {% for a in attribs %}
+                    <option value="{{ a.id }}"
+                        {{ 'selected' if req and a.id == req.attrib_id }}>{{ a.name }}</option>
+                {% endfor %}
+            </select>
+            <div class="attribval-container flex-grow" 
+                 data-field-name="winreqs[{{ index }}][quantity]">
+                <!-- Populated by ConfigEditor.syncAttribVal -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+<template id="winreq-template">
+    {{ winreq_card('__INDEX__', None) }}
+</template>
+
 <div class="configure-overall">
     <h1>Scenario Settings & Objectives</h1>
     
@@ -67,66 +162,16 @@
         <section class="outer-border">
             <div class="flex-between align-center">
                 <h3>Win Conditions (Objectives)</h3>
-                <button type="button" class="btn-sm" onclick="ConfigEditor.addRow('winreq-list', 'winreq-template')">+ Add Objective</button>
+                <button type="button" class="btn-sm" 
+                        onclick="ConfigEditor.addRow('winreq-list', 'winreq-template', (row) => { syncWinReqContext(row.querySelector('.winreq-target-select')); adjustWinReq('renumberRows'); })">
+                    + Add Condition
+                </button>
             </div>
-            <p class="label-like spacious-bottom">Define what needs to happen to "Win" this scenario. All conditions must be met.</p>
+            <p class="label-like spacious-bottom">Define what needs to happen to win this scenario. All conditions must be met.</p>
             
             <div id="winreq-list">
                 {% for req in overall.win_reqs %}
-                <div class="winreq-card outer-border spacious-bottom">
-                    <div class="flex-between">
-                        <span class="text-accent">Condition #{{ loop.index }}</span>
-                        <button type="button" class="btn-sm dangerous-button" onclick="this.closest('.winreq-card').remove()">Remove</button>
-                    </div>
-                    
-                    <div class="grid-3-col spacious-top">
-                        <!-- Target Entity (Item or Character) -->
-                        <div class="form-group">
-                            <label>Target Entity</label>
-                            <select name="winreqs[{{ loop.index0 }}][target_id]">
-                                <option value="">(None)</option>
-                                <optgroup label="Items">
-                                    {% for i in items %}<option value="{{ i.id }}" {{ 'selected' if i.id == req.item_id }}>{{ i.name }}</option>{% endfor %}
-                                </optgroup>
-                                <optgroup label="Characters">
-                                    {% for c in characters %}<option value="{{ c.id }}" {{ 'selected' if c.id == req.char_id }}>{{ c.name }}</option>{% endfor %}
-                                </optgroup>
-                            </select>
-                        </div>
-
-                        <!-- Target Context (Location) -->
-                        <div class="form-group">
-                            <label>Must be at Location</label>
-                            <select name="winreqs[{{ loop.index0 }}][loc_id]">
-                                <option value="">(Anywhere)</option>
-                                {% for l in locations %}
-                                    <option value="{{ l.id }}" {{ 'selected' if l.id == req.loc_id }}>{{ l.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <!-- Requirements (Quantity or Attribute) -->
-                        <div class="form-group" style="background-color: #222">
-                            <label>Required Value</label>
-                            <div class="flex-row gap-5 attrib-wrapper">
-                                <select name="winreqs[{{ loop.index0 }}][attrib_id]"
-                                        style="width: 12ch;"
-                                        data-current-val="{{ req.quantity or req.attrib_value or 0 }}"
-                                        onchange="ConfigEditor.syncAttribVal(this)">
-                                    <option value="">(Qty)</option>
-                                    {% for a in attribs %}
-                                        <option value="{{ a.id }}"
-                                            {{ 'selected' if a.id == req.attrib_id }}>{{ a.name }}</option>
-                                    {% endfor %}
-                                </select>
-                                <div class="attribval-container flex-grow" 
-                                     data-field-name="winreqs[{{ loop.index0 }}][quantity]"
-                                    <!-- Populated by ConfigEditor.syncAttribVal -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                    {{ winreq_card(loop.index0, req) }}
                 {% endfor %}
             </div>
         </section>
@@ -136,57 +181,53 @@
     </form>
 </div>
 
-<!-- TEMPLATE FOR DYNAMIC ROW -->
-<template id="winreq-template">
-    <div class="winreq-card outer-border spacious-bottom">
-        <div class="flex-between">
-            <span class="text-accent">New Objective</span>
-            <button type="button" class="btn-sm dangerous-button" onclick="this.closest('.winreq-card').remove()">Remove</button>
-        </div>
-        <div class="grid-3-col spacious-top">
-            <div class="form-group">
-                <label>Target Entity:</label>
-                <select name="winreqs[__INDEX__][target_id]">
-                    <option value="">(None)</option>
-                    <optgroup label="Items">{% for i in items %}<option value="{{ i.id }}">{{ i.name }}</option>{% endfor %}</optgroup>
-                    <optgroup label="Characters">{% for c in characters %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</optgroup>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Must be at Location:</label>
-                <select name="winreqs[__INDEX__][loc_id]">
-                    <option value="">(Anywhere)</option>
-                    {% for l in locations %}<option value="{{ l.id }}">{{ l.name }}</option>{% endfor %}
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Required Value:</label>
-                <div class="flex-row gap-5 attrib-wrapper">
-                    <select name="winreqs[__INDEX__][attrib_id]" 
-                            style="width: 12ch;"
-                            onchange="ConfigEditor.syncAttribVal(this)">
-                        <option value="">(Qty)</option>
-                        {% for a in attribs %}
-                            <option value="{{ a.id }}">{{ a.name }}</option>
-                        {% endfor %}
-                    </select>
-                    <div class="attribval-container flex-grow" 
-                         data-field-name="winreqs[__INDEX__][quantity]">
-                         <!-- Initialized as numeric by ConfigEditor -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</template>
-
 <script>
+    /**
+     * Configuration for the WinReq list sorting
+     */
+    function adjustWinReq(method, ...args) {
+        const options = {
+            rowSelector: '.winreq-card',
+            inputClass: '.winreq-order-input',
+            displayClass: '.winreq-display-number',
+            upClass: '.btn-winreq-up',
+            downClass: '.btn-winreq-down',
+            emptyMsgId: 'winreq-list-empty'
+        };
+        ConfigEditor[method](...args, 'winreq-list', options);
+    }
+
+    /**
+     * Disables the 'Characters' context group if the target entity is a Character.
+     */
+    function syncWinReqContext(targetSelect) {
+        if (!targetSelect) return;
+        
+        const card = targetSelect.closest('.winreq-card');
+        const contextSelect = card.querySelector('.winreq-context-select');
+        const charGroup = contextSelect.querySelector('.context-char-group');
+        
+        const selectedOption = targetSelect.options[targetSelect.selectedIndex];
+        const type = selectedOption.dataset.type;
+
+        if (type === 'character') {
+            charGroup.disabled = true;
+            // If a character was already selected in the context, reset it to "(Anywhere)"
+            if (charGroup.contains(contextSelect.selectedOptions[0])) {
+                contextSelect.value = "";
+            }
+        } else {
+            charGroup.disabled = false;
+        }
+    }
+
+    // Initialize state for existing rows on load
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.winreq-target-select').forEach(syncWinReqContext);
+        adjustWinReq('renumberRows');
+    });
 </script>
 
 <style>
-    .winreq-card { background: #111; padding: 15px; border-left: 4px solid var(--border); }
-    .winreq-card:hover { border-left-color: var(--accent); }
-    .grid-3-col { display: grid; grid-template-columns: 1.5fr 1.5fr 2fr; gap: 15px; }
-    .footer-actions { margin-top: 40px; padding: 20px; border-top: 1px solid var(--border); }
 </style>
 {% endblock %}

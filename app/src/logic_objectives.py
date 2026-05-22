@@ -1,5 +1,5 @@
 from app.models import (
-    db, WinRequirement, Pile, Character, AttribVal, GENERAL_ID)
+    db, WinRequirement, Pile, Character, Item, AttribVal, GENERAL_ID)
 from app.utils import format_num, maskable_name
 
 def validate_requirements(game_token):
@@ -18,47 +18,52 @@ def validate_requirements(game_token):
         is_fulfilled = False
         desc = ""
 
-        # Condition 1: Item in General Storage (Universal)
-        if r.item_id and not r.char_id and not r.loc_id:
-            pile = Pile.query.filter_by(
-                game_token=game_token, item_id=r.item_id, owner_id=GENERAL_ID
-            ).first()
-            current_qty = pile.quantity if pile else 0
-            is_fulfilled = current_qty >= r.quantity
-            desc = f"🌐 {format_num(r.quantity)} " \
-                   f"{maskable_name(r.item)}"
+        # --- CASE 1: ITEM QUANTITY GOALS ---
+        if r.item_id and not r.attrib_id:
+            q_required = format_num(r.quantity) if r.quantity != 1 else ''
 
-        # Condition 2: Item at a specific Location
-        elif r.item_id and r.loc_id and not r.char_id:
-            # Sum all piles of this item at the location (across all grid positions)
-            piles = Pile.query.filter_by(
-                game_token=game_token, item_id=r.item_id, owner_id=r.loc_id
-            ).all()
-            current_qty = sum(p.quantity for p in piles)
-            is_fulfilled = current_qty >= r.quantity
-            desc = f"📍 {format_num(r.quantity)} {maskable_name(r.item)}" \
-                   f" at {maskable_name(r.loc)}"
+            # A. Item in General Storage (Universal)
+            if not r.char_id and not r.loc_id:
+                pile = Pile.query.filter_by(
+                    game_token=game_token, item_id=r.item_id, owner_id=GENERAL_ID
+                ).first()
+                current_qty = pile.quantity if pile else 0
+                is_fulfilled = current_qty >= r.quantity
+                desc = f"🌐 {q_required} {maskable_name(r.item)}"
 
-        # Condition 3: Item owned by a Character
-        elif r.item_id and r.char_id:
-            pile = Pile.query.filter_by(
-                game_token=game_token, item_id=r.item_id, owner_id=r.char_id
-            ).first()
-            current_qty = pile.quantity if pile else 0
-            is_fulfilled = current_qty >= r.quantity
-            desc = f"👤 {r.char.name} must carry {format_num(r.quantity)}" \
-                   f" {maskable_name(r.item)}"
+            # B. Item at a specific Location
+            elif r.loc_id:
+                piles = Pile.query.filter_by(
+                    game_token=game_token, item_id=r.item_id, owner_id=r.loc_id
+                ).all()
+                current_qty = sum(p.quantity for p in piles)
+                is_fulfilled = current_qty >= r.quantity
+                desc = f"📍 {q_required} {maskable_name(r.item)} at {maskable_name(r.loc)}"
 
-        # Condition 4: Character at a Location
-        elif r.char_id and r.loc_id and not r.item_id:
+            # C. Item owned by a Character (Carried)
+            elif r.char_id:
+                pile = Pile.query.filter_by(
+                    game_token=game_token, item_id=r.item_id, owner_id=r.char_id
+                ).first()
+                current_qty = pile.quantity if pile else 0
+                is_fulfilled = current_qty >= r.quantity
+                desc = f"👤 {r.char.name} must carry {q_required} {maskable_name(r.item)}"
+
+        # --- CASE 2: LOCATION GOALS (Char at Loc) ---
+        elif r.char_id and r.loc_id and not r.item_id and not r.attrib_id:
             char = Character.query.get((game_token, r.char_id))
             is_fulfilled = char.location_id == r.loc_id
             desc = f"👤 {char.name} must be at {maskable_name(r.loc)}"
 
-        # Condition 5: Character Attribute Level
-        elif r.char_id and r.attrib_id:
+        # --- CASE 3: ATTRIBUTE GOALS ---
+        elif r.attrib_id:
+            # Determine the subject (Character or Item)
+            subject_id = r.char_id or r.item_id
+            subject_name = r.char.name if r.char_id else maskable_name(r.item)
+            icon = "👤" if r.char_id else "📦"
+            
             val_rec = AttribVal.query.filter_by(
-                game_token=game_token, subject_id=r.char_id, attrib_id=r.attrib_id
+                game_token=game_token, subject_id=subject_id, attrib_id=r.attrib_id
             ).first()
             current_val = val_rec.value if val_rec else 0
 

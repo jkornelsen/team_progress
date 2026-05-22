@@ -308,6 +308,12 @@
                 ]
             },
             {
+                "id": 125,
+                "name": "Forbidden Book",
+                "description": "Atlanth won't let you leave with this unless he's distracted. Talk to him.\r\n\r\nAfter escaping from the Sunken Library, Lyria should give the book to her friend **Crush** in **Dustridge Town.**",
+                "q_limit": 1.0
+            },
+            {
                 "id": 68,
                 "name": "Harmony Pick",
                 "description": "Can mine spectrum ore."
@@ -506,12 +512,14 @@
                 "id": 17,
                 "name": "Blackvein Hold Approach",
                 "description": "Looking down from the crest of a hill, you can see the **Blackvein Hold** gate ahead.",
+                "masked": true,
                 "destinations": [
                     {"loc2_id": 34},
                     {
                         "loc2_id": 35,
                         "door2": [4, 6]
-                    }
+                    },
+                    {"loc2_id": 65}
                 ],
                 "entrance_reqs": [
                     {"item_id": 19, "val_required": 1.0}
@@ -625,8 +633,7 @@
                 "name": "East Harbor",
                 "description": "A major road goes through here, and there is a dock for freight ships. The ocean expands to the horizon in the east. Southwest is the town of **Dustridge**, while to the north lie the cold lands.",
                 "destinations": [
-                    {"loc2_id": 64},
-                    {"loc2_id": 17}
+                    {"loc2_id": 64}
                 ],
                 "entrance_reqs": [
                     {"item_id": 101, "val_required": 1.0}
@@ -776,6 +783,9 @@
                 "id": 48,
                 "name": "Sunken Library",
                 "description": "Dome-shaped building on the ocean floor with a doorway at the top.",
+                "items": [
+                    {"item_id": 125, "quantity": 1.0}
+                ],
                 "destinations": [
                     {"loc2_id": 65}
                 ],
@@ -961,8 +971,8 @@
                 ],
                 "abilities": [21, 26, 27, 33],
                 "toplevel": true,
-                "location_id": 48,
-                "items": []
+                "location_id": 9,
+                "position": [3, 5]
             },
             {
                 "id": 83,
@@ -1328,6 +1338,7 @@
         "slots": ["Main Hand", "Off Hand", "Body", "Head", "Feet", "Back"],
         "win_reqs": [
             {"char_id": 4, "attrib_id": 7, "attrib_value": 0.0},
+            {"item_id": 125, "quantity": 1.0, "char_id": 52},
             {"item_id": 18, "quantity": 1.0}
         ],
         "tag_introduce_order": 40,

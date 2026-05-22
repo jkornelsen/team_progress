@@ -38,7 +38,7 @@
         
         <select name="dests[{{ index }}][target_id]">
             {% for loc in all_locs if loc.id != current_loc_id %}
-                <option value="{{ loc.id }}" {{ 'selected' if loc.id == dest.target_id }}>{{ loc.name }}</option>
+                <option value="{{ loc.id }}" {{ 'selected' if dest and loc.id == dest.target_id }}>{{ loc.name }}</option>
             {% endfor %}
         </select>
 

@@ -208,15 +208,7 @@
                         
                         {% for y in range(1, location.dimensions[1] + 1) %}
                             {% for x in range(1, location.dimensions[0] + 1) %}
-                                {% set is_excluded = false %}
-                                {% if location.excluded and location.excluded|length == 4 %}
-                                    {% set l, t, r, b = location.excluded %}
-                                    {% if x >= l and x <= r and y >= t and y <= b %}
-                                        {% set is_excluded = true %}
-                                    {% endif %}
-                                {% endif %}
-                                
-                                <div class="tactgrid-cell {{ 'excluded' if is_excluded else 'included' }}" 
+                                <div class="tactgrid-cell included" 
                                      id="cell-{{ x }}-{{ y }}"
                                      data-x="{{ x }}" data-y="{{ y }}">
                                     {# Content injected by JS fillGrid() #}
@@ -372,7 +364,6 @@
     ];
 
     function fillGrid() {
-        //$('.tactgrid-cell.included').html('');
         const $cells = $('.tactgrid-cell.included');
         $cells.html('');
         $cells.attr('title', '');

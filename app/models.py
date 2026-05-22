@@ -1753,7 +1753,10 @@ class Overall(db.Model, DictHydrator):
             "description": self.description,
             "number_format": self.number_format,
             "slots": self.slots or [],
-            "win_reqs": [wr.to_dict() for wr in self.win_reqs],
+            "win_reqs": [
+                wr.to_dict() for wr in
+                sorted(self.win_reqs, key=lambda x: x.order_index)
+            ],
             "tag_introduce_order": self.tag_introduce_order,
             "tag_best_order": self.tag_best_order,
             "tag_progress_type": self.tag_progress_type,
@@ -1765,9 +1768,9 @@ class Overall(db.Model, DictHydrator):
     @classmethod
     def from_dict(cls, data, game_token):
         overall = super().from_dict(data, game_token)
-        for r_data in data.get('win_reqs', []):
+        for order_index, wr_data in enumerate(data.get('win_reqs', [])):
             overall.win_reqs.append(
-                WinRequirement.from_dict(r_data, game_token)
+                WinRequirement.from_dict(wr_data, game_token, order_index)
             )
         return overall
 
@@ -1789,12 +1792,14 @@ class Overall(db.Model, DictHydrator):
         back_populates='overall',
         foreign_keys="[WinRequirement.game_token]",
         cascade="all, delete-orphan",
+        order_by="WinRequirement.order_index",
         overlaps="overall,item,char,loc,attrib")
 
 class WinRequirement(db.Model, DictHydrator):
     __tablename__ = 'win_requirements'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     game_token = db.Column(db.String(50), index=True, nullable=False)
+    order_index = db.Column(db.Integer, default=0)
     item_id = db.Column(db.Integer)
     quantity = db.Column(db.Float)
     char_id = db.Column(db.Integer)
@@ -1814,8 +1819,9 @@ class WinRequirement(db.Model, DictHydrator):
         return self.to_dict_sparse(data)
 
     @classmethod
-    def from_dict(cls, data, game_token):
-        return super().from_dict(data, game_token)
+    def from_dict(cls, data, game_token, order_index):
+        return super().from_dict(
+            data, game_token, order_index=order_index)
 
     overall = db.relationship(
         'Overall',
