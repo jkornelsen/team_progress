@@ -11,14 +11,36 @@
                 ]
             },
             {
+                "id": 166,
+                "name": "Chain Mail",
+                "description": "Requires high strength to wear and still be able to move freely.",
+                "recipes": [
+                    {
+                        "id": 171,
+                        "sources": [
+                            {"item_id": 169, "q_required": 10.0}
+                        ]
+                    }
+                ]
+            },
+            {
                 "id": 78,
                 "name": "Charcoal",
-                "description": "Made from wood, needed to fuel forge."
+                "description": "Made from wood, needed to fuel forges.",
+                "recipes": [
+                    {
+                        "id": 179,
+                        "rate_duration": 8,
+                        "sources": [
+                            {"item_id": 40, "q_required": 2.0}
+                        ]
+                    }
+                ]
             },
             {
                 "id": 117,
                 "name": "Convo Atlanth 1a",
-                "description": "Lyria swims down to the library floor, the fin flaps raised up on her arms and legs. Amidst the bookshelves, there sits an ancient watery figure. She approaches nervously. But the trick with gods you might not trust is to be casual and respectfully friendly.\r\n\r\nShe does not greet Atlanth directly, but goes to a nearby shelf and starts looking at the titles. *\"Let's see, there must be something on Nalaran history somewhere,\"* she says aloud.\r\n\r\nThis gains Atlanth's interest. *\"Would you like to hear where your people came from?\"* he asks. Sharing lore is one of his favorite things to do, especially with those who live in the waves.",
+                "description": "Lyria swims down to the library floor, the fin flaps raised up on her arms and legs. Amidst the bookshelves, there sits an ancient watery figure. She approaches nervously. With gods you might not trust, it's best to be respectfully casual.\r\n\r\nShe does not greet Atlanth directly, but goes to a nearby shelf and starts looking at the titles. *\"Let's see, there must be something on Nalaran history somewhere,\"* she says aloud.\r\n\r\nThis gains Atlanth's interest. *\"Would you like to hear where your people came from?\"* he asks. Sharing lore is one of his favorite things to do, especially with those who live in the waves.",
                 "storage_type": "u",
                 "q_limit": 2.0,
                 "recipes": [
@@ -40,7 +62,7 @@
             {
                 "id": 120,
                 "name": "Convo Atlanth 1b",
-                "description": "*\"Well, we've always been seahorse riders,\"* responds Lyria. While keeping her face towards the god, she starts to quietly step backwards, to the end of the first shelf.\r\n\r\n*\"Seahorses, indeed. But they were not tame at the beginning. There was a year when the seahorses found the settlement and attacked in large numbers with their sharp fins. Your people were forced to hide in trenches.\"*",
+                "description": "*\"Well, we've always been seahorse riders,\"* responds Lyria nonchalantly. While keeping her face towards the god, she starts to quietly step backwards, to the end of the first shelf.\r\n\r\n*\"Seahorses, indeed. But they were not tame at the beginning. There was a year when the seahorses found the settlement and attacked in large numbers with their sharp fins. Your people were forced to hide in trenches.\"*",
                 "storage_type": "u",
                 "q_limit": 2.0,
                 "recipes": [
@@ -62,7 +84,7 @@
             {
                 "id": 122,
                 "name": "Convo Atlanth 1c",
-                "description": "*\"Sounds awful,\"* answers Lyria. *\"How did they survive?\"* Rounding the first shelf, she thumbs through the books on the second shelf. *It has to be here somewhere,* she thought.\r\n\r\n*\"Then, a mute fisher's daughter named Selthari noticed what others missed. She felt the vibration of their mating calls and sang their own longing back to them, until they became enchanted with desire.\"* Atlanth is engrossed in storytelling now and does not notice the books Lyria is looking at.\r\n\r\n*\"Are you saying the seahorses started pressing after each other in heat?\"* She feigns shock.\r\n\r\n*\"Each other, no...\"* he chucked. *\"There's a reason the riders traditionally wore spiked belts.\"*",
+                "description": "*\"Sounds awful,\"* answers Lyria. *\"How did they survive?\"* Rounding the first shelf, she thumbs through the books on the second shelf. *It has to be here somewhere,* she thought.\r\n\r\n*\"A mute fisher's daughter named Selthari noticed what others missed. She felt the vibration of their mating calls and sang their own longing back to them, until they became enchanted with desire.\"* Atlanth is engrossed in storytelling now and does not notice the books Lyria is looking at.\r\n\r\n*\"Are you saying the seahorses started going after each other in heat?\"* She feigns shock.\r\n\r\n*\"Each other, no...\"* he chucked. *\"There's a reason the riders traditionally wore spiked belts.\"*",
                 "storage_type": "u",
                 "q_limit": 1.0,
                 "recipes": [
@@ -84,14 +106,14 @@
             {
                 "id": 124,
                 "name": "Convo Atlanth 1d",
-                "description": "Lyria doesn't believe the god's words, although they are amusing. Then, she finds it, the book containing the word \"Tethered\" in the title. She quickly grabs it.\r\n\r\n*\"That's quite a tale,\"* she speaks up, suddenly firm. *\"But didn't you know, what I really came for was to hear about the Tethered One. Won't you tell me about him?\"* With that, she leaps up and swims for the exit as fast as she can.\r\n\r\n*\"What? NOOOO, that's forbidden, you minnow-bitch!\"* he roars. But she reaches the door and kicks hard. The entire section cracks and then crashes down, preventing him from following.",
+                "description": "Lyria doesn't believe the god's words, although they are amusing. Then, she finds it, a book containing the word \"Tethered.\" She quickly grabs it.\r\n\r\n*\"That's quite a tale,\"* she speaks up, suddenly firm. *\"But didn't you know, what I really came for was to hear about the {rebeccapurple|Tethered One}. Won't you tell me about him?\"* With that, she leaps up and swims for the exit as fast as she can.\r\n\r\n*\"What? NOOOO, that's forbidden, you minnow-bitch!\"* he roars. But she reaches the door and kicks hard. The entire section cracks and crashes down, preventing him from following.",
                 "storage_type": "u",
                 "q_limit": 1.0,
                 "recipes": [
                     {
                         "id": 125,
                         "sources": [
-                            {"item_id": 114, "q_required": 1.0, "preserve": true}
+                            {"item_id": 122, "q_required": 1.0, "preserve": true}
                         ],
                         "attrib_reqs": [
                             {
@@ -104,16 +126,38 @@
                 ]
             },
             {
+                "id": 156,
+                "name": "Convo Crush 1a",
+                "description": "Lyria finds Crush taking a break from woodcutting in a quiet spot at the base of a cliff. She often meets him here after coming up the road from the eastern shore. He is a reliable listening ear that she has always found reassuring.\r\n\r\n*\"So then he was going on about these seahorses and I barely had a chance to grab this book and escape.\"* Lyria's recap had been rushing out for the past 10 minutes before finally she paused.\r\n\r\n*\"Wow, I think that might be the craziest story I've ever heard from you,\"* responded Crush, *\"and that's saying a lot. But hold on, I know plenty about this guy they call the Tethered One. And it's not good news.\"*",
+                "storage_type": "u",
+                "q_limit": 2.0,
+                "recipes": [
+                    {
+                        "id": 157,
+                        "sources": [
+                            {"item_id": 156, "q_required": 1.0, "preserve": true}
+                        ],
+                        "attrib_reqs": [
+                            {
+                                "attrib_id": 128,
+                                "value_range": [1.0, 1.0],
+                                "range_inclusive": [true, true]
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
                 "id": 129,
                 "name": "Convo Crush 1b",
-                "description": "Lyria looks at him in surprise. *\"You know about him?\"*\r\n\r\n*\"Yeah, the Stonereach play a major role in running Blackvein Hold, what with it being underground and all. I've visited a few times myself. Not through the subterranean water, though,\"* he laughed. *\"Just the front gate.*\"\r\n\r\n*\"Anyway, the guards I know say they hate being near his cell. He can slip through almost any crack, and for more than a century now, he's been learning Ithilborn tricks. Guess he has a natural affinity with their ways. If it weren't for the fact that that prison was made by Vull himself, doubtless the Tethered One would be out causing gods know what terror.\"*",
+                "description": "Lyria looks at him in surprise. *\"You know about him?\"*\r\n\r\n*\"Yeah, the Stonereach play a major role in running Blackvein Hold, what with it being underground and all. I've visited a few times myself. Not through the subterranean water, though,\"* he laughed. *\"Just the front gate.*\"\r\n\r\n*\"Anyway, the guards say they hate being near his cell. He can slip through almost any crack, and for more than a century now, he's been learning {darkgray|Ithilborn} tricks. Guess he has a natural affinity with their ways. If it weren't for the fact that that prison was made by Vull himself, doubtless the Tethered One would be out causing gods know what terror.\"*",
                 "storage_type": "u",
                 "q_limit": 1.0,
                 "recipes": [
                     {
                         "id": 130,
                         "sources": [
-                            {"item_id": 126, "q_required": 2.0, "preserve": true}
+                            {"item_id": 156, "q_required": 2.0, "preserve": true}
                         ],
                         "attrib_reqs": [
                             {
@@ -128,7 +172,7 @@
             {
                 "id": 131,
                 "name": "Convo Crush 1c",
-                "description": "Lyria ponders this. *\"I mean, I'm not saying he comes across as safe, and certainly not warm and friendly like Dulcie,\"* (this gets a laugh out of Crush), *\"but I don't know, I guess he was convincing enough that I wanted to know what secrets the gods have covered up.\"*\r\n\r\n*\"I think you're underestimating him,\"* came back Crush. *\"Met an unimaginative farmer once who said the Tethered One could pull the spirit right out of a man and stitch it into weapons, ships, even buildings.\"* His calloused fingers absently traced the woodaxe's edge, as if reassuring himself it bore no enchantments. *\"Dunno if it's true, but that farmer? His eyes never blinked right after.\"*\r\n\r\n*\"Not to mention what we learned in school history about him allowing the Drowned Court's army to march right up to the celestial realm. They had no choice but to break the Worldbridge or countless lives would have been lost.\"*\r\n\r\n*\"That explains how he got tethered to the earthly plane—he was holding open the terrestrial side of the bridge when it was burst. Foolish vanity to go against the gods, and dangerous to boot.\"*",
+                "description": "Lyria ponders this. *\"I mean, I'm not saying he comes across as safe, and certainly not warm and friendly like Dulcie,\"* (this gets a laugh out of Crush), *\"but I don't know, I guess he was convincing enough that I wanted to know what secrets the gods have covered up.\"*\r\n\r\n*\"I think you're underestimating him,\"* came back Crush. *\"Met an unimaginative farmer once who said the Tethered One could pull the spirit right out of a man and stitch it into ships, buildings, even weapons.\"* His calloused fingers absently traced the woodaxe's edge, as if reassuring himself it bore no enchantments. *\"Dunno if it's true, but that farmer? His eyes never blinked right after.\"*\r\n\r\n*\"Not to mention what we learned in school history about him allowing the Drowned Court's army to march right up to the celestial realm. They had no choice but to break the Worldbridge or countless lives would have been lost.\"*\r\n\r\n*\"That explains how he got tethered to the earthly plane—he was holding open the terrestrial side of the bridge when it was burst. Foolish vanity to go against the gods, and dangerous to boot.\"*",
                 "storage_type": "u",
                 "q_limit": 1.0,
                 "recipes": [
@@ -150,7 +194,7 @@
             {
                 "id": 133,
                 "name": "Convo Crush 1d",
-                "description": "*\"Well, here is the book. It has a lot of strange characters, but some are in common language.*\" She opens the book.\r\n\r\n*\"Now, I found a reference to the Drowned Court King, when the entire land was in danger of being taken over by the sea.\"* Crush shudders. Lyria doesn't have the same gut reaction to the prospect of floods, naturally, but still, she understood that such awesome power could be dangerous.\r\n\r\n*\"Ah yes, and the merrow—my people, who we now call Nalaran—were his army.\"*\r\n\r\n*\"Clear as a lantern in a mine,\"* returns Crush. *\"Just think what would have happened had the gods not stopped them.\"*\r\n\r\n*\"But look, I don't think that's the whole story. A large group of merrow resisted his plan. They had no interest in ruling the world. Look, this word is ...resisted..., then ...many fled...\"*",
+                "description": "*\"Well, here is the book. It has a lot of strange characters, but some are in the common language.*\" She opens the book.\r\n\r\n*\"Now, I found a reference to the Drowned Court King, when the entire land was in danger of being taken over by the sea.\"* Crush shudders. Lyria doesn't have the same gut reaction to the prospect of floods, but still, she understood that such awesome power could be dangerous.\r\n\r\n*\"Ah yes, and the merrow—my people, who we now call Nalaran—were his army.\"*\r\n\r\n*\"Clear as a lantern in a mine,\"* returns Crush. *\"Just think what would have happened had the gods not stopped them.\"*\r\n\r\n*\"But look, I don't think that's the whole story,\"* counters Lyria. *\"A large group of merrow resisted his plan. They had no interest in wiping out the dry land. Look, this word is ...resisted..., then ...many fled...\"*",
                 "storage_type": "u",
                 "q_limit": 1.0,
                 "recipes": [
@@ -172,7 +216,7 @@
             {
                 "id": 135,
                 "name": "Convo Crush 1e",
-                "description": "*\"Let me see that,\"* speaks up Crush, his curiosity piqued. She hands him the book.\r\n\r\n*\"Then these refugees were the ones who tried to enter the celestial realm? If that's true, then they were asking for help. And that would mean the Tethered One was trying to prevent their deaths.\"*\r\n\r\n*\"Well, that does fit together, but it's just sad history. I don't see why we should get involved.\"*",
+                "description": "*\"Let me see that,\"* Crush speaks up, his curiosity piqued. **She hands him the book.**\r\n\r\n*\"Then these refugees were the ones who tried to enter the celestial realm? If that's true, then they were asking for help. And that would mean the Tethered One was trying to prevent their deaths.\"*\r\n\r\n*\"Well, that does fit together, but it's just sad history. I don't see why we should get involved.\"*",
                 "storage_type": "u",
                 "q_limit": 1.0,
                 "recipes": [
@@ -238,7 +282,7 @@
             {
                 "id": 151,
                 "name": "Convo Crush 2b",
-                "description": "Dulcie turns to Lydia. *\"He'll help,\"* she finishes.\r\n\r\n{lemonchiffon|Edit **Crush** and *Show in Overview*}\r\n\r\n*\"Um, well okay then,\"* she says, hearing no argument from Crush. *\"Now, we need 30 Spectrum Bars.\"*\r\n\r\n*\"There is a way to get those, but it's not easy. I'd need the Harmony Pick. **Thaddeus** has it, but he's not going to let anyone borrow it. He's even more stubborn than I am.\"*\r\n\r\n*\"Thaddeus, huh? I was just spilling a drink on him a few minutes ago in the tavern. Not my favorite customer. But whatever, wait here, I'll get your blasted pick.\"*",
+                "description": "Dulcie turns to Lydia. *\"He'll help,\"* she finishes.\r\n\r\n{lemonchiffon|Edit **Crush** and *Show in Overview*}\r\n\r\n*\"Um, well okay then,\"* she says, hearing no argument from Crush. *\"Now, we need 30 Spectrum Bars.\"*\r\n\r\n*\"There is a way to get those, but it's not easy. I'd need the **Harmony Pick.** **Thaddeus** has it, but he's not going to let anyone borrow it. He's even more stubborn than I am.\"*\r\n\r\n*\"Thaddeus, huh? I was just spilling a drink on him a few minutes ago in the tavern. Not my favorite customer. But whatever, wait here, I'll get your blasted pick.\"*",
                 "storage_type": "u",
                 "q_limit": 1.0,
                 "recipes": [
@@ -260,7 +304,7 @@
             {
                 "id": 110,
                 "name": "Convo Danglars 1a",
-                "description": "After the long trip north, Lyria enters **Pike Village** and sees the man she recognizes. *\"Hello, remember me?\"* she asks.\r\n\r\n*\"Why, Lyria, good to see you again!\"* exclaims Danglars warmly, walking up to her and hugging her. *\"What brings you here this time? Some kind of expedition no doubt.\"*",
+                "description": "After the long trip north, Lyria enters Pike Village and sees the man she recognizes. *\"Hello, remember me?\"* she asks.\r\n\r\n*\"Why, Lyria, good to see you again!\"* exclaims Danglars warmly, walking up to her and hugging her. *\"What brings you here this time? Some kind of expedition no doubt.\"*",
                 "storage_type": "u",
                 "q_limit": 2.0,
                 "recipes": [
@@ -348,7 +392,7 @@
             {
                 "id": 143,
                 "name": "Convo Dulcie 1b",
-                "description": "Outside, Lyria asks, *\"Dulcie, how do you feel about saving the world?\"*\r\n\r\n*\"I'm glad there are people like you, dear, who are worried about that sort of thing,\"* is Dulcie's reply.\r\n\r\n*\"Okay, well, I need your help with Crush, he's being obstinate. Can you persuade him to help me?\"*\r\n\r\n*\"Crush, huh? Well, the two of us had something going for quite a long time, you know. I was happy then. How's that fellow of yours anyway, Sutherdepth was it?\"*\r\n\r\n*\"Swirly's been working on the pipes as always. And he's not exactly **my** fellow. I'm not sure if I can be with someone who never swam beyond the eastern coral reef. But anyway, Crush is just over there, by the cliff.*\"\r\n\r\n{lemonchiffon|Edit **Dulcie** and mark *Show in Overview.*}",
+                "description": "Outside, Lyria asks, *\"Dulcie, how do you feel about mending the broken world?\"*\r\n\r\n*\"I'm glad there are people like you, dear, who are worried about that sort of thing,\"* is Dulcie's reply.\r\n\r\n*\"Okay, well, I need your help with Crush, he's being obstinate. Can you persuade him to help me?\"*\r\n\r\n*\"Crush, huh? Well, the two of us had something going for quite a long time, you know. I was happy then. How's that fellow of yours anyway, Sutherdepth was it?\"*\r\n\r\n*\"Swirly's been working on the pipes as always. And he's not exactly **my** fellow. I'm not sure if I can be with someone who never swam beyond the eastern coral reef. But anyway, Crush is just over there, by the cliff.*\"\r\n\r\n{lemonchiffon|Edit **Dulcie** and mark *Show in Overview.*}",
                 "storage_type": "u",
                 "q_limit": 1.0,
                 "recipes": [
@@ -480,7 +524,7 @@
             {
                 "id": 146,
                 "name": "Convo TethOne 2a",
-                "description": "Lyria returns to the cell. *\"Okay, I found that book of yours. Flying porpoises, was the sea god angry. Anyway, I am on your side. How can I help?\"*\r\n\r\nThe Tethered One answers, *\"I'm going to need two things. First, a weapon. Second, a way out.\"*\r\n\r\n*\"For the weapon, we'll need **30 Spectrum Bars,** * he continued. *\"As for the way out, I have a plan involving water, a lot of it, but we can talk about that later.\"*",
+                "description": "Lyria returns to the cell. *\"Okay, I found that book of yours. Flying porpoises, was the sea god angry. Anyway, I am on your side. How can I help?\"*\r\n\r\nThe Tethered One answers, *\"I'm going to need two things. First, a weapon. Second, a way out.\"*\r\n\r\n*\"For the weapon, we'll need **30 Spectrum Bars,**\"* he continued. *\"As for the way out, I have a plan involving water, a lot of it, but we can talk about that later.\"*",
                 "storage_type": "u",
                 "q_limit": 2.0,
                 "recipes": [
@@ -522,6 +566,72 @@
                 ]
             },
             {
+                "id": 159,
+                "name": "Convo Thaddeus 1a",
+                "description": "Thaddeus had been ogling Dulcie's backside as she left, and now he sees her coming back in. *\"Get over here,\"* he demands. *\"I'd like to discuss where you're going to be sleeping tonight.\"*\r\n\r\n*\"What would your wife say?\"* answers Dulcie calmly. *\"Honestly, I feel sorry for Bliss sometimes.\"*\r\n\r\n*\"Now, don't pretend to be all coy with me,\"* shouts Thaddeus above the tavern din. *\"It wouldn't be the first time I've taken you.\"*\r\n\r\n*\"And I don't plan to make a habit of it. Anyway, Darla is available if you're in need of paid company.\"*",
+                "storage_type": "u",
+                "q_limit": 2.0,
+                "recipes": [
+                    {
+                        "id": 160,
+                        "sources": [
+                            {"item_id": 159, "q_required": 1.0, "preserve": true}
+                        ],
+                        "attrib_reqs": [
+                            {
+                                "attrib_id": 158,
+                                "value_range": [1.0, 1.0],
+                                "range_inclusive": [true, true]
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 162,
+                "name": "Convo Thaddeus 1b",
+                "description": "*\"Darla, huh? I mean, she's not bad, but I haven't had you in a long time.\"* Thaddeus has had a lot to drink, more than usual, and grows wild. He grabs Dulcie and throws her to the ground, then starts to climb on top of her.\r\n\r\nThe owner, Hink, rushes out from behind the bar. *\"Thaddeus, what the hell, this is not acceptable,\"* he yells, pulling the larger man up by his shoulders. Thaddeus spins and knocks Hink down without thinking.\r\n\r\nHink slowly gets up, staring angrily into Thaddeus's face without saying anything.\r\n\r\nThaddeus looks around, and the tavern has gone silent. *\"Look, I may have gotten out of line here,\"* he softens. He extends a hand to help Dulcie up off of the floor.",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 163,
+                        "sources": [
+                            {"item_id": 159, "q_required": 2.0, "preserve": true}
+                        ],
+                        "attrib_reqs": [
+                            {
+                                "attrib_id": 158,
+                                "value_range": [1.0, 1.0],
+                                "range_inclusive": [true, true]
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 164,
+                "name": "Convo Thaddeus 1c",
+                "description": "Hink looks to Dulcie. *\"What this man has done today is unacceptable. How do you want to handle this?\"*\r\n\r\nDulcie hold back a sniffle and steadies herself to face Thaddeus. *\"I'm willing to forget this incident, but I need something from you. We need to borrow the Harmony Pick.\"*\r\n\r\nThaddeus stiffens. *\"The Harmony... now why would you want a thing like that?\"* he asks suspiciously.\r\n\r\n*\"Never you mind, and I personally guarantee we'll return it as soon as we're finished,\"* she promises.\r\n\r\n*\"I'll hold you to that,\"* he says threateningly, but reluctantly **gives her the pick.**",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 165,
+                        "sources": [
+                            {"item_id": 162, "q_required": 1.0, "preserve": true}
+                        ],
+                        "attrib_reqs": [
+                            {
+                                "attrib_id": 158,
+                                "value_range": [1.0, 1.0],
+                                "range_inclusive": [true, true]
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
                 "id": 45,
                 "name": "Cordage",
                 "recipes": [
@@ -555,6 +665,7 @@
                 "description": "Atlanth won't let you leave with this unless he's distracted. Talk to him.\r\n\r\nAfter escaping from the Sunken Library, Lyria should give the book to her friend **Crush** in **Dustridge Town.**",
                 "q_limit": 1.0
             },
+            {"id": 178, "name": "Forge", "storage_type": "l", "q_limit": 1.0},
             {
                 "id": 68,
                 "name": "Harmony Pick",
@@ -569,6 +680,20 @@
                     [29, 1.0]
                 ],
                 "q_limit": 1.0
+            },
+            {"id": 181, "name": "Iron Node", "storage_type": "l"},
+            {
+                "id": 168,
+                "name": "Iron Ore",
+                "recipes": [
+                    {
+                        "id": 182,
+                        "rate_duration": 8,
+                        "sources": [
+                            {"item_id": 181, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
             },
             {
                 "id": 77,
@@ -607,8 +732,57 @@
                 "name": "Shadow Silk",
                 "description": "Made from **Spectrum Bars**"
             },
-            {"id": 70, "name": "Spectrum Bar"},
-            {"id": 69, "name": "Spectrum Ore"},
+            {
+                "id": 70,
+                "name": "Spectrum Bar",
+                "recipes": [
+                    {
+                        "id": 172,
+                        "sources": [
+                            {"item_id": 69, "q_required": 2.0},
+                            {"item_id": 167, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 167,
+                "name": "Spectrum Forge",
+                "description": "No one knows who built it, but this forge was uncovered in a deep chamber below the spectrum ore source. It runs on geothermal heat and requires no fuel.\r\n\r\nThis is the only place to smelt spectrum ore, but the bars can be used elsewhere.",
+                "storage_type": "l",
+                "loc_hosted": true
+            },
+            {
+                "id": 69,
+                "name": "Spectrum Ore",
+                "recipes": [
+                    {
+                        "id": 175,
+                        "rate_duration": 20,
+                        "sources": [
+                            {"item_id": 174, "q_required": 1.0, "preserve": true},
+                            {"item_id": 68, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {"id": 174, "name": "Spectrum Stalactites", "storage_type": "l"},
+            {
+                "id": 169,
+                "name": "Steel Bar",
+                "description": "To make steel, coal is required to combine with iron as well as fuel the forge.",
+                "recipes": [
+                    {
+                        "id": 170,
+                        "rate_duration": 8,
+                        "sources": [
+                            {"item_id": 168, "q_required": 2.0},
+                            {"item_id": 78, "q_required": 5.0},
+                            {"item_id": 178, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
             {"id": 38, "name": "Stone"},
             {
                 "id": 43,
@@ -865,7 +1039,6 @@
                 "description": "Busy working class community. The most important local industry is mining.",
                 "destinations": [
                     {"loc2_id": 61},
-                    {"loc2_id": 66},
                     {"loc2_id": 71},
                     {"loc2_id": 17, "bidirectional": false}
                 ]
@@ -881,8 +1054,36 @@
                     {"item_id": 101, "val_required": 1.0}
                 ]
             },
+            {
+                "id": 176,
+                "name": "Forge Chamber",
+                "description": "In the middle of the chamber, the forge connects from ceiling to floor like a pillar.",
+                "items": [
+                    {"item_id": 167, "quantity": 1.0}
+                ]
+            },
+            {
+                "id": 180,
+                "name": "Grove",
+                "description": "Frequented by Dustridge workers for harvesting wood.",
+                "items": [
+                    {"item_id": 41, "quantity": 1.0}
+                ],
+                "destinations": [
+                    {"loc2_id": 64}
+                ]
+            },
             {"id": 72, "name": "Jungle", "description": "Home of many Treemates."},
-            {"id": 66, "name": "Mine"},
+            {
+                "id": 66,
+                "name": "Mine First Level",
+                "items": [
+                    {"item_id": 181, "quantity": 1.0}
+                ],
+                "destinations": [
+                    {"loc2_id": 64}
+                ]
+            },
             {
                 "id": 9,
                 "name": "Murky Pond",
@@ -1014,11 +1215,29 @@
                 ]
             },
             {
+                "id": 177,
+                "name": "Smithy",
+                "items": [
+                    {"item_id": 178, "quantity": 1.0}
+                ],
+                "destinations": [
+                    {"loc2_id": 64}
+                ]
+            },
+            {
                 "id": 104,
                 "name": "Snow Cave",
                 "description": "Dense snowy walls make it so sound does not travel outside even if someone were to walk nearby.",
                 "destinations": [
                     {"loc2_id": 50}
+                ]
+            },
+            {
+                "id": 173,
+                "name": "Stalactite Room",
+                "description": "The only source of spectrum ore ever found is in this cave, the luminescent stalactites that grow from the ceiling. Swarms of bats fly in and out of them.",
+                "items": [
+                    {"item_id": 174, "quantity": 1.0}
                 ]
             },
             {
@@ -1220,7 +1439,7 @@
                     [31, 6.0],
                     [89, 1.0]
                 ],
-                "abilities": [21, 26, 27, 33],
+                "abilities": [26, 21, 33, 27],
                 "toplevel": true,
                 "location_id": 9,
                 "position": [3, 5]
@@ -1267,13 +1486,13 @@
             },
             {
                 "id": 51,
-                "name": "Swirly (Sutherdepth)",
-                "description": "- **Ancestry:** {blue|Nalaran}\r\n- **Specialties:** pipe maintenance worker\r\n\r\nLyria's likely match for marriage."
+                "name": "Sutherdepth",
+                "description": "- **Ancestry:** {blue|Nalaran}\r\n- **Specialties:** pipe maintenance worker\r\n\r\nKnown as Swirly. Lyria's likely match for marriage."
             },
             {
                 "id": 54,
                 "name": "Tethered One",
-                "description": "- **Ancestry:** not earthly, possibly celestial or demon\r\n- **Specialties:** partial existence in both spiritual and physical plane, dagger/knives proficiency, rogue, can slip through cracks, reportedly can stitch souls onto physical surfaces\r\n- **Appearance:** extroardinarily thin, a purple glow rather than irises comes from within eye sockets, long smooth dark pants and shirt, pale face, slick hair\r\n\r\nPlot Points\r\n- caught in backlash when the gods destroyed the worldbridge\r\n- imprisoned underground in Blackvein Hold for many years",
+                "description": "- **Ancestry:** not earthly, possibly celestial or demon\r\n- **Specialties:** partial existence in both spiritual and physical plane, dagger/knives proficiency, rogue, can slip through cracks, reportedly can stitch souls onto physical surfaces\r\n- **Appearance:** extroardinarily thin, {rebeccapurple|purple glow} rather than irises comes from within eye sockets, long smooth dark pants and shirt, pale face, slick hair",
                 "attribs": [
                     [88, 1.0],
                     [89, 0.0],
@@ -1287,7 +1506,8 @@
                 "name": "Thaddeus",
                 "description": "- **Ancestry:** {peru|Stonereach}\r\n- **Specialties:** wealthy mining foreman, somewhat of a bully",
                 "attribs": [
-                    [154, 4.0]
+                    [154, 4.0],
+                    [158, 1.0]
                 ],
                 "location_id": 66,
                 "items": [
@@ -1327,6 +1547,7 @@
             {"id": 14, "name": "Is Kormak", "is_binary": true},
             {"id": 15, "name": "Is Lyria", "is_binary": true},
             {"id": 95, "name": "Is Tethered One", "is_binary": true},
+            {"id": 158, "name": "Is Thaddeus", "is_binary": true},
             {
                 "id": 12,
                 "name": "Perception",
@@ -1449,7 +1670,7 @@
                         "op_application": "=="
                     },
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 126},
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 156},
                         "op_application": "==",
                         "val_required": 0.0
                     },
@@ -1461,7 +1682,7 @@
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 126},
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 156},
                         "op_application": ":=",
                         "op_transform": "c",
                         "auto_apply": true
@@ -1653,6 +1874,35 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 146},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "auto_apply": true
+                    }
+                ]
+            },
+            {
+                "id": 161,
+                "name": "Start Convo Th1",
+                "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 158},
+                        "op_application": "=="
+                    },
+                    {
+                        "infield": {"role": "target char", "attrib_id": 140},
+                        "op_application": "=="
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 159},
+                        "op_application": "==",
+                        "val_required": 0.0
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 159},
                         "op_application": ":=",
                         "op_transform": "c",
                         "auto_apply": true

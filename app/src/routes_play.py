@@ -108,7 +108,7 @@ def play_location(id):
         game_token=game_token, owner_id=id
     ).all()
     inventory_piles = sort_by_name_stripped(
-        inventory_piles, key=lambda p: p.item.name)
+        inventory_piles, lambda p: p.item)
 
     # Validate the session's char_id
     current_char_id = session.get('old_char_id')
@@ -185,7 +185,7 @@ def play_location(id):
             'quantity': gen_pile.quantity if gen_pile else 0.0
         })
     referenced_data = sort_by_name_stripped(
-        referenced_data, key=lambda x: x['item'].name)
+        referenced_data, lambda d: d['item'])
 
     # 5. Local attributes
     attrib_values = AttribVal.query.filter_by(
@@ -688,7 +688,7 @@ def play_item(id):
             })
             seen_ids.add(product.id)
     used_for_production = sort_by_name_stripped(
-        used_for_production, key=lambda x: x['item'].name)
+        used_for_production, lambda d: d['item'])
 
     # Recipes where this item is a BYPRODUCT
     byproduct_of = []
@@ -1046,6 +1046,7 @@ def play_attrib(attrib_id, subject_id):
         RecipeAttribReq.attrib_id == attrib_id,
         Item.game_token == game_token
     ).all()
+    items_requiring_this = sort_by_name_stripped(items_requiring_this)
 
     # Get events using this attribute
     events_raw = Event.query.join(EventFactor).join(

@@ -427,8 +427,12 @@ def name_stripped(col=None):
         func.regexp_replace(col, r'^\W+', '', 'g')
     ).op('COLLATE')(literal_column('"C"'))
 
-def sort_by_name_stripped(items, key=lambda x: x.name):
-    return sorted(items, key=lambda x: re.sub(r'^\W+', '', key(x)).lower())
+def sort_by_name_stripped(items, named=lambda x: x):
+    def get_sort_key(item):
+        obj = named(item)
+        return re.sub(r'^\W+', '', obj.name).lower()
+        
+    return sorted(items, key=get_sort_key)
 
 # ------------------------------------------------------------------------
 # HTML Sanitization Filter
