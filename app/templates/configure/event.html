@@ -335,8 +335,8 @@
         document.getElementById('effects').classList.toggle(
             'hidden', type == 'dice_system');
 
-        document.querySelectorAll('.eff-card .source-type-select').forEach(select => {
-            syncEffSourceState(select);
+        document.querySelectorAll('.eff-card .success-filter-container').forEach(filter => {
+            filter.classList.toggle('hidden', type !== 'fourway');
         });
     }
 
@@ -345,9 +345,6 @@
         const sourceFieldBox = card.querySelector('.source-field-box');
         const sourceConstBox = card.querySelector('.source-const-box');
         const placeholder = card.querySelector('.source-placeholder-text');
-        const successFilter = card.querySelector('.success-filter-container');
-        const tierSelect = card.querySelector('.success-tier-select');
-        const eventOutcomeType = document.getElementById('outcome_type').value;
         const innerOpSelect = card.querySelector('.op-inner-selector');
 
         const isAnotherField = (element.value === '{{ Participant.INFIELD }}');
@@ -631,7 +628,6 @@
             
             const sourceTypeSelect = sourceSection.querySelector('.source-type-select');
             const infieldBox = sourceSection.querySelector('.source-field-box');
-            const successFilter = sourceSection.querySelector('.success-filter-container');
 
             if (isConstant) {
                 if (sourceTypeSelect && sourceTypeSelect.value !== "{{ Participant.OUTCOME }}") {

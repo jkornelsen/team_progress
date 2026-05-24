@@ -362,12 +362,12 @@ def calculate_determinants(event, role_entities):
 # Effects
 # ------------------------------------------------------------------------
 
-def calculate_numeric_impact(eff, role_entities, roll_total=None):
+def calculate_numeric_impact(eff, role_entities, roll_val=None):
     """
-    Shared helper: computes the numeric impact value for an effect.
-    This is the 'From' side — source value after the inner transform.
+    Computes the numeric impact value for an effect,
+    the source value after the inner transform.
     Returns (impact, relies_on_roll):
-      - impact is None if roll_total is needed but not yet available.
+      - impact is None if roll_val is needed but not yet available.
       - relies_on_roll is True when the effect depends on the roll result.
     """
     subject_id = resolve_anchor_id(Participant.SUBJECT, role_entities)
@@ -377,11 +377,11 @@ def calculate_numeric_impact(eff, role_entities, roll_total=None):
         eff.op_transform != Operation.CONST
     )
 
-    if relies_on_roll and roll_total is None:
+    if relies_on_roll and roll_val is None:
         return None, True
 
     if eff.get_val_from == Participant.OUTCOME:
-        impact = roll_total
+        impact = roll_val
     elif eff.get_val_from in (Participant.INFIELD, Participant.OUTFIELD):
         source_field = eff.infield or eff.outfield
         anchor_id = resolve_anchor_id(source_field.role, role_entities)
@@ -504,7 +504,7 @@ def preview_effects(event, role_entities):
 
         # --- 3. CALCULATE PRE-ROLL IMPACT ---
         impact_value, relies_on_roll = calculate_numeric_impact(
-            eff, role_entities, roll_total=None)
+            eff, role_entities, roll_val=None)
 
         # Output looks generally like:
         # target_name
@@ -533,13 +533,13 @@ def preview_effects(event, role_entities):
         })
     return results
 
-def resolve_effects(event, role_entities, roll_total):
+def resolve_effects(event, role_entities, roll_val):
     """
     Calculates the final outcome of every effect for display after a roll
     has occurred, but before it is applied.
 
     Calls preview_effects for all structural/display info, then fills in
-    the now-known roll_total.
+    the now-known roll_val.
     """
     game_token = g.game_token
     previews = preview_effects(event, role_entities)
@@ -550,8 +550,8 @@ def resolve_effects(event, role_entities, roll_total):
         if not field_def:
             continue
  
-        # --- 1. FILL IN IMPACT now that roll_total is known ---
-        impact, _ = calculate_numeric_impact(eff, role_entities, roll_total)
+        # --- 1. FILL IN IMPACT now that roll_val is known ---
+        impact, _ = calculate_numeric_impact(eff, role_entities, roll_val)
  
         # --- 2. COMPUTE FINAL VALUE ---
         current_val = preview['current_value']
@@ -617,7 +617,8 @@ def check_outcome_success(filter_val, tier):
 
     return False
 
-def process_all_effects(event, role_entities, roll_total, tier, force_auto_only=False):
+def process_all_effects(
+        event, role_entities, roll_val, tier, force_auto_only=False):
     """
     Called by roll_event route. Scans all effects and triggers
     automatic ones that match the success tier.
@@ -627,16 +628,16 @@ def process_all_effects(event, role_entities, roll_total, tier, force_auto_only=
             continue
         if force_auto_only and not eff.auto_apply:
             continue
-        do_effect_change(eff, roll_total, role_entities)
+        do_effect_change(eff, roll_val, role_entities)
 
-def do_effect_change(eff, roll_total, role_entities):
+def do_effect_change(eff, roll_val, role_entities):
     """
     Calculates math, writes to DB, and logs the change.
     """
     game_token = g.game_token
 
     # --- STEP 1: CALCULATE IMPACT (The "From") ---
-    impact, _ = calculate_numeric_impact(eff, role_entities, roll_total)
+    impact, _ = calculate_numeric_impact(eff, role_entities, roll_val)
 
     # --- STEP 2: APPLY TO DATABASE (The "To") ---
     field_def = eff.outfield
@@ -736,7 +737,7 @@ def do_effect_change(eff, roll_total, role_entities):
             return False, "No location (At) for placement."
 
         # 2. Extract position from the roll result
-        if not isinstance(roll_total, list) or len(roll_total) != 2:
+        if not isinstance(roll_val, list) or len(roll_val) != 2:
             return False, "Expected a Coordinate outcome."
 
         # 3. Create or increment the pile
@@ -744,11 +745,11 @@ def do_effect_change(eff, roll_total, role_entities):
             field_def.item_id, 
             loc_id, 
             delta=1.0, 
-            position=roll_total
+            position=roll_val
         )
         
         item = Item.query.get((game_token, field_def.item_id))
-        add_message(f"Placed {maskable_name(item)} at {roll_total}")
+        add_message(f"Placed {maskable_name(item)} at {roll_val}")
 
     # Destination E: Teleportation (Move existing character)
     elif field_def.field_mode == Participant.POS:
@@ -765,16 +766,16 @@ def do_effect_change(eff, roll_total, role_entities):
             # Determine Position
             loc = Location.query.get((game_token, loc_id))
             char.location_id = loc_id
-            char.position = list(roll_total) \
-                if isinstance(roll_total, (list, tuple)) \
-                    and len(roll_total) == 2 \
+            char.position = list(roll_val) \
+                if isinstance(roll_val, (list, tuple)) \
+                    and len(roll_val) == 2 \
                 else get_default_position(loc)
             add_message(
                 f"Positioned {char.name} at {maskable_name(loc)} {char.position}")
 
     # Destination F: Mob Spawning (Clone a character)
     elif field_def.field_mode == Participant.SPAWN:
-        if not isinstance(roll_total, (list, tuple)) or len(roll_total) != 2:
+        if not isinstance(roll_val, (list, tuple)) or len(roll_val) != 2:
             return False, "Expected a Coordinate outcome."
 
         char = clone_entity(field_def.char_id, 'character')
@@ -785,8 +786,8 @@ def do_effect_change(eff, roll_total, role_entities):
         loc_id = get_loc(field_def, role_entities)
         loc = Location.query.get((game_token, loc_id))
         char.location_id = loc_id
-        char.position = roll_total
-        add_message(f"Spawned {char.name} at {maskable_name(loc)} {roll_total}")
+        char.position = roll_val
+        add_message(f"Spawned {char.name} at {maskable_name(loc)} {roll_val}")
 
     db.session.flush()
     return True, ''
@@ -807,12 +808,12 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
     base_min = event.numeric_range[0] if event.numeric_range else 1
     base_max = event.numeric_range[1] if event.numeric_range else 20
 
-    # Determined events don't roll; they use the fixed_base as the start.
-    total = 0
+    result_val = 0
     choice_str = ''
     if event.outcome_type == 'determined':
-        total = event.fixed_base
-        breakdown_parts = [format_for_display(total)]
+        # Determined events don't roll; they use the fixed_base as the start.
+        result_val = event.fixed_base
+        breakdown_parts = [format_for_display(result_val)]
 
     elif event.outcome_type == 'selection':
         options = [s.strip() for s in event.selection_strings.split('\n') if s.strip()]
@@ -821,12 +822,12 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
 
     elif event.outcome_type == 'coordinates':
         loc_id = role_entities.get(Participant.AT)
-        total, coord_str = roll_coordinate(loc_id)
+        result_val, coord_str = roll_coordinate(loc_id)
         breakdown_parts = [coord_str]
 
     else:
         die_roll = random.randint(base_min, base_max)
-        total = float(die_roll)
+        result_val = float(die_roll)
         breakdown_parts = [f"d{base_max - base_min + 1}(🎲{die_roll})"]
 
     # 2. Resolve and Apply every Determinant individually
@@ -864,12 +865,12 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
         current_min_precedence = op_prec
 
         # Update Total
-        total = apply_operation(total, val, op)
+        result_val = apply_operation(result_val, val, op)
 
     # 3. Final Formatting
     if event.outcome_type not in('selection', 'coordinates'):
         breakdown_str += \
-            f" = <span class='outcome-total'>{format_for_display(total)}</span>"
+            f" = <span class='outcome-val'>{format_for_display(result_val)}</span>"
     
     display_str = ""
     tier = None
@@ -888,13 +889,13 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
         elif die_roll == base_min:
             res = "Natural Min!"
             tier = Participant.FAILURE_NAT_MIN
-        elif total >= major_success_min:
+        elif result_val >= major_success_min:
             res = "Major Success"
             tier = Participant.SUCCESS_MAJOR
-        elif total >= minor_success_min:
+        elif result_val >= minor_success_min:
             res = "Minor Success"
             tier = Participant.SUCCESS_MINOR
-        elif total <= major_failure_max:
+        elif result_val <= major_failure_max:
             res = "Major Failure"
             tier = Participant.FAILURE_MAJOR
         else:
@@ -902,16 +903,16 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
             tier = Participant.FAILURE_MINOR
 
         display_str = f"<b>{res}</b><br><small>{breakdown_str}</small>"
-        message_str = f"{format_for_display(total)} — {res}"
+        message_str = f"{format_for_display(result_val)} — {res}"
     elif event.outcome_type == 'selection':
         display_str = breakdown_str
         message_str = choice_str
     else:
         display_str = breakdown_str
-        message_str = f"Outcome {format_for_display(total)}"
+        message_str = f"Outcome {format_for_display(result_val)}"
 
     add_message(f"{event.name}: {message_str}")
-    return total, display_str, tier
+    return result_val, display_str, tier
 
 def roll_coordinate(loc_id):
     """Pick a random available square at a location."""

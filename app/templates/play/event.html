@@ -670,8 +670,10 @@
         rollBtn.onclick = async () => {
             refreshModifiers();
 
-            document.querySelectorAll('.check-mark').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.auto-gear').forEach(el => el.classList.remove('hidden'));
+            document.querySelectorAll('.check-mark').forEach(
+                el => el.classList.add('hidden'));
+            document.querySelectorAll('.auto-gear').forEach(
+                el => el.classList.remove('hidden'));
             lastRollValue = null;
 
             const fd = getRoleIDs();
@@ -691,13 +693,11 @@
 
             // 1. Display the main outcome result
             lastRollValue = data.result_value;
-            document.getElementById('outcome-text').innerHTML = data.display;
+            document.getElementById('outcome-text').innerHTML = data.full_display;
             const resultTier = data.tier;
 
             // 2. Update Effects using the pre-calculated results from the server
             if (data.resolved_effects) {
-                lastRollValue = data.result_value;
-
                 data.resolved_effects.forEach(eff => {
                     const row = document.getElementById(`eff-row-${eff.effect_id}`);
                     if (!row) return;
@@ -716,7 +716,7 @@
                         if (row.dataset.getValFrom === '{{ Participant.OUTCOME }}') {
                             const displayRoll = Array.isArray(data.result_value) 
                                 ? `(${data.result_value.join(',')})` 
-                                : data.result_value;
+                                : data.result_val_display;
                             equationEl.innerText = formatInnerFormula(
                                 displayRoll,
                                 row.dataset.valTrans, 
@@ -836,7 +836,7 @@
         const row = document.getElementById(`eff-row-${factorId}`);
         const btn = row.querySelector('.apply-eff-btn');
         const fd = getRoleIDs();
-        fd.append('roll_total', JSON.stringify(lastRollValue));
+        fd.append('roll_value', JSON.stringify(lastRollValue));
 
         const success = await apiPost(
             `/event/apply-effect/${factorId}`, fd, "Could not apply");
@@ -878,7 +878,7 @@
     font-size: 0.9em;
 }
 
-.outcome-total {
+.outcome-val {
     font-weight: bold;
     font-size: 1.2em;
     color: #1a1a1a;

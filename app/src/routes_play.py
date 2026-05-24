@@ -19,9 +19,8 @@ from app.utils import (
 from .logic_piles import transfer_item
 from .logic_event import (
     roll_for_outcome, roll_for_system_outcome, calculate_determinants,
-    preview_effects, resolve_effects,
-    get_entity_value, is_factor_met,
-    do_effect_change, process_all_effects)
+    preview_effects, resolve_effects, get_entity_value, is_factor_met,
+    do_effect_change, process_all_effects, format_for_display)
 from .logic_progress import (
     tick_all_active, start_production, stop_production)
 from .logic_production import (
@@ -1082,22 +1081,30 @@ def play_event(id):
     
     # Semantic Context
     subject_id = req.get_int('subject_id')
-    subject = Entity.query.get((game_token, subject_id)) if subject_id else None
+    subject = Entity.query.get(
+        (game_token, subject_id)) if subject_id else None
 
     owner_id = req.get_int('owner_id')
-    owner = Entity.query.get((game_token, owner_id)) if owner_id else None
+    owner = Entity.query.get(
+        (game_token, owner_id)) if owner_id else None
 
     ctx_char_id = req.get_int('char_id') or session.get('old_char_id')
-    ctx_char = Character.query.get((game_token, ctx_char_id)) if ctx_char_id else None
+    ctx_char = Character.query.get(
+        (game_token, ctx_char_id)) if ctx_char_id else None
 
     ctx_loc_id = req.get_int('loc_id') or session.get('old_loc_id')
     if subject and subject.entity_type == Character.TYPENAME:
         ctx_loc_id = subject.location_id
+    elif subject and subject.entity_type == Location.TYPENAME:
+        ctx_loc_id = subject.id
     elif owner and owner.entity_type == Character.TYPENAME:
         ctx_loc_id = owner.location_id
+    elif owner and owner.entity_type == Location.TYPENAME:
+        ctx_loc_id = owner.id
     elif ctx_char:
         ctx_loc_id = ctx_char.location_id
-    ctx_loc = Location.query.get((game_token, ctx_loc_id)) if ctx_loc_id else None
+    ctx_loc = Location.query.get(
+        (game_token, ctx_loc_id)) if ctx_loc_id else None
 
     # Get list of all available nearby entities
 
@@ -1265,23 +1272,24 @@ def roll_event(id):
         n_dice = req.get_int('num_dice', 1)
         sides = req.get_int('sides', 20)
         bonus = req.get_int('bonus', 0)
-        result_num, result_str = roll_for_system_outcome(
+        result_val, result_str = roll_for_system_outcome(
             id, n_dice, sides, bonus)
     else:
         difficulty = req.get_float('difficulty', 0.55)
-        result_num, result_str, tier = roll_for_outcome(
+        result_val, result_str, tier = roll_for_outcome(
             id, role_entities, difficulty)
 
     resolved_effects = resolve_effects(
-        event, role_entities, result_num)
+        event, role_entities, result_val)
     process_all_effects(
-        event, role_entities, result_num, tier, force_auto_only=True)
+        event, role_entities, result_val, tier, force_auto_only=True)
     db.session.commit()
     
     return jsonify({
-        "result_value": result_num,
+        "result_value": result_val,
+        "result_val_display": format_for_display(result_val),
+        "full_display": result_str,
         "tier": tier,
-        "display": result_str,
         "resolved_effects": resolved_effects
     })
 
@@ -1295,12 +1303,12 @@ def apply_single_effect(factor_id):
         for k in req if k.endswith(Participant.ROLE_SUFFIX)
     }
     try:
-        roll_str = req.get_str('roll_total')
-        roll_total = json.loads(roll_str)
+        roll_str = req.get_str('roll_value')
+        roll_val = json.loads(roll_str)
     except (json.JSONDecodeError, TypeError):
-        roll_total = req.get_float('roll_total')
+        roll_val = req.get_float('roll_value')
     success, message = do_effect_change(
-        eff, roll_total, role_entities)
+        eff, roll_val, role_entities)
     db.session.commit()
     
     if not success:

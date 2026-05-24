@@ -306,14 +306,14 @@ def export_to_dict():
     Serializes the entire game state into a dictionary.
     """
     output = {
+        JsonKeys.OVERALL: {},
         JsonKeys.ENTITIES: {
             key: [] for key in ENTITIES.keys()
         },
         JsonKeys.GENERAL: {
             "piles": []
         },
-        "progress": [],
-        JsonKeys.OVERALL: {}
+        "progress": []
     }
 
     # Overall settings
