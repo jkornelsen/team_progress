@@ -113,13 +113,12 @@ def import_from_dict(data):
         for entry in entities_data.get(key, []):
             instance = model_cls.from_dict(entry, game_token)
             db.session.add(instance)
-
-    # General state
     general_data = data.get(JsonKeys.GENERAL, {})
     for pile_data in general_data.get("piles", []):
         db.session.add(Pile.from_dict(pile_data, game_token, GENERAL_ID))
-    for prog_data in general_data.get("progress", []):
-        prog_data['host_id'] = GENERAL_ID
+
+    # State
+    for prog_data in data.get("progress", []):
         db.session.add(Progress.from_dict(prog_data, game_token))
 
     # Sync the next ID counter
@@ -307,11 +306,13 @@ def export_to_dict():
     Serializes the entire game state into a dictionary.
     """
     output = {
-        JsonKeys.ENTITIES: {key: [] for key in ENTITIES.keys()},
-        JsonKeys.GENERAL: {
-            "piles": [],
-            "progress": [],
+        JsonKeys.ENTITIES: {
+            key: [] for key in ENTITIES.keys()
         },
+        JsonKeys.GENERAL: {
+            "piles": []
+        },
+        "progress": [],
         JsonKeys.OVERALL: {}
     }
 
@@ -321,7 +322,7 @@ def export_to_dict():
     if ov:
         output[JsonKeys.OVERALL] = ov.to_dict()
 
-    # Export all entities
+    # Entities
     for key, model_cls in ENTITIES.items():
         entities = model_cls.query.filter(
             model_cls.game_token == game_token
@@ -329,18 +330,18 @@ def export_to_dict():
         
         output[JsonKeys.ENTITIES][key] = [ent.to_dict() for ent in entities]
 
-    # General state
     gen_piles = Pile.query.filter_by(
         game_token=game_token, owner_id=GENERAL_ID).all()
     output[JsonKeys.GENERAL]["piles"] = [
         p.to_dict()
         for p in sorted(gen_piles, key=lambda p: (p.item_id, p.quantity))
     ]
-    gen_progress = Progress.query.filter_by(
-        game_token=game_token, host_id=GENERAL_ID).all()
-    output[JsonKeys.GENERAL]["progress"] = [
-        prog.to_dict()
-        for prog in sorted(gen_progress, key=lambda p: p.recipe_id)
+
+    # State
+    progress_rows = Progress.query.filter_by(game_token=game_token).all()
+    output["progress"] = [
+        row.to_dict()
+        for row in sorted(progress_rows, key=lambda p: p.recipe_id)
     ]
 
     return output

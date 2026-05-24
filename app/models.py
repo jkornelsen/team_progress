@@ -348,7 +348,6 @@ class Location(Entity):
             "toplevel": self.toplevel,
             "masked": self.masked,
             "items": [p.to_dict() for p in self.piles],
-            "progress": [p.to_dict() for p in self.progress_records],
             "item_refs": [ir.item_id for ir in self.item_refs],
             "destinations": [d.to_dict() for d in self.routes_forward],
             "entrance_reqs": [r.to_dict() for r in self.entrance_reqs],
@@ -363,9 +362,6 @@ class Location(Entity):
         for i in data.get('items', []):
             loc.piles.append(
                 Pile.from_dict(i, game_token, loc.id))
-        for p in data.get('progress', []):
-            loc.progress_records.append(
-                Progress.from_dict(p, game_token))
         for item_id in data.get('item_refs', []):
             new_ref = ItemRef(
                 game_token=game_token,
@@ -464,7 +460,6 @@ class Character(Entity):
             "position": self.position,
             "travel_party": self.travel_party,
             "items": [p.to_dict() for p in self.piles],
-            "progress": [p.to_dict() for p in self.progress_records],
         })
         return self.to_dict_sparse(data)
 
@@ -475,9 +470,6 @@ class Character(Entity):
         for i_data in data.get('items', []):
             char.piles.append(
                 Pile.from_dict(i_data, game_token, char.id))
-        for p_data in data.get('progress', []):
-            char.progress_records.append(
-                Progress.from_dict(p_data, game_token))
         return char
 
     location = db.relationship(

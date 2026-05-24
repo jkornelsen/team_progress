@@ -363,6 +363,7 @@ def execute_production(
             return 0, reason
 
     # Consume
+    net_product_delta = 0.0
     for src in sources:
         if not src['source_def'].preserve:
             debt = src['source_def'].q_required * batches
@@ -374,6 +375,11 @@ def execute_production(
                 # Try to take the debt from this specific pile
                 unpaid = adjust_quantity(
                     src['item'].id, p.owner_id, -debt, p.position)
+
+                if src['item'].id == recipe.product_id:
+                    drained = debt - abs(unpaid)
+                    net_product_delta -= drained
+
                 debt = abs(unpaid) 
 
     # Produce
@@ -381,27 +387,35 @@ def execute_production(
     placements = get_eligible_placements(
         recipe, target_owner_id, host_id, sources)
     amount_to_place = recipe.rate_amount * batches
+    initial_amount_to_place = amount_to_place
+
     for owner_id, pos in placements:
         if amount_to_place <= 0:
             break
         amount_to_place = adjust_quantity(
             recipe.product_id, owner_id, amount_to_place, position=pos)
     
+    placed = initial_amount_to_place - max(0, amount_to_place)
+    net_product_delta += placed
+
     for bp in recipe.byproducts:
         bp_target_id = get_byproduct_target(
             bp.item_id, target_owner_id, host_id, ctx)
         adjust_quantity(bp.item_id, bp_target_id, bp.rate_amount * batches,
             position=anchor_pos)
 
-    # Log who did the production
-    gain_qty = recipe.rate_amount * batches
-    log_msg = f"{gain_qty:g} {maskable_name(recipe.product)}"
-    if host_id == GENERAL_ID:
-        log_msg = f"{log_msg} gained"
-    elif host_ent.entity_type == Character.TYPENAME:
-        log_msg = f"{host_ent.name} produced {log_msg}"
+    # Log the production
+    if net_product_delta < 0:
+        verb = "consumed"
     else:
-        log_msg = f"{log_msg} produced at {host_ent.name}"
+        verb = "gained" if host_id == GENERAL_ID else "produced"
+    log_msg = f"{abs(net_product_delta):g} {maskable_name(recipe.product)}"
+    if host_id == GENERAL_ID:
+        log_msg = f"{log_msg} {verb}"
+    elif host_ent.entity_type == Character.TYPENAME:
+        log_msg = f"{host_ent.name} {verb} {log_msg}"
+    else:
+        log_msg = f"{log_msg} {verb} at {host_ent.name}"
     add_message(log_msg)
 
     return batches, None
