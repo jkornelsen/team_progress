@@ -5,7 +5,7 @@
         "number_format": "sci",
         "slots": [],
         "win_reqs": [
-            {"item_id": 9, "quantity": 10000000.0, "attrib_value": 0.0}
+            {"item_id": 9, "quantity": 10000000.0}
         ],
         "tag_introduce_order": 50,
         "tag_best_order": 25,
@@ -129,7 +129,7 @@
                 "description": "Fuel limit × (5 per qty). Go to **Spent Fuel Limit** when changed.",
                 "abilities": [35],
                 "storage_type": "u",
-                "q_limit": 5.0,
+                "q_limit": 7.0,
                 "recipes": [
                     {
                         "id": 41,
@@ -257,7 +257,7 @@
             {
                 "id": 19,
                 "name": "Workers",
-                "description": "Workers increase research speed and lower repair costs. They do not directly improve production rates.\r\n\r\nKeep track of how many employees work here and their average mood. If their mood or health are bad then they may consider leaving. Mood does not affect performance.",
+                "description": "Workers increase research speed and lower repair costs. They do not directly improve production rates.\r\n\r\nWorkers are hired to a particular location and not moved after that.",
                 "attribs": [
                     [20, 7.0],
                     [24, 2.0],
@@ -321,7 +321,7 @@
             {
                 "id": 20,
                 "name": "Mood",
-                "description": "Scale of 1 (miserable) to 10 (highly motivated to work).\r\n\r\n- Injury lowers mood based on how many workers get injured.\r\n- Long hours and poor pay negatively affect mood."
+                "description": "Average across all workers. Scale of 1 (miserable) to 10 (highly motivated to work).\r\n\r\n- Injury lowers mood based on how many workers get injured.\r\n- Long hours and poor pay negatively affect mood.\r\n- If their mood is bad then they may consider leaving. Mood does not affect performance."
             },
             {
                 "id": 24,
@@ -447,6 +447,19 @@
                 "description": "To repair the battery, deduct this result from [funds quantity](/configure/item/11), then set [stored energy limit](/configure/item/9) back to 10,000,000.",
                 "outcome_type": "determined",
                 "fixed_base": 40.0,
+                "determinants": [
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 9},
+                        "op_transform": "scap",
+                        "val_transform": 1000.0
+                    },
+                    {
+                        "infield": {"role": "at", "field_mode": "qty", "item_id": 19},
+                        "op_application": "*",
+                        "op_transform": "x^",
+                        "val_transform": -0.5
+                    }
+                ],
                 "effects": [
                     {
                         "get_val_from": "outcome",
@@ -461,6 +474,14 @@
                 "description": "Costs more for more advanced equipment. If you don't have any funds for repairs, then [undo cooling system upgrades](/play/item/27?owner_id=14) (do partially if you have some funds or minor failure). Or, decide to go into debt instead.\r\n\r\nDeduct this result from [funds quantity](/configure/item/11), then you may use the cooling facility again.",
                 "outcome_type": "determined",
                 "fixed_base": 10.0,
+                "determinants": [
+                    {
+                        "infield": {"role": "at", "field_mode": "qty", "item_id": 19},
+                        "op_application": "*",
+                        "op_transform": "x^",
+                        "val_transform": -0.5
+                    }
+                ],
                 "effects": [
                     {
                         "get_val_from": "outcome",
@@ -484,6 +505,12 @@
                         "infield": {"role": "universal", "field_mode": "qty", "item_id": 2},
                         "op_transform": "*",
                         "val_transform": 1000.0
+                    },
+                    {
+                        "infield": {"role": "at", "field_mode": "qty", "item_id": 19},
+                        "op_application": "*",
+                        "op_transform": "x^",
+                        "val_transform": -0.5
                     }
                 ],
                 "effects": [
@@ -626,23 +653,74 @@
             {
                 "id": 21,
                 "name": "Workers: Hire",
-                "outcome_type": "numeric",
-                "numeric_range": [-10, 10],
+                "description": "Before attempting to hire, see if you have enough funds to [pay the new hire](/play/event/45).\r\n\r\n- On any success, or on major failure, you must pay the new hire. The amount required is the same no matter whether you are able to hire 2, 1, or 0 new workers.",
+                "numeric_range": [1, 20],
                 "determinants": [
                     {
-                        "infield": {"role": "at", "field_mode": "qty", "item_id": 22, "attrib_id": 0},
-                        "op_transform": "scap"
+                        "infield": {"role": "at", "field_mode": "qty", "item_id": 22}
                     },
                     {
                         "label": "Crowded",
-                        "infield": {"role": "at", "field_mode": "qty", "item_id": 19, "attrib_id": 0},
-                        "op_application": "-",
-                        "op_transform": "scap"
+                        "infield": {"role": "at", "field_mode": "qty", "item_id": 19},
+                        "op_application": "-"
                     },
                     {
-                        "infield": {"role": "at", "item_id": 19, "attrib_id": 20},
-                        "op_transform": "scap",
+                        "infield": {"role": "at", "child_of_anchor": true, "attrib_id": 20},
                         "val_transform": 0.5
+                    },
+                    {
+                        "label": "Threshold Adjustment",
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 5.0
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "at", "field_mode": "qty", "item_id": 19},
+                        "op_transform": "c",
+                        "outcome_success": "success_minor"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "at", "field_mode": "qty", "item_id": 19},
+                        "op_transform": "c",
+                        "val_transform": 2.0,
+                        "outcome_success": "success_major"
+                    }
+                ],
+                "chained_events": [
+                    {"child_id": 45, "success_filter": "success_any"},
+                    {"child_id": 45, "success_filter": "failure_major"}
+                ]
+            },
+            {
+                "id": 45,
+                "name": "Workers: Pay New Hires",
+                "outcome_type": "determined",
+                "fixed_base": 1000.0,
+                "determinants": [
+                    {
+                        "infield": {"role": "at", "child_of_anchor": true, "attrib_id": 20},
+                        "op_application": "*",
+                        "op_transform": "x^",
+                        "val_transform": -0.5
+                    },
+                    {
+                        "infield": {"role": "at", "field_mode": "qty", "item_id": 19},
+                        "op_application": "*",
+                        "op_transform": "x^",
+                        "val_transform": 4.0
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 11},
+                        "op_application": "-",
+                        "val_transform": 5.0,
+                        "outcome_success": "success_any"
                     }
                 ]
             },

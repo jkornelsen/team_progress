@@ -1130,6 +1130,7 @@ def play_event(id):
     eligible_role_entities = {}
     fields_not_met = {}
     for role in roles_to_resolve:
+        fields_not_met[role] = {'positive': [], 'negated': []}
         if role == Participant.BLUEPRINT:
             continue
         if role == Participant.UNIVERSAL:
@@ -1155,8 +1156,7 @@ def play_event(id):
             if not can_use:
                 logic_key = 'negated' if factor.negate else 'positive'
                 field = factor.infield
-                fields_not_met.setdefault(
-                    role, {}).setdefault(logic_key, []).append((factor, field))
+                fields_not_met[role][logic_key].append((factor, field))
 
         eligible_role_entities[role] = sort_by_name_stripped(
             list(role_candidates))

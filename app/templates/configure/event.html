@@ -282,18 +282,16 @@
         else
             adjustEff('renumberRows');
 
+        syncOutcomeTypeState();
         const newCard = list.lastElementChild;
-
         const sourceSelect = newCard.querySelector('.source-type-select') || 
                            newCard.querySelector('[name$="[get_val_from]"]');
         if (sourceSelect) {
             syncEffSourceState(sourceSelect);
         }
-
         newCard.querySelectorAll('.field-mode-select').forEach(select => {
             syncFieldIdsState(select);
         });
-
         syncInnerExprState(newCard);
         syncOuterExprState(newCard);
     }
