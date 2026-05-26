@@ -23,7 +23,7 @@
         document.getElementById('dest-select')?.focus();
     };
     window.linkForKey['w'] = () => {
-        document.getElementById('travel-with-select')?.focus();
+        document.getElementById('travel-with-party-chk')?.click();
     };
 </script>
 
@@ -81,7 +81,8 @@
                                    id="travel-with-party-chk"
                                    onchange="this.blur()"
                                    {{ 'checked' if request.args.get('move_party') == '1' }}>
-                                Travel with <i>{{ character.travel_party if character.travel_party else 'Followers' }}</i> 
+                                Travel {{ hk.bracket('w') }}ith
+                                <i>{{ character.travel_party if character.travel_party else 'Followers' }}</i> 
                                 ({{ party_members | length }} other{{ 's' if party_members | length != 1 }} nearby)
                         </label>
                     </div>

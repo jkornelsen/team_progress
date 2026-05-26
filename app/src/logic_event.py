@@ -11,7 +11,7 @@ from app.serialization import clone_entity
 from .logic_piles import set_quantity, adjust_quantity
 from .logic_user_interaction import add_message
 from .logic_navigation import (
-    get_all_valid_coords, distance_between, get_default_position)
+    get_all_valid_coords, straight_line_dist, get_default_position)
 
 logger = logging.getLogger(__name__)
 
@@ -116,7 +116,7 @@ def get_entity_value(anchor_id, field_def, subject_id=None):
         target = Entity.query.get((game_token, anchor_id))
         if not (subj and target and subj.position and target.position):
             return 0.0
-        return float(distance_between(subj.position, target.position) or 0.0)
+        return float(straight_line_dist(subj.position, target.position) or 0.0)
 
     # Recipe Property Fetching
     if field_def.field_mode in [Participant.RATE_AMT, Participant.RATE_DUR]:
@@ -215,7 +215,7 @@ def can_use_field(field, entity):
             return False
 
     # TODO: check for event distance requirement e.g. 30ft (6 tiles)
-    # dist = distance_between(owner.position, c.position)
+    # dist = straight_line_dist(owner.position, c.position)
     # if dist is not None and dist > d.distance_reqired
 
     # --- 4. STANDARD QUANTITY CHECK (On the Anchor itself) ---

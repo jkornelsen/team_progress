@@ -18,6 +18,15 @@ don't show duplicate destinations in play location
     same door positions (null in the example)
     maybe shouldn't allow in database
 
+logic_navigation.py", line 300, in move_group
+    db.session.flush()
+sqlalchemy.exc.OperationalError: (psycopg2.errors.DeadlockDetected) deadlock detected
+DETAIL:  Process 5176 waits for ShareLock on transaction 2605284; blocked by process 13756.
+Process 13756 waits for ShareLock on transaction 2605285; blocked by process 5176.
+CONTEXT:  while updating tuple (0,46) in relation "characters"
+[SQL: UPDATE characters SET position=%(position)s::INTEGER[] WHERE characters.game_token = %(characters_game_token)s AND characters.id = %(characters_id)s]
+[parameters: {'position': [9, 4], 'characters_game_token': '128a971e-9667-4496-9d0d-8ce491b31780', 'characters_id': 8}]
+
 ---- scenario ----
 
 fission plant
@@ -55,7 +64,6 @@ lumber
     add status attrib (flag) on natural 1 that must be cleared by event
 
 tethered one
-    sled wolves: keep hands away from their teeth
     deception check for lyria in sunken library
         handled by the event that starts the convo
         if deception fails (use target for an inverted roll)

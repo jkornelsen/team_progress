@@ -28,7 +28,7 @@ from .logic_production import (
     execute_production)
 from .logic_navigation import (
     move_group, get_available_destinations, arrive_at_destination,
-    is_in_grid, blocked_by_local_item, get_default_position, is_adjacent)
+    is_in_grid, blocked_by_local_item, find_nearest_available_pos, is_adjacent)
 from .logic_objectives import validate_requirements
 from .logic_user_interaction import add_message
 
@@ -117,32 +117,49 @@ def play_location(id):
         session.pop('old_char_id', None)
 
     # 2. Fix Incorrectly Positioned Entities
-    if location:
-        default_pos = get_default_position(location)
+    if location.has_grid:
         needs_commit = False
 
-        if default_pos:
-            # Validate Characters
-            for char in characters_here:
-                if not char.position or not is_in_grid(location, char.position):
-                    char.position = default_pos
-                    db.session.add(char)
-                    needs_commit = True
+        # Validate Characters (No overlapping allowed)
+        occupied_in_fix = set()
+        for char in characters_here:
+            out_of_bounds = not is_in_grid(location, char.position)
+            # If out of bounds OR someone else already took this spot during the fix
+            if not char.position or out_of_bounds or tuple(char.position) in occupied_in_fix:
+                start_search = char.position or [1, 1]
+                # Find nearest that isn't blocked by items/zones, 
+                # and isn't in our 'occupied_in_fix' set
+                new_pos = find_nearest_available_pos(location, start_search, exclude_char_id=char.id)
+                
+                # Check for collisions with characters we haven't processed yet
+                while new_pos and tuple(new_pos) in occupied_in_fix:
+                     # Bump the search slightly if there's a collision in the local tracker
+                     new_pos = find_nearest_available_pos(location, [new_pos[0]+1, new_pos[1]], exclude_char_id=char.id)
 
-            # Validate & Merge Items
-            for pile in inventory_piles:
-                is_local = pile.item.storage_type == StorageType.LOCAL
-                out_of_bounds = not is_in_grid(
-                    location, pile.position, check_zones=False)
-                blocked_by_zone = not is_local and not out_of_bounds and \
-                    not is_in_grid(location, pile.position, check_zones=True)
-                overlap_collision = not is_local and blocked_by_local_item(
-                    id, pile.position)
-
-                if not pile.position or out_of_bounds or blocked_by_zone \
-                        or overlap_collision:
-                    pile.merge_to(default_pos)
+                if new_pos:
+                    char.position = new_pos
                     needs_commit = True
+            
+            if char.position:
+                occupied_in_fix.add(tuple(char.position))
+
+        # Validate & Disperse Items
+        for pile in inventory_piles:
+            is_local = pile.item.storage_type == StorageType.LOCAL
+            out_of_bounds = not is_in_grid(
+                location, pile.position, check_zones=False)
+            blocked_by_zone = not is_local and not out_of_bounds and \
+                not is_in_grid(location, pile.position, check_zones=True)
+            overlap_collision = not is_local and blocked_by_local_item(
+                id, pile.position)
+
+            if not pile.position or out_of_bounds or blocked_by_zone \
+                    or overlap_collision:
+                # Find the nearest open floor space
+                new_pos = find_nearest_available_pos(
+                    location, pile.position or [1, 1])
+                pile.position = new_pos
+                needs_commit = True
 
         if needs_commit:
             db.session.commit()
