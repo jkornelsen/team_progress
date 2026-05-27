@@ -8,7 +8,7 @@
         <!-- Mode -->
         <select name="{{ field_prefix }}[field_mode]"
                 class="field-mode-select full-width"
-                style="max-width: 30ch;"
+                style="min-width: 20ch; max-width: 30ch;"
                 onchange="syncFieldIdsState(this)">
             <option value="{{ Participant.ATTR }}" {{ 'selected'
                 if field_mode == Participant.ATTR }}>Attribute</option>
@@ -41,10 +41,10 @@
                             factor.usage_type == Participant.EFF else 
                         1.0 
                     }}"
-                    onchange="syncFieldAttribState(this)"
                     class="id-attr full-width {{
                         'hidden' if field_mode not in Participant.USES_ATTRIB }}" 
-                    style="min-width: 20ch; max-width: 30ch;">
+                    style="min-width: 30ch; max-width: 50ch;"
+                    onchange="syncFieldAttribState(this)">
                 {% for a in all_attribs %}
                     <option value="{{ a.id }}" {{ 'selected' if attrib_id == a.id }}>{{ a.name }}</option>
                 {% endfor %}
@@ -54,7 +54,7 @@
             <select name="{{ field_prefix }}[item_id]" 
                     class="id-item full-width {{
                         'hidden' if field_mode not in Participant.USES_ITEM }}" 
-                    style="min-width: 20ch; max-width: 30ch;"
+                    style="min-width: 30ch; max-width: 50ch;"
                     onchange="syncRecipesState(this); syncEventFieldState(this)">
                 {% for i in all_items %}
                     <option value="{{ i.id }}" {{ 'selected' if item_id == i.id }}>{{ i.name }}</option>
@@ -63,9 +63,10 @@
 
             <!-- Recipe -->
             <select name="{{ field_prefix }}[recipe_id]"
+                    data-current-id="{{ field_data.recipe_id if field_data else '' }}"
                     class="id-recipe {{
                         'hidden' if field_mode not in Participant.USES_RECIPE }}" 
-                    data-current-id="{{ field_data.recipe_id if field_data else '' }}">
+                    style="min-width: 30ch; max-width: 50ch;">
                 <!-- Populated by syncRecipesState() -->
             </select>
 
@@ -73,7 +74,7 @@
             <select name="{{ field_prefix }}[loc_id]" 
                     class="id-loc full-width {{
                         'hidden' if field_mode not in Participant.USES_LOC }}" 
-                    style="min-width: 20ch; max-width: 30ch;">
+                    style="min-width: 30ch; max-width: 50ch;">
                 <option value="">(Inactive / Nowhere)</option>
                 {% for l in all_locs %}
                     <option value="{{ l.id }}" {{ 'selected'
@@ -87,9 +88,9 @@
     <div class="flex-row align-center gap-10 role-row">
         <span>Participant:</span>
         <input type="hidden" 
-                name="{{ field_prefix }}[role]" 
-                class="role-hidden-input" 
-                value="{{ role }}">
+               name="{{ field_prefix }}[role]" 
+               class="role-hidden-input" 
+               value="{{ role }}">
         <select class="role-selector"
                 style="max-width: 30ch;"
                 onchange="syncEventFieldState(this)">

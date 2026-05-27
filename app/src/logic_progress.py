@@ -80,35 +80,37 @@ def tick_all_active(messages_host_id=None):
     for wave in range(CHUNK_SIZE + 1):
         any_work_done_this_wave = False
         
-        for item in work_items:
+        for work in work_items:
             # Skip if already finished or halted
-            if item['total_remaining'] <= 0 or item['halt_reason']:
+            if work['total_remaining'] <= 0 or work['halt_reason']:
                 continue
 
             # Determine size of this chunk
-            to_do = min(item['chunk_size'], item['total_remaining'])
+            to_do = min(work['chunk_size'], work['total_remaining'])
             
             # Make the change
+            p = work['progress']
             actual, reason = execute_production(
-                item['progress'].host_id, 
-                item['recipe'], 
-                item['progress'].owner_id, 
-                item['ctx'], 
+                p.host_id, 
+                work['recipe'], 
+                p.owner_id, 
+                work['ctx'], 
                 batches=to_do,
-                catching_up=item['catching_up']
+                catching_up=work['catching_up'],
+                stop_at=p.stop_at
             )
             
             # Update tracking
-            item['total_remaining'] -= actual
-            item['progress'].batches_processed += actual
+            work['total_remaining'] -= actual
+            p.batches_processed += actual
             
             if actual > 0:
                 any_work_done_this_wave = True
             elif reason == "Stalled":
-                logger.debug(f"Item {item['recipe'].product_id} waiting.")
+                logger.debug(f"Item {work['recipe'].product_id} waiting.")
             elif reason:
                 # If it halted, record why
-                item['halt_reason'] = reason
+                work['halt_reason'] = reason
 
         # Optimization: If the whole world is stuck, stop looping
         if not any_work_done_this_wave:
@@ -122,18 +124,18 @@ def tick_all_active(messages_host_id=None):
         add_message(f"Caught up after {time_str}")
 
     halt_messages = []
-    for item in work_items:
-        p = item['progress']
-        halt_reason = item['halt_reason']
+    for work in work_items:
+        progress = work['progress']
+        halt_reason = work['halt_reason']
         
         # Check future viability
         if not halt_reason:
             possible, reason = can_perform_recipe(
-                p.host_id, item['recipe'], p.owner_id, item['ctx'])
+                p.host_id, work['recipe'], p.owner_id, work['ctx'])
             if not possible:
                 halt_reason = reason
 
-        # Handle deletion for halted items
+        # Handle deletion for halted work
         if halt_reason:
             # Capture needed data into local variables while p is still valid
             prod_name = p.product.name if p.product else "Unknown Item"
@@ -169,7 +171,7 @@ def get_elapsed_seconds(progress):
     logger.debug(f"get_elapsed_seconds: now={now}, start={start}, elapsed={elapsed_seconds}s")
     return elapsed_seconds
 
-def start_production(host_id, recipe_id, owner_id, ctx):
+def start_production(host_id, recipe_id, owner_id, ctx, stop_at=None):
     """Initializes a Progress record for an Entity."""
     game_token = g.game_token
     recipe = Recipe.query.get((game_token, recipe_id))
@@ -217,8 +219,11 @@ def start_production(host_id, recipe_id, owner_id, ctx):
             owner_id=owner_id,
             host_id=host_id,
             char_id=ctx.char_id,
-            loc_id=ctx.loc_id)
+            loc_id=ctx.loc_id,
+            stop_at=stop_at)
         db.session.add(progress)
+    else:
+        progress.stop_at = stop_at
 
     progress.start_time = datetime.now()
     progress.batches_processed = 0

@@ -660,14 +660,9 @@ def play_item(id):
         host_ent = Entity.query.get((game_token, host_id)) if host_id else None
 
         enriched_recipes.append({
-            'id': r.id,
+            'recipe': r,
             'host_id': host_id,
             'host_name': host_ent.name if host_ent else "No Host",
-            'is_location_hosted': r.is_location_hosted,
-            'product_id': r.product_id,
-            'rate_amount': r.rate_amount,
-            'rate_duration': r.rate_duration,
-            'instant': r.instant,
             'can_produce': can_do,
             'reason': reason,
             'sources': sources_ui_data,
@@ -676,7 +671,7 @@ def play_item(id):
         })
 
     for r_data in enriched_recipes:
-        recipe_obj = next(r for r in item.recipes if r.id == r_data['id'])
+        recipe_obj = r_data['recipe']
         
         # Find the limiting ingredient
         possible_batches = []
@@ -789,7 +784,7 @@ def play_item(id):
         pile=pile,
         ctx_char=ctx_char,
         ctx_loc=ctx_loc,
-        recipes=enriched_recipes,
+        enriched_recipes=enriched_recipes,
         used_for_production=used_for_production,
         byproduct_of=byproduct_of,
         progress=current_progress,
@@ -910,7 +905,8 @@ def item_production_status(item_id, owner_id):
             "active_recipe_id": active_prog.recipe_id if active_prog else None,
             "active_host_id": active_prog.host_id if active_prog else None,
             "start_time": active_prog.start_time.isoformat() if active_prog else None,
-            "rate_duration": active_prog.recipe.rate_duration if active_prog else None
+            "rate_duration": active_prog.recipe.rate_duration if active_prog else None,
+            "stop_at": active_prog.stop_at if active_prog else None
         },
         "sources": [
             {"id": sid, "quantity": sqty}
@@ -927,6 +923,7 @@ def start_item_production(host_id):
     req = RequestHelper('form')
     recipe_id = req.get_int('recipe_id')
     owner_id = req.get_int('owner_id')
+    stop_at = req.get_float('stop_at', default=None)
 
     owner = Entity.query.get((game_token, owner_id))
     ctx = ContextIds(
@@ -941,7 +938,7 @@ def start_item_production(host_id):
         f" | Char:{ctx.char_id} | Loc:{ctx.loc_id}")
 
     success, message = start_production(
-        host_id, recipe_id, owner_id, ctx)
+        host_id, recipe_id, owner_id, ctx, stop_at=stop_at)
     if success:
         return '', HTTPStatus.NO_CONTENT
     # BAD_REQUEST causes res.ok to be false in JS

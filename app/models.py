@@ -1435,6 +1435,23 @@ class Recipe(db.Model, DictHydrator):
         )
 
     @property
+    def net_product_change(self):
+        """Calculates Yield minus Consumption for the primary product."""
+        net = self.rate_amount
+        for s in self.sources:
+            if s.item_id == self.product_id and not s.preserve:
+                net -= s.q_required
+        return net
+
+    @property
+    def is_producer(self):
+        return self.net_product_change > 0
+
+    @property
+    def is_consumer(self):
+        return self.net_product_change < 0
+
+    @property
     def summary(self):
         """Generates a string like: 'Yield 1 from Iron, Coal'"""
         from app.utils import maskable_name
@@ -1663,6 +1680,7 @@ class Progress(db.Model, DictHydrator):
     # status
     start_time = db.Column(db.DateTime)
     batches_processed = db.Column(db.Integer, default=0)
+    stop_at = db.Column(db.Float)
 
     def to_dict(self):
         data = {
@@ -1673,6 +1691,7 @@ class Progress(db.Model, DictHydrator):
             "loc_id": self.loc_id,
             "start_time": timeToStr(self.start_time),
             "batches_processed": self.batches_processed,
+            "stop_at": self.stop_at,
         }
         return self.to_dict_sparse(data)
 

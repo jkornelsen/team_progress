@@ -117,7 +117,7 @@ def get_eligible_placements(recipe, target_owner_id, host_id, sources=None):
 
 def can_perform_recipe(
         host_id, recipe, target_owner_id, ctx, batches=1,
-        catching_up=False, ignore_limit=False, sources=None):
+        catching_up=False, ignore_limit=False, sources=None, stop_at=None):
     """
     Validates if a host can perform a recipe. 
     Checks Storage limits, Ingredients, and Attributes.
@@ -150,6 +150,13 @@ def can_perform_recipe(
             # If catching up, we just want to know if we can do AT LEAST one
             if not catching_up or total_capacity < recipe.rate_amount:
                 return False, "Storage limit reached"
+
+    if stop_at is not None:
+        current_qty = get_accessible_quantity(recipe.product_id, target_owner_id)
+        if recipe.is_producer and current_qty >= stop_at:
+            return False, f"Target {stop_at:g} reached"
+        if is_consumer and current_qty <= stop_at:
+            return False, f"Target {stop_at:g} reached"
 
     # 2. Ingredient Availability
     if sources is None:
@@ -309,7 +316,8 @@ def resolve_recipe_sources(host_id, recipe, ctx):
     return resolved_sources
 
 def execute_production(
-        host_id, recipe, target_owner_id, ctx, batches=1, catching_up=False):
+        host_id, recipe, target_owner_id, ctx, batches=1,
+        catching_up=False, stop_at=None):
     """Executes production batches and applies changes.
     @param target_owner_id: the initial intent
     """
@@ -331,7 +339,26 @@ def execute_production(
     if not possible:
         return 0, reason
 
-    # Calculate the real ceiling based on current ingredients
+    # Calculate the ceiling based on current ingredients and stop_at
+
+    net_change = recipe.net_product_change
+    current_qty = get_accessible_quantity(recipe.product_id, target_owner_id)
+
+    if stop_at is not None:
+        if recipe.is_producer:
+            if current_qty >= stop_at:
+                return 0, f"Reached target of {stop_at:g}"
+            remaining_needed = stop_at - current_qty
+            batches_allowed = math.ceil(remaining_needed / net_change)
+            batches = min(batches, batches_allowed)
+
+        elif recipe.is_consumer:
+            if current_qty <= stop_at:
+                return 0, f"Dropped to target of {stop_at:g}"
+            remaining_to_drain = current_qty - stop_at
+            batches_allowed = math.ceil(remaining_to_drain / abs(net_change))
+            batches = min(batches, batches_allowed)
+
     if catching_up and batches > 1:
         max_possible = batches
         for src in sources:
@@ -345,10 +372,13 @@ def execute_production(
         
         # Also check Output Limit (q_limit)
         if recipe.rate_amount > 0 and recipe.product.q_limit > 0:
-            current_qty = get_accessible_quantity(
-                recipe.product_id, target_owner_id)
             space_left = recipe.product.q_limit - current_qty
             limit = math.floor(space_left / recipe.rate_amount)
+            if limit < max_possible:
+                max_possible = limit
+        if stop_at is not None and stop_at > 0:
+            remaining_needed = stop_at - current_qty
+            limit = math.ceil(remaining_needed / recipe.rate_amount)
             if limit < max_possible:
                 max_possible = limit
 

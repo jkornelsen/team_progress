@@ -102,40 +102,21 @@
     <div class="column-container">
         <!-- COLUMN: Production -->
         <div class="production-column">
-            {% if recipes %}
+            {% if enriched_recipes %}
             <section class="outer-border">
                 <h3>Production Recipes</h3>
                 <div class="recipe-list">
-                    {% for r in recipes %}
+                    {% for r_data in enriched_recipes %}
+                        {% set r = r_data['recipe'] %}
                     <div class="recipe-card {{ 'active' if progress and progress.recipe_id == r.id }}">
                         <div class="recipe-header flex-between">
                             <strong>
-                                Output:
-
-                                {# 1. Calculate how much of the CURRENT item this recipe consumes #}
-                                {% set ns = namespace(self_consumed=0) %}
-                                
-                                {% for s in r.sources %}
-                                    {# Note: s is a dictionary here because it is the 'enriched' recipe data #}
-                                    {% if s.ingredient.id == item.id and not s.preserve %}
-                                        {% set ns.self_consumed = s.q_required %}
-                                    {% endif %}
-                                {% endfor %}
-
-                                {# 2. Determine the icon/label based on Net Yield #}
-                                {% if r.rate_amount > ns.self_consumed %}
-                                    {# Normal Production #}
-                                    {{ r.rate_amount | formatNum }}
-                                {% elif r.rate_amount == 0 and ns.self_consumed == 0 %}
-                                    {# Effect/Tool only, no change in quantity #}
-                                    <span title="Mechanism/Effect Only" style="cursor: help;">🛠️</span>
+                                {% if r.is_producer %}
+                                    Output: {{ r.net_product_change | formatNum }}
+                                {% elif r.is_consumer %}
+                                    Consumes: {{ r.net_product_change | abs | formatNum }}
                                 {% else %}
-                                    {# Net loss or Trash Can (e.g. rate 0, consumes 1) #}
-                                    <span title="Consumes main item" style="cursor: help; font-size: 1.2em;">📉</span>
-                                    {% if r.rate_amount > 0 %}
-                                        {# If it yields something but less than it took, show the partial yield #}
-                                        <small class="label-like">({{ r.rate_amount | formatNum }})</small>
-                                    {% endif %}
+                                    <span title="Does not change main quantity" style="cursor: help;">🛠️</span>
                                 {% endif %}
                             </strong>
                             {% if r.is_location_hosted %}
@@ -152,7 +133,7 @@
                         
                         <!-- Sources (Ingredients) -->
                         <ul class="source-list label-like">
-                            {% for s in r.sources %}
+                            {% for s in r_data.sources %}
                                 <li>
                                     <span title="{{ 'Source must be available but is preserved' if s.preserve else 'Gets consumed' }}" style="cursor: help;">
                                         {{ '🛠️' if s.preserve else '📉' }}
@@ -170,10 +151,10 @@
                         </ul>
 
                         <!-- Recipe Byproducts -->
-                        {% if r.byproducts %}
+                        {% if r_data.byproducts %}
                         <div class="byproduct-list" style="margin-top: 5px; padding-left: 2px;">
                             <strong>🎁 Byproducts:</strong>
-                            {% for bp in r.byproducts %}
+                            {% for bp in r_data.byproducts %}
                                 <span class="byproduct-tag label-like">
                                     {% set bp_url = url_for('play.play_item', id=bp.item.id, **bp.url_params) %}
                                     {{ render.maskable_name(bp.item, bp_url, link_letters) }}
@@ -185,9 +166,9 @@
                         {% endif %}
 
                         <!-- Attribute Requirements -->
-                        {% if r.attrib_reqs %}
+                        {% if r_data.attrib_reqs %}
                         <ul class="attrib-req-list label-like">
-                            {% for req in r.attrib_reqs %}
+                            {% for req in r_data.attrib_reqs %}
                                 <li id="attrib-row-{{ req.attrib.id }}-{{ req.link_entity_id }}"
                                     class="{{ 'text-danger' if not req.is_satisfied else '' }}">
                                     {% if not req.attrib.is_binary %}
@@ -240,12 +221,12 @@
                             <div id="controls-{{ r.id }}" data-recipe-hotkey="{{ letter }}">
                                 {% if r.instant %}
                                     <div id="instant-controls-{{ r.id }}"
-                                        class="batch-selector flex-row align-center {{ 'hidden' if not r.can_produce }}">
+                                        class="batch-selector flex-row align-center {{ 'hidden' if not r_data.can_produce }}">
                                         <input type="text" id="batches-{{ r.id }}" 
-                                                value="{{ r.max_batches }}" 
-                                                data-max="{{ r.max_batches }}"
+                                                value="{{ r_data.max_batches }}" 
+                                                data-max="{{ r_data.max_batches }}"
                                                 onchange="setBatchQty('{{ r.id }}', this.value)"
-                                                min="1" max="{{ r.max_batches }}" 
+                                                min="1" max="{{ r_data.max_batches }}" 
                                                 class="mini-input">
                                         
                                         <div class="presets">
@@ -258,37 +239,54 @@
                                         </div>
                                     </div>
                                     <button id="gain-{{ r.id }}"
-                                        onclick="gainItem({{ r.id }}, {{ r.host_id }})"
-                                        class="go-button {{ 'hidden' if not r.can_produce }}">
+                                        onclick="gainItem({{ r.id }}, {{ r_data.host_id }})"
+                                        class="go-button {{ 'hidden' if not r_data.can_produce }}">
                                         <span class="hotkey-indicator">{{ letter }}</span>
                                         Gain Instant
                                     </button>
                                 {% else %}
-                                    <button id="start-{{ r.id }}"
-                                            onclick="startProd({{ r.id }}, {{ r.host_id }})"
-                                            class="go-button {{ 'hidden' if not r.can_produce or
-                                            (progress and progress.recipe_id == r.id) }}">
-                                        <span class="hotkey-indicator">{{ letter }}</span>
-                                        Start
-                                    </button>
-                                    <button id="stop-{{ r.id }}"
-                                            onclick="stopProd({{ r.host_id }}, {{ r.product_id }})"
-                                            class="dangerous-button {{ 'hidden' if not
-                                            (progress and progress.recipe_id == r.id) }}">
-                                        <span class="hotkey-indicator">{{ letter }}</span>
-                                        Stop
-                                    </button>
+                                    <div class="flex-row align-center">
+                                        <button id="start-{{ r.id }}"
+                                                onclick="startProd({{ r.id }}, {{ r_data.host_id }})"
+                                                class="go-button {{ 'hidden' if not r_data.can_produce or
+                                                (progress and progress.recipe_id == r.id) }}">
+                                            <span class="hotkey-indicator">{{ letter }}</span>
+                                            Start
+                                        </button>
+                                        <button id="stop-{{ r.id }}"
+                                                onclick="stopProd({{ r_data.host_id }}, {{ r.product_id }})"
+                                                class="dangerous-button {{ 'hidden' if not
+                                                (progress and progress.recipe_id == r.id) }}">
+                                            <span class="hotkey-indicator">{{ letter }}</span>
+                                            Stop
+                                        </button>
+                                        <div class="flex-row align-center" 
+                                             id="stop-at-wrapper-{{ r.id }}"
+                                             style="margin-left: 10px;">
+                                            <label for="stop-at-{{ r.id }}">Stop at</label>
+                                            <input type="number" 
+                                                   id="stop-at-{{ r.id }}" 
+                                                   name="stop_at" 
+                                                   placeholder="∞" 
+                                                   step="any" 
+                                                   class="mini-input no-spinners" 
+                                                   style="width: 7ch;">
+                                            <span id="stop-at-display-{{ r.id }}"
+                                                  class="hidden text-accent"
+                                                  style="font-weight: bold;"></span>
+                                        </div>
+                                    </div>
                                 {% endif %}
 
                                 {# Message why production is blocked #}
                                 <div id="blocked-{{ r.id }}" 
-                                     class="blocked-container flex-row align-center {{ 'hidden' if r.can_produce }}">
+                                     class="blocked-container flex-row align-center {{ 'hidden' if r_data.can_produce }}">
                                     
-                                    {% set isStorageFull = "limit reached" in r.reason.lower() %}
+                                    {% set isStorageFull = "limit reached" in r_data.reason.lower() %}
                                     
                                     <span class="info-icon {{ 'hidden' if isStorageFull }}" 
                                           style="cursor: help; font-size: 1.5em;" 
-                                          title="{{ r.reason }}">🚫</span>
+                                          title="{{ r_data.reason }}">🚫</span>
                                           
                                     <small class="blocked-msg text-dim" style="margin-left: 5px;">
                                         {{ 'Storage full' if isStorageFull else 'Requirements not met' }}
@@ -301,7 +299,7 @@
                                         const letter = '{{ letter }}';
                                         const recipeId = '{{ r.id }}';
                                         const isInstant = {{ 'true' if r.instant else 'false' }};
-                                        const canProduce = {{ 'true' if r.can_produce else 'false' }};
+                                        const canProduce = {{ 'true' if r_data.can_produce else 'false' }};
                                         const isRunning = {{ 'true' if progress and progress.recipe_id == r.id else 'false' }};
 
                                         if (isRunning) {
@@ -529,12 +527,13 @@
     const startedAtZero = (parseFloat("{{ pile.quantity }}".replace(/,/g, '')) || 0) === 0;
 
     const recipeMetadata = {
-        {% for r in recipes %}
+        {% for r_data in enriched_recipes %}
+            {% set r = r_data['recipe'] %}
         "{{ r.id }}": {
-            "can_produce": {{ 'true' if r.can_produce else 'false' }},
+            "can_produce": {{ 'true' if r_data.can_produce else 'false' }},
             "rate_amount": {{ r.rate_amount }},
             "sources": [
-                {% for s in r.sources %}
+                {% for s in r_data.sources %}
                 {
                     "item_id": "{{ s.ingredient.id }}",
                     "q_required": {{ s.q_required }},
@@ -703,6 +702,9 @@
                 // Check if this recipe is the one currently running
                 const isRunning = (
                     main.is_ongoing && main.active_recipe_id === r.recipe_id);
+                const stopAtWrapper = document.getElementById(`stop-at-wrapper-${r.recipe_id}`);
+                const stopAtInput = document.getElementById(`stop-at-${r.recipe_id}`);
+                const stopAtDisplay = document.getElementById(`stop-at-display-${r.recipe_id}`);
 
                 if (isRunning) {
                     if (startBtn) startBtn.classList.add('hidden');
@@ -721,6 +723,15 @@
                                 r.recipe_id, main.start_time, main.rate_duration);
                         }
                     }
+                    if (stopAtWrapper) {
+                        if (main.stop_at) {
+                            stopAtInput.classList.add('hidden');
+                            stopAtDisplay.classList.remove('hidden');
+                            stopAtDisplay.textContent = main.stop_at;
+                        } else {
+                            stopAtWrapper.classList.add('hidden');
+                        }
+                    }
                 } else {
                     // --- INACTIVE STATE ---
                     if (progContainer) progContainer.classList.add('hidden');
@@ -734,6 +745,9 @@
                         }
                         progBar.value = 0;
                     }
+                    if (stopAtWrapper) {
+                        stopAtDisplay.classList.add('hidden');
+                    }
 
                     if (r.can_produce) {
                         // CAN PRODUCE
@@ -743,6 +757,13 @@
                         if (startBtn) {
                             startBtn.classList.remove('hidden');
                             if (letter) window.linkForKey[letter] = `#start-${r.recipe_id}`;
+                            if (stopAtWrapper) {
+                                if (stopAtInput.classList.contains('hidden')) {
+                                    stopAtInput.value = ""; 
+                                }
+                                stopAtWrapper.classList.remove('hidden');
+                                stopAtInput.classList.remove('hidden');
+                            }
                         }
                         if (gainBtn) {
                             gainBtn.classList.remove('hidden');
@@ -893,6 +914,10 @@
         fd.append('owner_id', ownerId);
         fd.append('char_id', charId);
         fd.append('loc_id', locId);
+        const stopAtInput = document.getElementById(`stop-at-${recipeId}`);
+        if (stopAtInput && stopAtInput.value !== '') {
+            fd.append('stop_at', stopAtInput.value);
+        }
 
         const url = `/production/start/host/${targetHostId}`;
         const data = await apiPost(url, fd, "Could not start.");
@@ -909,6 +934,9 @@
 
         // Trigger update immediately so buttons flip without delay
         updateStatus();
+        document.querySelectorAll('input[id^="stop-at-input-"]').forEach(input => {
+            input.value = "";
+        });
     }
 
     async function gainItem(recipeId, targetHostId) {

@@ -129,7 +129,7 @@
                 "description": "Fuel limit × (5 per qty). Go to **Spent Fuel Limit** when changed.",
                 "abilities": [35],
                 "storage_type": "u",
-                "q_limit": 7.0,
+                "q_limit": 10.0,
                 "recipes": [
                     {
                         "id": 41,
@@ -137,6 +137,24 @@
                         "sources": [
                             {"item_id": 27, "q_required": 1.0, "preserve": true},
                             {"item_id": 11, "q_required": 1500.0}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 46,
+                "name": "Plutonium Purchase III",
+                "description": "Fuel limit × (1.5$^{qty}). Go to **Spent Fuel Limit** when changed.",
+                "abilities": [35],
+                "storage_type": "u",
+                "q_limit": 12.0,
+                "recipes": [
+                    {
+                        "id": 47,
+                        "rate_duration": 1800,
+                        "sources": [
+                            {"item_id": 11, "q_required": 20000.0},
+                            {"item_id": 27, "q_required": 1.0, "preserve": true}
                         ]
                     }
                 ]
@@ -174,6 +192,25 @@
                             {"item_id": 11, "q_required": 2000.0},
                             {"item_id": 27, "q_required": 1.0, "preserve": true},
                             {"item_id": 3, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 48,
+                "name": "Production Rate III",
+                "description": "Energy production rate × (1.5$^{qty}). This does not improve efficiency, so also increase the waste generated and resources required.",
+                "abilities": [17],
+                "storage_type": "u",
+                "q_limit": 8.0,
+                "recipes": [
+                    {
+                        "id": 49,
+                        "rate_duration": 3000,
+                        "sources": [
+                            {"item_id": 2, "q_required": 1.0, "preserve": true},
+                            {"item_id": 11, "q_required": 20000.0},
+                            {"item_id": 27, "q_required": 1.0, "preserve": true}
                         ]
                     }
                 ]
@@ -361,7 +398,7 @@
             {
                 "id": 17,
                 "name": "Production Rate",
-                "description": "Determine production rate by taking upgrades into account.\r\n\r\nAfter rolling, [edit energy](/configure/item/9) and find the recipe section. Do NOT press *Apply* on the effect — the number is for reference only.\r\n\r\n- Set *Gain per Batch*, required **Plutonium**, and **Spent Fuel** byproduct to the result.\r\n- Set **Radioactive Waste** and **Thermal Waste** byproducts to 2 × the result.",
+                "description": "Determine production rate by taking upgrades into account.\r\n\r\nAfter rolling, [edit Energy](/configure/item/9) and find the recipe section. Do NOT press *Apply* on the effect — the number is for reference only.\r\n\r\n- Set *Gain per Batch*, required **Plutonium**, and **Spent Fuel** byproduct to the result.\r\n- Set **Radioactive Waste** and **Thermal Waste** byproducts to 2 × the result.",
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -372,6 +409,12 @@
                         "op_application": "*",
                         "op_transform": "*",
                         "val_transform": 4.0
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "op_application": "*",
+                        "op_transform": "^x",
+                        "val_transform": 1.5
                     }
                 ],
                 "effects": [
@@ -388,7 +431,7 @@
             {
                 "id": 18,
                 "name": "Reclaim Spent Fuel",
-                "description": "- Waste buildup increases the chance of something going wrong.\r\n- Sets **Spent Fuel** to 0 and set plutonium quantity to that amount instead, plus 25% on major success.\r\n- If there is a failure then you still get the reclaimed fuel, but something goes wrong—determine **Plant Problem Type**.",
+                "description": "- Sets **Plutonium** quantity to the amount of **Spent Fuel,** plus 40% on major success.\r\n- If there is a failure then you still get the reclaimed fuel, but something goes wrong—determine **Plant Problem Type**.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -422,11 +465,11 @@
                         "auto_apply": true
                     },
                     {
-                        "label": "+25% Gain",
+                        "label": "+40% Gain",
                         "get_val_from": "outfield",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 4},
                         "op_transform": "*",
-                        "val_transform": 0.25,
+                        "val_transform": 0.4,
                         "outcome_success": "success_major",
                         "auto_apply": true
                     },
@@ -509,6 +552,11 @@
                         "val_transform": 1000.0
                     },
                     {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "op_transform": "*",
+                        "val_transform": 10000.0
+                    },
+                    {
                         "infield": {"role": "at", "field_mode": "qty", "item_id": 19},
                         "op_application": "*",
                         "op_transform": "x^",
@@ -581,6 +629,18 @@
                         "outfield": {
                             "role": "blueprint",
                             "field_mode": "rate_dur",
+                            "item_id": 46,
+                            "recipe_id": 47
+                        },
+                        "op_application": ":=",
+                        "op_transform": "*",
+                        "val_transform": 1800.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "rate_dur",
                             "item_id": 3,
                             "recipe_id": 19
                         },
@@ -599,13 +659,25 @@
                         "op_application": ":=",
                         "op_transform": "*",
                         "val_transform": 400.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "rate_dur",
+                            "item_id": 48,
+                            "recipe_id": 49
+                        },
+                        "op_application": ":=",
+                        "op_transform": "*",
+                        "val_transform": 3000.0
                     }
                 ]
             },
             {
                 "id": 35,
                 "name": "Spent Fuel Limit",
-                "description": "Roll, then [edit Spent Fuel](/configure/item/5):\r\n- Set *Limit per Pile* to this result.\r\n- Change quantity by increasing similarly. Doesn't have to be perfect because the limit regulates quantity eventually.",
+                "description": "Roll, then edit **Spent Fuel**:\r\n- Set *Limit per Pile* to this result.\r\n- Change quantity by increasing similarly. Doesn't have to be perfect because the limit regulates quantity eventually.",
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -617,6 +689,12 @@
                         "op_application": "*",
                         "op_transform": "*",
                         "val_transform": 5.0
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 46},
+                        "op_application": "*",
+                        "op_transform": "^x",
+                        "val_transform": 1.5
                     }
                 ]
             },
@@ -738,13 +816,13 @@
                     {
                         "infield": {"role": "at", "field_mode": "qty", "item_id": 22},
                         "op_transform": "scap",
-                        "val_transform": 10
+                        "val_transform": 10.0
                     },
                     {
                         "infield": {"role": "at", "field_mode": "qty", "item_id": 19},
                         "op_application": "-",
                         "op_transform": "scap",
-                        "val_transform": 10
+                        "val_transform": 10.0
                     }
                 ]
             }

@@ -27,7 +27,7 @@
                     {{ subject.name }}
                 {% endcall %}
             {% endif %}
-            {% if ctx_char and ctx_char.id != subject.id %}
+            {% if ctx_char and (not subject or ctx_char.id != subject.id) %}
                 <span style="margin-left: 5px; margin-right: 5px">|</span>
                 <span class="label-like">👤</span>
                 {% set target_url = url_for('play.play_character', id=ctx_char.id) %}
@@ -36,7 +36,7 @@
                 {% endcall %}
                 active
             {% endif %}
-            {% if ctx_loc and ctx_loc.id != subject.id %}
+            {% if ctx_loc and (not subject or ctx_loc.id != subject.id) %}
                 <span style="margin-left: 5px; margin-right: 5px">|</span>
                 <span class="label-like">📍</span>
                 {% set loc_url = url_for('play.play_location', id=ctx_loc.id) %}
@@ -167,7 +167,9 @@
                                 {% endif %}
                             </span>
                             {% if ent.entity_type == 'event' %}
-                                {% set target_url = url_for('play.play_event', id=ent.id) %}
+                                {% set target_url = url_for('play.play_event',
+                                        id=ent.id, subject_id=(
+                                        subject.id if subject else 1)) %}
                                 {% call hk.hotlink(target_url, link_letters) %}
                                     {{ ent.name }}
                                 {% endcall %}
@@ -780,6 +782,9 @@
                         for (let [key, value] of fd.entries()) {
                             url.searchParams.append(key, value);
                         }
+                        {% if subject %}
+                        url.searchParams.append('subject_id', '{{ subject.id }}');
+                        {% endif %}
 
                         const a = document.createElement('a');
                         a.href = url.toString();

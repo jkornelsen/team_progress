@@ -240,6 +240,16 @@ select {
     text-decoration: none;
 }
 
+/* Hide spin buttons for numeric inputs depending on browser */
+.no-spinners::-webkit-outer-spin-button,
+.no-spinners::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.no-spinners {
+  -moz-appearance: textfield;
+}
+
 /* ==========================================================================
    5. WIDGETS (Tables, Progress, Logs)
    ========================================================================== */

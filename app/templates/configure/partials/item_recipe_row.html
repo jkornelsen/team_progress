@@ -29,21 +29,21 @@
             <label>
                 Duration (Seconds):
                 <input type="number"
-                        name="recipes[{{ recipe_index }}][rate_duration]" 
-                        id="duration-{{ recipe_index }}"
-                        class="duration-input"
-                        value="{{ recipe.rate_duration if recipe else 3 }}"
-                        step="1" min="1" required>
+                       name="recipes[{{ recipe_index }}][rate_duration]" 
+                       id="duration-{{ recipe_index }}"
+                       class="duration-input"
+                       value="{{ recipe.rate_duration if recipe else 3 }}"
+                       step="1" min="1" required>
             </label>
         </div>
         <div class="form-group align-center flex-row" style="padding-top: 25px;">
             <label class="checkbox-label">
                 <input type="checkbox"
-                        name="recipes[{{ recipe_index }}][instant]" 
-                        id="instant-{{ recipe_index }}"
-                        class="instant-checkbox"
-                        onchange="syncInstantState(this)"
-                        {{ 'checked' if recipe and recipe.instant }}>
+                       name="recipes[{{ recipe_index }}][instant]" 
+                       id="instant-{{ recipe_index }}"
+                       class="instant-checkbox"
+                       onchange="syncInstantState(this)"
+                       {{ 'checked' if recipe and recipe.instant }}>
                 Instant
             </label>
         </div>
@@ -64,11 +64,15 @@
                             <option value="{{ i.id }}" {{ 'selected' if i.id == source.item_id }}>{{ i.name }}</option>
                             {% endfor %}
                         </select>
-                        <input type="number" name="recipes[{{ recipe_index }}][sources][{{ loop.index0 }}][q_required]" 
-                               value="{{ source.q_required }}" step="any" style="width: 60px;">
+                        <input type="number"
+                               name="recipes[{{ recipe_index }}][sources][{{ loop.index0 }}][q_required]" 
+                               value="{{ source.q_required }}"
+                               step="any"
+                               style="width: 10ch;">
                         <label class="checkbox-label"
-                                title="Leave unchecked for resources that get consumed.">
-                            <input type="checkbox" name="recipes[{{ recipe_index }}][sources][{{ loop.index0 }}][preserve]" 
+                               title="Leave unchecked for resources that get consumed.">
+                            <input type="checkbox"
+                                   name="recipes[{{ recipe_index }}][sources][{{ loop.index0 }}][preserve]" 
                                    {{ 'checked' if source.preserve }}> Preserve
                         </label>
                         <button type="button" class="btn-sm dangerous-button"
@@ -93,8 +97,12 @@
                             <option value="{{ i.id }}" {{ 'selected' if i.id == byproduct.item_id }}>{{ i.name }}</option>
                             {% endfor %}
                         </select>
-                        <input type="number" name="recipes[{{ recipe_index }}][byproducts][{{ loop.index0 }}][rate_amount]" 
-                               value="{{ byproduct.rate_amount }}" step="any" style="width: 60px;">
+                        <input type="number"
+                               name="recipes[{{ recipe_index }}][byproducts][{{ loop.index0 }}][rate_amount]" 
+                               value="{{ byproduct.rate_amount }}"
+                               step="any"
+                               class="no-spinners"
+                               style="width: 60px;">
                         <button type="button" class="btn-sm dangerous-button"
                             onclick="this.parentElement.remove()">×</button>
                     </div>

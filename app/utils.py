@@ -282,9 +282,9 @@ def format_num(value, nformat='en_US'):
     except locale.Error:
         locale.setlocale(locale.LC_ALL, 'C')
 
-    # Determine precision: show up to 7 significant digits
+    # Show up to 3 decimal digits
     try:
-        val_str = locale.format_string("%.7f", value, grouping=True)
+        val_str = locale.format_string("%.3f", value, grouping=True)
         # Strip trailing zeros and the decimal point if it becomes empty
         val_str = val_str.rstrip('0').rstrip(locale.localeconv()['decimal_point'])
         return val_str

@@ -149,7 +149,6 @@
                                    value="{{ item.q_limit }}" step="any"
                                    placeholder="0 for unlimited"
                                    style="max-width: 20ch; padding-left: 10px;">
-                            <div class="label-like">(Default)</div>
                             <span></span> <!-- Empty span for grid alignment -->
                         </div>
 
@@ -288,7 +287,12 @@
                 <option value="{{ i.id }}">{{ i.name }}</option>
             {% endfor %}
         </select>
-        <input type="number" name="recipes[RECIPE_INDEX][byproducts][SUB_INDEX][rate_amount]" value="1" step="any" style="width: 60px;">
+        <input type="number"
+               name="recipes[RECIPE_INDEX][byproducts][SUB_INDEX][rate_amount]"
+               value="1"
+               step="any"
+               class="no-spinners"
+               style="width: 60px;">
         <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
     </div>
 </template>
