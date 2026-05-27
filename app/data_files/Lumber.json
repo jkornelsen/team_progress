@@ -632,7 +632,7 @@
                     }
                 ],
                 "chained_events": [
-                    {"child_id": 22, "success_filter": "failure_major"}
+                    {"child_id": 22, "outcome_success": "failure_major"}
                 ]
             },
             {
@@ -756,7 +756,7 @@
             {
                 "id": 23,
                 "name": "Swing to Chop",
-                "description": "For the final blow, or after rolling a natural 1, do a [Chopping Check](/play/event/26).",
+                "description": "For the final blow, or after rolling a natural 1, do a **Chopping Check.**",
                 "outcome_type": "numeric",
                 "numeric_range": [1, 10],
                 "determinants": [
@@ -782,7 +782,7 @@
                     }
                 ],
                 "chained_events": [
-                    {"child_id": 26, "success_filter": "natural_min"}
+                    {"child_id": 26, "outcome_success": "natural_min"}
                 ]
             }
         ]

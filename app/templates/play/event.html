@@ -152,45 +152,37 @@
             {% endif %}
             </section>
 
-            {% if caller_entities or parent_events or involved_entities %}
+            {% if related_entities %}
             <section class="outer-border">
-                <h3>Called From / Involved</h3>
+                <h3>Involved Links</h3>
                 <div>
-                    {% for p_event in parent_events %}
-                        <div>
-                            <span class="label-like" title="Parent Event">⚡</span>
-                            {% set target_url = url_for('play.play_event', id=p_event.id) %}
-                            {% call hk.hotlink(target_url, link_letters) %}
-                                {{ p_event.name }}
-                            {% endcall %}
-                        </div>
-                    {% endfor %}
-                    {% for ent in caller_entities %}
+                    {% for ent in related_entities %}
                         <div>
                             <span class="label-like">
-                                {{ '👤' if ent.entity_type == 'character' else '📍' if ent.entity_type == 'location' else '📦' }}
-                            </span>
-                            {% set target_url = url_for('play.play_' ~ ent.entity_type, id=ent.id) %}
-                            {{ render.maskable_name(
-                                ent, target_url, link_letters) }}
-                        </div>
-                    {% endfor %}
-                    {% for ent in involved_entities %}
-                        <div>
-                            <span class="label-like">
-                                {% if ent.entity_type == 'character' %}👤
+                                {% if ent.entity_type == 'event' %}⚡
+                                {% elif ent.entity_type == 'character' %}👤
+                                {% elif ent.entity_type == 'location' %}📍
                                 {% elif ent.entity_type == 'item' %}📦
                                 {% elif ent.entity_type == 'attrib' %}📊
                                 {% endif %}
                             </span>
-                            {% set target_url = url_for('play.play_' ~ ent.entity_type, id=ent.id)
-                                    if ent.entity_type != 'attrib' 
-                               else url_for('play.play_attrib', attrib_id=ent.id, subject_id=(subject.id
-                                    if subject else ctx_char.id if ctx_char else 1)) %}
-                            
-                            {% call hk.hotlink(target_url, link_letters) %}
-                                {{ ent.name }}
-                            {% endcall %}
+                            {% if ent.entity_type == 'event' %}
+                                {% set target_url = url_for('play.play_event', id=ent.id) %}
+                                {% call hk.hotlink(target_url, link_letters) %}
+                                    {{ ent.name }}
+                                {% endcall %}
+                            {% elif ent.entity_type == 'attrib' %}
+                                {% set target_url = url_for('play.play_attrib',
+                                        attrib_id=ent.id, subject_id=(
+                                            subject.id if subject
+                                            else ctx_char.id if ctx_char else 1)) %}
+                                {% call hk.hotlink(target_url, link_letters) %}
+                                    {{ ent.name }}
+                                {% endcall %}
+                            {% else %}
+                                {% set target_url = url_for('play.play_' ~ ent.entity_type, id=ent.id) %}
+                                {{ render.maskable_name(ent, target_url, link_letters) }}
+                            {% endif %}
                         </div>
                     {% endfor %}
                 </div>
@@ -284,7 +276,7 @@
                              id="eff-row-{{ eff.id }}" 
                              data-role="{{ eff.outfield.role }}"
                              data-get-val-from="{{ eff.get_val_from }}"
-                             data-success-filter="{{ eff.outcome_success }}"
+                             data-outcome-success="{{ eff.outcome_success }}"
                              data-op-trans="{{ eff.op_transform or '' }}"
                              data-val-trans="{{ eff.val_transform }}"
                              data-auto="{{ 'true' if eff.auto_apply else 'false' }}"
@@ -364,7 +356,7 @@
         {
             "child_id": {{ link.child_id }},
             "child_name": "{{ link.child.name }}",
-            "success_filter": "{{ link.success_filter }}"
+            "outcome_success": "{{ link.outcome_success }}"
         }{{ "," if not loop.last }}
         {% endfor %}
     ];
@@ -539,8 +531,8 @@
 
                 // Update Line 2: Logic description
                 const logicEl = row.querySelector('.source-logic-description');
-                const filterKey = row.dataset.successFilter;
-                const successFilterText = FILTER_LABELS[filterKey] || "";
+                const filterKey = row.dataset.outcomeSuccess;
+                const outcomeSuccessText = FILTER_LABELS[filterKey] || "";
 
                 const hasTransform = (
                     row.dataset.opTrans && row.dataset.opTrans !== ''
@@ -549,8 +541,8 @@
                 let logicParts = [];
 
                 // A. Add Filter Requirement (e.g., "If Major Success")
-                if (successFilterText) {
-                    logicParts.push(`<span class="">${successFilterText}</span>`);
+                if (outcomeSuccessText) {
+                    logicParts.push(`<span class="">${outcomeSuccessText}</span>`);
                 }
 
                 // B. Add Math Transform (e.g., "Roll Result × 2")
@@ -595,14 +587,14 @@
 
         const min = {{ event.numeric_range[0] if event.numeric_range else 1 }};
         const max = {{ event.numeric_range[1] if event.numeric_range else 20 }};
-        const span = max - min + 1;
+        const sides = max - min + 1;
 
         const difficulty = parseFloat(diffSelect.value);
-        const shift = Math.round(span * difficulty);
+        const shift = Math.round(sides * difficulty);
         
         const majorFailureMax = min + Math.floor(shift * 0.20);
-        const minorSuccessMin = Math.round(span * 0.10) + shift;
-        const majorSuccessMin = (max - Math.floor(span * 0.15)) + Math.floor(shift * 0.40);
+        const minorSuccessMin = Math.round(sides * 0.10) + shift;
+        const majorSuccessMin = (max - Math.floor(sides * 0.15)) + Math.floor(shift * 0.40);
 
         const minorSuccessDisplay = `≥ ${minorSuccessMin}`;
         const majorSuccessDisplay = `≥ ${majorSuccessMin}`;
@@ -706,7 +698,7 @@
                     const currentValEl = row.querySelector('.current-value-display');
                     const newValEl = row.querySelector('.new-val');
                     const equationEl = row.querySelector('.equation-display');
-                    const successFilter = row.dataset.successFilter;
+                    const outcomeSuccess = row.dataset.outcomeSuccess;
                     const reliesOnRoll = row.dataset.reliesOnRoll === "true";
 
                     currentValEl.innerText = eff.current_display;
@@ -734,7 +726,7 @@
                         equationEl.innerHTML = `<span class="text-success" style="font-weight:bold;">${eff.impact_display}</span>`;
                     }
                     {% if event.outcome_type == OutcomeType.FOURWAY %}
-                        const isEligible = tierMatch(successFilter, resultTier);
+                        const isEligible = tierMatch(outcomeSuccess, resultTier);
                         if (!isEligible) {
                             row.classList.add('hidden'); // Hide effects that didn't trigger
                         } else {
@@ -777,7 +769,7 @@
                 let visibleChainCount = 0;
 
                 CHAINED_EVENTS.forEach(link => {
-                    const isEligible = tierMatch(link.success_filter, resultTier);
+                    const isEligible = tierMatch(link.outcome_success, resultTier);
                     if (isEligible) {
                         visibleChainCount++;
                         const idx = visibleChainCount - 1;

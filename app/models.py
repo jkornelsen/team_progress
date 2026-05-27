@@ -1321,12 +1321,12 @@ class EventLink(db.Model, DictHydrator):
     parent_id = db.Column(db.Integer, nullable=False)
     child_id = db.Column(db.Integer, nullable=False)
     
-    success_filter = db.Column(db.String(20), default=Participant.ALWAYS)
+    outcome_success = db.Column(db.String(20), default=Participant.ALWAYS)
 
     def to_dict(self):
         data = {
             "child_id": self.child_id,
-            "success_filter": self.success_filter
+            "outcome_success": self.outcome_success
         }
         return self.to_dict_sparse(data)
 

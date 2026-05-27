@@ -739,7 +739,7 @@ def edit_event(id):
                     game_token=game_token,
                     parent_id=event.id,
                     child_id=child_id,
-                    success_filter=row.get_str('success_filter', 'always')
+                    outcome_success=row.get_str('outcome_success', 'always')
                 ))
 
         db.session.commit()

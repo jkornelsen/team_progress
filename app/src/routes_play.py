@@ -1147,7 +1147,6 @@ def play_event(id):
     eligible_role_entities = {}
     fields_not_met = {}
     for role in roles_to_resolve:
-        fields_not_met[role] = {'positive': [], 'negated': []}
         if role == Participant.BLUEPRINT:
             continue
         if role == Participant.UNIVERSAL:
@@ -1171,6 +1170,8 @@ def play_event(id):
             }
             role_candidates &= can_use # Intersection
             if not can_use:
+                if role not in fields_not_met:
+                    fields_not_met[role] = {'positive': [], 'negated': []}
                 logic_key = 'negated' if factor.negate else 'positive'
                 field = factor.infield
                 fields_not_met[role][logic_key].append((factor, field))
@@ -1178,60 +1179,55 @@ def play_event(id):
         eligible_role_entities[role] = sort_by_name_stripped(
             list(role_candidates))
 
-    # Entities that call this event
-    caller_entities = (
-        db.session.query(Entity)
-        .join(EntityAbility, (Entity.id == EntityAbility.entity_id) & 
-                            (Entity.game_token == EntityAbility.game_token))
-        .filter(EntityAbility.event_id == id)
-        .filter(EntityAbility.game_token == game_token)
-        .order_by(name_stripped(Entity.name))
-        .all()
-    )
-    parent_events = (
+    # Entities that call or are involved with this event
+    all_related = {}
+
+    # Parent events that call this event
+    for e in (
         db.session.query(Event)
-        .join(EventLink, (Event.id == EventLink.parent_id) & 
+        .join(EventLink, (Event.id == EventLink.parent_id) &
                          (Event.game_token == EventLink.game_token))
         .filter(EventLink.child_id == id)
         .filter(EventLink.game_token == game_token)
-        .order_by(name_stripped(Event.name))
         .all()
-    )
+    ):
+        all_related[e.id] = e
 
-    # Identify Involved Blueprint Entities (scan factors as before)
-    attrib_ids = set()
-    item_ids = set()
-    char_ids = set()
+    # Entities that call this event via abilities
+    for e in (
+        db.session.query(Entity)
+        .join(EntityAbility, (Entity.id == EntityAbility.entity_id) &
+                             (Entity.game_token == EntityAbility.game_token))
+        .filter(EntityAbility.event_id == id)
+        .filter(EntityAbility.game_token == game_token)
+        .all()
+    ):
+        all_related[e.id] = e
+
+    # Blueprint entities involved via factors
     for f in event.factors:
         for field in [f.infield, f.outfield]:
             if not field: continue
-            if field.attrib_id: attrib_ids.add(field.attrib_id)
-            if field.item_id: item_ids.add(field.item_id)
-            if field.char_id: char_ids.add(field.char_id)
-            if field.recipe_id:
+            if field.attrib_id:
+                ent = Attrib.query.get((game_token, field.attrib_id))
+            elif field.item_id:
+                ent = Item.query.filter_by(game_token=game_token, id=field.item_id, masked=False).first()
+            elif field.char_id:
+                ent = Character.query.get((game_token, field.char_id))
+            elif field.recipe_id:
                 rec = Recipe.query.get((game_token, field.recipe_id))
-                if rec: item_ids.add(rec.product_id)
+                ent = Item.query.filter_by(game_token=game_token, id=rec.product_id, masked=False).first() if rec else None
+            else:
+                ent = None
+            if ent:
+                all_related[ent.id] = ent
 
-    raw_involved = []
-    if attrib_ids:
-        raw_involved += Attrib.query.filter(
-            Attrib.game_token == game_token, Attrib.id.in_(
-            list(attrib_ids))).all()
-    if item_ids:
-        raw_involved += Item.query.filter(
-            Item.game_token == game_token, Item.id.in_(
-            list(item_ids)), Item.masked == False).all()
-    if char_ids:
-        raw_involved += Character.query.filter(
-            Character.game_token == game_token, Character.id.in_(
-            list(char_ids))).all()
+    # Chained events
+    for link in event.chained_events:
+        ent = link.child
+        all_related[ent.id] = ent
 
-    caller_keys = {(c.id, c.entity_type) for c in caller_entities}
-    involved_filtered = [
-        ent for ent in raw_involved 
-        if (ent.id, ent.entity_type) not in caller_keys
-    ]
-    involved_entities = sort_by_name_stripped(involved_filtered)
+    related = sort_by_name_stripped(list(all_related.values()))
 
     return render_template(
         'play/event.html',
@@ -1241,9 +1237,7 @@ def play_event(id):
         ctx_loc=ctx_loc,
         role_entities=eligible_role_entities,
         fields_not_met=fields_not_met,
-        caller_entities=caller_entities,
-        involved_entities=involved_entities,
-        parent_events=parent_events,
+        related_entities=related,
         OutcomeType=OutcomeType,
         Participant=Participant,
         Operation=Operation,

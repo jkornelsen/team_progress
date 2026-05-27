@@ -23,14 +23,23 @@ def format_for_display(val):
     except (TypeError, ValueError):
         return str(val)
 
-def apply_operation(current_val, mod_val, op):
+def num_sides(event=None):
+    if not event:
+        return 20, 1, 20
+    base_min = event.numeric_range[0] if event.numeric_range else 1
+    base_max = event.numeric_range[1] if event.numeric_range else 20
+    sides = abs(base_max - base_min) + 1
+    return sides, base_min, base_max
+
+def apply_operation(current_val, mod_val, op, output_range=None):
     """Applies the specific operation and returns the new value."""
     if op == Operation.CONST:
         return mod_val
 
     # Unary Functions
     if op == Operation.SOFTCAP:
-        c = 50
+        cap_threshold = mod_val if (mod_val and mod_val != 0) else 50
+        output_range = (output_range or 20) * 0.15
         if current_val == 0:
             return 0.0
         current_abs = abs(current_val)
@@ -39,9 +48,9 @@ def apply_operation(current_val, mod_val, op):
             return current_val
         if current_abs < 1.1:
             return sign * 1
-        ratio = math.log(1 + current_abs / c) / (
-            1 + math.log(1 + current_abs / c))
-        return sign * (1 + mod_val * ratio)
+        ratio = math.log(1 + current_abs / cap_threshold) / (
+            1 + math.log(1 + current_abs / cap_threshold))
+        return sign * (1 + output_range * ratio)
     if op == Operation.ROUND:
         try:
             if mod_val == 0:
@@ -266,8 +275,9 @@ def calculate_determinants(event, role_entities):
     Returns a list of calculated modifiers based on selected participants.
         [{label, source_name, field_name, value, op}, ...]
     """
-    modifiers = []
     game_token = g.game_token
+    modifiers = []
+    sides, _, _ = num_sides(event)
 
     for det in event.determinants:
         val = 0.0
@@ -328,14 +338,14 @@ def calculate_determinants(event, role_entities):
                 breakdown_text = get_inner_breakdown(
                     val, det.val_transform, det.op_transform)
                 val = apply_operation(
-                    val, det.val_transform, det.op_transform)
+                    val, det.val_transform, det.op_transform, sides)
 
         # Check if this is a comparison or a calculation
         is_met = True
         if det.is_comparison:
             # Evaluate: (TransformedVal Op ValRequired)
             raw_result = apply_operation(
-                val, det.val_required, det.op_application)
+                val, det.val_required, det.op_application, sides)
             is_met = bool(raw_result)
         if det.negate:
             is_met = not is_met
@@ -803,11 +813,8 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
     """
     game_token = g.game_token
     event = Event.query.get((g.game_token, event_id))
+    sides, base_min, base_max = num_sides(event)
     
-    # 1. Start with the Base Roll
-    base_min = event.numeric_range[0] if event.numeric_range else 1
-    base_max = event.numeric_range[1] if event.numeric_range else 20
-
     result_val = 0
     choice_str = ''
     if event.outcome_type == 'determined':
@@ -827,8 +834,11 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
 
     else:
         die_roll = random.randint(base_min, base_max)
+        adjustment = f"{base_min - 1}" if base_min != 1 else ""
+        if adjustment and base_min >= 0:
+            adjustment = f"+{adjustment}"
         result_val = float(die_roll)
-        breakdown_parts = [f"d{base_max - base_min + 1}(🎲{die_roll})"]
+        breakdown_parts = [f"d{sides}(🎲{die_roll}){adjustment}"]
 
     # 2. Resolve and Apply every Determinant individually
     modifiers = calculate_determinants(event, role_entities)
@@ -865,7 +875,7 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
         current_min_precedence = op_prec
 
         # Update Total
-        result_val = apply_operation(result_val, val, op)
+        result_val = apply_operation(result_val, val, op, sides)
 
     # 3. Final Formatting
     if event.outcome_type not in('selection', 'coordinates'):
@@ -875,13 +885,12 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
     display_str = ""
     tier = None
     if event.outcome_type == 'fourway':
-        span = abs(base_max - base_min) + 1
-        shift = round(span * difficulty)
+        shift = round(sides * difficulty)
 
         major_failure_max = base_min + math.floor(shift * 0.20)
-        minor_success_min = round(span * 0.10) + shift
+        minor_success_min = round(sides * 0.10) + shift
         major_success_min = (
-            base_max - math.floor(span * 0.15)) + math.floor(shift * 0.40)
+            base_max - math.floor(sides * 0.15)) + math.floor(shift * 0.40)
 
         if die_roll == base_max:
             res = "Natural Max!"

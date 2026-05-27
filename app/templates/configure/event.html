@@ -23,34 +23,34 @@
         {% endfor %}
     </select>
     
-    <select name="chained_events[{{ index }}][success_filter]">
-        <option value="always" {{ 'selected' if not link or link.success_filter == 'always' }}>Show Always</option>
+    <select name="chained_events[{{ index }}][outcome_success]">
+        <option value="always" {{ 'selected' if not link or link.outcome_success == 'always' }}>Show Always</option>
         <option value="{{ Participant.ALWAYS }}" 
-            {{ 'selected' if not link or link.success_filter ==
+            {{ 'selected' if not link or link.outcome_success ==
                 Participant.ALWAYS }}>Any Outcome</option>
         <option value="{{ Participant.SUCCESS_ANY }}" 
-            {{ 'selected' if link and link.success_filter ==
+            {{ 'selected' if link and link.outcome_success ==
                 Participant.SUCCESS_ANY }}>Any Success</option>
         <option value="{{ Participant.SUCCESS_NAT_MAX }}" 
-            {{ 'selected' if link and link.success_filter ==
+            {{ 'selected' if link and link.outcome_success ==
                 Participant.SUCCESS_NAT_MAX }}>Natural Max</option>
         <option value="{{ Participant.SUCCESS_MAJOR }}" 
-            {{ 'selected' if link and link.success_filter ==
+            {{ 'selected' if link and link.outcome_success ==
                 Participant.SUCCESS_MAJOR }}>Major Success</option>
         <option value="{{ Participant.SUCCESS_MINOR }}" 
-            {{ 'selected' if link and link.success_filter ==
+            {{ 'selected' if link and link.outcome_success ==
                 Participant.SUCCESS_MINOR }}>Minor Success</option>
         <option value="{{ Participant.FAILURE_ANY }}" 
-            {{ 'selected' if link and link.success_filter ==
+            {{ 'selected' if link and link.outcome_success ==
                 Participant.FAILURE_ANY }}>Any Failure</option>
         <option value="{{ Participant.FAILURE_MINOR }}" 
-            {{ 'selected' if link and link.success_filter ==
+            {{ 'selected' if link and link.outcome_success ==
                 Participant.FAILURE_MINOR }}>Minor Failure</option>
         <option value="{{ Participant.FAILURE_MAJOR }}" 
-            {{ 'selected' if link and link.success_filter ==
+            {{ 'selected' if link and link.outcome_success ==
                 Participant.FAILURE_MAJOR }}>Major Failure</option>
         <option value="{{ Participant.FAILURE_NAT_MIN }}" 
-            {{ 'selected' if link and link.success_filter ==
+            {{ 'selected' if link and link.outcome_success ==
                 Participant.FAILURE_NAT_MIN }}>Natural Min</option>
     </select>
     <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>

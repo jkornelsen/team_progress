@@ -398,12 +398,14 @@
                     {
                         "infield": {"role": "universal", "field_mode": "qty", "item_id": 7},
                         "op_application": "-",
-                        "op_transform": "scap"
+                        "op_transform": "scap",
+                        "val_transform": 10000.0
                     },
                     {
                         "infield": {"role": "universal", "field_mode": "qty", "item_id": 8},
                         "op_application": "-",
-                        "op_transform": "scap"
+                        "op_transform": "scap",
+                        "val_transform": 10000.0
                     },
                     {
                         "label": "Base Threshold",
@@ -438,7 +440,7 @@
                     }
                 ],
                 "chained_events": [
-                    {"child_id": 15, "success_filter": "failure_any"}
+                    {"child_id": 15, "outcome_success": "failure_any"}
                 ]
             },
             {
@@ -653,7 +655,7 @@
             {
                 "id": 21,
                 "name": "Workers: Hire",
-                "description": "Before attempting to hire, see if you have enough funds to [pay the new hire](/play/event/45).\r\n\r\n- On any success, or on major failure, you must pay the new hire. The amount required is the same no matter whether you are able to hire 2, 1, or 0 new workers.",
+                "description": "Before attempting to hire, try **Workers: Pay New Hires** to see if you have enough funds.\r\n\r\nOn any success, or on major failure, you must pay the new hire. The amount required is the same no matter whether you are able to hire 2, 1, or 0 new workers.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -691,8 +693,8 @@
                     }
                 ],
                 "chained_events": [
-                    {"child_id": 45, "success_filter": "success_any"},
-                    {"child_id": 45, "success_filter": "failure_major"}
+                    {"child_id": 45, "outcome_success": "success_any"},
+                    {"child_id": 45, "outcome_success": "failure_major"}
                 ]
             },
             {
@@ -736,13 +738,13 @@
                     {
                         "infield": {"role": "at", "field_mode": "qty", "item_id": 22},
                         "op_transform": "scap",
-                        "val_transform": 0.5
+                        "val_transform": 10
                     },
                     {
                         "infield": {"role": "at", "field_mode": "qty", "item_id": 19},
                         "op_application": "-",
                         "op_transform": "scap",
-                        "val_transform": 0.5
+                        "val_transform": 10
                     }
                 ]
             }
