@@ -15,6 +15,7 @@
     },
     "entities": {
         "items": [
+            {"id": 50, "name": "Can Hire", "storage_type": "u"},
             {
                 "id": 10,
                 "name": "Cooling Tower",
@@ -129,7 +130,7 @@
                 "description": "Fuel limit × (5 per qty). Go to **Spent Fuel Limit** when changed.",
                 "abilities": [35],
                 "storage_type": "u",
-                "q_limit": 10.0,
+                "q_limit": 20.0,
                 "recipes": [
                     {
                         "id": 41,
@@ -144,7 +145,7 @@
             {
                 "id": 46,
                 "name": "Plutonium Purchase III",
-                "description": "Fuel limit × (1.5$^{qty}). Go to **Spent Fuel Limit** when changed.",
+                "description": "Fuel limit × 1.5 $^{(qty)}$\r\n\r\nGo to **Spent Fuel Limit** when changed.",
                 "abilities": [35],
                 "storage_type": "u",
                 "q_limit": 12.0,
@@ -180,10 +181,10 @@
             {
                 "id": 2,
                 "name": "Production Rate II",
-                "description": "Energy production rate × (4 per qty) for a fairly steep linear increase. This does not improve efficiency, so also increase the waste generated and resources required.\r\n\r\nProducing the first increase makes an uneven 1.25 — edit this item and set quantity to 1 for quadruple effect.",
+                "description": "Energy production rate × (4 per qty). This does not improve efficiency, so also increase the waste generated and resources required.\r\n\r\nProducing the first increase makes an uneven 1.25 — edit this item and set quantity to 1 for quadruple effect.",
                 "abilities": [17],
                 "storage_type": "u",
-                "q_limit": 5.0,
+                "q_limit": 10.0,
                 "recipes": [
                     {
                         "id": 20,
@@ -218,7 +219,7 @@
             {
                 "id": 29,
                 "name": "Radioactive Contamination",
-                "description": "There's really no way to get rid of it other than to wait for materials to dissipate. Requires full evacuation, unless you want to roll and see which workers survive.\r\n\r\n- Set quantity to 60 for minor failure or 90 for major failure.\r\n- Produce until quantity returns to 0, then you may resume normal plant operation.",
+                "description": "There's really no way to get rid of it other than to wait for materials to dissipate. Requires full evacuation, unless you want to roll and see which workers survive.\r\n\r\n- Set quantity to 30 for minor failure or 60 for major failure.\r\n- Produce until quantity returns to 0, then you may resume normal plant operation.",
                 "abilities": [15],
                 "storage_type": "u",
                 "toplevel": true,
@@ -300,7 +301,7 @@
                     [24, 2.0],
                     [26, 0.0]
                 ],
-                "abilities": [21, 23, 25],
+                "abilities": [45, 23, 25],
                 "storage_type": "l"
             }
         ],
@@ -371,9 +372,9 @@
             {
                 "id": 42,
                 "name": "Battery Power Loss",
-                "description": "5% loss",
+                "description": "10% loss",
                 "outcome_type": "determined",
-                "fixed_base": 0.05,
+                "fixed_base": 0.1,
                 "determinants": [
                     {
                         "infield": {"role": "universal", "field_mode": "qty", "item_id": 9},
@@ -391,7 +392,7 @@
             {
                 "id": 15,
                 "name": "Plant Problem Type",
-                "description": "Get information about a problem that occurred. If the inciting roll was a major failure then consider the problem to be more severe.\r\n\r\n- **Unusable Amenities** — lower [worker mood](/configure/item/19) by 2 for 3 cycles\r\n- **Low Wages** — [workers may react badly](/play/event/23)\r\n- **Waste Bacteria Inert** — fail to reduce radioactive waste for 3 production cycles\r\n- **Radioactive Waste Leak** — significantly increases amount of radioactive waste; cleanup becomes a bigger job\r\n- **Cooling System Leak** — [double the duration](/configure/item/8) of thermal waste reduction for 3 production cycles, major failure hits employees with scalding water\r\n- **Machinery Jam** — problem with [reclaiming machinery](/play/item/34?owner_id=12); set reclaim difficulty to *Hard* for 2 production cycles or *Very Hard* for major failure\r\n- **Electricity Down** — prevents cooling tower from operating for 3 production cycles, major failure requires repairs to [electrical system](/play/item/10)\r\n- **Fuel Spill** — lose  10% (rounded up) of your best [Plutonium Purchase](/play/item/27?owner_id=14) quantity on major failure, or second best for minor failure\r\n- **Energy Not Gained** — nothing to fix but roll back recent energy gains\r\n- **Excess Energy** — damages storage systems, reduce [battery](/configure/item/9) *Limit per Pile* by 100,000; [can be repaired](/play/event/33)\r\n- **Battery Power Loss** — see [battery power loss](/play/event/42) (event)\r\n- **Core Meltdown — Reactor Damage** — cannot produce energy until [repairs are made](/play/item/6)\r\n- **Core Meltdown — Radioactive Contamination** — worst-case scenario, [wait for it to dissipate](/play/item/29)",
+                "description": "Get information about a problem that occurred. If the inciting roll was a major failure then consider the problem to be more severe.\r\n\r\n- **Unusable Amenities** — lower [worker mood](/play/attrib/20/subject/19) by 2 for 3 cycles\r\n- **Low Wages** — [workers may react badly](/play/event/23)\r\n- **Waste Bacteria Inert** — fail to reduce radioactive waste for 3 production cycles\r\n- **Radioactive Waste Leak** — see [radioactive waste leak](/play/event/51) (event)\r\n- **Cooling System Leak** — [double the duration](/configure/item/8) of thermal waste reduction for 3 production cycles, major failure hits employees with scalding water\r\n- **Machinery Jam** — problem with [reclaiming machinery](/play/item/34?owner_id=12); set reclaim difficulty to *Hard* for 2 production cycles or *Very Hard* for major failure\r\n- **Electricity Down** — prevents cooling tower from operating for 3 production cycles, major failure requires repairs to [electrical system](/play/item/10)\r\n- **Fuel Spill** — lose  10% (rounded up) of your best [Plutonium Purchase](/play/item/27?owner_id=14) quantity on major failure, or second best for minor failure\r\n- **Energy Not Gained** — nothing to fix but roll back recent energy gains\r\n- **Excess Energy** — damages storage systems, reduce [battery](/configure/item/9) *Limit per Pile* by 100,000; [can be repaired](/play/event/33)\r\n- **Battery Power Loss** — see [battery power loss](/play/event/42) (event)\r\n- **Core Meltdown — Reactor Damage** — cannot produce energy until [repairs are made](/play/item/6)\r\n- **Core Meltdown — Radioactive Contamination** — worst-case scenario, [wait for it to dissipate](/play/item/29)",
                 "outcome_type": "selection",
                 "selection_strings": "Unusable Amenities\r\nLow Wages\r\nWaste Bacteria Inert\r\nRadioactive Waste Leak\r\nCooling System Leak\r\nMachinery Jam\r\nElectricity Down\r\nFuel Spill\r\nEnergy Not Gained\r\nExcess Energy\r\nBattery Power Loss\r\nCore Meltdown — Reactor Damage\r\nCore Meltdown — Radioactive Contamination"
             },
@@ -425,6 +426,26 @@
                         "op_application": ":=",
                         "op_transform": "*",
                         "val_transform": 2.0
+                    }
+                ]
+            },
+            {
+                "id": 51,
+                "name": "Radioactive Waste Leak",
+                "description": "10% increase in barrels of radioactive waste — cleanup becomes a bigger job.",
+                "outcome_type": "determined",
+                "fixed_base": 1.1,
+                "determinants": [
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 7},
+                        "op_application": "*"
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 7},
+                        "op_application": ":="
                     }
                 ]
             },
@@ -516,7 +537,7 @@
             {
                 "id": 32,
                 "name": "Repair Cooling System",
-                "description": "Costs more for more advanced equipment. If you don't have any funds for repairs, then [undo cooling system upgrades](/play/item/27?owner_id=14) (do partially if you have some funds or minor failure). Or, decide to go into debt instead.\r\n\r\nDeduct this result from [funds quantity](/configure/item/11), then you may use the cooling facility again.",
+                "description": "Costs more for more advanced equipment. If you don't have any funds for repairs, then [undo cooling system upgrades](/play/item/27?owner_id=14) (do partially if you have some funds or minor failure). Or, decide to go into debt instead.\r\n\r\nDeduct this result from **Funds** (quantity), then you may use the cooling facility again.",
                 "outcome_type": "determined",
                 "fixed_base": 10.0,
                 "determinants": [
@@ -538,7 +559,7 @@
             {
                 "id": 28,
                 "name": "Repair Reactor",
-                "description": "Not cheap. Costs more for more advanced equipment. If you don't have any funds for repairs, then [undo upgrades](/play/item/27?owner_id=14) (do partially if you have some funds or minor failure). Or, decide to go into debt instead.\r\n\r\nDeduct this result from [funds quantity](/configure/item/11), then you may use the reactor again.",
+                "description": "Not cheap. Costs more for more advanced equipment. If you don't have any funds for repairs, then [undo upgrades](/play/item/27?owner_id=14) (do partially if you have some funds or minor failure). Or, decide to go into debt instead.\r\n\r\nDeduct this result from **Funds** (quantity), then you may use the reactor again.",
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -701,7 +722,7 @@
             {
                 "id": 38,
                 "name": "Waste Consumption Speed",
-                "description": "- [Edit Radioactive Waste](/configure/item/7). Under *Sources*, set the consumed **Radioactive Waste** quantity to this result.\r\n- Press apply to set *Gain per Batch* to half of this result.",
+                "description": "- Edit **Radioactive Waste.** Under *Sources*, set the consumed **Radioactive Waste** quantity to this result.\r\n- Press apply to set *Gain per Batch* to half of this result.",
                 "outcome_type": "determined",
                 "fixed_base": 2.0,
                 "determinants": [
@@ -733,7 +754,7 @@
             {
                 "id": 21,
                 "name": "Workers: Hire",
-                "description": "Before attempting to hire, try **Workers: Pay New Hires** to see if you have enough funds.\r\n\r\nOn any success, or on major failure, you must pay the new hire. The amount required is the same no matter whether you are able to hire 2, 1, or 0 new workers.",
+                "description": "On any success, or on major failure, you must pay the new hire. The amount required is the same no matter whether you are able to hire 2, 1, or 0 new workers.\r\n\r\nOn minor failure, try again.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -753,9 +774,27 @@
                         "op_application": "-",
                         "op_transform": "c",
                         "val_transform": 5.0
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 50},
+                        "op_application": ">="
                     }
                 ],
                 "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 50},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 50},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "outcome_success": "failure_major"
+                    },
                     {
                         "get_val_from": "outcome",
                         "outfield": {"role": "at", "field_mode": "qty", "item_id": 19},
@@ -769,15 +808,12 @@
                         "val_transform": 2.0,
                         "outcome_success": "success_major"
                     }
-                ],
-                "chained_events": [
-                    {"child_id": 45, "outcome_success": "success_any"},
-                    {"child_id": 45, "outcome_success": "failure_major"}
                 ]
             },
             {
                 "id": 45,
                 "name": "Workers: Pay New Hires",
+                "description": "First, set aside funds for the new hire, then do **Workers: Hire** to gain the new workers (if any).",
                 "outcome_type": "determined",
                 "fixed_base": 1000.0,
                 "determinants": [
@@ -791,7 +827,7 @@
                         "infield": {"role": "at", "field_mode": "qty", "item_id": 19},
                         "op_application": "*",
                         "op_transform": "x^",
-                        "val_transform": 4.0
+                        "val_transform": 2.0
                     }
                 ],
                 "effects": [
@@ -801,7 +837,15 @@
                         "op_application": "-",
                         "val_transform": 5.0,
                         "outcome_success": "success_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 50},
+                        "op_transform": "c"
                     }
+                ],
+                "chained_events": [
+                    {"child_id": 21}
                 ]
             },
             {
