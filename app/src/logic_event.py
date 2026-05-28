@@ -39,7 +39,7 @@ def apply_operation(current_val, mod_val, op, output_range=None):
     # Unary Functions
     if op == Operation.SOFTCAP:
         cap_threshold = mod_val if (mod_val and mod_val != 0) else 50
-        output_range = (output_range or 20) * 0.15
+        output_range = (output_range or 20) * 0.2
         if current_val == 0:
             return 0.0
         current_abs = abs(current_val)

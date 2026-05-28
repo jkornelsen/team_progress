@@ -57,10 +57,9 @@ def overview():
     tick_all_active()
 
     # Fetch IDs of items currently being produced by the General Host
-    general_production_ids = {
+    items_in_production = {
         p.product_id for p in Progress.query.filter_by(
-            game_token=game_token, 
-            host_id=GENERAL_ID
+            game_token=game_token
         ).all()
     }
 
@@ -78,7 +77,7 @@ def overview():
         characters=chars,
         locations=locs,
         items=items,
-        general_production_ids=general_production_ids,
+        items_in_production=items_in_production,
         events=events,
         overall=overall,
         win_reqs=win_reqs,

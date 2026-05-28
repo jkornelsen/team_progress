@@ -125,7 +125,7 @@ def tick_all_active(messages_host_id=None):
 
     halt_messages = []
     for work in work_items:
-        progress = work['progress']
+        p = work['progress']
         halt_reason = work['halt_reason']
         
         # Check future viability

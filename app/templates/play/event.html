@@ -812,11 +812,12 @@
     async function applyAllManual() {
         const applyAllBtn = document.getElementById('apply-all-btn');
         if (!applyAllBtn) return;
-        const buttons = document.querySelectorAll('.apply-eff-btn:not(.hidden):not(:disabled)');
-        
         applyAllBtn.disabled = true;
 
-        // Trigger buttons in sequence
+        // Trigger visible buttons in sequence
+        const buttons = document.querySelectorAll(
+            '.effect-row:not(.hidden) .apply-eff-btn:not(.hidden):not(:disabled)'
+        );
         for (const btn of buttons) {
             btn.click();
             

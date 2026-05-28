@@ -124,7 +124,7 @@
                             {% endcall %}
                         </td>
                         <td>
-                            {% set is_producing = item.id in general_production_ids %}
+                            {% set is_producing = item.id in items_in_production %}
                             <span>{{ (pile.quantity if pile is defined else 0) | formatNum }}</span>
                             {% if is_producing %}
                                 <span title="In Production..." class="in-progress"></span>
