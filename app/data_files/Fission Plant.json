@@ -29,18 +29,18 @@
                 "id": 9,
                 "name": "Energy",
                 "description": "Stored in a high-capacity battery. Quantity is measured in kilowatt-hours (kWh).\r\n\r\nA fully charged battery is enough to provide backup power for a city while the main supply is repaired. *IRL Note: Present-day batteries cannot hold such large amounts.*",
-                "abilities": [33, 18],
+                "abilities": [18, 33],
                 "storage_type": "u",
                 "q_limit": 10000000.0,
                 "toplevel": true,
                 "recipes": [
                     {
                         "id": 14,
-                        "rate_amount": 1.0,
+                        "rate_amount": 2.0,
                         "rate_duration": 4,
                         "sources": [
-                            {"item_id": 6, "q_required": 1.0, "preserve": true},
-                            {"item_id": 4, "q_required": 1.0}
+                            {"item_id": 4, "q_required": 1.0},
+                            {"item_id": 6, "q_required": 1.0, "preserve": true}
                         ],
                         "byproducts": [
                             {"item_id": 5, "rate_amount": 1.0},
@@ -59,7 +59,7 @@
                 "recipes": [
                     {
                         "id": 18,
-                        "rate_amount": 10.0,
+                        "rate_amount": 5.0,
                         "instant": true,
                         "sources": [
                             {"item_id": 9, "q_required": 10.0}
@@ -78,13 +78,14 @@
                 "id": 22,
                 "name": "Offices",
                 "description": "More offices makes it easier to have more workers.",
+                "abilities": [56],
                 "storage_type": "l"
             },
             {
                 "id": 37,
                 "name": "Petri Dishes I",
                 "description": "Increase the number of cultured dishes to grow bacteria faster. Agar gel provides the nutrition they need.",
-                "abilities": [38],
+                "abilities": [60],
                 "storage_type": "u",
                 "q_limit": 10.0,
                 "recipes": [
@@ -92,8 +93,25 @@
                         "id": 39,
                         "rate_duration": 300,
                         "sources": [
-                            {"item_id": 27, "q_required": 1.0, "preserve": true},
-                            {"item_id": 11, "q_required": 2500.0}
+                            {"item_id": 11, "q_required": 2500.0},
+                            {"item_id": 27, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 52,
+                "name": "Petri Dishes II",
+                "abilities": [60],
+                "storage_type": "u",
+                "q_limit": 10.0,
+                "recipes": [
+                    {
+                        "id": 53,
+                        "rate_duration": 1800,
+                        "sources": [
+                            {"item_id": 11, "q_required": 25000.0},
+                            {"item_id": 27, "q_required": 1.0, "preserve": true}
                         ]
                     }
                 ]
@@ -136,8 +154,8 @@
                         "id": 41,
                         "rate_duration": 300,
                         "sources": [
-                            {"item_id": 27, "q_required": 1.0, "preserve": true},
-                            {"item_id": 11, "q_required": 1500.0}
+                            {"item_id": 11, "q_required": 1500.0},
+                            {"item_id": 27, "q_required": 1.0, "preserve": true}
                         ]
                     }
                 ]
@@ -154,8 +172,8 @@
                         "id": 47,
                         "rate_duration": 1800,
                         "sources": [
-                            {"item_id": 11, "q_required": 20000.0},
-                            {"item_id": 27, "q_required": 1.0, "preserve": true}
+                            {"item_id": 27, "q_required": 1.0, "preserve": true},
+                            {"item_id": 11, "q_required": 20000.0}
                         ]
                     }
                 ]
@@ -190,9 +208,9 @@
                         "id": 20,
                         "rate_duration": 400,
                         "sources": [
+                            {"item_id": 3, "q_required": 1.0, "preserve": true},
                             {"item_id": 11, "q_required": 2000.0},
-                            {"item_id": 27, "q_required": 1.0, "preserve": true},
-                            {"item_id": 3, "q_required": 1.0, "preserve": true}
+                            {"item_id": 27, "q_required": 1.0, "preserve": true}
                         ]
                     }
                 ]
@@ -200,7 +218,7 @@
             {
                 "id": 48,
                 "name": "Production Rate III",
-                "description": "Energy production rate × (1.5$^{qty}). This does not improve efficiency, so also increase the waste generated and resources required.",
+                "description": "Energy production rate × 1.5 $^{(qty)}$\r\n\r\nThis also increases the waste generated and resources required.",
                 "abilities": [17],
                 "storage_type": "u",
                 "q_limit": 8.0,
@@ -238,7 +256,7 @@
                 "id": 7,
                 "name": "Radioactive Waste",
                 "description": "Glowing, greenish sludge. Stored in thick metal barrels—just hope they don't spring a leak.\r\n\r\nCan be consumed and neutralized by bio-engineered bacteria.",
-                "abilities": [38],
+                "abilities": [60],
                 "storage_type": "u",
                 "toplevel": true,
                 "recipes": [
@@ -279,6 +297,7 @@
                 "id": 8,
                 "name": "Thermal Waste",
                 "description": "Generated heat could turn nearby rivers into hot springs, upsetting 🐟 fishes.",
+                "abilities": [38],
                 "storage_type": "u",
                 "toplevel": true,
                 "recipes": [
@@ -286,8 +305,43 @@
                         "id": 17,
                         "rate_amount": 0.0,
                         "sources": [
-                            {"item_id": 8, "q_required": 1.0},
-                            {"item_id": 10, "q_required": 1.0, "preserve": true}
+                            {"item_id": 10, "q_required": 1.0, "preserve": true},
+                            {"item_id": 8, "q_required": 1.0}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 58,
+                "name": "Throwing Party",
+                "description": "Stop production until finished.",
+                "storage_type": "u",
+                "q_limit": 2.0,
+                "recipes": [
+                    {
+                        "id": 59,
+                        "rate_amount": 0.0,
+                        "rate_duration": 60,
+                        "sources": [
+                            {"item_id": 58, "q_required": 1.0}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 54,
+                "name": "Water Capacity I",
+                "description": "Larger tubes and pumps to circulate heat efficiently.",
+                "abilities": [38],
+                "storage_type": "u",
+                "q_limit": 10.0,
+                "recipes": [
+                    {
+                        "id": 55,
+                        "rate_duration": 1800,
+                        "sources": [
+                            {"item_id": 11, "q_required": 18000.0},
+                            {"item_id": 27, "q_required": 1.0, "preserve": true}
                         ]
                     }
                 ]
@@ -310,10 +364,11 @@
                 "id": 12,
                 "name": "Energy Core Room",
                 "description": "Large chamber with a controlled environment where fission takes place.",
+                "abilities": [57],
                 "toplevel": true,
                 "items": [
-                    {"item_id": 6, "quantity": 1.0},
                     {"item_id": 19, "quantity": 1.0},
+                    {"item_id": 6, "quantity": 1.0},
                     {"item_id": 22, "quantity": 2.0},
                     {"item_id": 34, "quantity": 1.0}
                 ],
@@ -326,8 +381,8 @@
                 "toplevel": true,
                 "items": [
                     {"item_id": 10, "quantity": 1.0},
-                    {"item_id": 19, "quantity": 1.0},
-                    {"item_id": 22, "quantity": 2.0}
+                    {"item_id": 22, "quantity": 2.0},
+                    {"item_id": 19, "quantity": 1.0}
                 ],
                 "item_refs": [8]
             },
@@ -338,9 +393,9 @@
                 "abilities": [44],
                 "toplevel": true,
                 "items": [
+                    {"item_id": 19, "quantity": 1.0},
                     {"item_id": 22, "quantity": 2.0},
-                    {"item_id": 27, "quantity": 1.0},
-                    {"item_id": 19, "quantity": 1.0}
+                    {"item_id": 27, "quantity": 1.0}
                 ]
             }
         ],
@@ -390,16 +445,55 @@
                 ]
             },
             {
+                "id": 56,
+                "name": "Build Offices",
+                "outcome_type": "determined",
+                "fixed_base": 500.0,
+                "determinants": [
+                    {
+                        "infield": {"role": "at", "field_mode": "qty", "item_id": 22},
+                        "op_application": "*"
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 11},
+                        "op_application": "-"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "at", "field_mode": "qty", "item_id": 22},
+                        "op_transform": "c"
+                    }
+                ]
+            },
+            {
+                "id": 38,
+                "name": "Cooling Speed",
+                "description": "Edit **Thermal Waste** and under *Sources*, set **Thermal Waste** to this result.",
+                "outcome_type": "determined",
+                "fixed_base": 1.0,
+                "determinants": [
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 54},
+                        "op_application": "*",
+                        "op_transform": "x^",
+                        "val_transform": 2.0
+                    }
+                ]
+            },
+            {
                 "id": 15,
                 "name": "Plant Problem Type",
-                "description": "Get information about a problem that occurred. If the inciting roll was a major failure then consider the problem to be more severe.\r\n\r\n- **Unusable Amenities** — lower [worker mood](/play/attrib/20/subject/19) by 2 for 3 cycles\r\n- **Low Wages** — [workers may react badly](/play/event/23)\r\n- **Waste Bacteria Inert** — fail to reduce radioactive waste for 3 production cycles\r\n- **Radioactive Waste Leak** — see [radioactive waste leak](/play/event/51) (event)\r\n- **Cooling System Leak** — [double the duration](/configure/item/8) of thermal waste reduction for 3 production cycles, major failure hits employees with scalding water\r\n- **Machinery Jam** — problem with [reclaiming machinery](/play/item/34?owner_id=12); set reclaim difficulty to *Hard* for 2 production cycles or *Very Hard* for major failure\r\n- **Electricity Down** — prevents cooling tower from operating for 3 production cycles, major failure requires repairs to [electrical system](/play/item/10)\r\n- **Fuel Spill** — lose  10% (rounded up) of your best [Plutonium Purchase](/play/item/27?owner_id=14) quantity on major failure, or second best for minor failure\r\n- **Energy Not Gained** — nothing to fix but roll back recent energy gains\r\n- **Excess Energy** — damages storage systems, reduce [battery](/configure/item/9) *Limit per Pile* by 100,000; [can be repaired](/play/event/33)\r\n- **Battery Power Loss** — see [battery power loss](/play/event/42) (event)\r\n- **Core Meltdown — Reactor Damage** — cannot produce energy until [repairs are made](/play/item/6)\r\n- **Core Meltdown — Radioactive Contamination** — worst-case scenario, [wait for it to dissipate](/play/item/29)",
+                "description": "Get information about a problem that occurred. If the inciting roll was a major failure then consider the problem to be more severe.\r\n\r\n- **Unusable Amenities** — lower [worker mood](/play/attrib/20/subject/19) by 2 for 3 cycles\r\n- **Long Hours** — lower [worker mood](/play/attrib/20/subject/19) by 1\r\n- **Low Wages** — [workers may react badly](/play/event/23)\r\n- **Waste Bacteria Inert** — fail to reduce radioactive waste for 3 production cycles\r\n- **Radioactive Waste Leak** — see [radioactive waste leak](/play/event/51) (event)\r\n- **Cooling System Leak** — [double the duration](/configure/item/8) of thermal waste reduction for 3 production cycles, major failure hits employees with scalding water\r\n- **Machinery Jam** — problem with [reclaiming machinery](/play/item/34?owner_id=12); set reclaim difficulty to *Hard* for 2 production cycles or *Very Hard* for major failure\r\n- **Electricity Down** — prevents cooling tower from operating for 3 production cycles, major failure requires repairs to [electrical system](/play/item/10)\r\n- **Fuel Spill** — lose  10% (rounded up) of your best [Plutonium Purchase](/play/item/27?owner_id=14) quantity on major failure, or second best for minor failure\r\n- **Energy Not Gained** — nothing to fix but roll back recent energy gains\r\n- **Excess Energy** — damages storage systems, reduce [battery](/configure/item/9) *Limit per Pile* by 100,000; [can be repaired](/play/event/33)\r\n- **Battery Power Loss** — see [battery power loss](/play/event/42) (event)\r\n- **Core Meltdown — Reactor Damage** — cannot produce energy until [repairs are made](/play/item/6)\r\n- **Core Meltdown — Radioactive Contamination** — worst-case scenario, [wait for it to dissipate](/play/item/29)",
                 "outcome_type": "selection",
                 "selection_strings": "Unusable Amenities\r\nLow Wages\r\nWaste Bacteria Inert\r\nRadioactive Waste Leak\r\nCooling System Leak\r\nMachinery Jam\r\nElectricity Down\r\nFuel Spill\r\nEnergy Not Gained\r\nExcess Energy\r\nBattery Power Loss\r\nCore Meltdown — Reactor Damage\r\nCore Meltdown — Radioactive Contamination"
             },
             {
                 "id": 17,
                 "name": "Production Rate",
-                "description": "Determine production rate by taking upgrades into account.\r\n\r\nAfter rolling, [edit Energy](/configure/item/9) and find the recipe section. Do NOT press *Apply* on the effect — the number is for reference only.\r\n\r\n- Set *Gain per Batch*, required **Plutonium**, and **Spent Fuel** byproduct to the result.\r\n- Set **Radioactive Waste** and **Thermal Waste** byproducts to 2 × the result.",
+                "description": "Determine production rate by taking upgrades into account.\r\n\r\nAfter rolling, [edit Energy](/configure/item/9) and find the recipe section. Do NOT press *Apply* on the effect — the number is for reference only.\r\n\r\n- Set *Gain per Batch*, **Radioactive Waste** and **Thermal Waste** byproducts to 2 × the result.\r\n- Set **Plutonium** required and **Spent Fuel** byproduct to the result.",
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -541,6 +635,18 @@
                 "outcome_type": "determined",
                 "fixed_base": 10.0,
                 "determinants": [
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 54},
+                        "op_application": "*",
+                        "op_transform": "*",
+                        "val_transform": 1000.0
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 8},
+                        "op_application": "*",
+                        "op_transform": "scap",
+                        "val_transform": 100000.0
+                    },
                     {
                         "infield": {"role": "at", "field_mode": "qty", "item_id": 19},
                         "op_application": "*",
@@ -720,7 +826,7 @@
                 ]
             },
             {
-                "id": 38,
+                "id": 60,
                 "name": "Waste Consumption Speed",
                 "description": "- Edit **Radioactive Waste.** Under *Sources*, set the consumed **Radioactive Waste** quantity to this result.\r\n- Press apply to set *Gain per Batch* to half of this result.",
                 "outcome_type": "determined",
@@ -728,6 +834,12 @@
                 "determinants": [
                     {
                         "infield": {"role": "universal", "field_mode": "qty", "item_id": 37}
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 52},
+                        "op_application": "*",
+                        "op_transform": "^x",
+                        "val_transform": 1.5
                     }
                 ],
                 "effects": [
@@ -851,7 +963,7 @@
             {
                 "id": 23,
                 "name": "Workers: Retain",
-                "description": "If they're not happy then they may decide to go on strike or quit.",
+                "description": "If they're not happy then they may decide to go on strike or quit. Go to the location that has had the most problems lately.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -859,14 +971,74 @@
                     },
                     {
                         "infield": {"role": "at", "field_mode": "qty", "item_id": 22},
-                        "op_transform": "scap",
                         "val_transform": 10.0
                     },
                     {
                         "infield": {"role": "at", "field_mode": "qty", "item_id": 19},
                         "op_application": "-",
-                        "op_transform": "scap",
                         "val_transform": 10.0
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"field_mode": "qty", "item_id": 19},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "outcome_success": "failure_minor"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "at", "field_mode": "qty", "item_id": 19},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 2.0,
+                        "outcome_success": "failure_major"
+                    }
+                ]
+            },
+            {
+                "id": 57,
+                "name": "Workers: Throw Party",
+                "description": "Improves worker mood. Roll and then go to **Throwing Party.**",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "infield": {"role": "at", "child_of_anchor": true, "attrib_id": 20}
+                    },
+                    {
+                        "infield": {"role": "at", "child_of_anchor": true, "attrib_id": 20},
+                        "op_application": "<",
+                        "val_required": 9.0
+                    }
+                ],
+                "effects": [
+                    {
+                        "infield": {"role": "at", "field_mode": "qty", "item_id": 19},
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 11},
+                        "op_application": "-",
+                        "op_transform": "*",
+                        "val_transform": 1000.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 58},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "at", "child_of_anchor": true, "attrib_id": 20},
+                        "op_transform": "c",
+                        "outcome_success": "success_minor"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "at", "child_of_anchor": true, "attrib_id": 20},
+                        "op_transform": "c",
+                        "val_transform": 2.0,
+                        "outcome_success": "success_major"
                     }
                 ]
             }

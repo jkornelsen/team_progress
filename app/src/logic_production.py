@@ -155,7 +155,7 @@ def can_perform_recipe(
         current_qty = get_accessible_quantity(recipe.product_id, target_owner_id)
         if recipe.is_producer and current_qty >= stop_at:
             return False, f"Target {stop_at:g} reached"
-        if is_consumer and current_qty <= stop_at:
+        if recipe.is_consumer and current_qty <= stop_at:
             return False, f"Target {stop_at:g} reached"
 
     # 2. Ingredient Availability
@@ -420,7 +420,7 @@ def execute_production(
     initial_amount_to_place = amount_to_place
 
     for owner_id, pos in placements:
-        if amount_to_place <= 0:
+        if amount_to_place == 0:
             break
         amount_to_place = adjust_quantity(
             recipe.product_id, owner_id, amount_to_place, position=pos)
