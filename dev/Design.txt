@@ -6,6 +6,9 @@
 
 do partial production up to limit
 
+chain event conditions like determinant comparisons
+    target hp < 1
+
 Value: -4.500000000000018
     truncate floating point limits with epsilon or whatever it was
     or 6-8 places, especially when writing to json and maybe also db
@@ -15,6 +18,7 @@ prompt before overwriting another character action in progress
 
 sessions should be easier to connect to
     remember game token on client side
+    connect as FarmerGiles2
 
 session settings
     number format -- instead of overall (scenario) settings
@@ -23,6 +27,9 @@ session settings
 don't show duplicate destinations in play location
     same door positions (null in the example)
     maybe shouldn't allow in database
+
+links that edit should include callback page details
+    using last navigated page is unhelpful for multiple windows
 
 logic_navigation.py", line 300, in move_group
     db.session.flush()
@@ -83,7 +90,6 @@ infestation
     0 energy means another bot has to come and get you
         at least for the highway
         perhaps increases repair cost
-    require level 2 or 3 to enter highway
     combat events at different levels
         electric shock -- stun and damage
         chainsaw -- won't work if repairs needed is too high
@@ -94,9 +100,7 @@ infestation
         grappling hook -- moves to melee distance
         rush
         detect -- lowers enemy stealth
-    edit char to add ability link and/or require xl
-    clear any temporary bonuses in "finish fight" event
-    also "initiate fight" to set distance and restore hp
+    edit char to add ability links after reaching certain xl levels
     some abilities take long enough to allow enemy to respond
     their attacks depend on distance
         claw
@@ -138,8 +142,9 @@ consider manual refactoring choices or a list of summarized ai suggestions
 
 ---- doesn't seem important currently ----
 
-win condition op_compare selectbox: ">=", "=" (e.g. enum), "<"
-    Fission Plant: no more than a certain amount of pollution
+reload games by token 
+    for easier switching between multiple games
+    maybe not needed if we clean up old records in the db 
 
 prompt each player to save to their PC occasionally
     only if no one recently saved from that session
@@ -164,5 +169,10 @@ try selenium to test client side
 
 consider sharing community scenarios
 perhaps submit to reddit, or github via pull requests
+
+screenshots
+    infestation baby mouse attack
+    rays red bar progress bar
+    tethered kormak grid
 
 like Roll20 or Foundry?

@@ -102,11 +102,9 @@ def play_location(id):
         game_token=game_token, location_id=id
     ).order_by(name_stripped()).all()
     
-    inventory_piles = Pile.query.filter_by(
-        game_token=game_token, owner_id=id
-    ).all()
     inventory_piles = sort_by_name_stripped(
-        inventory_piles, lambda p: p.item)
+        Pile.query.filter_by(game_token=game_token, owner_id=id).all(),
+        lambda p: p.item)
 
     # Validate the session's char_id
     current_char_id = session.get('old_char_id')
@@ -202,11 +200,6 @@ def play_location(id):
     referenced_data = sort_by_name_stripped(
         referenced_data, lambda d: d['item'])
 
-    # 5. Local attributes
-    attrib_values = AttribVal.query.filter_by(
-        game_token=game_token, subject_id=id
-    ).all()
-
     # 6. Active Character Setup
     active_char_id = request.args.get('active_char_id', type=int)
     if not active_char_id and characters_here:
@@ -220,7 +213,9 @@ def play_location(id):
         destinations=destinations,
         grid_exits=grid_exits,
         referenced_items=referenced_data,
-        attrib_values=attrib_values,
+        attrib_values=sort_by_name_stripped(
+            AttribVal.query.filter_by(game_token=game_token, subject_id=id).all(),
+            lambda p: p.attrib),
         active_char_id=active_char_id,
         ctx_char=current_char,
         link_letters=LinkLetters(excluded='ctmoedw')
@@ -251,24 +246,18 @@ def play_character(id):
             Character.id != character.id
         ).all()
 
-    # Fetch piles (Items carried)
-    inventory = Pile.query.filter_by(
-        game_token=game_token, owner_id=id
-    ).all()
-    
-    # Fetch Attributes
-    attrib_values = AttribVal.query.filter_by(
-        game_token=game_token, subject_id=id
-    ).all()
-    
     # Fetch Navigation (Nearby Destinations)
     destinations, has_nonadjacent = get_available_destinations(character)
     
     return render_template(
         'play/character.html',
         character=character,
-        inventory=inventory,
-        attrib_values=attrib_values,
+        inventory=sort_by_name_stripped(
+            Pile.query.filter_by(game_token=game_token, owner_id=id).all(),
+            lambda p: p.item),
+        attrib_values=sort_by_name_stripped(
+            AttribVal.query.filter_by(game_token=game_token, subject_id=id).all(),
+            lambda p: p.attrib),
         destinations=destinations,
         exit_loc_id=exit_loc_id,
         has_nonadjacent=has_nonadjacent,
@@ -756,11 +745,6 @@ def play_item(id):
                 is_reachable = False
                 reach_error = f"{owner.name} is in a different location."
 
-    # Attributes for this Item
-    attrib_values = AttribVal.query.filter_by(
-        game_token=game_token, subject_id=id
-    ).all()
-
     # For equipping to a slot
     overall = Overall.query.get(game_token)
 
@@ -790,7 +774,9 @@ def play_item(id):
         attribreq_entities=attribreq_entities,
         available_slots=overall.slots,
         other_chars_here=other_chars_here,
-        attrib_values=attrib_values,
+        attrib_values=sort_by_name_stripped(
+            AttribVal.query.filter_by(game_token=game_token, subject_id=id).all(),
+            lambda p: p.attrib),
         is_reachable=is_reachable,
         reach_error=reach_error,
         link_letters=LinkLetters(excluded='moedpqrg')

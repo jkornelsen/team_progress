@@ -16,10 +16,17 @@
     "entities": {
         "items": [
             {
+                "id": 48,
+                "name": "Distance",
+                "description": "Measure of how far away the enemy is, *Theater of the Mind* (no tactical grid). Melee distance is 1 unless there's e.g. a long spear with reach 2.",
+                "storage_type": "u",
+                "toplevel": true
+            },
+            {
                 "id": 5,
                 "name": "Energy",
-                "description": "Must have at least 1 unit for fighting. A unit is 100 Kilojoules.\r\n\r\nAfter each fight, consume 1 energy with the recipe that shows a trash can. Restore by levelling up, or travel to the *Maintenance Building* and click on the *Recharging Station*.\r\n\r\nLimit is 5 + 2 * [XL](/play/attrib/4/subject/13), plus any special bonuses. Record the bonuses by editing this description:\r\n\r\n- No special bonuses yet",
-                "q_limit": 5.0,
+                "description": "Must have at least 1 unit for fighting. A unit is 100 Kilojoules.\r\n\r\nAfter each fight, use the recipe to consume 1 energy. Restore by levelling up, or travel to the *Maintenance Building* and click on the *Recharging Station*.\r\n\r\nLimit is 10 + 4 * [XL](/play/attrib/4/subject/13), plus any special bonuses. Record the bonuses by editing this description:\r\n\r\n- No special bonuses yet",
+                "q_limit": 10.0,
                 "recipes": [
                     {
                         "id": 1,
@@ -72,6 +79,9 @@
                     {"loc2_id": 12},
                     {"loc2_id": 9},
                     {"loc2_id": 11}
+                ],
+                "entrance_reqs": [
+                    {"attrib_id": 4, "val_required": 3.0}
                 ]
             },
             {
@@ -79,7 +89,7 @@
                 "name": "Maintenance Building",
                 "description": "An outpost in northern Florida set up to contain the infestation. Engineers perform upgrades and repairs as well as charging. This is also where robots are controlled from, and where intel is assessed.",
                 "items": [
-                    {"item_id": 6, "quantity": 1.0, "position": null}
+                    {"item_id": 6, "quantity": 1.0}
                 ]
             },
             {"id": 11, "name": "Tainted Bunny Area", "masked": true}
@@ -88,17 +98,16 @@
             {
                 "id": 16,
                 "name": "🐁Baby Mouse",
-                "description": "Mutant, rabid and green-eyed, burning from within due to toxic waste. Max 5 HP.",
+                "description": "Mutant, rabid and green-eyed. Low HP but can still bite.\r\n\r\nWasting away from the toxins within. Since all enemies in this scenario have been contaminated, if they have under 5% HP remaining (or 1 HP), then roll **DEF DoT** to see if they fully succumb.",
                 "attribs": [
                     [4, 2.0],
                     [26, 0.0],
                     [29, 1.0],
                     [30, 3.0],
-                    [27, 5.0],
-                    [42, 1.0],
-                    [45, 0.0]
+                    [45, 0.0],
+                    [27, 5.0]
                 ],
-                "abilities": [39, 40, 41, 43],
+                "abilities": [39, 47, 41, 49, 43, 46],
                 "location_id": 10
             },
             {
@@ -125,26 +134,26 @@
             {
                 "id": 13,
                 "name": "🤖 Herbert 2100B",
-                "description": "Remotely controlled machine — the player character.\r\n\r\nDoes not get diseases from being bitten, but has a limited amount of power. Battle testing allows the engineers to improve the technology incrementally.",
+                "description": "Autonomous machine that can also be given instructions remotely — the player character.\r\n\r\nDoes not get diseases from being bitten, but has a limited amount of power. Battle testing allows engineers to improve the technology.",
                 "attribs": [
                     [4, 1.0],
                     [29, 3.0],
                     [30, 2.0],
+                    [45, 0.0],
                     [27, 10.0],
-                    [2, 0.0],
-                    [45, 0.0]
+                    [2, 0.0]
                 ],
-                "abilities": [28, 38, 35, 18, 43, 44, 23],
+                "abilities": [28, 35, 43, 18, 44, 23, 47],
                 "toplevel": true,
                 "location_id": 12,
                 "items": [
-                    {"item_id": 5, "quantity": 2.0, "slot": ""}
+                    {"item_id": 5, "quantity": 10.0}
                 ]
             },
             {
                 "id": 25,
                 "name": "👴Old Fart Supreme",
-                "description": "Wearing a nametag with \"Gerry\" written on it.",
+                "description": "Wearing a nametag with \"Gerry\" written on it.\r\n\r\nAfter his defeat, he can be restored to normal through medical procedures. Whether the process improves cantankerousness is doubtful though.",
                 "attribs": [
                     [3, 0.0],
                     [4, 20.0],
@@ -171,7 +180,7 @@
             {
                 "id": 30,
                 "name": "Action Speed",
-                "description": "How fast to take an action."
+                "description": "Higher numbers increase not only your chance of getting in a hit before the opponent, but also landing hits before they can dodge."
             },
             {
                 "id": 45,
@@ -185,14 +194,9 @@
                 "is_binary": true
             },
             {
-                "id": 42,
-                "name": "Distance",
-                "description": "Measure of how far away the enemy is (Theater of the Mind, because this scenario does not use a grid). Melee distance is 1."
-            },
-            {
                 "id": 29,
                 "name": "Force",
-                "description": "How much power is available to hit or move things. Equates to Strength for non-robots (or we could use a separate Str attrib)."
+                "description": "How much power is available to hit or move things. Equates to Strength for living beings."
             },
             {
                 "id": 27,
@@ -225,120 +229,151 @@
             {
                 "id": 39,
                 "name": "ATK Bite (To-Hit)",
-                "description": "Use teeth for a basic melee attack.\r\n\r\n- **Difficulty:** If you're significantly outleveled, for example level 1 or 2 to the enemy's 5, then set difficulty to *Easy*. If you significantly outlevel the enemy, then set difficulty to *Hard*.\r\n- **Damage:** If the attack hits then [Roll for Damage](/play/event/40?subject_id=${subject_id}).\r\n- **Major Success:** (Nat 20) Enemy gets two damage rolls instead of one.\r\n- **Major Failure:** Enemy loses a turn.",
-                "roller_type": "dnd",
+                "description": "Use teeth for a basic melee attack.\r\n\r\n- **Difficulty:** If you're significantly outleveled, for example level 1 or 2 to the enemy's 5, then set difficulty to *Easy*. If you significantly outlevel the enemy, then set difficulty to *Hard*.\r\n- **Damage:** If the attack hits then roll **ATK Bite Dmg.**\r\n- **Major Success:** (Nat 20) Enemy gets two damage rolls instead of one.\r\n- **Major Failure:** Wild swing—enemy cannot reposition on the next turn.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
+                        "label": "Melee Dist",
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "op_application": "<",
+                        "val_required": 2.0
+                    },
+                    {
                         "label": "Can Fight",
-                        "infield": {"item_id": 0, "attrib_id": 27},
+                        "infield": {"attrib_id": 27},
                         "op_application": ">="
                     },
                     {
                         "label": "Target Can Fight",
-                        "infield": {"role": "target char", "item_id": 0, "attrib_id": 27},
+                        "infield": {"role": "target char", "attrib_id": 27},
                         "op_application": ">="
                     },
                     {
                         "label": "Chance to Hit",
-                        "infield": {"item_id": 0, "attrib_id": 30}
+                        "infield": {"attrib_id": 30}
                     },
                     {
                         "label": "Accuracy Bonus",
-                        "infield": {"item_id": 0, "attrib_id": 45}
+                        "infield": {"attrib_id": 45}
                     },
                     {
                         "label": "Evasion",
-                        "infield": {"role": "target char", "item_id": 0, "attrib_id": 30},
+                        "infield": {"role": "target char", "attrib_id": 30},
                         "op_application": "-"
                     }
+                ],
+                "chained_events": [
+                    {"child_id": 40, "outcome_success": "success_any"}
                 ]
             },
             {
                 "id": 40,
                 "name": "ATK Bite Dmg",
-                "description": "Roll, then decrease Robot HP by that amount.",
+                "description": "Roll, then apply that amount of damage.",
                 "outcome_type": "numeric",
-                "roller_type": "dnd",
-                "numeric_range": [1, 6],
+                "numeric_range": [1, 4],
                 "determinants": [
                     {
-                        "infield": {"item_id": 0, "attrib_id": 29},
-                        "val_required": 0.0
+                        "infield": {"attrib_id": 29}
                     },
                     {
-                        "infield": {"role": "target char", "item_id": 0, "attrib_id": 27},
+                        "infield": {"role": "target char", "attrib_id": 27},
                         "op_application": ">="
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 27},
+                        "op_application": "-"
                     }
                 ]
             },
             {
                 "id": 28,
                 "name": "ATK Fist Pummel (To-Hit)",
-                "description": "Close grasping digits and swing robotic arm forward. Basic melee attack.\r\n\r\n- **Energy**: The robot must have at least 1 to start. After the attack, consume 1 [Energy](/play/item/5?owner_id=13).\r\n- **Difficulty:** If you're significantly outleveled, for example level 1 or 2 to the enemy's 5, then set difficulty to *Hard*. If you significantly outlevel the opponent, then set difficulty to *Easy*.\r\n- **Damage:** If the attack hits then [Roll for Damage](/play/event/38?subject_id=13).\r\n- **Major Success:** (Nat 20) Roll two damage rolls instead of one.\r\n- **Major Failure:** Consume 2 Energy instead of 1.\r\n\r\nAfter the swing, the enemy gets to [take an action](/play/event/41) if they're still alive.",
-                "roller_type": "dnd",
+                "description": "Close grasping digits and swing robotic arm forward. Basic melee attack.\r\n\r\n- **Energy**: The robot must have at least 1 to start. After the attack, consumes 1 **Energy.**\r\n- **Difficulty:** If you're significantly outleveled, for example level 1 or 2 to the enemy's 5, then set difficulty to *Hard*. If you significantly outlevel the opponent, then set difficulty to *Easy*.\r\n- **Damage:** If the attack hits then roll **ATK Fist Pummel Dmg.**\r\n- **Major Success:** (Nat 20) Roll two damage rolls instead of one.\r\n- **Major Failure:** Consumes 2 Energy instead of 1.\r\n\r\nAfter the swing, the enemy gets to [take an action](/play/event/41) if they're still alive.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
                         "label": "Can Operate",
-                        "infield": {
-                            "field_mode": "qty",
-                            "child_of_anchor": true,
-                            "item_id": 5,
-                            "attrib_id": 0
-                        },
+                        "infield": {"field_mode": "qty", "item_id": 5},
                         "op_application": ">="
                     },
                     {
                         "label": "Can Fight",
-                        "infield": {"item_id": 0, "attrib_id": 27},
+                        "infield": {"attrib_id": 27},
                         "op_application": ">="
                     },
                     {
                         "label": "Enemy Can Fight",
-                        "infield": {"role": "target char", "item_id": 0, "attrib_id": 27},
+                        "infield": {"role": "target char", "attrib_id": 27},
                         "op_application": ">="
                     },
                     {
                         "label": "Melee Range",
-                        "infield": {"role": "target char", "item_id": 0, "attrib_id": 42},
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
                         "op_application": "<",
                         "val_required": 2.0
                     },
                     {
                         "label": "Chance to Hit",
-                        "infield": {"item_id": 0, "attrib_id": 30}
+                        "infield": {"attrib_id": 30}
                     },
                     {
                         "label": "Accuracy Bonus",
-                        "infield": {"item_id": 0, "attrib_id": 45}
+                        "infield": {"attrib_id": 45}
                     },
                     {
                         "label": "Evasion",
-                        "infield": {"role": "target char", "item_id": 0, "attrib_id": 30},
+                        "infield": {"role": "target char", "attrib_id": 30},
                         "op_application": "-"
                     }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"field_mode": "qty", "item_id": 5},
+                        "op_application": "-",
+                        "op_transform": "c"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"field_mode": "qty", "item_id": 5},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "outcome_success": "failure_major"
+                    }
+                ],
+                "chained_events": [
+                    {"child_id": 38, "outcome_success": "success_any"}
                 ]
             },
             {
                 "id": 38,
                 "name": "ATK Fist Pummel Dmg",
-                "description": "- Roll, then decrease Enemy HP by that amount.\r\n- If Enemy HP is reduced to 0 then [Finish Fight](/play/event/18?subject_id=13).\r\n\r\nDo we need a separate dmg roll? Ideally the hit roll would do everything. We could use determinate damage based on force and enemy resistance.",
+                "description": "Roll and apply the damage. If Enemy HP is reduced below 1 then [Gain XP](/play/event/18?subject_id=13).",
                 "outcome_type": "numeric",
-                "roller_type": "dnd",
                 "numeric_range": [1, 6],
                 "determinants": [
                     {
-                        "infield": {"role": "target char", "item_id": 0, "attrib_id": 27},
+                        "infield": {"role": "target char", "attrib_id": 27},
                         "op_application": ">="
                     },
                     {
-                        "infield": {"item_id": 0, "attrib_id": 29}
+                        "infield": {"attrib_id": 29}
                     },
                     {
-                        "infield": {"item_id": 0, "attrib_id": 45},
-                        "op_transform": "scap",
-                        "val_transform": 10.0
+                        "infield": {"attrib_id": 45},
+                        "op_transform": "*",
+                        "val_transform": 0.5
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 27},
+                        "op_application": "-"
                     }
                 ]
             },
@@ -346,7 +381,6 @@
                 "id": 35,
                 "name": "ATK Ignite",
                 "description": "Burning enemies take damage each round. Typically lasts 3 rounds. Damage per round is decided by the original event outcome.\r\n\r\n- **Energy**: Make sure the robot has at least 1 to start.\r\n- **Difficulty:** If you're significantly outleveled, for example level 1 or 2 to the enemy's 5, then set difficulty to *Hard*. If you significantly outlevel the opponent, then set difficulty to *Easy*, although that is probably a good time to move on to the next location.\r\n\r\nRoll, then see [Finish Fight](/play/event/18?subject_id=13).",
-                "roller_type": "dnd",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -359,66 +393,184 @@
                 ]
             },
             {
+                "id": 47,
+                "name": "ATK Move to Melee Dist",
+                "description": "Rush into melee range, repositioning to 1 tile away.\r\n\r\n- **Success:** No loss of turn—the action is free.\r\n- **Minor Failure:** Close gap but turn ends and consumes 1 **Energy.**\r\n- **Major Failure:** Fail to close gap.",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "label": "Not Melee Dist",
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "op_application": ">=",
+                        "val_required": 2.0
+                    },
+                    {
+                        "label": "Can Fight",
+                        "infield": {"attrib_id": 27},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Target Can Fight",
+                        "infield": {"role": "target char", "attrib_id": 27},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Quickness",
+                        "infield": {"attrib_id": 30}
+                    },
+                    {
+                        "label": "Quickness",
+                        "infield": {"role": "target char", "attrib_id": 30},
+                        "op_application": "-"
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "outcome_success": "failure_minor"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"field_mode": "qty", "item_id": 5},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "outcome_success": "failure_any"
+                    }
+                ]
+            },
+            {
                 "id": 41,
                 "name": "Choose Enemy Action",
-                "description": "Roll to determine what enemy does next. If there is a straightforward choice in the narrative then there is no need to roll.",
+                "description": "Roll to determine what an enemy does next.\r\nIf there is a straightforward choice then there is no need to roll.\r\nIf the result does not make sense for this encounter, then roll again.",
                 "outcome_type": "selection",
-                "roller_type": "dnd",
-                "numeric_range": [1, 20],
                 "selection_strings": "Bite\r\nHeal\r\nMove to Range"
             },
             {
                 "id": 36,
                 "name": "DEF Dodge",
                 "description": "Attempt to evade a hit entirely or partially.",
-                "roller_type": "dnd",
                 "numeric_range": [1, 20]
+            },
+            {
+                "id": 49,
+                "name": "DEF DoT",
+                "description": "Damage over time due to burning or toxicity. Applies each turn even when the opponent does not attack, so backing off may be worthwhile.",
+                "numeric_range": [1, 20]
+            },
+            {
+                "id": 43,
+                "name": "DEF Move to Range",
+                "description": "Step out of melee range, repositioning to 5 tiles away.\r\n\r\n- **Major Success:** (Nat 20) No loss of turn—the action is free.\r\n- **Minor Success:** Move away and turn ends.\r\n- **Minor Failure:** Disengage but allow an *Attack of Opportunity*.\r\n- **Major Failure:** Still in melee range.",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "label": "Can Fight",
+                        "infield": {"attrib_id": 27},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Target Can Fight",
+                        "infield": {"role": "target char", "attrib_id": 27},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Quickness",
+                        "infield": {"attrib_id": 30}
+                    },
+                    {
+                        "label": "Quickness",
+                        "infield": {"role": "target char", "attrib_id": 30},
+                        "op_application": "-"
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "op_application": "<",
+                        "val_required": 2.0
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 5.0,
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 5.0,
+                        "outcome_success": "failure_minor"
+                    }
+                ]
             },
             {
                 "id": 37,
                 "name": "DEF Shock",
                 "description": "Attempt to resist getting shocked. Is this necessary or can the attack event do the necessary roll?",
-                "roller_type": "dnd",
                 "numeric_range": [1, 20]
             },
             {
-                "id": 18,
-                "name": "Finish Fight",
-                "description": "If the fight ended in victory, then add the enemy's XL to [XP](/play/attrib/2/subject/13). To do this, press *Resolve*. Once the outcome is set, fill for XP and apply.\r\n\r\nTo fight the same kind of enemy again (not bosses which are unique), reset enemy stats.",
+                "id": 46,
+                "name": "Fresh Baby Mouse",
+                "description": "A new enemy arrives. Whether the other one was dead or wounded doesn't matter anymore — it's gone now.",
                 "outcome_type": "determined",
-                "roller_type": "dnd",
-                "numeric_range": [0, 0],
-                "determinants": [
+                "effects": [
                     {
-                        "infield": {"role": "target char", "item_id": 0, "attrib_id": 4}
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 27},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 5.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 45},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 5.0
                     }
                 ]
             },
             {
-                "id": 43,
-                "name": "Move to Range",
-                "description": "Step out of melee range, repositioning to about 5 tiles away.\r\n\r\n- **Major Success:** (Nat 20) No loss of turn—the action is free.\r\n- **Major Failure:** Allow an *Attack of Opportunity*.",
-                "roller_type": "dnd",
-                "numeric_range": [1, 20],
+                "id": 18,
+                "name": "Gain XP",
+                "description": "If the fight ended in victory, press *resolve* to gain experience equal to the enemy's level.\r\n\r\nTo fight the same kind of enemy again (not bosses which are unique), find their **Fresh** event.",
+                "outcome_type": "determined",
                 "determinants": [
                     {
-                        "label": "Can Fight",
-                        "infield": {"item_id": 0, "attrib_id": 27},
-                        "op_application": ">="
+                        "infield": {"role": "target char", "attrib_id": 27},
+                        "op_application": "<"
                     },
                     {
-                        "label": "Target Can Fight",
-                        "infield": {"role": "target char", "item_id": 0, "attrib_id": 27},
-                        "op_application": ">="
-                    },
+                        "infield": {"role": "target char", "attrib_id": 4}
+                    }
+                ],
+                "effects": [
                     {
-                        "label": "Quickness",
-                        "infield": {"item_id": 0, "attrib_id": 30}
-                    },
-                    {
-                        "label": "Quickness",
-                        "infield": {"role": "target char", "item_id": 0, "attrib_id": 30},
-                        "op_application": "-"
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 2},
+                        "auto_apply": true
                     }
                 ]
             },
@@ -427,7 +579,6 @@
                 "name": "Surge",
                 "description": "Gain a bonus to power and speed for 1 turn.\r\n\r\n- Normally costs a turn to use. However, if you had just withdrawn to range and the enemy used their turn to follow, then it does not.\r\n- Can only be used once per fight.\r\n- Chance of causing a penalty rather than a bonus.",
                 "outcome_type": "numeric",
-                "roller_type": "dnd",
                 "numeric_range": [-1, 4],
                 "determinants": [
                     {
@@ -447,13 +598,14 @@
                 "name": "Upgrade Bonus",
                 "description": "Run after every 3 experience levels.",
                 "outcome_type": "selection",
-                "numeric_range": [1, 20],
                 "selection_strings": "Triple XP for the next three fights.\r\nGain 50% of XP towards the next level.\r\nIncrease Energy limit by 1.\r\nFor three fights, do not decrease Energy unless critical.\r\nNo Bonus."
             }
         ]
     },
     "general data": {
-        "piles": []
+        "piles": [
+            {"item_id": 48, "quantity": 5.0}
+        ]
     },
     "progress": []
 }
