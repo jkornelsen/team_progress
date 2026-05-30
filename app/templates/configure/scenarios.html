@@ -1,3 +1,7 @@
+{# =========================================================================
+   1. GLOBAL IMPORTS
+   ========================================================================= #}
+
 {% extends 'layout/base.html' %}
 {% import 'macros/hotkeys.html' as hk %}
 
@@ -10,6 +14,11 @@
 {% endblock %}
 
 {% block content %}
+
+{# =========================================================================
+   2. MAIN CONTENT
+   ========================================================================= #}
+
 <div class="scenarios-browser">
     <header class="flex-between align-center">
         <h1>Pre-built Scenarios</h1>
@@ -68,21 +77,9 @@
     </div>
 </div>
 
-<script>
-    const linkForKey = {};
-
-    document.addEventListener('DOMContentLoaded', () => {
-        if (isMobile) return;
-        
-        document.addEventListener('keypress', (event) => {
-            const key = event.key.toLowerCase();
-            if (linkForKey[key]) {
-                const btnId = linkForKey[key];
-                document.getElementById(btnId).click();
-            }
-        });
-    });
-</script>
+{# =========================================================================
+   3. TEMPLATES & STYLES
+   ========================================================================= #}
 
 <style>
 h3 { margin-bottom: 0px; margin-top: 5px; }
@@ -94,4 +91,24 @@ h3 { margin-bottom: 0px; margin-top: 5px; }
 .tag-mp { background: #004d40; color: #4db6ac; border: 1px solid #00695c; }
 .scenario-footer { border-top: 1px solid #222; padding-top: 0px; }
 </style>
+
+{# =========================================================================
+   4. SCRIPTS
+   ========================================================================= #}
+
+<script>
+const linkForKey = {};
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (isMobile) return;
+    
+    document.addEventListener('keypress', (event) => {
+        const key = event.key.toLowerCase();
+        if (linkForKey[key]) {
+            const btnId = linkForKey[key];
+            document.getElementById(btnId).click();
+        }
+    });
+});
+</script>
 {% endblock %}

@@ -1,3 +1,7 @@
+{# =========================================================================
+   1. GLOBAL IMPORTS
+   ========================================================================= #}
+
 {% extends 'layout/base.html' %}
 {% import 'macros/hotkeys.html' as hk %}
 {% from 'macros/config_forms.html' import footer_actions %}
@@ -23,6 +27,140 @@
     };
 </script>
 <script src="{{ url_for('static', filename='js/configuration.js') }}"></script>
+
+{# =========================================================================
+   2. MAIN CONTENT
+   ========================================================================= #}
+
+<div class="configure-overall">
+    <h1>Scenario Settings & Objectives</h1>
+    
+    <form method="POST">
+        <!-- 1. Basic Metadata -->
+        <section class="outer-border">
+            <h3>Scenario Identity</h3>
+            <div class="form-group">
+                <label for="title">Scenario Title:</label>
+                <input type="text" id="title" name="title" value="{{ overall.title }}" required class="full-width themed-input">
+            </div>
+            <div class="form-group spacious-top">
+                <label for="description">Introductory Description:</label>
+                <textarea id="description" name="description" rows="5" class="full-width themed-input">{{ overall.description }}</textarea>
+            </div>
+        </section>
+
+        <!-- 2. Application Logic -->
+        <section class="outer-border">
+            <h3>Global Configuration</h3>
+            <div class="grid-2-col">
+                <div class="form-group">
+                    <label for="number_format">Display Number Format:</label>
+                    <select id="number_format" name="number_format" class="full-width themed-input">
+                        <option value="en_US" {{ 'selected' if overall.number_format == 'en_US' }}>International (1,234.56)</option>
+                        <option value="de_DE" {{ 'selected' if overall.number_format == 'de_DE' }}>European (1.234,56)</option>
+                        <option value="abbr" {{ 'selected' if overall.number_format == 'abbr' }}>Abbreviated (1.2k, 1.5m)</option>
+                        <option value="sci" {{ 'selected' if overall.number_format == 'sci' }}>Scientific (1.2e3)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="slots">Equipment Slots (One per line):</label>
+                    <textarea id="slots" name="slots" rows="4" class="full-width themed-input" 
+                              placeholder="Main Hand&#10;Off Hand&#10;Body">{{ overall.slots | join('\n') }}</textarea>
+                    <small class="label-like">These appear in the Character and Item editors.</small>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Win Requirements -->
+        <section class="outer-border">
+            <div class="flex-between align-center">
+                <h3>Win Conditions (Objectives)</h3>
+                <button type="button" class="btn-sm" 
+                        onclick="ConfigEditor.addRow('winreq-list', 'winreq-template', (row) => { syncWinReqContext(row.querySelector('.winreq-target-select')); adjustWinReq('renumberRows'); })">
+                    + Add Condition
+                </button>
+            </div>
+            <p class="label-like spacious-bottom">Define what needs to happen to win this scenario. All conditions must be met.</p>
+            
+            <div id="winreq-list">
+                {% for req in overall.win_reqs %}
+                    {{ winreq_card(loop.index0, req) }}
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Form Actions -->
+        {{ footer_actions() }}
+    </form>
+</div>
+
+{# =========================================================================
+   3. TEMPLATES & STYLES
+   ========================================================================= #}
+
+<template id="winreq-template">
+    {{ winreq_card('__INDEX__', None) }}
+</template>
+
+<style>
+</style>
+
+{# =========================================================================
+   4. SCRIPTS
+   ========================================================================= #}
+
+<script>
+/**
+ * Configuration for the WinReq list sorting
+ */
+function adjustWinReq(method, ...args) {
+    const options = {
+        rowSelector: '.winreq-card',
+        inputClass: '.winreq-order-input',
+        displayClass: '.winreq-display-number',
+        upClass: '.btn-winreq-up',
+        downClass: '.btn-winreq-down',
+        emptyMsgId: 'winreq-list-empty'
+    };
+    ConfigEditor[method](...args, 'winreq-list', options);
+}
+
+/**
+ * Disables the 'Characters' context group if the target entity is a Character.
+ */
+function syncWinReqContext(targetSelect) {
+    if (!targetSelect) return;
+    
+    const card = targetSelect.closest('.winreq-card');
+    const contextSelect = card.querySelector('.winreq-context-select');
+    const charGroup = contextSelect.querySelector('.context-char-group');
+    
+    const selectedOption = targetSelect.options[targetSelect.selectedIndex];
+    const type = selectedOption.dataset.type;
+
+    if (type === 'character') {
+        charGroup.disabled = true;
+        // If a character was already selected in the context, reset it to "(Anywhere)"
+        if (charGroup.contains(contextSelect.selectedOptions[0])) {
+            contextSelect.value = "";
+        }
+    } else {
+        charGroup.disabled = false;
+    }
+}
+
+// Initialize state for existing rows on load
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.winreq-target-select').forEach(syncWinReqContext);
+    adjustWinReq('renumberRows');
+});
+</script>
+
+{# =========================================================================
+   5. MACROS
+   ========================================================================= #}
+
+{% endblock %}
 
 {% macro winreq_card(index, req=None) %}
 <div class="winreq-card outer-border spacious-bottom factor-card"
@@ -115,119 +253,3 @@
 </div>
 {% endmacro %}
 
-<template id="winreq-template">
-    {{ winreq_card('__INDEX__', None) }}
-</template>
-
-<div class="configure-overall">
-    <h1>Scenario Settings & Objectives</h1>
-    
-    <form method="POST">
-        <!-- 1. Basic Metadata -->
-        <section class="outer-border">
-            <h3>Scenario Identity</h3>
-            <div class="form-group">
-                <label for="title">Scenario Title:</label>
-                <input type="text" id="title" name="title" value="{{ overall.title }}" required class="full-width themed-input">
-            </div>
-            <div class="form-group spacious-top">
-                <label for="description">Introductory Description:</label>
-                <textarea id="description" name="description" rows="5" class="full-width themed-input">{{ overall.description }}</textarea>
-            </div>
-        </section>
-
-        <!-- 2. Application Logic -->
-        <section class="outer-border">
-            <h3>Global Configuration</h3>
-            <div class="grid-2-col">
-                <div class="form-group">
-                    <label for="number_format">Display Number Format:</label>
-                    <select id="number_format" name="number_format" class="full-width themed-input">
-                        <option value="en_US" {{ 'selected' if overall.number_format == 'en_US' }}>International (1,234.56)</option>
-                        <option value="de_DE" {{ 'selected' if overall.number_format == 'de_DE' }}>European (1.234,56)</option>
-                        <option value="abbr" {{ 'selected' if overall.number_format == 'abbr' }}>Abbreviated (1.2k, 1.5m)</option>
-                        <option value="sci" {{ 'selected' if overall.number_format == 'sci' }}>Scientific (1.2e3)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="slots">Equipment Slots (One per line):</label>
-                    <textarea id="slots" name="slots" rows="4" class="full-width themed-input" 
-                              placeholder="Main Hand&#10;Off Hand&#10;Body">{{ overall.slots | join('\n') }}</textarea>
-                    <small class="label-like">These appear in the Character and Item editors.</small>
-                </div>
-            </div>
-        </section>
-
-        <!-- 3. Win Requirements -->
-        <section class="outer-border">
-            <div class="flex-between align-center">
-                <h3>Win Conditions (Objectives)</h3>
-                <button type="button" class="btn-sm" 
-                        onclick="ConfigEditor.addRow('winreq-list', 'winreq-template', (row) => { syncWinReqContext(row.querySelector('.winreq-target-select')); adjustWinReq('renumberRows'); })">
-                    + Add Condition
-                </button>
-            </div>
-            <p class="label-like spacious-bottom">Define what needs to happen to win this scenario. All conditions must be met.</p>
-            
-            <div id="winreq-list">
-                {% for req in overall.win_reqs %}
-                    {{ winreq_card(loop.index0, req) }}
-                {% endfor %}
-            </div>
-        </section>
-
-        <!-- Form Actions -->
-        {{ footer_actions() }}
-    </form>
-</div>
-
-<script>
-    /**
-     * Configuration for the WinReq list sorting
-     */
-    function adjustWinReq(method, ...args) {
-        const options = {
-            rowSelector: '.winreq-card',
-            inputClass: '.winreq-order-input',
-            displayClass: '.winreq-display-number',
-            upClass: '.btn-winreq-up',
-            downClass: '.btn-winreq-down',
-            emptyMsgId: 'winreq-list-empty'
-        };
-        ConfigEditor[method](...args, 'winreq-list', options);
-    }
-
-    /**
-     * Disables the 'Characters' context group if the target entity is a Character.
-     */
-    function syncWinReqContext(targetSelect) {
-        if (!targetSelect) return;
-        
-        const card = targetSelect.closest('.winreq-card');
-        const contextSelect = card.querySelector('.winreq-context-select');
-        const charGroup = contextSelect.querySelector('.context-char-group');
-        
-        const selectedOption = targetSelect.options[targetSelect.selectedIndex];
-        const type = selectedOption.dataset.type;
-
-        if (type === 'character') {
-            charGroup.disabled = true;
-            // If a character was already selected in the context, reset it to "(Anywhere)"
-            if (charGroup.contains(contextSelect.selectedOptions[0])) {
-                contextSelect.value = "";
-            }
-        } else {
-            charGroup.disabled = false;
-        }
-    }
-
-    // Initialize state for existing rows on load
-    document.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('.winreq-target-select').forEach(syncWinReqContext);
-        adjustWinReq('renumberRows');
-    });
-</script>
-
-<style>
-</style>
-{% endblock %}

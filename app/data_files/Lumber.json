@@ -632,7 +632,10 @@
                     }
                 ],
                 "chained_events": [
-                    {"child_id": 22, "outcome_success": "failure_major"}
+                    {
+                        "child_id": 22,
+                        "req": {"outcome_success": "failure_major"}
+                    }
                 ]
             },
             {
@@ -782,7 +785,10 @@
                     }
                 ],
                 "chained_events": [
-                    {"child_id": 26, "outcome_success": "natural_min"}
+                    {
+                        "child_id": 26,
+                        "req": {"outcome_success": "natural_min"}
+                    }
                 ]
             }
         ]

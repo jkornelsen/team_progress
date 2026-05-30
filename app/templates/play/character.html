@@ -1,3 +1,7 @@
+{# =========================================================================
+   1. GLOBAL IMPORTS
+   ========================================================================= #}
+
 {% extends 'layout/base.html' %}
 {% import 'macros/hotkeys.html' as hk %}
 {% import 'macros/render.html' as render %}
@@ -26,6 +30,10 @@
         document.getElementById('travel-with-party-chk')?.click();
     };
 </script>
+
+{# =========================================================================
+   2. MAIN CONTENT
+   ========================================================================= #}
 
 <div class="play-container">
     <header class="entity-header">
@@ -208,6 +216,17 @@
     </main>
 </div>
 
+{# =========================================================================
+   3. TEMPLATES & STYLES
+   ========================================================================= #}
+
+<style>
+</style>
+
+{# =========================================================================
+   4. SCRIPTS
+   ========================================================================= #}
+
 <script src="{{ url_for('static', filename='js/api.js') }}"></script>
 
 <script>
@@ -234,7 +253,4 @@
         window.location.href = redirectUrl.toString();
     });
 </script>
-
-<style>
-</style>
 {% endblock %}

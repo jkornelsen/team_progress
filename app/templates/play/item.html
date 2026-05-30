@@ -1,3 +1,7 @@
+{# =========================================================================
+   1. GLOBAL IMPORTS
+   ========================================================================= #}
+
 {% extends 'layout/base.html' %}
 {% import 'macros/hotkeys.html' as hk %}
 {% import 'macros/render.html' as render %}
@@ -34,6 +38,10 @@
         window.linkForKey['q'] = "#equip-btn";
     {% endif %}
 </script>
+
+{# =========================================================================
+   2. MAIN CONTENT
+   ========================================================================= #}
 
 <div class="item-play-container">
     <header class="entity-header">
@@ -220,30 +228,34 @@
                             {% set letter = link_letters.next() %}
                             <div id="controls-{{ r.id }}" data-recipe-hotkey="{{ letter }}">
                                 {% if r.instant %}
-                                    <div id="instant-controls-{{ r.id }}"
-                                        class="batch-selector flex-row align-center {{ 'hidden' if not r_data.can_produce }}">
-                                        <input type="text" id="batches-{{ r.id }}" 
-                                                value="{{ r_data.max_batches }}" 
-                                                data-max="{{ r_data.max_batches }}"
-                                                onchange="setBatchQty('{{ r.id }}', this.value)"
-                                                min="1" max="{{ r_data.max_batches }}" 
-                                                class="mini-input">
-                                        
-                                        <div class="presets">
-                                            <button type="button" class="tag-button" 
-                                                onclick="setBatchQty('{{ r.id }}', '1')">1</button>
-                                            <button type="button" class="tag-button" 
-                                                onclick="setBatchQty('{{ r.id }}', 'half')">½</button>
-                                            <button type="button" class="tag-button" 
-                                                onclick="setBatchQty('{{ r.id }}', 'max')">Max</button>
+                                    <div class="flex-row align-center">
+                                        <button id="gain-{{ r.id }}"
+                                            onclick="gainItem({{ r.id }}, {{ r_data.host_id }})"
+                                            class="go-button {{ 'hidden' if not r_data.can_produce }}">
+                                            <span class="hotkey-indicator">{{ letter }}</span>
+                                            Gain Instant
+                                        </button>
+                                        <div id="instant-controls-{{ r.id }}"
+                                             class="batch-selector flex-row align-center {{ 'hidden' if not r_data.can_produce }}"
+                                             style="margin-left: 10px;">
+                                            <input type="text" id="batches-{{ r.id }}" 
+                                                    value="{{ r_data.max_batches }}" 
+                                                    data-max="{{ r_data.max_batches }}"
+                                                    onchange="setBatchQty('{{ r.id }}', this.value)"
+                                                    min="1" max="{{ r_data.max_batches }}" 
+                                                    style="max-width: 9ch;"
+                                                    class="mini-input">
+                                            
+                                            <div class="presets">
+                                                <button type="button" class="tag-button" 
+                                                    onclick="setBatchQty('{{ r.id }}', '1')">1</button>
+                                                <button type="button" class="tag-button" 
+                                                    onclick="setBatchQty('{{ r.id }}', 'half')">½</button>
+                                                <button type="button" class="tag-button" 
+                                                    onclick="setBatchQty('{{ r.id }}', 'max')">Max</button>
+                                            </div>
                                         </div>
                                     </div>
-                                    <button id="gain-{{ r.id }}"
-                                        onclick="gainItem({{ r.id }}, {{ r_data.host_id }})"
-                                        class="go-button {{ 'hidden' if not r_data.can_produce }}">
-                                        <span class="hotkey-indicator">{{ letter }}</span>
-                                        Gain Instant
-                                    </button>
                                 {% else %}
                                     <div class="flex-row align-center">
                                         <button id="start-{{ r.id }}"
@@ -517,672 +529,680 @@
     </div>
 </div>
 
+{# =========================================================================
+   3. TEMPLATES & STYLES
+   ========================================================================= #}
+
+<style>
+progressbar {
+    transition: value 0.2s ease-out;
+    appearance: none;
+}
+progressbar::-webkit-progress-value {
+    transition: width 0.01s linear;
+}
+
+.action-box { display: flex; gap: 10px; margin-bottom: 10px; }
+.recipe-list { display: flex; flex-direction: column; gap: 15px; }
+.source-list { list-style: none; padding: 5px 0; margin: 0; font-size: 0.85em; }
+.attrib-req-list { list-style: none; padding: 5px 0; margin: 0; font-size: 0.85em; }
+.byproduct-of-row { --grid-cols: 1fr; }
+.reverse-lookup-list { --col-list-max-width: 350px; }
+
+.batch-selector { gap: 5px; margin-bottom: 8px; }
+.presets { display: flex; gap: 2px; }
+.tag-button { 
+    font-size: 0.7em; 
+    padding: 2px 6px; 
+    background: var(--bg-lighter); 
+    border: 1px solid var(--border-dim);
+    cursor: pointer;
+}
+.tag-button:hover { background: var(--accent-dim); }
+</style>
+
+{# =========================================================================
+   4. SCRIPTS
+   ========================================================================= #}
+
 <script src="{{ url_for('static', filename='js/api.js') }}"></script>
 
 <script>
-    const itemId = {{ item.id }};
-    const ownerId = {{ owner.id }}; 
-    const charId = {{ ctx_char.id if ctx_char else 'null' }};
-    const locId = {{ ctx_loc.id if ctx_loc else 'null' }};
-    const startedAtZero = (parseFloat("{{ pile.quantity }}".replace(/,/g, '')) || 0) === 0;
+const itemId = {{ item.id }};
+const ownerId = {{ owner.id }}; 
+const charId = {{ ctx_char.id if ctx_char else 'null' }};
+const locId = {{ ctx_loc.id if ctx_loc else 'null' }};
+const startedAtZero = (parseFloat("{{ pile.quantity }}".replace(/,/g, '')) || 0) === 0;
 
-    const recipeMetadata = {
-        {% for r_data in enriched_recipes %}
-            {% set r = r_data['recipe'] %}
-        "{{ r.id }}": {
-            "can_produce": {{ 'true' if r_data.can_produce else 'false' }},
-            "rate_amount": {{ r.rate_amount }},
-            "sources": [
-                {% for s in r_data.sources %}
-                {
-                    "item_id": "{{ s.ingredient.id }}",
-                    "q_required": {{ s.q_required }},
-                    "preserve": {{ 'true' if s.preserve else 'false' }}
-                }{% if not loop.last %},{% endif %}
-                {% endfor %}
-            ]
-        }{% if not loop.last %},{% endif %}
-        {% endfor %}
-    };
+const recipeMetadata = {
+    {% for r_data in enriched_recipes %}
+        {% set r = r_data['recipe'] %}
+    "{{ r.id }}": {
+        "can_produce": {{ 'true' if r_data.can_produce else 'false' }},
+        "rate_amount": {{ r.rate_amount }},
+        "sources": [
+            {% for s in r_data.sources %}
+            {
+                "item_id": "{{ s.ingredient.id }}",
+                "q_required": {{ s.q_required }},
+                "preserve": {{ 'true' if s.preserve else 'false' }}
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ]
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+};
 
-    // Heartbeat tick
+// Heartbeat tick
 
-    async function updateStatus() {
-        // 1. Build route form data
-        const fd = new FormData();
-        fd.append('char_id', charId);
-        fd.append('loc_id', locId);
-        const urlParams = new URLSearchParams(window.location.search);
-        const pos = urlParams.get('pos');
-        if (pos) fd.append('pos', pos);
+async function updateStatus() {
+    // 1. Build route form data
+    const fd = new FormData();
+    fd.append('char_id', charId);
+    fd.append('loc_id', locId);
+    const urlParams = new URLSearchParams(window.location.search);
+    const pos = urlParams.get('pos');
+    if (pos) fd.append('pos', pos);
 
-        // 2. Fetch the complete state snapshot for this context
-        const url = `/production/status/item/${itemId}/owner/${ownerId}`;
-        const data = await apiPost(url, fd, "Could not update status.");
-        if (!data) return;
+    // 2. Fetch the complete state snapshot for this context
+    const url = `/production/status/item/${itemId}/owner/${ownerId}`;
+    const data = await apiPost(url, fd, "Could not update status.");
+    if (!data) return;
 
-        // 3. Handle Flash Messages (e.g., "Storage Full")
-        if (data.halt_messages && data.halt_messages.length > 0) {
-            data.halt_messages.forEach(msg => {
-                if (!msg.toLowerCase().includes("limit reached")) {
-                    flashMessage(msg);
-                }
-            });
-        }
-
-        const main = data.main;
-
-        // 4. Update Main Quantity Display
-        if (main.quantity !== undefined) {
-            const qtyDisplay = document.getElementById('main-qty-display');
-            if (qtyDisplay) qtyDisplay.textContent = main.quantity;
-            //isWaitingForServer = false;
-
-            const isCurrentlyZero = (
-                parseFloat(main.quantity.replace(/,/g, '')) || 0) === 0;
-            if (isCurrentlyZero !== startedAtZero) {
-                // Show or hide inventory actions
-                window.location.reload();
-                return;
+    // 3. Handle Flash Messages (e.g., "Storage Full")
+    if (data.halt_messages && data.halt_messages.length > 0) {
+        data.halt_messages.forEach(msg => {
+            if (!msg.toLowerCase().includes("limit reached")) {
+                flashMessage(msg);
             }
-        }
+        });
+    }
 
-        // 5. Update Ingredient/Source Stock Labels
-        if (data.sources) {
-            const stockMap = {};
-            data.sources.forEach(s => {
-                const val = parseFloat(s.quantity.replace(/,/g, '')) || 0;
-                stockMap[s.id] = val;
-                
-                // Update the UI text for the source quantity
-                const el = document.getElementById(`source-qty-${s.id}`);
-                if (el) el.textContent = s.quantity;
+    const main = data.main;
+
+    // 4. Update Main Quantity Display
+    if (main.quantity !== undefined) {
+        const qtyDisplay = document.getElementById('main-qty-display');
+        if (qtyDisplay) qtyDisplay.textContent = main.quantity;
+        //isWaitingForServer = false;
+
+        const isCurrentlyZero = (
+            parseFloat(main.quantity.replace(/,/g, '')) || 0) === 0;
+        if (isCurrentlyZero !== startedAtZero) {
+            // Show or hide inventory actions
+            window.location.reload();
+            return;
+        }
+    }
+
+    // 5. Update Ingredient/Source Stock Labels
+    if (data.sources) {
+        const stockMap = {};
+        data.sources.forEach(s => {
+            const val = parseFloat(s.quantity.replace(/,/g, '')) || 0;
+            stockMap[s.id] = val;
+            
+            // Update the UI text for the source quantity
+            const el = document.getElementById(`source-qty-${s.id}`);
+            if (el) el.textContent = s.quantity;
+        });
+
+        const qLimit = {{ item.q_limit }};
+        const currentQty = parseFloat(main.quantity.replace(/,/g, '')) || 0;
+
+        // Update max_batches for each recipe
+        for (const [recipeId, meta] of Object.entries(recipeMetadata)) {
+            let maxBatches = Infinity;
+            let hasConsumableIngredients = false;
+
+            meta.sources.forEach(source => {
+                if (!source.preserve && source.q_required > 0) {
+                    hasConsumableIngredients = true;
+                    const currentStock = stockMap[source.item_id] || 0;
+                    const possible = Math.floor(currentStock / source.q_required);
+
+                    if (possible < maxBatches) {
+                        maxBatches = possible;
+                    }
+                }
             });
 
-            const qLimit = {{ item.q_limit }};
-            const currentQty = parseFloat(main.quantity.replace(/,/g, '')) || 0;
+            // If no ingredients are consumed, or recipe is infinite
+            if (!hasConsumableIngredients) {
+                maxBatches = meta.can_produce ? 999 : 0;
+            }
 
-            // Update max_batches for each recipe
-            for (const [recipeId, meta] of Object.entries(recipeMetadata)) {
-                let maxBatches = Infinity;
-                let hasConsumableIngredients = false;
+            // Calculate limit based on Storage Capacity
+            // Final Max is the stricter of the two
+            let storageMax = Infinity;
+            const yieldPerBatch = meta.rate_amount;
+            if (qLimit > 0 && yieldPerBatch > 0) {
+                storageMax = Math.max(0, Math.floor((qLimit - currentQty) / yieldPerBatch));
+            }
+            maxBatches = Math.min(maxBatches, storageMax);
 
-                meta.sources.forEach(source => {
-                    if (!source.preserve && source.q_required > 0) {
-                        hasConsumableIngredients = true;
-                        const currentStock = stockMap[source.item_id] || 0;
-                        const possible = Math.floor(currentStock / source.q_required);
+            if (meta.can_produce && maxBatches === 0 && currentQty < qLimit) {
+                maxBatches = 1;
+            }
 
-                        if (possible < maxBatches) {
-                            maxBatches = possible;
-                        }
-                    }
-                });
+            const input = document.getElementById(`batches-${recipeId}`);
+            if (input) {
+                input.dataset.max = maxBatches;
+                input.max = maxBatches;
 
-                // If no ingredients are consumed, or recipe is infinite
-                if (!hasConsumableIngredients) {
-                    maxBatches = meta.can_produce ? 999 : 0;
-                }
+                const isUserEditing = document.activeElement === input;
+                if (!isUserEditing) {
+                    // Automatically follow the new max
+                    const pending = JSON.parse(sessionStorage.getItem('pendingQty'));
+                    const isThisInput = pending && pending.targetId === `batches-${recipeId}`;
+                    const wasMax = isThisInput && pending.ratioType === 'max';
 
-                // Calculate limit based on Storage Capacity
-                // Final Max is the stricter of the two
-                let storageMax = Infinity;
-                const yieldPerBatch = meta.rate_amount;
-                if (qLimit > 0 && yieldPerBatch > 0) {
-                    storageMax = Math.max(0, Math.floor((qLimit - currentQty) / yieldPerBatch));
-                }
-                maxBatches = Math.min(maxBatches, storageMax);
-
-                if (meta.can_produce && maxBatches === 0 && currentQty < qLimit) {
-                    maxBatches = 1;
-                }
-
-                const input = document.getElementById(`batches-${recipeId}`);
-                if (input) {
-                    input.dataset.max = maxBatches;
-                    input.max = maxBatches;
-
-                    const isUserEditing = document.activeElement === input;
-                    if (!isUserEditing) {
-                        // Automatically follow the new max
-                        const pending = JSON.parse(sessionStorage.getItem('pendingQty'));
-                        const isThisInput = pending && pending.targetId === `batches-${recipeId}`;
-                        const wasMax = isThisInput && pending.ratioType === 'max';
-
-                        if (wasMax) {
+                    if (wasMax) {
+                        input.value = maxBatches;
+                        pending.lastValue = maxBatches;
+                        sessionStorage.setItem('pendingQty', JSON.stringify(pending));
+                    } else if (isThisInput && pending.ratioType === 'half') {
+                        input.value = Math.floor(maxBatches / 2);
+                    } else {
+                        let currentVal = parseInt(input.value) || 0;
+                        if (currentVal > maxBatches) {
                             input.value = maxBatches;
-                            pending.lastValue = maxBatches;
-                            sessionStorage.setItem('pendingQty', JSON.stringify(pending));
-                        } else if (isThisInput && pending.ratioType === 'half') {
-                            input.value = Math.floor(maxBatches / 2);
-                        } else {
-                            let currentVal = parseInt(input.value) || 0;
-                            if (currentVal > maxBatches) {
-                                input.value = maxBatches;
-                            }
                         }
                     }
                 }
-            };
-        }
+            }
+        };
+    }
 
-        // 7. Update Attribute Requirements (if they change during play)
-        if (data.attribs) {
-            data.attribs.forEach(a => {
-                const row = document.getElementById(`attrib-row-${a.attrib_id}-${a.subject_id}`);
-                if (row) {
-                    const valSpan = row.querySelector('.curr-val');
-                    if (valSpan) valSpan.textContent = `(currently ${a.value})`;
+    // 7. Update Attribute Requirements (if they change during play)
+    if (data.attribs) {
+        data.attribs.forEach(a => {
+            const row = document.getElementById(`attrib-row-${a.attrib_id}-${a.subject_id}`);
+            if (row) {
+                const valSpan = row.querySelector('.curr-val');
+                if (valSpan) valSpan.textContent = `(currently ${a.value})`;
+            }
+        });
+    }
+
+    // 8. Update Recipes & Progress Bars
+    if (data.recipes) {
+        data.recipes.forEach(r => {
+            const container = document.getElementById(`controls-${r.recipe_id}`);
+            if (!container) return;
+
+            const card = container.closest('.recipe-card');
+            const letter = container.getAttribute('data-recipe-hotkey');
+
+            const startBtn = document.getElementById(`start-${r.recipe_id}`);
+            const stopBtn = document.getElementById(`stop-${r.recipe_id}`);
+            const gainBtn = document.getElementById(`gain-${r.recipe_id}`);
+            const blockedDiv = document.getElementById(`blocked-${r.recipe_id}`);
+            const instantControls = document.getElementById(`instant-controls-${r.recipe_id}`);
+
+            const progContainer = document.getElementById(`prog-container-${r.recipe_id}`);
+            // If server says recipe is currently valid, clear red text
+            if (r.can_produce && card) {
+                card.querySelectorAll('.text-danger').forEach(
+                    el => el.classList.remove('text-danger'));
+            }
+
+            // Check if this recipe is the one currently running
+            const isRunning = (
+                main.is_ongoing && main.active_recipe_id === r.recipe_id);
+            const stopAtWrapper = document.getElementById(`stop-at-wrapper-${r.recipe_id}`);
+            const stopAtInput = document.getElementById(`stop-at-${r.recipe_id}`);
+            const stopAtDisplay = document.getElementById(`stop-at-display-${r.recipe_id}`);
+
+            if (isRunning) {
+                if (startBtn) startBtn.classList.add('hidden');
+                if (gainBtn) gainBtn.classList.add('hidden');
+                if (instantControls) instantControls.classList.add('hidden');
+                if (blockedDiv) blockedDiv.classList.add('hidden');
+
+                if (stopBtn) {
+                    stopBtn.classList.remove('hidden');
+                    if (letter) window.linkForKey[letter] = `#stop-${r.recipe_id}`;
                 }
-            });
-        }
-
-        // 8. Update Recipes & Progress Bars
-        if (data.recipes) {
-            data.recipes.forEach(r => {
-                const container = document.getElementById(`controls-${r.recipe_id}`);
-                if (!container) return;
-
-                const card = container.closest('.recipe-card');
-                const letter = container.getAttribute('data-recipe-hotkey');
-
-                const startBtn = document.getElementById(`start-${r.recipe_id}`);
-                const stopBtn = document.getElementById(`stop-${r.recipe_id}`);
-                const gainBtn = document.getElementById(`gain-${r.recipe_id}`);
-                const blockedDiv = document.getElementById(`blocked-${r.recipe_id}`);
-                const instantControls = document.getElementById(`instant-controls-${r.recipe_id}`);
-
-                const progContainer = document.getElementById(`prog-container-${r.recipe_id}`);
-                // If server says recipe is currently valid, clear red text
-                if (r.can_produce && card) {
-                    card.querySelectorAll('.text-danger').forEach(
-                        el => el.classList.remove('text-danger'));
+                if (progContainer) {
+                    progContainer.classList.remove('hidden');
+                    if (main.start_time && main.rate_duration) {
+                        animateProgress(
+                            r.recipe_id, main.start_time, main.rate_duration);
+                    }
+                }
+                if (stopAtWrapper) {
+                    if (main.stop_at) {
+                        stopAtInput.classList.add('hidden');
+                        stopAtDisplay.classList.remove('hidden');
+                        stopAtDisplay.textContent = main.stop_at;
+                    } else {
+                        stopAtWrapper.classList.add('hidden');
+                    }
+                }
+            } else {
+                // --- INACTIVE STATE ---
+                if (progContainer) progContainer.classList.add('hidden');
+                
+                isWaitingForServer = false;
+                const progBar = document.getElementById(`prog-bar-${r.recipe_id}`);
+                if (progBar && progBar.value > 0) {
+                    if (animationFrameId) {
+                        cancelAnimationFrame(animationFrameId);
+                        animationFrameId = null;
+                    }
+                    progBar.value = 0;
+                }
+                if (stopAtWrapper) {
+                    stopAtDisplay.classList.add('hidden');
                 }
 
-                // Check if this recipe is the one currently running
-                const isRunning = (
-                    main.is_ongoing && main.active_recipe_id === r.recipe_id);
-                const stopAtWrapper = document.getElementById(`stop-at-wrapper-${r.recipe_id}`);
-                const stopAtInput = document.getElementById(`stop-at-${r.recipe_id}`);
-                const stopAtDisplay = document.getElementById(`stop-at-display-${r.recipe_id}`);
-
-                if (isRunning) {
-                    if (startBtn) startBtn.classList.add('hidden');
-                    if (gainBtn) gainBtn.classList.add('hidden');
-                    if (instantControls) instantControls.classList.add('hidden');
+                if (r.can_produce) {
+                    // CAN PRODUCE
+                    if (stopBtn) stopBtn.classList.add('hidden');
                     if (blockedDiv) blockedDiv.classList.add('hidden');
 
-                    if (stopBtn) {
-                        stopBtn.classList.remove('hidden');
-                        if (letter) window.linkForKey[letter] = `#stop-${r.recipe_id}`;
-                    }
-                    if (progContainer) {
-                        progContainer.classList.remove('hidden');
-                        if (main.start_time && main.rate_duration) {
-                            animateProgress(
-                                r.recipe_id, main.start_time, main.rate_duration);
+                    if (startBtn) {
+                        startBtn.classList.remove('hidden');
+                        if (letter) window.linkForKey[letter] = `#start-${r.recipe_id}`;
+                        if (stopAtWrapper) {
+                            if (stopAtInput.classList.contains('hidden')) {
+                                stopAtInput.value = ""; 
+                            }
+                            stopAtWrapper.classList.remove('hidden');
+                            stopAtInput.classList.remove('hidden');
                         }
                     }
-                    if (stopAtWrapper) {
-                        if (main.stop_at) {
-                            stopAtInput.classList.add('hidden');
-                            stopAtDisplay.classList.remove('hidden');
-                            stopAtDisplay.textContent = main.stop_at;
-                        } else {
-                            stopAtWrapper.classList.add('hidden');
-                        }
+                    if (gainBtn) {
+                        gainBtn.classList.remove('hidden');
+                        if (instantControls) instantControls.classList.remove('hidden');
+                        if (letter) window.linkForKey[letter] = `#gain-${r.recipe_id}`;
                     }
                 } else {
-                    // --- INACTIVE STATE ---
-                    if (progContainer) progContainer.classList.add('hidden');
+                    // CAN'T PRODUCE
+                    if (startBtn) startBtn.classList.add('hidden');
+                    if (stopBtn) stopBtn.classList.add('hidden');
+                    if (gainBtn) gainBtn.classList.add('hidden');
+                    if (instantControls) instantControls.classList.add('hidden');
+                    if (letter) delete window.linkForKey[letter];
                     
-                    isWaitingForServer = false;
-                    const progBar = document.getElementById(`prog-bar-${r.recipe_id}`);
-                    if (progBar && progBar.value > 0) {
-                        if (animationFrameId) {
-                            cancelAnimationFrame(animationFrameId);
-                            animationFrameId = null;
+                    if (blockedDiv) {
+                        blockedDiv.classList.remove('hidden');
+
+                        const isStorageFull = r.reason.toLowerCase().includes("limit reached");
+                        const icon = blockedDiv.querySelector('.info-icon');
+                        const msg = blockedDiv.querySelector('.blocked-msg');
+                        if (icon) {
+                            icon.classList.toggle('hidden', isStorageFull);
+                            icon.title = r.reason;
                         }
-                        progBar.value = 0;
+                        if (msg) msg.textContent = isStorageFull ? 'Storage full' : 'Requirements not met';
                     }
-                    if (stopAtWrapper) {
-                        stopAtDisplay.classList.add('hidden');
-                    }
-
-                    if (r.can_produce) {
-                        // CAN PRODUCE
-                        if (stopBtn) stopBtn.classList.add('hidden');
-                        if (blockedDiv) blockedDiv.classList.add('hidden');
-
-                        if (startBtn) {
-                            startBtn.classList.remove('hidden');
-                            if (letter) window.linkForKey[letter] = `#start-${r.recipe_id}`;
-                            if (stopAtWrapper) {
-                                if (stopAtInput.classList.contains('hidden')) {
-                                    stopAtInput.value = ""; 
-                                }
-                                stopAtWrapper.classList.remove('hidden');
-                                stopAtInput.classList.remove('hidden');
-                            }
-                        }
-                        if (gainBtn) {
-                            gainBtn.classList.remove('hidden');
-                            if (instantControls) instantControls.classList.remove('hidden');
-                            if (letter) window.linkForKey[letter] = `#gain-${r.recipe_id}`;
-                        }
-                    } else {
-                        // CAN'T PRODUCE
-                        if (startBtn) startBtn.classList.add('hidden');
-                        if (stopBtn) stopBtn.classList.add('hidden');
-                        if (gainBtn) gainBtn.classList.add('hidden');
-                        if (instantControls) instantControls.classList.add('hidden');
-                        if (letter) delete window.linkForKey[letter];
-                        
-                        if (blockedDiv) {
-                            blockedDiv.classList.remove('hidden');
-
-                            const isStorageFull = r.reason.toLowerCase().includes("limit reached");
-                            const icon = blockedDiv.querySelector('.info-icon');
-                            const msg = blockedDiv.querySelector('.blocked-msg');
-                            if (icon) {
-                                icon.classList.toggle('hidden', isStorageFull);
-                                icon.title = r.reason;
-                            }
-                            if (msg) msg.textContent = isStorageFull ? 'Storage full' : 'Requirements not met';
-                        }
-                    }
-                }
-            });
-        }
-        {% if not manualtick %}
-            window.productionTimeout = setTimeout(updateStatus, 1500);
-        {% endif %}
-    }
-
-    {% if manualtick %}
-        let isProcessing = false;
-        let cooldownActive = false;
-        const tickBtn = document.getElementById('debug-tick-btn');
-        function setButtonState(state) {
-            switch (state) {
-                case 'ready':
-                    isProcessing = false;
-                    cooldownActive = false;
-                    tickBtn.style.backgroundColor = "green";
-                    tickBtn.style.cursor = "pointer";
-                    tickBtn.innerText = "RUN TICK [Space]";
-                    break;
-                case 'processing':
-                    isProcessing = true;
-                    tickBtn.style.backgroundColor = "gray";
-                    tickBtn.style.cursor = "not-allowed";
-                    tickBtn.innerText = "Processing...";
-                    break;
-                case 'waiting':
-                    isProcessing = false;
-                    cooldownActive = true;
-                    tickBtn.style.backgroundColor = "gray";
-                    tickBtn.style.cursor = "not-allowed";
-                    tickBtn.innerText = "Waiting...";
-                    break;
-            }
-        }
-        async function manualTick() {
-            // Prevent execution if already running or in cooldown
-            if (isProcessing || cooldownActive) return;
-            setButtonState('processing');
-            try {
-                await updateStatus();
-            } catch (err) {
-                console.error("Tick failed:", err);
-            }
-            // Enter cooldown phase
-            setButtonState('waiting');
-            setTimeout(() => {
-                setButtonState('ready');
-            }, 1500);
-        }
-        document.addEventListener('keydown', (e) => {
-            if (e.code === "Space" && !isProcessing && !cooldownActive) {
-                const active = document.activeElement.tagName;
-                if (!['INPUT', 'TEXTAREA'].includes(active)) {
-                    e.preventDefault();
-                    manualTick();
                 }
             }
         });
-        // Initialize state on load
-        setButtonState('ready');
-    {% else %}
-        // Initial call on load
-        updateStatus();
+    }
+    {% if not manualtick %}
+        window.productionTimeout = setTimeout(updateStatus, 1500);
+    {% endif %}
+}
+
+{% if manualtick %}
+    let isProcessing = false;
+    let cooldownActive = false;
+    const tickBtn = document.getElementById('debug-tick-btn');
+    function setButtonState(state) {
+        switch (state) {
+            case 'ready':
+                isProcessing = false;
+                cooldownActive = false;
+                tickBtn.style.backgroundColor = "green";
+                tickBtn.style.cursor = "pointer";
+                tickBtn.innerText = "RUN TICK [Space]";
+                break;
+            case 'processing':
+                isProcessing = true;
+                tickBtn.style.backgroundColor = "gray";
+                tickBtn.style.cursor = "not-allowed";
+                tickBtn.innerText = "Processing...";
+                break;
+            case 'waiting':
+                isProcessing = false;
+                cooldownActive = true;
+                tickBtn.style.backgroundColor = "gray";
+                tickBtn.style.cursor = "not-allowed";
+                tickBtn.innerText = "Waiting...";
+                break;
+        }
+    }
+    async function manualTick() {
+        // Prevent execution if already running or in cooldown
+        if (isProcessing || cooldownActive) return;
+        setButtonState('processing');
+        try {
+            await updateStatus();
+        } catch (err) {
+            console.error("Tick failed:", err);
+        }
+        // Enter cooldown phase
+        setButtonState('waiting');
+        setTimeout(() => {
+            setButtonState('ready');
+        }, 1500);
+    }
+    document.addEventListener('keydown', (e) => {
+        if (e.code === "Space" && !isProcessing && !cooldownActive) {
+            const active = document.activeElement.tagName;
+            if (!['INPUT', 'TEXTAREA'].includes(active)) {
+                e.preventDefault();
+                manualTick();
+            }
+        }
+    });
+    // Initialize state on load
+    setButtonState('ready');
+{% else %}
+    // Initial call on load
+    updateStatus();
+{% endif %}
+
+// Smooth progress bar
+
+let animationFrameId = null; 
+let isWaitingForServer = false;
+
+function animateProgress(recipeId, serverStart, durationSec) {
+    // If a loop is already running, don't start a second one
+    if (animationFrameId) return;
+
+    const progBar = document.getElementById(`prog-bar-${recipeId}`);
+    const progLabel = document.getElementById(`prog-label-${recipeId}`);
+    const startTimeMs = new Date(serverStart).getTime();
+    const durationMs = durationSec * 1000;
+
+    function frame() {
+        const now = Date.now();
+        const elapsedMs = now - startTimeMs;
+        
+        const elapsedInCurrentBatch = elapsedMs % durationMs;
+        let percent = Math.min((elapsedInCurrentBatch / durationMs) * 100, 100);
+
+        if (percent >= 99) {
+            percent = 100
+            isWaitingForServer = true;
+        }
+
+        if (progBar) progBar.value = percent;
+        if (progLabel) {
+            if (percent == 100) {
+                progLabel.innerHTML = '<span style="margin-left: 10px;">+</span>';
+            } else {
+                progLabel.innerText = `${Math.floor(percent)}%`;
+            }
+        }
+
+        if (!isWaitingForServer) {
+            animationFrameId = requestAnimationFrame(frame);
+        } else {
+            animationFrameId = null; 
+        }
+    }
+
+    // Reset the flag and clear old loops whenever we start a fresh animation
+    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    isWaitingForServer = false; 
+    animationFrameId = requestAnimationFrame(frame);
+}
+
+// Production
+
+async function startProd(recipeId, targetHostId) {
+    const fd = new FormData();
+    fd.append('recipe_id', recipeId);
+    fd.append('owner_id', ownerId);
+    fd.append('char_id', charId);
+    fd.append('loc_id', locId);
+    const stopAtInput = document.getElementById(`stop-at-${recipeId}`);
+    if (stopAtInput && stopAtInput.value !== '') {
+        fd.append('stop_at', stopAtInput.value);
+    }
+
+    const url = `/production/start/host/${targetHostId}`;
+    const data = await apiPost(url, fd, "Could not start.");
+    if (!data) return;
+
+    // Trigger update immediately so buttons flip without delay
+    updateStatus();
+}
+
+async function stopProd(targetHostId, productId) {
+    const url = `/production/stop/host/${targetHostId}/item/${productId}`;
+    const data = await apiPost(url, null, "Could not stop properly.");
+    if (!data) return;
+
+    // Trigger update immediately so buttons flip without delay
+    updateStatus();
+    document.querySelectorAll('input[id^="stop-at-input-"]').forEach(input => {
+        input.value = "";
+    });
+}
+
+async function gainItem(recipeId, targetHostId) {
+    // Instant gain (one-off execution)
+    const batchInput = document.getElementById(`batches-${recipeId}`);
+    const batches = batchInput ? batchInput.value : 1;
+    const fd = new FormData();
+    fd.append('owner_id', ownerId);
+    fd.append('recipe_id', recipeId);
+    fd.append('batches', batches);
+    const urlParams = new URLSearchParams(window.location.search);
+    const pos = urlParams.get('pos');
+    if (pos) fd.append('pos', pos);
+
+    const url = `/production/instant/host/${targetHostId}`;
+    const data = await apiPost(url, fd, "Could not gain.");
+    if (!data) return;
+
+    // Get new values immediately
+    updateStatus();
+}
+
+// Quantity fields
+
+function refreshQuantities() {
+    const pending = JSON.parse(sessionStorage.getItem('pendingQty'));
+    if (!pending) return;
+
+    if (pending.targetId.startsWith('batches-')) {
+        const recipeId = pending.targetId.replace('batches-', '');
+        // Re-apply the logic (Max/Half/1) based on the new dataset.max
+        if (pending.ratioType !== 'custom') {
+            setBatchQty(recipeId, pending.ratioType);
+        }
+    } else if (pending.targetId === 'action-qty') {
+        if (pending.ratioType !== 'custom') {
+            setActionQty(pending.ratioType);
+        }
+    }
+}
+
+(function() {
+    const saved = sessionStorage.getItem('pendingQty');
+    if (saved) {
+        try {
+            const data = JSON.parse(saved);
+            window.addEventListener('DOMContentLoaded', () => {
+                const target = document.getElementById(data.targetId);
+                if (target) {
+                    // Use lastValue, which is what applyQtyUpdate now saves
+                    target.value = data.lastValue || 1;
+                }
+                // Only remove if we actually found a target to apply it to
+                sessionStorage.removeItem('pendingQty');
+            });
+        } catch (e) {
+            sessionStorage.removeItem('pendingQty');
+        }
+    }
+    // DEFAULT BEHAVIOR: If no intent is saved, set all batch inputs to 'max'
+    else {
+        document.querySelectorAll('input[id^="batches-"]').forEach(input => {
+            const recipeId = input.id.replace('batches-', '');
+            const maxVal = input.dataset.max || input.getAttribute('max') || 1;
+            
+            // This "seeds" the session so updateStatus() follows it immediately
+            sessionStorage.setItem('pendingQty', JSON.stringify({
+                targetId: input.id,
+                ratioType: 'max',
+                lastValue: maxVal
+            }));
+            
+            input.value = maxVal;
+        });
+    }
+})();
+
+function applyQtyUpdate(inputId, value, ratioType = 'custom') {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+
+    input.value = value;
+    
+    // Save the intent (ratioType) and the target
+    sessionStorage.setItem('pendingQty', JSON.stringify({
+        targetId: inputId,
+        ratioType: ratioType, // '1', 'half', 'max', or 'custom'
+        lastValue: value
+    }));
+}
+
+function setBatchQty(recipeId, type) {
+    // Check if we received the full string "batches-123" or just "123"
+    const idOnly = recipeId.toString().replace('batches-', '');
+    const inputId = `batches-${idOnly}`;
+    const input = document.getElementById(inputId);
+    if (!input) return;
+
+    // Fallback chain: data-max -> attribute max -> 0
+    const max = parseInt(input.dataset.max) || parseInt(input.getAttribute('max')) || 0;
+    let finalVal = 1;
+
+    if (type === 'max') {
+        finalVal = max;
+    } else if (type === 'half') {
+        finalVal = Math.floor(max / 2);
+    } else if (type === '1') {
+        finalVal = 1;
+    } else {
+        finalVal = parseInt(type) || 1;
+        type = 'custom';
+    }
+
+    // Ensure we don't return NaN or values below 1 (if max > 0)
+    finalVal = max > 0 ? Math.min(max, Math.max(1, finalVal)) : 0;
+    
+    applyQtyUpdate(inputId, finalVal, type);
+}
+
+function setActionQty(type) {
+    const inputId = 'action-qty';
+    const el = document.getElementById('main-qty-display'); // Where the raw number lives
+    if (!el) return;
+
+    const max = parseFloat(el.textContent.replace(/,/g, '')) || 0;
+    let finalVal = 1;
+
+    if (type === 'max') {
+        finalVal = max;
+    } else if (type === 'half') {
+        finalVal = max / 2;
+    } else if (type === '1') {
+        finalVal = 1;
+    }
+
+    applyQtyUpdate(inputId, finalVal, type);
+}
+
+const getActionQty = () => document.getElementById('action-qty')?.value || 0;
+
+// Inventory AJAX Logic
+
+document.getElementById('drop-btn')?.addEventListener('click', async () => {
+    const fd = new FormData();
+    fd.append('item_id', itemId);
+    fd.append('quantity', getActionQty());
+
+    const url = `/char/${ownerId}/drop`;
+    const data = await apiPost(url, fd, "Could not drop.");
+    if (!data) return;
+
+    if (data.message) {
+        window.location.reload(); 
+        return;
+    }
+    window.location.href = "{{ url_for('play.play_character', id=owner.id) }}";
+});
+
+document.getElementById('pickup-btn')?.addEventListener('click', async () => {
+    const charId = document.getElementById('pickup-char-id').value;
+    const fd = new FormData();
+    fd.append('item_id', itemId);
+    fd.append('quantity', getActionQty());
+    {% if pile.position %}
+        fd.append('pos', "{{ pile.position | join(',') }}");
     {% endif %}
 
-    // Smooth progress bar
+    const url = `/char/${charId}/pickup`;
+    const data = await apiPost(url, fd, "Could not pick up.");
+    if (!data) return;
 
-    let animationFrameId = null; 
-    let isWaitingForServer = false;
-
-    function animateProgress(recipeId, serverStart, durationSec) {
-        // If a loop is already running, don't start a second one
-        if (animationFrameId) return;
-
-        const progBar = document.getElementById(`prog-bar-${recipeId}`);
-        const progLabel = document.getElementById(`prog-label-${recipeId}`);
-        const startTimeMs = new Date(serverStart).getTime();
-        const durationMs = durationSec * 1000;
-
-        function frame() {
-            const now = Date.now();
-            const elapsedMs = now - startTimeMs;
-            
-            const elapsedInCurrentBatch = elapsedMs % durationMs;
-            let percent = Math.min((elapsedInCurrentBatch / durationMs) * 100, 100);
-
-            if (percent >= 99) {
-                percent = 100
-                isWaitingForServer = true;
-            }
-
-            if (progBar) progBar.value = percent;
-            if (progLabel) {
-                if (percent == 100) {
-                    progLabel.innerHTML = '<span style="margin-left: 10px;">+</span>';
-                } else {
-                    progLabel.innerText = `${Math.floor(percent)}%`;
-                }
-            }
-
-            if (!isWaitingForServer) {
-                animationFrameId = requestAnimationFrame(frame);
-            } else {
-                animationFrameId = null; 
-            }
-        }
-
-        // Reset the flag and clear old loops whenever we start a fresh animation
-        if (animationFrameId) cancelAnimationFrame(animationFrameId);
-        isWaitingForServer = false; 
-        animationFrameId = requestAnimationFrame(frame);
-    }
-
-    // Production
-
-    async function startProd(recipeId, targetHostId) {
-        const fd = new FormData();
-        fd.append('recipe_id', recipeId);
-        fd.append('owner_id', ownerId);
-        fd.append('char_id', charId);
-        fd.append('loc_id', locId);
-        const stopAtInput = document.getElementById(`stop-at-${recipeId}`);
-        if (stopAtInput && stopAtInput.value !== '') {
-            fd.append('stop_at', stopAtInput.value);
-        }
-
-        const url = `/production/start/host/${targetHostId}`;
-        const data = await apiPost(url, fd, "Could not start.");
-        if (!data) return;
-
-        // Trigger update immediately so buttons flip without delay
-        updateStatus();
-    }
-
-    async function stopProd(targetHostId, productId) {
-        const url = `/production/stop/host/${targetHostId}/item/${productId}`;
-        const data = await apiPost(url, null, "Could not stop properly.");
-        if (!data) return;
-
-        // Trigger update immediately so buttons flip without delay
-        updateStatus();
-        document.querySelectorAll('input[id^="stop-at-input-"]').forEach(input => {
-            input.value = "";
-        });
-    }
-
-    async function gainItem(recipeId, targetHostId) {
-        // Instant gain (one-off execution)
-        const batchInput = document.getElementById(`batches-${recipeId}`);
-        const batches = batchInput ? batchInput.value : 1;
-        const fd = new FormData();
-        fd.append('owner_id', ownerId);
-        fd.append('recipe_id', recipeId);
-        fd.append('batches', batches);
-        const urlParams = new URLSearchParams(window.location.search);
-        const pos = urlParams.get('pos');
-        if (pos) fd.append('pos', pos);
-
-        const url = `/production/instant/host/${targetHostId}`;
-        const data = await apiPost(url, fd, "Could not gain.");
-        if (!data) return;
-
-        // Get new values immediately
-        updateStatus();
-    }
-
-    // Quantity fields
-
-    function refreshQuantities() {
-        const pending = JSON.parse(sessionStorage.getItem('pendingQty'));
-        if (!pending) return;
-
-        if (pending.targetId.startsWith('batches-')) {
-            const recipeId = pending.targetId.replace('batches-', '');
-            // Re-apply the logic (Max/Half/1) based on the new dataset.max
-            if (pending.ratioType !== 'custom') {
-                setBatchQty(recipeId, pending.ratioType);
-            }
-        } else if (pending.targetId === 'action-qty') {
-            if (pending.ratioType !== 'custom') {
-                setActionQty(pending.ratioType);
-            }
-        }
-    }
-
-    (function() {
-        const saved = sessionStorage.getItem('pendingQty');
-        if (saved) {
-            try {
-                const data = JSON.parse(saved);
-                window.addEventListener('DOMContentLoaded', () => {
-                    const target = document.getElementById(data.targetId);
-                    if (target) {
-                        // Use lastValue, which is what applyQtyUpdate now saves
-                        target.value = data.lastValue || 1;
-                    }
-                    // Only remove if we actually found a target to apply it to
-                    sessionStorage.removeItem('pendingQty');
-                });
-            } catch (e) {
-                sessionStorage.removeItem('pendingQty');
-            }
-        }
-        // DEFAULT BEHAVIOR: If no intent is saved, set all batch inputs to 'max'
-        else {
-            document.querySelectorAll('input[id^="batches-"]').forEach(input => {
-                const recipeId = input.id.replace('batches-', '');
-                const maxVal = input.dataset.max || input.getAttribute('max') || 1;
-                
-                // This "seeds" the session so updateStatus() follows it immediately
-                sessionStorage.setItem('pendingQty', JSON.stringify({
-                    targetId: input.id,
-                    ratioType: 'max',
-                    lastValue: maxVal
-                }));
-                
-                input.value = maxVal;
-            });
-        }
-    })();
-
-    function applyQtyUpdate(inputId, value, ratioType = 'custom') {
-        const input = document.getElementById(inputId);
-        if (!input) return;
-
-        input.value = value;
-        
-        // Save the intent (ratioType) and the target
-        sessionStorage.setItem('pendingQty', JSON.stringify({
-            targetId: inputId,
-            ratioType: ratioType, // '1', 'half', 'max', or 'custom'
-            lastValue: value
-        }));
-    }
-
-    function setBatchQty(recipeId, type) {
-        // Check if we received the full string "batches-123" or just "123"
-        const idOnly = recipeId.toString().replace('batches-', '');
-        const inputId = `batches-${idOnly}`;
-        const input = document.getElementById(inputId);
-        if (!input) return;
-
-        // Fallback chain: data-max -> attribute max -> 0
-        const max = parseInt(input.dataset.max) || parseInt(input.getAttribute('max')) || 0;
-        let finalVal = 1;
-
-        if (type === 'max') {
-            finalVal = max;
-        } else if (type === 'half') {
-            finalVal = Math.floor(max / 2);
-        } else if (type === '1') {
-            finalVal = 1;
-        } else {
-            finalVal = parseInt(type) || 1;
-            type = 'custom';
-        }
-
-        // Ensure we don't return NaN or values below 1 (if max > 0)
-        finalVal = max > 0 ? Math.min(max, Math.max(1, finalVal)) : 0;
-        
-        applyQtyUpdate(inputId, finalVal, type);
-    }
-
-    function setActionQty(type) {
-        const inputId = 'action-qty';
-        const el = document.getElementById('main-qty-display'); // Where the raw number lives
-        if (!el) return;
-
-        const max = parseFloat(el.textContent.replace(/,/g, '')) || 0;
-        let finalVal = 1;
-
-        if (type === 'max') {
-            finalVal = max;
-        } else if (type === 'half') {
-            finalVal = max / 2;
-        } else if (type === '1') {
-            finalVal = 1;
-        }
-
-        applyQtyUpdate(inputId, finalVal, type);
-    }
-
-    const getActionQty = () => document.getElementById('action-qty')?.value || 0;
-
-    // Inventory AJAX Logic
-
-    document.getElementById('drop-btn')?.addEventListener('click', async () => {
-        const fd = new FormData();
-        fd.append('item_id', itemId);
-        fd.append('quantity', getActionQty());
-
-        const url = `/char/${ownerId}/drop`;
-        const data = await apiPost(url, fd, "Could not drop.");
-        if (!data) return;
-
-        if (data.message) {
-            window.location.reload(); 
-            return;
-        }
-        window.location.href = "{{ url_for('play.play_character', id=owner.id) }}";
-    });
-
-    document.getElementById('pickup-btn')?.addEventListener('click', async () => {
-        const charId = document.getElementById('pickup-char-id').value;
-        const fd = new FormData();
-        fd.append('item_id', itemId);
-        fd.append('quantity', getActionQty());
-        {% if pile.position %}
-            fd.append('pos', "{{ pile.position | join(',') }}");
-        {% endif %}
-
-        const url = `/char/${charId}/pickup`;
-        const data = await apiPost(url, fd, "Could not pick up.");
-        if (!data) return;
-
-        if (data.message) {
-            window.location.reload(); 
-            return;
-        }
-        window.location.href = "{{ url_for('play.play_location', id=owner.id) }}";
-    });
-
-    document.getElementById('give-btn')?.addEventListener('click', async () => {
-        const targetCharId = document.getElementById('give-char-id').value;
-        const fd = new FormData();
-        fd.append('item_id', itemId);
-        fd.append('target_char_id', targetCharId);
-        fd.append('quantity', getActionQty());
-
-        const url = `/char/${ownerId}/give`;
-        const data = await apiPost(url, fd, "Could not give.");
-        if (!data) return;
-
-        if (data.message) {
-            window.location.reload(); 
-            return;
-        }
-        window.location.href = "{{ url_for('play.play_character', id=owner.id) }}";
-    });
-
-    document.getElementById('equip-btn')?.addEventListener('click', async () => {
-        const slotInput = document.getElementById('equip-slot');
-        const fd = new FormData();
-        fd.append('item_id', itemId); // itemId should be globally defined in your template
-        fd.append('slot', slotInput.value);
-
-        const url = `/char/${ownerId}/equip`;
-        const data = await apiPost(url, fd, "Could not equip.");
-        if (!data) return;
-
+    if (data.message) {
         window.location.reload(); 
-    });
+        return;
+    }
+    window.location.href = "{{ url_for('play.play_location', id=owner.id) }}";
+});
 
-    document.getElementById('unequip-btn')?.addEventListener('click', async () => {
-        const fd = new FormData();
-        fd.append('item_id', itemId);
+document.getElementById('give-btn')?.addEventListener('click', async () => {
+    const targetCharId = document.getElementById('give-char-id').value;
+    const fd = new FormData();
+    fd.append('item_id', itemId);
+    fd.append('target_char_id', targetCharId);
+    fd.append('quantity', getActionQty());
 
-        const url = `/char/${ownerId}/unequip`;
-        const data = await apiPost(url, fd, "Could not unequip.");
-        if (!data) return;
+    const url = `/char/${ownerId}/give`;
+    const data = await apiPost(url, fd, "Could not give.");
+    if (!data) return;
 
-        window.location.reload();
-    });
+    if (data.message) {
+        window.location.reload(); 
+        return;
+    }
+    window.location.href = "{{ url_for('play.play_character', id=owner.id) }}";
+});
+
+document.getElementById('equip-btn')?.addEventListener('click', async () => {
+    const slotInput = document.getElementById('equip-slot');
+    const fd = new FormData();
+    fd.append('item_id', itemId); // itemId should be globally defined in your template
+    fd.append('slot', slotInput.value);
+
+    const url = `/char/${ownerId}/equip`;
+    const data = await apiPost(url, fd, "Could not equip.");
+    if (!data) return;
+
+    window.location.reload(); 
+});
+
+document.getElementById('unequip-btn')?.addEventListener('click', async () => {
+    const fd = new FormData();
+    fd.append('item_id', itemId);
+
+    const url = `/char/${ownerId}/unequip`;
+    const data = await apiPost(url, fd, "Could not unequip.");
+    if (!data) return;
+
+    window.location.reload();
+});
 </script>
-
-<style>
-    progressbar {
-        transition: value 0.2s ease-out;
-        appearance: none;
-    }
-    progressbar::-webkit-progress-value {
-        transition: width 0.01s linear;
-    }
-
-    .action-box { display: flex; gap: 10px; margin-bottom: 10px; }
-    .recipe-list { display: flex; flex-direction: column; gap: 15px; }
-    .source-list { list-style: none; padding: 5px 0; margin: 0; font-size: 0.85em; }
-    .attrib-req-list { list-style: none; padding: 5px 0; margin: 0; font-size: 0.85em; }
-    .byproduct-of-row { --grid-cols: 1fr; }
-    .reverse-lookup-list { --col-list-max-width: 350px; }
-
-    .batch-selector { gap: 5px; margin-bottom: 8px; }
-    .presets { display: flex; gap: 2px; }
-    .tag-button { 
-        font-size: 0.7em; 
-        padding: 2px 6px; 
-        background: var(--bg-lighter); 
-        border: 1px solid var(--border-dim);
-        cursor: pointer;
-    }
-    .tag-button:hover { background: var(--accent-dim); }
-</style>
 {% endblock %}

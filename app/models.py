@@ -529,7 +529,7 @@ class Attrib(Entity):
         back_populates='attrib',
         foreign_keys="[AttribVal.game_token, AttribVal.attrib_id]",
         viewonly=True)
-    requirements = db.relationship(
+    reqs = db.relationship(
         'RecipeAttribReq',
         back_populates='attrib',
         foreign_keys="[RecipeAttribReq.game_token, RecipeAttribReq.attrib_id]",
@@ -595,7 +595,7 @@ class Event(Entity):
                 if self.outcome_type == OutcomeType.SELECT else None,
             "determinants": [d.to_dict() for d in self.determinants],
             "effects": [e.to_dict() for e in self.effects],
-            "chained_events": [l.to_dict() for l in self.chained_events],
+            "chained": [l.to_dict() for l in self.chained],
         })
         return self.to_dict_sparse(data)
 
@@ -615,8 +615,8 @@ class Event(Entity):
                 usage_type=Participant.EFF, order_index=idx) 
             for idx, e in enumerate(effects)
         ]
-        for child_data in data.get('chained_events', []):
-            event.chained_events.append(
+        for child_data in data.get('chained', []):
+            event.chained.append(
                 EventLink.from_dict(child_data, game_token, event.id))
         return event
 
@@ -638,7 +638,7 @@ class Event(Entity):
         'EventFactor',
         back_populates='event',
         cascade="all, delete-orphan")
-    chained_events = db.relationship(
+    chained = db.relationship(
         'EventLink',
         back_populates='parent',
         foreign_keys="[EventLink.game_token, EventLink.parent_id]",
@@ -668,11 +668,10 @@ ENTITIES = {
 # ------------------------------------------------------------------------
 
 class Pile(db.Model, DictHydrator):
-    """Consolidated pile of items either:
+    """Consolidated pile of items. The owner defines whether it is:
     * held by a Character
     * or at a Location
     * or neither; the general pile of that Item
-    The 'owner' relationship handles all of these cases.
     """
     __tablename__ = 'piles'
     # Single Primary Key: Postgres handles autoincrement globally without drama
@@ -1078,7 +1077,8 @@ class Participant:
     # --- Usage ---
     DET = 'det'  # Determinant (affects roll)
     EFF = 'eff'  # Effect (applies changes)
-    ALL_USAGE = [DET, EFF]
+    CHAIN = 'chn' # Criteria for EventLink
+    ALL_USAGE = [DET, EFF, CHAIN]
 
 class Operation:
     CONST = 'c'
@@ -1312,38 +1312,45 @@ class EventFactor(db.Model, DictHydrator):
     )
 
 class EventLink(db.Model, DictHydrator):
-    """Connections between events to create chains/sequences.
-    Semantically different from EntityAbility because the caller isn't
-    the subject.
-    """
+    """Connections between events to create chains/sequences."""
     __tablename__ = 'event_links'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     game_token = db.Column(db.String(50), index=True, nullable=False)
     
     parent_id = db.Column(db.Integer, nullable=False)
     child_id = db.Column(db.Integer, nullable=False)
-    
-    outcome_success = db.Column(db.String(20), default=Participant.ALWAYS)
 
+    factor_id = db.Column(db.Integer, nullable=True)
+    
     def to_dict(self):
         data = {
             "child_id": self.child_id,
-            "outcome_success": self.outcome_success
+            "req": self.req.to_dict() if self.req else None
         }
         return self.to_dict_sparse(data)
 
     @classmethod
     def from_dict(cls, data, game_token, parent_id):
-        return super().from_dict(data, game_token, parent_id=parent_id)
+        link = super().from_dict(data, game_token, parent_id=parent_id)
+        req_data = data.get('req')
+        if req_data:
+            link.req = EventFactor.from_dict(
+                req_data, game_token, parent_id, usage_type=Participant.CHAIN)
+        return link
 
     parent = db.relationship(
         'Event',
         foreign_keys=[game_token, parent_id],
-        back_populates='chained_events')
+        back_populates='chained')
     child = db.relationship(
         'Event',
         foreign_keys=[game_token, child_id],
         viewonly=True)
+    req = db.relationship(
+        'EventFactor',
+        foreign_keys=[factor_id],
+        cascade="all, delete-orphan", 
+        single_parent=True)
 
     __table_args__ = (
         db.ForeignKeyConstraint(
@@ -1352,6 +1359,9 @@ class EventLink(db.Model, DictHydrator):
         db.ForeignKeyConstraint(
             ['game_token', 'child_id'],
             ['events.game_token', 'events.id'], ondelete='CASCADE'),
+        db.ForeignKeyConstraint(
+            ['factor_id'], 
+            ['event_factors.id'], ondelete='CASCADE'),
     )
 
 class EntityAbility(db.Model):
@@ -1640,10 +1650,10 @@ class RecipeAttribReq(db.Model, DictHydrator):
         'Recipe',
         back_populates='attrib_reqs',
         foreign_keys=[game_token, recipe_id],
-        overlaps="recipe,requirements")
+        overlaps="recipe,reqs")
     attrib = db.relationship(
         'Attrib',
-        back_populates='requirements',
+        back_populates='reqs',
         foreign_keys=[game_token, attrib_id],
         overlaps="recipe,attrib_reqs")
 

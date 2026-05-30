@@ -1,3 +1,7 @@
+{# =========================================================================
+   1. GLOBAL IMPORTS
+   ========================================================================= #}
+
 {% extends 'layout/base.html' %}
 {% import 'macros/hotkeys.html' as hk %}
 {% import 'macros/render.html' as render %}
@@ -15,6 +19,10 @@
 {% endblock %}
 
 {% block content %}
+
+{# =========================================================================
+   2. MAIN CONTENT
+   ========================================================================= #}
 
 <div class="event-play-container">
     <header class="entity-header">
@@ -338,523 +346,9 @@
     </div>
 </div>
 
-<script src="{{ url_for('static', filename='js/api.js') }}"></script>
-
-<script>
-    const OP_MAP = {{ Operation.Repr | tojson | safe }};
-    const eventId = {{ event.id }};
-    const FILTER_LABELS = {
-        '{{ Participant.SUCCESS_ANY }}': 'If Successful',
-        '{{ Participant.SUCCESS_NAT_MAX }}': 'If Natural Max',
-        '{{ Participant.SUCCESS_MAJOR }}': 'If Major Success',
-        '{{ Participant.SUCCESS_MINOR }}': 'If Minor Success',
-        '{{ Participant.FAILURE_ANY }}': 'If Failure',
-        '{{ Participant.FAILURE_NAT_MIN }}': 'If Natural Min',
-        '{{ Participant.FAILURE_MAJOR }}': 'If Major Failure',
-        '{{ Participant.FAILURE_MINOR }}': 'If Minor Failure'
-    };
-    const CHAINED_EVENTS = [
-        {% for link in event.chained_events %}
-        {
-            "child_id": {{ link.child_id }},
-            "child_name": "{{ link.child.name }}",
-            "outcome_success": "{{ link.outcome_success }}"
-        }{{ "," if not loop.last }}
-        {% endfor %}
-    ];
-
-    const diffSelect = document.getElementById('difficulty-select');
-    const rollBtn = document.getElementById('submit-roll');
-
-    let lastRollValue = null;
-
-    /**
-     * Gather the selected Participant ID for each role
-     */
-    function getRoleIDs() {
-        const fd = new FormData();
-        const inputs = document.querySelectorAll(
-            'input[name$="{{ Participant.ROLE_SUFFIX }}"], ' +
-            'select[name$="{{ Participant.ROLE_SUFFIX }}"]');
-        inputs.forEach(el => {
-            if (el.value) {
-                fd.append(el.name, el.value);
-            }
-        });
-        return fd;
-    }
-
-    /**
-     * Formats the inner expression that calculates the impact,
-     * i.e. the magnitude of change being applied to a target.
-     * (Source <op> Constant) = Impact
-     * 
-     * Used for Effect Line 2 (Logic/Labels) and Line 3 (Actual Numbers).
-     * Functional notation for Round/SoftCap, binary for others.
-     *
-     * @param {string|number} source - The raw input (e.g., "Roll Result" or 100)
-     * @param {number} constant - The inner transform value (e.g., 2.0)
-     * @param {string} op - The operator key (e.g., '*', 'scap')
-     */
-    function formatInnerFormula(source, constant, op) {
-        if (!op || op === '{{ Operation.CONST }}') return source;
-
-        const opSymbol = OP_MAP[op] || op;
-        if (op === '{{ Operation.ROUND }}' || op === '{{ Operation.SOFTCAP }}') {
-            return `${opSymbol}(${source}, ${constant})`;
-        }
-        if (op === '{{ Operation.VAL_TO_POW }}') {
-            return `${source}<sup>${constant}</sup>`;
-        }
-        if (op === '{{ Operation.POW_OF_VAL }}') {
-            return `${constant}<sup>${source}</sup>`;
-        }
-        return `(${source} ${opSymbol} ${constant})`;
-    }
-
-    /**
-     * Fetches calculated modifiers from the server and updates the UI
-     */
-    async function refreshModifiers(updateEffectVals = true) {
-        const previewDiv = document.getElementById('modifier-preview');
-        const fd = getRoleIDs();
-        const url = `/event/preview/${eventId}`;
-        const data = await apiPost(url, fd, "Could not load modifiers");
-        if (!data) return;
-
-        // --- Handle Determinants (Left Column) ---
-        let allRequirementsMet = true;
-        let html = '<ul class="modifier-list" style="list-style: none; padding: 0;">';
-
-        const modifiers = data.modifiers;
-        if (modifiers.length === 0) {
-            previewDiv.innerHTML = '<span class="text-dim">No modifiers applied.</span>';
-        } else {
-            modifiers.forEach(m => {
-                const labelHtml = (m.label && m.label.trim() !== "") 
-                    ? `<span class="">${m.label}:</span>` 
-                    : "";
-                const displayVal = m.value_display;
-                const displayOp = m.op_app_display;
-
-                const hasInner = (m.breakdown && m.breakdown !== m.value.toString());
-                const innerExpr = hasInner ? `<small class="text-dim">[${m.breakdown}]</small>` : "";
-
-                let contentHtml = "";
-
-                if (m.is_comparison) {
-                    // FORMAT: Source Field (Breakdown) >= RequiredValue
-                    if (!m.is_met) allRequirementsMet = false;
-                    const colorClass = m.is_met ? 'text-success' : 'text-danger';
-                    const negatePrefix = m.negate ? `<span class=${colorClass}>NOT</span>` : '';
-
-                    let displayFormula;
-                    if (m.val_required === 1 && (m.op === '{{ Operation.GE }}' || m.op === '{{ Operation.EQ }}')) {
-                        const rawInner = hasInner ? ` (${m.breakdown})` : ""; 
-                        displayFormula = `
-                            ${negatePrefix}
-                            <span class="${colorClass}">${m.is_met ? "Has" : "Needs"}</span>
-                            <small class="text-dim">[${displayVal}${rawInner} ${displayOp} ${m.val_required}]</small>
-                        `;
-                    } else {
-                        displayFormula = `
-                            ${negatePrefix}
-                            <span class="${colorClass}">${displayVal}</span>
-                            ${innerExpr}
-                            <strong class="${colorClass}">${displayOp} ${m.val_required}</strong>
-                        `;
-                    }
-
-                    contentHtml = `
-                        <strong>${m.source_name}</strong>
-                        <div style="padding-left: 1.5em;">
-                            <span class="text-dim" style="margin-right: 4px;">${m.field_name}:</span> 
-                            ${displayFormula}
-                        </div>
-                    `;
-                } else if (m.source_name === 'Constant') {
-                    const colorClass = 'text-success';
-                    contentHtml = `
-                        <span>[Preset]:</span>
-                        <strong class="${colorClass}" style="margin-right: 4px;">${displayOp} ${displayVal}</strong>
-                    `;
-                } else {
-                    // FORMAT: Source Field: +Value (Breakdown)
-                    const colorClass = m.value >= 0 ? 'text-success' : 'text-danger';
-                    const fieldPart = (m.field_name && m.field_name !== "Value") 
-                        ? `<span class="text-dim">${m.field_name}:</span> ` : "";
-
-                    contentHtml = `
-                        <strong>${m.source_name}</strong>
-                        <div style="padding-left: 1.5em;">
-                            ${fieldPart}
-                            <strong class="${colorClass}" style="margin-right: 4px;">${displayOp} ${displayVal}</strong>
-                            ${innerExpr}
-                        </div>
-                    `;
-                }
-
-                html += `
-                    <li class="spacious-bottom" style="display: block;">
-                        ${labelHtml} ${contentHtml}
-                    </li>`;
-            });
-            previewDiv.innerHTML = html + '</ul>';
-        }
-
-        if (rollBtn) {
-            rollBtn.disabled = !allRequirementsMet;
-            rollBtn.style.opacity = allRequirementsMet ? "1" : "0.5";
-        }
-
-        // --- Handle Effect Previews (Right Column) ---
-        if (data.effect_previews) {
-            data.effect_previews.forEach(eff => {
-                const row = document.getElementById(`eff-row-${eff.effect_id}`);
-                if (!row) return;
-
-                row.dataset.reliesOnRoll = eff.relies_on_roll ? "true" : "false";
-
-                const equationEl = row.querySelector('.equation-display');
-                const getValFrom = row.dataset.getValFrom;
-
-                row.querySelector('.target-name-display').innerText = eff.target_name || "?";
-                row.style.opacity = eff.is_resolved ? "1" : "0.5";
-
-                // Update current value and operator for a new roll
-                if (updateEffectVals) {
-                    const currentValEl = row.querySelector('.current-value-display');
-                    currentValEl.innerText = eff.current_display;
-
-                    const impactRes = row.querySelector('.impact-result');
-                    if (impactRes) impactRes.classList.add('hidden');
-                }
-                row.querySelector('.op-display').innerText = eff.op_app_display;
-
-                // Update Line 2: Logic description
-                const logicEl = row.querySelector('.source-logic-description');
-                const filterKey = row.dataset.outcomeSuccess;
-                const outcomeSuccessText = FILTER_LABELS[filterKey] || "";
-
-                const hasTransform = (
-                    row.dataset.opTrans && row.dataset.opTrans !== ''
-                    && row.dataset.opTrans !== '{{ Operation.CONST }}');
-
-                let logicParts = [];
-
-                // A. Add Filter Requirement (e.g., "If Major Success")
-                if (outcomeSuccessText) {
-                    logicParts.push(`<span class="">${outcomeSuccessText}</span>`);
-                }
-
-                // B. Add Math Transform (e.g., "Roll Result × 2")
-                if (hasTransform && eff.source_name) {
-                    const sourceLabel = (getValFrom === '{{ Participant.OUTCOME }}') ? "Roll Result" : eff.source_name;
-                    logicParts.push(formatInnerFormula(
-                        sourceLabel, row.dataset.valTrans, row.dataset.opTrans));
-                }
-
-                if (logicParts.length > 0) {
-                    // Join with a space or separator
-                    logicEl.innerHTML = logicParts.join(" &mdash; ");
-                    logicEl.classList.remove('hidden');
-                } else {
-                    logicEl.classList.add('hidden');
-                }
-
-                // Update Line 3: The Equation (using placeholders)
-                if (eff.relies_on_roll && !eff.impact_display) {
-                    equationEl.innerText = formatInnerFormula(
-                        "Roll", row.dataset.valTrans, row.dataset.opTrans);
-                } else {
-                    // Server has provided the impact_value because it's not dependent on the roll
-                    const formattedImpact = `<span class="text-success" style="font-weight:bold;">${eff.impact_display}</span>`;
-                    
-                    if (hasTransform) {
-                        // Show: (1 * 1.0) = 1 (green)
-                        const baseEq = formatInnerFormula(
-                            eff.source_display, row.dataset.valTrans, row.dataset.opTrans);
-                        equationEl.innerHTML = `${baseEq} = ${formattedImpact}`;
-                    } else {
-                        // Show: 1 (green)
-                        equationEl.innerHTML = formattedImpact;
-                    }
-                }
-            });
-        }
-    }
-
-    function updateDieThresholds() {
-        if (!diffSelect) return;
-
-        const min = {{ event.numeric_range[0] if event.numeric_range else 1 }};
-        const max = {{ event.numeric_range[1] if event.numeric_range else 20 }};
-        const sides = max - min + 1;
-
-        const difficulty = parseFloat(diffSelect.value);
-        const shift = Math.round(sides * difficulty);
-        
-        const majorFailureMax = min + Math.floor(shift * 0.20);
-        const minorSuccessMin = Math.round(sides * 0.10) + shift;
-        const majorSuccessMin = (max - Math.floor(sides * 0.15)) + Math.floor(shift * 0.40);
-
-        const minorSuccessDisplay = `≥ ${minorSuccessMin}`;
-        const majorSuccessDisplay = `≥ ${majorSuccessMin}`;
-        const majorFailureDisplay = `≤ ${majorFailureMax}`;
-
-        document.getElementById('minor-success-threshold').innerText = minorSuccessDisplay;
-        document.getElementById('major-success-threshold').innerText = majorSuccessDisplay;
-        document.getElementById('major-failure-threshold').innerText = majorFailureDisplay;
-    }
-
-    /**
-     * Refreshes the visibility of the 'Apply All' button based on 
-     * how many manual apply buttons are currently visible and active.
-     */
-    function syncApplyAllState() {
-        const container = document.getElementById('apply-all-container');
-        if (!container) return;
-
-        // Count manual buttons that are in visible rows and haven't been clicked yet
-        const activeManualButtons = document.querySelectorAll(
-            '.effect-row:not(.hidden) .apply-eff-btn:not(.hidden):not(:disabled)'
-        );
-
-        if (activeManualButtons.length <= 1) {
-            container.classList.add('hidden');
-        } else {
-            container.classList.remove('hidden');
-            const btn = document.getElementById('apply-all-btn');
-            if (btn) btn.disabled = false;
-        }
-    }
-
-    /**
-     * Mirrors backend check_outcome_success logic.
-     */
-    function tierMatch(filter, tier) {
-        if (filter === 'always') return true;
-        if (!tier) return false;
-        if (filter === tier) return true;
-        if (filter === '{{ Participant.SUCCESS_ANY }}') {
-            return [
-                '{{ Participant.SUCCESS_NAT_MAX }}',
-                '{{ Participant.SUCCESS_MAJOR }}',
-                '{{ Participant.SUCCESS_MINOR }}'].includes(tier);
-        }
-        if (filter === '{{ Participant.SUCCESS_MAJOR }}') {
-            return tier === '{{ Participant.SUCCESS_NAT_MAX }}';
-        }
-        if (filter === '{{ Participant.FAILURE_ANY }}') {
-            return [
-                '{{ Participant.FAILURE_NAT_MIN }}',
-                '{{ Participant.FAILURE_MAJOR }}',
-                '{{ Participant.FAILURE_MINOR }}'].includes(tier);
-        }
-        if (filter === '{{ Participant.FAILURE_MAJOR }}') {
-            return tier === '{{ Participant.FAILURE_NAT_MIN }}';
-        }
-        return false;
-    }
-
-    /**
-     * The main roll button handler
-     */
-    if (rollBtn) {
-        rollBtn.onclick = async () => {
-            refreshModifiers();
-
-            document.querySelectorAll('.check-mark').forEach(
-                el => el.classList.add('hidden'));
-            document.querySelectorAll('.auto-gear').forEach(
-                el => el.classList.remove('hidden'));
-            lastRollValue = null;
-
-            const fd = getRoleIDs();
-            const diff = document.getElementById('difficulty-select')?.value;
-            if (diff) fd.append('difficulty', diff);
-            
-            // Dice System specific inputs
-            const nDice = document.getElementById('num-dice')?.value;
-            const nSides = document.getElementById('num-sides')?.value;
-            const nBonus = document.getElementById('num-bonus')?.value;
-            if (nDice) fd.append('num_dice', nDice);
-            if (nSides) fd.append('sides', nSides);
-            if (nBonus) fd.append('bonus', nBonus);
-
-            const data = await apiPost(`/event/roll/${eventId}`, fd, "Could not roll");
-            if (!data) return;
-
-            // 1. Display the main outcome result
-            lastRollValue = data.result_value;
-            document.getElementById('outcome-text').innerHTML = data.full_display;
-            const resultTier = data.tier;
-
-            // 2. Update Effects using the pre-calculated results from the server
-            if (data.resolved_effects) {
-                data.resolved_effects.forEach(eff => {
-                    const row = document.getElementById(`eff-row-${eff.effect_id}`);
-                    if (!row) return;
-
-                    const impactRes = row.querySelector('.impact-result');
-                    const currentValEl = row.querySelector('.current-value-display');
-                    const newValEl = row.querySelector('.new-val');
-                    const equationEl = row.querySelector('.equation-display');
-                    const outcomeSuccess = row.dataset.outcomeSuccess;
-                    const reliesOnRoll = row.dataset.reliesOnRoll === "true";
-
-                    currentValEl.innerText = eff.current_display;
-
-                    if (reliesOnRoll && eff.final_display) {
-                        // Update the "Roll" placeholder with the actual number
-                        if (row.dataset.getValFrom === '{{ Participant.OUTCOME }}') {
-                            const displayRoll = Array.isArray(data.result_value) 
-                                ? `(${data.result_value.join(',')})` 
-                                : data.result_val_display;
-                            equationEl.innerText = formatInnerFormula(
-                                displayRoll,
-                                row.dataset.valTrans, 
-                                row.dataset.opTrans
-                            );
-                        }
-
-                        // Show the final value calculated by the server
-                        if (newValEl) newValEl.innerText = eff.final_display;
-                        if (impactRes) impactRes.classList.remove('hidden');
-                    } else {
-                        // This was a known value (e.g. Constant or Field).
-                        // It's already showing the correct green result in equationEl.
-                        if (impactRes) impactRes.classList.add('hidden');
-                        equationEl.innerHTML = `<span class="text-success" style="font-weight:bold;">${eff.impact_display}</span>`;
-                    }
-                    {% if event.outcome_type == OutcomeType.FOURWAY %}
-                        const isEligible = tierMatch(outcomeSuccess, resultTier);
-                        if (!isEligible) {
-                            row.classList.add('hidden'); // Hide effects that didn't trigger
-                        } else {
-                            row.classList.remove('hidden');
-                        }
-                    {% endif %}
-
-                    // Handle button states
-                    const isAuto = row.dataset.auto === "true";
-                    const btn = row.querySelector('.apply-eff-btn');
-                    const checkMark = row.querySelector('.check-mark');
-                    const autoGear = row.querySelector('.auto-gear');
-
-                    if (isAuto) {
-                        if (!row.classList.contains('hidden')) {
-                            row.style.opacity = "0.7";
-                            if (checkMark) checkMark.classList.remove('hidden');
-                            if (autoGear) autoGear.classList.add('hidden');
-                        }
-                    } else {
-                        row.style.opacity = "1";
-                        if (btn) {
-                            btn.disabled = false;
-                            btn.classList.remove('hidden');
-                            btn.title = "Apply this change";
-                        }
-                        if (checkMark) checkMark.classList.add('hidden');
-                    }
-                });
-            }
-
-            // Sync based on outcome
-            syncApplyAllState()
-
-            const chainSection = document.getElementById('follow-up-section');
-            const chainButtons = document.getElementById('follow-up-buttons');
-
-            if (chainButtons) {
-                chainButtons.innerHTML = '';
-                let visibleChainCount = 0;
-
-                CHAINED_EVENTS.forEach(link => {
-                    const isEligible = tierMatch(link.outcome_success, resultTier);
-                    if (isEligible) {
-                        visibleChainCount++;
-                        const idx = visibleChainCount - 1;
-                        const letters = ['i', 'j', 'k'];
-
-                        const url = new URL(`/play/event/${link.child_id}`, window.location.origin);
-                        const fd = getRoleIDs();
-                        for (let [key, value] of fd.entries()) {
-                            url.searchParams.append(key, value);
-                        }
-                        {% if subject %}
-                        url.searchParams.append('subject_id', '{{ subject.id }}');
-                        {% endif %}
-
-                        const a = document.createElement('a');
-                        a.href = url.toString();
-                        if (idx < letters.length) {
-                            const letter = letters[idx];
-                            linkForKey[letter] = url.toString();
-                            a.innerHTML = `<span class="hotkey-indicator">${letter}</span> ${link.child_name}`;
-                        } else {
-                            a.innerText = link.child_name;
-                        }
-                        chainButtons.appendChild(a);
-                    }
-                });
-
-                if (visibleChainCount > 0) {
-                    chainSection.classList.remove('hidden');
-                }
-            }
-        };
-    }
-
-    /**
-     * Iterates through all visible manual apply buttons and triggers them
-     */
-    async function applyAllManual() {
-        const applyAllBtn = document.getElementById('apply-all-btn');
-        if (!applyAllBtn) return;
-        applyAllBtn.disabled = true;
-
-        // Trigger visible buttons in sequence
-        const buttons = document.querySelectorAll(
-            '.effect-row:not(.hidden) .apply-eff-btn:not(.hidden):not(:disabled)'
-        );
-        for (const btn of buttons) {
-            btn.click();
-            
-            // Brief delay to allow the UI to feel responsive between updates
-            await new Promise(resolve => setTimeout(resolve, 100));
-        }
-        applyAllBtn.closest('#apply-all-container').classList.add('hidden');
-    }
-
-    /**
-     * Sends a request to apply a manual effect
-     */
-    async function applySingleEffect(factorId) {
-        const row = document.getElementById(`eff-row-${factorId}`);
-        const btn = row.querySelector('.apply-eff-btn');
-        const fd = getRoleIDs();
-        fd.append('roll_value', JSON.stringify(lastRollValue));
-
-        const success = await apiPost(
-            `/event/apply-effect/${factorId}`, fd, "Could not apply");
-        if (success) {
-            btn.classList.add('hidden');
-            row.querySelector('.check-mark').classList.remove('hidden');
-            row.style.opacity = "0.7";
-
-            await refreshModifiers(false);
-            syncApplyAllState();
-        } else {
-            btn.innerText = "Retry";
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        updateDieThresholds();
-        refreshModifiers();
-    });
-</script>
+{# =========================================================================
+   3. TEMPLATES & STYLES
+   ========================================================================= #}
 
 <style>
 #submit-roll {
@@ -896,4 +390,521 @@
 .dim-hr { border: 0; border-top: 1px solid #333; margin: 15px 0; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 </style>
+
+{# =========================================================================
+   4. SCRIPTS
+   ========================================================================= #}
+
+<script src="{{ url_for('static', filename='js/api.js') }}"></script>
+
+<script>
+const OP_MAP = {{ Operation.Repr | tojson | safe }};
+const eventId = {{ event.id }};
+const FILTER_LABELS = {
+    '{{ Participant.SUCCESS_ANY }}': 'If Successful',
+    '{{ Participant.SUCCESS_NAT_MAX }}': 'If Natural Max',
+    '{{ Participant.SUCCESS_MAJOR }}': 'If Major Success',
+    '{{ Participant.SUCCESS_MINOR }}': 'If Minor Success',
+    '{{ Participant.FAILURE_ANY }}': 'If Failure',
+    '{{ Participant.FAILURE_NAT_MIN }}': 'If Natural Min',
+    '{{ Participant.FAILURE_MAJOR }}': 'If Major Failure',
+    '{{ Participant.FAILURE_MINOR }}': 'If Minor Failure'
+};
+
+const diffSelect = document.getElementById('difficulty-select');
+const rollBtn = document.getElementById('submit-roll');
+
+let lastRollValue = null;
+
+/**
+ * Gather the selected Participant ID for each role
+ */
+function getRoleIDs() {
+    const fd = new FormData();
+    const inputs = document.querySelectorAll(
+        'input[name$="{{ Participant.ROLE_SUFFIX }}"], ' +
+        'select[name$="{{ Participant.ROLE_SUFFIX }}"]');
+    inputs.forEach(el => {
+        if (el.value) {
+            fd.append(el.name, el.value);
+        }
+    });
+    return fd;
+}
+
+/**
+ * Formats the inner expression that calculates the impact,
+ * i.e. the magnitude of change being applied to a target.
+ * (Source <op> Constant) = Impact
+ * 
+ * Used for Effect Line 2 (Logic/Labels) and Line 3 (Actual Numbers).
+ * Functional notation for Round/SoftCap, binary for others.
+ *
+ * @param {string|number} source - The raw input (e.g., "Roll Result" or 100)
+ * @param {number} constant - The inner transform value (e.g., 2.0)
+ * @param {string} op - The operator key (e.g., '*', 'scap')
+ */
+function formatInnerFormula(source, constant, op) {
+    if (!op || op === '{{ Operation.CONST }}') return source;
+
+    const opSymbol = OP_MAP[op] || op;
+    if (op === '{{ Operation.ROUND }}' || op === '{{ Operation.SOFTCAP }}') {
+        return `${opSymbol}(${source}, ${constant})`;
+    }
+    if (op === '{{ Operation.VAL_TO_POW }}') {
+        return `${source}<sup>${constant}</sup>`;
+    }
+    if (op === '{{ Operation.POW_OF_VAL }}') {
+        return `${constant}<sup>${source}</sup>`;
+    }
+    return `(${source} ${opSymbol} ${constant})`;
+}
+
+/**
+ * Fetches calculated modifiers from the server and updates the UI
+ */
+async function refreshModifiers(updateEffectVals = true) {
+    const previewDiv = document.getElementById('modifier-preview');
+    const fd = getRoleIDs();
+    const url = `/event/preview/${eventId}`;
+    const data = await apiPost(url, fd, "Could not load modifiers");
+    if (!data) return;
+
+    // --- Handle Determinants (Left Column) ---
+    let allRequirementsMet = true;
+    let html = '<ul class="modifier-list" style="list-style: none; padding: 0;">';
+
+    const modifiers = data.modifiers;
+    if (modifiers.length === 0) {
+        previewDiv.innerHTML = '<span class="text-dim">No modifiers applied.</span>';
+    } else {
+        modifiers.forEach(m => {
+            const labelHtml = (m.label && m.label.trim() !== "") 
+                ? `<span class="">${m.label}:</span>` 
+                : "";
+            const displayVal = m.value_display;
+            const displayOp = m.op_app_display;
+
+            const hasInner = (m.breakdown && m.breakdown !== m.value.toString());
+            const innerExpr = hasInner ? `<small class="text-dim">[${m.breakdown}]</small>` : "";
+
+            let contentHtml = "";
+
+            if (m.is_comparison) {
+                // FORMAT: Source Field (Breakdown) >= RequiredValue
+                if (!m.is_met) allRequirementsMet = false;
+                const colorClass = m.is_met ? 'text-success' : 'text-danger';
+                const negatePrefix = m.negate ? `<span class=${colorClass}>NOT</span>` : '';
+
+                let displayFormula;
+                if (m.val_required === 1 && (m.op === '{{ Operation.GE }}' || m.op === '{{ Operation.EQ }}')) {
+                    const rawInner = hasInner ? ` (${m.breakdown})` : ""; 
+                    displayFormula = `
+                        ${negatePrefix}
+                        <span class="${colorClass}">${m.is_met ? "Has" : "Needs"}</span>
+                        <small class="text-dim">[${displayVal}${rawInner} ${displayOp} ${m.val_required}]</small>
+                    `;
+                } else {
+                    displayFormula = `
+                        ${negatePrefix}
+                        <span class="${colorClass}">${displayVal}</span>
+                        ${innerExpr}
+                        <strong class="${colorClass}">${displayOp} ${m.val_required}</strong>
+                    `;
+                }
+
+                contentHtml = `
+                    <strong>${m.source_name}</strong>
+                    <div style="padding-left: 1.5em;">
+                        <span class="text-dim" style="margin-right: 4px;">${m.field_name}:</span> 
+                        ${displayFormula}
+                    </div>
+                `;
+            } else if (m.source_name === 'Constant') {
+                const colorClass = 'text-success';
+                contentHtml = `
+                    <span>[Preset]:</span>
+                    <strong class="${colorClass}" style="margin-right: 4px;">${displayOp} ${displayVal}</strong>
+                `;
+            } else {
+                // FORMAT: Source Field: +Value (Breakdown)
+                const colorClass = m.value >= 0 ? 'text-success' : 'text-danger';
+                const fieldPart = (m.field_name && m.field_name !== "Value") 
+                    ? `<span class="text-dim">${m.field_name}:</span> ` : "";
+
+                contentHtml = `
+                    <strong>${m.source_name}</strong>
+                    <div style="padding-left: 1.5em;">
+                        ${fieldPart}
+                        <strong class="${colorClass}" style="margin-right: 4px;">${displayOp} ${displayVal}</strong>
+                        ${innerExpr}
+                    </div>
+                `;
+            }
+
+            html += `
+                <li class="spacious-bottom" style="display: block;">
+                    ${labelHtml} ${contentHtml}
+                </li>`;
+        });
+        previewDiv.innerHTML = html + '</ul>';
+    }
+
+    if (rollBtn) {
+        rollBtn.disabled = !allRequirementsMet;
+        rollBtn.style.opacity = allRequirementsMet ? "1" : "0.5";
+    }
+
+    // --- Handle Effect Previews (Right Column) ---
+    if (data.effect_previews) {
+        data.effect_previews.forEach(eff => {
+            const row = document.getElementById(`eff-row-${eff.effect_id}`);
+            if (!row) return;
+
+            row.dataset.reliesOnRoll = eff.relies_on_roll ? "true" : "false";
+
+            const equationEl = row.querySelector('.equation-display');
+            const getValFrom = row.dataset.getValFrom;
+
+            row.querySelector('.target-name-display').innerText = eff.target_name || "?";
+            row.style.opacity = eff.is_resolved ? "1" : "0.5";
+
+            // Update current value and operator for a new roll
+            if (updateEffectVals) {
+                const currentValEl = row.querySelector('.current-value-display');
+                currentValEl.innerText = eff.current_display;
+
+                const impactRes = row.querySelector('.impact-result');
+                if (impactRes) impactRes.classList.add('hidden');
+            }
+            row.querySelector('.op-display').innerText = eff.op_app_display;
+
+            // Update Line 2: Logic description
+            const logicEl = row.querySelector('.source-logic-description');
+            const filterKey = row.dataset.outcomeSuccess;
+            const outcomeSuccessText = FILTER_LABELS[filterKey] || "";
+
+            const hasTransform = (
+                row.dataset.opTrans && row.dataset.opTrans !== ''
+                && row.dataset.opTrans !== '{{ Operation.CONST }}');
+
+            let logicParts = [];
+
+            // A. Add Filter Requirement (e.g., "If Major Success")
+            if (outcomeSuccessText) {
+                logicParts.push(`<span class="">${outcomeSuccessText}</span>`);
+            }
+
+            // B. Add Math Transform (e.g., "Roll Result × 2")
+            if (hasTransform && eff.source_name) {
+                const sourceLabel = (getValFrom === '{{ Participant.OUTCOME }}') ? "Roll Result" : eff.source_name;
+                logicParts.push(formatInnerFormula(
+                    sourceLabel, row.dataset.valTrans, row.dataset.opTrans));
+            }
+
+            if (logicParts.length > 0) {
+                // Join with a space or separator
+                logicEl.innerHTML = logicParts.join(" &mdash; ");
+                logicEl.classList.remove('hidden');
+            } else {
+                logicEl.classList.add('hidden');
+            }
+
+            // Update Line 3: The Equation (using placeholders)
+            if (eff.relies_on_roll && !eff.impact_display) {
+                equationEl.innerText = formatInnerFormula(
+                    "Roll", row.dataset.valTrans, row.dataset.opTrans);
+            } else {
+                // Server has provided the impact_value because it's not dependent on the roll
+                const formattedImpact = `<span class="text-success" style="font-weight:bold;">${eff.impact_display}</span>`;
+                
+                if (hasTransform) {
+                    // Show: (1 * 1.0) = 1 (green)
+                    const baseEq = formatInnerFormula(
+                        eff.source_display, row.dataset.valTrans, row.dataset.opTrans);
+                    equationEl.innerHTML = `${baseEq} = ${formattedImpact}`;
+                } else {
+                    // Show: 1 (green)
+                    equationEl.innerHTML = formattedImpact;
+                }
+            }
+        });
+    }
+}
+
+function updateDieThresholds() {
+    if (!diffSelect) return;
+
+    const min = {{ event.numeric_range[0] if event.numeric_range else 1 }};
+    const max = {{ event.numeric_range[1] if event.numeric_range else 20 }};
+    const sides = max - min + 1;
+
+    const difficulty = parseFloat(diffSelect.value);
+    const shift = Math.round(sides * difficulty);
+    
+    const majorFailureMax = min + Math.floor(shift * 0.20);
+    const minorSuccessMin = Math.round(sides * 0.10) + shift;
+    const majorSuccessMin = (max - Math.floor(sides * 0.15)) + Math.floor(shift * 0.40);
+
+    const minorSuccessDisplay = `≥ ${minorSuccessMin}`;
+    const majorSuccessDisplay = `≥ ${majorSuccessMin}`;
+    const majorFailureDisplay = `≤ ${majorFailureMax}`;
+
+    document.getElementById('minor-success-threshold').innerText = minorSuccessDisplay;
+    document.getElementById('major-success-threshold').innerText = majorSuccessDisplay;
+    document.getElementById('major-failure-threshold').innerText = majorFailureDisplay;
+}
+
+/**
+ * Refreshes the visibility of the 'Apply All' button based on 
+ * how many manual apply buttons are currently visible and active.
+ */
+function syncApplyAllState() {
+    const container = document.getElementById('apply-all-container');
+    if (!container) return;
+
+    // Count manual buttons that are in visible rows and haven't been clicked yet
+    const activeManualButtons = document.querySelectorAll(
+        '.effect-row:not(.hidden) .apply-eff-btn:not(.hidden):not(:disabled)'
+    );
+
+    if (activeManualButtons.length <= 1) {
+        container.classList.add('hidden');
+    } else {
+        container.classList.remove('hidden');
+        const btn = document.getElementById('apply-all-btn');
+        if (btn) btn.disabled = false;
+    }
+}
+
+/**
+ * Mirrors backend check_outcome_success logic.
+ */
+function tierMatch(filter, tier) {
+    if (filter === 'always') return true;
+    if (!tier) return false;
+    if (filter === tier) return true;
+    if (filter === '{{ Participant.SUCCESS_ANY }}') {
+        return [
+            '{{ Participant.SUCCESS_NAT_MAX }}',
+            '{{ Participant.SUCCESS_MAJOR }}',
+            '{{ Participant.SUCCESS_MINOR }}'].includes(tier);
+    }
+    if (filter === '{{ Participant.SUCCESS_MAJOR }}') {
+        return tier === '{{ Participant.SUCCESS_NAT_MAX }}';
+    }
+    if (filter === '{{ Participant.FAILURE_ANY }}') {
+        return [
+            '{{ Participant.FAILURE_NAT_MIN }}',
+            '{{ Participant.FAILURE_MAJOR }}',
+            '{{ Participant.FAILURE_MINOR }}'].includes(tier);
+    }
+    if (filter === '{{ Participant.FAILURE_MAJOR }}') {
+        return tier === '{{ Participant.FAILURE_NAT_MIN }}';
+    }
+    return false;
+}
+
+/**
+ * The main roll button handler
+ */
+if (rollBtn) {
+    rollBtn.onclick = async () => {
+        refreshModifiers();
+
+        document.querySelectorAll('.check-mark').forEach(
+            el => el.classList.add('hidden'));
+        document.querySelectorAll('.auto-gear').forEach(
+            el => el.classList.remove('hidden'));
+        lastRollValue = null;
+
+        const fd = getRoleIDs();
+        const diff = document.getElementById('difficulty-select')?.value;
+        if (diff) fd.append('difficulty', diff);
+        
+        // Dice System specific inputs
+        const nDice = document.getElementById('num-dice')?.value;
+        const nSides = document.getElementById('num-sides')?.value;
+        const nBonus = document.getElementById('num-bonus')?.value;
+        if (nDice) fd.append('num_dice', nDice);
+        if (nSides) fd.append('sides', nSides);
+        if (nBonus) fd.append('bonus', nBonus);
+
+        const data = await apiPost(`/event/roll/${eventId}`, fd, "Could not roll");
+        if (!data) return;
+
+        // 1. Display the main outcome result
+        lastRollValue = data.result_value;
+        document.getElementById('outcome-text').innerHTML = data.full_display;
+        const resultTier = data.tier;
+
+        // 2. Update Effects using the pre-calculated results from the server
+        if (data.resolved_effects) {
+            data.resolved_effects.forEach(eff => {
+                const row = document.getElementById(`eff-row-${eff.effect_id}`);
+                if (!row) return;
+
+                const impactRes = row.querySelector('.impact-result');
+                const currentValEl = row.querySelector('.current-value-display');
+                const newValEl = row.querySelector('.new-val');
+                const equationEl = row.querySelector('.equation-display');
+                const outcomeSuccess = row.dataset.outcomeSuccess;
+                const reliesOnRoll = row.dataset.reliesOnRoll === "true";
+
+                currentValEl.innerText = eff.current_display;
+
+                if (reliesOnRoll && eff.final_display) {
+                    // Update the "Roll" placeholder with the actual number
+                    if (row.dataset.getValFrom === '{{ Participant.OUTCOME }}') {
+                        const displayRoll = Array.isArray(data.result_value) 
+                            ? `(${data.result_value.join(',')})` 
+                            : data.result_val_display;
+                        equationEl.innerText = formatInnerFormula(
+                            displayRoll,
+                            row.dataset.valTrans, 
+                            row.dataset.opTrans
+                        );
+                    }
+
+                    // Show the final value calculated by the server
+                    if (newValEl) newValEl.innerText = eff.final_display;
+                    if (impactRes) impactRes.classList.remove('hidden');
+                } else {
+                    // This was a known value (e.g. Constant or Field).
+                    // It's already showing the correct green result in equationEl.
+                    if (impactRes) impactRes.classList.add('hidden');
+                    equationEl.innerHTML = `<span class="text-success" style="font-weight:bold;">${eff.impact_display}</span>`;
+                }
+                {% if event.outcome_type == OutcomeType.FOURWAY %}
+                    const isEligible = tierMatch(outcomeSuccess, resultTier);
+                    if (!isEligible) {
+                        row.classList.add('hidden'); // Hide effects that didn't trigger
+                    } else {
+                        row.classList.remove('hidden');
+                    }
+                {% endif %}
+
+                // Handle button states
+                const isAuto = row.dataset.auto === "true";
+                const btn = row.querySelector('.apply-eff-btn');
+                const checkMark = row.querySelector('.check-mark');
+                const autoGear = row.querySelector('.auto-gear');
+
+                if (isAuto) {
+                    if (!row.classList.contains('hidden')) {
+                        row.style.opacity = "0.7";
+                        if (checkMark) checkMark.classList.remove('hidden');
+                        if (autoGear) autoGear.classList.add('hidden');
+                    }
+                } else {
+                    row.style.opacity = "1";
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.classList.remove('hidden');
+                        btn.title = "Apply this change";
+                    }
+                    if (checkMark) checkMark.classList.add('hidden');
+                }
+            });
+        }
+
+        // Sync based on outcome
+        syncApplyAllState()
+
+        const chainSection = document.getElementById('follow-up-section');
+        const chainButtons = document.getElementById('follow-up-buttons');
+
+        if (chainButtons && data.chain_options) {
+            chainButtons.innerHTML = '';
+            
+            if (data.chain_options.length > 0) {
+                chainSection.classList.remove('hidden');
+                
+                data.chain_options.forEach((opt, idx) => {
+                    // 1. Construct the URL for the next event
+                    const nextUrl = new URL(`${window.location.origin}/play/event/${opt.child_id}`);
+                    
+                    // Map current role selections to the next URL
+                    const currentRoles = getRoleIDs();
+                    for (let [key, value] of currentRoles.entries()) {
+                        nextUrl.searchParams.append(key, value);
+                    }
+                    {% if subject %}
+                    //nextUrl.searchParams.append('subject_id', '{{ subject.id }}');
+                    {% endif %}
+                    
+                    // 2. Create the Button
+                    const btn = document.createElement('a');
+                    btn.href = nextUrl.toString();
+                    btn.className = 'go-button btn-sm';
+                    btn.style.textDecoration = 'none';
+
+                    // 3. Assign Hotkeys (i, j, k)
+                    const letters = ['i', 'j', 'k'];
+                    if (idx < letters.length) {
+                        const letter = letters[idx];
+                        window.linkForKey[letter] = nextUrl.toString();
+                        btn.innerHTML = `<span class="hotkey-indicator">${letter}</span> ${opt.child_name}`;
+                    } else {
+                        btn.innerText = opt.child_name;
+                    }
+
+                    chainButtons.appendChild(btn);
+                });
+            } else {
+                chainSection.classList.add('hidden');
+            }
+        }
+    };
+}
+
+/**
+ * Iterates through all visible manual apply buttons and triggers them
+ */
+async function applyAllManual() {
+    const applyAllBtn = document.getElementById('apply-all-btn');
+    if (!applyAllBtn) return;
+    applyAllBtn.disabled = true;
+
+    // Trigger visible buttons in sequence
+    const buttons = document.querySelectorAll(
+        '.effect-row:not(.hidden) .apply-eff-btn:not(.hidden):not(:disabled)'
+    );
+    for (const btn of buttons) {
+        btn.click();
+        
+        // Brief delay to allow the UI to feel responsive between updates
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    applyAllBtn.closest('#apply-all-container').classList.add('hidden');
+}
+
+/**
+ * Sends a request to apply a manual effect
+ */
+async function applySingleEffect(factorId) {
+    const row = document.getElementById(`eff-row-${factorId}`);
+    const btn = row.querySelector('.apply-eff-btn');
+    const fd = getRoleIDs();
+    fd.append('roll_value', JSON.stringify(lastRollValue));
+
+    const success = await apiPost(
+        `/event/apply-effect/${factorId}`, fd, "Could not apply");
+    if (success) {
+        btn.classList.add('hidden');
+        row.querySelector('.check-mark').classList.remove('hidden');
+        row.style.opacity = "0.7";
+
+        await refreshModifiers(false);
+        syncApplyAllState();
+    } else {
+        btn.innerText = "Retry";
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    updateDieThresholds();
+    refreshModifiers();
+});
+</script>
 {% endblock %}

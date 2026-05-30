@@ -1,3 +1,7 @@
+{# =========================================================================
+   1. GLOBAL IMPORTS
+   ========================================================================= #}
+
 {% extends 'layout/base.html' %}
 {% import 'macros/hotkeys.html' as hk %}
 {% import 'macros/render.html' as render %}
@@ -21,6 +25,10 @@
 {% endblock %}
 
 {% block content %}
+
+{# =========================================================================
+   2. MAIN CONTENT
+   ========================================================================= #}
 
 <div class="location-container">
     <header class="entity-header">
@@ -283,377 +291,9 @@
     </div>
 </div>
 
-<script src="{{ url_for('static', filename='js/api.js') }}"></script>
-
-<script>
-    const charSelector = document.getElementById('active-char-select');
-
-    const getFirstGrapheme = (str) => {
-        if (!str) return '';
-        if (typeof Intl !== 'undefined' && Intl.Segmenter) {
-            const segmenter = new Intl.Segmenter('en', { granularity: 'grapheme' });
-            const segments = Array.from(segmenter.segment(str));
-            return segments.length > 0 ? segments[0].segment : '';
-        }
-        return str.charAt(0);
-    };
-
-    const chars = {
-        {% for char in characters_here %}
-        "{{ char.id }}": { 
-            name: "{{ char.name }}", 
-            x: {{ char.position[0] if char.position else 0 }}, 
-            y: {{ char.position[1] if char.position else 0 }},
-            travel_party: "{{ char.travel_party or '' }}",
-            icon: getFirstGrapheme("{{ char.name }}"),
-            link: "{{ url_for('play.play_character', id=char.id) }}"
-        },
-        {% endfor %}
-    };
-
-    const items = [
-        {% for pile in inventory_piles %}
-        { 
-            name: "{{ pile.item.name }}", 
-            x: {{ pile.position[0] if pile.position else 0 }}, 
-            y: {{ pile.position[1] if pile.position else 0 }},
-            icon: getFirstGrapheme("{{ pile.item.name }}"),
-            link: "{{ url_for('play.play_item',
-                id=pile.item_id, owner_id=location.id,
-                pos=pile.position|join(',')) if pile.position else None }}"
-        },
-        {% endfor %}
-    ];
-
-    const exits = [
-        {% if location.has_grid %}
-            {% for e in grid_exits %}
-            { 
-                name: "{{ e.name }}", 
-                x: {{ e.x }}, 
-                y: {{ e.y }}, 
-                target_id: {{ e.target_id }},
-                masked: {{ e.masked | tojson }},
-                icon: "🚪", 
-                link: {% if e.masked %}null{% else %}"{{
-                    url_for('play.play_location', id=e.target_id) }}"{% endif %}
-            },
-            {% endfor %}
-        {% else %}
-            {% for route in destinations %}
-                {% set target = route.other_loc(location.id) %}
-                { 
-                    name: "{{ target.name }}", 
-                    target_id: {{ target.id }},
-                    masked: {{ target.masked | tojson }}
-                },
-            {% endfor %}
-        {% endif %}
-    ];
-
-    const zones = [
-        {% for zone in location.zones %}
-        {
-            name: "{{ zone.label or '' }}",
-            color: "{{ zone.color or '' }}",
-            prevents_travel: {{ 'true' if zone.prevents_travel else 'false' }},
-            l: {{ zone.coords[0] }}, t: {{ zone.coords[1] }},
-            r: {{ zone.coords[2] }}, b: {{ zone.coords[3] }}
-        },
-        {% endfor %}
-    ];
-
-    function fillGrid() {
-        const $cells = $('.tactgrid-cell.included');
-        $cells.html('');
-        $cells.attr('title', '');
-        $cells.css('background-color', '');
-
-        zones.forEach(z => {
-            for (let x = z.l; x <= z.r; x++) {
-                for (let y = z.t; y <= z.b; y++) {
-                    const $cell = $(`#cell-${x}-${y}`);
-                    if (z.color) $cell.css('background-color', z.color);
-                    if (z.name) {
-                        const currentTitle = $cell.attr('title') || '';
-                        $cell.attr('title', z.name);
-                    }
-                    if (z.prevents_travel && !z.color) {
-                        $cell.addClass('excluded').removeClass('included');
-                    }
-                }
-            }
-        });
-
-        const renderToken = (obj, typeClass) => {
-            const $cell = $(`#cell-${obj.x}-${obj.y}`);
-            if ($cell.length && $cell.is(':empty')) {
-                const $inner = obj.masked || !obj.link
-                    ? $('<span></span>')
-                    : $('<a></a>').attr('href', obj.link);
-                $inner
-                    .attr('title', obj.name)
-                    .addClass(`grid-token ${typeClass}`)
-                    .text(obj.icon);
-                $cell.append($inner);
-            }
-        };
-
-        Object.values(chars).forEach(c => renderToken(c, 'char-token'));
-        exits.forEach(e => {
-            const isOccupiedByChar = Object.values(chars).some(
-                c => c.x === e.x && c.y === e.y);
-            if (!isOccupiedByChar) {
-                renderToken(e, 'exit-token');
-            }
-        });
-        items.forEach(i => renderToken(i, 'item-token'));
-        syncTravelPromptState();
-    }
-
-    function syncTravelPromptState() {
-        const travelPrompt = document.getElementById('travel-prompt');
-        if (!travelPrompt) return;
-
-        {% if location.has_grid %}
-            const nearbyExit = getActiveExit();
-            travelPrompt.style.opacity = nearbyExit ? "1" : "0.5";
-            travelPrompt.style.color = nearbyExit ? "inherit" : "gray";
-        {% else %}
-            travelPrompt.style.opacity = "1";
-        {% endif %}
-    }
-
-    function syncPartyState() {
-        const container = document.getElementById('party-move-container');
-        const chk = document.getElementById('move-with-party-chk');
-        if (!container) return;
-        
-        const active = getActiveChar();
-        const myName = active.char.name.toLowerCase();
-        const myParty = (active.char.travel_party || "").toLowerCase();
-
-        // Check if there's at least one OTHER character in the same party here
-        const otherMembers = Object.keys(chars).filter(id => {
-            if (id == active.char_id) return false; // Skip self
-            
-            const other = chars[id];
-            const otherName = other.name.toLowerCase();
-            const otherParty = (other.travel_party || "").toLowerCase();
-
-            const isSharedGroup = (myParty !== "" && otherParty === myParty);
-            const iFollowThem = (myParty !== "" && otherName === myParty);
-            const theyFollowMe = (otherParty !== "" && otherParty === myName);
-
-            return isSharedGroup || iFollowThem || theyFollowMe;
-        });
-
-        if (otherMembers.length > 0) {
-            container.style.display = 'block';
-            const displayName = active.char.travel_party || "Followers";
-            const label = container.querySelector('.checkbox-label');
-            label.innerHTML = `
-                <input type="checkbox" id="move-with-party-chk" onchange="this.blur();" ${chk?.checked ? 'checked' : ''}> 
-                Move {{ hk.bracket('w') }}ith <i>${displayName}</i>
-            `;
-        } else {
-            container.style.display = 'none';
-        }
-        syncTravelPromptState(); // Refresh the door prompts too
-    }
-
-    function getActiveExit() {
-        const active = getActiveChar();
-        if (!active) return null;
-
-        // Returns the first exit within 1 unit (including diagonals)
-        return exits.find(e => {
-            const dx = Math.abs(Number(e.x) - Number(active.char.x));
-            const dy = Math.abs(Number(e.y) - Number(active.char.y));
-            return dx <= 1 && dy <= 1;
-        });
-    }
-
-    function getActiveChar() {
-        const id = charSelector ? charSelector.value : null;
-        if (id && chars[id]) {
-            return {
-                char_id: id,
-                char: chars[id]
-            };
-        }
-        return null;
-    }
-
-    function updateCharListCoords(charId, pos) {
-        const el = document.querySelector(`.char-pos-display[data-char-id="${charId}"]`);
-        if (el) {
-            el.innerText = `[${pos[0]},${pos[1]}]`;
-            
-            // Optional: briefly highlight the text to show it changed
-            el.style.color = 'var(--accent)';
-            setTimeout(() => { el.style.color = ''; }, 300);
-        }
-    }
-
-    async function move(dx, dy) {
-        const active = getActiveChar();
-        if (!active) return;
-
-        const moveParty = document.getElementById('move-with-party-chk').checked;
-        
-        const fd = new FormData();
-        fd.append('dx', dx);
-        fd.append('dy', dy);
-        fd.append('move_party', moveParty); // Tell backend to move the whole party
-
-        const url = `/char/${active.char_id}/move`;
-        const data = await apiPost(url, fd, "Could not move.");
-        if (!data) return;
-
-        for (const [id, pos] of Object.entries(data.positions)) {
-            if (chars[id]) {
-                chars[id].x = pos[0];
-                chars[id].y = pos[1];
-            }
-            updateCharListCoords(id, pos);
-        }
-        fillGrid();
-        scrollToActiveChar();
-    }
-
-    /**
-     * Automatically adjusts the horizontal scrollbar to keep 
-     * the active character in the middle of the screen.
-     */
-    function scrollToActiveChar(instant = false) {
-        const active = getActiveChar();
-        if (!active) return;
-
-        const container = document.querySelector('.grid-scroll-container');
-        const cell = document.getElementById(`cell-${active.char.x}-${active.char.y}`);
-        
-        if (!container || !cell) return;
-
-        // Calculate the midpoint of the cell relative to the grid
-        const cellCenter = cell.offsetLeft + (cell.offsetWidth / 2);
-        
-        // Calculate the scroll position required to put that midpoint 
-        // in the center of the container's visible area
-        const targetScroll = cellCenter - (container.offsetWidth / 2);
-
-    console.log(`Moving to X:${active.char.x}, CellOffset: ${cell.offsetLeft}, Target: ${targetScroll}`);
-
-        container.scrollTo({
-            left: targetScroll,
-            behavior: instant ? 'auto' : 'smooth'
-        });
-    }
-
-    // Keyboard Listeners
-    document.addEventListener('keydown', (event) => {
-        if (isMobile) return;
-        
-        const activeElem = document.activeElement;
-        const isInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes(activeElem.tagName);
-        if (isInput && activeElem.type !== 'checkbox') {
-            return;
-        }
-
-        const key = event.key;
-        if (event.altKey || event.ctrlKey || event.metaKey) {
-            console.debug("Ignoring modifier keys");
-            return;
-        }
-
-        {% if location.has_grid %}
-        // 1. Handle Movement (Arrows & Numpad)
-        const moveKeys = {
-            // Arrow Keys
-            /*
-            'ArrowUp': [0, -1],
-            'ArrowDown': [0, 1],
-            'ArrowLeft': [-1, 0],
-            'ArrowRight': [1, 0],
-            */
-            // NumPad
-            '7': [-1, -1], '8': [0, -1], '9': [1, -1],
-            '4': [-1, 0],                '6': [1, 0],
-            '1': [-1, 1],  '2': [0, 1],  '3': [1, 1],
-        };
-
-        if (moveKeys[key]) {
-            event.preventDefault();
-            const [dx, dy] = moveKeys[key];
-            move(dx, dy);
-            return; // Exit so it doesn't check linkForKey
-        }
-        {% endif %}
-
-        // 2. Active character screen
-        const active = getActiveChar();
-        if (active) {
-            const moveWithParty = document.getElementById('move-with-party-chk')?.checked;
-            const url = new URL(`${window.location.origin}/play/char/${active.char_id}`);
-            if (moveWithParty) {
-                url.searchParams.set('move_party', '1');
-            }
-            if (key === 'c') {
-                window.location.href = url.toString();
-                return;
-            } 
-            else if (key === 't') {
-                {% if location.has_grid %}
-                const exitByPos = getActiveExit();
-                if (exitByPos) {
-                    url.searchParams.set('auto_select_exit', exitByPos.target_id);
-                }
-                {% else %}
-                if (exits && exits.length >= 1) {
-                    url.searchParams.set('auto_select_exit', exits[0].target_id);
-                }
-                {% endif %}
-                window.location.href = url.toString();
-                return;
-            }
-            else if (key === 'w') {
-                const chk = document.getElementById('move-with-party-chk');
-                if (chk && chk.closest('#party-move-container')?.style.display !== 'none') {
-                    chk.checked = !chk.checked;
-                    chk.dispatchEvent(new Event('change'));
-                    event.preventDefault();
-                    return;
-                }
-            }
-        }
-
-        // 3. Handle Global Hotkeys
-        const target = window.linkForKey[key];
-        if (target) {
-            event.preventDefault();
-            if (target.startsWith('/') || target.startsWith('http')) {
-                window.location.href = target;
-            } else {
-                const el = document.querySelector(target);
-                if (el) el.click();
-            }
-        }
-    });
-
-    // Initial Load
-    $(document).ready(() => {
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('move_party') === '1') {
-            const chk = document.getElementById('move-with-party-chk');
-            if (chk) chk.checked = true;
-        }
-        fillGrid();
-        syncPartyState();
-        requestAnimationFrame(() => {
-            scrollToActiveChar();
-        });
-    });
-</script>
+{# =========================================================================
+   3. TEMPLATES & STYLES
+   ========================================================================= #}
 
 <style>
 .tactgrid-wrapper { 
@@ -732,4 +372,380 @@
 .qty { font-family: monospace; font-weight: bold; margin-right: 8px; }
 .control-meta { text-align: center; margin-top: 15px; }
 </style>
+
+{# =========================================================================
+   4. SCRIPTS
+   ========================================================================= #}
+
+<script src="{{ url_for('static', filename='js/api.js') }}"></script>
+
+<script>
+const charSelector = document.getElementById('active-char-select');
+
+const getFirstGrapheme = (str) => {
+    if (!str) return '';
+    if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+        const segmenter = new Intl.Segmenter('en', { granularity: 'grapheme' });
+        const segments = Array.from(segmenter.segment(str));
+        return segments.length > 0 ? segments[0].segment : '';
+    }
+    return str.charAt(0);
+};
+
+const chars = {
+    {% for char in characters_here %}
+    "{{ char.id }}": { 
+        name: "{{ char.name }}", 
+        x: {{ char.position[0] if char.position else 0 }}, 
+        y: {{ char.position[1] if char.position else 0 }},
+        travel_party: "{{ char.travel_party or '' }}",
+        icon: getFirstGrapheme("{{ char.name }}"),
+        link: "{{ url_for('play.play_character', id=char.id) }}"
+    },
+    {% endfor %}
+};
+
+const items = [
+    {% for pile in inventory_piles %}
+    { 
+        name: "{{ pile.item.name }}", 
+        x: {{ pile.position[0] if pile.position else 0 }}, 
+        y: {{ pile.position[1] if pile.position else 0 }},
+        icon: getFirstGrapheme("{{ pile.item.name }}"),
+        link: "{{ url_for('play.play_item',
+            id=pile.item_id, owner_id=location.id,
+            pos=pile.position|join(',')) if pile.position else None }}"
+    },
+    {% endfor %}
+];
+
+const exits = [
+    {% if location.has_grid %}
+        {% for e in grid_exits %}
+        { 
+            name: "{{ e.name }}", 
+            x: {{ e.x }}, 
+            y: {{ e.y }}, 
+            target_id: {{ e.target_id }},
+            masked: {{ e.masked | tojson }},
+            icon: "🚪", 
+            link: {% if e.masked %}null{% else %}"{{
+                url_for('play.play_location', id=e.target_id) }}"{% endif %}
+        },
+        {% endfor %}
+    {% else %}
+        {% for route in destinations %}
+            {% set target = route.other_loc(location.id) %}
+            { 
+                name: "{{ target.name }}", 
+                target_id: {{ target.id }},
+                masked: {{ target.masked | tojson }}
+            },
+        {% endfor %}
+    {% endif %}
+];
+
+const zones = [
+    {% for zone in location.zones %}
+    {
+        name: "{{ zone.label or '' }}",
+        color: "{{ zone.color or '' }}",
+        prevents_travel: {{ 'true' if zone.prevents_travel else 'false' }},
+        l: {{ zone.coords[0] }}, t: {{ zone.coords[1] }},
+        r: {{ zone.coords[2] }}, b: {{ zone.coords[3] }}
+    },
+    {% endfor %}
+];
+
+function fillGrid() {
+    const $cells = $('.tactgrid-cell.included');
+    $cells.html('');
+    $cells.attr('title', '');
+    $cells.css('background-color', '');
+
+    zones.forEach(z => {
+        for (let x = z.l; x <= z.r; x++) {
+            for (let y = z.t; y <= z.b; y++) {
+                const $cell = $(`#cell-${x}-${y}`);
+                if (z.color) $cell.css('background-color', z.color);
+                if (z.name) {
+                    const currentTitle = $cell.attr('title') || '';
+                    $cell.attr('title', z.name);
+                }
+                if (z.prevents_travel && !z.color) {
+                    $cell.addClass('excluded').removeClass('included');
+                }
+            }
+        }
+    });
+
+    const renderToken = (obj, typeClass) => {
+        const $cell = $(`#cell-${obj.x}-${obj.y}`);
+        if ($cell.length && $cell.is(':empty')) {
+            const $inner = obj.masked || !obj.link
+                ? $('<span></span>')
+                : $('<a></a>').attr('href', obj.link);
+            $inner
+                .attr('title', obj.name)
+                .addClass(`grid-token ${typeClass}`)
+                .text(obj.icon);
+            $cell.append($inner);
+        }
+    };
+
+    Object.values(chars).forEach(c => renderToken(c, 'char-token'));
+    exits.forEach(e => {
+        const isOccupiedByChar = Object.values(chars).some(
+            c => c.x === e.x && c.y === e.y);
+        if (!isOccupiedByChar) {
+            renderToken(e, 'exit-token');
+        }
+    });
+    items.forEach(i => renderToken(i, 'item-token'));
+    syncTravelPromptState();
+}
+
+function syncTravelPromptState() {
+    const travelPrompt = document.getElementById('travel-prompt');
+    if (!travelPrompt) return;
+
+    {% if location.has_grid %}
+        const nearbyExit = getActiveExit();
+        travelPrompt.style.opacity = nearbyExit ? "1" : "0.5";
+        travelPrompt.style.color = nearbyExit ? "inherit" : "gray";
+    {% else %}
+        travelPrompt.style.opacity = "1";
+    {% endif %}
+}
+
+function syncPartyState() {
+    const container = document.getElementById('party-move-container');
+    const chk = document.getElementById('move-with-party-chk');
+    if (!container) return;
+    
+    const active = getActiveChar();
+    const myName = active.char.name.toLowerCase();
+    const myParty = (active.char.travel_party || "").toLowerCase();
+
+    // Check if there's at least one OTHER character in the same party here
+    const otherMembers = Object.keys(chars).filter(id => {
+        if (id == active.char_id) return false; // Skip self
+        
+        const other = chars[id];
+        const otherName = other.name.toLowerCase();
+        const otherParty = (other.travel_party || "").toLowerCase();
+
+        const isSharedGroup = (myParty !== "" && otherParty === myParty);
+        const iFollowThem = (myParty !== "" && otherName === myParty);
+        const theyFollowMe = (otherParty !== "" && otherParty === myName);
+
+        return isSharedGroup || iFollowThem || theyFollowMe;
+    });
+
+    if (otherMembers.length > 0) {
+        container.style.display = 'block';
+        const displayName = active.char.travel_party || "Followers";
+        const label = container.querySelector('.checkbox-label');
+        label.innerHTML = `
+            <input type="checkbox" id="move-with-party-chk" onchange="this.blur();" ${chk?.checked ? 'checked' : ''}> 
+            Move {{ hk.bracket('w') }}ith <i>${displayName}</i>
+        `;
+    } else {
+        container.style.display = 'none';
+    }
+    syncTravelPromptState(); // Refresh the door prompts too
+}
+
+function getActiveExit() {
+    const active = getActiveChar();
+    if (!active) return null;
+
+    // Returns the first exit within 1 unit (including diagonals)
+    return exits.find(e => {
+        const dx = Math.abs(Number(e.x) - Number(active.char.x));
+        const dy = Math.abs(Number(e.y) - Number(active.char.y));
+        return dx <= 1 && dy <= 1;
+    });
+}
+
+function getActiveChar() {
+    const id = charSelector ? charSelector.value : null;
+    if (id && chars[id]) {
+        return {
+            char_id: id,
+            char: chars[id]
+        };
+    }
+    return null;
+}
+
+function updateCharListCoords(charId, pos) {
+    const el = document.querySelector(`.char-pos-display[data-char-id="${charId}"]`);
+    if (el) {
+        el.innerText = `[${pos[0]},${pos[1]}]`;
+        
+        // Optional: briefly highlight the text to show it changed
+        el.style.color = 'var(--accent)';
+        setTimeout(() => { el.style.color = ''; }, 300);
+    }
+}
+
+async function move(dx, dy) {
+    const active = getActiveChar();
+    if (!active) return;
+
+    const moveParty = document.getElementById('move-with-party-chk').checked;
+    
+    const fd = new FormData();
+    fd.append('dx', dx);
+    fd.append('dy', dy);
+    fd.append('move_party', moveParty); // Tell backend to move the whole party
+
+    const url = `/char/${active.char_id}/move`;
+    const data = await apiPost(url, fd, "Could not move.");
+    if (!data) return;
+
+    for (const [id, pos] of Object.entries(data.positions)) {
+        if (chars[id]) {
+            chars[id].x = pos[0];
+            chars[id].y = pos[1];
+        }
+        updateCharListCoords(id, pos);
+    }
+    fillGrid();
+    scrollToActiveChar();
+}
+
+/**
+ * Automatically adjusts the horizontal scrollbar to keep 
+ * the active character in the middle of the screen.
+ */
+function scrollToActiveChar(instant = false) {
+    const active = getActiveChar();
+    if (!active) return;
+
+    const container = document.querySelector('.grid-scroll-container');
+    const cell = document.getElementById(`cell-${active.char.x}-${active.char.y}`);
+    
+    if (!container || !cell) return;
+
+    // Calculate the midpoint of the cell relative to the grid
+    const cellCenter = cell.offsetLeft + (cell.offsetWidth / 2);
+    
+    // Calculate the scroll position required to put that midpoint 
+    // in the center of the container's visible area
+    const targetScroll = cellCenter - (container.offsetWidth / 2);
+
+console.log(`Moving to X:${active.char.x}, CellOffset: ${cell.offsetLeft}, Target: ${targetScroll}`);
+
+    container.scrollTo({
+        left: targetScroll,
+        behavior: instant ? 'auto' : 'smooth'
+    });
+}
+
+// Keyboard Listeners
+document.addEventListener('keydown', (event) => {
+    if (isMobile) return;
+    
+    const activeElem = document.activeElement;
+    const isInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes(activeElem.tagName);
+    if (isInput && activeElem.type !== 'checkbox') {
+        return;
+    }
+
+    const key = event.key;
+    if (event.altKey || event.ctrlKey || event.metaKey) {
+        console.debug("Ignoring modifier keys");
+        return;
+    }
+
+    {% if location.has_grid %}
+    // 1. Handle Movement (Arrows & Numpad)
+    const moveKeys = {
+        // Arrow Keys
+        /*
+        'ArrowUp': [0, -1],
+        'ArrowDown': [0, 1],
+        'ArrowLeft': [-1, 0],
+        'ArrowRight': [1, 0],
+        */
+        // NumPad
+        '7': [-1, -1], '8': [0, -1], '9': [1, -1],
+        '4': [-1, 0],                '6': [1, 0],
+        '1': [-1, 1],  '2': [0, 1],  '3': [1, 1],
+    };
+
+    if (moveKeys[key]) {
+        event.preventDefault();
+        const [dx, dy] = moveKeys[key];
+        move(dx, dy);
+        return; // Exit so it doesn't check linkForKey
+    }
+    {% endif %}
+
+    // 2. Active character screen
+    const active = getActiveChar();
+    if (active) {
+        const moveWithParty = document.getElementById('move-with-party-chk')?.checked;
+        const url = new URL(`${window.location.origin}/play/char/${active.char_id}`);
+        if (moveWithParty) {
+            url.searchParams.set('move_party', '1');
+        }
+        if (key === 'c') {
+            window.location.href = url.toString();
+            return;
+        } 
+        else if (key === 't') {
+            {% if location.has_grid %}
+            const exitByPos = getActiveExit();
+            if (exitByPos) {
+                url.searchParams.set('auto_select_exit', exitByPos.target_id);
+            }
+            {% else %}
+            if (exits && exits.length >= 1) {
+                url.searchParams.set('auto_select_exit', exits[0].target_id);
+            }
+            {% endif %}
+            window.location.href = url.toString();
+            return;
+        }
+        else if (key === 'w') {
+            const chk = document.getElementById('move-with-party-chk');
+            if (chk && chk.closest('#party-move-container')?.style.display !== 'none') {
+                chk.checked = !chk.checked;
+                chk.dispatchEvent(new Event('change'));
+                event.preventDefault();
+                return;
+            }
+        }
+    }
+
+    // 3. Handle Global Hotkeys
+    const target = window.linkForKey[key];
+    if (target) {
+        event.preventDefault();
+        if (target.startsWith('/') || target.startsWith('http')) {
+            window.location.href = target;
+        } else {
+            const el = document.querySelector(target);
+            if (el) el.click();
+        }
+    }
+});
+
+// Initial Load
+$(document).ready(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('move_party') === '1') {
+        const chk = document.getElementById('move-with-party-chk');
+        if (chk) chk.checked = true;
+    }
+    fillGrid();
+    syncPartyState();
+    requestAnimationFrame(() => {
+        scrollToActiveChar();
+    });
+});
+</script>
 {% endblock %}

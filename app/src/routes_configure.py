@@ -731,16 +731,54 @@ def edit_event(id):
                         setattr(factor, field_key, None)
                 event.factors.append(factor)
 
-        event.chained_events = []
-        for row in req.get_list('chained_events'):
+        event.chained = []
+        for row in req.get_list('chained'):
             child_id = row.get_int('child_id')
             if child_id:
-                event.chained_events.append(EventLink(
+                new_link = EventLink(
                     game_token=game_token,
                     parent_id=event.id,
-                    child_id=child_id,
-                    outcome_success=row.get_str('outcome_success', 'always')
-                ))
+                    child_id=child_id
+                )
+                event.chained.append(new_link)
+                
+                factor = EventFactor(
+                    game_token=game_token,
+                    event_id=event.id,
+                    usage_type=Participant.CHAIN,
+                    outcome_success=row.get_str('outcome_success', Participant.ALWAYS)
+                )
+                new_link.req = factor
+
+                if row.get_bool('use_comparison'):
+                    fld = row.get_map('infield')
+                    mode = fld.get_str('field_mode')
+                    role = fld.get_str('role')
+                    if role and mode:
+                        factor.get_val_from = Participant.INFIELD
+                        factor.op_application = row.get_str(
+                            'op_application', Operation.EQ)
+                        factor.op_transform = row.get_str(
+                            'op_transform')
+                        factor.val_transform = row.get_float(
+                            'val_transform', 1.0)
+                        factor.val_required = row.get_float(
+                            'val_required', 1.0)
+                        factor.negate = row.get_bool(
+                            'negate')
+
+                        fld_attrib_id = fld.get_int('attrib_id') \
+                            if mode in Participant.USES_ATTRIB else None
+                        fld_item_id = fld.get_int('item_id') \
+                            if mode in Participant.USES_ITEM else None
+                        factor.infield = EventField(
+                            game_token=game_token,
+                            role=role,
+                            field_mode=mode,
+                            child_of_anchor=fld.get_bool('child_of_anchor'),
+                            attrib_id=fld_attrib_id,
+                            item_id=fld_item_id
+                        )
 
         db.session.commit()
         if 'duplicate' in request.form:

@@ -1,3 +1,7 @@
+{# =========================================================================
+   1. GLOBAL IMPORTS
+   ========================================================================= #}
+
 {% extends 'layout/base.html' %}
 {% import 'macros/hotkeys.html' as hk %}
 
@@ -10,6 +14,11 @@
 {% endblock %}
 
 {% block content %}
+
+{# =========================================================================
+   2. MAIN CONTENT
+   ========================================================================= #}
+
 <div class="session-card outer-border" style="max-width: 600px; margin: 40px auto;">
     <h1>Load Scenario Data</h1>
     
@@ -60,179 +69,188 @@
     </div>
 </div>
 
-<script>
-    const statusBox = document.getElementById('status-box');
-    const statusTitle = document.getElementById('status-title');
-    const statusText = document.getElementById('status-text');
-    const dropZone = document.getElementById('drop-zone');
-    const clearZone = document.getElementById('clear-zone');
-    const modeInput = document.getElementById('active-mode');
-    const modeIcon = document.getElementById('mode-icon');
-
-    function syncFormState(mode) {
-        const modeInput = document.getElementById('active-mode');
-        const statusBox = document.getElementById('status-box');
-        
-        modeInput.value = mode;
-        
-        // Reset classes and displays
-        statusBox.className = 'warning-box'; 
-        document.getElementById('drop-zone').style.display = 'block';
-        document.getElementById('clear-zone').style.display = 'none';
-
-        if (mode === 'overwrite') {
-            statusTitle.innerText = "Overwrite Mode";
-            statusText.innerHTML = "Erases current data and replaces it with JSON content.";
-            statusBox.classList.add('warning');
-            modeIcon.innerText = "📄";
-        } else if (mode === 'patch') {
-            statusTitle.innerText = "Patch Mode";
-            statusText.innerText = "Updates matching entities and appends new ones. Some connections may need to be fixed manually.";
-            statusBox.classList.add('info');
-            modeIcon.innerText = "🩹";
-        } else if (mode === 'clear') {
-            statusTitle.innerText = "Blank Mode";
-            statusText.innerText = "Permanently deletes everything. Use for starting a fresh project.";
-            statusBox.classList.add('danger');
-            document.getElementById('drop-zone').style.display = 'none';
-            document.getElementById('clear-zone').style.display = 'block';
-            modeIcon.innerText = "🧹";
-        }
-    }
-
-    // Drag and Drop Logic
-    const dz = document.getElementById('drop-zone');
-    const fileInput = document.getElementById('file-input');
-    const uploadForm = document.getElementById('upload-form');
-
-    // Simple Hotkey for Upload
-    document.addEventListener('keypress', (e) => {
-        if (e.target.tagName !== 'INPUT' && e.key.toLowerCase() === 'u') {
-            fileInput.click(); // Opens the browse dialog
-        }
-    });
-
-    // Automatically submit the form once dropped
-    const autoSubmit = (files) => {
-        if (files.length > 0) {
-            // Use requestSubmit() to trigger HTML5 validation 
-            // and stay compatible with standard form behavior
-            if (typeof uploadForm.requestSubmit === 'function') {
-                uploadForm.requestSubmit();
-            } else {
-                uploadForm.submit();
-                //HTMLFormElement.prototype.submit.call(uploadForm);
-            }
-            console.log("File uploaded:", files[0].name);
-        }
-    };
-
-    // Manual Browse (The Fallback)
-    // Fires as soon as the user selects a file in the system dialog
-    fileInput.addEventListener('change', (e) => {
-        const files = e.target.files;
-        fileInput.files = files;  // Put file into the form input.
-        autoSubmit(files);
-    });
-
-    // Visual Feedback
-    dz.addEventListener('dragover', (e) => { 
-        e.preventDefault(); 
-        dz.style.borderColor = 'var(--accent)'; 
-    });
-
-    dz.addEventListener('dragleave', (e) => { 
-        dz.style.borderColor = 'var(--border)'; 
-    });
-
-    // Handling the Drop
-    dz.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dz.style.borderColor = 'var(--border)';
-
-        // 1. Get the files from the event
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-            // 2. Assign the dropped file to the hidden file input
-            fileInput.files = files;  // Put file into the form input.
-            autoSubmit(files);
-        }
-    });
-</script>
+{# =========================================================================
+   3. TEMPLATES & STYLES
+   ========================================================================= #}
 
 <style>
-    /* Tab Styling */
-    .tab-button input { display: none; }
-    .tab-button span {
-        padding: 8px 16px;
-        border: 1px solid var(--border);
-        cursor: pointer;
-        border-radius: 4px;
-        transition: 0.2s;
-    }
-    .tab-button input:checked + span {
-        background: var(--accent);
-        color: white;
-        border-color: var(--accent);
-    }
-    .warning-box.info { 
-        border-left: 5px solid #3498db; /* Blue */
-        background: rgba(52, 152, 219, 0.1);
-        color: var(--text);
-        font-size: 1em;
-    }
-    .warning-box.warning { 
-        border-left: 5px solid #f39c12; /* Amber/Orange */
-        background: rgba(243, 156, 18, 0.1); 
-        color: var(--text);
-        font-size: 1em;
-    }
-    .warning-box.danger { 
-        border-left: 5px solid #c0392b; /* Deep Red */
-        background: rgba(192, 57, 43, 0.1); 
-        color: var(--text);
-        font-size: 1em;
-    }
 
-    .upload-zone {
-        border: 2px dashed var(--border);
-        padding: 40px;
-        text-align: center;
-        border-radius: 8px;
-        background: #111;
-        transition: border-color 0.3s;
-    }
-    .warning-box {
-        background: #2a0000;
-        padding: 10px;
-    }
-    .gap-10 { gap: 10px; }
+/* Tab Styling */
+.tab-button input { display: none; }
+.tab-button span {
+    padding: 8px 16px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: 0.2s;
+}
+.tab-button input:checked + span {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+}
+.warning-box.info { 
+    border-left: 5px solid #3498db; /* Blue */
+    background: rgba(52, 152, 219, 0.1);
+    color: var(--text);
+    font-size: 1em;
+}
+.warning-box.warning { 
+    border-left: 5px solid #f39c12; /* Amber/Orange */
+    background: rgba(243, 156, 18, 0.1); 
+    color: var(--text);
+    font-size: 1em;
+}
+.warning-box.danger { 
+    border-left: 5px solid #c0392b; /* Deep Red */
+    background: rgba(192, 57, 43, 0.1); 
+    color: var(--text);
+    font-size: 1em;
+}
 
-    #file-input {
-        display: none;
-    }
+.upload-zone {
+    border: 2px dashed var(--border);
+    padding: 40px;
+    text-align: center;
+    border-radius: 8px;
+    background: #111;
+    transition: border-color 0.3s;
+}
+.warning-box {
+    background: #2a0000;
+    padding: 10px;
+}
+.gap-10 { gap: 10px; }
 
-    .custom-file-upload {
-        display: inline-block;
-        padding: 12px 30px;
-        cursor: pointer;
-        background: var(--accent, #007bff);
-        color: white;
-        border-radius: 8px;
-        font-weight: bold;
-    }
+#file-input {
+    display: none;
+}
 
-    #file-name {
-        margin-left: 10px;
-        font-size: 0.9em;
-        color: #555;
-    }
+.custom-file-upload {
+    display: inline-block;
+    padding: 12px 30px;
+    cursor: pointer;
+    background: var(--accent, #007bff);
+    color: white;
+    border-radius: 8px;
+    font-weight: bold;
+}
 
-    .blank-start-area {
-        margin-top: 20px;
-        padding: 20px;
-        border-top: 1px solid #222;
-    }
+#file-name {
+    margin-left: 10px;
+    font-size: 0.9em;
+    color: #555;
+}
+
+.blank-start-area {
+    margin-top: 20px;
+    padding: 20px;
+    border-top: 1px solid #222;
+}
 
 </style>
+
+{# =========================================================================
+   4. SCRIPTS
+   ========================================================================= #}
+
+<script>
+const statusBox = document.getElementById('status-box');
+const statusTitle = document.getElementById('status-title');
+const statusText = document.getElementById('status-text');
+const dropZone = document.getElementById('drop-zone');
+const clearZone = document.getElementById('clear-zone');
+const modeInput = document.getElementById('active-mode');
+const modeIcon = document.getElementById('mode-icon');
+
+function syncFormState(mode) {
+    const modeInput = document.getElementById('active-mode');
+    const statusBox = document.getElementById('status-box');
+    
+    modeInput.value = mode;
+    
+    // Reset classes and displays
+    statusBox.className = 'warning-box'; 
+    document.getElementById('drop-zone').style.display = 'block';
+    document.getElementById('clear-zone').style.display = 'none';
+
+    if (mode === 'overwrite') {
+        statusTitle.innerText = "Overwrite Mode";
+        statusText.innerHTML = "Erases current data and replaces it with JSON content.";
+        statusBox.classList.add('warning');
+        modeIcon.innerText = "📄";
+    } else if (mode === 'patch') {
+        statusTitle.innerText = "Patch Mode";
+        statusText.innerText = "Updates matching entities and appends new ones. Some connections may need to be fixed manually.";
+        statusBox.classList.add('info');
+        modeIcon.innerText = "🩹";
+    } else if (mode === 'clear') {
+        statusTitle.innerText = "Blank Mode";
+        statusText.innerText = "Permanently deletes everything. Use for starting a fresh project.";
+        statusBox.classList.add('danger');
+        document.getElementById('drop-zone').style.display = 'none';
+        document.getElementById('clear-zone').style.display = 'block';
+        modeIcon.innerText = "🧹";
+    }
+}
+
+// Drag and Drop Logic
+const dz = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+const uploadForm = document.getElementById('upload-form');
+
+// Simple Hotkey for Upload
+document.addEventListener('keypress', (e) => {
+    if (e.target.tagName !== 'INPUT' && e.key.toLowerCase() === 'u') {
+        fileInput.click(); // Opens the browse dialog
+    }
+});
+
+// Automatically submit the form once dropped
+const autoSubmit = (files) => {
+    if (files.length > 0) {
+        // Use requestSubmit() to trigger HTML5 validation 
+        // and stay compatible with standard form behavior
+        if (typeof uploadForm.requestSubmit === 'function') {
+            uploadForm.requestSubmit();
+        } else {
+            uploadForm.submit();
+            //HTMLFormElement.prototype.submit.call(uploadForm);
+        }
+        console.log("File uploaded:", files[0].name);
+    }
+};
+
+// Manual Browse (The Fallback)
+// Fires as soon as the user selects a file in the system dialog
+fileInput.addEventListener('change', (e) => {
+    const files = e.target.files;
+    fileInput.files = files;  // Put file into the form input.
+    autoSubmit(files);
+});
+
+// Visual Feedback
+dz.addEventListener('dragover', (e) => { 
+    e.preventDefault(); 
+    dz.style.borderColor = 'var(--accent)'; 
+});
+
+dz.addEventListener('dragleave', (e) => { 
+    dz.style.borderColor = 'var(--border)'; 
+});
+
+// Handling the Drop
+dz.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dz.style.borderColor = 'var(--border)';
+
+    // 1. Get the files from the event
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        // 2. Assign the dropped file to the hidden file input
+        fileInput.files = files;  // Put file into the form input.
+        autoSubmit(files);
+    }
+});
+</script>
 {% endblock %}

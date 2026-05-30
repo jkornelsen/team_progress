@@ -1,3 +1,7 @@
+{# =========================================================================
+   1. GLOBAL IMPORTS
+   ========================================================================= #}
+
 {% extends 'layout/base.html' %}
 {% import 'macros/hotkeys.html' as hk %}
 {% import 'macros/render.html' as render %}
@@ -11,6 +15,10 @@
 {% endblock %}
 
 {% block content %}
+
+{# =========================================================================
+   2. MAIN CONTENT
+   ========================================================================= #}
 
 <!-- Smoother reloading -->
 <div id="loading-overlay" style="
@@ -184,68 +192,77 @@
     </div>
 </div>
 
-<script>
-    // Handle Auto-Reload Logic
-    let reloadTimer = null;
-    const reloadToggle = document.getElementById('reload-toggle');
-    const STORAGE_KEY = 'game_reload_interval';
-
-    function startTimer() {
-        const isEnabled = reloadToggle.checked;
-        const ms = isEnabled ? parseInt(reloadToggle.getAttribute('data-interval')) : 0;
-        localStorage.setItem(STORAGE_KEY, ms);
-        if (reloadTimer) clearInterval(reloadTimer);
-        if (ms > 0) {
-            reloadTimer = setInterval(() => {
-                location.reload();
-            }, ms);
-        }
-    }
-
-    // Initialization: Run this on page load
-    function initReload() {
-        const savedValue = localStorage.getItem(STORAGE_KEY);
-        if (savedValue !== null) {
-            reloadToggle.checked = (savedValue > 0);
-        }
-        startTimer();
-    }
-
-    window.addEventListener('load', () => {
-        const overlay = document.getElementById('loading-overlay');
-        if (overlay) {
-            overlay.style.opacity = '0';
-            setTimeout(() => overlay.style.display = 'none', 300);
-        }
-    });
-
-    reloadToggle.addEventListener('change', startTimer);
-    initReload();
-
-    // Log scroll position
-    const log = document.getElementById('game-log');
-    const SCROLL_KEY = 'game_log_scroll';
-
-    if (log) {
-        // 1. On load, check if we have a saved position
-        const savedScroll = localStorage.getItem(SCROLL_KEY);
-        if (savedScroll !== null) {
-            log.scrollTop = parseInt(savedScroll);
-        } else {
-            // Default to bottom if no saved position exists
-            log.scrollTop = log.scrollHeight;
-        }
-
-        // 2. Save the scroll position whenever the user scrolls
-        log.addEventListener('scroll', () => {
-            localStorage.setItem(SCROLL_KEY, log.scrollTop);
-        });
-    }
-</script>
+{# =========================================================================
+   3. TEMPLATES & STYLES
+   ========================================================================= #}
 
 <style>
     .objective-list { list-style: none; padding: 0; }
     .objective-list li { margin-bottom: 8px; }
     .loc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 </style>
+
+{# =========================================================================
+   4. SCRIPTS
+   ========================================================================= #}
+
+<script>
+
+// Handle Auto-Reload Logic
+let reloadTimer = null;
+const reloadToggle = document.getElementById('reload-toggle');
+const STORAGE_KEY = 'game_reload_interval';
+
+function startTimer() {
+    const isEnabled = reloadToggle.checked;
+    const ms = isEnabled ? parseInt(reloadToggle.getAttribute('data-interval')) : 0;
+    localStorage.setItem(STORAGE_KEY, ms);
+    if (reloadTimer) clearInterval(reloadTimer);
+    if (ms > 0) {
+        reloadTimer = setInterval(() => {
+            location.reload();
+        }, ms);
+    }
+}
+
+// Initialization: Run this on page load
+function initReload() {
+    const savedValue = localStorage.getItem(STORAGE_KEY);
+    if (savedValue !== null) {
+        reloadToggle.checked = (savedValue > 0);
+    }
+    startTimer();
+}
+
+window.addEventListener('load', () => {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) {
+        overlay.style.opacity = '0';
+        setTimeout(() => overlay.style.display = 'none', 300);
+    }
+});
+
+reloadToggle.addEventListener('change', startTimer);
+initReload();
+
+// Log scroll position
+const log = document.getElementById('game-log');
+const SCROLL_KEY = 'game_log_scroll';
+
+if (log) {
+    // 1. On load, check if we have a saved position
+    const savedScroll = localStorage.getItem(SCROLL_KEY);
+    if (savedScroll !== null) {
+        log.scrollTop = parseInt(savedScroll);
+    } else {
+        // Default to bottom if no saved position exists
+        log.scrollTop = log.scrollHeight;
+    }
+
+    // 2. Save the scroll position whenever the user scrolls
+    log.addEventListener('scroll', () => {
+        localStorage.setItem(SCROLL_KEY, log.scrollTop);
+    });
+}
+</script>
 {% endblock %}

@@ -1,3 +1,7 @@
+{# =========================================================================
+   1. GLOBAL IMPORTS
+   ========================================================================= #}
+
 {% extends 'layout/base.html' %}
 {% import 'macros/hotkeys.html' as hk %}
 
@@ -14,6 +18,11 @@
 {% endblock %}
 
 {% block content %}
+
+{# =========================================================================
+   2. MAIN CONTENT
+   ========================================================================= #}
+
 <div class="lookup-container">
     <header class="entity-header">
         <span class="label-like text-uppercase">{{ entity.entity_type }} Usage</span>
@@ -72,14 +81,18 @@
     </div>
 </div>
 
+{# =========================================================================
+   3. TEMPLATES & STYLES
+   ========================================================================= #}
+
 <style>
-    .category-title { border-bottom: 1px solid var(--accent); padding-bottom: 5px; margin-bottom: 15px; color: var(--accent); }
-    .usage-list { list-style: none; padding: 0; }
-    .usage-list li { padding: 10px; border-bottom: 1px solid #333; transition: background 0.2s; }
-    .usage-list li:hover { background: #222; }
-    .usage-label { color: var(--text-dim); font-size: 0.85em; margin-right: 10px; display: inline-block; min-width: 120px; }
-    .usage-name { font-weight: bold; }
-    .gap-10 { gap: 10px; }
-    .text-uppercase { text-transform: uppercase; letter-spacing: 1px; font-size: 0.75em; }
+.category-title { border-bottom: 1px solid var(--accent); padding-bottom: 5px; margin-bottom: 15px; color: var(--accent); }
+.usage-list { list-style: none; padding: 0; }
+.usage-list li { padding: 10px; border-bottom: 1px solid #333; transition: background 0.2s; }
+.usage-list li:hover { background: #222; }
+.usage-label { color: var(--text-dim); font-size: 0.85em; margin-right: 10px; display: inline-block; min-width: 120px; }
+.usage-name { font-weight: bold; }
+.gap-10 { gap: 10px; }
+.text-uppercase { text-transform: uppercase; letter-spacing: 1px; font-size: 0.75em; }
 </style>
 {% endblock %}

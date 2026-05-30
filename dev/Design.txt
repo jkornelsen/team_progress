@@ -6,9 +6,6 @@
 
 do partial production up to limit
 
-chain event conditions like determinant comparisons
-    target hp < 1
-
 Value: -4.500000000000018
     truncate floating point limits with epsilon or whatever it was
     or 6-8 places, especially when writing to json and maybe also db
@@ -83,6 +80,22 @@ tethered one
     when lyria stuck in snow cave
         pike village entrance req to not be trapped in cave
         "spoiled" in atlanth's dialog reported by danglars
+    dynamite
+        countdown timer -- recommended to leave open in separate window
+        crush gives to lyria
+        would kill anyone in window loc
+        the plan is to blow open the doors but vull blocks and blast goes down
+    masked dest from window loc after blown -- vull's cavern
+        crush and dulcie can visit outside
+        galebane and suhkh follow them -- their cell floor is blown out too
+        they fall but the prisoner doesn't -- he was cowering in a corner
+        evelyn dies (falling wheelchair) and suhkh leaves
+    narrator convo requiring all 6 chars
+        party plus galebane and vull
+    vull kept at bay by water
+    dulcie sees evelyn fallen to her death and demands retribution
+        galebane has a panic attack at being trapped underground
+        crush twists the wheelchair metal to bind galebane's body
 
 infestation
     repair cost + reload cost can reduce xp to 0 (but never below)
@@ -136,9 +149,7 @@ saving grandfather clock resets hour, an enumerated attrib, to 12am
 ---- code ----
 
 can doors be owned deterministically so they don't move around in diffs
-
-refactor play_item
-consider manual refactoring choices or a list of summarized ai suggestions
+    and sort relations by ids since they don't have names
 
 ---- doesn't seem important currently ----
 

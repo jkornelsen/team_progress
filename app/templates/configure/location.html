@@ -1,3 +1,7 @@
+{# =========================================================================
+   1. GLOBAL IMPORTS
+   ========================================================================= #}
+
 {% extends 'layout/base.html' %}
 {% import 'macros/hotkeys.html' as hk %}
 {% from 'macros/config_forms.html' import footer_actions %}
@@ -30,199 +34,9 @@
 {% set containable_items = all_items |
     rejectattr("storage_type", "equalto", StorageType.UNIVERSAL) | list %}
 
-<!-- TEMPLATES FOR DYNAMIC ROWS -->
-
-{% macro dest_row(index, dest=None, current_loc_id=None) %}
-    <div class="col-row dest-row {{ 'unplaced-route' if not dest or not dest.door_here }}" style="align-items: center;">
-        <input type="hidden" name="dests[{{ index }}][id]" value="{{ dest.id if dest else '' }}">
-        
-        <select name="dests[{{ index }}][target_id]">
-            {% for loc in all_locs if loc.id != current_loc_id %}
-                <option value="{{ loc.id }}" {{ 'selected' if dest and loc.id == dest.target_id }}>{{ loc.name }}</option>
-            {% endfor %}
-        </select>
-
-        <!-- Door Here (Exit/Arrival Point) -->
-        <div class="coord-input-group">
-            <input type="text" name="dests[{{ index }}][door_here]" 
-                   value="{{ dest.door_here|join(',') if dest and dest.door_here else '' }}" 
-                   placeholder="x,y" size="8">
-        </div>
-
-        <div class="direction-toggle">
-            <select name="dests[{{ index }}][direction]" class="input-sm">
-                <option value="two-way" {{ 'selected' if dest and dest.direction == 'two-way' or not dest }}>
-                    ↔ Two-Way
-                </option>
-                <option value="forward" {{ 'selected' if dest and dest.direction == 'forward' }}>
-                    → Exit Only
-                </option>
-                <option value="backward" {{ 'selected' if dest and dest.direction == 'backward' }}>
-                    ← Entrance Only
-                </option>
-            </select>
-        </div>
-
-        <button type="button" class="btn-sm dangerous-button" onclick="ConfigEditor.removeRow(this, 'dest-list')">×</button>
-    </div>
-{% endmacro %}
-
-{% macro zone_row(index, zone=None) %}
-    <div class="col-row zone-row">
-        <input type="hidden" name="zones[{{ index }}][order_index]"
-            class="zone-order-input" value="{{ index }}">
-        <input type="text" name="zones[{{ index }}][lt]"
-            value="{{ zone.coords[:2]|join(',') if zone else '' }}" placeholder="1,1">
-        <input type="text" name="zones[{{ index }}][rb]"
-            value="{{ zone.coords[2:]|join(',') if zone else '' }}" placeholder="2,2">
-        <input type="text" name="zones[{{ index }}][color]"
-            value="{{ zone.color if zone else '' }}" placeholder="rgba(0,0,0,0.5)">
-        <input type="checkbox" name="zones[{{ index }}][prevents_travel]"
-            {{ 'checked' if zone and zone.prevents_travel }}>
-        <input type="text" name="zones[{{ index }}][label]"
-            value="{{ zone.label if zone else '' }}" placeholder="Stone Wall">
-        <div class="flex-row">
-            <button type="button" class="btn-sm btn-zone-up"
-                onclick="adjustZone('moveRow', this, -1)">↑</button>
-            <button type="button" class="btn-sm btn-zone-down"
-                onclick="adjustZone('moveRow', this, 1)">↓</button>
-            <button type="button" class="btn-sm dangerous-button"
-                style="margin-left: 10px;"
-                onclick="ConfigEditor.removeRow(this, 'zone-list'); adjustZone('renumberRows')">×</button>
-        </div>
-    </div>
-{% endmacro %}
-
-{% macro item_row(index, item_obj=None) %}
-    {% set selected_id = item_obj.item_id if item_obj else None %}
-    {% set qty = item_obj.quantity if item_obj else 1 %}
-    {% set pos = item_obj.pos if item_obj else '' %}
-
-    <div class="col-row floor-piles-row">
-        <select name="items[{{ index }}][item_id]">
-            {% for item in containable_items %}
-                <option value="{{ item.id }}" {{ 'selected' if item.id == selected_id }}>
-                    {{ item.name }}
-                </option>
-            {% endfor %}
-        </select>
-        <input type="number" name="items[{{ index }}][quantity]" value="{{ qty }}" step="any">
-        <input type="text" name="items[{{ index }}][pos]" value="{{ pos }}" placeholder="1,1">
-        <button type="button" class="btn-sm dangerous-button" onclick="ConfigEditor.removeRow(this, 'item-list')">×</button>
-    </div>
-{% endmacro %}
-
-{% macro ref_row(selected_id=None) %}
-    <div class="col-row item-ref-row">
-        <select name="item_refs[]">
-            {% for item in universal_items %}
-                <option value="{{ item.id }}" {{ 'selected' if item.id == selected_id }}>
-                    {{ item.name }}
-                </option>
-            {% endfor %}
-        </select>
-        <button type="button" class="btn-sm dangerous-button" onclick="ConfigEditor.removeRow(this, 'ref-list')">×</button>
-    </div>
-{% endmacro %}
-
-{% macro req_row(index, req=None) %}
-<div class="flex-row gap-5 align-center spacious-bottom attrib-wrapper entrance-req-row">
-    <select name="entrance_reqs[{{ index }}][entity_id]">
-        <option value="" {{ 'selected' if not req or not req.item_id }}>👤 (Character)</option>
-        {% for i in all_items if i.storage_type in [StorageType.UNIVERSAL, StorageType.CARRIED] %}
-            <option value="{{ i.id }}" {{ 'selected' if req and req.item_id == i.id }}>
-                {{ i.name }}
-            </option>
-        {% endfor %}
-    </select>
-
-    <select name="entrance_reqs[{{ index }}][attrib_id]" 
-            data-current-val="{{ req.val_required if req else 0 }}"
-            onchange="ConfigEditor.syncAttribVal(this)"
-            style="width: 15ch;">
-        <option value="">(Quantity)</option>
-        {% for a in all_attribs %}
-            <option value="{{ a.id }}" {{ 'selected' if req and a.id == req.attrib_id }}>{{ a.name }}</option>
-        {% endfor %}
-    </select>
-
-    <div class="attribval-container flex-grow" 
-         data-field-name="entrance_reqs[{{ index }}][val_required]">
-    </div>
-    
-    <button type="button" class="btn-sm dangerous-button"
-        onclick="ConfigEditor.removeRow(this, 'entrance-req-list')">×</button>
-</div>
-{% endmacro %}
-
-{% macro event_row(index, selected_id=None) %}
-    <div class="col-row event-row">
-        <select name="events[{{ index }}][id]">
-            <option value="" disabled {{ 'selected' if not selected_id }}>Select an Event...</option>
-            {% for event_def in all_events %}
-                <option value="{{ event_def.id }}" {{ 'selected' if event_def.id == selected_id }}>
-                    {{ event_def.name }} ({{ event_def.outcome_type }})
-                </option>
-            {% endfor %}
-        </select>
-        <button type="button" class="btn-sm dangerous-button" 
-                onclick="ConfigEditor.removeRow(this, 'event-list')">×</button>
-    </div>
-{% endmacro %}
-
-{% macro attrib_row(index, av=None) %}
-    {% set selected_id = av.attrib_id if av else None %}
-    {% set val = av.value if av else 0 %}
-    
-    <div class="col-row attrib-row attrib-wrapper">
-        <select name="attribs[{{ index }}][id]" 
-                data-current-val="{{ val }}"
-                onchange="ConfigEditor.syncAttribVal(this)">
-            {% for attr_def in all_attribs %}
-                <option value="{{ attr_def.id }}" 
-                    {{ 'selected' if attr_def.id == selected_id }}>
-                    {{ attr_def.name }}
-                </option>
-            {% endfor %}
-        </select>
-        <div class="attribval-container"
-            data-field-name="attribs[{{ index }}][value]">
-            <!-- Filled by ConfigEditor.syncAttribVal -->
-        </div>
-        <button type="button" class="btn-sm dangerous-button" 
-                onclick="ConfigEditor.removeRow(this, 'attrib-list')">×</button>
-    </div>
-{% endmacro %}
-
-<template id="dest-template">
-    {{ dest_row('__INDEX__', None, location.id) }}
-</template>
-
-<template id="item-template">
-    {{ item_row('__INDEX__', None) }}
-</template>
-
-<template id="ref-template">
-    {{ ref_row(None) }}
-</template>
-
-<template id="zone-template">
-    {{ zone_row('__INDEX__') }}
-</template>
-
-<template id="entrance-req-template">
-    {{ req_row('__INDEX__', None) }}
-</template>
-
-<template id="event-template">
-    {{ event_row('__INDEX__', None) }}
-</template>
-
-<template id="attrib-template">
-    {{ attrib_row('__INDEX__', None) }}
-</template>
-
-<!-- MAIN CONTENT -->
+{# =========================================================================
+   2. MAIN CONTENT
+   ========================================================================= #}
 
 <div class="configure-location">
     <h1>Location Setup</h1>
@@ -444,17 +258,219 @@
     </form>
 </div>
 
-<script>
-    function adjustZone(method, ...args) {
-        const options = {
-            inputClass: '.zone-order-input',
-            upClass: '.btn-zone-up',
-            downClass: '.btn-zone-down'
-        };
-        ConfigEditor[method](...args, 'zone-list', options);
-    }
-</script>
+{# =========================================================================
+   3. TEMPLATES & STYLES
+   ========================================================================= #}
+
+<template id="dest-template">
+    {{ dest_row('__INDEX__', None, location.id) }}
+</template>
+
+<template id="item-template">
+    {{ item_row('__INDEX__', None) }}
+</template>
+
+<template id="ref-template">
+    {{ ref_row(None) }}
+</template>
+
+<template id="zone-template">
+    {{ zone_row('__INDEX__') }}
+</template>
+
+<template id="entrance-req-template">
+    {{ req_row('__INDEX__', None) }}
+</template>
+
+<template id="event-template">
+    {{ event_row('__INDEX__', None) }}
+</template>
+
+<template id="attrib-template">
+    {{ attrib_row('__INDEX__', None) }}
+</template>
 
 <style>
 </style>
+
+{# =========================================================================
+   4. SCRIPTS
+   ========================================================================= #}
+
+<script>
+function adjustZone(method, ...args) {
+    const options = {
+        inputClass: '.zone-order-input',
+        upClass: '.btn-zone-up',
+        downClass: '.btn-zone-down'
+    };
+    ConfigEditor[method](...args, 'zone-list', options);
+}
+</script>
+
+{# =========================================================================
+   5. MACROS
+   ========================================================================= #}
+
 {% endblock %}
+
+{% macro dest_row(index, dest=None, current_loc_id=None) %}
+<div class="col-row dest-row {{ 'unplaced-route' if not dest or not dest.door_here }}" style="align-items: center;">
+    <input type="hidden" name="dests[{{ index }}][id]" value="{{ dest.id if dest else '' }}">
+    
+    <select name="dests[{{ index }}][target_id]">
+        {% for loc in all_locs if loc.id != current_loc_id %}
+            <option value="{{ loc.id }}" {{ 'selected' if dest and loc.id == dest.target_id }}>{{ loc.name }}</option>
+        {% endfor %}
+    </select>
+
+    <!-- Door Here (Exit/Arrival Point) -->
+    <div class="coord-input-group">
+        <input type="text" name="dests[{{ index }}][door_here]" 
+               value="{{ dest.door_here|join(',') if dest and dest.door_here else '' }}" 
+               placeholder="x,y" size="8">
+    </div>
+
+    <div class="direction-toggle">
+        <select name="dests[{{ index }}][direction]" class="input-sm">
+            <option value="two-way" {{ 'selected' if dest and dest.direction == 'two-way' or not dest }}>
+                ↔ Two-Way
+            </option>
+            <option value="forward" {{ 'selected' if dest and dest.direction == 'forward' }}>
+                → Exit Only
+            </option>
+            <option value="backward" {{ 'selected' if dest and dest.direction == 'backward' }}>
+                ← Entrance Only
+            </option>
+        </select>
+    </div>
+
+    <button type="button" class="btn-sm dangerous-button" onclick="ConfigEditor.removeRow(this, 'dest-list')">×</button>
+</div>
+{% endmacro %}
+
+{% macro zone_row(index, zone=None) %}
+<div class="col-row zone-row">
+    <input type="hidden" name="zones[{{ index }}][order_index]"
+        class="zone-order-input" value="{{ index }}">
+    <input type="text" name="zones[{{ index }}][lt]"
+        value="{{ zone.coords[:2]|join(',') if zone else '' }}" placeholder="1,1">
+    <input type="text" name="zones[{{ index }}][rb]"
+        value="{{ zone.coords[2:]|join(',') if zone else '' }}" placeholder="2,2">
+    <input type="text" name="zones[{{ index }}][color]"
+        value="{{ zone.color if zone else '' }}" placeholder="rgba(0,0,0,0.5)">
+    <input type="checkbox" name="zones[{{ index }}][prevents_travel]"
+        {{ 'checked' if zone and zone.prevents_travel }}>
+    <input type="text" name="zones[{{ index }}][label]"
+        value="{{ zone.label if zone else '' }}" placeholder="Stone Wall">
+    <div class="flex-row">
+        <button type="button" class="btn-sm btn-zone-up"
+            onclick="adjustZone('moveRow', this, -1)">↑</button>
+        <button type="button" class="btn-sm btn-zone-down"
+            onclick="adjustZone('moveRow', this, 1)">↓</button>
+        <button type="button" class="btn-sm dangerous-button"
+            style="margin-left: 10px;"
+            onclick="ConfigEditor.removeRow(this, 'zone-list'); adjustZone('renumberRows')">×</button>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro item_row(index, item_obj=None) %}
+    {% set selected_id = item_obj.item_id if item_obj else None %}
+    {% set qty = item_obj.quantity if item_obj else 1 %}
+    {% set pos = item_obj.pos if item_obj else '' %}
+<div class="col-row floor-piles-row">
+    <select name="items[{{ index }}][item_id]">
+        {% for item in containable_items %}
+            <option value="{{ item.id }}" {{ 'selected' if item.id == selected_id }}>
+                {{ item.name }}
+            </option>
+        {% endfor %}
+    </select>
+    <input type="number" name="items[{{ index }}][quantity]" value="{{ qty }}" step="any">
+    <input type="text" name="items[{{ index }}][pos]" value="{{ pos }}" placeholder="1,1">
+    <button type="button" class="btn-sm dangerous-button" onclick="ConfigEditor.removeRow(this, 'item-list')">×</button>
+</div>
+{% endmacro %}
+
+{% macro ref_row(selected_id=None) %}
+<div class="col-row item-ref-row">
+    <select name="item_refs[]">
+        {% for item in universal_items %}
+            <option value="{{ item.id }}" {{ 'selected' if item.id == selected_id }}>
+                {{ item.name }}
+            </option>
+        {% endfor %}
+    </select>
+    <button type="button" class="btn-sm dangerous-button" onclick="ConfigEditor.removeRow(this, 'ref-list')">×</button>
+</div>
+{% endmacro %}
+
+{% macro req_row(index, req=None) %}
+<div class="flex-row gap-5 align-center spacious-bottom attrib-wrapper entrance-req-row">
+    <select name="entrance_reqs[{{ index }}][entity_id]">
+        <option value="" {{ 'selected' if not req or not req.item_id }}>👤 (Character)</option>
+        {% for i in all_items if i.storage_type in [StorageType.UNIVERSAL, StorageType.CARRIED] %}
+            <option value="{{ i.id }}" {{ 'selected' if req and req.item_id == i.id }}>
+                {{ i.name }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <select name="entrance_reqs[{{ index }}][attrib_id]" 
+            data-current-val="{{ req.val_required if req else 0 }}"
+            onchange="ConfigEditor.syncAttribVal(this)"
+            style="width: 15ch;">
+        <option value="">(Quantity)</option>
+        {% for a in all_attribs %}
+            <option value="{{ a.id }}" {{ 'selected' if req and a.id == req.attrib_id }}>{{ a.name }}</option>
+        {% endfor %}
+    </select>
+
+    <div class="attribval-container flex-grow" 
+         data-field-name="entrance_reqs[{{ index }}][val_required]">
+    </div>
+    
+    <button type="button" class="btn-sm dangerous-button"
+        onclick="ConfigEditor.removeRow(this, 'entrance-req-list')">×</button>
+</div>
+{% endmacro %}
+
+{% macro event_row(index, selected_id=None) %}
+<div class="col-row event-row">
+    <select name="events[{{ index }}][id]">
+        <option value="" disabled {{ 'selected' if not selected_id }}>Select an Event...</option>
+        {% for event_def in all_events %}
+            <option value="{{ event_def.id }}" {{ 'selected' if event_def.id == selected_id }}>
+                {{ event_def.name }} ({{ event_def.outcome_type }})
+            </option>
+        {% endfor %}
+    </select>
+    <button type="button" class="btn-sm dangerous-button" 
+            onclick="ConfigEditor.removeRow(this, 'event-list')">×</button>
+</div>
+{% endmacro %}
+
+{% macro attrib_row(index, av=None) %}
+    {% set selected_id = av.attrib_id if av else None %}
+    {% set val = av.value if av else 0 %}
+    
+<div class="col-row attrib-row attrib-wrapper">
+    <select name="attribs[{{ index }}][id]" 
+            data-current-val="{{ val }}"
+            onchange="ConfigEditor.syncAttribVal(this)">
+        {% for attr_def in all_attribs %}
+            <option value="{{ attr_def.id }}" 
+                {{ 'selected' if attr_def.id == selected_id }}>
+                {{ attr_def.name }}
+            </option>
+        {% endfor %}
+    </select>
+    <div class="attribval-container"
+        data-field-name="attribs[{{ index }}][value]">
+        <!-- Filled by ConfigEditor.syncAttribVal -->
+    </div>
+    <button type="button" class="btn-sm dangerous-button" 
+            onclick="ConfigEditor.removeRow(this, 'attrib-list')">×</button>
+</div>
+{% endmacro %}

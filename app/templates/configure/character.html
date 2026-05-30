@@ -1,3 +1,7 @@
+{# =========================================================================
+   1. GLOBAL IMPORTS
+   ========================================================================= #}
+
 {% extends 'layout/base.html' %}
 {% import 'macros/hotkeys.html' as hk %}
 {% from 'macros/config_forms.html' import footer_actions %}
@@ -25,90 +29,9 @@
 </script>
 <script src="{{ url_for('static', filename='js/configuration.js') }}"></script>
 
-<!-- TEMPLATES FOR DYNAMIC ROWS -->
-
-{% macro attrib_row(index, av=None, all_attribs=[]) %}
-    {% set selected_id = av.attrib_id if av else None %}
-    {% set val = av.value if av else 0 %}
-    <div class="col-row attrib-row attrib-wrapper">
-        <select name="attribs[{{ index }}][id]" 
-                data-current-val="{{ val }}"
-                onchange="ConfigEditor.syncAttribVal(this)">
-            {% for attr_def in all_attribs %}
-                <option value="{{ attr_def.id }}" 
-                    {{ 'selected' if attr_def.id == selected_id }}>
-                    {{ attr_def.name }}
-                </option>
-            {% endfor %}
-        </select>
-        <div class="attribval-container"
-            data-field-name="attribs[{{ index }}][value]">
-            <!-- Filled by ConfigEditor.syncAttribVal -->
-        </div>
-        <button type="button" class="btn-sm dangerous-button" 
-                onclick="ConfigEditor.removeRow(this, 'attrib-list')">×</button>
-    </div>
-{% endmacro %}
-
-{% macro inv_row(index, pile=None, all_items=[], slots=[]) %}
-    {% set selected_item_id = pile.item_id if pile else None %}
-    {% set qty = pile.quantity if pile else 1 %}
-    {% set selected_slot = pile.slot if pile else '' %}
-
-    <div class="col-row inv-piles-row">
-        <select name="items[{{ index }}][item_id]">
-            {% for item_def in all_items %}
-                <option value="{{ item_def.id }}" {{ 'selected' if item_def.id == selected_item_id }}>
-                    {{ item_def.name }}
-                </option>
-            {% endfor %}
-        </select>
-
-        <input type="number" name="items[{{ index }}][quantity]" 
-               value="{{ qty }}" step="any" placeholder="Qty">
-
-        <select name="items[{{ index }}][slot]">
-            <option value="">(In Pack)</option>
-            {% for slot in slots %}
-                <option value="{{ slot }}" {{ 'selected' if slot == selected_slot }}>
-                    {{ slot }}
-                </option>
-            {% endfor %}
-        </select>
-
-        <button type="button" class="btn-sm dangerous-button" 
-                onclick="ConfigEditor.removeRow(this, 'inv-list')">×</button>
-    </div>
-{% endmacro %}
-
-{% macro ability_row(index, selected_id=None, all_events=[]) %}
-    <div class="col-row ability-row">
-        <select name="abilities[{{ index }}][id]">
-            <option value="" disabled {{ 'selected' if not selected_id }}>Select an Event...</option>
-            {% for event_def in all_events %}
-                <option value="{{ event_def.id }}" {{ 'selected' if event_def.id == selected_id }}>
-                    {{ event_def.name }}
-                </option>
-            {% endfor %}
-        </select>
-        <button type="button" class="btn-sm dangerous-button" 
-                onclick="ConfigEditor.removeRow(this, 'ability-list')">×</button>
-    </div>
-{% endmacro %}
-
-<template id="attrib-template">
-    {{ attrib_row('__INDEX__', None, all_attribs) }}
-</template>
-
-<template id="inv-template">
-    {{ inv_row('__INDEX__', None, all_items, overall.slots) }}
-</template>
-
-<template id="ability-template">
-    {{ ability_row('__INDEX__', None, all_events) }}
-</template>
-
-<!-- MAIN CONTENT -->
+{# =========================================================================
+   2. MAIN CONTENT
+   ========================================================================= #}
 
 <div class="configure-character">
     <h1>Character Setup</h1>
@@ -249,12 +172,105 @@
     </form>
 </div>
 
-<!-- JAVASCRIPT AND STYLES -->
+{# =========================================================================
+   3. TEMPLATES & STYLES
+   ========================================================================= #}
 
-<script>
-</script>
+<template id="attrib-template">
+    {{ attrib_row('__INDEX__', None, all_attribs) }}
+</template>
+
+<template id="inv-template">
+    {{ inv_row('__INDEX__', None, all_items, overall.slots) }}
+</template>
+
+<template id="ability-template">
+    {{ ability_row('__INDEX__', None, all_events) }}
+</template>
 
 <style>
     .grid-2-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 </style>
+
+{# =========================================================================
+   4. SCRIPTS
+   ========================================================================= #}
+
+<script>
+</script>
+
+{# =========================================================================
+   5. MACROS
+   ========================================================================= #}
+
 {% endblock %}
+
+{% macro attrib_row(index, av=None, all_attribs=[]) %}
+    {% set selected_id = av.attrib_id if av else None %}
+    {% set val = av.value if av else 0 %}
+    <div class="col-row attrib-row attrib-wrapper">
+        <select name="attribs[{{ index }}][id]" 
+                data-current-val="{{ val }}"
+                onchange="ConfigEditor.syncAttribVal(this)">
+            {% for attr_def in all_attribs %}
+                <option value="{{ attr_def.id }}" 
+                    {{ 'selected' if attr_def.id == selected_id }}>
+                    {{ attr_def.name }}
+                </option>
+            {% endfor %}
+        </select>
+        <div class="attribval-container"
+            data-field-name="attribs[{{ index }}][value]">
+            <!-- Filled by ConfigEditor.syncAttribVal -->
+        </div>
+        <button type="button" class="btn-sm dangerous-button" 
+                onclick="ConfigEditor.removeRow(this, 'attrib-list')">×</button>
+    </div>
+{% endmacro %}
+
+{% macro inv_row(index, pile=None, all_items=[], slots=[]) %}
+    {% set selected_item_id = pile.item_id if pile else None %}
+    {% set qty = pile.quantity if pile else 1 %}
+    {% set selected_slot = pile.slot if pile else '' %}
+
+    <div class="col-row inv-piles-row">
+        <select name="items[{{ index }}][item_id]">
+            {% for item_def in all_items %}
+                <option value="{{ item_def.id }}" {{ 'selected' if item_def.id == selected_item_id }}>
+                    {{ item_def.name }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <input type="number" name="items[{{ index }}][quantity]" 
+               value="{{ qty }}" step="any" placeholder="Qty">
+
+        <select name="items[{{ index }}][slot]">
+            <option value="">(In Pack)</option>
+            {% for slot in slots %}
+                <option value="{{ slot }}" {{ 'selected' if slot == selected_slot }}>
+                    {{ slot }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <button type="button" class="btn-sm dangerous-button" 
+                onclick="ConfigEditor.removeRow(this, 'inv-list')">×</button>
+    </div>
+{% endmacro %}
+
+{% macro ability_row(index, selected_id=None, all_events=[]) %}
+    <div class="col-row ability-row">
+        <select name="abilities[{{ index }}][id]">
+            <option value="" disabled {{ 'selected' if not selected_id }}>Select an Event...</option>
+            {% for event_def in all_events %}
+                <option value="{{ event_def.id }}" {{ 'selected' if event_def.id == selected_id }}>
+                    {{ event_def.name }}
+                </option>
+            {% endfor %}
+        </select>
+        <button type="button" class="btn-sm dangerous-button" 
+                onclick="ConfigEditor.removeRow(this, 'ability-list')">×</button>
+    </div>
+{% endmacro %}
+

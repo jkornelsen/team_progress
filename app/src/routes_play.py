@@ -18,7 +18,8 @@ from app.utils import (
     maskable_name)
 from .logic_piles import transfer_item
 from .logic_event import (
-    roll_for_outcome, roll_for_system_outcome, calculate_determinants,
+    roll_for_outcome, roll_for_system_outcome, check_outcome_success,
+    calculate_determinants,
     preview_effects, resolve_effects, get_entity_value, is_factor_met,
     do_effect_change, process_all_effects, format_for_display)
 from .logic_progress import (
@@ -31,6 +32,7 @@ from .logic_navigation import (
     is_in_grid, blocked_by_local_item, find_nearest_available_pos, is_adjacent)
 from .logic_objectives import validate_requirements
 from .logic_user_interaction import add_message
+from .presenters import ItemPlayPresenter
 
 logger = logging.getLogger(__name__)
 play_bp = Blueprint('play', __name__)
@@ -452,335 +454,15 @@ def char_travel(id):
     return jsonify({"message": message}), HTTPStatus.BAD_REQUEST
 
 # ------------------------------------------------------------------------
-# Item & Pile Routes
+# Item Route
 # ------------------------------------------------------------------------
 
 @play_bp.route('/play/item/<int:id>')
 def play_item(id):
-    game_token = g.game_token
-    req = RequestHelper('args')
-
-    item = Item.query.get_or_404((game_token, id))
-    capture_origin(name=item.name)
-
-    # Determine Viewed Pile Owner
-    # This is the pile displayed at the top of the page.
-    owner_id = req.get_int('owner_id')
-    if not owner_id:
-        # Default fallback based on how the item is stored
-        if item.storage_type == StorageType.UNIVERSAL:
-            owner_id = GENERAL_ID
-        elif session.get('old_char_id'):
-            owner_id = session.get('old_char_id')
-        else:
-            owner_id = session.get('old_loc_id') or GENERAL_ID
-
-    owner = Entity.query.get((game_token, owner_id))
-    
-    # Capture and Clean Context
-    ctx = ContextIds(
-        owner_id,
-        req.get_int('char_id') or session.get('old_char_id'),
-        req.get_int('loc_id') or session.get('old_loc_id')
-    )
-    if owner.entity_type == Character.TYPENAME:
-        ctx.char_id = owner.id
-        session['old_char_id'] = owner.id
-    elif owner.entity_type == Location.TYPENAME:
-        ctx.loc_id = owner.id
-        session['old_loc_id'] = owner.id
-        if ctx.char_id:
-            # Clear character if they aren't here
-            char = Character.query.get((game_token, ctx.char_id))
-            if not char or char.location_id != owner.id:
-                ctx.char_id = None
-                del session['old_char_id']
-
-    ctx_char = Character.query.get((game_token, ctx.char_id)) if ctx.char_id else None
-    if ctx_char:
-        ctx.loc_id = ctx_char.location_id
-        session['old_loc_id'] = ctx_char.location_id
-    ctx_loc = Location.query.get((game_token, ctx.loc_id)) if ctx.loc_id else None
-
-    logger.debug(
-        f"---- play_item() ----\n"
-        f"Item:{item.id} | Owner:{owner.id}"
-        f" | Char:{ctx.char_id} | Loc:{ctx.loc_id}")
-
-    # Fetch the specific Pile record
-    query = Pile.query.filter_by(
-        game_token=game_token, 
-        item_id=id, 
-        owner_id=owner.id
-    )
-    pos = req.get_coords('pos')
-    if pos:
-        query = query.filter_by(position=list(pos))
-    pile = query.first()
-
-    # If no pile exists yet, create a virtual one
-    if not pile:
-        pile = Pile(item_id=id, owner_id=owner.id, quantity=0.0, position=pos)
-
-    # Collect all relevant entities for attribute checking
-    all_attribreq_entity_ids = set()
-    if owner.id != GENERAL_ID:
-        all_attribreq_entity_ids.add(owner.id)
-    if ctx.addl_char_id:
-        all_attribreq_entity_ids.add(ctx.char_id)
-    if ctx.addl_loc_id:
-        all_attribreq_entity_ids.add(ctx.loc_id)
-    for r in item.recipes:
-        for source in r.sources:
-            all_attribreq_entity_ids.add(source.item_id)
-
-    # Recipes that PRODUCE this item
-    # Enriched allows UI to show 🚫 icon and specific reason tooltip.
-    all_attrib_vals = AttribVal.query.filter(
-        AttribVal.game_token == game_token,
-        AttribVal.subject_id.in_(all_attribreq_entity_ids)
-    ).all()
-    attribval_lookup = {(av.subject_id, av.attrib_id): av for av in all_attrib_vals}
-
-    enriched_recipes = []
-    for r in item.recipes:
-        host_id = find_best_host(r, owner.id, ctx)
-        logger.debug(f'host {host_id}')
-        
-        # Determine viability for the UI
-        can_do, reason = can_perform_recipe(host_id, r, owner.id, ctx)
-        resolved_ingredients = resolve_recipe_sources(host_id, r, ctx)
-        
-        # Prepare sources data for the UI
-        sources_ui_data = []
-        for res in resolved_ingredients:
-            url_params = { 'owner_id': res['anticipated_owner_id'] }
-            if ctx.addl_char_id and res['anticipated_owner_type'] != Character.TYPENAME:
-                url_params['char_id'] = ctx.char_id
-            elif ctx.addl_loc_id and res['anticipated_owner_id'] == GENERAL_ID:
-                url_params['loc_id'] = ctx.loc_id
-            if res['best_pile'] and res['best_pile'].position:
-                url_params['pos[]'] = res['best_pile'].position
-
-            sources_ui_data.append({
-                'ingredient': res['item'],
-                'q_required': res['source_def'].q_required,
-                'preserve': res['source_def'].preserve,
-                'current_stock': res['total_available'],
-                'pile_owner_id': res['anticipated_owner_id'],
-                'pile_owner_type': res['anticipated_owner_type'],
-                'url_params': url_params
-            })
-
-        # Prepare byproducts data for the UI
-        byproducts_ui_data = []
-        for bp in r.byproducts:
-            byproducts_ui_data.append({
-                'item': bp.item,
-                'rate_amount': bp.rate_amount,
-                'url_params': ctx.get_params()
-            })
-
-        # Check attribute requirements against all relevant entities
-        attribreq_entity_ids = set()
-        if owner.id != GENERAL_ID:
-            attribreq_entity_ids.add(owner.id)
-        if ctx.addl_char_id:
-            attribreq_entity_ids.add(ctx.char_id)
-        if ctx.addl_loc_id:
-            attribreq_entity_ids.add(ctx.loc_id)
-        
-        # Add any entities that provide ingredients
-        for res in resolved_ingredients:
-            if res['anticipated_owner_id'] != GENERAL_ID:
-                attribreq_entity_ids.add(res['anticipated_owner_id'])
-                all_attribreq_entity_ids.add(res['anticipated_owner_id'])
-
-            # --- Also add the Item ID itself to the UI search scope ---
-            attribreq_entity_ids.add(res['item'].id)
-            all_attribreq_entity_ids.add(res['item'].id)
-        
-        attrib_reqs_ui_data = []
-        for req in r.attrib_reqs:
-            req_met = False
-            current_val = None
-            satisfying_entity = None
-            entity_with_value = None
-            
-            for entity_id in attribreq_entity_ids:
-                av = attribval_lookup.get((entity_id, req.attrib_id), None)
-                if av is not None:
-                    if req.in_range(av.value):
-                        req_met = True
-                        current_val = av.value
-                        satisfying_entity = entity_id
-                        break
-
-                    # If we haven't found a winner, keep the first value 
-                    # we found (or the "best" one) to show the user why it's failing.
-                    if current_val is None:
-                        current_val = av.value
-                    else:
-                        # If the requirement has a max (like HP <= -1), 
-                        # we want to show the lowest value found.
-                        if req.max_val != float('inf') and req.max_val < 0:
-                            if av.value < current_val:
-                                current_val = av.value
-                                entity_with_value = entity_id
-                        # Otherwise, show the highest
-                        elif av.value > current_val:
-                            current_val = av.value
-                            entity_with_value = entity_id
-            
-            # Use satisfying entity if requirement met, otherwise entity with highest value
-            link_entity_id = satisfying_entity or entity_with_value
-            
-            attrib_reqs_ui_data.append({
-                'attrib': req.attrib,
-                'min_val': req.min_val,
-                'max_val': req.max_val,
-                'range_display': req.range_display,
-                'current_val': current_val,
-                'is_satisfied': req_met,
-                'link_entity_id': link_entity_id
-            })
-
-        host_ent = Entity.query.get((game_token, host_id)) if host_id else None
-
-        enriched_recipes.append({
-            'recipe': r,
-            'host_id': host_id,
-            'host_name': host_ent.name if host_ent else "No Host",
-            'can_produce': can_do,
-            'reason': reason,
-            'sources': sources_ui_data,
-            'byproducts': byproducts_ui_data,
-            'attrib_reqs': attrib_reqs_ui_data
-        })
-
-    for r_data in enriched_recipes:
-        recipe_obj = r_data['recipe']
-        
-        # Find the limiting ingredient
-        possible_batches = []
-        for source in r_data['sources']:
-            if not source['preserve'] and source['q_required'] > 0:
-                batches = int(source['current_stock'] // source['q_required'])
-                possible_batches.append(batches)
-        
-        # If it's infinite/no ingredients, default to a sensible max or 1
-        max_val = min(possible_batches) if possible_batches else 1
-        # Ensure at least 1 is shown if they can produce, otherwise 0
-        r_data['max_batches'] = max(1, max_val) if r_data['can_produce'] else 0
-
-    # Recipes where this item is a SOURCE (Ingredient)
-    used_for_production = []
-    seen_ids = set()
-    for source_link in item.as_ingredient:
-        product = source_link.recipe.product
-        if product.id != id and product.id not in seen_ids:
-            used_for_production.append({
-                'item': product,
-                'q_required': source_link.q_required,
-                'preserve': source_link.preserve,
-                'url_params': ctx.get_params()
-            })
-            seen_ids.add(product.id)
-    used_for_production = sort_by_name_stripped(
-        used_for_production, lambda d: d['item'])
-
-    # Recipes where this item is a BYPRODUCT
-    byproduct_of = []
-    for byproduct_link in item.as_byproducts:
-        product = byproduct_link.recipe.product
-        byproduct_of.append({
-            'item': product,
-            'rate_amount': byproduct_link.rate_amount,
-            'url_params': ctx.get_params()
-        })
-
-    # Check for active progress
-    current_progress = Progress.query.filter_by(
-        game_token=game_token, product_id=id
-    ).first()
-
-    # Characters nearby (for the "Give" button)
-    other_chars_here = []
-    if isinstance(owner, Character) and owner.location_id:
-        raw_chars = Character.query.filter(
-            Character.game_token == game_token,
-            Character.location_id == owner.location_id,
-            Character.id != owner.id
-        ).all()
-        
-        # Enrich the character objects with proximity data for the UI
-        for c in raw_chars:
-            c.is_reachable = is_adjacent(
-                owner.position, c.position) if owner.position else True
-            other_chars_here.append(c)
-
-    # Determine if the item is physically reachable by the context character
-    is_reachable = True
-    reach_error = None
-    if ctx_char:
-        # If the item is on the ground at a location with a grid
-        if owner.entity_type == 'location' and owner.dimensions and owner.dimensions[0] > 0:
-            if pile.position:
-                if not is_adjacent(ctx_char.position, pile.position):
-                    is_reachable = False
-                    reach_error = "Must be next to item to pick up."
-            else:
-                # Item is at location but has no position (internal storage/unplaced)
-                # In a strict grid game, unplaced items might be unreachable
-                is_reachable = False
-                reach_error = "This item is not currently placed on the grid."
-        
-        # If the item is carried by another character
-        elif owner.entity_type == Character.TYPENAME and owner.id != ctx_char.id:
-            if owner.location_id == ctx_char.location_id:
-                if not is_adjacent(ctx_char.position, owner.position):
-                    is_reachable = False
-                    reach_error = f"Must be next to {owner.name} to trade."
-            else:
-                is_reachable = False
-                reach_error = f"{owner.name} is in a different location."
-
-    # For equipping to a slot
-    overall = Overall.query.get(game_token)
-
-    # Create entities lookup for attribute requirement links
-    attribreq_entities = {owner.id: owner}
-    if ctx_char:
-        attribreq_entities[ctx_char.id] = ctx_char
-    if ctx_loc:
-        attribreq_entities[ctx_loc.id] = ctx_char
-    for entity_id in all_attribreq_entity_ids:
-        if entity_id not in attribreq_entities and entity_id != GENERAL_ID:
-            entity = Entity.query.get((game_token, entity_id))
-            if entity:
-                attribreq_entities[entity_id] = entity
-
+    presenter = ItemPlayPresenter(id, RequestHelper('args'))
     return render_template(
         'play/item.html',
-        item=item,
-        owner=owner,
-        pile=pile,
-        ctx_char=ctx_char,
-        ctx_loc=ctx_loc,
-        enriched_recipes=enriched_recipes,
-        used_for_production=used_for_production,
-        byproduct_of=byproduct_of,
-        progress=current_progress,
-        attribreq_entities=attribreq_entities,
-        available_slots=overall.slots,
-        other_chars_here=other_chars_here,
-        attrib_values=sort_by_name_stripped(
-            AttribVal.query.filter_by(game_token=game_token, subject_id=id).all(),
-            lambda p: p.attrib),
-        is_reachable=is_reachable,
-        reach_error=reach_error,
-        link_letters=LinkLetters(excluded='moedpqrg')
-    )
+        **presenter.get_template_context())
 
 # ------------------------------------------------------------------------
 # Production Routes
@@ -1205,7 +887,7 @@ def play_event(id):
                 all_related[ent.id] = ent
 
     # Chained events
-    for link in event.chained_events:
+    for link in event.chained:
         ent = link.child
         all_related[ent.id] = ent
 
@@ -1278,11 +960,41 @@ def roll_event(id):
         event, role_entities, result_val, tier, force_auto_only=True)
     db.session.commit()
     
+    # Evaluate Chained Events
+    chain_results = []
+    for evt_link in event.chained:
+        is_eligible = True
+
+        if evt_link.req:
+            # Check Outcome Success Tier
+            if not check_outcome_success(
+                    evt_link.req.outcome_success, tier):
+                is_eligible = False
+            
+            # Check Comparison Attributes/Items
+            factor = evt_link.req
+            if is_eligible and factor.infield:
+                anchor_id = resolve_anchor_id(factor.role, role_entities)
+                if anchor_id:
+                    anchor = Entity.query.get((game_token, anchor_id))
+                    if not is_factor_met(
+                            factor, anchor, subject_id=subject_id):
+                        is_eligible = False
+                elif factor.role != Participant.BLUEPRINT:
+                    is_eligible = False
+
+        if is_eligible:
+            chain_results.append({
+                "child_id": evt_link.child_id,
+                "child_name": evt_link.child.name
+            })
+
     return jsonify({
         "result_value": result_val,
         "result_val_display": format_for_display(result_val),
         "full_display": result_str,
         "tier": tier,
+        "chain_options": chain_results,
         "resolved_effects": resolved_effects
     })
 

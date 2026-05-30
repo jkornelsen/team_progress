@@ -1,3 +1,7 @@
+{# =========================================================================
+   1. GLOBAL IMPORTS
+   ========================================================================= #}
+
 {% extends 'layout/base.html' %}
 {% import 'macros/hotkeys.html' as hk %}
 {% from 'macros/config_forms.html' import footer_actions %}
@@ -24,34 +28,9 @@
 </script>
 <script src="{{ url_for('static', filename='js/configuration.js') }}"></script>
 
-{% macro limit_row(index, limit_obj=None) %}
-    <div class="col-row limit-row">
-        <select name="limits_for[{{ index }}][owner_id]">
-            <option value="" disabled {{ 'selected'
-                if not limit_obj }}>(Select Owner)</option>
-            <optgroup label="Characters">
-                {% for c in all_chars %}
-                    <option value="{{ c.id }}" {{ 'selected'
-                        if limit_obj and limit_obj.owner_id == c.id }}>{{ c.name }}</option>
-                {% endfor %}
-            </optgroup>
-            <optgroup label="Locations">
-                {% for l in all_locs %}
-                    <option value="{{ l.id }}" {{ 'selected'
-                        if limit_obj and limit_obj.owner_id == l.id }}>{{ l.name }}</option>
-                {% endfor %}
-            </optgroup>
-        </select>
-        <input type="number" name="limits_for[{{ index }}][q_limit]" 
-               value="{{ limit_obj.q_limit if limit_obj else 0 }}" step="any">
-        <button type="button" class="btn-sm dangerous-button" 
-                onclick="ConfigEditor.removeRow(this, 'limit-list')">×</button>
-    </div>
-{% endmacro %}
-
-<template id="limit-template">
-    {{ limit_row('__INDEX__', None) }}
-</template>
+{# =========================================================================
+   2. MAIN CONTENT
+   ========================================================================= #}
 
 <div class="configure-item">
     <h1>Item Setup</h1>
@@ -178,10 +157,8 @@
             </div>
             
             <div id="recipes-container" class="spacious-top">
-                {# Recipes are injected here via JS/Jinja loop #}
                 {% for recipe in recipes %}
-                    {% set recipe_index = loop.index0 %}
-                    {% include 'configure/partials/item_recipe_row.html' %}
+                    {{ recipe_row(loop.index0) }}
                 {% endfor %}
             </div>
         </section>
@@ -254,14 +231,18 @@
     </form>
 </div>
 
-<!-- Recipe Card -->
-<template id="recipe-template">
-    {% set recipe_index = 'RECIPE_INDEX' %}
-    {% set recipe = None %}
-    {% include 'configure/partials/item_recipe_row.html' %}
+{# =========================================================================
+   3. TEMPLATES & STYLES
+   ========================================================================= #}
+
+<template id="limit-template">
+    {{ limit_row('__INDEX__', None) }}
 </template>
 
-<!-- Source Row -->
+<template id="recipe-template">
+    {{ recipe_row('RECIPE_INDEX') }}
+</template>
+
 <template id="source-template">
     <div class="flex-row gap-5 align-center spacious-bottom">
         <select name="recipes[RECIPE_INDEX][sources][SUB_INDEX][item_id]" style="max-width: 20ch;">
@@ -279,7 +260,6 @@
     </div>
 </template>
 
-<!-- Byproduct Row -->
 <template id="byproduct-template">
     <div class="flex-row gap-5 align-center spacious-bottom">
         <select name="recipes[RECIPE_INDEX][byproducts][SUB_INDEX][item_id]" style="max-width: 11ch;">
@@ -297,7 +277,6 @@
     </div>
 </template>
 
-<!-- Attribute Requirement Row -->
 <template id="attrib-req-template">
     <div class="flex-row gap-10 align-center spacious-bottom attrib-req-row attrib-wrapper">
         <select name="recipes[RECIPE_INDEX][attrib_reqs][SUB_INDEX][attrib_id]" 
@@ -316,7 +295,6 @@
     </div>
 </template>
 
-<!-- Item Attribute Row -->
 <template id="attrib-template">
     <div class="col-row item-attrib-row attrib-wrapper">
         <select name="attribs[__INDEX__][id]" 
@@ -335,7 +313,6 @@
     </div>
 </template>
 
-<!-- Item Event Row -->
 <template id="ability-template">
     <div class="col-row item-ability-row">
         <select name="abilities[__INDEX__][id]">
@@ -346,156 +323,342 @@
     </div>
 </template>
 
-<script>
-    function syncStorageState() {
-        const selectedType = document.querySelector('input[name="storage_type"]:checked').value;
-        const quantityInput = document.getElementById('quantity-input');
-        const topLevelCheckbox = document.getElementById('toplevel');
-        const locHostedCheckbox = document.getElementById('loc-hosted');
-        const locHostedLabel = document.getElementById('loc-hosted-label');
-        const limitList = document.getElementById('limit-list');
-        const addLimitBtn = document.getElementById('add-limit-btn');
-        
-        const isUniversal = (selectedType === '{{ StorageType.UNIVERSAL }}');
-        const isLocal = (selectedType === '{{ StorageType.LOCAL }}');
-
-        quantityInput.disabled = !isUniversal;
-        topLevelCheckbox.disabled = !isUniversal;
-        if (!isUniversal) {
-            quantityInput.value = 0;
-            topLevelCheckbox.checked = false;
-        }
-
-        limitList.classList.toggle('hidden', isUniversal);
-        addLimitBtn.classList.toggle('hidden', isUniversal);
-        addLimitBtn.disabled = isUniversal;
-        limitList.querySelectorAll('input, select, button').forEach(el => {
-            el.disabled = isUniversal;
-        });
-
-        locHostedCheckbox.disabled = !isLocal;
-        locHostedLabel.classList.toggle('disabled', !isLocal);
-        if (!isLocal) {
-            locHostedCheckbox.checked = false;
-        }
-    }
-
-    document.querySelectorAll('input[name="storage_type"]').forEach(radio => {
-        radio.addEventListener('change', syncStorageState);
-    });
-
-    /**
-     * Adds a top-level Recipe Card
-     */
-    function addRecipe() {
-        const container = document.getElementById('recipes-container');
-        const template = document.getElementById('recipe-template').innerHTML;
-        
-        // Use a timestamp to ensure the index is unique even if rows are deleted/added
-        const newIndex = Date.now(); 
-        const html = template.replace(/RECIPE_INDEX/g, newIndex);
-        
-        container.insertAdjacentHTML('beforeend', html);
-        adjustRecipe('renumberRows');
-
-        // Get the newly added checkbox and sync it
-        const newCard = container.lastElementChild;
-        const newCheckbox = newCard.querySelector('.instant-checkbox');
-        if (newCheckbox) syncInstantState(newCheckbox);
-    }
-
-    /**
-     * Change sort order of recipes
-     */
-    function adjustRecipe(method, ...args) {
-        const options = {
-            rowSelector: '.recipe-card',
-            inputClass: '.recipe-order-input',
-            displayClass: '.recipe-display-number',
-            upClass: '.btn-recipe-up',
-            downClass: '.btn-recipe-down',
-            emptyMsgId: 'recipes-container-empty'
-        };
-        ConfigEditor[method](...args, 'recipes-container', options);
-    }
-
-    /**
-     * Adds a sub-row (Source, Byproduct, or AttribReq) to a specific Recipe Card
-     */
-    function addSubRow(recipeIndex, containerSuffix, templateId) {
-        const container = document.getElementById(`${containerSuffix}-${recipeIndex}`);
-        const template = document.getElementById(templateId).innerHTML;
-        
-        const subIndex = container.children.length;
-        let html = template.replace(/RECIPE_INDEX/g, recipeIndex);
-        html = html.replace(/SUB_INDEX/g, subIndex);
-        
-        container.insertAdjacentHTML('beforeend', html);
-    }
-
-    // Convenience wrappers called by buttons in included partial
-    function addSource(idx) { addSubRow(idx, 'sources', 'source-template'); }
-    function addByproduct(idx) { addSubRow(idx, 'byproducts', 'byproduct-template'); }
-    function addAttribReq(idx) { 
-        addSubRow(idx, 'attribs', 'attrib-req-template');
-        // Initialize the binary attribute UI for the newly added row
-        setTimeout(() => {
-            const container = document.getElementById(`attribs-${idx}`);
-            const lastRow = container.lastElementChild;
-            const selectElement = lastRow.querySelector('select');
-            if (selectElement) {
-                ConfigEditor.syncAttribRange(selectElement);
-            }
-        }, 0);
-    }
-
-    /**
-     * Toggles the duration input state within a specific recipe card.
-     * @param {HTMLElement} checkbox - The checkbox element that was toggled.
-     */
-    function syncInstantState(checkbox) {
-        const card = checkbox.closest('.recipe-card');
-        const durationInput = card.querySelector('.duration-input');
-        const durationLabel = card.querySelector('.duration-group label');
-
-        if (checkbox.checked) {
-            durationInput.disabled = true;
-            durationInput.classList.add('disabled');
-            if (durationLabel) durationLabel.classList.add('disabled');
-            
-            // Save current value and set to 0
-            durationInput.dataset.preInstantValue = durationInput.value;
-            durationInput.value = 0;
-        } else {
-            durationInput.disabled = false;
-            durationInput.classList.remove('disabled');
-            if (durationLabel) durationLabel.classList.remove('disabled');
-            
-            // Restore value if it was saved
-            if (durationInput.dataset.preInstantValue) {
-                durationInput.value = durationInput.dataset.preInstantValue;
-            }
-        }
-    }
-
-    // Run on page load
-    document.addEventListener('DOMContentLoaded', () => {
-        syncStorageState();
-        adjustRecipe('renumberRows');
-
-        document.querySelectorAll('.instant-checkbox').forEach(cb => {
-            syncInstantState(cb);
-        });
-    });
-</script>
-
 <style>
-    .recipe-card { background: #1a1a1a; margin-top: 20px; border-left: 4px solid var(--accent); }
-    .grid-3-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
-    .sub-section { flex: 1; min-width: 250px; background: #222; padding: 10px; border-radius: 4px; }
-    h5 { margin-top: 0; color: var(--text-dim); }
-    .gap-5 { gap: 5px; }
-    .spacious-bottom { margin-bottom: 8px; }
+.recipe-card { background: #1a1a1a; margin-top: 20px; border-left: 4px solid var(--accent); }
+.grid-3-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
+.sub-section { flex: 1; min-width: 250px; background: #222; padding: 10px; border-radius: 4px; }
+h5 { margin-top: 0; color: var(--text-dim); }
+.gap-5 { gap: 5px; }
+.spacious-bottom { margin-bottom: 8px; }
 </style>
 
+{# =========================================================================
+   4. SCRIPTS
+   ========================================================================= #}
+
+<script>
+function syncStorageState() {
+    const selectedType = document.querySelector('input[name="storage_type"]:checked').value;
+    const quantityInput = document.getElementById('quantity-input');
+    const topLevelCheckbox = document.getElementById('toplevel');
+    const locHostedCheckbox = document.getElementById('loc-hosted');
+    const locHostedLabel = document.getElementById('loc-hosted-label');
+    const limitList = document.getElementById('limit-list');
+    const addLimitBtn = document.getElementById('add-limit-btn');
+    
+    const isUniversal = (selectedType === '{{ StorageType.UNIVERSAL }}');
+    const isLocal = (selectedType === '{{ StorageType.LOCAL }}');
+
+    quantityInput.disabled = !isUniversal;
+    topLevelCheckbox.disabled = !isUniversal;
+    if (!isUniversal) {
+        quantityInput.value = 0;
+        topLevelCheckbox.checked = false;
+    }
+
+    limitList.classList.toggle('hidden', isUniversal);
+    addLimitBtn.classList.toggle('hidden', isUniversal);
+    addLimitBtn.disabled = isUniversal;
+    limitList.querySelectorAll('input, select, button').forEach(el => {
+        el.disabled = isUniversal;
+    });
+
+    locHostedCheckbox.disabled = !isLocal;
+    locHostedLabel.classList.toggle('disabled', !isLocal);
+    if (!isLocal) {
+        locHostedCheckbox.checked = false;
+    }
+}
+
+document.querySelectorAll('input[name="storage_type"]').forEach(radio => {
+    radio.addEventListener('change', syncStorageState);
+});
+
+/**
+ * Adds a top-level Recipe Card
+ */
+function addRecipe() {
+    const container = document.getElementById('recipes-container');
+    const template = document.getElementById('recipe-template').innerHTML;
+    
+    // Use a timestamp to ensure the index is unique even if rows are deleted/added
+    const newIndex = Date.now(); 
+    const html = template.replace(/RECIPE_INDEX/g, newIndex);
+    
+    container.insertAdjacentHTML('beforeend', html);
+    adjustRecipe('renumberRows');
+
+    // Get the newly added checkbox and sync it
+    const newCard = container.lastElementChild;
+    const newCheckbox = newCard.querySelector('.instant-checkbox');
+    if (newCheckbox) syncInstantState(newCheckbox);
+}
+
+/**
+ * Change sort order of recipes
+ */
+function adjustRecipe(method, ...args) {
+    const options = {
+        rowSelector: '.recipe-card',
+        inputClass: '.recipe-order-input',
+        displayClass: '.recipe-display-number',
+        upClass: '.btn-recipe-up',
+        downClass: '.btn-recipe-down',
+        emptyMsgId: 'recipes-container-empty'
+    };
+    ConfigEditor[method](...args, 'recipes-container', options);
+}
+
+/**
+ * Adds a sub-row (Source, Byproduct, or AttribReq) to a specific Recipe Card
+ */
+function addSubRow(recipeIndex, containerSuffix, templateId) {
+    const container = document.getElementById(`${containerSuffix}-${recipeIndex}`);
+    const template = document.getElementById(templateId).innerHTML;
+    
+    const subIndex = container.children.length;
+    let html = template.replace(/RECIPE_INDEX/g, recipeIndex);
+    html = html.replace(/SUB_INDEX/g, subIndex);
+    
+    container.insertAdjacentHTML('beforeend', html);
+}
+
+// Convenience wrappers called by buttons
+function addSource(idx) { addSubRow(idx, 'sources', 'source-template'); }
+function addByproduct(idx) { addSubRow(idx, 'byproducts', 'byproduct-template'); }
+function addAttribReq(idx) { 
+    addSubRow(idx, 'attribs', 'attrib-req-template');
+    // Initialize the binary attribute UI for the newly added row
+    setTimeout(() => {
+        const container = document.getElementById(`attribs-${idx}`);
+        const lastRow = container.lastElementChild;
+        const selectElement = lastRow.querySelector('select');
+        if (selectElement) {
+            ConfigEditor.syncAttribRange(selectElement);
+        }
+    }, 0);
+}
+
+/**
+ * Toggles the duration input state within a specific recipe card.
+ * @param {HTMLElement} checkbox - The checkbox element that was toggled.
+ */
+function syncInstantState(checkbox) {
+    const card = checkbox.closest('.recipe-card');
+    const durationInput = card.querySelector('.duration-input');
+    const durationLabel = card.querySelector('.duration-group label');
+
+    if (checkbox.checked) {
+        durationInput.disabled = true;
+        durationInput.classList.add('disabled');
+        if (durationLabel) durationLabel.classList.add('disabled');
+        
+        // Save current value and set to 0
+        durationInput.dataset.preInstantValue = durationInput.value;
+        durationInput.value = 0;
+    } else {
+        durationInput.disabled = false;
+        durationInput.classList.remove('disabled');
+        if (durationLabel) durationLabel.classList.remove('disabled');
+        
+        // Restore value if it was saved
+        if (durationInput.dataset.preInstantValue) {
+            durationInput.value = durationInput.dataset.preInstantValue;
+        }
+    }
+}
+
+// Run on page load
+document.addEventListener('DOMContentLoaded', () => {
+    syncStorageState();
+    adjustRecipe('renumberRows');
+
+    document.querySelectorAll('.instant-checkbox').forEach(cb => {
+        syncInstantState(cb);
+    });
+});
+</script>
+
+{# =========================================================================
+   5. MACROS
+   ========================================================================= #}
+
 {% endblock %}
+
+{% macro limit_row(index, limit_obj=None) %}
+<div class="col-row limit-row">
+    <select name="limits_for[{{ index }}][owner_id]">
+        <option value="" disabled {{ 'selected'
+            if not limit_obj }}>(Select Owner)</option>
+        <optgroup label="Characters">
+            {% for c in all_chars %}
+                <option value="{{ c.id }}" {{ 'selected'
+                    if limit_obj and limit_obj.owner_id == c.id }}>{{ c.name }}</option>
+            {% endfor %}
+        </optgroup>
+        <optgroup label="Locations">
+            {% for l in all_locs %}
+                <option value="{{ l.id }}" {{ 'selected'
+                    if limit_obj and limit_obj.owner_id == l.id }}>{{ l.name }}</option>
+            {% endfor %}
+        </optgroup>
+    </select>
+    <input type="number" name="limits_for[{{ index }}][q_limit]" 
+           value="{{ limit_obj.q_limit if limit_obj else 0 }}" step="any">
+    <button type="button" class="btn-sm dangerous-button" 
+            onclick="ConfigEditor.removeRow(this, 'limit-list')">×</button>
+</div>
+{% endmacro %}
+
+{% macro recipe_row(row_index, recipe=None) %}
+<div class="recipe-card outer-border" data-recipe-index="{{ row_index }}">
+    <!-- Hidden ID for existing recipes -->
+    <input type="hidden" name="recipes[{{ row_index }}][id]" value="{{ recipe.id if recipe }}">
+    <input type="hidden" name="recipes[{{ row_index }}][order_index]" class="recipe-order-input" value="{{ recipe.order_index if recipe else 0 }}">
+    
+    <div class="flex-between align-center">
+        <h4 style="margin-top: 0px; margin-bottom: 0px;">
+            Recipe <span class="recipe-display-number">{{ '#' ~ (row_index + 1) if row_index is number else '' }}</span>
+        </h4>
+        <div class="flex-row gap-10">
+            <button type="button" class="btn-sm btn-recipe-up"
+                onclick="adjustRecipe('moveRow', this, -1)">↑</button>
+            <button type="button" class="btn-sm btn-recipe-down"
+                onclick="adjustRecipe('moveRow', this, 1)">↓</button>
+            <button type="button" class="btn-sm dangerous-button"
+                onclick="this.closest('.recipe-card').remove(); adjustRecipe('renumberRows');">Remove</button>
+        </div>
+    </div>
+
+    <div class="grid-3-col spacious-top">
+        <div class="form-group">
+            <label>
+                Gain per Batch:
+                <input type="number" name="recipes[{{ row_index }}][rate_amount]" 
+                       value="{{ recipe.rate_amount if recipe else 1.0 }}" step="any" required>
+            </label>
+        </div>
+        <div class="form-group duration-group">
+            <label>
+                Duration (Seconds):
+                <input type="number"
+                       name="recipes[{{ row_index }}][rate_duration]" 
+                       id="duration-{{ row_index }}"
+                       class="duration-input"
+                       value="{{ recipe.rate_duration if recipe else 3 }}"
+                       step="1" min="1" required>
+            </label>
+        </div>
+        <div class="form-group align-center flex-row" style="padding-top: 25px;">
+            <label class="checkbox-label">
+                <input type="checkbox"
+                       name="recipes[{{ row_index }}][instant]" 
+                       id="instant-{{ row_index }}"
+                       class="instant-checkbox"
+                       onchange="syncInstantState(this)"
+                       {{ 'checked' if recipe and recipe.instant }}>
+                Instant
+            </label>
+        </div>
+    </div>
+
+    <hr class="dim-hr">
+
+    <div class="column-container">
+        <!-- 1. SOURCES (Ingredients) -->
+        <div class="sub-section" style="flex: 5">
+            <h5>📉 Sources (Ingredients)</h5>
+            <div class="source-list" id="sources-{{ row_index }}">
+                {% if recipe %}
+                    {% for source in recipe.sources %}
+                    <div class="flex-row gap-5 align-center spacious-bottom">
+                        <select name="recipes[{{ row_index }}][sources][{{ loop.index0 }}][item_id]" style="max-width: 20ch;">
+                            {% for i in all_items %}
+                            <option value="{{ i.id }}" {{ 'selected' if i.id == source.item_id }}>{{ i.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="number"
+                               name="recipes[{{ row_index }}][sources][{{ loop.index0 }}][q_required]" 
+                               value="{{ source.q_required }}"
+                               step="any"
+                               style="width: 10ch;">
+                        <label class="checkbox-label"
+                               title="Leave unchecked for resources that get consumed.">
+                            <input type="checkbox"
+                                   name="recipes[{{ row_index }}][sources][{{ loop.index0 }}][preserve]" 
+                                   {{ 'checked' if source.preserve }}> Preserve
+                        </label>
+                        <button type="button" class="btn-sm dangerous-button"
+                            onclick="this.parentElement.remove()" style="margin-left: 5px;">×</button>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            <button type="button" class="btn-sm"
+                onclick="addSource({{ row_index }})">+ Add Source</button>
+        </div>
+
+        <!-- 2. BYPRODUCTS -->
+        <div class="sub-section" style="flex: 2">
+            <h5>🎁 Byproducts</h5>
+            <div class="byproduct-list" id="byproducts-{{ row_index }}">
+                {% if recipe %}
+                    {% for byproduct in recipe.byproducts %}
+                    <div class="flex-row gap-5 align-center spacious-bottom">
+                        <select name="recipes[{{ row_index }}][byproducts][{{ loop.index0 }}][item_id]" style="max-width: 11ch;">
+                            {% for i in all_items %}
+                            <option value="{{ i.id }}" {{ 'selected' if i.id == byproduct.item_id }}>{{ i.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="number"
+                               name="recipes[{{ row_index }}][byproducts][{{ loop.index0 }}][rate_amount]" 
+                               value="{{ byproduct.rate_amount }}"
+                               step="any"
+                               class="no-spinners"
+                               style="width: 60px;">
+                        <button type="button" class="btn-sm dangerous-button"
+                            onclick="this.parentElement.remove()">×</button>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            <button type="button" class="btn-sm"
+                onclick="addByproduct({{ row_index }})">+ Add Byproduct</button>
+        </div>
+    </div>
+
+    <hr class="dim-hr">
+
+    <!-- 3. ATTRIBUTE REQUIREMENTS -->
+    <div class="sub-section">
+        <h5>⚖️ Attribute Requirements</h5>
+        <div class="attrib-req-list" id="attribs-{{ row_index }}">
+            {% if recipe %}
+                {% for req in recipe.attrib_reqs %}
+                <div class="flex-row gap-10 align-center spacious-bottom attrib-req-row attrib-wrapper">
+                    <select name="recipes[{{ row_index }}][attrib_reqs][{{ loop.index0 }}][attrib_id]" 
+                            data-current-min="{{ req.min_val }}"
+                            data-current-max="{{ req.max_val }}"
+                            onchange="ConfigEditor.syncAttribRange(this)">
+                        {% for a in all_attribs %}
+                        <option value="{{ a.id }}" {{ 'selected' if a.id == req.attrib_id }}>
+                            {{ a.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="attribval-container flex-row gap-5 align-center"
+                        data-field-name="recipes[{{ row_index }}][attrib_reqs][{{ loop.index0 }}]">
+                        <!-- Filled by ConfigEditor.syncAttribRange -->
+                    </div>
+                    <button type="button" class="btn-sm dangerous-button"
+                        onclick="this.parentElement.remove()">×</button>
+                </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        <button type="button" class="btn-sm"
+            onclick="addAttribReq({{ row_index }})">+ Add Requirement</button>
+    </div>
+</div>
+{% endmacro %}
+

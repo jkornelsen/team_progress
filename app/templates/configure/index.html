@@ -1,3 +1,7 @@
+{# =========================================================================
+   1. GLOBAL IMPORTS
+   ========================================================================= #}
+
 {% extends 'layout/base.html' %}
 {% import 'macros/hotkeys.html' as hk %}
 
@@ -46,79 +50,83 @@
     });
 </script>
 
-    <header class="config-header">
-        <div class="top-row-grid">
-            <div class="title-area">
-                <h1>Game Editor</h1>
-                
-                <div class="scenario-settings-area spacious-top">
-                    <button onclick="location.href='{{ url_for('configure.edit_overall') }}'" class="btn primary" style="width: fit-content;">
-                    <span class="hotkey-indicator">t</span> Scenario Settings ⚙️
-                    </button>
-                    <!--
-                    <p class="italic small" style="margin-top: 5px; color: #888;">
-                        Title, description, and win conditions.
-                    </p>
-                    -->
-                </div>
-            </div>
+{# =========================================================================
+   2. MAIN CONTENT
+   ========================================================================= #}
 
-            <div class="file-stack flex-col gap-5">
-                <button onclick="location.href='{{ url_for('session.browse_scenarios') }}'" class="btn">
-                    <span class="hotkey-indicator">p</span> Pre-built Scenarios
+<header class="config-header">
+    <div class="top-row-grid">
+        <div class="title-area">
+            <h1>Game Editor</h1>
+            
+            <div class="scenario-settings-area spacious-top">
+                <button onclick="location.href='{{ url_for('configure.edit_overall') }}'" class="btn primary" style="width: fit-content;">
+                <span class="hotkey-indicator">t</span> Scenario Settings ⚙️
                 </button>
-                <button onclick="location.href='{{ url_for('session.save_to_file') }}'" class="btn">
-                    <span class="hotkey-indicator">s</span> Save to File
-                </button>
-                <button onclick="location.href='{{ url_for('session.upload') }}'" class="btn">
-                    <span class="hotkey-indicator">u</span> Upload / New
-                </button>
+                <!--
+                <p class="italic small" style="margin-top: 5px; color: #888;">
+                    Title, description, and win conditions.
+                </p>
+                -->
             </div>
         </div>
-    </header>
 
-    <!-- Entity Grid -->
-    <div class="entity-setup-grid" style="margin-top: 30px">
-        {% set types = [
-            ('item', 'Items', items),
-            ('location', 'Locations', locations),
-            ('character', 'Characters', characters),
-            ('attrib', 'Attributes', attribs),
-            ('event', 'Events', events)
-        ] %}
-
-        {% for slug, label, collection in types %}
-        <section id="{{ slug }}" class="entity-section outer-border">
-            <div class="flex-between align-center section-header">
-                <div style="display: flex; align-items: baseline;"><span class="hotkey-indicator">{{ slug[0] }}</span> <h3 style="padding-left: 4px">{{ label }}</h3></div>
-                <a href="{{ url_for('configure.edit_' + slug) }}" class="text-accent">+ Add</a>
-            </div>
-            <div class="entity-link-list {{ 'is-empty' if not collection }}">
-                {% if collection %}
-                    {% for ent in collection %}
-                        <div class="entity-link-wrapper">
-                            <a href="{{ url_for('configure.edit_' + slug, id=ent.id) }}" 
-                                class="entity-link"
-                                title="Edit {{ ent.name }}">
-                                {{ ent.name }}
-                            </a>
-                            <button type="button" 
-                                    onclick="window.location.href='{{ url_for('configure.lookup_entity', ent_type=slug, id=ent.id) }}'" 
-                                    class="lookup-btn" 
-                                    title="Look up usage for {{ ent.name }}">
-                                🔍
-                            </button>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            </div>
-        </section>
-        {% endfor %}
+        <div class="file-stack flex-col gap-5">
+            <button onclick="location.href='{{ url_for('session.browse_scenarios') }}'" class="btn">
+                <span class="hotkey-indicator">p</span> Pre-built Scenarios
+            </button>
+            <button onclick="location.href='{{ url_for('session.save_to_file') }}'" class="btn">
+                <span class="hotkey-indicator">s</span> Save to File
+            </button>
+            <button onclick="location.href='{{ url_for('session.upload') }}'" class="btn">
+                <span class="hotkey-indicator">u</span> Upload / New
+            </button>
+        </div>
     </div>
+</header>
+
+<!-- Entity Grid -->
+<div class="entity-setup-grid" style="margin-top: 30px">
+    {% set types = [
+        ('item', 'Items', items),
+        ('location', 'Locations', locations),
+        ('character', 'Characters', characters),
+        ('attrib', 'Attributes', attribs),
+        ('event', 'Events', events)
+    ] %}
+
+    {% for slug, label, collection in types %}
+    <section id="{{ slug }}" class="entity-section outer-border">
+        <div class="flex-between align-center section-header">
+            <div style="display: flex; align-items: baseline;"><span class="hotkey-indicator">{{ slug[0] }}</span> <h3 style="padding-left: 4px">{{ label }}</h3></div>
+            <a href="{{ url_for('configure.edit_' + slug) }}" class="text-accent">+ Add</a>
+        </div>
+        <div class="entity-link-list {{ 'is-empty' if not collection }}">
+            {% if collection %}
+                {% for ent in collection %}
+                    <div class="entity-link-wrapper">
+                        <a href="{{ url_for('configure.edit_' + slug, id=ent.id) }}" 
+                            class="entity-link"
+                            title="Edit {{ ent.name }}">
+                            {{ ent.name }}
+                        </a>
+                        <button type="button" 
+                                onclick="window.location.href='{{ url_for('configure.lookup_entity', ent_type=slug, id=ent.id) }}'" 
+                                class="lookup-btn" 
+                                title="Look up usage for {{ ent.name }}">
+                            🔍
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </section>
+    {% endfor %}
 </div>
 
-<script>
-</script>
+{# =========================================================================
+   3. TEMPLATES & STYLES
+   ========================================================================= #}
 
 <style>
 /* --- 1. Header & Layout --- */
@@ -271,4 +279,11 @@
     border-style: dashed;
 }
 </style>
+
+{# =========================================================================
+   4. SCRIPTS
+   ========================================================================= #}
+
+<script>
+</script>
 {% endblock %}

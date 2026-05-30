@@ -263,7 +263,10 @@
                     }
                 ],
                 "chained_events": [
-                    {"child_id": 40, "outcome_success": "success_any"}
+                    {
+                        "child_id": 40,
+                        "req": {"outcome_success": "success_any"}
+                    }
                 ]
             },
             {
@@ -346,13 +349,16 @@
                     }
                 ],
                 "chained_events": [
-                    {"child_id": 38, "outcome_success": "success_any"}
+                    {
+                        "child_id": 38,
+                        "req": {"outcome_success": "success_any"}
+                    }
                 ]
             },
             {
                 "id": 38,
                 "name": "ATK Fist Pummel Dmg",
-                "description": "Roll and apply the damage. If Enemy HP is reduced below 1 then [Gain XP](/play/event/18?subject_id=13).",
+                "description": "Roll and apply the damage. If Enemy HP is reduced below 1 then **Gain XP.**",
                 "outcome_type": "numeric",
                 "numeric_range": [1, 6],
                 "determinants": [
@@ -374,6 +380,15 @@
                         "get_val_from": "outcome",
                         "outfield": {"role": "target char", "attrib_id": 27},
                         "op_application": "-"
+                    }
+                ],
+                "chained_events": [
+                    {
+                        "child_id": 18,
+                        "req": {
+                            "infield": {"role": "target char", "attrib_id": 27},
+                            "op_application": "<"
+                        }
                     }
                 ]
             },

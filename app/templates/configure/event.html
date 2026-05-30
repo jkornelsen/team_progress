@@ -1,3 +1,7 @@
+{# =========================================================================
+   1. GLOBAL IMPORTS
+   ========================================================================= #}
+
 {% extends 'layout/base.html' %}
 {% import 'macros/hotkeys.html' as hk %}
 {% from 'macros/config_forms.html' import footer_actions %}
@@ -12,55 +16,6 @@
 
 {% block content %}
 
-<!-- TEMPLATES FOR DYNAMIC ROWS -->
-
-{% macro chained_row(index, link=None, all_events=[], parent_id=None) %}
-<div class="col-row chained-row">
-    <select name="chained_events[{{ index }}][child_id]">
-        <option value="" disabled {{ 'selected' if not link }}>Select...</option>
-        {% for e in all_events if e.id != parent_id %}
-            <option value="{{ e.id }}" {{ 'selected' if link and e.id == link.child_id }}>{{ e.name }}</option>
-        {% endfor %}
-    </select>
-    
-    <select name="chained_events[{{ index }}][outcome_success]">
-        <option value="always" {{ 'selected' if not link or link.outcome_success == 'always' }}>Show Always</option>
-        <option value="{{ Participant.ALWAYS }}" 
-            {{ 'selected' if not link or link.outcome_success ==
-                Participant.ALWAYS }}>Any Outcome</option>
-        <option value="{{ Participant.SUCCESS_ANY }}" 
-            {{ 'selected' if link and link.outcome_success ==
-                Participant.SUCCESS_ANY }}>Any Success</option>
-        <option value="{{ Participant.SUCCESS_NAT_MAX }}" 
-            {{ 'selected' if link and link.outcome_success ==
-                Participant.SUCCESS_NAT_MAX }}>Natural Max</option>
-        <option value="{{ Participant.SUCCESS_MAJOR }}" 
-            {{ 'selected' if link and link.outcome_success ==
-                Participant.SUCCESS_MAJOR }}>Major Success</option>
-        <option value="{{ Participant.SUCCESS_MINOR }}" 
-            {{ 'selected' if link and link.outcome_success ==
-                Participant.SUCCESS_MINOR }}>Minor Success</option>
-        <option value="{{ Participant.FAILURE_ANY }}" 
-            {{ 'selected' if link and link.outcome_success ==
-                Participant.FAILURE_ANY }}>Any Failure</option>
-        <option value="{{ Participant.FAILURE_MINOR }}" 
-            {{ 'selected' if link and link.outcome_success ==
-                Participant.FAILURE_MINOR }}>Minor Failure</option>
-        <option value="{{ Participant.FAILURE_MAJOR }}" 
-            {{ 'selected' if link and link.outcome_success ==
-                Participant.FAILURE_MAJOR }}>Major Failure</option>
-        <option value="{{ Participant.FAILURE_NAT_MIN }}" 
-            {{ 'selected' if link and link.outcome_success ==
-                Participant.FAILURE_NAT_MIN }}>Natural Min</option>
-    </select>
-    <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
-</div>
-{% endmacro %}
-
-<template id="chained-template">
-    {{ chained_row('__INDEX__', None, all_events, event.id) }}
-</template>
-
 <script>
     const ATTRIB_REGISTRY = {
         {% for a in all_attribs %}
@@ -73,7 +28,11 @@
 </script>
 <script src="{{ url_for('static', filename='js/configuration.js') }}"></script>
 
-<div class="configure-event">
+{# =========================================================================
+   2. MAIN CONTENT
+   ========================================================================= #}
+
+<div class="configure-event" data-lpignore="true">
     <h1>Event Setup</h1>
     <p class="info">
         Chance or magnitude of something happening, such as
@@ -173,20 +132,13 @@
             </div>
             <div id="det-list" class="spacious-top">
                 {% for factor in event.determinants %}
-                    {% set index = loop.index0 %}
-                    {% include 'configure/partials/event_det_card.html' %}
+                    {{ det_card(loop.index0, factor) }}
                 {% endfor %}
             </div>
             <div id="det-list-empty" class="no-entities {{ 'hidden' if event.determinants }}">
                 (No modifiers set for this event)
             </div>
         </section>
-
-        <template id="det-template">
-            {% set index = '__INDEX__' %}
-            {% set factor = None %}
-            {% include 'configure/partials/event_det_card.html' %}
-        </template>
 
         <!-- 4. Effects (Values Changed) -->
         <section id="effects" class="outer-border" style="background: #004422">
@@ -196,8 +148,7 @@
             </div>
             <div id="eff-list" class="spacious-top">
                 {% for factor in event.effects %}
-                    {% set index = loop.index0 %}
-                    {% include 'configure/partials/event_eff_card.html' %}
+                    {{ eff_card(loop.index0, factor) }}
                 {% endfor %}
             </div>
             <div id="eff-list-empty" class="no-entities {{ 'hidden' if event.effects }}">
@@ -205,26 +156,15 @@
             </div>
         </section>
 
-        <!-- Template for Effects -->
-        <template id="eff-template">
-            {% set index = '__INDEX__' %}
-            {% set factor = None %}
-            {% include 'configure/partials/event_eff_card.html' %}
-        </template>
-
-        <!-- 5. Follow-up Events -->
-        <section class="outer-border">
+        <!-- 5. Chained Events -->
+        <section class="outer-border" style="background: #442200">
             <div class="flex-between">
                 <h3>Follow-up Events</h3>
                 <button type="button" class="btn-sm" onclick="ConfigEditor.addRow('chained-list', 'chained-template')">+ Add Follow-up</button>
             </div>
-            <style>
-                .chained-row { --grid-cols: 5fr 3fr 1fr; }
-                .chained-list { --col-list-max-width: 400px; }
-            </style>
-            <div id="chained-list" class="col-list chained-list">
-                {% for link in event.chained_events %}
-                    {{ chained_row(loop.index0, link, all_events, event.id) }}
+            <div id="chained-list" class="spacious-top">
+                {% for link in event.chained %}
+                    {{ chained_card(loop.index0, link) }}
                 {% endfor %}
             </div>
         </section>
@@ -237,468 +177,21 @@
     </form>
 </div>
 
-<!-- TEMPLATES -->
+{# =========================================================================
+   3. TEMPLATES & STYLES
+   ========================================================================= #}
 
-<template id="change-template">
-    <div class="flex-row gap-10 align-center spacious-bottom">
-        <select name="changes[__INDEX__][attrib_id]" style="flex: 2;">
-            {% for a in all_attribs %} <option value="{{ a.id }}">{{ a.name }}</option> {% endfor %}
-        </select>
-        <span class="label-like">is adjusted by outcome</span>
-        <button type="button" class="btn-sm dangerous-button" onclick="this.parentElement.remove()">×</button>
-    </div>
+<template id="det-template">
+    {{ det_card('__INDEX__') }}
 </template>
 
-<script>
-    const ITEM_STORAGE_TYPE = {
-        {% for i in all_items %}
-        "{{ i.id }}": "{{ i.storage_type }}",
-        {% endfor %}
-    };
-    const RECIPE_MAP = {{ recipe_map | tojson | safe }};
-    const USES_ATTRIB = {{ Participant.USES_ATTRIB|list|tojson }};
-    const USES_ITEM = {{ Participant.USES_ITEM|list|tojson }};
-    const USES_LOC = {{ Participant.USES_LOC|list|tojson }};
-    const USES_RECIPE = {{ Participant.USES_RECIPE|list|tojson }};
-    const USES_BLUEPRINT = {{ Participant.USES_BLUEPRINT|list|tojson }};
+<template id="eff-template">
+    {{ eff_card('__INDEX__') }}
+</template>
 
-    function addFactor(usage) {
-        const list = document.getElementById(`${usage}-list`);
-        const emptyMsg = document.getElementById(`${usage}-list-empty`);
-        const template = document.getElementById(`${usage}-template`).innerHTML;
-        
-        const existingCards = list.querySelectorAll('.factor-card');
-        const indices = Array.from(existingCards).map(card => 
-            parseInt(card.getAttribute('data-index')) || 0
-        );
-        const nextIndex = indices.length > 0 ? Math.max(...indices) + 1 : 1;
-
-        const html = template.replace(/__INDEX__/g, nextIndex);
-        list.insertAdjacentHTML('beforeend', html);
-        emptyMsg.classList.add('hidden');
-
-        if (usage === '{{ Participant.DET }}')
-            adjustDet('renumberRows');
-        else
-            adjustEff('renumberRows');
-
-        syncOutcomeTypeState();
-        const newCard = list.lastElementChild;
-        const sourceSelect = newCard.querySelector('.source-type-select') || 
-                           newCard.querySelector('[name$="[get_val_from]"]');
-        if (sourceSelect) {
-            syncEffSourceState(sourceSelect);
-        }
-        newCard.querySelectorAll('.field-mode-select').forEach(select => {
-            syncFieldIdsState(select);
-        });
-        syncInnerExprState(newCard);
-        syncOuterExprState(newCard);
-    }
-
-    function adjustDet(method, ...args) {
-        ConfigEditor[method](...args, 'det-list', {
-            rowSelector: '.factor-card',
-            inputClass: '.factor-order-input',
-            displayClass: '.index-display',
-            upClass: '.btn-det-up',
-            downClass: '.btn-det-down',
-            emptyMsgId: 'det-list-empty'
-        });
-    }
-
-    function adjustEff(method, ...args) {
-        ConfigEditor[method](...args, 'eff-list', {
-            rowSelector: '.factor-card',
-            inputClass: '.factor-order-input',
-            displayClass: '.index-display',
-            upClass: '.btn-eff-up',
-            downClass: '.btn-eff-down',
-            emptyMsgId: 'eff-list-empty'
-        });
-    }
-
-    function syncOutcomeTypeState() {
-        const type = document.getElementById('outcome_type').value;
-        document.getElementById('fields-range').classList.toggle(
-            'hidden', !['fourway', 'numeric'].includes(type));
-        document.getElementById('fields-base').classList.toggle(
-            'hidden', type !== 'determined');
-        document.getElementById('fields-selection').classList.toggle(
-            'hidden', type !== 'selection');
-        document.getElementById('fields-dice').classList.toggle(
-            'hidden', type !== 'dice_system');
-        document.getElementById('determinants').classList.toggle(
-            'hidden', type == 'dice_system');
-        document.getElementById('effects').classList.toggle(
-            'hidden', type == 'dice_system');
-
-        document.querySelectorAll('.eff-card .success-filter-container').forEach(filter => {
-            filter.classList.toggle('hidden', type !== 'fourway');
-        });
-    }
-
-    function syncEffSourceState(element) {
-        const card = element.closest('.factor-card');
-        const sourceFieldBox = card.querySelector('.source-field-box');
-        const sourceConstBox = card.querySelector('.source-const-box');
-        const placeholder = card.querySelector('.source-placeholder-text');
-        const innerOpSelect = card.querySelector('.op-inner-selector');
-
-        const isAnotherField = (element.value === '{{ Participant.INFIELD }}');
-        const sameAsOutfield = (element.value === '{{ Participant.OUTFIELD }}');
-        const isOutcome = (element.value === '{{ Participant.OUTCOME }}');
-
-        if (sourceFieldBox) {
-            sourceFieldBox.classList.toggle('hidden', !isAnotherField);
-        }
-
-        if (sourceConstBox) {
-            sourceConstBox.classList.toggle('hidden', isAnotherField);
-        }
-
-        if (placeholder) {
-            if (isAnotherField || sameAsOutfield)
-                placeholder.innerText = "Source Value";
-            else if (isOutcome)
-                placeholder.innerText = "Roll Result";
-            else
-                placeholder.innerText = "Constant";
-        }
-
-        if (card.classList.contains('eff-card')) {
-            innerOpSelect.disabled = false;
-            innerOpSelect.style.opacity = "";
-            innerOpSelect.style.cursor = "";
-            if (innerOpSelect && innerOpSelect.value !== '{{ Operation.CONST }}') {
-                syncInnerExprState(card);
-            }
-        }
-    }
-
-    function syncEventFieldState(element) {
-        const card = element.closest('.factor-card');
-        const fieldGroup = element.closest('.field-input-group');
-
-        const modeSelect = fieldGroup.querySelector('.field-mode-select');
-        const roleSelect = fieldGroup.querySelector('.role-selector');
-        const roleHidden = fieldGroup.querySelector('.role-hidden-input');
-        const roleRow = fieldGroup.querySelector('.role-row');
-        const itemSelect = fieldGroup.querySelector('.id-item');
-        const childContainer = fieldGroup.querySelector('.child-toggle-container');
-        const childCheckbox = fieldGroup.querySelector('.child-item-checkbox');
-
-        if (!modeSelect || !roleSelect) return;
-
-        const mode = modeSelect.value;
-        const role = roleSelect.value;
-        const itemId = itemSelect ? itemSelect.value : null;
-        const storageType = itemId ? ITEM_STORAGE_TYPE[itemId] : null;
-
-        // Role Restrictions based on Storage Type
-        if (USES_BLUEPRINT.includes(mode)) {
-            roleSelect.value = "{{ Participant.BLUEPRINT }}";
-            if (roleHidden) roleHidden.value = "{{ Participant.BLUEPRINT }}";
-            roleRow.classList.add('hidden');
-            childContainer.classList.add('hidden');
-            syncOuterExprState(card);
-            return;
-        } else {
-            roleRow.classList.remove('hidden');
-            Array.from(roleSelect.options).forEach(opt => {
-                if (opt.value === "{{ Participant.BLUEPRINT }}") opt.hidden = true;
-            });
-            if (roleSelect.value === "{{ Participant.BLUEPRINT }}") {
-                roleSelect.value = "{{ Participant.SUBJECT }}";
-            }
-        }
-        if (mode === "{{ Participant.QTY }}" || mode === "{{ Participant.DIST }}") {
-            const isUniversalItem = (storageType === "{{ StorageType.UNIVERSAL }}");
-            const isRoleUniversal = (role === "{{ Participant.UNIVERSAL }}");
-            if (isUniversalItem) {
-                if (!isRoleUniversal) {
-                    roleSelect.value = "{{ Participant.UNIVERSAL }}";
-                }
-                roleSelect.disabled = true;
-            } else {
-                if (isRoleUniversal) {
-                    roleSelect.value = "{{ Participant.SUBJECT }}";
-                }
-                roleSelect.disabled = false;
-                Array.from(roleSelect.options).forEach(opt => {
-                    if (opt.value === "{{ Participant.UNIVERSAL }}") {
-                        opt.disabled = true;
-                    } else {
-                        opt.disabled = false;
-                    }
-                });
-            }
-        } else {
-            roleSelect.disabled = false;
-            Array.from(roleSelect.options).forEach(opt => opt.disabled = false);
-        }
-        if (roleHidden) {
-            roleHidden.value = roleSelect.value;
-        }
-
-        // Child Item Toggle Visibility
-        if ((mode === 'attr') && (roleSelect.value !== "{{ Participant.UNIVERSAL }}")) {
-            childContainer.classList.remove('hidden');
-        } else {
-            childContainer.classList.add('hidden');
-            childCheckbox.checked = false;
-        }
-    }
-
-    /**
-     * Synchronizes the ID selectors (Attrib, Item, Recipe) based on the chosen Mode.
-     */
-    function syncFieldIdsState(modeSelect) {
-        const container = modeSelect.closest('.field-input-group');
-        const mode = modeSelect.value;
-
-        const attrSelect = container.querySelector('.id-attr');
-        const itemSelect = container.querySelector('.id-item');
-        const recipeSelect = container.querySelector('.id-recipe');
-        const locSelect = container.querySelector('.id-loc');
-
-        // 1. Reset visibility
-        attrSelect?.classList.toggle('hidden', !USES_ATTRIB.includes(mode));
-        itemSelect?.classList.toggle('hidden', !USES_ITEM.includes(mode));
-        locSelect?.classList.toggle('hidden', !USES_LOC.includes(mode));
-        recipeSelect?.classList.toggle('hidden', !USES_RECIPE.includes(mode));
-        if (USES_RECIPE.includes(mode)) {
-            syncRecipesState(itemSelect);
-        }
-        syncEventFieldState(modeSelect);
-        syncFieldAttribState(attrSelect);
-    }
-
-    /**
-     * Fills the Recipe dropdown based on which Item is selected.
-     */
-    function syncRecipesState(itemSelect, initialRecipeId = null) {
-        const container = itemSelect.closest('.field-input-group');
-        const recipeSelect = container.querySelector('.id-recipe');
-        const itemId = itemSelect.value;
-        
-        // Get current recipe_id if we aren't providing one (for hydration)
-        const currentRecipeId = initialRecipeId || recipeSelect.dataset.currentId;
-
-        // Clear existing options
-        recipeSelect.innerHTML = '';
-
-        const recipes = RECIPE_MAP[itemId] || [];
-
-        if (recipes.length === 0) {
-            const opt = document.createElement('option');
-            opt.textContent = "(No recipes for this item)";
-            opt.value = "";
-            recipeSelect.appendChild(opt);
-            return;
-        }
-
-        recipes.forEach(r => {
-            const opt = document.createElement('option');
-            opt.value = r.id;
-            opt.textContent = r.summary; // e.g. "Yield 1 from Iron, Coal"
-            if (r.id == currentRecipeId) {
-                opt.selected = true;
-            }
-            recipeSelect.appendChild(opt);
-        });
-    }
-
-    function syncOuterExprState(card) {
-        const appSelector = card.querySelector('.op-application-selector');
-        const op = appSelector.value;
-        const innerGroup = card.querySelector('[data-inner-group]');
-        const requiredGroup = card.querySelector('[data-slot-required]');
-        const attrSelect = card.querySelector('.id-attr');
-        const negateToggle = card.querySelector('.negate-toggle-container');
-
-        const comparisonOps = ['==', '>', '<', '>=', '<='];
-
-        if (requiredGroup) {
-            const isComparison = comparisonOps.includes(op);
-            negateToggle.classList.toggle('hidden', !isComparison);
-            requiredGroup.classList.toggle('hidden', !isComparison);
-            if (isComparison) {
-                // COMPARISON: ( Inner ) == Target
-                innerGroup.style.order = "1";
-                appSelector.style.order = "2";
-                requiredGroup.style.order = "3";
-                syncFieldAttribState(attrSelect);
-            } else {
-                // CALCULATION: + ( Inner )
-                appSelector.style.order = "1";
-                innerGroup.style.order = "2";
-                negateToggle.querySelector('input').checked = false;
-            }
-        } else {
-            appSelector.parentElement.style.order = "1";
-            innerGroup.style.order = "2";
-        }
-    }
-
-    function syncFieldAttribState(attrSelect) {
-        const eventField = attrSelect.closest('.field-input-group');
-        const modeSelect = eventField.querySelector('.field-mode-select');
-
-        if (modeSelect.value === '{{ Participant.ATTR }}') {
-            ConfigEditor.syncAttribVal(attrSelect);
-        } else {
-            ConfigEditor.syncNumVal(attrSelect);
-        }
-    }
-
-    function syncCardAttribState(card) {
-        let masterSelect = null;
-        if (card.classList.contains('eff-card')) {
-            masterSelect = card.querySelector('select[name$="[outfield][attrib_id]"]');
-        } else {
-            masterSelect = card.querySelector('select[name$="[infield][attrib_id]"]');
-        }
-        if (masterSelect) {
-            syncFieldAttribState(masterSelect);
-        }
-    }
-
-    function syncInnerExprState(card) {
-        const opSelector = card.querySelector('.op-inner-selector');
-        if (!opSelector) return;
-
-        const op = opSelector.value;
-        const isConstant = (op === "{{ Operation.CONST }}");
-        const hasNoTransform = (op === ""); 
-        const isEff = card.classList.contains('eff-card');
-        
-        const lhs = card.querySelector('[data-slot-lhs]');       // "Fetched Value" / "Source"
-        const rhsGroup = card.querySelector('[data-slot-rhs]'); // The numeric input [ 1.0 ]
-
-        // --- 1. VISIBILITY RULES ---
-        
-        // Hide "Fetched Value" only if we are in "Constant" mode
-        if (lhs) lhs.classList.toggle('hidden', isConstant);
-
-        // Hide the numeric input if we are just using the raw value ("Use Value")
-        // but keep it for every other operation (including Constant)
-        if (rhsGroup) rhsGroup.classList.toggle('hidden', hasNoTransform);
-
-        // --- 2. ORDERING RULES (Visual Equation Flow) ---
-        
-        let isFunctional = false;
-
-        if (isConstant) {
-            // ( [ 10 ] )
-            rhsGroup.style.order = "1";
-            opSelector.style.order = "2";
-        } 
-        else if (op === "{{ Operation.POW_OF_VAL }}") {
-            // ( [ 10 ] ^ Fetched Value )
-            rhsGroup.style.order = "1";
-            opSelector.style.order = "2";
-            lhs.style.order = "3";
-        } 
-        else if (op === "{{ Operation.SOFTCAP }}" || op === "{{ Operation.ROUND }}") {
-            // Round ( Fetched Value , [ 10 ] )
-            opSelector.style.order = "1";
-            lhs.style.order = "2";
-            rhsGroup.style.order = "3";
-            isFunctional = true;
-        } 
-        else {
-            // Standard Binary: ( Fetched Value + [ 10 ] )
-            // Or "Use Value": ( Fetched Value )
-            lhs.style.order = "1";
-            opSelector.style.order = "2";
-            rhsGroup.style.order = "3";
-        }
-
-        card.classList.toggle('functional-layout', isFunctional);
-
-        // --- 3. SOURCE & TARGET LOGIC (📥 and 📤 sections) ---
-
-        if (isEff) {
-            const subSections = card.querySelectorAll('.card-body > .sub-section');
-            const outfieldSection = subSections[0]; 
-            const sourceSection = subSections[1];   
-            
-            const sourceTypeSelect = sourceSection.querySelector('.source-type-select');
-            const infieldBox = sourceSection.querySelector('.source-field-box');
-
-            if (isConstant) {
-                if (sourceTypeSelect && sourceTypeSelect.value !== "{{ Participant.OUTCOME }}") {
-                    sourceTypeSelect.value = "{{ Participant.OUTCOME }}";
-                    syncEffSourceState(sourceTypeSelect); 
-                }
-                if (sourceTypeSelect) sourceTypeSelect.disabled = true;
-
-                if (infieldBox) {
-                    infieldBox.querySelectorAll('select, input').forEach(i => i.disabled = true);
-                    infieldBox.style.opacity = "0.5";
-                    infieldBox.style.pointerEvents = "none";
-                }
-            } else {
-                if (sourceTypeSelect) sourceTypeSelect.disabled = false;
-                if (infieldBox) {
-                    infieldBox.querySelectorAll('select, input').forEach(i => i.disabled = false);
-                    infieldBox.style.opacity = "1";
-                    infieldBox.style.pointerEvents = "auto";
-                    const inMode = infieldBox.querySelector('.field-mode-select');
-                    if (inMode) syncFieldIdsState(inMode);
-                }
-            }
-        } else {
-            const detSourceSection = card.querySelector('.card-body .sub-section');
-            if (detSourceSection) {
-                detSourceSection.querySelectorAll('select, input').forEach(i => i.disabled = isConstant);
-                detSourceSection.style.opacity = isConstant ? "0.5" : "1";
-                detSourceSection.style.pointerEvents = isConstant ? "none" : "auto";
-            }
-        }
-    }
-
-    // Use Event Delegation for dynamic changes
-    document.addEventListener('change', function(e) {
-        const card = e.target.closest('.factor-card');
-        if (!card) return;
-
-        if (e.target.classList.contains('op-inner-selector')) {
-            syncInnerExprState(card);
-        }
-        
-        if (e.target.classList.contains('op-application-selector')) {
-            syncOuterExprState(card);
-        }
-    });
-
-    // Re-enable so the values get sent to the server
-    document.querySelector('form').addEventListener('submit', function() {
-        this.querySelectorAll('.op-inner-selector').forEach(select => {
-            select.disabled = false;
-        });
-    });
-
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.field-mode-select').forEach(syncFieldIdsState);
-        document.querySelectorAll('.source-type-select').forEach(syncEffSourceState);
-        document.querySelectorAll('.factor-card').forEach(card => {
-            syncInnerExprState(card);
-            syncOuterExprState(card);
-        });
-        document.querySelectorAll('.field-input-group .id-item').forEach(itemSelect => {
-            const mode = itemSelect.closest('.field-input-group').querySelector('.field-mode-select').value;
-            if (mode.startsWith('rate_')) {
-                syncRecipesState(itemSelect);
-            }
-        });
-        document.querySelectorAll('.factor-card').forEach(syncCardAttribState);
-        adjustDet('renumberRows');
-        adjustEff('renumberRows');
-        syncOutcomeTypeState();
-    });
-</script>
+<template id="chained-template">
+    {{ chained_card('__INDEX__') }}
+</template>
 
 <style>
 .factor-card {
@@ -735,4 +228,999 @@ h5 { margin-bottom: 8px; font-size: 0.8em; color: var(--text-dim); text-transfor
     font-weight: bold;
 }
 </style>
+
+{# =========================================================================
+   4. SCRIPTS
+   ========================================================================= #}
+
+<script>
+const ITEM_STORAGE_TYPE = {
+    {% for i in all_items %}
+    "{{ i.id }}": "{{ i.storage_type }}",
+    {% endfor %}
+};
+const RECIPE_MAP = {{ recipe_map | tojson | safe }};
+const USES_ATTRIB = {{ Participant.USES_ATTRIB|list|tojson }};
+const USES_ITEM = {{ Participant.USES_ITEM|list|tojson }};
+const USES_LOC = {{ Participant.USES_LOC|list|tojson }};
+const USES_RECIPE = {{ Participant.USES_RECIPE|list|tojson }};
+const USES_BLUEPRINT = {{ Participant.USES_BLUEPRINT|list|tojson }};
+
+function addFactor(usage) {
+    const list = document.getElementById(`${usage}-list`);
+    const emptyMsg = document.getElementById(`${usage}-list-empty`);
+    const template = document.getElementById(`${usage}-template`).innerHTML;
+    
+    const existingCards = list.querySelectorAll('.factor-card');
+    const indices = Array.from(existingCards).map(card => 
+        parseInt(card.getAttribute('data-index')) || 0
+    );
+    const nextIndex = indices.length > 0 ? Math.max(...indices) + 1 : 1;
+
+    const html = template.replace(/__INDEX__/g, nextIndex);
+    list.insertAdjacentHTML('beforeend', html);
+    emptyMsg.classList.add('hidden');
+
+    if (usage === '{{ Participant.DET }}')
+        adjustDet('renumberRows');
+    else
+        adjustEff('renumberRows');
+
+    syncOutcomeTypeState();
+    const newCard = list.lastElementChild;
+    const sourceSelect = newCard.querySelector('.source-type-select') || 
+                       newCard.querySelector('[name$="[get_val_from]"]');
+    if (sourceSelect) {
+        syncEffSourceState(sourceSelect);
+    }
+    newCard.querySelectorAll('.field-mode-select').forEach(select => {
+        syncFieldIdsState(select);
+    });
+    syncInnerExprState(newCard);
+    syncOuterExprState(newCard);
+}
+
+function adjustDet(method, ...args) {
+    ConfigEditor[method](...args, 'det-list', {
+        rowSelector: '.factor-card',
+        inputClass: '.factor-order-input',
+        displayClass: '.index-display',
+        upClass: '.btn-det-up',
+        downClass: '.btn-det-down',
+        emptyMsgId: 'det-list-empty'
+    });
+}
+
+function adjustEff(method, ...args) {
+    ConfigEditor[method](...args, 'eff-list', {
+        rowSelector: '.factor-card',
+        inputClass: '.factor-order-input',
+        displayClass: '.index-display',
+        upClass: '.btn-eff-up',
+        downClass: '.btn-eff-down',
+        emptyMsgId: 'eff-list-empty'
+    });
+}
+
+function syncOutcomeTypeState() {
+    const type = document.getElementById('outcome_type').value;
+    document.getElementById('fields-range').classList.toggle(
+        'hidden', !['fourway', 'numeric'].includes(type));
+    document.getElementById('fields-base').classList.toggle(
+        'hidden', type !== 'determined');
+    document.getElementById('fields-selection').classList.toggle(
+        'hidden', type !== 'selection');
+    document.getElementById('fields-dice').classList.toggle(
+        'hidden', type !== 'dice_system');
+    document.getElementById('determinants').classList.toggle(
+        'hidden', type == 'dice_system');
+    document.getElementById('effects').classList.toggle(
+        'hidden', type == 'dice_system');
+
+    document.querySelectorAll('.eff-card .success-filter-container').forEach(filter => {
+        filter.classList.toggle('hidden', type !== 'fourway');
+    });
+}
+
+function syncEffSourceState(element) {
+    const card = element.closest('.factor-card');
+    const sourceFieldBox = card.querySelector('.source-field-box');
+    const sourceConstBox = card.querySelector('.source-const-box');
+    const placeholder = card.querySelector('.source-placeholder-text');
+    const innerOpSelect = card.querySelector('.op-inner-selector');
+
+    const isAnotherField = (element.value === '{{ Participant.INFIELD }}');
+    const sameAsOutfield = (element.value === '{{ Participant.OUTFIELD }}');
+    const isOutcome = (element.value === '{{ Participant.OUTCOME }}');
+
+    if (sourceFieldBox) {
+        sourceFieldBox.classList.toggle('hidden', !isAnotherField);
+    }
+
+    if (sourceConstBox) {
+        sourceConstBox.classList.toggle('hidden', isAnotherField);
+    }
+
+    if (placeholder) {
+        if (isAnotherField || sameAsOutfield)
+            placeholder.innerText = "Source Value";
+        else if (isOutcome)
+            placeholder.innerText = "Roll Result";
+        else
+            placeholder.innerText = "Constant";
+    }
+
+    if (card.classList.contains('eff-card')) {
+        innerOpSelect.disabled = false;
+        innerOpSelect.style.opacity = "";
+        innerOpSelect.style.cursor = "";
+        if (innerOpSelect && innerOpSelect.value !== '{{ Operation.CONST }}') {
+            syncInnerExprState(card);
+        }
+    }
+}
+
+function syncEventFieldState(element) {
+    const card = element.closest('.factor-card');
+    const fieldGroup = element.closest('.field-input-group');
+
+    const modeSelect = fieldGroup.querySelector('.field-mode-select');
+    const roleSelect = fieldGroup.querySelector('.role-selector');
+    const roleHidden = fieldGroup.querySelector('.role-hidden-input');
+    const roleRow = fieldGroup.querySelector('.role-row');
+    const itemSelect = fieldGroup.querySelector('.id-item');
+    const childContainer = fieldGroup.querySelector('.child-toggle-container');
+    const childCheckbox = fieldGroup.querySelector('.child-item-checkbox');
+
+    if (!modeSelect || !roleSelect) return;
+
+    const mode = modeSelect.value;
+    const role = roleSelect.value;
+    const itemId = itemSelect ? itemSelect.value : null;
+    const storageType = itemId ? ITEM_STORAGE_TYPE[itemId] : null;
+
+    // Role Restrictions based on Storage Type
+    if (USES_BLUEPRINT.includes(mode)) {
+        roleSelect.value = "{{ Participant.BLUEPRINT }}";
+        if (roleHidden) roleHidden.value = "{{ Participant.BLUEPRINT }}";
+        roleRow.classList.add('hidden');
+        childContainer.classList.add('hidden');
+        syncOuterExprState(card);
+        return;
+    } else {
+        roleRow.classList.remove('hidden');
+        Array.from(roleSelect.options).forEach(opt => {
+            if (opt.value === "{{ Participant.BLUEPRINT }}") opt.hidden = true;
+        });
+        if (roleSelect.value === "{{ Participant.BLUEPRINT }}") {
+            roleSelect.value = "{{ Participant.SUBJECT }}";
+        }
+    }
+    if (mode === "{{ Participant.QTY }}" || mode === "{{ Participant.DIST }}") {
+        const isUniversalItem = (storageType === "{{ StorageType.UNIVERSAL }}");
+        const isRoleUniversal = (role === "{{ Participant.UNIVERSAL }}");
+        if (isUniversalItem) {
+            if (!isRoleUniversal) {
+                roleSelect.value = "{{ Participant.UNIVERSAL }}";
+            }
+            roleSelect.disabled = true;
+        } else {
+            if (isRoleUniversal) {
+                roleSelect.value = "{{ Participant.SUBJECT }}";
+            }
+            roleSelect.disabled = false;
+            Array.from(roleSelect.options).forEach(opt => {
+                if (opt.value === "{{ Participant.UNIVERSAL }}") {
+                    opt.disabled = true;
+                } else {
+                    opt.disabled = false;
+                }
+            });
+        }
+    } else {
+        roleSelect.disabled = false;
+        Array.from(roleSelect.options).forEach(opt => opt.disabled = false);
+    }
+    if (roleHidden) {
+        roleHidden.value = roleSelect.value;
+    }
+
+    // Child Item Toggle Visibility
+    if ((mode === '{{ Participant.ATTR }}') && (roleSelect.value !== "{{ Participant.UNIVERSAL }}")) {
+        childContainer.classList.remove('hidden');
+    } else {
+        childContainer.classList.add('hidden');
+        childCheckbox.checked = false;
+    }
+}
+
+function syncChainReqState(checkbox) {
+    const card = checkbox.closest('.factor-card');
+    const targetSection = card.querySelector('.chain-comparison-section');
+
+    if (checkbox.checked) {
+        targetSection.style.display = '';
+        targetSection.querySelectorAll('input, select, textarea').forEach(el => {
+            el.removeAttribute('disabled');
+        });
+    } else {
+        targetSection.style.display = 'none';
+        targetSection.querySelectorAll('input, select, textarea').forEach(el => {
+            el.setAttribute('disabled', 'true');
+        });
+    }
+}
+
+/**
+ * Synchronizes the ID selectors (Attrib, Item, Recipe) based on the chosen Mode.
+ */
+function syncFieldIdsState(modeSelect) {
+    const container = modeSelect.closest('.field-input-group');
+    const mode = modeSelect.value;
+
+    const attrSelect = container.querySelector('.id-attr');
+    const itemSelect = container.querySelector('.id-item');
+    const recipeSelect = container.querySelector('.id-recipe');
+    const locSelect = container.querySelector('.id-loc');
+
+    // 1. Reset visibility
+    attrSelect?.classList.toggle('hidden', !USES_ATTRIB.includes(mode));
+    itemSelect?.classList.toggle('hidden', !USES_ITEM.includes(mode));
+    locSelect?.classList.toggle('hidden', !USES_LOC.includes(mode));
+    recipeSelect?.classList.toggle('hidden', !USES_RECIPE.includes(mode));
+    if (USES_RECIPE.includes(mode)) {
+        syncRecipesState(itemSelect);
+    }
+    syncEventFieldState(modeSelect);
+    syncFieldAttribState(attrSelect);
+}
+
+/**
+ * Fills the Recipe dropdown based on which Item is selected.
+ */
+function syncRecipesState(itemSelect, initialRecipeId = null) {
+    const container = itemSelect.closest('.field-input-group');
+    const recipeSelect = container.querySelector('.id-recipe');
+    const itemId = itemSelect.value;
+    
+    // Get current recipe_id if we aren't providing one (for hydration)
+    const currentRecipeId = initialRecipeId || recipeSelect.dataset.currentId;
+
+    // Clear existing options
+    recipeSelect.innerHTML = '';
+
+    const recipes = RECIPE_MAP[itemId] || [];
+
+    if (recipes.length === 0) {
+        const opt = document.createElement('option');
+        opt.textContent = "(No recipes for this item)";
+        opt.value = "";
+        recipeSelect.appendChild(opt);
+        return;
+    }
+
+    recipes.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r.id;
+        opt.textContent = r.summary; // e.g. "Yield 1 from Iron, Coal"
+        if (r.id == currentRecipeId) {
+            opt.selected = true;
+        }
+        recipeSelect.appendChild(opt);
+    });
+}
+
+function syncOuterExprState(card) {
+    const appSelector = card.querySelector('.op-application-selector');
+    const op = appSelector.value;
+    const innerGroup = card.querySelector('[data-inner-group]');
+    const requiredGroup = card.querySelector('[data-slot-required]');
+    const attrSelect = card.querySelector('.id-attr');
+    const negateToggle = card.querySelector('.negate-toggle-container');
+
+    const comparisonOps = ['==', '>', '<', '>=', '<='];
+
+    if (requiredGroup) {
+        const isComparison = comparisonOps.includes(op);
+        negateToggle.classList.toggle('hidden', !isComparison);
+        requiredGroup.classList.toggle('hidden', !isComparison);
+        if (isComparison) {
+            // COMPARISON: ( Inner ) == Target
+            innerGroup.style.order = "1";
+            appSelector.style.order = "2";
+            requiredGroup.style.order = "3";
+            syncFieldAttribState(attrSelect);
+        } else {
+            // CALCULATION: + ( Inner )
+            appSelector.style.order = "1";
+            innerGroup.style.order = "2";
+            negateToggle.querySelector('input').checked = false;
+        }
+    } else {
+        appSelector.parentElement.style.order = "1";
+        innerGroup.style.order = "2";
+    }
+}
+
+function syncFieldAttribState(attrSelect) {
+    const eventField = attrSelect.closest('.field-input-group');
+    const modeSelect = eventField.querySelector('.field-mode-select');
+
+    if (modeSelect.value === '{{ Participant.ATTR }}') {
+        ConfigEditor.syncAttribVal(attrSelect);
+    } else {
+        ConfigEditor.syncNumVal(attrSelect);
+    }
+}
+
+function syncCardAttribState(card) {
+    let masterSelect = null;
+    if (card.classList.contains('eff-card')) {
+        masterSelect = card.querySelector('select[name$="[outfield][attrib_id]"]');
+    } else {
+        masterSelect = card.querySelector('select[name$="[infield][attrib_id]"]');
+    }
+    if (masterSelect) {
+        syncFieldAttribState(masterSelect);
+    }
+}
+
+function syncInnerExprState(card) {
+    const opSelector = card.querySelector('.op-inner-selector');
+    if (!opSelector) return;
+
+    const op = opSelector.value;
+    const isConstant = (op === "{{ Operation.CONST }}");
+    const hasNoTransform = (op === ""); 
+    const isEff = card.classList.contains('eff-card');
+    
+    const lhs = card.querySelector('[data-slot-lhs]');       // "Fetched Value" / "Source"
+    const rhsGroup = card.querySelector('[data-slot-rhs]'); // The numeric input [ 1.0 ]
+
+    // --- 1. VISIBILITY RULES ---
+    
+    // Hide "Fetched Value" only if we are in "Constant" mode
+    if (lhs) lhs.classList.toggle('hidden', isConstant);
+
+    // Hide the numeric input if we are just using the raw value ("Use Value")
+    // but keep it for every other operation (including Constant)
+    if (rhsGroup) rhsGroup.classList.toggle('hidden', hasNoTransform);
+
+    // --- 2. ORDERING RULES (Visual Equation Flow) ---
+    
+    let isFunctional = false;
+
+    if (isConstant) {
+        // ( [ 10 ] )
+        rhsGroup.style.order = "1";
+        opSelector.style.order = "2";
+    } 
+    else if (op === "{{ Operation.POW_OF_VAL }}") {
+        // ( [ 10 ] ^ Fetched Value )
+        rhsGroup.style.order = "1";
+        opSelector.style.order = "2";
+        lhs.style.order = "3";
+    } 
+    else if (op === "{{ Operation.SOFTCAP }}" || op === "{{ Operation.ROUND }}") {
+        // Round ( Fetched Value , [ 10 ] )
+        opSelector.style.order = "1";
+        lhs.style.order = "2";
+        rhsGroup.style.order = "3";
+        isFunctional = true;
+    } 
+    else {
+        // Standard Binary: ( Fetched Value + [ 10 ] )
+        // Or "Use Value": ( Fetched Value )
+        lhs.style.order = "1";
+        opSelector.style.order = "2";
+        rhsGroup.style.order = "3";
+    }
+
+    card.classList.toggle('functional-layout', isFunctional);
+
+    // --- 3. SOURCE & TARGET LOGIC (📥 and 📤 sections) ---
+
+    if (isEff) {
+        const subSections = card.querySelectorAll('.card-body > .sub-section');
+        const outfieldSection = subSections[0]; 
+        const sourceSection = subSections[1];   
+        
+        const sourceTypeSelect = sourceSection.querySelector('.source-type-select');
+        const infieldBox = sourceSection.querySelector('.source-field-box');
+
+        if (isConstant) {
+            if (sourceTypeSelect && sourceTypeSelect.value !== "{{ Participant.OUTCOME }}") {
+                sourceTypeSelect.value = "{{ Participant.OUTCOME }}";
+                syncEffSourceState(sourceTypeSelect); 
+            }
+            if (sourceTypeSelect) sourceTypeSelect.disabled = true;
+
+            if (infieldBox) {
+                infieldBox.querySelectorAll('select, input').forEach(i => i.disabled = true);
+                infieldBox.style.opacity = "0.5";
+                infieldBox.style.pointerEvents = "none";
+            }
+        } else {
+            if (sourceTypeSelect) sourceTypeSelect.disabled = false;
+            if (infieldBox) {
+                infieldBox.querySelectorAll('select, input').forEach(i => i.disabled = false);
+                infieldBox.style.opacity = "1";
+                infieldBox.style.pointerEvents = "auto";
+                const inMode = infieldBox.querySelector('.field-mode-select');
+                if (inMode) syncFieldIdsState(inMode);
+            }
+        }
+    } else {
+        const detSourceSection = card.querySelector('.card-body .sub-section');
+        if (detSourceSection) {
+            detSourceSection.querySelectorAll('select, input').forEach(i => i.disabled = isConstant);
+            detSourceSection.style.opacity = isConstant ? "0.5" : "1";
+            detSourceSection.style.pointerEvents = isConstant ? "none" : "auto";
+        }
+    }
+}
+
+// Use Event Delegation for dynamic changes
+document.addEventListener('change', function(e) {
+    const card = e.target.closest('.factor-card');
+    if (!card) return;
+
+    if (e.target.classList.contains('op-inner-selector')) {
+        syncInnerExprState(card);
+    }
+    
+    if (e.target.classList.contains('op-application-selector')) {
+        syncOuterExprState(card);
+    }
+});
+
+// Re-enable so the values get sent to the server
+document.querySelector('form').addEventListener('submit', function() {
+    this.querySelectorAll('.op-inner-selector').forEach(select => {
+        select.disabled = false;
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.field-mode-select').forEach(syncFieldIdsState);
+    document.querySelectorAll('.source-type-select').forEach(syncEffSourceState);
+    document.querySelectorAll('.factor-card').forEach(card => {
+        syncInnerExprState(card);
+        syncOuterExprState(card);
+    });
+    document.querySelectorAll('.field-input-group .id-item').forEach(itemSelect => {
+        const mode = itemSelect.closest('.field-input-group').querySelector('.field-mode-select').value;
+        if (mode.startsWith('rate_')) {
+            syncRecipesState(itemSelect);
+        }
+    });
+    document.querySelectorAll('.factor-card').forEach(syncCardAttribState);
+    document.querySelectorAll('.chained-row[data-usage="chained"] input[type="checkbox"]').forEach(checkbox => {
+        syncChainReqState(checkbox);
+    });
+    adjustDet('renumberRows');
+    adjustEff('renumberRows');
+    syncOutcomeTypeState();
+});
+</script>
+
+{# =========================================================================
+   5. MACROS
+   ========================================================================= #}
+
 {% endblock %}
+
+{% macro field_inputs(prefix, field_data=None, factor=None, usage_type='DET') %}
+<div class="field-input-group">
+    {% set role = field_data.role if field_data else '' %}
+    {% set field_mode = field_data.field_mode if field_data else 'attr' %}
+    {% set attrib_id = field_data.attrib_id if field_data else None %}
+    {% set item_id = field_data.item_id if field_data else None %}
+
+    <div class="flex-row gap-10">
+        <!-- Mode -->
+        <select name="{{ prefix }}[field_mode]"
+                class="field-mode-select full-width"
+                style="min-width: 20ch; max-width: 30ch;"
+                onchange="syncFieldIdsState(this)">
+            <option value="{{ Participant.ATTR }}" {{ 'selected'
+                if field_mode == Participant.ATTR }}>Attribute</option>
+            <option value="{{ Participant.QTY }}" {{ 'selected'
+                if field_mode == Participant.QTY }}>Item Quantity</option>
+            <option value="{{ Participant.RATE_AMT }}" {{ 'selected'
+                if field_mode == Participant.RATE_AMT }}>Recipe Yield</option>
+            <option value="{{ Participant.RATE_DUR }}" {{ 'selected'
+                if field_mode == Participant.RATE_DUR }}>Recipe Duration</option>
+            {% if 'outfield' in prefix %}
+            <option value="{{ Participant.PLACE }}" {{ 'selected'
+                if field_mode == Participant.PLACE }}>Place Item</option>
+            <option value="{{ Participant.POS }}" {{ 'selected'
+                if field_mode == Participant.POS }}>Position Char</option>
+            <option value="{{ Participant.SPAWN }}" {{ 'selected'
+                if field_mode == Participant.SPAWN }}>Spawn Char</option>
+            {% elif 'infield' in prefix %}
+            <option value="{{ Participant.DIST }}" {{ 'selected'
+                if field_mode == Participant.DIST }}>Distance</option>
+            {% endif %}
+        </select>
+
+        <div class="id-selectors">
+            <!-- Attrib -->
+            <select name="{{ prefix }}[attrib_id]" 
+                    data-current-val="{{ 
+                        factor.val_required if factor and
+                            factor.usage_type == Participant.DET else 
+                        factor.val_transform if factor and
+                            factor.usage_type == Participant.EFF else 
+                        1.0 
+                    }}"
+                    class="id-attr full-width {{
+                        'hidden' if field_mode not in Participant.USES_ATTRIB }}" 
+                    style="min-width: 30ch; max-width: 50ch;"
+                    onchange="syncFieldAttribState(this)">
+                {% for a in all_attribs %}
+                    <option value="{{ a.id }}" {{ 'selected' if attrib_id == a.id }}>{{ a.name }}</option>
+                {% endfor %}
+            </select>
+            
+            <!-- Item -->
+            <select name="{{ prefix }}[item_id]" 
+                    class="id-item full-width {{
+                        'hidden' if field_mode not in Participant.USES_ITEM }}" 
+                    style="min-width: 30ch; max-width: 50ch;"
+                    onchange="syncRecipesState(this); syncEventFieldState(this)">
+                {% for i in all_items %}
+                    <option value="{{ i.id }}" {{ 'selected' if item_id == i.id }}>{{ i.name }}</option>
+                {% endfor %}
+            </select>
+
+            <!-- Recipe -->
+            <select name="{{ prefix }}[recipe_id]"
+                    data-current-id="{{ field_data.recipe_id if field_data else '' }}"
+                    class="id-recipe {{
+                        'hidden' if field_mode not in Participant.USES_RECIPE }}" 
+                    style="min-width: 30ch; max-width: 50ch;">
+                <!-- Populated by syncRecipesState() -->
+            </select>
+
+            <!-- Location -->
+            <select name="{{ prefix }}[loc_id]" 
+                    class="id-loc full-width {{
+                        'hidden' if field_mode not in Participant.USES_LOC }}" 
+                    style="min-width: 30ch; max-width: 50ch;">
+                <option value="">(Inactive / Nowhere)</option>
+                {% for l in all_locs %}
+                    <option value="{{ l.id }}" {{ 'selected'
+                        if field_data and field_data.loc_id == l.id }}>{{ l.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <!-- Role -->
+    <div class="flex-row align-center gap-10 role-row">
+        <span>Participant:</span>
+        <input type="hidden" 
+               name="{{ prefix }}[role]" 
+               class="role-hidden-input" 
+               value="{{ role }}">
+        <select class="role-selector"
+                style="max-width: 30ch;"
+                onchange="syncEventFieldState(this)">
+            <option value="{{ Participant.SUBJECT }}"
+                title="Who or what started this event"
+                {{ 'selected' if role == Participant.SUBJECT }}>Subject</option>
+
+            <option value="{{ Participant.TARGET }}"
+                title="Another nearby or selected entity involved"
+                {{ 'selected' if role == Participant.TARGET }}>Target Char</option>
+
+            <option value="{{ Participant.AT }}"
+                title="The location where this is happening"
+                {{ 'selected' if role == Participant.AT }}>At</option>
+
+            <option value="{{ Participant.UNIVERSAL }}"
+                title="Global storage items not held or placed anywhere"
+                {{ 'selected' if role == Participant.UNIVERSAL }}>Universal</option>
+
+            <option value="{{ Participant.BLUEPRINT }}"
+                hidden style="display: none;"
+                title="(Item Blueprint)"
+                {{ 'selected' if role == Participant.BLUEPRINT }}>(Item Blueprint)</option>
+        </select>
+    </div>
+
+    <div class="child-toggle-container flex-row align-center gap-5">
+        <label class="checkbox-label">
+            <input type="checkbox" name="{{ prefix }}[child_of_anchor]" 
+                   class="child-item-checkbox"
+                   {{ 'checked' if field_data and field_data.child_of_anchor }}>
+                Inventory
+        </label>
+        <span class="label-like">— Attribute of an item at/carried by this participant</span>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro det_card(card_index, factor=None) %}
+<div class="factor-card outer-border det-card"
+     data-index="{{ card_index }}" data-usage="det">
+    
+    <input type="hidden"
+            name="dets[{{ card_index }}][order_index]"
+            class="factor-order-input"
+            value="{{ factor.order_index if factor else 0 }}">
+
+    <!-- 1. Header: Label & Workflow -->
+    <div class="flex-between align-center card-header">
+        <div class="flex-row align-center gap-10">
+            <span class="index-display label-like">#{{ card_index }}</span>
+            <input type="text" 
+                   name="dets[{{ card_index }}][label]" 
+                   value="{{ (factor.label or '') if factor else '' }}" 
+                   placeholder="Label e.g. Evasion (Optional)">
+        </div>
+        <!-- Move/Delete buttons -->
+        <div class="flex-row gap-10">
+            <button type="button" class="btn-sm btn-det-up"
+                onclick="adjustDet('moveRow', this, -1)">↑</button>
+            <button type="button" class="btn-sm btn-det-down"
+                onclick="adjustDet('moveRow', this, 1)">↓</button>
+            <button type="button" class="btn-sm dangerous-button"
+                onclick="this.closest('.factor-card').remove(); adjustDet('renumberRows');">×</button>
+        </div>
+    </div>
+
+    <div class="card-body attrib-wrapper">
+        <!-- 2. THE SOURCE (The "From") -->
+        <h5>📥 Value Source</h5>
+        <div class="flex-row align-center sub-section">
+            <input type="hidden" name="dets[{{ card_index }}][get_val_from]" value="infield">
+
+            <div class="source-field-box">
+                {{ field_inputs(
+                    prefix="dets[" ~ card_index ~ "][infield]", 
+                    field_data=factor.infield if factor else None, 
+                    factor=factor, 
+                    usage_type='DET'
+                ) }}
+            </div>
+        </div>
+
+        <!-- 3. MATH (Calculations) -->
+        <h5>🧮 Calculation</h5>
+        <div class="sub-section">
+            <div class="flex-row align-center gap-10">
+
+                <div class="inner-expr-group flex-row align-center gap-5" data-inner-group>
+                    <span style="font-size: 2em; order: 0;">(</span>
+                    
+                    <span data-slot-lhs style="font-style: italic">Fetched Value</span>
+
+                    {% set op_transform = factor.op_transform if factor else '' %}
+                    <select name="dets[{{ card_index }}][op_transform]" 
+                            class="op-inner-selector"
+                            style="max-width: 15ch;"
+                            onchange="syncInnerExprState(this.closest('.factor-card'))">
+                        <option value="{{ Operation.CONST }}" {{ 'selected'
+                            if op_transform == Operation.CONST }}>Constant</option>
+                        <option value="" {{ 'selected'
+                            if not op_transform }}>Use Value</option>
+                        {% for op_key in Operation.TRANSFORM_OPS %}
+                            <option value="{{ op_key }}" {{ 'selected'
+                            if op_transform == op_key }}>
+                                {{ Operation.Repr[op_key] }}
+                            </option>
+                        {% endfor %}
+                    </select>
+
+                    <div data-slot-rhs class="flex-row align-center gap-5">
+                        <input type="number" 
+                               name="dets[{{ card_index }}][val_transform]" 
+                               data-input-constant
+                               value="{{ factor.val_transform if factor else 1.0 }}" 
+                               step="any" 
+                               style="max-width: 12ch;">
+                    </div>
+
+                    <span style="font-size: 2em; order: 4;">)</span>
+                </div>
+
+                {% set op_application = factor.op_application if factor else '+' %}
+                <select name="dets[{{ card_index }}][op_application]" 
+                        class="op-application-selector" 
+                        style="max-width: 8ch;"
+                        onchange="syncOuterExprState(this.closest('.factor-card'))">
+                    {% for op_key in Operation.APPLICATION_OPS %}
+                        <option value="{{ op_key }}" {{ 'selected'
+                            if op_application == op_key }}>
+                            {{ Operation.Repr[op_key] }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <div data-slot-required
+                    class="attribval-container flex-row align-center gap-5 hidden"
+                    data-field-name="dets[{{ card_index }}][val_required]">
+                    <!-- Filled by ConfigEditor.syncAttribVal -->
+                </div>
+                <div class="negate-toggle-container">
+                    <label class="checkbox-label"
+                            title="True when value isn't found or doesn't match expression">
+                        <input type="checkbox" name="dets[{{ card_index }}][negate]"
+                            class="negate-checkbox"
+                            {{ 'checked' if factor and factor.negate }}>
+                        NOT
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro eff_card(card_index, factor=None) %}
+<div class="factor-card outer-border eff-card attrib-wrapper" data-index="{{ card_index }}">
+    <input type="hidden" name="effs[{{ card_index }}][order_index]" class="factor-order-input" value="{{ factor.order_index if factor else 0 }}">
+
+    <!-- 1. Header: Label & Filter -->
+    <div class="flex-between align-center card-header">
+        <div class="flex-row align-center gap-10">
+            <span class="index-display label-like">#{{ card_index }}</span>
+            <input type="text"
+                   name="effs[{{ card_index }}][label]"
+                   value="{{ (factor.label or '') if factor else '' }}" 
+                   placeholder="Effect Label">
+            
+        </div>
+        <!-- Move/Delete buttons -->
+        <div class="flex-row gap-10">
+            <button type="button" class="btn-sm btn-det-up"
+                onclick="adjustEff('moveRow', this, -1)">↑</button>
+            <button type="button" class="btn-sm btn-det-down"
+                onclick="adjustEff('moveRow', this, 1)">↓</button>
+            <button type="button" class="btn-sm dangerous-button"
+                onclick="this.closest('.factor-card').remove(); adjustEff('renumberRows');">×</button>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <!-- 2. THE DESTINATION (The "To") -->
+        <div class="flex-row align-center">
+            <h5 style="margin-right: 30px;">📤 Apply Change To</h5>
+            <label class="checkbox-label"
+                    style="margin-top: 15px;">
+                <input type="checkbox" name="effs[{{ card_index }}][auto_apply]"
+                    {{ 'checked' if factor and factor.auto_apply }}> Auto Apply</label>
+        </div>
+        <div class="sub-section">
+            {{ field_inputs(
+                prefix="effs[" ~ card_index ~ "][outfield]", 
+                field_data=factor.outfield if factor else None, 
+                factor=factor, 
+                usage_type='EFF'
+            ) }}
+        </div>
+
+        <!-- 3. THE SOURCE (The "From") -->
+        <h5>📥 Get Value From</h5>
+        <div class="sub-section">
+            <div>
+                <div class="flex-row">
+                    <span>Source:</span>
+                    <select name="effs[{{ card_index }}][get_val_from]"
+                            class="source-type-select"
+                            onchange="syncEffSourceState(this)">
+                        <option value="{{ Participant.OUTCOME }}" {{ 'selected'
+                            if factor and factor.get_val_from == Participant.OUTCOME
+                            }}>Result of Roll</option>
+                        <option value="{{ Participant.INFIELD }}" {{ 'selected'
+                            if factor and factor.get_val_from == Participant.INFIELD
+                            }}>Another Field</option>
+                        <option value="{{ Participant.OUTFIELD }}" {{ 'selected'
+                            if factor and factor.get_val_from == Participant.OUTFIELD
+                            }}>The Field We're Changing</option>
+                    </select>
+
+                    <div class="success-filter-container" style="margin-left: 20px;">
+                        <span>Fourway Filter:</span>
+                        <select name="effs[{{ card_index }}][outcome_success]"
+                                class="mini-select success-tier-select">
+                            <option value="{{ Participant.ALWAYS }}" 
+                                {{ 'selected' if factor and factor.outcome_success ==
+                                    Participant.ALWAYS }}>Always</option>
+                            <option value="{{ Participant.SUCCESS_ANY }}" 
+                                {{ 'selected' if factor and factor.outcome_success ==
+                                    Participant.SUCCESS_ANY }}>Any Success</option>
+                            <option value="{{ Participant.SUCCESS_NAT_MAX }}" 
+                                {{ 'selected' if factor and factor.outcome_success ==
+                                    Participant.SUCCESS_NAT_MAX }}>Natural Max</option>
+                            <option value="{{ Participant.SUCCESS_MAJOR }}" 
+                                {{ 'selected' if factor and factor.outcome_success ==
+                                    Participant.SUCCESS_MAJOR }}>Major Success</option>
+                            <option value="{{ Participant.SUCCESS_MINOR }}" 
+                                {{ 'selected' if factor and factor.outcome_success ==
+                                    Participant.SUCCESS_MINOR }}>Minor Success</option>
+                            <option value="{{ Participant.FAILURE_ANY }}" 
+                                {{ 'selected' if factor and factor.outcome_success ==
+                                    Participant.FAILURE_ANY }}>Any Failure</option>
+                            <option value="{{ Participant.FAILURE_MINOR }}" 
+                                {{ 'selected' if factor and factor.outcome_success ==
+                                    Participant.FAILURE_MINOR }}>Minor Failure</option>
+                            <option value="{{ Participant.FAILURE_MAJOR }}" 
+                                {{ 'selected' if factor and factor.outcome_success ==
+                                    Participant.FAILURE_MAJOR }}>Major Failure</option>
+                            <option value="{{ Participant.FAILURE_NAT_MIN }}" 
+                                {{ 'selected' if factor and factor.outcome_success ==
+                                    Participant.FAILURE_NAT_MIN }}>Natural Min</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Field Inputs (Hidden if not in 'infield' mode) -->
+                <div class="source-field-box {{ 'hidden' if factor and factor.get_val_from != Participant.INFIELD }}">
+                    {{ field_inputs(
+                        prefix="effs[" ~ card_index ~ "][infield]", 
+                        field_data=factor.infield if factor else None, 
+                        factor=factor, 
+                        usage_type='EFF'
+                    ) }}
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. THE MATH (The "Calculated Result") -->
+        <h5>🧮 Calculation</h5>
+        <div class="sub-section">
+            <div class="flex-row align-center gap-10">
+                
+                <!-- Assignment Operator -->
+                <div class="flex-column" style="gap: 2px;">
+                    <select name="effs[{{ card_index }}][op_application]" class="op-application-selector" style="max-width: 15ch;">
+                        <option value="{{ Operation.ASSIGN }}" {{ 'selected'
+                            if (not factor) or (factor.op_application == Operation.ASSIGN) }}>
+                            Set To
+                        </option>
+                        <option value="{{ Operation.ADD }}" {{ 'selected'
+                            if factor and factor.op_application == Operation.ADD }}>
+                            Increase By ({{ Operation.Repr[Operation.ADD] }})
+                        </option>
+                        <option value="{{ Operation.SUB }}" {{ 'selected'
+                            if factor and factor.op_application == Operation.SUB }}>
+                            Decrease By ({{ Operation.Repr[Operation.SUB] }})
+                        </option>
+                    </select>
+                </div>
+
+                <!-- The Inner Transformation -->
+                <div class="inner-expr-group flex-row align-center gap-5" data-inner-group>
+                    <span style="font-size: 2em; order: 0;">(</span>
+                    
+                    <span data-slot-lhs style="font-style: italic; order: 1;" class="source-placeholder-text">
+                        Source
+                    </span>
+
+                    {% set op_transform = factor.op_transform if factor else '' %}
+                    <select name="effs[{{ card_index }}][op_transform]" 
+                            class="op-inner-selector"
+                            style="max-width: 15ch; order: 2;"
+                            onchange="syncInnerExprState(this.closest('.factor-card'))">
+                        <option value="{{ Operation.CONST }}" {{ 'selected'
+                            if op_transform == Operation.CONST }}>Constant</option>
+                        <option value="" {{ 'selected'
+                            if not op_transform }}>Use Value</option>
+                        {% for op_key in Operation.TRANSFORM_OPS %}
+                            <option value="{{ op_key }}" {{ 'selected'
+                                if op_transform == op_key }}>
+                                {{ Operation.Repr[op_key] }}
+                            </option>
+                        {% endfor %}
+                    </select>
+
+                    <div data-slot-rhs
+                        class="attribval-container flex-row align-center gap-5"
+                        data-field-name="effs[{{ card_index }}][val_transform]"
+                        style="order: 3;">
+                        <!-- Filled by ConfigEditor.syncAttribVal -->
+                    </div>
+
+                    <span style="font-size: 2em; order: 4;">)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro chained_card(card_index, link=None) %}
+<div class="chained-row factor-card outer-border"
+     style="padding: 15px;"
+     data-index="{{ card_index }}" data-usage="chained">
+    <div class="flex-between card-body">
+        <div>
+        <label>
+            Event:
+            <select name="chained[{{ card_index }}][child_id]">
+                {% for e in all_events if e.id != event.id %}
+                    <option value="{{ e.id }}" {{ 'selected' if link and e.id == link.child_id }}>{{ e.name }}</option>
+                {% endfor %}
+            </select>
+            </label>
+
+            {% set outcome_success = link.req.outcome_success
+                if link and link.req else None %}
+            <label style="margin-left: 20px;">
+                Fourway Filter:
+            <select name="chained[{{ card_index }}][outcome_success]"
+                    class="mini-select" id="chain1">
+                <option value="{{ Participant.ALWAYS }}" 
+                    {{ 'selected' if not outcome_success or outcome_success ==
+                        Participant.ALWAYS }}>Any Outcome</option>
+                <option value="{{ Participant.SUCCESS_ANY }}" 
+                    {{ 'selected' if outcome_success ==
+                        Participant.SUCCESS_ANY }}>Any Success</option>
+                <option value="{{ Participant.SUCCESS_NAT_MAX }}" 
+                    {{ 'selected' if outcome_success ==
+                        Participant.SUCCESS_NAT_MAX }}>Natural Max</option>
+                <option value="{{ Participant.SUCCESS_MAJOR }}" 
+                    {{ 'selected' if outcome_success ==
+                        Participant.SUCCESS_MAJOR }}>Major Success</option>
+                <option value="{{ Participant.SUCCESS_MINOR }}" 
+                    {{ 'selected' if outcome_success ==
+                        Participant.SUCCESS_MINOR }}>Minor Success</option>
+                <option value="{{ Participant.FAILURE_ANY }}" 
+                    {{ 'selected' if outcome_success ==
+                        Participant.FAILURE_ANY }}>Any Failure</option>
+                <option value="{{ Participant.FAILURE_MINOR }}" 
+                    {{ 'selected' if outcome_success ==
+                        Participant.FAILURE_MINOR }}>Minor Failure</option>
+                <option value="{{ Participant.FAILURE_MAJOR }}" 
+                    {{ 'selected' if outcome_success ==
+                        Participant.FAILURE_MAJOR }}>Major Failure</option>
+                <option value="{{ Participant.FAILURE_NAT_MIN }}" 
+                    {{ 'selected' if outcome_success ==
+                        Participant.FAILURE_NAT_MIN }}>Natural Min</option>
+            </select>
+            </label>
+        </div>
+
+        <button type="button" class="btn-sm dangerous-button" onclick="this.closest('.chained-row').remove()">×</button>
+    </div>
+
+    <h5>
+        <input type="checkbox"
+               name="chained[{{ card_index }}][use_comparison]" 
+               onchange="syncChainReqState(this)"
+               {{ 'checked' if link and link.req and link.req.infield else '' }}>
+            Require A Value
+    </h5>
+
+    <div class="sub-section chain-comparison-section attrib-wrapper"
+         data-inner-group
+         style="{{ '' if link and link.req else 'display: none;' }}">
+        {{ field_inputs(
+            prefix="chained[" ~ card_index ~ "][infield]", 
+            field_data=link.req.infield if link and link.req else None,
+            factor=link.req if link else None, 
+            usage_type='DET'
+        ) }}
+        <div class="flex-row align-center gap-10 spacious-top">
+            <label class="checkbox-label">
+                <input type="checkbox" name="chained[{{ card_index }}][negate]"> NOT
+            </label>
+
+            <select name="chained[{{ card_index }}][op_application]"
+                    class="op-application-selector" id="chain2">
+                {% for op_key in Operation.COMPARISON_OPS %}
+                    <option value="{{ op_key }}">{{ Operation.Repr[op_key] }}</option>
+                {% endfor %}
+            </select>
+            
+            <div class="attribval-container"
+                data-field-name="chained[{{ card_index }}][val_required]">
+                <!-- JS fills via ConfigEditor.syncAttribVal -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
