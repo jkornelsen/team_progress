@@ -39,23 +39,19 @@ def find_best_host(recipe, owner_id, ctx):
     if product.storage_type == StorageType.UNIVERSAL:
         # Priority A: General Host (System)
         # We use this if ingredients/stats are all in the global bank.
-        if can_perform_recipe(
-                GENERAL_ID, recipe, owner_id, ctx,
-                ignore_limit=True)[0]:
+        if can_perform_recipe(GENERAL_ID, recipe, owner_id, ctx)[0]:
             return GENERAL_ID
 
         # Priority B: Character (Personal Trigger)
         # If the bank is missing ingredients, but the character has them.
         if ctx.char_id and can_perform_recipe(
-                ctx.char_id, recipe, owner_id, ctx,
-                ignore_limit=True)[0]:
+                ctx.char_id, recipe, owner_id, ctx)[0]:
             return ctx.char_id
 
         # Priority C: Location (Environment/Passive)
         # If no character is there.
         if ctx.loc_id and can_perform_recipe(
-                ctx.loc_id, recipe, owner_id, ctx,
-                ignore_limit=True)[0]:
+                ctx.loc_id, recipe, owner_id, ctx)[0]:
             return ctx.loc_id
 
         # Fallback for UI (Error reporting)
@@ -115,41 +111,44 @@ def get_eligible_placements(recipe, target_owner_id, host_id, sources=None):
 
     return placements
 
-def can_perform_recipe(
-        host_id, recipe, target_owner_id, ctx, batches=1,
-        catching_up=False, ignore_limit=False, sources=None, stop_at=None):
+def get_placement_capacity(recipe, target_owner_id, host_id, sources=None):
     """
-    Validates if a host can perform a recipe. 
-    Checks Storage limits, Ingredients, and Attributes.
+    Returns the total space available across all eligible output placements,
+    expressed as a number of whole batches. Returns float('inf') if unlimited.
+    """
+    if recipe.rate_amount <= 0:
+        return float('inf')
+
+    game_token = g.game_token
+    placements = get_eligible_placements(
+        recipe, target_owner_id, host_id, sources)
+    total_capacity = 0.0
+
+    for owner_id, pos in placements:
+        q_limit = get_quantity_limit(recipe.product_id, owner_id)
+        if q_limit == 0:
+            return float('inf')
+        pile = Pile.query.filter_by(
+            game_token=game_token, owner_id=owner_id,
+            item_id=recipe.product_id, position=pos).first()
+        current_qty = pile.quantity if pile else 0.0
+        total_capacity += max(0.0, q_limit - current_qty)
+
+    return math.floor(total_capacity / recipe.rate_amount), total_capacity
+
+def has_ingredients(
+        host_id, recipe, target_owner_id, ctx, batches=1,
+        catching_up=False, sources=None, stop_at=None):
+    """
+    Checks if a host has the ingredients and attribute requirements to perform
+    a recipe.
     """
     logger.debug(
-        f"can_perform_recipe() Product:{recipe.product_id}"
+        f"has_ingredients() Product:{recipe.product_id}"
         f" | Char:{ctx.char_id} | Loc:{ctx.loc_id}")
     game_token = g.game_token
     if not host_id:
         return False, "No appropriate host."
-
-    # Output Limit
-    if not ignore_limit and recipe.rate_amount > 0:
-        placements = get_eligible_placements(
-            recipe, target_owner_id, host_id, sources)
-        total_capacity = 0.0
-        
-        for owner_id, pos in placements:
-            q_limit = get_quantity_limit(recipe.product_id, owner_id)
-            if q_limit == 0:
-                total_capacity = float('inf')
-                break
-            pile = Pile.query.filter_by(
-                game_token=game_token, owner_id=owner_id, 
-                item_id=recipe.product_id, position=pos).first()
-            current_qty = pile.quantity if pile else 0.0
-            total_capacity += max(0.0, q_limit - current_qty)
-
-        if total_capacity < (recipe.rate_amount * batches):
-            # If catching up, we just want to know if we can do AT LEAST one
-            if not catching_up or total_capacity < recipe.rate_amount:
-                return False, "Storage limit reached"
 
     if stop_at is not None:
         current_qty = get_accessible_quantity(recipe.product_id, target_owner_id)
@@ -158,7 +157,7 @@ def can_perform_recipe(
         if recipe.is_consumer and current_qty <= stop_at:
             return False, f"Target {stop_at:g} reached"
 
-    # 2. Ingredient Availability
+    # Ingredient Availability
     if sources is None:
         sources = resolve_recipe_sources(host_id, recipe, ctx)
     for src in sources:
@@ -178,7 +177,7 @@ def can_perform_recipe(
                 verb = "Need More"
             return False, f"{verb} {maskable_name(src['item'])}"
 
-    # 3. Attribute Requirements
+    # Attribute Requirements
     scope = get_host_scope(host_id, ctx)
     for src in sources:
         if src['total_available'] > 0:
@@ -199,6 +198,18 @@ def can_perform_recipe(
                 f"Requires {maskable_name(req.attrib)} {req.range_display}"
 
     return True, ""
+
+def can_perform_recipe(
+        host_id, recipe, target_owner_id, ctx, batches=1,
+        catching_up=False, sources=None, stop_at=None):
+    _, total_capacity = get_placement_capacity(
+        recipe, target_owner_id, host_id, sources)
+    if total_capacity <= 0:
+        return False, "Storage limit reached"
+    return has_ingredients(
+        host_id, recipe, target_owner_id, ctx,
+        batches=batches, catching_up=catching_up,
+        sources=sources, stop_at=stop_at)
 
 def get_host_scope(host_id, ctx):
     """
@@ -333,7 +344,25 @@ def execute_production(
 
     # Validate if we can perform at least ONE
     sources = resolve_recipe_sources(host_id, recipe, ctx)
-    possible, reason = can_perform_recipe(
+
+    # Clamp batches to what output placements can actually absorb.
+    # Do this before can_perform_recipe so that a nearly-full pile doesn't
+    # block a partial batch — we produce as much as fits, consuming full
+    # source quantities per batch (no partial ingredient splits).
+    capacity_batches, total_capacity = get_placement_capacity(
+        recipe, target_owner_id, host_id, sources)
+    if capacity_batches == float('inf'):
+        pass  # unlimited
+    elif capacity_batches >= 1:
+        batches = min(batches, capacity_batches)
+    else:
+        # Less than one full batch of space — check if any space at all
+        if total_capacity <= 0:
+            return 0, "Storage limit reached"
+        # else: allow 1 batch; the produce loop will deposit what fits
+
+    # Validate ingredients/attributes (limit check handled by capacity clamp above)
+    possible, reason = has_ingredients(
         host_id, recipe, target_owner_id, ctx, batches=1,
         catching_up=catching_up, sources=sources)
     if not possible:
@@ -386,7 +415,7 @@ def execute_production(
 
     # Final verification for the (potentially adjusted) batch count
     if batches > 1:
-        possible, reason = can_perform_recipe(
+        possible, reason = has_ingredients(
             host_id, recipe, target_owner_id, ctx, batches,
             catching_up=catching_up, sources=sources)
         if not possible:

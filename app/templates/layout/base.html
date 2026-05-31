@@ -52,6 +52,11 @@
             }
         });
 
+        window.isUnloading = false;
+        window.addEventListener('beforeunload', () => {
+            window.isUnloading = true;
+        });
+
         /**
          * Display a message on screen immediately.
          */
@@ -76,11 +81,6 @@
                 $item.fadeOut(500, function() { $(this).remove(); });
             }, 5000);
         }
-
-        let isUnloading = false;
-        window.addEventListener('beforeunload', () => {
-            isUnloading = true;
-        });
 
         /**
          * Global entry point: saves message for next reload AND shows it now.

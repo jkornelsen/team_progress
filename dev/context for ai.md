@@ -10,8 +10,58 @@
 - Use inline constants from model e.g. '{{ Participant.OUTCOME }}' in javascript rather than hardcoded literal 'outcome'
 - Do math on server rather than calculating 'current_val op val_transform' in javascript
 
+## Scoped Files for Bundling
+
+Prompt 1 along with full bundled code:
+
+```
+You are helping modify an existing Flask + SQLAlchemy project.
+
+IMPORTANT:
+- preserve existing behavior unless explicitly changed
+- prefer minimal diffs
+- avoid unrelated refactors
+- do not rewrite architecture
+- identify risks before coding
+
+Your task:
+1. Identify all places likely requiring modification
+2. Identify possible regressions
+3. Propose implementation order
+4. Do NOT generate code yet
+
+Goal:
+[enter goal]
+```
+
+Prompt 2:
+
+```
+Return a FILE MANIFEST for implementing this change.
+
+Rules:
+- output ONLY file paths
+- include NO explanations
+- include NO code
+- include ONLY files you are confident are relevant or directly adjacent
+- prefer completeness over minimality, but avoid noise
+```
+
+Prompt 3:
+
+```
+Implement changes.
+Output unified diffs only.
+
+Goal:
+```
+
+Copy and paste goal from prompt 1.
+Drag and drop bundled file selection.
+
 ## Repeatable Mini-Template
 
+```
 Context:
 
 - This project is a rewrite.
@@ -25,6 +75,7 @@ Task:
 Focus:
 
 - preserve behavior, not structure
+```
 
 ## Generating JSON Using Instructions
 

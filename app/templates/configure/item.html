@@ -158,7 +158,7 @@
             
             <div id="recipes-container" class="spacious-top">
                 {% for recipe in recipes %}
-                    {{ recipe_row(loop.index0) }}
+                    {{ recipe_row(loop.index0, recipe) }}
                 {% endfor %}
             </div>
         </section>

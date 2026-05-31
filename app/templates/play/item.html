@@ -272,7 +272,9 @@
                                             <span class="hotkey-indicator">{{ letter }}</span>
                                             Stop
                                         </button>
-                                        <div class="flex-row align-center" 
+                                        <div class="flex-row align-center {{ 'hidden'
+                                                if not r_data.can_produce or (
+                                                progress and progress.recipe_id == r.id) }}" 
                                              id="stop-at-wrapper-{{ r.id }}"
                                              style="margin-left: 10px;">
                                             <label for="stop-at-{{ r.id }}">Stop at</label>

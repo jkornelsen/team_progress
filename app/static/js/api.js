@@ -73,6 +73,20 @@ async function apiRequest(
         }
         return true;
     } catch (err) {
+        if (window.isUnloading) return null;
+
+        const noiseErrors = [
+            "Failed to fetch",       // Chrome/Edge/Firefox network interrupt
+            "Load failed",           // Safari network interrupt
+            "The operation was aborted", // Explicit aborts
+            "NetworkError when attempting to fetch resource" // Older Firefox
+        ];
+
+        if (noiseErrors.includes(err.message)) {
+            console.warn("Muting network noise:", err.message);
+            return null;
+        }
+
         if (typeof flashMessage === 'function') {
             flashMessage(err.message, "error");
         }
