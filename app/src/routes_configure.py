@@ -102,7 +102,7 @@ def edit_overall():
             db.session.add(new_req)
 
         db.session.commit()
-        return redirect(url_for('configure.index'))
+        return redirect_back('configure.index')
         
     entities = {
         name: model.query.filter_by(
@@ -118,7 +118,7 @@ def edit_overall():
 @configure_bp.route('/cancel')
 def cancel():
     """Generic cancel route to return to the last known origin."""
-    return redirect_back('configure.index')
+    return redirect_back('configure.index', fallback_to_referrer=False)
 
 # ------------------------------------------------------------------------
 # Entity Settings
@@ -136,7 +136,7 @@ def edit_item(id):
         if 'delete' in request.form:
             db.session.delete(item)
             db.session.commit()
-            return redirect(url_for('configure.index'))
+            return redirect_back('configure.index')
 
         if item.id is None:
             item.id = Overall.generate_next_id(g.game_token)
@@ -315,7 +315,7 @@ def edit_location(id):
 
         if 'delete' in request.form:
             handle_deletion(loc)
-            return redirect(url_for('configure.index'))
+            return redirect_back('configure.index')
 
         if loc.id is None:
             loc.id = Overall.generate_next_id(g.game_token)
@@ -521,7 +521,7 @@ def edit_character(id):
 
         if 'delete' in request.form:
             handle_deletion(char)
-            return redirect(url_for('configure.index'))
+            return redirect_back('configure.index')
 
         if char.id is None:
             char.id = Overall.generate_next_id(g.game_token)
@@ -605,7 +605,7 @@ def edit_attrib(id):
 
         if 'delete' in request.form:
             handle_deletion(attrib)
-            return redirect(url_for('configure.index'))
+            return redirect_back('configure.index')
 
         if attrib.id is None:
             attrib.id = Overall.generate_next_id(g.game_token)
@@ -643,7 +643,7 @@ def edit_event(id):
 
         if 'delete' in request.form:
             handle_deletion(event)
-            return redirect(url_for('configure.index'))
+            return redirect_back('configure.index')
 
         if event.id is None:
             event.id = Overall.generate_next_id(g.game_token)

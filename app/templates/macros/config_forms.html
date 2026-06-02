@@ -1,3 +1,9 @@
+{% macro edit_url(entity_type, id=None) -%}
+    {{ url_for('configure.edit_' ~ entity_type,
+        callback=request.full_path,
+        **({'id': id} if id is not none else {})) }}
+{%- endmacro %}
+
 {% macro footer_actions(entity_name=None, entity_id=None) %}
 <div class="footer-actions flex-between">
     <div class="gap-20" style="display: flex">

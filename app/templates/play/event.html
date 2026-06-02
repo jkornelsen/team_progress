@@ -5,6 +5,7 @@
 {% extends 'layout/base.html' %}
 {% import 'macros/hotkeys.html' as hk %}
 {% import 'macros/render.html' as render %}
+{% import 'macros/config_forms.html' as forms %}
 
 {% block upper_left %}
     <nav class="nav-container">
@@ -13,7 +14,7 @@
         {{ hk.page_main_setup() }}
         <span class="separator">|</span>
         {{ hk.fixed_text(
-            url_for('configure.edit_event', id=event.id),
+            forms.edit_url('event', event.id),
             hk.bracket('e') ~ "dit event", 'e') }}
     </nav>
 {% endblock %}

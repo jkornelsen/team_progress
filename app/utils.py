@@ -195,12 +195,14 @@ def capture_origin(name=None):
     session['origin_url'] = request.full_path
     session['origin_name'] = name or "Previous Page"
 
-def redirect_back(default='play.overview'):
+def redirect_back(default='play.overview', fallback_to_referrer=True):
     """
-    Redirects to the stored origin, or a default route.
+    Redirects to a callback URL provided in the query parameters, the stored
+    session origin, or a default route.
     Clears the origin after use to prevent loops.
     """
-    target = session.pop('origin_url', request.referrer)
+    target = request.args.get('callback') or session.pop(
+        'origin_url', request.referrer if fallback_to_referrer else None)
     if not target or target == request.url:
         target = url_for(default)
     return redirect(target)
@@ -468,8 +470,9 @@ def htmlify_filter(text, allow_links=True):
             html
         )
 
-    # 3. LaTeX-Style Superscript Support e.g. $^{2}$
-    html = re.sub(r'\$\^\{([^}]+)\}\$', r'<sup>\1</sup>', html)
+    # 3. LaTeX-Style Superscript: ^{2} or _{p1}
+    html = re.sub(r'\^\{([^}]+)\}', r'<sup>\1</sup>', html)
+    html = re.sub(r'\_\{([^}]+)\}', r'<sub>\1</sub>', html)
 
     # 4. Modern Color Syntax: {color|content}
     def color_replacer(match):
@@ -505,8 +508,8 @@ def htmlify_filter(text, allow_links=True):
     # 7. Sanitize with Bleach
     css_sanitizer = CSSSanitizer(allowed_css_properties=['color'])
     allowed_tags = {
-        'a', 'b', 'i', 'span', 'div', 'pre', 'code', 'br', 'strong', 'em',
-        'u', 'p', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'sup'}
+        'a', 'b', 'i', 'span', 'div', 'pre', 'code', 'br', 'hr', 'strong', 'em',
+        'u', 'p', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'sup', 'sub'}
     allowed_attrs = {
         'a': ['href', 'title'],
         'span': ['style', 'class'], 

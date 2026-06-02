@@ -99,13 +99,13 @@
     <section id="{{ slug }}" class="entity-section outer-border">
         <div class="flex-between align-center section-header">
             <div style="display: flex; align-items: baseline;"><span class="hotkey-indicator">{{ slug[0] }}</span> <h3 style="padding-left: 4px">{{ label }}</h3></div>
-            <a href="{{ url_for('configure.edit_' + slug) }}" class="text-accent">+ Add</a>
+            <a href="{{ url_for('configure.edit_' + slug, callback=request.full_path) }}" class="text-accent">+ Add</a>
         </div>
         <div class="entity-link-list {{ 'is-empty' if not collection }}">
             {% if collection %}
                 {% for ent in collection %}
                     <div class="entity-link-wrapper">
-                        <a href="{{ url_for('configure.edit_' + slug, id=ent.id) }}" 
+                        <a href="{{ url_for('configure.edit_' + slug, id=ent.id, callback=request.full_path) }}" 
                             class="entity-link"
                             title="Edit {{ ent.name }}">
                             {{ ent.name }}

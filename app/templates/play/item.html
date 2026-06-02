@@ -5,8 +5,7 @@
 {% extends 'layout/base.html' %}
 {% import 'macros/hotkeys.html' as hk %}
 {% import 'macros/render.html' as render %}
-
-{% set manualtick = False %} {# set to True to call one update at a time for debugging #}
+{% import 'macros/config_forms.html' as forms %}
 
 {% block upper_left %}
     <nav class="nav-container">
@@ -15,16 +14,18 @@
         {{ hk.page_main_setup() }}
         <span class="separator">|</span>
         {{ hk.fixed_text(
-            url_for('configure.edit_item', id=item.id),
+            forms.edit_url('item', item.id),
             hk.bracket('e') ~ "dit item", 'e') }}
         {% if owner.id != 1 %}
             <span class="separator">|</span>
-            {% set target_url = url_for('configure.edit_' ~ owner.entity_type, id=owner.id) %}
+            {% set target_url = forms.edit_url(owner.entity_type, owner.id) %}
             {% set text = "e" ~ hk.bracket('d') ~ "it " ~ owner.SHORT %}
             {{ hk.fixed_text(target_url, text, 'd') }}
         {% endif %}
     </nav>
 {% endblock %}
+
+{% set manualtick = False %} {# set to True to call one update at a time for debugging #}
 
 {% block content %}
 
@@ -140,6 +141,15 @@
                         </div>
                         
                         <!-- Sources (Ingredients) -->
+                        {% if r_data.host_id is none %}
+                            <p class="text-danger" style="margin: 4px 0 6px;">
+                                {% if r.is_location_hosted %}
+                                    No active location
+                                {% else %}
+                                    No active character
+                                {% endif %}
+                            </p>
+                        {% endif %}
                         <ul class="source-list label-like">
                             {% for s in r_data.sources %}
                                 <li>
@@ -151,9 +161,11 @@
                                     {{ render.maskable_name(
                                         s.ingredient, target_url, link_letters) }}
                                     {{ s.q_required | formatNum }}
+                                    {% if r_data.host_id is not none %}
                                     (Have <span id="source-qty-{{ s.ingredient.id }}"
                                         class="{{ 'text-danger' if s.current_stock < s.q_required else '' }}"
                                         >{{ s.current_stock | formatNum }}</span>)
+                                    {% endif %}
                                 </li>
                             {% endfor %}
                         </ul>
@@ -200,14 +212,7 @@
                                     {% else %}
                                         {{ req.attrib.name }}
                                     {% endif %}
-                                    {% if req.attrib.is_binary %}
-                                        {% if req.min_val > 0 %}
-                                        {% else %}
-                                        {% endif %}
-                                        {{ '✓' if req.min_val > 0 else '✗' }}
-                                    {% else %}
-                                        {{ req.range_display }}
-                                    {% endif %}
+                                    {{ req.range_display }}
                                     {% if not req.is_satisfied %}
                                         <span class="curr-val">
                                         {% if req.current_val is none %}

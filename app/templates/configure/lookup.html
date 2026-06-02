@@ -4,6 +4,7 @@
 
 {% extends 'layout/base.html' %}
 {% import 'macros/hotkeys.html' as hk %}
+{% import 'macros/config_forms.html' as forms %}
 
 {% block upper_left %}
     <nav class="nav-container">
@@ -12,7 +13,7 @@
         {{ hk.page_main_setup() }}
         <span class="separator">|</span>
         {{ hk.fixed_text(
-            url_for('configure.edit_' + entity.entity_type, id=entity.id),
+            forms.edit_url(entity.entity_type, entity.id),
             hk.bracket('e') ~ "dit " ~ entity.entity_type, 'e') }}
     </nav>
 {% endblock %}
@@ -72,7 +73,8 @@
                             ▶️ Open in Play Mode
                         </a>
                     {% endif %}
-                    <a href="{{ url_for('configure.edit_' + entity.entity_type, id=entity.id) }}" class="btn text-center">
+                    <a href="{{ forms.edit_url(entity.entity_type, entity.id) }}"
+                            class="btn text-center">
                         📝 Edit Configuration
                     </a>
                 </div>

@@ -5,6 +5,7 @@
 {% extends 'layout/base.html' %}
 {% import 'macros/hotkeys.html' as hk %}
 {% import 'macros/render.html' as render %}
+{% import 'macros/config_forms.html' as forms %}
 
 {% block upper_left %}
     <nav class="nav-container">
@@ -13,7 +14,7 @@
         {{ hk.page_main_setup() }}
         <span class="separator">|</span>
         {{ hk.fixed_text(
-            url_for('configure.edit_character', id=character.id),
+            forms.edit_url('character', character.id),
             hk.bracket('e') ~ "dit character", 'e') }}
     </nav>
 {% endblock %}
@@ -21,7 +22,6 @@
 {% block content %}
 
 <script>
-    window.linkForKey['e'] = "{{ url_for('configure.edit_character', id=character.id) }}";
     window.linkForKey['g'] = "#do-travel-btn";
     window.linkForKey['t'] = () => {
         document.getElementById('dest-select')?.focus();

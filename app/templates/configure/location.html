@@ -15,6 +15,11 @@
     </nav>
 {% endblock %}
 
+{% set universal_items = all_items |
+    selectattr("storage_type", "equalto", StorageType.UNIVERSAL) | list %}
+{% set containable_items = all_items |
+    rejectattr("storage_type", "equalto", StorageType.UNIVERSAL) | list %}
+
 {% block content %}
 
 <script>
@@ -29,11 +34,6 @@
 </script>
 <script src="{{ url_for('static', filename='js/configuration.js') }}"></script>
 
-{% set universal_items = all_items |
-    selectattr("storage_type", "equalto", StorageType.UNIVERSAL) | list %}
-{% set containable_items = all_items |
-    rejectattr("storage_type", "equalto", StorageType.UNIVERSAL) | list %}
-
 {# =========================================================================
    2. MAIN CONTENT
    ========================================================================= #}
@@ -41,7 +41,7 @@
 <div class="configure-location">
     <h1>Location Setup</h1>
         <p class="info">
-            Room, area, or container where items and characters can be.
+            Area or container where items and characters can be.
             May be subdivided into a grid with position 1,1 as the upper-left corner.
         </p>
     

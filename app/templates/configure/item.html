@@ -35,9 +35,8 @@
 <div class="configure-item">
     <h1>Item Setup</h1>
     <p class="info">
-        Resources and equipment, or concepts such as upgrades.
-        Also conversation dialog.
-        Often produced according to recipes.
+        Resources, equipment, and information such as upgrades, progress, and dialogue.
+        Often produced using recipes.
     </p>
     <form method="POST" id="item-form">
         <!-- 1. Identity (Entity Table) -->
@@ -59,9 +58,10 @@
         <!-- 2. Logic & Storage (Item Table) -->
         <section class="outer-border">
             <p class="info">
-                Storage type is important to consider. Universal is
-                good for idle progress, while carried is typically for RPGs.
-                Crafting stations reside at a location.
+                <b>Carried</b> items can be picked up by characters,
+                <b>Local</b> crafting stations are immovable,
+                and <b>Universal</b> means shared globally rather than tied to a location.
+
                 To store more than one way, create an additional item
                 and convert with a recipe.
                 For example,

@@ -24,6 +24,7 @@ def find_best_host(recipe, owner_id, ctx):
     """
     logger.debug(
         f"find_best_host() | Product:{recipe.product_id}"
+        f" | is_location_hosted:{recipe.is_location_hosted}"
         f" | Char:{ctx.char_id} | Loc:{ctx.loc_id}")
 
     game_token = g.game_token
@@ -58,8 +59,11 @@ def find_best_host(recipe, owner_id, ctx):
         return GENERAL_ID
 
     # 3. PHYSICAL PRODUCT BRANCH (Tools, Resources, Structures)
-    else:
-        return ctx.char_id
+    logger.debug(
+        f"find_best_host() returning | is_location_hosted:{recipe.is_location_hosted}"
+        f" | storage_type:{product.storage_type}"
+        f" | result:{ctx.char_id}")
+    return ctx.char_id
 
 def resolve_host_pos(host_id, recipe, sources=None):
     """Returns (loc_id, anchor_pos) for a host."""
@@ -202,6 +206,9 @@ def has_ingredients(
 def can_perform_recipe(
         host_id, recipe, target_owner_id, ctx, batches=1,
         catching_up=False, sources=None, stop_at=None):
+    """Can this host perform the recipe."""
+    if host_id is None:
+        return False, "No appropriate host."
     _, total_capacity = get_placement_capacity(
         recipe, target_owner_id, host_id, sources)
     if total_capacity <= 0:
@@ -235,6 +242,12 @@ def resolve_recipe_sources(host_id, recipe, ctx):
     """
     Determines where ingredients are pulled from based on host identity.
     """
+    logger.debug(
+        f"resolve_recipe_sources() | host_id:{host_id}"
+        f" | host_id type:{type(host_id)}"
+        f" | GENERAL_ID:{GENERAL_ID}"
+        f" | host_id==GENERAL_ID:{host_id == GENERAL_ID}"
+        f" | Char:{ctx.char_id} | Loc:{ctx.loc_id}")
     game_token = g.game_token
     resolved_sources = []
     

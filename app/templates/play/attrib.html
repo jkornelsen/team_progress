@@ -1,6 +1,7 @@
 {% extends 'layout/base.html' %}
 {% import 'macros/hotkeys.html' as hk %}
 {% import 'macros/render.html' as render %}
+{% import 'macros/config_forms.html' as forms %}
 
 {% block upper_left %}
     <nav class="nav-container">
@@ -9,10 +10,10 @@
         {{ hk.page_main_setup() }}
         <span class="separator">|</span>
         {{ hk.fixed_text(
-            url_for('configure.edit_attrib', id=attribute.id),
+            forms.edit_url('attrib', attribute.id),
             hk.bracket('e') ~ "dit attrib", 'e') }}
         <span class="separator">|</span>
-        {% set target_url = url_for('configure.edit_' ~ subject.entity_type, id=subject.id) %}
+        {% set target_url = forms.edit_url(subject.entity_type, subject.id) %}
         {% set text = "e" ~ hk.bracket('d') ~ "it " ~ subject.SHORT %}
         {{ hk.fixed_text(target_url, text, 'd') }}
     </nav>
