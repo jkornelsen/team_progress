@@ -128,13 +128,28 @@ def get_entity_value(anchor_id, field_def, subject_id=None):
         return float(straight_line_dist(subj.position, target.position) or 0.0)
 
     # Recipe Property Fetching
-    if field_def.field_mode in [Participant.RATE_AMT, Participant.RATE_DUR]:
+    if field_def.field_mode in (
+            Participant.RATE_AMT, Participant.RATE_DUR,
+            Participant.SOURCE_QTY, Participant.BYP_QTY):
         if not field_def.recipe_id: return 0.0
         recipe = Recipe.query.get((game_token, field_def.recipe_id))
         if not recipe: return 0.0
-        return recipe.rate_amount \
-            if field_def.field_mode == Participant.RATE_AMT \
-            else recipe.rate_duration
+
+        if field_def.field_mode == Participant.RATE_AMT:
+            return recipe.rate_amount
+        if field_def.field_mode == Participant.RATE_DUR:
+            return float(recipe.rate_duration)
+        # Look up the per-item qty in the recipe
+        if field_def.field_mode == Participant.SOURCE_QTY:
+            src = next(
+                (s for s in recipe.sources
+                 if s.item_id == field_def.source_item_id), None)
+            return src.q_required if src else 0.0
+        if field_def.field_mode == Participant.BYP_QTY:
+            byp = next(
+                (b for b in recipe.byproducts
+                 if b.item_id == field_def.source_item_id), None)
+            return byp.rate_amount if byp else 0.0
 
     # Handle Depth Traversal
     if field_def.child_of_anchor:
@@ -167,6 +182,11 @@ def get_entity_value(anchor_id, field_def, subject_id=None):
         ).first()
         return val_obj.value if val_obj else 0.0
     
+    # Fetch Default Storage Limit
+    if field_def.field_mode == Participant.LIMIT and field_def.item_id:
+        item = Item.query.get((game_token, field_def.item_id))
+        return item.q_limit if item else 0.0
+
     # Fetch Quantity Value
     if field_def.field_mode == Participant.QTY and field_def.item_id:
         item = Item.query.get((game_token, field_def.item_id))
@@ -282,54 +302,58 @@ def calculate_determinants(event, role_entities):
     for det in event.determinants:
         val = 0.0
         breakdown_text = ""
-        field_name = "Value"
+        infield = det.infield
+        field_name = infield.get_field_name() if infield else "Value"
         source_display = "Constant"
             
         if det.op_transform == Operation.CONST:
             val = det.val_transform
-        elif det.get_val_from == Participant.INFIELD and det.infield:
-            anchor_id = resolve_anchor_id(det.infield.role, role_entities)
-            if not anchor_id:
+        elif det.get_val_from == Participant.INFIELD and infield:
+            anchor_id = resolve_anchor_id(infield.role, role_entities)
+            if anchor_id is None and infield.role != Participant.BLUEPRINT:
                 continue
-            val = get_entity_value(anchor_id, det.infield)
-            infield = det.infield
+            val = get_entity_value(anchor_id, infield)
 
-            if infield.field_mode == Participant.ATTR:
-                attr = Attrib.query.get((game_token, infield.attrib_id))
-                field_name = attr.name if attr else "Attribute"
-            elif infield.field_mode == Participant.QTY:
-                item = Item.query.get((game_token, infield.item_id))
-                field_name = maskable_name(item) if item else "Quantity"
-
-            anchor = Entity.query.get((game_token, anchor_id))
-            anchor_name = '' if anchor_id == GENERAL_ID \
-                else maskable_name(anchor) if anchor else "Unknown"
-            source_display = anchor_name
-            if infield.child_of_anchor:
-                # Try to find the specific child item that provided the value
-                child_name = "Item"
-                pile_query = db.session.query(Pile).join(
-                    Item, (Pile.item_id == Item.id) & (Pile.game_token == Item.game_token)
-                )
-                if det.infield.field_mode == Participant.ATTR:
-                    pile = pile_query.join(
-                        AttribVal, (
-                            AttribVal.subject_id == Item.id) & (
-                            AttribVal.game_token == Item.game_token)
-                    ).filter(
-                        Pile.game_token == g.game_token,
-                        Pile.owner_id == anchor_id,
-                        AttribVal.attrib_id == det.infield.attrib_id
-                    ).first()
+            # Source Display Name
+            if infield.role == Participant.BLUEPRINT:
+                if infield.item_id:
+                    blueprint_item = Item.query.get((game_token, infield.item_id))
+                    source_display = \
+                        f"{maskable_name(blueprint_item)}" \
+                        if blueprint_item else "(Item)"
                 else:
-                    pile = pile_query.filter(
-                        Pile.game_token == g.game_token,
-                        Pile.owner_id == anchor_id,
-                        Pile.item_id == det.infield.item_id
-                    ).first()
-                if pile:
-                    child_name = maskable_name(pile.item)
-                source_display = f"{anchor_name}'s {child_name}"
+                    source_display = "(Item)"
+            else:
+                anchor = Entity.query.get((game_token, anchor_id))
+                anchor_name = '' if anchor_id == GENERAL_ID \
+                    else maskable_name(anchor) if anchor else "Unknown"
+                source_display = anchor_name
+                if infield.child_of_anchor:
+                    # Find the specific child item that provided the value
+                    child_name = "Item"
+                    pile_query = db.session.query(Pile).join(
+                        Item, (Pile.item_id == Item.id) &
+                              (Pile.game_token == Item.game_token)
+                    )
+                    if infield.field_mode == Participant.ATTR:
+                        pile = pile_query.join(
+                            AttribVal, (
+                                AttribVal.subject_id == Item.id) & (
+                                AttribVal.game_token == Item.game_token)
+                        ).filter(
+                            Pile.game_token == game_token,
+                            Pile.owner_id == anchor_id,
+                            AttribVal.attrib_id == infield.attrib_id
+                        ).first()
+                    else:
+                        pile = pile_query.filter(
+                            Pile.game_token == game_token,
+                            Pile.owner_id == anchor_id,
+                            Pile.item_id == infield.item_id
+                        ).first()
+                    if pile:
+                        child_name = maskable_name(pile.item)
+                    source_display = f"{anchor_name}'s {child_name}"
 
             breakdown_text = format_for_display(val)
 
@@ -718,7 +742,18 @@ def do_effect_change(eff, roll_val, role_entities):
             else apply_operation(current, impact, op)
         set_quantity(field_def.item_id, out_entity_id, new_val)
 
-    # Destination C: Recipe Efficiency (Global Blueprint Change)
+    # Destination C: Item Limit (Blueprint)
+    elif field_def.field_mode == Participant.LIMIT:
+        item = Item.query.get((game_token, field_def.item_id))
+        if item:
+            current = item.q_limit
+            item.q_limit = impact if op == Operation.ASSIGN \
+                else apply_operation(current, impact, op)
+            add_message(
+                f"Set {maskable_name(item)} "
+                f"storage limit to {item.q_limit:g}")
+
+    # Destination D: Recipe Efficiency (Global Blueprint Change)
     elif field_def.field_mode in Participant.USES_RECIPE:
         recipe = Recipe.query.get((game_token, field_def.recipe_id))
         if recipe:
@@ -726,19 +761,43 @@ def do_effect_change(eff, roll_val, role_entities):
                 current = recipe.rate_amount
                 recipe.rate_amount = impact if op == Operation.ASSIGN \
                     else apply_operation(current, impact, op)
-                log_impact = f"yield to {recipe.rate_amount:g}"
-            else:
+                add_message(
+                    f"Set {maskable_name(recipe.product)} "
+                    f"yield to {recipe.rate_amount:g}")
+            elif field_def.field_mode == Participant.RATE_DUR:
                 current = recipe.rate_duration
                 new_dur = impact if op == Operation.ASSIGN else \
                     apply_operation(current, impact, op)
                 # Truncate to integer and clamp at 1 second minimum
                 recipe.rate_duration = max(1, int(impact))
-                log_impact = "duration to {recipe.rate_duration:g}"
+                add_message(
+                    f"Set {maskable_name(recipe.product)} "
+                    f"duration to {recipe.rate_duration}s")
+            elif field_def.field_mode == Participant.SOURCE_QTY:
+                src = next((s for s in recipe.sources
+                    if s.item_id == field_def.source_item_id), None)
+                if src:
+                    current = src.q_required
+                    src.q_required = impact if op == Operation.ASSIGN \
+                        else apply_operation(current, impact, op)
+                    add_message(
+                        f"Set {maskable_name(recipe.product)} "
+                        f"source ({maskable_name(src.ingredient)}) "
+                        f"to {src.q_required:g}")
 
-            add_message(
-                f"Set {maskable_name(recipe.product)} {log_impact}")
+            elif field_def.field_mode == Participant.BYP_QTY:
+                byp = next((b for b in recipe.byproducts
+                    if b.item_id == field_def.source_item_id), None)
+                if byp:
+                    current = byp.rate_amount
+                    byp.rate_amount = impact if op == Operation.ASSIGN \
+                        else apply_operation(current, impact, op)
+                    add_message(
+                        f"Set {maskable_name(recipe.product)} "
+                        f"byproduct ({maskable_name(byp.item)}) "
+                        f"to {byp.rate_amount:g}")
 
-    # Destination D: Physical Placement
+    # Destination E: Physical Placement
     elif field_def.field_mode == Participant.PLACE:
         
         # 1. Target must be a location
@@ -761,7 +820,7 @@ def do_effect_change(eff, roll_val, role_entities):
         item = Item.query.get((game_token, field_def.item_id))
         add_message(f"Placed {maskable_name(item)} at {roll_val}")
 
-    # Destination E: Teleportation (Move existing character)
+    # Destination F: Teleportation (Move existing character)
     elif field_def.field_mode == Participant.POS:
         char = Character.query.get((game_token, out_entity_id))
         if not char:
@@ -783,7 +842,7 @@ def do_effect_change(eff, roll_val, role_entities):
             add_message(
                 f"Positioned {char.name} at {maskable_name(loc)} {char.position}")
 
-    # Destination F: Mob Spawning (Clone a character)
+    # Destination G: Mob Spawning (Clone a character)
     elif field_def.field_mode == Participant.SPAWN:
         if not isinstance(roll_val, (list, tuple)) or len(roll_val) != 2:
             return False, "Expected a Coordinate outcome."

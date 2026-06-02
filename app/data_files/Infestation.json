@@ -5,7 +5,9 @@
         "number_format": "en_US",
         "slots": [],
         "win_reqs": [
-            {"quantity": 0.0, "char_id": 13, "attrib_id": 4, "attrib_value": 10.0}
+            {"char_id": 13, "attrib_id": 4, "attrib_value": 10.0},
+            {"char_id": 17, "attrib_id": 3, "attrib_value": 1.0},
+            {"char_id": 25, "attrib_id": 3, "attrib_value": 1.0}
         ],
         "tag_introduce_order": 30,
         "tag_best_order": 30,
@@ -45,6 +47,12 @@
                 ]
             },
             {
+                "id": 50,
+                "name": "Funding",
+                "description": "Required for repairs, so don't be too reckless or there might not be enough to complete the mission.",
+                "storage_type": "u"
+            },
+            {
                 "id": 34,
                 "name": "Pool of Water",
                 "description": "Can be used to extinguish flames.",
@@ -55,8 +63,10 @@
                 "id": 6,
                 "name": "Recharging Station",
                 "description": "Click on *Energy* to power up the robot.",
-                "storage_type": "l"
-            }
+                "storage_type": "l",
+                "q_limit": 1.0
+            },
+            {"id": 51, "name": "Repair Dock", "storage_type": "l", "q_limit": 1.0}
         ],
         "locations": [
             {
@@ -64,8 +74,7 @@
                 "name": "Baby Mice Area",
                 "description": "The weakest of the rodents can be found here, but the area is alarmingly close to the base. Populations must be controlled so they don't spread further.",
                 "destinations": [
-                    {"loc2_id": 7},
-                    {"loc2_id": 12}
+                    {"loc2_id": 7}
                 ]
             },
             {"id": 9, "name": "Bad Hare Area", "masked": true},
@@ -76,7 +85,6 @@
                 "description": "Advanced state of disrepair, though it beats trudging through swampland. Provides travel deeper south, for a higher degree of difficulty than the areas near the Maintenance Building.",
                 "masked": true,
                 "destinations": [
-                    {"loc2_id": 12},
                     {"loc2_id": 9},
                     {"loc2_id": 11}
                 ],
@@ -89,7 +97,12 @@
                 "name": "Maintenance Building",
                 "description": "An outpost in northern Florida set up to contain the infestation. Engineers perform upgrades and repairs as well as charging. This is also where robots are controlled from, and where intel is assessed.",
                 "items": [
-                    {"item_id": 6, "quantity": 1.0}
+                    {"item_id": 6, "quantity": 1.0},
+                    {"item_id": 51, "quantity": 1.0}
+                ],
+                "destinations": [
+                    {"loc2_id": 8},
+                    {"loc2_id": 10}
                 ]
             },
             {"id": 11, "name": "Tainted Bunny Area", "masked": true}
@@ -102,12 +115,13 @@
                 "attribs": [
                     [4, 2.0],
                     [26, 0.0],
+                    [27, 5.0],
                     [29, 1.0],
                     [30, 3.0],
                     [45, 0.0],
-                    [27, 5.0]
+                    [53, 5.0]
                 ],
-                "abilities": [39, 47, 41, 49, 43, 46],
+                "abilities": [39, 41, 43, 46, 47, 49],
                 "location_id": 10
             },
             {
@@ -136,14 +150,15 @@
                 "name": "🤖 Herbert 2100B",
                 "description": "Autonomous machine that can also be given instructions remotely — the player character.\r\n\r\nDoes not get diseases from being bitten, but has a limited amount of power. Battle testing allows engineers to improve the technology.",
                 "attribs": [
+                    [2, 0.0],
                     [4, 1.0],
+                    [27, 10.0],
                     [29, 3.0],
                     [30, 2.0],
                     [45, 0.0],
-                    [27, 10.0],
-                    [2, 0.0]
+                    [53, 10.0]
                 ],
-                "abilities": [28, 35, 43, 18, 44, 23, 47],
+                "abilities": [18, 23, 28, 35, 43, 44, 47],
                 "toplevel": true,
                 "location_id": 12,
                 "items": [
@@ -201,9 +216,10 @@
             {
                 "id": 27,
                 "name": "HP",
-                "description": "How much damage the enemy can take before being defeated. 0 HP doesn't necessarily mean dead — see the Finish Fight event for what happens at that point."
+                "description": "How much damage the enemy can take before being defeated. 0 HP doesn't necessarily mean dead."
             },
             {"id": 26, "name": "Is Boss", "is_binary": true},
+            {"id": 53, "name": "Max HP"},
             {
                 "id": 31,
                 "name": "Movement Speed",
@@ -217,7 +233,7 @@
             {
                 "id": 4,
                 "name": "XL",
-                "description": "Gaining a new level increases [energy limit](/configure/item/5) and sets [current energy](/play/item/5?owner_id=13) to full.\r\n\r\nOn reaching level 3, see [Upgrade Bonus](/play/event/23?subject_id=13).\r\n\r\n<pre>\r\nLevel  Total XP Required\r\n~~~~~  ~~~~~~~~~~~~~~~~~\r\n1      (0)\r\n2      5\r\n3      15\r\n4      30\r\n5      50\r\n6      80\r\n7      120\r\n8      180\r\n9      260\r\n10     370\r\n11     500\r\n12     660\r\n13     860\r\n14     1110\r\n15     1400\r\n16     1800\r\n17     2300\r\n18     2900\r\n19     3600\r\n20     4200\r\n</pre>"
+                "description": "<pre>\r\nLevel  Total XP Required\r\n~~~~~  ~~~~~~~~~~~~~~~~~\r\n1      (0)\r\n2      5\r\n3      15\r\n4      30\r\n5      50\r\n6      80\r\n7      120\r\n8      180\r\n9      260\r\n10     370\r\n11     500\r\n12     660\r\n13     860\r\n14     1110\r\n15     1400\r\n16     1800\r\n17     2300\r\n18     2900\r\n19     3600\r\n20     4200\r\n</pre>"
             },
             {
                 "id": 2,
@@ -262,7 +278,7 @@
                         "op_application": "-"
                     }
                 ],
-                "chained_events": [
+                "chained": [
                     {
                         "child_id": 40,
                         "req": {"outcome_success": "success_any"}
@@ -348,7 +364,7 @@
                         "outcome_success": "failure_major"
                     }
                 ],
-                "chained_events": [
+                "chained": [
                     {
                         "child_id": 38,
                         "req": {"outcome_success": "success_any"}
@@ -382,7 +398,7 @@
                         "op_application": "-"
                     }
                 ],
-                "chained_events": [
+                "chained": [
                     {
                         "child_id": 18,
                         "req": {
@@ -540,15 +556,14 @@
             },
             {
                 "id": 46,
-                "name": "Fresh Baby Mouse",
+                "name": "Fresh Enemy",
                 "description": "A new enemy arrives. Whether the other one was dead or wounded doesn't matter anymore — it's gone now.",
                 "outcome_type": "determined",
                 "effects": [
                     {
-                        "get_val_from": "outcome",
+                        "infield": {"attrib_id": 53},
                         "outfield": {"attrib_id": 27},
                         "op_application": ":=",
-                        "op_transform": "c",
                         "val_transform": 5.0
                     },
                     {
@@ -587,6 +602,99 @@
                         "outfield": {"attrib_id": 2},
                         "auto_apply": true
                     }
+                ],
+                "chained": [
+                    {"child_id": 54}
+                ]
+            },
+            {
+                "id": 54,
+                "name": "Level Up",
+                "description": "Gaining a new level:\r\n- increases **Energy** limit and sets current energy to full\r\n- increases **Max HP** and sets **HP** to full\r\n\r\nOn reaching level 3, see [Upgrade Bonus](/play/event/23?subject_id=13).",
+                "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "label": "sq root",
+                        "infield": {"attrib_id": 2},
+                        "op_transform": "x^",
+                        "val_transform": 0.5
+                    },
+                    {"op_application": "/", "op_transform": "c", "val_transform": 1.8}
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 4},
+                        "op_application": ":="
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 53},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 10.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 53},
+                        "op_transform": "*",
+                        "val_transform": 4.0
+                    },
+                    {
+                        "infield": {"attrib_id": 53},
+                        "outfield": {"attrib_id": 27},
+                        "op_application": ":="
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "blueprint", "field_mode": "limit", "item_id": 5},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 10.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "blueprint", "field_mode": "limit", "item_id": 5},
+                        "op_transform": "*",
+                        "val_transform": 5.0
+                    },
+                    {
+                        "infield": {"role": "blueprint", "field_mode": "limit", "item_id": 5},
+                        "outfield": {"field_mode": "qty", "item_id": 5},
+                        "op_application": ":="
+                    }
+                ]
+            },
+            {
+                "id": 52,
+                "name": "Perform Repairs",
+                "description": "Higher damage is costlier to repair.",
+                "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "infield": {"role": "at", "field_mode": "qty", "item_id": 51},
+                        "op_application": ">="
+                    },
+                    {
+                        "infield": {"attrib_id": 53}
+                    },
+                    {
+                        "infield": {"attrib_id": 27},
+                        "op_application": "-"
+                    },
+                    {"op_application": "*", "op_transform": "c", "val_transform": 10.0}
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 50},
+                        "op_application": "-"
+                    },
+                    {
+                        "infield": {"attrib_id": 53},
+                        "outfield": {"attrib_id": 27},
+                        "op_application": ":="
+                    }
                 ]
             },
             {
@@ -619,7 +727,8 @@
     },
     "general data": {
         "piles": [
-            {"item_id": 48, "quantity": 5.0}
+            {"item_id": 48, "quantity": 5.0},
+            {"item_id": 50, "quantity": 10000000.0}
         ]
     },
     "progress": []

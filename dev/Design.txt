@@ -4,6 +4,28 @@
 
 ---- functional, tightening, quality of life ----
 
+mode to use the running total as the fetched value for a determinant
+    so we can round the final total for the infestation Level Up event
+    op_app doesn't apply in that case, or we could say it's assigning,
+        like the first row
+
+event effects need to calculate one at a time
+    so we can do:
+    1) hp = 10
+    2) hp = hp + (XL * 5)
+    currently, step 2 starts with the hp at the time of the roll
+    we may still be able to calculate the cumulative values at the time
+        of the roll so that we can show in preview
+    is that what we want if someone applies only certain effects?
+        seems logical to apply each formula rather than assuming cumulative
+        in that case we could update any remaining displays
+        that wouldn't help the user read the whole list but would
+        correctly show what happens if you press apply
+    a counterargument is the way we're using events has been pretty fixed
+        rather than an event where the user can optionally add poison dmg
+        so maybe applying the cumulative value would be fine,
+        worth it because it would be easier to read
+
 Value: -4.500000000000018
     truncate floating point limits with epsilon or whatever it was
     or 6-8 places, especially when writing to json and maybe also db
@@ -93,7 +115,6 @@ tethered one
         crush twists the wheelchair metal to bind galebane's body
 
 infestation
-    repair cost + reload cost can reduce xp to 0 (but never below)
     enough energy for several rounds of multiple events
     0 energy means another bot has to come and get you
         at least for the highway
@@ -140,6 +161,16 @@ furniture
     distance affects chance of success
 saving grandfather clock resets hour, an enumerated attrib, to 12am
     hasn't been tested in new version
+
+spelunkers
+    hold and seize are the same thing
+    would be smoother for an event to include all actions for a certain stat
+        description lists some of the main possibilities
+        narration would describe the action
+    the island characters are kind of odd as defaults or at least need adjusting
+        is appearance included or not
+        likely better to start with generic names such as "Party Member 1"
+        or suggest at least 10 pre-defined characters and choose 1-5 of them
 
 ---- code ----
 

@@ -121,7 +121,7 @@ def get_placement_capacity(recipe, target_owner_id, host_id, sources=None):
     expressed as a number of whole batches. Returns float('inf') if unlimited.
     """
     if recipe.rate_amount <= 0:
-        return float('inf')
+        return float('inf'), float('inf')
 
     game_token = g.game_token
     placements = get_eligible_placements(
@@ -131,7 +131,7 @@ def get_placement_capacity(recipe, target_owner_id, host_id, sources=None):
     for owner_id, pos in placements:
         q_limit = get_quantity_limit(recipe.product_id, owner_id)
         if q_limit == 0:
-            return float('inf')
+            return float('inf'), float('inf')
         pile = Pile.query.filter_by(
             game_token=game_token, owner_id=owner_id,
             item_id=recipe.product_id, position=pos).first()

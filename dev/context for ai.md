@@ -6,10 +6,8 @@ Prompt 1 along with full bundled code:
 You are helping modify an existing Flask + SQLAlchemy project.
 
 IMPORTANT:
-- preserve existing behavior unless explicitly changed
-- prefer minimal diffs
-- avoid unrelated refactors
 - do not rewrite architecture
+- avoid unrelated refactors
 - identify risks before coding
 
 Your task:
@@ -39,7 +37,10 @@ Prompt 3:
 
 ```
 You are helping modify an existing Flask + SQLAlchemy project.
-Output diffs to implement changes.
+- output diffs to implement changes
+- prefer minimal diffs
+- preserve existing behavior unless explicitly changed
+- avoid unrelated refactors
 
 Goal:
 ```

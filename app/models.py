@@ -166,11 +166,12 @@ class Entity(db.Model, DictHydrator):
             "id": self.id,
             "name": self.name,
             "description": self.description,
-            "attribs": [
+            "attribs": sorted([
                 [av.attrib_id, av.value] 
                 for av in self.attrib_values
-            ],
-            "abilities": [link.event_id for link in self._ability_links]
+            ], key=lambda x: x[0]),
+            "abilities": sorted(
+                [link.event_id for link in self._ability_links])
         }
         return self.to_dict_sparse(data)
 
@@ -266,7 +267,8 @@ class Item(Entity):
         data.update({
             "storage_type": self.storage_type,
             "q_limit": self.q_limit,
-            "limits_for": [l.to_dict() for l in self.limits_for],
+            "limits_for": sorted([l.to_dict() for l in self.limits_for], 
+                                key=lambda x: x['owner_id']),
             "loc_hosted": self.loc_hosted,
             "toplevel": self.toplevel,
             "masked": self.masked,
@@ -347,10 +349,18 @@ class Location(Entity):
             "dimensions": self.dimensions,
             "toplevel": self.toplevel,
             "masked": self.masked,
-            "items": [p.to_dict() for p in self.piles],
-            "item_refs": [ir.item_id for ir in self.item_refs],
-            "destinations": [d.to_dict() for d in self.routes_forward],
-            "entrance_reqs": [r.to_dict() for r in self.entrance_reqs],
+            "items": sorted(
+                [p.to_dict() for p in self.piles], 
+                key=lambda x: (x['item_id'], x.get('position') or [])),
+            "item_refs": sorted(
+                [ir.item_id for ir in self.item_refs]),
+            "destinations": sorted(
+                [d.to_dict() for d in self.routes_forward], 
+                key=lambda x: x['loc2_id']),
+            "entrance_reqs": sorted(
+                [r.to_dict() for r in self.entrance_reqs], 
+                key=lambda x: (x.get('item_id') or 0,
+                            x.get('attrib_id') or 0)),
             "zones": [z.to_dict() for z in self.zones],
         })
         return self.to_dict_sparse(data)
@@ -459,7 +469,8 @@ class Character(Entity):
             "location_id": self.location_id,
             "position": self.position,
             "travel_party": self.travel_party,
-            "items": [p.to_dict() for p in self.piles],
+            "items": sorted([p.to_dict() for p in self.piles], 
+                           key=lambda x: x['item_id']),
         })
         return self.to_dict_sparse(data)
 
@@ -595,7 +606,8 @@ class Event(Entity):
                 if self.outcome_type == OutcomeType.SELECT else None,
             "determinants": [d.to_dict() for d in self.determinants],
             "effects": [e.to_dict() for e in self.effects],
-            "chained": [l.to_dict() for l in self.chained],
+            "chained": sorted([l.to_dict() for l in self.chained], 
+                             key=lambda x: x['child_id']),
         })
         return self.to_dict_sparse(data)
 
@@ -1049,19 +1061,27 @@ class Participant:
     # --- Field Mode ---
     ATTR = 'attr'   # AttribVal
     QTY  = 'qty'    # Pile quantity
+    LIMIT = 'limit' # Pile default limit
+    RATE_AMT = 'rate_amt' # Recipe.rate_amount
+    RATE_DUR = 'rate_dur' # Recipe.rate_duration
+    SOURCE_QTY = 'src_qty' # Recipe quantity for a particular source
+    BYP_QTY = 'byp_qty'    # Recipe quantity for a particular byproduct
     DIST = 'dist'   # Distance from subject grid pos (read-only)
     PLACE = 'place' # Create pile at position (write-only)
     POS = 'pos'     # Teleport char to location and position
     SPAWN = 'spawn' # Create numbered duplicate of char
-    RATE_AMT = 'rate_amt' # Recipe.rate_amount
-    RATE_DUR = 'rate_dur' # Recipe.rate_duration
-    ALL_MODES = [ATTR, QTY, DIST, PLACE, POS, SPAWN, RATE_AMT, RATE_DUR]
+
+    ALL_MODES = [
+        ATTR, QTY, LIMIT, RATE_AMT, RATE_DUR, SOURCE_QTY, BYP_QTY,
+        DIST, PLACE, POS, SPAWN]
     USES_ATTRIB = {ATTR}
-    USES_ITEM = {QTY, RATE_AMT, RATE_DUR, PLACE}
-    USES_CHAR = {SPAWN}
+    USES_ITEM = {QTY, LIMIT, RATE_AMT, RATE_DUR, SOURCE_QTY, BYP_QTY, PLACE}
+    USES_RECIPE = {RATE_AMT, RATE_DUR, SOURCE_QTY, BYP_QTY}
+    USES_BLUEPRINT = {
+        LIMIT, RATE_AMT, RATE_DUR, SOURCE_QTY, BYP_QTY, PLACE, SPAWN}
+    USES_SOURCE_ITEM = {SOURCE_QTY, BYP_QTY}
     USES_LOC = {POS, SPAWN, PLACE}
-    USES_RECIPE = {RATE_AMT, RATE_DUR}
-    USES_BLUEPRINT = {PLACE, SPAWN, RATE_AMT, RATE_DUR}
+    USES_CHAR = {SPAWN}
 
     # --- Outcome Success Filter ---
     ALWAYS = 'always'
@@ -1152,6 +1172,7 @@ class EventField(db.Model, DictHydrator):
     char_id = db.Column(db.Integer, nullable=True)
     loc_id = db.Column(db.Integer, nullable=True)
     recipe_id = db.Column(db.Integer, nullable=True)
+    source_item_id = db.Column(db.Integer, nullable=True)
 
     def to_dict(self):
         data = {
@@ -1162,7 +1183,8 @@ class EventField(db.Model, DictHydrator):
             "attrib_id": self.attrib_id,
             "char_id": self.char_id,
             "loc_id": self.loc_id,
-            "recipe_id": self.recipe_id
+            "recipe_id": self.recipe_id,
+            "source_item_id": self.source_item_id,
         }
         return self.to_dict_sparse(data)
 
@@ -1178,6 +1200,8 @@ class EventField(db.Model, DictHydrator):
             item = Item.query.get((self.game_token, self.item_id))
             if self.field_mode == Participant.QTY:
                 return f"{maskable_name(item)} Qty"
+            if self.field_mode == Participant.LIMIT:
+                return f"{maskable_name(item)} Limit"
             if self.field_mode == Participant.DIST:
                return f"Distance from Subject"
             if self.field_mode == Participant.RATE_AMT and self.recipe_id:
@@ -1186,6 +1210,14 @@ class EventField(db.Model, DictHydrator):
                 return f"{maskable_name(item)} Recipe Duration"
             if self.field_mode == Participant.PLACE:
                 return f"Place {maskable_name(item)}"
+            if self.field_mode in (
+                    Participant.SOURCE_QTY, Participant.BYP_QTY) \
+                    and self.recipe_id and self.source_item_id:
+                src = Item.query.get((self.game_token, self.source_item_id))
+                label = "Source" if self.field_mode == Participant.SOURCE_QTY \
+                    else "Byproduct"
+                return f"{maskable_name(item)} {label}" \
+                       f" ({maskable_name(src)}) Qty"
         return ""
 
     __table_args__ = (

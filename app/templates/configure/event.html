@@ -245,6 +245,7 @@ const USES_ITEM = {{ Participant.USES_ITEM|list|tojson }};
 const USES_LOC = {{ Participant.USES_LOC|list|tojson }};
 const USES_RECIPE = {{ Participant.USES_RECIPE|list|tojson }};
 const USES_BLUEPRINT = {{ Participant.USES_BLUEPRINT|list|tojson }};
+const USES_SOURCE_ITEM = {{ Participant.USES_SOURCE_ITEM|list|tojson }};
 
 function addFactor(usage) {
     const list = document.getElementById(`${usage}-list`);
@@ -462,14 +463,19 @@ function syncFieldIdsState(modeSelect) {
     const itemSelect = container.querySelector('.id-item');
     const recipeSelect = container.querySelector('.id-recipe');
     const locSelect = container.querySelector('.id-loc');
+    const sourceItemSelect = container.querySelector('.id-source-item');
 
     // 1. Reset visibility
     attrSelect?.classList.toggle('hidden', !USES_ATTRIB.includes(mode));
     itemSelect?.classList.toggle('hidden', !USES_ITEM.includes(mode));
     locSelect?.classList.toggle('hidden', !USES_LOC.includes(mode));
     recipeSelect?.classList.toggle('hidden', !USES_RECIPE.includes(mode));
+    sourceItemSelect?.classList.toggle('hidden', !USES_SOURCE_ITEM.includes(mode));
     if (USES_RECIPE.includes(mode)) {
         syncRecipesState(itemSelect);
+    }
+    if (USES_SOURCE_ITEM.includes(mode)) {
+        syncSourceItemState(recipeSelect);
     }
     syncEventFieldState(modeSelect);
     syncFieldAttribState(attrSelect);
@@ -481,6 +487,7 @@ function syncFieldIdsState(modeSelect) {
 function syncRecipesState(itemSelect, initialRecipeId = null) {
     const container = itemSelect.closest('.field-input-group');
     const recipeSelect = container.querySelector('.id-recipe');
+    const mode = container.querySelector('.field-mode-select').value;
     const itemId = itemSelect.value;
     
     // Get current recipe_id if we aren't providing one (for hydration)
@@ -507,6 +514,51 @@ function syncRecipesState(itemSelect, initialRecipeId = null) {
             opt.selected = true;
         }
         recipeSelect.appendChild(opt);
+    });
+
+    if (USES_SOURCE_ITEM.includes(mode)) {
+        syncSourceItemState(recipeSelect);
+    }
+}
+
+/**
+ * Fills the Source/Byproduct Item dropdown based on selected Recipe and mode.
+ */
+function syncSourceItemState(recipeSelect, initialSourceItemId = null) {
+    const container = recipeSelect.closest('.field-input-group');
+    const sourceItemSelect = container.querySelector('.id-source-item');
+    const modeSelect = container.querySelector('.field-mode-select');
+    if (!sourceItemSelect) return;
+
+    const recipeId = recipeSelect.value;
+    const mode = modeSelect.value;
+    const currentId = initialSourceItemId || sourceItemSelect.dataset.currentId;
+
+    // Find the recipe data from RECIPE_MAP
+    let recipeData = null;
+    for (const recipes of Object.values(RECIPE_MAP)) {
+        recipeData = recipes.find(r => String(r.id) === String(recipeId));
+        if (recipeData) break;
+    }
+
+    sourceItemSelect.innerHTML = '';
+    const listKey = (mode === '{{ Participant.BYP_QTY }}') ? 'byproducts' : 'sources';
+    const items = recipeData ? (recipeData[listKey] || []) : [];
+
+    if (items.length === 0) {
+        const opt = document.createElement('option');
+        opt.textContent = `(No ${listKey} for this recipe)`;
+        opt.value = "";
+        sourceItemSelect.appendChild(opt);
+        return;
+    }
+
+    items.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item.id;
+        opt.textContent = item.name;
+        if (String(item.id) === String(currentId)) opt.selected = true;
+        sourceItemSelect.appendChild(opt);
     });
 }
 
@@ -690,8 +742,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     document.querySelectorAll('.field-input-group .id-item').forEach(itemSelect => {
         const mode = itemSelect.closest('.field-input-group').querySelector('.field-mode-select').value;
-        if (mode.startsWith('rate_')) {
+        if (USES_RECIPE.includes(mode)) {
             syncRecipesState(itemSelect);
+        }
+    });
+    document.querySelectorAll('.field-input-group .id-recipe').forEach(recipeSelect => {
+        const mode = recipeSelect.closest('.field-input-group').querySelector('.field-mode-select').value;
+        if (USES_SOURCE_ITEM.includes(mode)) {
+            syncSourceItemState(recipeSelect);
         }
     });
     document.querySelectorAll('.factor-card').forEach(syncCardAttribState);
@@ -727,10 +785,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 if field_mode == Participant.ATTR }}>Attribute</option>
             <option value="{{ Participant.QTY }}" {{ 'selected'
                 if field_mode == Participant.QTY }}>Item Quantity</option>
+            <option value="{{ Participant.LIMIT }}" {{ 'selected'
+                if field_mode == Participant.LIMIT }}>Item Limit</option>
             <option value="{{ Participant.RATE_AMT }}" {{ 'selected'
                 if field_mode == Participant.RATE_AMT }}>Recipe Yield</option>
             <option value="{{ Participant.RATE_DUR }}" {{ 'selected'
                 if field_mode == Participant.RATE_DUR }}>Recipe Duration</option>
+            <option value="{{ Participant.SOURCE_QTY }}" {{ 'selected'
+                if field_mode == Participant.SOURCE_QTY }}>Recipe Source Quantity</option>
+            <option value="{{ Participant.BYP_QTY }}" {{ 'selected'
+                if field_mode == Participant.BYP_QTY }}>Recipe Byproduct Quantity</option>
             {% if 'outfield' in prefix %}
             <option value="{{ Participant.PLACE }}" {{ 'selected'
                 if field_mode == Participant.PLACE }}>Place Item</option>
@@ -779,8 +843,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     data-current-id="{{ field_data.recipe_id if field_data else '' }}"
                     class="id-recipe {{
                         'hidden' if field_mode not in Participant.USES_RECIPE }}" 
-                    style="min-width: 30ch; max-width: 50ch;">
+                    style="min-width: 30ch; max-width: 50ch;"
+                    onchange="syncSourceItemState(this)">
                 <!-- Populated by syncRecipesState() -->
+            </select>
+
+            <!-- Source/Byproduct Item (for SOURCE_QTY / BYP_QTY modes) -->
+            <select name="{{ prefix }}[source_item_id]"
+                    data-current-id="{{ field_data.source_item_id if field_data else '' }}"
+                    class="id-source-item {{
+                        'hidden' if field_mode not in Participant.USES_SOURCE_ITEM }}"
+                    style="min-width: 30ch; max-width: 50ch;">
+                <!-- Populated by syncSourceItemState() -->
             </select>
 
             <!-- Location -->

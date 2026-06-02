@@ -716,6 +716,8 @@ def edit_event(id):
                             if mode in Participant.USES_RECIPE else None
                         fld_loc_id = fld.get_int('loc_id') \
                             if mode in Participant.USES_LOC else None
+                        fld_source_item_id = fld.get_int('source_item_id') \
+                            if mode in Participant.USES_SOURCE_ITEM else None
 
                         setattr(factor, field_key, EventField(
                             game_token=game_token,
@@ -726,6 +728,7 @@ def edit_event(id):
                             item_id=fld_item_id,
                             recipe_id=fld_recipe_id,
                             loc_id=fld_loc_id,
+                            source_item_id=fld_source_item_id,
                         ))
                     else:
                         setattr(factor, field_key, None)
@@ -791,7 +794,15 @@ def edit_event(id):
     recipe_map = {}
     for item in all_items:
         recipe_map[item.id] = [
-            {'id': r.id, 'summary': r.summary} for r in item.recipes
+            {
+                'id': r.id,
+                'summary': r.summary,
+                'sources': [{'id': s.item_id, 'name': s.ingredient.name}
+                             for s in r.sources],
+                'byproducts': [{'id': b.item_id, 'name': b.item.name}
+                                for b in r.byproducts],
+            }
+            for r in item.recipes
         ]
 
     return render_template('configure/event.html', 
