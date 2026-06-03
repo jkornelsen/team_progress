@@ -1114,7 +1114,9 @@ class Operation:
     VAL_TO_POW = 'x^'
     POW_OF_VAL = '^x'
     SOFTCAP = 'scap'
-    ROUND = 'roun'
+    ROUND = 'round'
+    FLOOR = 'floor'
+    CEIL = 'ceil'
 
     Repr = {
         CONST:      'n',
@@ -1131,6 +1133,8 @@ class Operation:
         POW_OF_VAL: 'nˣ',
         SOFTCAP:    'SoftCap',
         ROUND:      'Round',
+        FLOOR:      'Floor',
+        CEIL:       'Ceiling',
     }
 
     # How the result applies to the total
@@ -1140,7 +1144,7 @@ class Operation:
     # Modify the Field Value before we apply it to the total
     TRANSFORM_OPS = [
         ADD, SUB, MULT, DIV,
-        VAL_TO_POW, POW_OF_VAL, ROUND, SOFTCAP]
+        VAL_TO_POW, POW_OF_VAL, SOFTCAP, ROUND, FLOOR, CEIL]
 
 class EventField(db.Model, DictHydrator):
     """
@@ -1262,8 +1266,8 @@ class EventFactor(db.Model, DictHydrator):
     #   (Str - 1) == 10    -> op_app: EQ, op_trans: SUB, val_trans: 1.0, val_req: 10
     #   + log(HP)          -> op_app: ADD, scaling: 'log'
     #   
-    op_application = db.Column(db.String(4), default=Operation.ADD) # outer op
-    op_transform = db.Column(db.String(4), default=None) # inner op
+    op_application = db.Column(db.String(5), default=Operation.ADD) # outer op
+    op_transform = db.Column(db.String(5), default=None) # inner op
     val_transform = db.Column(db.Float, default=1.0) # inner constant
     val_required = db.Column(db.Float, default=1.0) # comparison RHS
 

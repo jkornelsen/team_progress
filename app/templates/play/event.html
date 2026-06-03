@@ -449,7 +449,10 @@ function formatInnerFormula(source, constant, op) {
     if (!op || op === '{{ Operation.CONST }}') return source;
 
     const opSymbol = OP_MAP[op] || op;
-    if (op === '{{ Operation.ROUND }}' || op === '{{ Operation.SOFTCAP }}') {
+    if (["{{ Operation.SOFTCAP }}",
+                "{{ Operation.ROUND }}",
+                "{{ Operation.FLOOR }}",
+                "{{ Operation.CEIL }}"].includes(op)) {
         return `${opSymbol}(${source}, ${constant})`;
     }
     if (op === '{{ Operation.VAL_TO_POW }}') {
@@ -837,21 +840,22 @@ if (rollBtn) {
                     for (let [key, value] of currentRoles.entries()) {
                         nextUrl.searchParams.append(key, value);
                     }
-                    {% if subject %}
-                    //nextUrl.searchParams.append('subject_id', '{{ subject.id }}');
-                    {% endif %}
                     
                     // 2. Create the Button
-                    const btn = document.createElement('a');
-                    btn.href = nextUrl.toString();
+                    const btn = document.createElement('button');
+                    btn.type = 'button'
                     btn.className = 'go-button btn-sm';
                     btn.style.textDecoration = 'none';
+                    btn.addEventListener('click', () => {
+                        window.location.href = nextUrl.toString();
+                    });
 
                     // 3. Assign Hotkeys (i, j, k)
                     const letters = ['i', 'j', 'k'];
                     if (idx < letters.length) {
                         const letter = letters[idx];
-                        window.linkForKey[letter] = nextUrl.toString();
+                        btn.id = `chainbtn-${letter}`;
+                        window.linkForKey[letter] = `#${btn.id}`;
                         btn.innerHTML = `<span class="hotkey-indicator">${letter}</span> ${opt.child_name}`;
                     } else {
                         btn.innerText = opt.child_name;

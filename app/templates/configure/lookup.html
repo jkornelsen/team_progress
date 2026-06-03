@@ -46,7 +46,7 @@
                                     <span class="usage-label">{{ item.label }}</span>
                                     <a href="{{ item.link }}" class="usage-name">{{ item.name }}</a>
                                 </div>
-                                {% if item.meta %}
+                                {% if item.meta is defined %}
                                     <span class="label-like">{{ item.meta }}</span>
                                 {% endif %}
                             </div>

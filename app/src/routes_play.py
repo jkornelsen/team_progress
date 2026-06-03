@@ -19,7 +19,7 @@ from app.utils import (
 from .logic_piles import transfer_item
 from .logic_event import (
     roll_for_outcome, roll_for_system_outcome, check_outcome_success,
-    calculate_determinants,
+    calculate_determinants, resolve_anchor_id, get_chain_results,
     preview_effects, resolve_effects, get_entity_value, is_factor_met,
     do_effect_change, process_all_effects, format_for_display)
 from .logic_progress import (
@@ -761,19 +761,21 @@ def play_event(id):
     capture_origin(name=event.name)
     
     # Semantic Context
-    subject_id = req.get_int('subject_id')
+    subject_id = req.get_int('subject_role_id') or req.get_int('subject_id')
     subject = Entity.query.get(
         (game_token, subject_id)) if subject_id else None
 
-    owner_id = req.get_int('owner_id')
+    owner_id = req.get_int('owner_role_id') or req.get_int('owner_id')
     owner = Entity.query.get(
         (game_token, owner_id)) if owner_id else None
 
-    ctx_char_id = req.get_int('char_id') or session.get('old_char_id')
+    ctx_char_id = req.get_int('target char_role_id') \
+        or req.get_int('char_id') or session.get('old_char_id')
     ctx_char = Character.query.get(
         (game_token, ctx_char_id)) if ctx_char_id else None
 
-    ctx_loc_id = req.get_int('loc_id') or session.get('old_loc_id')
+    ctx_loc_id = req.get_int('at_role_id') \
+        or req.get_int('loc_id') or session.get('old_loc_id')
     if subject and subject.entity_type == Character.TYPENAME:
         ctx_loc_id = subject.location_id
     elif subject and subject.entity_type == Location.TYPENAME:
@@ -823,6 +825,7 @@ def play_event(id):
             search_pool = [ctx_loc] if ctx_loc else other_entities_here
         else:
             search_pool = other_entities_here
+        logger.debug(f"routes_play: search_pool for {role} = {[e.name for e in search_pool]}")
 
         role_candidates = set(search_pool)
         factors = [
@@ -830,7 +833,8 @@ def play_event(id):
         for factor in factors:
             can_use = {
                 ent for ent in search_pool 
-                if is_factor_met(factor, ent, subject_id=subject_id)
+                if is_factor_met(factor, ent, subject_id=subject_id,
+                require_comparison=(factor.usage_type == Participant.DET))
             }
             role_candidates &= can_use # Intersection
             if not can_use:
@@ -954,40 +958,14 @@ def roll_event(id):
         result_val, result_str, tier = roll_for_outcome(
             id, role_entities, difficulty)
 
-    resolved_effects = resolve_effects(
+    resolved_effects, ledger = resolve_effects(
         event, role_entities, result_val)
     process_all_effects(
         event, role_entities, result_val, tier, force_auto_only=True)
     db.session.commit()
     
-    # Evaluate Chained Events
-    chain_results = []
-    for evt_link in event.chained:
-        is_eligible = True
-
-        if evt_link.req:
-            # Check Outcome Success Tier
-            if not check_outcome_success(
-                    evt_link.req.outcome_success, tier):
-                is_eligible = False
-            
-            # Check Comparison Attributes/Items
-            factor = evt_link.req
-            if is_eligible and factor.infield:
-                anchor_id = resolve_anchor_id(factor.role, role_entities)
-                if anchor_id:
-                    anchor = Entity.query.get((game_token, anchor_id))
-                    if not is_factor_met(
-                            factor, anchor, subject_id=subject_id):
-                        is_eligible = False
-                elif factor.role != Participant.BLUEPRINT:
-                    is_eligible = False
-
-        if is_eligible:
-            chain_results.append({
-                "child_id": evt_link.child_id,
-                "child_name": evt_link.child.name
-            })
+    chain_results = get_chain_results(
+        event, role_entities, result_val, tier, ledger)
 
     return jsonify({
         "result_value": result_val,

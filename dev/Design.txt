@@ -4,6 +4,9 @@
 
 ---- functional, tightening, quality of life ----
 
+infestation energy production didn't stop after filling Herbert's pile
+    because it overflowed to the location
+
 Value: -4.500000000000018
     truncate floating point limits with epsilon or whatever it was
     or 6-8 places, especially when writing to json and maybe also db
@@ -101,7 +104,6 @@ infestation
         shotgun
         rifle
         grappling hook -- moves to melee distance
-        rush
         detect -- lowers enemy stealth
     edit char to add ability links after reaching certain xl levels
     enemy attacks depend on distance
@@ -117,6 +119,10 @@ infestation
     later enemies bigger than rodents e.g. alligators -- only final boss human
     store attrib "Boss I Defeated" in universal item "Enemies Defeated"
         so events can check for that attrib
+    in addition to recording energy bonuses by editing description,
+        add attribute or universal item to store the bonus quantity,
+        so it can be included in the levelup calculation
+    gain xp equal to perhaps enemy XL ^ 1.5 so enemies get exponentially harder
 
 dungeon crawl
     3 levels up and down of location grids -- 7 total floors

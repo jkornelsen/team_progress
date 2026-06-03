@@ -51,14 +51,18 @@ def apply_operation(current_val, mod_val, op, output_range=None):
         ratio = math.log(1 + current_abs / cap_threshold) / (
             1 + math.log(1 + current_abs / cap_threshold))
         return sign * (1 + output_range * ratio)
+    try:
+        step = float(mod_val) if mod_val else 1.0
+        if step == 0.0:
+            step = 1.0
+    except (ValueError, TypeError):
+        step = 1.0
     if op == Operation.ROUND:
-        try:
-            if mod_val == 0:
-                return current_val
-            # Round to nearest X
-            return float(round(current_val / mod_val) * mod_val)
-        except (ValueError, TypeError, ZeroDivisionError):
-            return float(round(current_val))
+        return float(round(current_val / step) * step)
+    if op == Operation.FLOOR:
+        return float(math.floor(current_val / step) * step)
+    if op == Operation.CEIL:
+        return float(math.ceil(current_val / step) * step)
 
     # Comparisons
     if op == Operation.EQ: return current_val == mod_val
@@ -90,7 +94,9 @@ def get_inner_breakdown(val, mod_val, op):
         Operation.VAL_TO_POW: f"{v}<sup>{m}</sup>",
         Operation.POW_OF_VAL: f"{m}<sup>{v}</sup>",
         Operation.SOFTCAP:    f"SoftCap({v}, {m})",
-        Operation.ROUND  :    f"Round({v}, {m})"
+        Operation.ROUND:      f"Round({v}, {m})",
+        Operation.FLOOR:      f"Floor({v}, {m})",
+        Operation.CEIL:       f"Ceiling({v}, {m})"
     }
     return formats.get(op, v)
 
@@ -292,7 +298,8 @@ def can_use_field(field, entity):
 # Determinants (Modifiers)
 # ------------------------------------------------------------------------
 
-def is_factor_met(factor, entity, subject_id=None):
+def is_factor_met(factor, entity, subject_id=None,
+        require_comparison=True, ledger=None):
     """
     Evaluates if a specific entity satisfies the requirements of an EventFactor.
     Used for UI validation and filtering.
@@ -304,13 +311,13 @@ def is_factor_met(factor, entity, subject_id=None):
     if not field or not can_use_field(field, entity):
         return False if not factor.negate else True
 
-    # 2. If it's a calculation existence is enough to be met
-    if not factor.is_comparison:
+    # 2. If it's a calculation then existence is enough to be met
+    if not factor.is_comparison or not require_comparison:
         return True if not factor.negate else False
 
     # 3. If it's a comparison (==, >=, etc.), we must check the actual value
     # Fetch the value from the entity
-    val = get_entity_value(entity.id, field, subject_id=subject_id)
+    val = get_entity_value(entity.id, field, subject_id, ledger)
     
     # Apply inner transform (e.g. Rounding or Softcap)
     if factor.op_transform and factor.op_transform != Operation.CONST:
@@ -677,7 +684,43 @@ def resolve_effects(event, role_entities, roll_val):
             'final_value': final_val,
             'final_display': final_display
         })
-    return results
+    return results, ledger
+
+def get_chain_results(event, role_entities, roll_val, tier, ledger=None):
+    """
+    Evaluates follow-up events against the post-event state (the ledger).
+    """
+    game_token = g.game_token
+    subject_id = resolve_anchor_id(Participant.SUBJECT, role_entities)
+    chain_results = []
+    
+    for evt_link in event.chained:
+        is_eligible = True
+
+        if evt_link.req:
+            # 1. Check Outcome Success Tier
+            if not check_outcome_success(evt_link.req.outcome_success, tier):
+                is_eligible = False
+            
+            # 2. Check Comparison (Using Ledger)
+            factor = evt_link.req
+            if is_eligible and factor.infield:
+                anchor_id = resolve_anchor_id(factor.role, role_entities)
+                if anchor_id:
+                    anchor = Entity.query.get((game_token, anchor_id))
+                    # We pass the ledger here to check the assumed future state
+                    if not is_factor_met(factor, anchor, subject_id=subject_id, ledger=ledger):
+                        is_eligible = False
+                elif factor.role != Participant.BLUEPRINT:
+                    is_eligible = False
+
+        if is_eligible:
+            chain_results.append({
+                "child_id": evt_link.child_id,
+                "child_name": evt_link.child.name
+            })
+            
+    return chain_results
 
 def check_outcome_success(filter_val, tier):
     if filter_val == Participant.ALWAYS:

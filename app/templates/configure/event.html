@@ -666,7 +666,10 @@ function syncInnerExprState(card) {
         opSelector.style.order = "2";
         lhs.style.order = "3";
     } 
-    else if (op === "{{ Operation.SOFTCAP }}" || op === "{{ Operation.ROUND }}") {
+    else if (["{{ Operation.SOFTCAP }}",
+                "{{ Operation.ROUND }}",
+                "{{ Operation.FLOOR }}",
+                "{{ Operation.CEIL }}"].includes(op)) {
         // Round ( Fetched Value , [ 10 ] )
         opSelector.style.order = "1";
         lhs.style.order = "2";

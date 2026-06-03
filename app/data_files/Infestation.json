@@ -27,21 +27,13 @@
             {
                 "id": 5,
                 "name": "Energy",
-                "description": "Must have at least 1 unit for fighting. A unit is 100 Kilojoules.\r\n\r\nAfter each fight, use the recipe to consume 1 energy. Restore by levelling up, or travel to the *Maintenance Building* and click on the *Recharging Station*.\r\n\r\nLimit is 10 + 4 * [XL](/play/attrib/4/subject/13), plus any special bonuses. Record the bonuses by editing this description:\r\n\r\n- No special bonuses yet",
+                "description": "Must have at least 1 unit for fighting. A unit is 100 Kilojoules.\r\nRestore by levelling up, or travel to the *Maintenance Building* and click on the *Recharging Station*.\r\nLimit is 10 + 4 * **XL,** plus any special bonuses. Record the bonuses by editing this description:\r\n\r\n- No special bonuses yet",
                 "q_limit": 10.0,
                 "recipes": [
                     {
                         "id": 1,
                         "sources": [
                             {"item_id": 6, "q_required": 1.0, "preserve": true}
-                        ]
-                    },
-                    {
-                        "id": 2,
-                        "rate_amount": 0.0,
-                        "instant": true,
-                        "sources": [
-                            {"item_id": 5, "q_required": 1.0}
                         ]
                     }
                 ]
@@ -111,17 +103,18 @@
             {
                 "id": 16,
                 "name": "🐁Baby Mouse",
-                "description": "Mutant, rabid and green-eyed. Low HP but can still bite.\r\n\r\nWasting away from the toxins within. Since all enemies in this scenario have been contaminated, if they have under 5% HP remaining (or 1 HP), then roll **DEF DoT** to see if they fully succumb.",
+                "description": "Mutant, rabid and green-eyed. Low HP but can still bite.",
                 "attribs": [
                     [4, 2.0],
-                    [26, 0.0],
                     [27, 5.0],
                     [29, 1.0],
                     [30, 3.0],
                     [45, 0.0],
-                    [53, 5.0]
+                    [53, 5.0],
+                    [56, 1.0],
+                    [57, 1.0]
                 ],
-                "abilities": [39, 41, 43, 46, 47, 49],
+                "abilities": [39, 41, 43, 46, 47, 49, 58],
                 "location_id": 10
             },
             {
@@ -140,8 +133,7 @@
                 "name": "🐭Full-grown Mouse",
                 "description": "Okay, it's still kind of cute, despite the toxic green eyes.",
                 "attribs": [
-                    [4, 5.0],
-                    [26, 0.0]
+                    [4, 5.0]
                 ],
                 "location_id": 7
             },
@@ -158,7 +150,7 @@
                     [45, 0.0],
                     [53, 10.0]
                 ],
-                "abilities": [18, 23, 28, 35, 43, 44, 47],
+                "abilities": [18, 28, 35, 43, 44, 47],
                 "toplevel": true,
                 "location_id": 12,
                 "items": [
@@ -180,8 +172,7 @@
                 "name": "🐇Tainted Bunny",
                 "description": "Fur is greenish and sticky, with a fuzzy white tail.",
                 "attribs": [
-                    [4, 8.0],
-                    [26, 0.0]
+                    [4, 8.0]
                 ],
                 "location_id": 11
             }
@@ -207,6 +198,16 @@
                 "name": "Defeated",
                 "description": "An enemy with this attribute is unique, so after victory, set to true.",
                 "is_binary": true
+            },
+            {
+                "id": 56,
+                "name": "DoT Power",
+                "description": "Multiplier to damage on each turn"
+            },
+            {
+                "id": 57,
+                "name": "DoT Turns",
+                "description": "How many remaining turns does the damage apply for."
             },
             {
                 "id": 29,
@@ -238,14 +239,14 @@
             {
                 "id": 2,
                 "name": "XP",
-                "description": "Dispatch rodents to gain experience — bigger ones yield more.\r\n\r\nAlso, check whether it's time to increase [XL](/play/attrib/2/char/1)."
+                "description": "Dispatch rodents to gain experience — bigger ones yield more."
             }
         ],
         "events": [
             {
                 "id": 39,
-                "name": "ATK Bite (To-Hit)",
-                "description": "Use teeth for a basic melee attack.\r\n\r\n- **Difficulty:** If you're significantly outleveled, for example level 1 or 2 to the enemy's 5, then set difficulty to *Easy*. If you significantly outlevel the enemy, then set difficulty to *Hard*.\r\n- **Damage:** If the attack hits then roll **ATK Bite Dmg.**\r\n- **Major Success:** (Nat 20) Enemy gets two damage rolls instead of one.\r\n- **Major Failure:** Wild swing—enemy cannot reposition on the next turn.",
+                "name": "Bite (To-Hit)",
+                "description": "Use teeth for a basic melee attack.\r\n\r\n- **Difficulty:** If the enemy significantly outlevels you, for example level 1 or 2 to the enemy's 5, then set difficulty to *Easy*. If you significantly outlevel the enemy, then set difficulty to *Hard*.\r\n- **Damage:** If the attack hits then roll **ATK Bite Dmg.**\r\n- **Major Success:** (Nat 20) Enemy gets two damage rolls instead of one.\r\n- **Major Failure:** Wild lunge—enemy cannot reposition on the next turn.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -287,7 +288,7 @@
             },
             {
                 "id": 40,
-                "name": "ATK Bite Dmg",
+                "name": "Bite Dmg",
                 "description": "Roll, then apply that amount of damage.",
                 "outcome_type": "numeric",
                 "numeric_range": [1, 4],
@@ -309,11 +310,30 @@
                 ]
             },
             {
+                "id": 41,
+                "name": "Choose Enemy Action",
+                "description": "Roll to determine what an enemy does next.\r\nIf there is a straightforward choice then there is no need to roll.\r\nIf the result does not make sense for this encounter, then roll again.",
+                "outcome_type": "selection",
+                "selection_strings": "Bite\r\nHeal\r\nMove to Range"
+            },
+            {
+                "id": 36,
+                "name": "Dodge",
+                "description": "Attempt to evade a hit entirely or partially.",
+                "numeric_range": [1, 20]
+            },
+            {
                 "id": 28,
-                "name": "ATK Fist Pummel (To-Hit)",
-                "description": "Close grasping digits and swing robotic arm forward. Basic melee attack.\r\n\r\n- **Energy**: The robot must have at least 1 to start. After the attack, consumes 1 **Energy.**\r\n- **Difficulty:** If you're significantly outleveled, for example level 1 or 2 to the enemy's 5, then set difficulty to *Hard*. If you significantly outlevel the opponent, then set difficulty to *Easy*.\r\n- **Damage:** If the attack hits then roll **ATK Fist Pummel Dmg.**\r\n- **Major Success:** (Nat 20) Roll two damage rolls instead of one.\r\n- **Major Failure:** Consumes 2 Energy instead of 1.\r\n\r\nAfter the swing, the enemy gets to [take an action](/play/event/41) if they're still alive.",
+                "name": "Fist Pummel (To-Hit)",
+                "description": "Close grasping digits and swing robotic arm forward. Basic melee attack.\r\n\r\n- **Difficulty:** If you're significantly outleveled, for example level 1 or 2 to the enemy's 5, then set difficulty to *Hard*. If you significantly outlevel the opponent, then set difficulty to *Easy*.\r\n- **Damage:** If the attack hits then roll **ATK Fist Pummel Dmg.**\r\n- **Major Success:** (Nat 20) Two damage rolls instead of one.\r\n- **Major Failure:** Consumes 2 **Energy** instead of 1.\r\n\r\nAfter swinging, the enemy gets a turn.",
                 "numeric_range": [1, 20],
                 "determinants": [
+                    {
+                        "label": "Melee Range",
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "op_application": "<",
+                        "val_required": 2.0
+                    },
                     {
                         "label": "Can Operate",
                         "infield": {"field_mode": "qty", "item_id": 5},
@@ -328,12 +348,6 @@
                         "label": "Enemy Can Fight",
                         "infield": {"role": "target char", "attrib_id": 27},
                         "op_application": ">="
-                    },
-                    {
-                        "label": "Melee Range",
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
-                        "op_application": "<",
-                        "val_required": 2.0
                     },
                     {
                         "label": "Chance to Hit",
@@ -373,7 +387,7 @@
             },
             {
                 "id": 38,
-                "name": "ATK Fist Pummel Dmg",
+                "name": "Fist Pummel Dmg",
                 "description": "Roll and apply the damage. If Enemy HP is reduced below 1 then **Gain XP.**",
                 "outcome_type": "numeric",
                 "numeric_range": [1, 6],
@@ -399,33 +413,140 @@
                     }
                 ],
                 "chained": [
+                    {"child_id": 18}
+                ]
+            },
+            {
+                "id": 46,
+                "name": "Fresh Enemy",
+                "description": "A new enemy arrives. Whether the other one was dead or wounded doesn't matter anymore — it's gone now.",
+                "outcome_type": "determined",
+                "effects": [
                     {
-                        "child_id": 18,
-                        "req": {
-                            "infield": {"role": "target char", "attrib_id": 27},
-                            "op_application": "<"
-                        }
+                        "infield": {"attrib_id": 53},
+                        "outfield": {"attrib_id": 27},
+                        "op_application": ":=",
+                        "val_transform": 5.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 45},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 5.0
                     }
                 ]
             },
             {
+                "id": 18,
+                "name": "Gain XP",
+                "description": "If the fight ended in victory, press *resolve* to gain experience equal to the enemy's level.\r\n\r\nTo fight the same kind of enemy again, find their **Fresh** event. Bosses however are unique.",
+                "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "infield": {"role": "target char", "attrib_id": 27},
+                        "op_application": "<"
+                    },
+                    {
+                        "infield": {"role": "target char", "attrib_id": 4}
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 2},
+                        "auto_apply": true
+                    }
+                ],
+                "chained": [
+                    {"child_id": 54}
+                ]
+            },
+            {
                 "id": 35,
-                "name": "ATK Ignite",
-                "description": "Burning enemies take damage each round. Typically lasts 3 rounds. Damage per round is decided by the original event outcome.\r\n\r\n- **Energy**: Make sure the robot has at least 1 to start.\r\n- **Difficulty:** If you're significantly outleveled, for example level 1 or 2 to the enemy's 5, then set difficulty to *Hard*. If you significantly outlevel the opponent, then set difficulty to *Easy*, although that is probably a good time to move on to the next location.\r\n\r\nRoll, then see [Finish Fight](/play/event/18?subject_id=13).",
+                "name": "Ignite",
+                "description": "Burning enemies take damage each round. Typically lasts 3 rounds. Damage per round is decided by the original event outcome.\r\n\r\n- **Energy**: Make sure the robot has at least 1 to start.\r\n\r\nRoll, then see [Finish Fight](/play/event/18?subject_id=13).",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
-                        "infield": {"item_id": 0, "attrib_id": 4}
+                        "infield": {"attrib_id": 4}
                     },
                     {
-                        "infield": {"role": "target char", "item_id": 0, "attrib_id": 4},
+                        "infield": {"role": "target char", "attrib_id": 4},
                         "op_application": "-"
                     }
                 ]
             },
             {
+                "id": 54,
+                "name": "Level Up",
+                "description": "Roll to see if it's time to level up yet, but don't apply changes unless level increases.\r\n\r\nGaining a new level:\r\n- increases **Energy** limit and sets current energy to full\r\n- increases **Max HP** and sets **HP** to full\r\n\r\nOn reaching level 3, see [Upgrade Bonus](/play/event/23?subject_id=13).",
+                "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "label": "sq root of xp",
+                        "infield": {"attrib_id": 2},
+                        "op_transform": "x^",
+                        "val_transform": 0.5
+                    },
+                    {"op_application": "/", "op_transform": "c", "val_transform": 1.8},
+                    {"op_application": ":=", "op_transform": "floor"},
+                    {"op_transform": "c"}
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 4},
+                        "op_application": ":="
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 53},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 6.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 53},
+                        "op_transform": "*",
+                        "val_transform": 4.0
+                    },
+                    {
+                        "infield": {"attrib_id": 53},
+                        "outfield": {"attrib_id": 27},
+                        "op_application": ":="
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "blueprint", "field_mode": "limit", "item_id": 5},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 5.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "blueprint", "field_mode": "limit", "item_id": 5},
+                        "op_transform": "*",
+                        "val_transform": 5.0
+                    },
+                    {
+                        "infield": {"role": "blueprint", "field_mode": "limit", "item_id": 5},
+                        "outfield": {"field_mode": "qty", "item_id": 5},
+                        "op_application": ":="
+                    }
+                ]
+            },
+            {
                 "id": 47,
-                "name": "ATK Move to Melee Dist",
+                "name": "Move to Melee Dist",
                 "description": "Rush into melee range, repositioning to 1 tile away.\r\n\r\n- **Success:** No loss of turn—the action is free.\r\n- **Minor Failure:** Close gap but turn ends and consumes 1 **Energy.**\r\n- **Major Failure:** Fail to close gap.",
                 "numeric_range": [1, 20],
                 "determinants": [
@@ -480,30 +601,17 @@
                 ]
             },
             {
-                "id": 41,
-                "name": "Choose Enemy Action",
-                "description": "Roll to determine what an enemy does next.\r\nIf there is a straightforward choice then there is no need to roll.\r\nIf the result does not make sense for this encounter, then roll again.",
-                "outcome_type": "selection",
-                "selection_strings": "Bite\r\nHeal\r\nMove to Range"
-            },
-            {
-                "id": 36,
-                "name": "DEF Dodge",
-                "description": "Attempt to evade a hit entirely or partially.",
-                "numeric_range": [1, 20]
-            },
-            {
-                "id": 49,
-                "name": "DEF DoT",
-                "description": "Damage over time due to burning or toxicity. Applies each turn even when the opponent does not attack, so backing off may be worthwhile.",
-                "numeric_range": [1, 20]
-            },
-            {
                 "id": 43,
-                "name": "DEF Move to Range",
+                "name": "Move to Range",
                 "description": "Step out of melee range, repositioning to 5 tiles away.\r\n\r\n- **Major Success:** (Nat 20) No loss of turn—the action is free.\r\n- **Minor Success:** Move away and turn ends.\r\n- **Minor Failure:** Disengage but allow an *Attack of Opportunity*.\r\n- **Major Failure:** Still in melee range.",
                 "numeric_range": [1, 20],
                 "determinants": [
+                    {
+                        "label": "Melee Range",
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "op_application": "<",
+                        "val_required": 2.0
+                    },
                     {
                         "label": "Can Fight",
                         "infield": {"attrib_id": 27},
@@ -522,11 +630,6 @@
                         "label": "Quickness",
                         "infield": {"role": "target char", "attrib_id": 30},
                         "op_application": "-"
-                    },
-                    {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
-                        "op_application": "<",
-                        "val_required": 2.0
                     }
                 ],
                 "effects": [
@@ -545,125 +648,6 @@
                         "op_transform": "c",
                         "val_transform": 5.0,
                         "outcome_success": "failure_minor"
-                    }
-                ]
-            },
-            {
-                "id": 37,
-                "name": "DEF Shock",
-                "description": "Attempt to resist getting shocked. Is this necessary or can the attack event do the necessary roll?",
-                "numeric_range": [1, 20]
-            },
-            {
-                "id": 46,
-                "name": "Fresh Enemy",
-                "description": "A new enemy arrives. Whether the other one was dead or wounded doesn't matter anymore — it's gone now.",
-                "outcome_type": "determined",
-                "effects": [
-                    {
-                        "infield": {"attrib_id": 53},
-                        "outfield": {"attrib_id": 27},
-                        "op_application": ":=",
-                        "val_transform": 5.0
-                    },
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {"attrib_id": 45},
-                        "op_application": ":=",
-                        "op_transform": "c",
-                        "val_transform": 0.0
-                    },
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 48},
-                        "op_application": ":=",
-                        "op_transform": "c",
-                        "val_transform": 5.0
-                    }
-                ]
-            },
-            {
-                "id": 18,
-                "name": "Gain XP",
-                "description": "If the fight ended in victory, press *resolve* to gain experience equal to the enemy's level.\r\n\r\nTo fight the same kind of enemy again (not bosses which are unique), find their **Fresh** event.",
-                "outcome_type": "determined",
-                "determinants": [
-                    {
-                        "infield": {"role": "target char", "attrib_id": 27},
-                        "op_application": "<"
-                    },
-                    {
-                        "infield": {"role": "target char", "attrib_id": 4}
-                    }
-                ],
-                "effects": [
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {"attrib_id": 2},
-                        "auto_apply": true
-                    }
-                ],
-                "chained": [
-                    {"child_id": 54}
-                ]
-            },
-            {
-                "id": 54,
-                "name": "Level Up",
-                "description": "Roll to see if it's time to level up yet, but don't apply changes unless level increases.\r\n\r\nGaining a new level:\r\n- increases **Energy** limit and sets current energy to full\r\n- increases **Max HP** and sets **HP** to full\r\n\r\nOn reaching level 3, see [Upgrade Bonus](/play/event/23?subject_id=13).",
-                "outcome_type": "determined",
-                "determinants": [
-                    {
-                        "label": "sq root of xp",
-                        "infield": {"attrib_id": 2},
-                        "op_transform": "x^",
-                        "val_transform": 0.5
-                    },
-                    {"op_application": "/", "op_transform": "c", "val_transform": 1.8},
-                    {"op_application": ":=", "op_transform": "roun"},
-                    {"op_transform": "c"}
-                ],
-                "effects": [
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {"attrib_id": 4},
-                        "op_application": ":="
-                    },
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {"attrib_id": 53},
-                        "op_application": ":=",
-                        "op_transform": "c",
-                        "val_transform": 6.0
-                    },
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {"attrib_id": 53},
-                        "op_transform": "*",
-                        "val_transform": 4.0
-                    },
-                    {
-                        "infield": {"attrib_id": 53},
-                        "outfield": {"attrib_id": 27},
-                        "op_application": ":="
-                    },
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {"role": "blueprint", "field_mode": "limit", "item_id": 5},
-                        "op_application": ":=",
-                        "op_transform": "c",
-                        "val_transform": 5.0
-                    },
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {"role": "blueprint", "field_mode": "limit", "item_id": 5},
-                        "op_transform": "*",
-                        "val_transform": 5.0
-                    },
-                    {
-                        "infield": {"role": "blueprint", "field_mode": "limit", "item_id": 5},
-                        "outfield": {"field_mode": "qty", "item_id": 5},
-                        "op_application": ":="
                     }
                 ]
             },
@@ -700,20 +684,60 @@
                 ]
             },
             {
+                "id": 37,
+                "name": "Resist Shock",
+                "description": "Attempt to resist getting shocked. Is this necessary or can the attack event do the necessary roll?",
+                "numeric_range": [1, 20]
+            },
+            {
+                "id": 49,
+                "name": "Suffer DoT",
+                "description": "Roll and apply the damage.\r\n\r\nDamage over time due to burning or toxicity. Applies each turn even when the opponent does not attack, so backing off may be worthwhile.",
+                "outcome_type": "numeric",
+                "numeric_range": [0, 2],
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 57},
+                        "op_application": ">="
+                    },
+                    {
+                        "infield": {"attrib_id": 27},
+                        "op_application": ">="
+                    },
+                    {
+                        "infield": {"attrib_id": 56},
+                        "op_application": "*"
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 57},
+                        "op_application": "-",
+                        "op_transform": "c"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 27},
+                        "op_application": "-"
+                    }
+                ]
+            },
+            {
                 "id": 44,
                 "name": "Surge",
-                "description": "Gain a bonus to power and speed for 1 turn.\r\n\r\n- Normally costs a turn to use. However, if you had just withdrawn to range and the enemy used their turn to follow, then it does not.\r\n- Can only be used once per fight.\r\n- Chance of causing a penalty rather than a bonus.",
+                "description": "Gain bonus power and speed for 1 turn.\r\n\r\n- Normally costs a turn to use. However, if you had just withdrawn to range and the enemy used their turn to follow, then it does not.\r\n- Can only be used once per fight.\r\n- Chance of causing a small penalty rather than a bonus.",
                 "outcome_type": "numeric",
                 "numeric_range": [-1, 4],
                 "determinants": [
                     {
                         "label": "Can Fight",
-                        "infield": {"item_id": 0, "attrib_id": 27},
+                        "infield": {"attrib_id": 27},
                         "op_application": ">="
                     },
                     {
                         "label": "Target Can Fight",
-                        "infield": {"role": "target char", "item_id": 0, "attrib_id": 27},
+                        "infield": {"role": "target char", "attrib_id": 27},
                         "op_application": ">="
                     }
                 ]
@@ -724,6 +748,37 @@
                 "description": "Run after every 3 experience levels.",
                 "outcome_type": "selection",
                 "selection_strings": "Triple XP for the next three fights.\r\nGain 50% of XP towards the next level.\r\nIncrease Energy limit by 1.\r\nFor three fights, do not decrease Energy unless critical.\r\nNo Bonus."
+            },
+            {
+                "id": 58,
+                "name": "Waste Away",
+                "description": "All enemies in this scenario are wasting away from toxins within. If they have under 5% HP remaining, or only 1 HP, then roll to see if they fully succumb.\r\n\r\nLook in the modifiers section to verify that HP is low enough.",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "label": "If HP is either 1",
+                        "infield": {"attrib_id": 27},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Or under 5% of Max HP",
+                        "infield": {"attrib_id": 53},
+                        "op_application": ">=",
+                        "op_transform": "*",
+                        "val_transform": 0.05,
+                        "val_required": 0.0
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 27},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0,
+                        "outcome_success": "failure_any"
+                    }
+                ]
             }
         ]
     },
