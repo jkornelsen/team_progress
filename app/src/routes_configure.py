@@ -674,6 +674,7 @@ def edit_event(id):
         # 2. Process Determinants and Effects
         for usage in [Participant.DET, Participant.EFF]:
             for row in req.get_list(f"{usage}s"):
+                op_app = row.get_str('op_application')
                 op_trans = row.get_str('op_transform')
                 get_val_from = row.get_str('get_val_from', Participant.INFIELD)
                 if op_trans == Operation.CONST and usage == Participant.EFF:
@@ -689,12 +690,14 @@ def edit_event(id):
                     negate=row.get_bool('negate'),
                     outcome_success=row.get_str('outcome_success', Participant.ALWAYS),
                     auto_apply=row.get_bool('auto_apply'),
-                    op_application=row.get_str('op_application'),
+                    op_application=op_app,
                     op_transform=op_trans,
                     val_transform=row.get_float('val_transform', 1.0),
                     val_required=row.get_float('val_required', 1.0)
                 )
                 for field_key in ('infield', 'outfield'):
+                    if usage == Participant.DET and op_app == Operation.ASSIGN:
+                        continue
                     if field_key == 'infield' and \
                             factor.get_val_from != Participant.INFIELD:
                         factor.infield = None

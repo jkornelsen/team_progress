@@ -1134,7 +1134,7 @@ class Operation:
     }
 
     # How the result applies to the total
-    APPLICATION_OPS = [ADD, SUB, MULT, DIV, EQ, GE, LT, NE]
+    DET_APPLICATION_OPS = [ADD, SUB, MULT, DIV, ASSIGN, EQ, GE, LT, NE]
     COMPARISON_OPS = [EQ, GE, LT, NE]
 
     # Modify the Field Value before we apply it to the total

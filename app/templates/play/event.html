@@ -514,11 +514,13 @@ async function refreshModifiers(updateEffectVals = true) {
                     `;
                 }
 
+                const fieldPart = (m.field_name && m.field_name !== "") 
+                    ? `<span class="text-dim" style="margin-right: 4px;">${m.field_name}:</span>` 
+                    : "";
                 contentHtml = `
                     <strong>${m.source_name}</strong>
                     <div style="padding-left: 1.5em;">
-                        <span class="text-dim" style="margin-right: 4px;">${m.field_name}:</span> 
-                        ${displayFormula}
+                        ${fieldPart} ${displayFormula}
                     </div>
                 `;
             } else if (m.source_name === 'Constant') {

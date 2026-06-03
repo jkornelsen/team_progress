@@ -246,6 +246,7 @@ const USES_LOC = {{ Participant.USES_LOC|list|tojson }};
 const USES_RECIPE = {{ Participant.USES_RECIPE|list|tojson }};
 const USES_BLUEPRINT = {{ Participant.USES_BLUEPRINT|list|tojson }};
 const USES_SOURCE_ITEM = {{ Participant.USES_SOURCE_ITEM|list|tojson }};
+const COMPARISON_OPS = {{ Operation.COMPARISON_OPS|list|tojson }};
 
 function addFactor(usage) {
     const list = document.getElementById(`${usage}-list`);
@@ -570,10 +571,22 @@ function syncOuterExprState(card) {
     const attrSelect = card.querySelector('.id-attr');
     const negateToggle = card.querySelector('.negate-toggle-container');
 
-    const comparisonOps = ['==', '>', '<', '>=', '<='];
+    const isComparison = COMPARISON_OPS.includes(op);
+    const isAssign = (op === '{{ Operation.ASSIGN }}');
+    const isDet = card.classList.contains('det-card');
+    const lhsLabel = card.querySelector('[data-slot-lhs]');
+
+    if (isDet) {
+        const sourceSection = card.querySelector('.sub-section');
+        if (sourceSection) {
+            sourceSection.classList.toggle('hidden', isAssign);
+        }
+        if (lhsLabel) {
+            lhsLabel.innerText = isAssign ? "Running Total" : "Fetched Value";
+        }
+    }
 
     if (requiredGroup) {
-        const isComparison = comparisonOps.includes(op);
         negateToggle.classList.toggle('hidden', !isComparison);
         requiredGroup.classList.toggle('hidden', !isComparison);
         if (isComparison) {
@@ -1005,7 +1018,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         class="op-application-selector" 
                         style="max-width: 8ch;"
                         onchange="syncOuterExprState(this.closest('.factor-card'))">
-                    {% for op_key in Operation.APPLICATION_OPS %}
+                    {% for op_key in Operation.DET_APPLICATION_OPS %}
                         <option value="{{ op_key }}" {{ 'selected'
                             if op_application == op_key }}>
                             {{ Operation.Repr[op_key] }}

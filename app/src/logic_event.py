@@ -89,8 +89,8 @@ def get_inner_breakdown(val, mod_val, op):
         Operation.DIV:        f"{v}÷{m}",
         Operation.VAL_TO_POW: f"{v}<sup>{m}</sup>",
         Operation.POW_OF_VAL: f"{m}<sup>{v}</sup>",
-        Operation.SOFTCAP:    f"{v} Soft Capped",
-        Operation.ROUND  :    f"Round {v}, {m}"
+        Operation.SOFTCAP:    f"SoftCap({v}, {m})",
+        Operation.ROUND  :    f"Round({v}, {m})"
     }
     return formats.get(op, v)
 
@@ -308,6 +308,14 @@ def calculate_determinants(event, role_entities):
             
         if det.op_transform == Operation.CONST:
             val = det.val_transform
+        elif det.op_application == Operation.ASSIGN:
+            field_name = ""
+            source_display = ""
+            breakdown_text = "total"
+            val = ""
+            if det.op_transform:
+                breakdown_text = get_inner_breakdown(
+                    "total", det.val_transform, det.op_transform)
         elif det.get_val_from == Participant.INFIELD and infield:
             anchor_id = resolve_anchor_id(infield.role, role_entities)
             if anchor_id is None and infield.role != Participant.BLUEPRINT:
@@ -388,6 +396,8 @@ def calculate_determinants(event, role_entities):
             'is_comparison': det.is_comparison,
             'is_met': is_met,
             'breakdown': breakdown_text,
+            'op_transform': det.op_transform,
+            'val_transform': det.val_transform,
         })
         
     return modifiers
@@ -905,33 +915,35 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
     PRECEDENCE = {
         Operation.ADD:        1, Operation.SUB:        1,
         Operation.MULT:       2, Operation.DIV:        2,
-        Operation.VAL_TO_POW: 3, Operation.POW_OF_VAL: 3,
+        Operation.ASSIGN:     3,
     }
     breakdown_str = breakdown_parts[0] # Start with the Die Roll/Base
     current_min_precedence = 99 
 
     for m in modifiers:
-        val = m['value']
-        op = m['op_app']
         if m['is_comparison']:
             continue
 
-        symbol = Operation.Repr[op]
-        formatted_val = format_for_display(val)
+        op = m['op_app']
+        op_prec = PRECEDENCE.get(op, 1)
+        if op == Operation.ASSIGN:
+            op = m['op_transform']
+            val = m['val_transform']
+            formatted_val = get_inner_breakdown(result_val, val, op)
+            symbol = Operation.Repr[Operation.ASSIGN]
+        else:
+            val = m['value']
+            formatted_val = format_for_display(val)
+            symbol = Operation.Repr[op]
 
         # If the new operator is higher precedence than the previous ones,
         # wrap the left side to maintain sequential logic.
         # Example: (1 + 1) × 4
-        op_prec = PRECEDENCE.get(op, 1)
+        next_min_prec = PRECEDENCE.get(op, 1)
         if op_prec > current_min_precedence:
             breakdown_str = f"({breakdown_str})"
-        if op == Operation.VAL_TO_POW:
-            breakdown_str = f"{breakdown_str}<sup>{formatted_val}</sup>"
-        elif op == Operation.POW_OF_VAL:
-            breakdown_str = f"{formatted_val}<sup>{breakdown_str}</sup>"
-        else:
-            breakdown_str = f"{breakdown_str} {symbol} {formatted_val}"
-        current_min_precedence = op_prec
+        breakdown_str = f"{breakdown_str} {symbol} {formatted_val}"
+        current_min_precedence = next_min_prec
 
         # Update Total
         result_val = apply_operation(result_val, val, op, sides)
