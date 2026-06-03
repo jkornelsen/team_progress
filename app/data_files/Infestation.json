@@ -610,17 +610,18 @@
             {
                 "id": 54,
                 "name": "Level Up",
-                "description": "Gaining a new level:\r\n- increases **Energy** limit and sets current energy to full\r\n- increases **Max HP** and sets **HP** to full\r\n\r\nOn reaching level 3, see [Upgrade Bonus](/play/event/23?subject_id=13).",
+                "description": "Roll to see if it's time to level up yet, but don't apply changes unless level increases.\r\n\r\nGaining a new level:\r\n- increases **Energy** limit and sets current energy to full\r\n- increases **Max HP** and sets **HP** to full\r\n\r\nOn reaching level 3, see [Upgrade Bonus](/play/event/23?subject_id=13).",
                 "outcome_type": "determined",
                 "determinants": [
                     {
-                        "label": "sq root",
+                        "label": "sq root of xp",
                         "infield": {"attrib_id": 2},
                         "op_transform": "x^",
                         "val_transform": 0.5
                     },
                     {"op_application": "/", "op_transform": "c", "val_transform": 1.8},
-                    {"op_application": ":=", "op_transform": "roun"}
+                    {"op_application": ":=", "op_transform": "roun"},
+                    {"op_transform": "c"}
                 ],
                 "effects": [
                     {
@@ -633,7 +634,7 @@
                         "outfield": {"attrib_id": 53},
                         "op_application": ":=",
                         "op_transform": "c",
-                        "val_transform": 10.0
+                        "val_transform": 6.0
                     },
                     {
                         "get_val_from": "outcome",
@@ -651,7 +652,7 @@
                         "outfield": {"role": "blueprint", "field_mode": "limit", "item_id": 5},
                         "op_application": ":=",
                         "op_transform": "c",
-                        "val_transform": 10.0
+                        "val_transform": 5.0
                     },
                     {
                         "get_val_from": "outcome",

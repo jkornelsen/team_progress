@@ -113,11 +113,43 @@ def resolve_anchor_id(role_name, role_entities):
         return None
     return role_entities.get(role_name)
 
-def get_entity_value(anchor_id, field_def, subject_id=None):
+def _ledger_key(anchor_id, field_def):
+    """
+    Returns a hashable key that uniquely identifies the (entity, field) pair
+    targeted by a field_def, for use in the virtual effect ledger.
+    Returns None for field modes that cannot be meaningfully ledgered
+    (e.g. movement, spawning).
+    """
+    if field_def is None:
+        return None
+    mode = field_def.field_mode
+    if mode == Participant.ATTR:
+        return ('attr', anchor_id, field_def.attrib_id)
+    if mode == Participant.QTY:
+        return ('qty', anchor_id, field_def.item_id)
+    if mode == Participant.LIMIT:
+        return ('limit', None, field_def.item_id)
+    if mode == Participant.RATE_AMT:
+        return ('rate_amt', None, field_def.recipe_id)
+    if mode == Participant.RATE_DUR:
+        return ('rate_dur', None, field_def.recipe_id)
+    if mode == Participant.SOURCE_QTY:
+        return ('source_qty', field_def.recipe_id, field_def.source_item_id)
+    if mode == Participant.BYP_QTY:
+        return ('byp_qty', field_def.recipe_id, field_def.source_item_id)
+    return None  # POS, SPAWN, PLACE, DIST — not ledgerable
+
+def get_entity_value(anchor_id, field_def, subject_id=None, ledger=None):
     """Handles Attr vs Qty and Base vs Child."""
     game_token=g.game_token
     target_id = anchor_id
     
+    # Check the virtual ledger first
+    if ledger is not None:
+        ledger_key = _ledger_key(anchor_id, field_def)
+        if ledger_key and ledger_key in ledger:
+            return ledger[ledger_key]
+
     # Distance Calculation (Read-Only)
     if field_def.field_mode == Participant.DIST:
         if not subject_id or not anchor_id: return 0.0
@@ -491,7 +523,7 @@ def preview_effects(event, role_entities):
                 impact_display = "(Selected)"
             impact_value = None
 
-        elif field_def.field_mode in Participant.USES_RECIPE:
+        elif field_def.role in Participant.BLUEPRINT:
             is_resolved = True 
             target_name = "📦"
             current_val = get_entity_value(None, field_def)
@@ -528,8 +560,9 @@ def preview_effects(event, role_entities):
                     else maskable_name(
                         Entity.query.get((game_token, target_id)))
         else:
-            target_name = "(" + field_def.role + ")"
-            is_resolved = False
+            target_name = "" if field_def.role == Participant.BLUEPRINT \
+                else "(" + field_def.role + ")"
+            is_resolved = (field_def.role == Participant.BLUEPRINT)
 
         # --- 2. RESOLVE SOURCE DATA (Existing Logic) ---
         source_name = ""
@@ -588,6 +621,7 @@ def resolve_effects(event, role_entities, roll_val):
     game_token = g.game_token
     previews = preview_effects(event, role_entities)
     results = []
+    ledger = {}
 
     for preview, eff in zip(previews, event.effects):
         field_def = eff.outfield
@@ -598,11 +632,22 @@ def resolve_effects(event, role_entities, roll_val):
         impact, _ = calculate_numeric_impact(eff, role_entities, roll_val)
  
         # --- 2. COMPUTE FINAL VALUE ---
-        current_val = preview['current_value']
+        # Use the ledgered value if a prior effect already changed this field,
+        # otherwise fall back to the DB-sourced value from the preview.
+        target_id = resolve_anchor_id(field_def.role, role_entities)
+        lkey = _ledger_key(target_id, field_def)
+        if lkey and lkey in ledger:
+            current_val = ledger[lkey]
+            current_display = format_for_display(current_val)
+        else:
+            current_val = preview['current_value']
+            current_display = preview['current_display']
         if eff.op_application == Operation.ASSIGN:
             final_val = impact
         else:
             final_val = apply_operation(current_val, impact, eff.op_application)
+        if lkey is not None:
+            ledger[lkey] = final_val
  
         # --- 3. BUILD DISPLAY STRINGS ---
         # Location-setting modes: show destination name rather than a number
@@ -626,7 +671,7 @@ def resolve_effects(event, role_entities, roll_val):
         results.append({
             'effect_id': eff.id,
             'current_value': current_val,
-            'current_display': preview['current_display'],
+            'current_display': current_display,
             'impact_value': impact,
             'impact_display': impact_display,
             'final_value': final_val,

@@ -569,7 +569,7 @@ async function refreshModifiers(updateEffectVals = true) {
             const equationEl = row.querySelector('.equation-display');
             const getValFrom = row.dataset.getValFrom;
 
-            row.querySelector('.target-name-display').innerText = eff.target_name || "?";
+            row.querySelector('.target-name-display').innerText = eff.target_name;
             row.style.opacity = eff.is_resolved ? "1" : "0.5";
 
             // Update current value and operator for a new roll
@@ -775,8 +775,13 @@ if (rollBtn) {
                 } else {
                     // This was a known value (e.g. Constant or Field).
                     // It's already showing the correct green result in equationEl.
-                    if (impactRes) impactRes.classList.add('hidden');
                     equationEl.innerHTML = `<span class="text-success" style="font-weight:bold;">${eff.impact_display}</span>`;
+                    if (newValEl && eff.final_display) {
+                        newValEl.innerText = eff.final_display;
+                        if (impactRes) impactRes.classList.remove('hidden');
+                    } else {
+                        if (impactRes) impactRes.classList.add('hidden');
+                    }
                 }
                 {% if event.outcome_type == OutcomeType.FOURWAY %}
                     const isEligible = tierMatch(outcomeSuccess, resultTier);

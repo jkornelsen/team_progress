@@ -4,23 +4,6 @@
 
 ---- functional, tightening, quality of life ----
 
-event effects need to calculate one at a time
-    so we can do:
-    1) hp = 10
-    2) hp = hp + (XL * 5)
-    currently, step 2 starts with the hp at the time of the roll
-    we may still be able to calculate the cumulative values at the time
-        of the roll so that we can show in preview
-    is that what we want if someone applies only certain effects?
-        seems logical to apply each formula rather than assuming cumulative
-        in that case we could update any remaining displays
-        that wouldn't help the user read the whole list but would
-        correctly show what happens if you press apply
-    a counterargument is the way we're using events has been pretty fixed
-        rather than an event where the user can optionally add poison dmg
-        so maybe applying the cumulative value would be fine,
-        worth it because it would be easier to read
-
 Value: -4.500000000000018
     truncate floating point limits with epsilon or whatever it was
     or 6-8 places, especially when writing to json and maybe also db
@@ -110,10 +93,6 @@ tethered one
         crush twists the wheelchair metal to bind galebane's body
 
 infestation
-    enough energy for several rounds of multiple events
-    0 energy means another bot has to come and get you
-        at least for the highway
-        perhaps increases repair cost
     combat events at different levels
         electric shock -- stun and damage
         chainsaw -- won't work if repairs needed is too high
@@ -125,8 +104,7 @@ infestation
         rush
         detect -- lowers enemy stealth
     edit char to add ability links after reaching certain xl levels
-    some abilities take long enough to allow enemy to respond
-    their attacks depend on distance
+    enemy attacks depend on distance
         claw
         jump
         hide
