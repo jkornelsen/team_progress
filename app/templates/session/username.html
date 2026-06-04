@@ -11,8 +11,8 @@
 
 {% block content %}
 <div class="session-card outer-border" style="max-width: 500px; margin: 40px auto;">
-    <h1>Set User Identity</h1>
-    <p class="label-like">Choose a name so other players know who is performing actions.</p>
+    <h1>Set Username</h1>
+    <p class="label-like">Choose a name so other players know who is performing actions (optional).</p>
 
     <form method="POST" action="{{ url_for('session.change_user') }}">
         {# Carry the referrer so we can send the user back to the page they were on #}
@@ -38,7 +38,7 @@
         {% endif %}
 
         <div class="footer-actions spacious-top">
-            <button type="submit" class="go-button" style="width: 100%;">Confirm Identity</button>
+            <button type="submit" class="go-button" style="width: 100%;">Update</button>
             <p class="text-center"><a href="{{ url_for('play.overview') }}" class="label-like">Cancel</a></p>
         </div>
     </form>

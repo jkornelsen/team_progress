@@ -99,7 +99,8 @@ def save_to_file():
     title = (overall.title or '').strip() or 'scenario'
     filename = f"{title}.json"
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json') as tmp:
+    with tempfile.NamedTemporaryFile(
+            mode='w', delete=False, suffix='.json') as tmp:
         tmp.write(json_data)
         path = tmp.name
         
@@ -189,7 +190,7 @@ def log_user_activity(endpoint, entity_id=None):
 # Session Routes
 # ------------------------------------------------------------------------
 
-@session_bp.route('/join-game')
+@session_bp.route('/join')
 def join_game():
     """
     Point of entry via a shared link. Sets the session token 
@@ -210,7 +211,8 @@ def get_session_link():
     if 'game_token' not in session:
         return "No active session found.", 404
     
-    url = url_for('session.join_game', game_token=session['game_token'], _external=True)
+    url = url_for(
+        'session.join_game', game_token=session['game_token'], _external=True)
     return render_template('session/session_link.html', url=url)
 
 @session_bp.route('/change-user', methods=['GET', 'POST'])
@@ -283,6 +285,9 @@ def init_session_handlers(app):
             session['username'] = generate_username()
         
         # 4. Log presence (except for administrative/api routes)
-        if request.endpoint and not any(x in request.endpoint for x in ['static', 'log_visit']):
-            log_user_activity(request.endpoint, request.view_args.get('id') if request.view_args else None)
+        if request.endpoint and not any(
+                x in request.endpoint for x in ['static', 'log_visit']):
+            log_user_activity(
+                request.endpoint, request.view_args.get('id')
+                if request.view_args else None)
 

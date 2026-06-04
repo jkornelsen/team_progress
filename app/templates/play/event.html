@@ -338,9 +338,10 @@
             {% endif %}
 
             <section id="follow-up-section" class="outer-border hidden">
-                <h3>Follow-up Event</h3>
-                <div id="follow-up-buttons" class="flex-row gap-10">
-                    <!-- JS will inject buttons here -->
+                <h3>Follow-up Events</h3>
+                <div id="follow-up-buttons"
+                     style="display: flex; flex-direction: column; align-items: flex-start;">
+                    <!-- JS rollBtn handler injects buttons here -->
                 </div>
             </section>
         </div>
@@ -831,6 +832,9 @@ if (rollBtn) {
             if (data.chain_options.length > 0) {
                 chainSection.classList.remove('hidden');
                 
+                // Dedicated JavaScript hotkeys
+                const letters = ['i', 'j', 'k'];
+                
                 data.chain_options.forEach((opt, idx) => {
                     // 1. Construct the URL for the next event
                     const nextUrl = new URL(`${window.location.origin}/play/event/${opt.child_id}`);
@@ -841,33 +845,30 @@ if (rollBtn) {
                         nextUrl.searchParams.append(key, value);
                     }
                     
-                    // 2. Create the Button
-                    const btn = document.createElement('button');
-                    btn.type = 'button'
-                    btn.className = 'go-button btn-sm';
-                    btn.style.textDecoration = 'none';
-                    btn.addEventListener('click', () => {
-                        window.location.href = nextUrl.toString();
-                    });
+                    const targetUrlString = nextUrl.toString();
 
-                    // 3. Assign Hotkeys (i, j, k)
-                    const letters = ['i', 'j', 'k'];
+                    // 2. Create the Link Element
+                    const link = document.createElement('a');
+                    link.href = targetUrlString;
+                    link.className = 'hotkey-link';
+                    link.style.textDecoration = 'none';
+
+                    // 3. Assign JavaScript Hotkeys (i, j, k)
                     if (idx < letters.length) {
                         const letter = letters[idx];
-                        btn.id = `chainbtn-${letter}`;
-                        window.linkForKey[letter] = `#${btn.id}`;
-                        btn.innerHTML = `<span class="hotkey-indicator">${letter}</span> ${opt.child_name}`;
+                        window.linkForKey[letter] = targetUrlString;
+                        link.innerHTML = `⚡ <span class="hotkey-indicator">${letter}</span> ${opt.child_name}`;
                     } else {
-                        btn.innerText = opt.child_name;
+                        link.innerText = `⚡ ${opt.child_name}`;
                     }
 
-                    chainButtons.appendChild(btn);
+                    chainButtons.appendChild(link);
                 });
             } else {
                 chainSection.classList.add('hidden');
             }
         }
-    };
+    }
 }
 
 /**

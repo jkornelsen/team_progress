@@ -756,12 +756,20 @@ def edit_event(id):
                 )
                 new_link.req = factor
 
-                if row.get_bool('use_comparison'):
+                get_val_from = row.get_str('get_val_from')
+                if get_val_from == Participant.OUTCOME:
+                    factor.get_val_from = get_val_from
+                    factor.op_application = row.get_str(
+                        'op_application', Operation.EQ)
+                    factor.val_required = row.get_float(
+                        'val_required', 1.0)
+                    factor.negate = row.get_bool('negate')
+                elif get_val_from == Participant.INFIELD:
                     fld = row.get_map('infield')
                     mode = fld.get_str('field_mode')
                     role = fld.get_str('role')
                     if role and mode:
-                        factor.get_val_from = Participant.INFIELD
+                        factor.get_val_from = get_val_from
                         factor.op_application = row.get_str(
                             'op_application', Operation.EQ)
                         factor.op_transform = row.get_str(
@@ -770,8 +778,7 @@ def edit_event(id):
                             'val_transform', 1.0)
                         factor.val_required = row.get_float(
                             'val_required', 1.0)
-                        factor.negate = row.get_bool(
-                            'negate')
+                        factor.negate = row.get_bool('negate')
 
                         fld_attrib_id = fld.get_int('attrib_id') \
                             if mode in Participant.USES_ATTRIB else None

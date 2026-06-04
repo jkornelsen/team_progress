@@ -20,14 +20,14 @@
             {
                 "id": 48,
                 "name": "Distance",
-                "description": "Measure of how far away the enemy is, *Theater of the Mind* (no tactical grid). Melee distance is 1 unless there's e.g. a long spear with reach 2.",
+                "description": "Measure of how far away the combatants are, *Theater of the Mind* (no tactical grid). Melee distance is 1 unless there's e.g. a long spear with reach 2.",
                 "storage_type": "u",
                 "toplevel": true
             },
             {
                 "id": 5,
                 "name": "Energy",
-                "description": "Must have at least 1 unit for fighting. A unit is 100 Kilojoules.\r\nRestore by levelling up, or travel to the *Maintenance Building* and click on the *Recharging Station*.\r\nLimit is 10 + 4 * **XL,** plus any special bonuses. Record the bonuses by editing this description:\r\n\r\n- No special bonuses yet",
+                "description": "Required for fighting. A unit is 100 Kilojoules.\r\nRestore by levelling up, or travel to the *Maintenance Building* and click on the *Recharging Station*.\r\nLimit is 10 + 4 * **XL,** plus any special bonuses. Record the bonuses by editing this description:\r\n\r\n- No special bonuses yet",
                 "q_limit": 10.0,
                 "recipes": [
                     {
@@ -55,6 +55,7 @@
                 "id": 6,
                 "name": "Recharging Station",
                 "description": "Click on *Energy* to power up the robot.",
+                "abilities": [52],
                 "storage_type": "l",
                 "q_limit": 1.0
             },
@@ -64,7 +65,7 @@
             {
                 "id": 10,
                 "name": "Baby Mice Area",
-                "description": "The weakest of the rodents can be found here, but the area is alarmingly close to the base. Populations must be controlled so they don't spread further.",
+                "description": "The weakest of the rodents can be found here, but the area is alarmingly close to the maintenance building. Populations must be controlled so they don't spread further.",
                 "destinations": [
                     {"loc2_id": 7}
                 ]
@@ -87,7 +88,8 @@
             {
                 "id": 12,
                 "name": "Maintenance Building",
-                "description": "An outpost in northern Florida set up to contain the infestation. Engineers perform upgrades and repairs as well as charging. This is also where robots are controlled from, and where intel is assessed.",
+                "description": "An outpost in northern Florida set up to contain the infestation. Engineers assess intel and perform upgrades and repairs.",
+                "abilities": [52],
                 "items": [
                     {"item_id": 6, "quantity": 1.0},
                     {"item_id": 51, "quantity": 1.0}
@@ -105,14 +107,14 @@
                 "name": "🐁Baby Mouse",
                 "description": "Mutant, rabid and green-eyed. Low HP but can still bite.",
                 "attribs": [
-                    [4, 2.0],
                     [27, 5.0],
                     [29, 1.0],
                     [30, 3.0],
                     [45, 0.0],
                     [53, 5.0],
                     [56, 1.0],
-                    [57, 1.0]
+                    [57, 1.0],
+                    [60, 3.0]
                 ],
                 "abilities": [39, 41, 43, 46, 47, 49, 58],
                 "location_id": 10
@@ -123,8 +125,8 @@
                 "description": "Red-eyed monster that never stops hopping up and down, up and down.\r\n\r\n- Set difficulty to *Hard*.\r\n- On victory, mark the boss as [Defeated](/play/attrib/3/char/5) and add **250 XP**.",
                 "attribs": [
                     [3, 0.0],
-                    [4, 13.0],
-                    [26, 1.0]
+                    [26, 1.0],
+                    [60, 100.0]
                 ],
                 "location_id": 9
             },
@@ -133,14 +135,14 @@
                 "name": "🐭Full-grown Mouse",
                 "description": "Okay, it's still kind of cute, despite the toxic green eyes.",
                 "attribs": [
-                    [4, 5.0]
+                    [60, 7.0]
                 ],
                 "location_id": 7
             },
             {
                 "id": 13,
                 "name": "🤖 Herbert 2100B",
-                "description": "Autonomous machine that can also be given instructions remotely — the player character.\r\n\r\nDoes not get diseases from being bitten, but has a limited amount of power. Battle testing allows engineers to improve the technology.",
+                "description": "Semi-autonomous robot, the player character.\r\n\r\nDoes not get diseases from being bitten, but has a limited amount of power.\r\nBattle testing allows engineers to improve the technology.\r\nFight initiator—always gets the first turn.",
                 "attribs": [
                     [2, 0.0],
                     [4, 1.0],
@@ -150,7 +152,7 @@
                     [45, 0.0],
                     [53, 10.0]
                 ],
-                "abilities": [18, 28, 35, 43, 44, 47],
+                "abilities": [28, 35, 43, 44, 47],
                 "toplevel": true,
                 "location_id": 12,
                 "items": [
@@ -163,8 +165,8 @@
                 "description": "Wearing a nametag with \"Gerry\" written on it.\r\n\r\nAfter his defeat, he can be restored to normal through medical procedures. Whether the process improves cantankerousness is doubtful though.",
                 "attribs": [
                     [3, 0.0],
-                    [4, 20.0],
-                    [26, 1.0]
+                    [26, 1.0],
+                    [60, 200.0]
                 ]
             },
             {
@@ -172,7 +174,7 @@
                 "name": "🐇Tainted Bunny",
                 "description": "Fur is greenish and sticky, with a fuzzy white tail.",
                 "attribs": [
-                    [4, 8.0]
+                    [60, 15.0]
                 ],
                 "location_id": 11
             }
@@ -240,6 +242,11 @@
                 "id": 2,
                 "name": "XP",
                 "description": "Dispatch rodents to gain experience — bigger ones yield more."
+            },
+            {
+                "id": 60,
+                "name": "XP Worth",
+                "description": "How much XP you gain from defeating the enemy."
             }
         ],
         "events": [
@@ -311,10 +318,10 @@
             },
             {
                 "id": 41,
-                "name": "Choose Enemy Action",
+                "name": "Choose Baby Mouse Action",
                 "description": "Roll to determine what an enemy does next.\r\nIf there is a straightforward choice then there is no need to roll.\r\nIf the result does not make sense for this encounter, then roll again.",
                 "outcome_type": "selection",
-                "selection_strings": "Bite\r\nHeal\r\nMove to Range"
+                "selection_strings": "Bite\r\nWait\r\nMove Away"
             },
             {
                 "id": 36,
@@ -325,7 +332,7 @@
             {
                 "id": 28,
                 "name": "Fist Pummel (To-Hit)",
-                "description": "Close grasping digits and swing robotic arm forward. Basic melee attack.\r\n\r\n- **Difficulty:** If you're significantly outleveled, for example level 1 or 2 to the enemy's 5, then set difficulty to *Hard*. If you significantly outlevel the opponent, then set difficulty to *Easy*.\r\n- **Damage:** If the attack hits then roll **ATK Fist Pummel Dmg.**\r\n- **Major Success:** (Nat 20) Two damage rolls instead of one.\r\n- **Major Failure:** Consumes 2 **Energy** instead of 1.\r\n\r\nAfter swinging, the enemy gets a turn.",
+                "description": "Close grasping digits and swing robotic arm forward. Basic melee attack.\r\n\r\n- **Any Success:** If the attack hits then roll **ATK Fist Pummel Dmg.**\r\n- **Major Success:** (Nat 20) Two damage rolls instead of one.\r\n- **Major Failure:** Consumes 2 **Energy** instead of 1.\r\n\r\nAfter swinging, the enemy gets a turn.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -388,7 +395,7 @@
             {
                 "id": 38,
                 "name": "Fist Pummel Dmg",
-                "description": "Roll and apply the damage. If Enemy HP is reduced below 1 then **Gain XP.**",
+                "description": "Roll and apply the damage. If Enemy HP is reduced below 1 then do **XP Gain.**",
                 "outcome_type": "numeric",
                 "numeric_range": [1, 6],
                 "determinants": [
@@ -419,54 +426,32 @@
             {
                 "id": 46,
                 "name": "Fresh Enemy",
-                "description": "A new enemy arrives. Whether the other one was dead or wounded doesn't matter anymore — it's gone now.",
+                "description": "A new enemy arrives. Whether the other one was dead or wounded doesn't matter anymore — it's gone now.\r\n\r\nRun after the previous fight is over, or if you exited the area while the fight was in progress.",
                 "outcome_type": "determined",
                 "effects": [
                     {
                         "infield": {"attrib_id": 53},
                         "outfield": {"attrib_id": 27},
                         "op_application": ":=",
-                        "val_transform": 5.0
+                        "val_transform": 5.0,
+                        "auto_apply": true
                     },
                     {
                         "get_val_from": "outcome",
                         "outfield": {"attrib_id": 45},
                         "op_application": ":=",
                         "op_transform": "c",
-                        "val_transform": 0.0
+                        "val_transform": 0.0,
+                        "auto_apply": true
                     },
                     {
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 48},
                         "op_application": ":=",
                         "op_transform": "c",
-                        "val_transform": 5.0
-                    }
-                ]
-            },
-            {
-                "id": 18,
-                "name": "Gain XP",
-                "description": "If the fight ended in victory, press *resolve* to gain experience equal to the enemy's level.\r\n\r\nTo fight the same kind of enemy again, find their **Fresh** event. Bosses however are unique.",
-                "outcome_type": "determined",
-                "determinants": [
-                    {
-                        "infield": {"role": "target char", "attrib_id": 27},
-                        "op_application": "<"
-                    },
-                    {
-                        "infield": {"role": "target char", "attrib_id": 4}
-                    }
-                ],
-                "effects": [
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {"attrib_id": 2},
+                        "val_transform": 5.0,
                         "auto_apply": true
                     }
-                ],
-                "chained": [
-                    {"child_id": 54}
                 ]
             },
             {
@@ -486,8 +471,8 @@
             },
             {
                 "id": 54,
-                "name": "Level Up",
-                "description": "Roll to see if it's time to level up yet, but don't apply changes unless level increases.\r\n\r\nGaining a new level:\r\n- increases **Energy** limit and sets current energy to full\r\n- increases **Max HP** and sets **HP** to full\r\n\r\nOn reaching level 3, see [Upgrade Bonus](/play/event/23?subject_id=13).",
+                "name": "Level Up!",
+                "description": "Gaining a new level:\r\n- increases **Energy** limit and sets current energy to full\r\n- increases **Max HP** and sets **HP** to full\r\n\r\nOn reaching level 3, see [Upgrade Bonus](/play/event/23?subject_id=13).",
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -545,65 +530,9 @@
                 ]
             },
             {
-                "id": 47,
-                "name": "Move to Melee Dist",
-                "description": "Rush into melee range, repositioning to 1 tile away.\r\n\r\n- **Success:** No loss of turn—the action is free.\r\n- **Minor Failure:** Close gap but turn ends and consumes 1 **Energy.**\r\n- **Major Failure:** Fail to close gap.",
-                "numeric_range": [1, 20],
-                "determinants": [
-                    {
-                        "label": "Not Melee Dist",
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
-                        "op_application": ">=",
-                        "val_required": 2.0
-                    },
-                    {
-                        "label": "Can Fight",
-                        "infield": {"attrib_id": 27},
-                        "op_application": ">="
-                    },
-                    {
-                        "label": "Target Can Fight",
-                        "infield": {"role": "target char", "attrib_id": 27},
-                        "op_application": ">="
-                    },
-                    {
-                        "label": "Quickness",
-                        "infield": {"attrib_id": 30}
-                    },
-                    {
-                        "label": "Quickness",
-                        "infield": {"role": "target char", "attrib_id": 30},
-                        "op_application": "-"
-                    }
-                ],
-                "effects": [
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 48},
-                        "op_application": ":=",
-                        "op_transform": "c",
-                        "outcome_success": "success_any"
-                    },
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 48},
-                        "op_application": ":=",
-                        "op_transform": "c",
-                        "outcome_success": "failure_minor"
-                    },
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {"field_mode": "qty", "item_id": 5},
-                        "op_application": "-",
-                        "op_transform": "c",
-                        "outcome_success": "failure_any"
-                    }
-                ]
-            },
-            {
                 "id": 43,
-                "name": "Move to Range",
-                "description": "Step out of melee range, repositioning to 5 tiles away.\r\n\r\n- **Major Success:** (Nat 20) No loss of turn—the action is free.\r\n- **Minor Success:** Move away and turn ends.\r\n- **Minor Failure:** Disengage but allow an *Attack of Opportunity*.\r\n- **Major Failure:** Still in melee range.",
+                "name": "Move Away",
+                "description": "Step out of melee range, repositioning to 5 tiles away.\r\n\r\n- **Major Success:** (Nat 20) No loss of turn—the action is free.\r\n- **Minor Success:** Move away and turn ends.\r\n- **Minor Failure:** Disengage but allow an *Attack of Opportunity* (wait to apply distance).\r\n- **Major Failure:** Still in melee range.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -662,10 +591,10 @@
                         "op_application": ">="
                     },
                     {
-                        "infield": {"attrib_id": 53}
+                        "infield": {"role": "target char", "attrib_id": 53}
                     },
                     {
-                        "infield": {"attrib_id": 27},
+                        "infield": {"role": "target char", "attrib_id": 27},
                         "op_application": "-"
                     },
                     {"op_application": "*", "op_transform": "c", "val_transform": 10.0}
@@ -677,8 +606,8 @@
                         "op_application": "-"
                     },
                     {
-                        "infield": {"attrib_id": 53},
-                        "outfield": {"attrib_id": 27},
+                        "infield": {"role": "target char", "attrib_id": 53},
+                        "outfield": {"role": "target char", "attrib_id": 27},
                         "op_application": ":="
                     }
                 ]
@@ -688,6 +617,62 @@
                 "name": "Resist Shock",
                 "description": "Attempt to resist getting shocked. Is this necessary or can the attack event do the necessary roll?",
                 "numeric_range": [1, 20]
+            },
+            {
+                "id": 47,
+                "name": "Rush to Melee Dist",
+                "description": "Rush into melee range, repositioning to 1 tile away.\r\n\r\n- **Success:** The action is free—no loss of turn.\r\n- **Minor Failure:** Close gap but turn ends and consumes 1 **Energy.**\r\n- **Major Failure:** Fail to close gap.",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "label": "Not Melee Dist",
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "op_application": ">=",
+                        "val_required": 2.0
+                    },
+                    {
+                        "label": "Can Fight",
+                        "infield": {"attrib_id": 27},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Target Can Fight",
+                        "infield": {"role": "target char", "attrib_id": 27},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Quickness",
+                        "infield": {"attrib_id": 30}
+                    },
+                    {
+                        "label": "Quickness",
+                        "infield": {"role": "target char", "attrib_id": 30},
+                        "op_application": "-"
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "outcome_success": "failure_minor"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"field_mode": "qty", "item_id": 5},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "outcome_success": "failure_any"
+                    }
+                ]
             },
             {
                 "id": 49,
@@ -777,6 +762,62 @@
                         "op_transform": "c",
                         "val_transform": 0.0,
                         "outcome_success": "failure_any"
+                    }
+                ]
+            },
+            {
+                "id": 59,
+                "name": "XP For Next Level",
+                "description": "Shows the total XP needed to level up.",
+                "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 4}
+                    },
+                    {"op_application": ":=", "op_transform": "*", "val_transform": 1.8},
+                    {"op_application": ":=", "op_transform": "x^", "val_transform": 2.0},
+                    {"op_application": ":=", "op_transform": "ceil"}
+                ]
+            },
+            {
+                "id": 18,
+                "name": "XP Gain",
+                "description": "- If the fight ended in victory, press *resolve* to gain experience equal to the enemy's level.\r\n- If the calculation is at least 1 then you can level up.\r\n- To fight the same kind of enemy again, find their **Fresh** event. Bosses however are unique.",
+                "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "infield": {"role": "target char", "attrib_id": 27},
+                        "op_application": "<"
+                    },
+                    {
+                        "infield": {"attrib_id": 2}
+                    },
+                    {
+                        "infield": {"role": "target char", "attrib_id": 60}
+                    },
+                    {"op_application": ":=", "op_transform": "x^", "val_transform": 0.5},
+                    {"op_application": ":=", "op_transform": "/", "val_transform": 1.8},
+                    {"op_application": ":=", "op_transform": "floor"},
+                    {"op_transform": "c"},
+                    {
+                        "infield": {"attrib_id": 4},
+                        "op_application": "-"
+                    }
+                ],
+                "effects": [
+                    {
+                        "infield": {"role": "target char", "attrib_id": 60},
+                        "outfield": {"attrib_id": 2}
+                    }
+                ],
+                "chained": [
+                    {
+                        "child_id": 54,
+                        "req": {"get_val_from": "outcome", "op_application": ">="}
+                    },
+                    {
+                        "child_id": 59,
+                        "req": {"get_val_from": "outcome", "op_application": "<"}
                     }
                 ]
             }

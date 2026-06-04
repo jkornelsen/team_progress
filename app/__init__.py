@@ -1,6 +1,7 @@
 import os
 import logging
 import uuid
+from datetime import timedelta
 from flask import (
     Flask, g, session, request, redirect, render_template, url_for)
 from flask_migrate import Migrate
@@ -23,6 +24,7 @@ def create_app():
     app.config['TITLE'] = 'Team Progress Kit'
     app.config['SECRET_KEY'] = os.environ.get(
         'SECRET_KEY', 'team-progress-kit')
+    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=3)
     app.config['DATA_DIR'] = os.path.join(app.root_path, 'data_files')
 
     app.config['SQLALCHEMY_DATABASE_URI'] = get_db_uri()
@@ -83,12 +85,15 @@ def create_app():
         The core multi-tenant logic. 
         Ensures every request has a game_token and an initialized System ID 1.
         """
-        if request.endpoint and (request.endpoint.startswith('static') or 'favicon' in request.endpoint):
+        if request.endpoint and (
+                request.endpoint.startswith('static')
+                or 'favicon' in request.endpoint):
             return
 
         # 1. Ensure Game Token exists in session
         if 'game_token' not in session:
             session['game_token'] = str(uuid.uuid4())
+        session.permanent = True # keep for PERMANENT_SESSION_LIFETIME
         
         # Set global game token for use in SQLAlchemy queries
         g.game_token = session['game_token']

@@ -126,17 +126,17 @@ def get_placement_capacity(recipe, target_owner_id, host_id, sources=None):
     game_token = g.game_token
     placements = get_eligible_placements(
         recipe, target_owner_id, host_id, sources)
-    total_capacity = 0.0
-
-    for owner_id, pos in placements:
-        q_limit = get_quantity_limit(recipe.product_id, owner_id)
-        if q_limit == 0:
-            return float('inf'), float('inf')
-        pile = Pile.query.filter_by(
-            game_token=game_token, owner_id=owner_id,
-            item_id=recipe.product_id, position=pos).first()
-        current_qty = pile.quantity if pile else 0.0
-        total_capacity += max(0.0, q_limit - current_qty)
+    if not placements:
+        return 0, 0.0
+    owner_id, pos = placements[0]
+    q_limit = get_quantity_limit(recipe.product_id, owner_id)
+    if q_limit == 0:
+        return float('inf'), float('inf')
+    pile = Pile.query.filter_by(
+        game_token=game_token, owner_id=owner_id,
+        item_id=recipe.product_id, position=pos).first()
+    current_qty = pile.quantity if pile else 0.0
+    total_capacity = max(0.0, q_limit - current_qty)
 
     return math.floor(total_capacity / recipe.rate_amount), total_capacity
 
@@ -459,15 +459,13 @@ def execute_production(
     placements = get_eligible_placements(
         recipe, target_owner_id, host_id, sources)
     amount_to_place = recipe.rate_amount * batches
-    initial_amount_to_place = amount_to_place
-
-    for owner_id, pos in placements:
-        if amount_to_place == 0:
-            break
-        amount_to_place = adjust_quantity(
+    if placements:
+        owner_id, pos = placements[0]
+        remainder = adjust_quantity(
             recipe.product_id, owner_id, amount_to_place, position=pos)
-    
-    placed = initial_amount_to_place - max(0, amount_to_place)
+        placed = amount_to_place - max(0.0, remainder)
+    else:
+        placed = 0.0
     net_product_delta += placed
 
     for bp in recipe.byproducts:

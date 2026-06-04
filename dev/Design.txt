@@ -4,19 +4,12 @@
 
 ---- functional, tightening, quality of life ----
 
-infestation energy production didn't stop after filling Herbert's pile
-    because it overflowed to the location
-
 Value: -4.500000000000018
     truncate floating point limits with epsilon or whatever it was
     or 6-8 places, especially when writing to json and maybe also db
     at least 3 more than displayed 3, up to 1 million if turned to integer
 
 prompt before overwriting another character action in progress
-
-sessions should be easier to connect to
-    remember game token on client side
-    connect as FarmerGiles2
 
 session settings
     number format -- instead of overall (scenario) settings
@@ -116,13 +109,13 @@ infestation
         rip off and project their own fur -- reduces their hp a bit
         cane whack
         cane poke
+        heal self
     later enemies bigger than rodents e.g. alligators -- only final boss human
     store attrib "Boss I Defeated" in universal item "Enemies Defeated"
         so events can check for that attrib
     in addition to recording energy bonuses by editing description,
         add attribute or universal item to store the bonus quantity,
         so it can be included in the levelup calculation
-    gain xp equal to perhaps enemy XL ^ 1.5 so enemies get exponentially harder
 
 dungeon crawl
     3 levels up and down of location grids -- 7 total floors

@@ -97,16 +97,6 @@
                 "q_limit": 1.0
             },
             {
-                "id": 15,
-                "name": "Marked Pine",
-                "description": "Plots are full of trees, but mark only one at a time for harvesting.",
-                "attribs": [
-                    [2, 100.0]
-                ],
-                "storage_type": "l",
-                "q_limit": 1.0
-            },
-            {
                 "id": 14,
                 "name": "Old Axe",
                 "description": "Handle has been reattached many times in the past.",
@@ -143,6 +133,40 @@
                 ]
             },
             {
+                "id": 15,
+                "name": "P1 Marked Tree",
+                "description": "Plots are full of trees, but mark only one at a time for harvesting.",
+                "attribs": [
+                    [2, 100],
+                    [60, 100.0]
+                ],
+                "storage_type": "l",
+                "q_limit": 1.0
+            },
+            {
+                "id": 10,
+                "name": "P1 Pine Trees",
+                "description": "How many trees are available on a plot.",
+                "storage_type": "u",
+                "q_limit": 100.0,
+                "recipes": [
+                    {
+                        "id": 44,
+                        "rate_duration": 180,
+                        "sources": [
+                            {"item_id": 41, "q_required": 1.0}
+                        ]
+                    },
+                    {
+                        "id": 45,
+                        "rate_duration": 600,
+                        "sources": [
+                            {"item_id": 43, "q_required": 1.0}
+                        ]
+                    }
+                ]
+            },
+            {
                 "id": 12,
                 "name": "Pine Boards",
                 "description": "Cut from logs.",
@@ -166,7 +190,7 @@
                 "id": 7,
                 "name": "Pine Logs",
                 "description": "Idle chopping is for when no characters are actively chopping, either because they are doing something else, or while offline.",
-                "q_limit": 8.0,
+                "q_limit": 10.0,
                 "limits_for": [
                     {"owner_id": 19, "q_limit": 100.0}
                 ],
@@ -229,29 +253,6 @@
                         "rate_duration": 15,
                         "sources": [
                             {"item_id": 10, "q_required": 1.0, "preserve": true}
-                        ]
-                    }
-                ]
-            },
-            {
-                "id": 10,
-                "name": "Plot 1 Pine Trees",
-                "description": "How many trees are available on a plot.",
-                "storage_type": "u",
-                "q_limit": 100.0,
-                "recipes": [
-                    {
-                        "id": 44,
-                        "rate_duration": 180,
-                        "sources": [
-                            {"item_id": 41, "q_required": 1.0}
-                        ]
-                    },
-                    {
-                        "id": 45,
-                        "rate_duration": 600,
-                        "sources": [
-                            {"item_id": 43, "q_required": 1.0}
                         ]
                     }
                 ]
@@ -378,13 +379,6 @@
                 "id": 58,
                 "name": "Road",
                 "dimensions": [6, 5],
-                "destinations": [
-                    {
-                        "loc2_id": 18,
-                        "door1": [4, 5],
-                        "door2": [18, 1]
-                    }
-                ],
                 "zones": [
                     {
                         "coords": [1, 1, 2, 3],
@@ -427,14 +421,14 @@
                 "dimensions": [20, 20],
                 "items": [
                     {
-                        "item_id": 9,
-                        "quantity": 1.0,
-                        "position": [14, 5]
-                    },
-                    {
                         "item_id": 7,
                         "quantity": 4.0,
                         "position": [3, 2]
+                    },
+                    {
+                        "item_id": 9,
+                        "quantity": 1.0,
+                        "position": [14, 5]
                     },
                     {
                         "item_id": 15,
@@ -442,7 +436,7 @@
                         "position": [15, 4]
                     }
                 ],
-                "item_refs": [10],
+                "item_refs": [10, 30],
                 "destinations": [
                     {
                         "loc2_id": 16,
@@ -458,6 +452,11 @@
                         "loc2_id": 34,
                         "door1": [1, 11],
                         "door2": [5, 2]
+                    },
+                    {
+                        "loc2_id": 58,
+                        "door1": [18, 1],
+                        "door2": [4, 5]
                     }
                 ],
                 "zones": [
@@ -580,6 +579,7 @@
                 "name": "HP",
                 "description": "How much chopping still needs to be done to finish chopping down the tree. Once HP is 0, the tree can be cut into logs."
             },
+            {"id": 60, "name": "Max HP"},
             {
                 "id": 6,
                 "name": "Mileage Left",
@@ -605,7 +605,7 @@
             {
                 "id": 26,
                 "name": "Chopping Check",
-                "description": "- **Major Success:** Gain 50% more logs\r\n- **Minor Failure:** The attempt was unsuccessful — [add back HP from the swing](/play/attrib/2/subject/15) (see [game log](/overview))\r\n- **Major Failure:** Run *Chopping Mishap Type*",
+                "description": "- **Major Success:** Gain 50% more logs\r\n- **Any Failure:** The attempt didn't land cleanly — restores some **HP**\r\n- **Major Failure:** Run *Chopping Mishap Type*",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -629,6 +629,13 @@
                         "op_transform": "c",
                         "outcome_success": "success_major",
                         "auto_apply": true
+                    },
+                    {
+                        "infield": {"role": "at", "child_of_anchor": true, "attrib_id": 60},
+                        "outfield": {"role": "at", "child_of_anchor": true, "attrib_id": 2},
+                        "op_transform": "*",
+                        "val_transform": 0.25,
+                        "outcome_success": "failure_any"
                     }
                 ],
                 "chained": [
@@ -641,7 +648,7 @@
             {
                 "id": 22,
                 "name": "Chopping Mishap Type",
-                "description": "Run to get details on what happened after a [Chopping Mishap](/play/event/26) occurs.",
+                "description": "Run to get details on what happened after a **Chopping Check** fails.",
                 "outcome_type": "selection",
                 "selection_strings": "Fewer resources gained\r\nResources lost\r\nNo progress\r\nTool damaged\r\nTool broken\r\nTool destroyed\r\nMinor injury\r\nSevere injury"
             },
@@ -702,13 +709,20 @@
                             "role": "blueprint",
                             "field_mode": "place",
                             "item_id": 15,
-                            "loc_id": 0
+                            "loc_id": 18
                         },
                         "op_application": ":="
                     },
                     {
                         "get_val_from": "outcome",
                         "outfield": {"role": "at", "child_of_anchor": true, "attrib_id": 2},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 100.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "at", "attrib_id": 60},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 100.0
@@ -788,6 +802,13 @@
                     {
                         "child_id": 26,
                         "req": {"outcome_success": "natural_min"}
+                    },
+                    {
+                        "child_id": 26,
+                        "req": {
+                            "infield": {"role": "at", "child_of_anchor": true, "attrib_id": 2},
+                            "op_application": "<"
+                        }
                     }
                 ]
             }
@@ -796,7 +817,7 @@
     "general data": {
         "piles": [
             {"item_id": 10, "quantity": 49.0},
-            {"item_id": 12, "quantity": 0.0}
+            {"item_id": 12}
         ]
     },
     "progress": []

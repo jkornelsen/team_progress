@@ -270,7 +270,7 @@ function addFactor(usage) {
 
     syncOutcomeTypeState();
     const newCard = list.lastElementChild;
-    const sourceSelect = newCard.querySelector('.source-type-select') || 
+    const sourceSelect = newCard.querySelector('.eff-source-type-select') || 
                        newCard.querySelector('[name$="[get_val_from]"]');
     if (sourceSelect) {
         syncEffSourceState(sourceSelect);
@@ -319,7 +319,7 @@ function syncOutcomeTypeState() {
     document.getElementById('effects').classList.toggle(
         'hidden', type == 'dice_system');
 
-    document.querySelectorAll('.eff-card .success-filter-container').forEach(filter => {
+    document.querySelectorAll('.success-filter-container').forEach(filter => {
         filter.classList.toggle('hidden', type !== 'fourway');
     });
 }
@@ -436,19 +436,37 @@ function syncEventFieldState(element) {
     }
 }
 
-function syncChainReqState(checkbox) {
-    const card = checkbox.closest('.factor-card');
-    const targetSection = card.querySelector('.chain-comparison-section');
+function syncChainReqState(selectEl) {
+    const card = selectEl.closest('.factor-card');
+    const compSection = card.querySelector('.chain-comparison-section');
+    const infieldWrapper = compSection.querySelector('.attrib-wrapper [data-inner-group], .field-input-group')
+        || compSection.querySelector('.attrib-wrapper');
 
-    if (checkbox.checked) {
-        targetSection.style.display = '';
-        targetSection.querySelectorAll('input, select, textarea').forEach(el => {
+    const val = selectEl.value;
+    const hasComparison = (val === '{{ Participant.INFIELD }}'
+                        || val === '{{ Participant.OUTCOME }}');
+    const needsInfield = (val === '{{ Participant.INFIELD }}');
+
+    // Show/hide the entire comparison section
+    compSection.style.display = hasComparison ? '' : 'none';
+    compSection.querySelectorAll('input, select, textarea').forEach(el => {
+        if (hasComparison) {
             el.removeAttribute('disabled');
-        });
-    } else {
-        targetSection.style.display = 'none';
-        targetSection.querySelectorAll('input, select, textarea').forEach(el => {
+        } else {
             el.setAttribute('disabled', 'true');
+        }
+    });
+
+    // Show/hide the infield sub-section
+    if (compSection.querySelector('.field-input-group')) {
+        const fieldGroup = compSection.querySelector('.field-input-group');
+        fieldGroup.style.display = needsInfield ? '' : 'none';
+        fieldGroup.querySelectorAll('input, select, textarea').forEach(el => {
+            if (needsInfield) {
+                el.removeAttribute('disabled');
+            } else {
+                el.setAttribute('disabled', 'true');
+            }
         });
     }
 }
@@ -693,7 +711,7 @@ function syncInnerExprState(card) {
         const outfieldSection = subSections[0]; 
         const sourceSection = subSections[1];   
         
-        const sourceTypeSelect = sourceSection.querySelector('.source-type-select');
+        const sourceTypeSelect = sourceSection.querySelector('.eff-source-type-select');
         const infieldBox = sourceSection.querySelector('.source-field-box');
 
         if (isConstant) {
@@ -751,7 +769,7 @@ document.querySelector('form').addEventListener('submit', function() {
 
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.field-mode-select').forEach(syncFieldIdsState);
-    document.querySelectorAll('.source-type-select').forEach(syncEffSourceState);
+    document.querySelectorAll('.eff-source-type-select').forEach(syncEffSourceState);
     document.querySelectorAll('.factor-card').forEach(card => {
         syncInnerExprState(card);
         syncOuterExprState(card);
@@ -769,7 +787,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     document.querySelectorAll('.factor-card').forEach(syncCardAttribState);
-    document.querySelectorAll('.chained-row[data-usage="chained"] input[type="checkbox"]').forEach(checkbox => {
+    document.querySelectorAll('.chained-source-type-select').forEach(checkbox => {
         syncChainReqState(checkbox);
     });
     adjustDet('renumberRows');
@@ -1016,7 +1034,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <span style="font-size: 2em; order: 4;">)</span>
                 </div>
 
-                {% set op_application = factor.op_application if factor else '+' %}
+                {% set op_application = factor.op_application if factor else '' %}
                 <select name="dets[{{ card_index }}][op_application]" 
                         class="op-application-selector" 
                         style="max-width: 8ch;"
@@ -1034,7 +1052,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     data-field-name="dets[{{ card_index }}][val_required]">
                     <!-- Filled by ConfigEditor.syncAttribVal -->
                 </div>
-                <div class="negate-toggle-container">
+                <div class="negate-toggle-container" style="order: 4">
                     <label class="checkbox-label"
                             title="True when value isn't found or doesn't match expression">
                         <input type="checkbox" name="dets[{{ card_index }}][negate]"
@@ -1099,7 +1117,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="flex-row">
                     <span>Source:</span>
                     <select name="effs[{{ card_index }}][get_val_from]"
-                            class="source-type-select"
+                            class="eff-source-type-select"
                             onchange="syncEffSourceState(this)">
                         <option value="{{ Participant.OUTCOME }}" {{ 'selected'
                             if factor and factor.get_val_from == Participant.OUTCOME
@@ -1113,7 +1131,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     </select>
 
                     <div class="success-filter-container" style="margin-left: 20px;">
-                        <span>Fourway Filter:</span>
+                        <label>
+                            Fourway Filter:
                         <select name="effs[{{ card_index }}][outcome_success]"
                                 class="mini-select success-tier-select">
                             <option value="{{ Participant.ALWAYS }}" 
@@ -1144,6 +1163,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 {{ 'selected' if factor and factor.outcome_success ==
                                     Participant.FAILURE_NAT_MIN }}>Natural Min</option>
                         </select>
+                        </label>
                     </div>
                 </div>
 
@@ -1227,7 +1247,6 @@ document.addEventListener('DOMContentLoaded', function() {
      style="padding: 15px;"
      data-index="{{ card_index }}" data-usage="chained">
     <div class="flex-between card-body">
-        <div>
         <label>
             Event:
             <select name="chained[{{ card_index }}][child_id]">
@@ -1237,8 +1256,29 @@ document.addEventListener('DOMContentLoaded', function() {
             </select>
             </label>
 
-            {% set outcome_success = link.req.outcome_success
-                if link and link.req else None %}
+        <button type="button" class="btn-sm dangerous-button" onclick="this.closest('.chained-row').remove()">×</button>
+    </div>
+
+    {% set factor = link.req if link else None %}
+    <div class="flex-row">
+        <span>Source:</span>
+        <select name="chained[{{ card_index }}][get_val_from]"
+                class="chained-source-type-select"
+                onchange="syncChainReqState(this)">
+            <option value="" {{ 'selected'
+                if not factor or not factor.infield
+                }}>(No Value Required)</option>
+            <option value="{{ Participant.INFIELD }}" {{ 'selected'
+                if factor and factor.infield and factor.get_val_from == Participant.INFIELD
+                }}>Field</option>
+            <option value="{{ Participant.OUTCOME }}" {{ 'selected'
+                if factor and factor.get_val_from == Participant.OUTCOME
+                }}>Result of Roll</option>
+        </select>
+
+        <div class="success-filter-container" style="margin-left: 20px;">
+            {% set outcome_success = factor.outcome_success
+                if factor else None %}
             <label style="margin-left: 20px;">
                 Fourway Filter:
             <select name="chained[{{ card_index }}][outcome_success]"
@@ -1273,36 +1313,29 @@ document.addEventListener('DOMContentLoaded', function() {
             </select>
             </label>
         </div>
-
-        <button type="button" class="btn-sm dangerous-button" onclick="this.closest('.chained-row').remove()">×</button>
     </div>
-
-    <h5>
-        <input type="checkbox"
-               name="chained[{{ card_index }}][use_comparison]" 
-               onchange="syncChainReqState(this)"
-               {{ 'checked' if link and link.req and link.req.infield else '' }}>
-            Require A Value
-    </h5>
 
     <div class="sub-section chain-comparison-section attrib-wrapper"
          data-inner-group
-         style="{{ '' if link and link.req else 'display: none;' }}">
-        {{ field_inputs(
-            prefix="chained[" ~ card_index ~ "][infield]", 
-            field_data=link.req.infield if link and link.req else None,
-            factor=link.req if link else None, 
-            usage_type='DET'
-        ) }}
+         style="margin-top: 10px; {{ '' if factor else 'display: none;' }}">
+        <div class="field-input-group"
+             style="{{ 'display: none;' if factor and factor.get_val_from == Participant.OUTCOME else '' }}">
+            {{ field_inputs(
+                prefix="chained[" ~ card_index ~ "][infield]", 
+                field_data=factor.infield if factor else None,
+                factor=factor,
+                usage_type='DET'
+            ) }}
+        </div>
         <div class="flex-row align-center gap-10 spacious-top">
-            <label class="checkbox-label">
-                <input type="checkbox" name="chained[{{ card_index }}][negate]"> NOT
-            </label>
-
             <select name="chained[{{ card_index }}][op_application]"
-                    class="op-application-selector" id="chain2">
+                    class="op-application-selector">
+                {% set op_application = factor.op_application if factor else '' %}
                 {% for op_key in Operation.COMPARISON_OPS %}
-                    <option value="{{ op_key }}">{{ Operation.Repr[op_key] }}</option>
+                    <option value="{{ op_key }}" {{ 'selected'
+                        if op_application == op_key }}>
+                        {{ Operation.Repr[op_key] }}
+                    </option>
                 {% endfor %}
             </select>
             
@@ -1310,6 +1343,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 data-field-name="chained[{{ card_index }}][val_required]">
                 <!-- JS fills via ConfigEditor.syncAttribVal -->
             </div>
+
+            <label class="checkbox-label">
+                <input type="checkbox"
+                    name="chained[{{ card_index }}][negate]"
+                    {{ 'checked' if factor and factor.negate }}> NOT
+            </label>
         </div>
     </div>
 </div>

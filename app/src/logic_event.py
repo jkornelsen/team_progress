@@ -704,14 +704,23 @@ def get_chain_results(event, role_entities, roll_val, tier, ledger=None):
             
             # 2. Check Comparison (Using Ledger)
             factor = evt_link.req
-            if is_eligible and factor.infield:
-                anchor_id = resolve_anchor_id(factor.role, role_entities)
+            if is_eligible and factor.get_val_from == Participant.OUTCOME:
+                result = apply_operation(
+                    roll_val, factor.val_required, factor.op_application)
+                if factor.negate:
+                    result = not result
+                if not result:
+                    is_eligible = False
+            elif is_eligible and factor.infield:
+                anchor_id = resolve_anchor_id(
+                    factor.infield.role, role_entities)
                 if anchor_id:
                     anchor = Entity.query.get((game_token, anchor_id))
-                    # We pass the ledger here to check the assumed future state
-                    if not is_factor_met(factor, anchor, subject_id=subject_id, ledger=ledger):
+                    if not is_factor_met(
+                            factor, anchor, subject_id=subject_id,
+                            ledger=ledger):
                         is_eligible = False
-                elif factor.role != Participant.BLUEPRINT:
+                elif factor.infield.role != Participant.BLUEPRINT:
                     is_eligible = False
 
         if is_eligible:
@@ -1001,9 +1010,9 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
     modifiers = calculate_determinants(event, role_entities)
     
     PRECEDENCE = {
-        Operation.ADD:        1, Operation.SUB:        1,
-        Operation.MULT:       2, Operation.DIV:        2,
-        Operation.ASSIGN:     3,
+        Operation.ASSIGN:     1,
+        Operation.ADD:        2, Operation.SUB:        2,
+        Operation.MULT:       3, Operation.DIV:        3,
     }
     breakdown_str = breakdown_parts[0] # Start with the Die Roll/Base
     current_min_precedence = 99 
@@ -1013,7 +1022,7 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
             continue
 
         op = m['op_app']
-        op_prec = PRECEDENCE.get(op, 1)
+        op_prec = PRECEDENCE.get(op, PRECEDENCE[Operation.ADD])
         if op == Operation.ASSIGN:
             op = m['op_transform']
             val = m['val_transform']
@@ -1027,7 +1036,7 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
         # If the new operator is higher precedence than the previous ones,
         # wrap the left side to maintain sequential logic.
         # Example: (1 + 1) × 4
-        next_min_prec = PRECEDENCE.get(op, 1)
+        next_min_prec = PRECEDENCE.get(op, PRECEDENCE[Operation.ADD])
         if op_prec > current_min_precedence:
             breakdown_str = f"({breakdown_str})"
         breakdown_str = f"{breakdown_str} {symbol} {formatted_val}"

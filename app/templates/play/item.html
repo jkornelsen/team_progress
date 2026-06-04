@@ -141,15 +141,6 @@
                         </div>
                         
                         <!-- Sources (Ingredients) -->
-                        {% if r_data.host_id is none %}
-                            <p class="text-danger" style="margin: 4px 0 6px;">
-                                {% if r.is_location_hosted %}
-                                    No active location
-                                {% else %}
-                                    No active character
-                                {% endif %}
-                            </p>
-                        {% endif %}
                         <ul class="source-list label-like">
                             {% for s in r_data.sources %}
                                 <li>
@@ -301,15 +292,26 @@
                                 <div id="blocked-{{ r.id }}" 
                                      class="blocked-container flex-row align-center {{ 'hidden' if r_data.can_produce }}">
                                     
+                                    {% if r_data.host_id is none %}
+                                        <span class="text-danger">
+                                            {% if r.is_location_hosted %}
+                                                No active location
+                                            {% else %}
+                                                No active character
+                                            {% endif %}
+                                        </span>
+                                    {% else %}
                                     {% set isStorageFull = "limit reached" in r_data.reason.lower() %}
                                     
                                     <span class="info-icon {{ 'hidden' if isStorageFull }}" 
                                           style="cursor: help; font-size: 1.5em;" 
-                                          title="{{ r_data.reason }}">🚫</span>
+                                          title="{{ r_data.reason }}"
+                                          style="margin-right: 5px;">🚫</span>
                                           
-                                    <small class="blocked-msg text-dim" style="margin-left: 5px;">
+                                    <small class="blocked-msg text-dim">
                                         {{ 'Storage full' if isStorageFull else 'Requirements not met' }}
                                     </small>
+                                    {% endif %}
                                 </div>
 
                                 <script>

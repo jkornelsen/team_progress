@@ -636,8 +636,6 @@ function scrollToActiveChar(instant = false) {
     // in the center of the container's visible area
     const targetScroll = cellCenter - (container.offsetWidth / 2);
 
-console.log(`Moving to X:${active.char.x}, CellOffset: ${cell.offsetLeft}, Target: ${targetScroll}`);
-
     container.scrollTo({
         left: targetScroll,
         behavior: instant ? 'auto' : 'smooth'
