@@ -49,6 +49,7 @@ async function apiRequest(
 
     try {
         const res = await fetch(url, options);
+        if (window.isUnloading) return null;
         const contentType = res.headers.get("content-type");
         const got_json = (contentType && contentType.includes("application/json"));
 

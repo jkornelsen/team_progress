@@ -131,7 +131,8 @@ def tick_all_active(messages_host_id=None):
         # Check future viability
         if not halt_reason:
             possible, reason = can_perform_recipe(
-                p.host_id, work['recipe'], p.owner_id, work['ctx'])
+                p.host_id, work['recipe'], p.owner_id, work['ctx'],
+                stop_at=p.stop_at)
             if not possible:
                 halt_reason = reason
 

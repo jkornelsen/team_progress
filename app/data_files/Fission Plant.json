@@ -53,7 +53,7 @@
             {
                 "id": 11,
                 "name": "Funds",
-                "description": "Money is required for research &amp; development, repairs, and hiring workers.\r\n\r\nA simple way to put the scenario on **Easy** mode is to increase *Gain per Batch,* for example to 20.",
+                "description": "Money is required for research &amp; development, repairs, and hiring workers.\r\n\r\n**Easy Mode:** Set *Gain per Batch* to 20 instead of the normal 5.",
                 "storage_type": "u",
                 "toplevel": true,
                 "recipes": [
@@ -155,8 +155,8 @@
                         "id": 47,
                         "rate_duration": 1800,
                         "sources": [
-                            {"item_id": 27, "q_required": 1.0, "preserve": true},
-                            {"item_id": 11, "q_required": 20000.0}
+                            {"item_id": 11, "q_required": 20000.0},
+                            {"item_id": 27, "q_required": 1.0, "preserve": true}
                         ]
                     }
                 ]
@@ -288,8 +288,8 @@
                         "id": 17,
                         "rate_amount": 0.0,
                         "sources": [
-                            {"item_id": 10, "q_required": 1.0, "preserve": true},
-                            {"item_id": 8, "q_required": 1.0}
+                            {"item_id": 8, "q_required": 1.0},
+                            {"item_id": 10, "q_required": 1.0, "preserve": true}
                         ]
                     }
                 ]
@@ -338,7 +338,7 @@
                     [24, 2.0],
                     [26, 0.0]
                 ],
-                "abilities": [45, 23, 25],
+                "abilities": [23, 25, 45],
                 "storage_type": "l"
             }
         ],
@@ -350,8 +350,8 @@
                 "abilities": [57],
                 "toplevel": true,
                 "items": [
-                    {"item_id": 19, "quantity": 1.0},
                     {"item_id": 6, "quantity": 1.0},
+                    {"item_id": 19, "quantity": 1.0},
                     {"item_id": 22, "quantity": 2.0},
                     {"item_id": 34, "quantity": 1.0}
                 ],
@@ -364,8 +364,8 @@
                 "toplevel": true,
                 "items": [
                     {"item_id": 10, "quantity": 1.0},
-                    {"item_id": 22, "quantity": 2.0},
-                    {"item_id": 19, "quantity": 1.0}
+                    {"item_id": 19, "quantity": 1.0},
+                    {"item_id": 22, "quantity": 2.0}
                 ],
                 "item_refs": [8]
             },
@@ -410,9 +410,9 @@
             {
                 "id": 42,
                 "name": "Battery Power Loss",
-                "description": "10% loss",
+                "description": "20% loss",
                 "outcome_type": "determined",
-                "fixed_base": 0.1,
+                "fixed_base": 0.2,
                 "determinants": [
                     {
                         "infield": {"role": "universal", "field_mode": "qty", "item_id": 9},
@@ -456,7 +456,6 @@
             {
                 "id": 38,
                 "name": "Cooling Speed",
-                "description": "Edit **Thermal Waste** and under *Sources*, set **Thermal Waste** to this result.",
                 "outcome_type": "determined",
                 "fixed_base": 1.0,
                 "determinants": [
@@ -465,6 +464,19 @@
                         "op_application": "*",
                         "op_transform": "^x",
                         "val_transform": 4.0
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "src_qty",
+                            "item_id": 8,
+                            "recipe_id": 17,
+                            "source_item_id": 8
+                        },
+                        "op_application": ":="
                     }
                 ]
             },
@@ -478,7 +490,7 @@
             {
                 "id": 17,
                 "name": "Production Rates",
-                "description": "Determine production rate by taking upgrades into account.\r\n\r\nAfter rolling, [edit Energy](/configure/item/9) and find the recipe section. Do not press *Apply* on the effect — the number is for reference only (although harmless).\r\n\r\n- Set *Gain per Batch*, **Radioactive Waste** and **Thermal Waste** byproducts to 2 × the result.\r\n- Set **Plutonium** required and **Spent Fuel** byproduct to the result.",
+                "description": "Determine production rate by taking upgrades into account.",
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -499,9 +511,61 @@
                 ],
                 "effects": [
                     {
-                        "label": "Calculate × 2",
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "attrib_id": 43},
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "rate_amt",
+                            "item_id": 9,
+                            "recipe_id": 14
+                        },
+                        "op_application": ":=",
+                        "op_transform": "*",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "src_qty",
+                            "item_id": 9,
+                            "recipe_id": 14,
+                            "source_item_id": 4
+                        },
+                        "op_application": ":="
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "byp_qty",
+                            "item_id": 9,
+                            "recipe_id": 14,
+                            "source_item_id": 5
+                        },
+                        "op_application": ":="
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "byp_qty",
+                            "item_id": 9,
+                            "recipe_id": 14,
+                            "source_item_id": 7
+                        },
+                        "op_application": ":=",
+                        "op_transform": "*",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "byp_qty",
+                            "item_id": 9,
+                            "recipe_id": 14,
+                            "source_item_id": 8
+                        },
                         "op_application": ":=",
                         "op_transform": "*",
                         "val_transform": 2.0
@@ -816,7 +880,6 @@
             {
                 "id": 35,
                 "name": "Spent Fuel Limit",
-                "description": "Roll, then edit **Spent Fuel**:\r\n- Set *Limit per Pile* to this result.\r\n- Change quantity by increasing similarly. Doesn't have to be perfect because the limit regulates quantity eventually.",
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -834,15 +897,28 @@
                         "op_application": "*",
                         "op_transform": "^x",
                         "val_transform": 1.5
+                    },
+                    {
+                        "infield": {"role": "blueprint", "field_mode": "limit", "item_id": 5},
+                        "op_application": "-"
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "blueprint", "field_mode": "limit", "item_id": 5}
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 5}
                     }
                 ]
             },
             {
                 "id": 60,
                 "name": "Waste Consumption Speed",
-                "description": "- Edit **Radioactive Waste.** Under *Sources*, set the consumed **Radioactive Waste** quantity to this result.\r\n- Press apply to set *Gain per Batch* to half of this result.",
                 "outcome_type": "determined",
-                "fixed_base": 2.0,
+                "fixed_base": 1.0,
                 "determinants": [
                     {
                         "infield": {"role": "universal", "field_mode": "qty", "item_id": 52},
@@ -861,7 +937,19 @@
                             "recipe_id": 16
                         },
                         "op_application": ":=",
-                        "op_transform": "/",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "src_qty",
+                            "item_id": 7,
+                            "recipe_id": 16,
+                            "source_item_id": 7
+                        },
+                        "op_application": ":=",
+                        "op_transform": "*",
                         "val_transform": 2.0
                     }
                 ]
@@ -1059,8 +1147,8 @@
             {"item_id": 3, "quantity": 1.0},
             {"item_id": 4, "quantity": 10.0},
             {"item_id": 31, "quantity": 2.0},
-            {"item_id": 52, "quantity": 2.0},
-            {"item_id": 40, "quantity": 1.0}
+            {"item_id": 40, "quantity": 1.0},
+            {"item_id": 52, "quantity": 2.0}
         ]
     },
     "progress": []

@@ -468,11 +468,15 @@ def play_item(id):
 # Production Routes
 # ------------------------------------------------------------------------
 
-@play_bp.route('/production/status/item/<int:item_id>/owner/<int:owner_id>', methods=['POST'])
+@play_bp.route(
+    '/production/status/item/<int:item_id>/owner/<int:owner_id>',
+    methods=['POST'])
 def item_production_status(item_id, owner_id):
     """
-    Heartbeat endpoint to calculate current progress and refresh recipe availability.
+    Heartbeat endpoint to calculate current progress and
+    refresh recipe availability.
     """
+    session.modified = False # prevent stale cookie overwrites
     game_token = g.game_token
     req = RequestHelper('form')
     pos = req.get_coords('pos')

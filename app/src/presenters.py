@@ -49,34 +49,38 @@ class ItemPlayPresenter:
 
     def _reconcile_context(self, req):
         """Capture and clean session IDs."""
-        ctx = ContextIds(
-            owner_id=self.owner_id,
-            char_id=req.get_int('char_id') or session.get('old_char_id'),
-            loc_id=req.get_int('loc_id') or session.get('old_loc_id')
-        )
-
+        char_id = req.get_int('char_id') or session.get('old_char_id')
+        loc_id = req.get_int('loc_id') or session.get('old_loc_id')
         if self.owner.entity_type == Character.TYPENAME:
-            ctx.char_id = self.owner.id
-            session['old_char_id'] = self.owner.id
+            char_id = self.owner.id
         elif self.owner.entity_type == Location.TYPENAME:
-            ctx.loc_id = self.owner.id
-            session['old_loc_id'] = self.owner.id
-            if ctx.char_id:
-                # Clear character if they aren't here
-                char = Character.query.get((self.game_token, ctx.char_id))
-                if not char or char.location_id != self.owner.id:
-                    ctx.char_id = None
-                    session.pop('old_char_id', None)
+            loc_id = self.owner.id
 
-        self.ctx_char = Character.query.get(
-            (self.game_token, ctx.char_id)) if ctx.char_id else None
-        if self.ctx_char:
-            ctx.loc_id = self.ctx_char.location_id
-            session['old_loc_id'] = self.ctx_char.location_id
-        
+        self.ctx_char = None
+        char = Character.query.get(
+            (self.game_token, char_id)) if char_id else None
+        if char and self.owner.entity_type == Location.TYPENAME \
+                and char.location_id != self.owner.id:
+            # Clear character if they aren't here
+            char = None
+            char_id = None
+            session.pop('old_char_id', None)
+        elif char:
+            # Override current location
+            loc_id = char.location_id
+            session['old_char_id'] = char_id
+            self.ctx_char = char
+
+        if self.owner.entity_type == Location.TYPENAME or self.ctx_char:
+            logger.debug(f"old_loc_id {session.get('old_loc_id')} -> {loc_id}")
+            session['old_loc_id'] = loc_id
         self.ctx_loc = Location.query.get(
-            (self.game_token, ctx.loc_id)) if ctx.loc_id else None
-        return ctx
+            (self.game_token, loc_id)) if loc_id else None
+
+        return ContextIds(
+            owner_id=self.owner_id,
+            char_id=char_id,
+            loc_id=loc_id)
 
     def _get_pile(self):
         """Finds the specific stack on the grid or in inventory."""

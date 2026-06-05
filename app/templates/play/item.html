@@ -234,7 +234,7 @@
                                         <div id="instant-controls-{{ r.id }}"
                                              class="batch-selector flex-row align-center {{ 'hidden' if not r_data.can_produce }}"
                                              style="margin-left: 10px;">
-                                            <input type="text" id="batches-{{ r.id }}" 
+                                            <input type="text" id="instant-batches-{{ r.id }}" 
                                                     value="{{ r_data.max_batches }}" 
                                                     data-max="{{ r_data.max_batches }}"
                                                     onchange="setBatchQty('{{ r.id }}', this.value)"
@@ -268,19 +268,23 @@
                                             <span class="hotkey-indicator">{{ letter }}</span>
                                             Stop
                                         </button>
+
                                         <div class="flex-row align-center {{ 'hidden'
                                                 if not r_data.can_produce or (
                                                 progress and progress.recipe_id == r.id) }}" 
                                              id="stop-at-wrapper-{{ r.id }}"
                                              style="margin-left: 10px;">
-                                            <label for="stop-at-{{ r.id }}">Stop at</label>
+                                            <label for="batches-stop-{{ r.id }}">Batches</label>
                                             <input type="number" 
-                                                   id="stop-at-{{ r.id }}" 
-                                                   name="stop_at" 
+                                                   id="batches-stop-{{ r.id }}" 
+                                                   name="batches_stop" 
                                                    placeholder="∞" 
-                                                   step="any" 
-                                                   class="mini-input no-spinners" 
-                                                   style="width: 7ch;">
+                                                   step="1"
+                                                   min="1"
+                                                   value=""
+                                                   class="mini-input" 
+                                                   style="width: 7ch;"
+                                                   data-rate-amount="{{ r.rate_amount }}">
                                             <span id="stop-at-display-{{ r.id }}"
                                                   class="hidden text-accent"
                                                   style="font-weight: bold;"></span>
@@ -694,7 +698,7 @@ async function updateStatus() {
                 maxBatches = 1;
             }
 
-            const input = document.getElementById(`batches-${recipeId}`);
+            const input = document.getElementById(`instant-batches-${recipeId}`);
             if (input) {
                 input.dataset.max = maxBatches;
                 input.max = maxBatches;
@@ -703,7 +707,7 @@ async function updateStatus() {
                 if (!isUserEditing) {
                     // Automatically follow the new max
                     const pending = JSON.parse(sessionStorage.getItem('pendingQty'));
-                    const isThisInput = pending && pending.targetId === `batches-${recipeId}`;
+                    const isThisInput = pending && pending.targetId === `instant-batches-${recipeId}`;
                     const wasMax = isThisInput && pending.ratioType === 'max';
 
                     if (wasMax) {
@@ -760,7 +764,8 @@ async function updateStatus() {
             const isRunning = (
                 main.is_ongoing && main.active_recipe_id === r.recipe_id);
             const stopAtWrapper = document.getElementById(`stop-at-wrapper-${r.recipe_id}`);
-            const stopAtInput = document.getElementById(`stop-at-${r.recipe_id}`);
+            const batchesStopInput = document.getElementById(`batches-stop-${r.recipe_id}`);
+            const batchesStopLabel = stopAtWrapper?.querySelector('label');
             const stopAtDisplay = document.getElementById(`stop-at-display-${r.recipe_id}`);
 
             if (isRunning) {
@@ -782,9 +787,10 @@ async function updateStatus() {
                 }
                 if (stopAtWrapper) {
                     if (main.stop_at) {
-                        stopAtInput.classList.add('hidden');
+                        if (batchesStopInput) batchesStopInput.classList.add('hidden');
+                        if (batchesStopLabel) batchesStopLabel.classList.add('hidden');
                         stopAtDisplay.classList.remove('hidden');
-                        stopAtDisplay.textContent = main.stop_at;
+                        stopAtDisplay.textContent = `stop at ${main.stop_at}`;
                     } else {
                         stopAtWrapper.classList.add('hidden');
                     }
@@ -815,11 +821,12 @@ async function updateStatus() {
                         startBtn.classList.remove('hidden');
                         if (letter) window.linkForKey[letter] = `#start-${r.recipe_id}`;
                         if (stopAtWrapper) {
-                            if (stopAtInput.classList.contains('hidden')) {
-                                stopAtInput.value = ""; 
+                            if (batchesStopInput && batchesStopInput.classList.contains('hidden')) {
+                                batchesStopInput.value = "";
                             }
                             stopAtWrapper.classList.remove('hidden');
-                            stopAtInput.classList.remove('hidden');
+                            if (batchesStopInput) batchesStopInput.classList.remove('hidden');
+                            if (batchesStopLabel) batchesStopLabel.classList.remove('hidden');
                         }
                     }
                     if (gainBtn) {
@@ -855,6 +862,10 @@ async function updateStatus() {
         window.productionTimeout = setTimeout(updateStatus, 1500);
     {% endif %}
 }
+
+window.addEventListener('beforeunload', () => {
+    clearTimeout(window.productionTimeout);
+});
 
 {% if manualtick %}
     let isProcessing = false;
@@ -971,9 +982,15 @@ async function startProd(recipeId, targetHostId) {
     fd.append('owner_id', ownerId);
     fd.append('char_id', charId);
     fd.append('loc_id', locId);
-    const stopAtInput = document.getElementById(`stop-at-${recipeId}`);
-    if (stopAtInput && stopAtInput.value !== '') {
-        fd.append('stop_at', stopAtInput.value);
+
+    const batchesStopInput = document.getElementById(`batches-stop-${recipeId}`);
+    if (batchesStopInput && batchesStopInput.value !== '') {
+        const batches = parseFloat(batchesStopInput.value);
+        const rateAmount = parseFloat(batchesStopInput.dataset.rateAmount) || 1;
+        const currentQty = parseFloat(
+            document.getElementById('main-qty-display')?.textContent.replace(/,/g, '')) || 0;
+        const stopAt = currentQty + batches * rateAmount;
+        fd.append('stop_at', stopAt);
     }
 
     const url = `/production/start/host/${targetHostId}`;
@@ -998,7 +1015,7 @@ async function stopProd(targetHostId, productId) {
 
 async function gainItem(recipeId, targetHostId) {
     // Instant gain (one-off execution)
-    const batchInput = document.getElementById(`batches-${recipeId}`);
+    const batchInput = document.getElementById(`instant-batches-${recipeId}`);
     const batches = batchInput ? batchInput.value : 1;
     const fd = new FormData();
     fd.append('owner_id', ownerId);
@@ -1022,8 +1039,8 @@ function refreshQuantities() {
     const pending = JSON.parse(sessionStorage.getItem('pendingQty'));
     if (!pending) return;
 
-    if (pending.targetId.startsWith('batches-')) {
-        const recipeId = pending.targetId.replace('batches-', '');
+    if (pending.targetId.startsWith('instant-batches-')) {
+        const recipeId = pending.targetId.replace('instant-batches-', '');
         // Re-apply the logic (Max/Half/1) based on the new dataset.max
         if (pending.ratioType !== 'custom') {
             setBatchQty(recipeId, pending.ratioType);
@@ -1055,8 +1072,8 @@ function refreshQuantities() {
     }
     // DEFAULT BEHAVIOR: If no intent is saved, set all batch inputs to 'max'
     else {
-        document.querySelectorAll('input[id^="batches-"]').forEach(input => {
-            const recipeId = input.id.replace('batches-', '');
+        document.querySelectorAll('input[id^="instant-batches-"]').forEach(input => {
+            const recipeId = input.id.replace('instant-batches-', '');
             const maxVal = input.dataset.max || input.getAttribute('max') || 1;
             
             // This "seeds" the session so updateStatus() follows it immediately
@@ -1086,9 +1103,9 @@ function applyQtyUpdate(inputId, value, ratioType = 'custom') {
 }
 
 function setBatchQty(recipeId, type) {
-    // Check if we received the full string "batches-123" or just "123"
-    const idOnly = recipeId.toString().replace('batches-', '');
-    const inputId = `batches-${idOnly}`;
+    // Check if we received the full string "instant-batches-123" or just "123"
+    const idOnly = recipeId.toString().replace('instant-batches-', '');
+    const inputId = `instant-batches-${idOnly}`;
     const input = document.getElementById(inputId);
     if (!input) return;
 
