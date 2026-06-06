@@ -28,7 +28,7 @@
             {
                 "id": 9,
                 "name": "Energy",
-                "description": "Stored in a high-capacity battery. Quantity is measured in kilowatt-hours (kWh).\r\n\r\nA fully charged battery is enough to provide backup power for a city while the main supply is repaired. *IRL Note: Present-day batteries cannot hold such large amounts.*",
+                "description": "Stored in a high-capacity battery. Measured in kilowatt-hours (kWh).\r\n\r\nA fully charged battery is enough to provide backup power for a city while the main supply is repaired. *IRL Note: Present-day batteries cannot hold such large amounts.*",
                 "abilities": [18, 33],
                 "storage_type": "u",
                 "q_limit": 10000000.0,
@@ -113,7 +113,7 @@
                 "description": "+5 to how much fuel is available per production cycle. Go to **Spent Fuel Limit** when changed.",
                 "abilities": [35],
                 "storage_type": "u",
-                "q_limit": 20.0,
+                "q_limit": 30.0,
                 "recipes": [
                     {
                         "id": 32,
@@ -167,7 +167,7 @@
                 "description": "+1 each to energy production rate. This does not improve efficiency.\r\n\r\nTo implement, go to **Production Rate** (event).",
                 "abilities": [17],
                 "storage_type": "u",
-                "q_limit": 10.0,
+                "q_limit": 20.0,
                 "recipes": [
                     {
                         "id": 19,
@@ -385,11 +385,6 @@
         "characters": [],
         "attribs": [
             {
-                "id": 43,
-                "name": "Calculated Upgrade",
-                "description": "Used in events to show calculated values."
-            },
-            {
                 "id": 26,
                 "name": "Layoffs",
                 "description": "How many total workers were just let go."
@@ -410,9 +405,9 @@
             {
                 "id": 42,
                 "name": "Battery Power Loss",
-                "description": "20% loss",
+                "description": "40% loss",
                 "outcome_type": "determined",
-                "fixed_base": 0.2,
+                "fixed_base": 0.4,
                 "determinants": [
                     {
                         "infield": {"role": "universal", "field_mode": "qty", "item_id": 9},
@@ -603,6 +598,10 @@
                         "op_application": ">="
                     },
                     {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 29},
+                        "op_application": "<"
+                    },
+                    {
                         "infield": {"role": "universal", "field_mode": "qty", "item_id": 7},
                         "op_application": "-",
                         "op_transform": "scap",
@@ -655,16 +654,15 @@
             {
                 "id": 33,
                 "name": "Repair Battery",
-                "description": "To repair the battery, press *apply* to deduct **Funds**, then set [stored energy limit](/configure/item/9) back to 10,000,000.",
                 "outcome_type": "determined",
-                "fixed_base": 40.0,
+                "fixed_base": 35.0,
                 "determinants": [
                     {
                         "infield": {"role": "universal", "field_mode": "qty", "item_id": 9},
-                        "op_application": "*",
-                        "op_transform": "*",
-                        "val_transform": 0.05
+                        "op_transform": "x^",
+                        "val_transform": 0.7
                     },
+                    {"op_application": ":=", "op_transform": "*", "val_transform": 3.0},
                     {
                         "infield": {"role": "at", "field_mode": "qty", "item_id": 19},
                         "op_application": "*",
@@ -677,6 +675,13 @@
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 11},
                         "op_application": "-"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "blueprint", "field_mode": "limit", "item_id": 9},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 10000000.0
                     }
                 ]
             },
@@ -767,18 +772,6 @@
                     }
                 ],
                 "effects": [
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {
-                            "role": "blueprint",
-                            "field_mode": "rate_dur",
-                            "item_id": 52,
-                            "recipe_id": 39
-                        },
-                        "op_application": ":=",
-                        "op_transform": "*",
-                        "val_transform": 300.0
-                    },
                     {
                         "get_val_from": "outcome",
                         "outfield": {
@@ -963,7 +956,7 @@
             {
                 "id": 21,
                 "name": "Workers: Hire",
-                "description": "On any success, or on major failure, you must pay the new hire. The amount required is the same no matter whether you are able to hire 2, 1, or 0 new workers.\r\n\r\nOn minor failure, try again.",
+                "description": "On major success, higher 2 workers instead of 1, while on major failure, hire no workers. The cost is the same regardless.\r\n\r\nOn minor failure, nothing happens—roll again.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {

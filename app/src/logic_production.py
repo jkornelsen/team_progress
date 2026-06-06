@@ -412,17 +412,18 @@ def execute_production(
                 if limit < max_possible:
                     max_possible = limit
         
-        # Also check Output Limit (q_limit)
-        if recipe.rate_amount > 0 and recipe.product.q_limit > 0:
-            space_left = recipe.product.q_limit - current_qty
-            limit = math.floor(space_left / recipe.rate_amount)
-            if limit < max_possible:
-                max_possible = limit
-        if stop_at is not None and stop_at > 0:
-            remaining_needed = stop_at - current_qty
-            limit = math.ceil(remaining_needed / recipe.rate_amount)
-            if limit < max_possible:
-                max_possible = limit
+        # Check Output Limits
+        for limit in (recipe.product.q_limit, stop_at):
+            if limit and net_change:
+                remaining = limit - current_qty
+                if net_change * remaining > 0: # Same sign and neither 0
+
+                    batches_limit = math.floor(remaining / net_change)
+                    if remaining % net_change:
+                        batches_limit += 1
+
+                    if batches_limit < max_possible:
+                        max_possible = batches_limit
 
         batches = max(1, max_possible)
 
