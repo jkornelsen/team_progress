@@ -1111,6 +1111,7 @@ class Operation:
     SUB = '-'
     MULT = '*'
     DIV = '/'
+    MOD = '%'
     VAL_TO_POW = 'x^'
     POW_OF_VAL = '^x'
     SOFTCAP = 'scap'
@@ -1129,6 +1130,7 @@ class Operation:
         SUB:        '−',
         MULT:       '×',
         DIV:        '÷',
+        MOD:        'mod',
         VAL_TO_POW: 'xⁿ',
         POW_OF_VAL: 'nˣ',
         SOFTCAP:    'SoftCap',
@@ -1138,12 +1140,12 @@ class Operation:
     }
 
     # How the result applies to the total
-    DET_APPLICATION_OPS = [ADD, SUB, MULT, DIV, ASSIGN, EQ, GE, LT, NE]
+    DET_APPLICATION_OPS = [ADD, SUB, MULT, DIV, MOD, ASSIGN, EQ, GE, LT, NE]
     COMPARISON_OPS = [EQ, GE, LT, NE]
 
     # Modify the Field Value before we apply it to the total
     TRANSFORM_OPS = [
-        ADD, SUB, MULT, DIV,
+        ADD, SUB, MULT, DIV, MOD,
         VAL_TO_POW, POW_OF_VAL, SOFTCAP, ROUND, FLOOR, CEIL]
 
 class EventField(db.Model, DictHydrator):

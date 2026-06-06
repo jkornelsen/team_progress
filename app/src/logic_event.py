@@ -76,6 +76,8 @@ def apply_operation(current_val, mod_val, op, output_range=None):
     if op == Operation.MULT: return current_val * mod_val
     if op == Operation.DIV:  return current_val / mod_val \
                                 if mod_val != 0 else current_val
+    if op == Operation.MOD:  return current_val % mod_val \
+                                if mod_val != 0 else current_val
     if op == Operation.VAL_TO_POW: return current_val ** mod_val
     if op == Operation.POW_OF_VAL: return mod_val ** current_val
 
@@ -91,6 +93,7 @@ def get_inner_breakdown(val, mod_val, op):
         Operation.SUB:        f"{v}-{m}",
         Operation.MULT:       f"{v}×{m}",
         Operation.DIV:        f"{v}÷{m}",
+        Operation.MOD:        f"{v} mod {m}",
         Operation.VAL_TO_POW: f"{v}<sup>{m}</sup>",
         Operation.POW_OF_VAL: f"{m}<sup>{v}</sup>",
         Operation.SOFTCAP:    f"SoftCap({v}, {m})",
@@ -1011,8 +1014,11 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
     
     PRECEDENCE = {
         Operation.ASSIGN:     1,
-        Operation.ADD:        2, Operation.SUB:        2,
-        Operation.MULT:       3, Operation.DIV:        3,
+        Operation.ADD:        2,
+        Operation.SUB:        2,
+        Operation.MULT:       3,
+        Operation.DIV:        3,
+        Operation.MOD:        3,
     }
     breakdown_str = breakdown_parts[0] # Start with the Die Roll/Base
     current_min_precedence = 99 

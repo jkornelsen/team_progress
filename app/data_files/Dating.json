@@ -1,9 +1,18 @@
 {
     "overall settings": {
         "title": "Dating",
-        "description": "Your Indian mother has decided it's time. She's fine with you having a ❤️ love marriage, but if you don't find someone soon, she has in mind a match with a well-off family. The problem is that they're ugly!\r\n\r\nFirst, [talk things over with your Maa](/play/item/21?char_id=56), then make a visit to either {violet|the church or the bar} to start meeting people.\r\n\r\nThe initial setup aims for generally acceptable standards. If you make it explicit and want to share the file, then be considerate by including a warning.\r\n\r\nCompared to the *Making a Living* scenario, focuses on relationships, charisma, and gear, and downplays managing money.",
+        "description": "Your Indian mother has decided it's time. She's fine with you having a ❤️ love marriage, but if you don't find someone soon, she has in mind a match with a well-off family. The problem is that they're ugly! First, [talk things over with your Maa](/play/item/21?char_id=56), then make a visit to either {violet|the church or the bar} to start meeting people.\r\n\r\nDuring the day, work at a grocery store to earn cash. The right clothes are important to impress people.\r\n\r\n*The initial setup aims for generally acceptable standards. If you make it explicit and want to share the file, then be considerate by including a warning.*",
         "number_format": "en_US",
-        "slots": ["Upper Body", "Full Body", "Wrist", "Legs", "Feet", "Riding"],
+        "slots": [
+            "Torso",
+            "Chest (Women)",
+            "Legs",
+            "Hips (Underwear)",
+            "Feet",
+            "Full Body",
+            "Wrist",
+            "Riding"
+        ],
         "win_reqs": [],
         "tag_introduce_order": 35,
         "tag_best_order": 40,
@@ -20,6 +29,13 @@
                 "q_limit": 10.0
             },
             {
+                "id": 75,
+                "name": "Ate",
+                "description": "One meal a day is enough, typically in the evening.",
+                "storage_type": "u",
+                "toplevel": true
+            },
+            {
                 "id": 29,
                 "name": "Bible",
                 "description": "Best bring one of these to church meetings, or else it may be hard to follow the discussion."
@@ -29,6 +45,31 @@
                 "name": "Button Shirt",
                 "description": "Decent looking shirt.",
                 "q_limit": 1.0
+            },
+            {
+                "id": 68,
+                "name": "Calendar",
+                "attribs": [
+                    [15, 3.0]
+                ],
+                "abilities": [69],
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "toplevel": true
+            },
+            {"id": 81, "name": "Cash", "storage_type": "u", "toplevel": true},
+            {
+                "id": 80,
+                "name": "Cash Register",
+                "storage_type": "l",
+                "q_limit": 1.0
+            },
+            {
+                "id": 70,
+                "name": "Hours",
+                "description": "The basic measure of time needed to accomplish things. Starts (with 24 hours left) at sunrise — the hours aren't counted from midnight, even when staying up all night.",
+                "storage_type": "u",
+                "q_limit": 24.0
             },
             {
                 "id": 31,
@@ -101,11 +142,27 @@
                 "description": "Good for a variety of occasions including work and free time.",
                 "q_limit": 1.0
             },
+            {"id": 74, "name": "Rested", "storage_type": "u", "toplevel": true},
             {
                 "id": 35,
                 "name": "Revealing Leather Dress",
                 "description": "The bottom of the skirt rests just above the knees.",
                 "q_limit": 1.0
+            },
+            {
+                "id": 71,
+                "name": "Sleep",
+                "storage_type": "u",
+                "q_limit": 8.0,
+                "recipes": [
+                    {
+                        "id": 72,
+                        "rate_duration": 2,
+                        "sources": [
+                            {"item_id": 70, "q_required": 1.0}
+                        ]
+                    }
+                ]
             },
             {
                 "id": 36,
@@ -136,6 +193,25 @@
                 "name": "Watch",
                 "description": "Like something out of the Stone Age, it requires setting for each new day. If the *Day of Week* was last set yesterday, ensure <b>+</b> and <b>1</b> are selected, then press *Change* once.",
                 "q_limit": 1.0
+            },
+            {
+                "id": 77,
+                "name": "Work",
+                "description": "There are several types of jobs available here:\r\n- Stocker\r\n- Bagger\r\n- Cashier\r\n- Manager",
+                "storage_type": "u",
+                "q_limit": 40.0,
+                "recipes": [
+                    {
+                        "id": 78,
+                        "rate_amount": 8.0,
+                        "rate_duration": 15,
+                        "sources": [
+                            {"item_id": 70, "q_required": 8.0},
+                            {"item_id": 74, "q_required": 4.0, "preserve": true},
+                            {"item_id": 80, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
             },
             {
                 "id": 18,
@@ -234,11 +310,11 @@
                 "description": "The lights are much brighter, and the night life as well as the day life is humming.",
                 "destinations": [
                     {"loc2_id": 40},
-                    {"loc2_id": 51},
-                    {"loc2_id": 44},
                     {"loc2_id": 41},
                     {"loc2_id": 42},
-                    {"loc2_id": 46}
+                    {"loc2_id": 44},
+                    {"loc2_id": 46},
+                    {"loc2_id": 51}
                 ]
             },
             {
@@ -247,6 +323,16 @@
                 "description": "If you're religious anyway, then this is one of the best places to meet like-minded people. If not, you could go the dark route of trying to seduce some good girls and lead them astray.\r\n\r\nIn a place like this, however, it might be wise to take plenty of time to get to know someone you're interested in before you decide that they're all they seem to be.\r\n\r\nServices are Sunday mornings, young singles group is Monday evenings, and mid-week meetings are Wednesday evenings. There are also retreats from time to time, and special activities such as assisting at homeless shelters.",
                 "destinations": [
                     {"loc2_id": 52}
+                ]
+            },
+            {
+                "id": 79,
+                "name": "Grocery Store",
+                "items": [
+                    {"item_id": 80, "quantity": 1.0}
+                ],
+                "destinations": [
+                    {"loc2_id": 43}
                 ]
             },
             {
@@ -288,9 +374,9 @@
                 "name": "Your Bathroom",
                 "description": "Shower with hot water if you flip on the small water heater for a short time.\r\n\r\nIn a drawer is toothpaste and other toiletries. A shelf contains towels. The door has a hook for a bathrobe.",
                 "items": [
-                    {"item_id": 38, "quantity": 1.0, "position": null},
-                    {"item_id": 37, "quantity": 1.0, "position": null},
-                    {"item_id": 28, "quantity": 7.0, "position": null}
+                    {"item_id": 28, "quantity": 7.0},
+                    {"item_id": 37, "quantity": 1.0},
+                    {"item_id": 38, "quantity": 1.0}
                 ]
             },
             {
@@ -298,8 +384,8 @@
                 "name": "Your Bedroom",
                 "description": "Being single and living at your parents' house, this is the one true area of personal space. A dressor is against one wall, and there's also a closet with hangers. A window looks out to an old but healthy tree.\r\n\r\nOn a bookshelf is *How to feel good about yourself on dates* and *A guide to not feeling lonely*. Might be best to hide those if anyone comes to visit.",
                 "items": [
-                    {"item_id": 29, "quantity": 1.0, "position": null},
-                    {"item_id": 36, "quantity": 1.0, "position": null}
+                    {"item_id": 29, "quantity": 1.0},
+                    {"item_id": 36, "quantity": 1.0}
                 ],
                 "destinations": [
                     {"loc2_id": 45}
@@ -310,11 +396,11 @@
                 "name": "Your Home",
                 "description": "Luxurious — three swimming pools, far more than your grandparents in India. Only for some reason they're all very small, about ankle deep. Well, it may not be the finest in the land, but it's nothing to be ashamed of either.",
                 "items": [
-                    {"item_id": 27, "quantity": 1.0, "position": null}
+                    {"item_id": 27, "quantity": 1.0}
                 ],
                 "destinations": [
-                    {"loc2_id": 50},
                     {"loc2_id": 39},
+                    {"loc2_id": 50},
                     {"loc2_id": 53},
                     {"loc2_id": 54}
                 ]
@@ -340,14 +426,14 @@
                 "name": "Claudia",
                 "description": "Neatly dressed young woman with braided long brown hair. Looks like someone who would be welcoming but should be greeted respectfully.",
                 "attribs": [
-                    [7, 1.0],
-                    [6, 1.0],
-                    [10, 5.0],
-                    [11, 1.0],
-                    [5, 10.0],
-                    [4, 5.0],
                     [2, 5.0],
-                    [3, 5.0]
+                    [3, 5.0],
+                    [4, 5.0],
+                    [5, 10.0],
+                    [6, 1.0],
+                    [7, 1.0],
+                    [10, 5.0],
+                    [11, 1.0]
                 ],
                 "location_id": 52,
                 "items": [
@@ -373,7 +459,7 @@
                 ],
                 "location_id": 52,
                 "items": [
-                    {"item_id": 29, "quantity": 1.0, "slot": ""}
+                    {"item_id": 29, "quantity": 1.0}
                 ]
             },
             {
@@ -381,26 +467,26 @@
                 "name": "(Enter a name)",
                 "description": "Work has left little time for social life, until now. With a few months off, this is the perfect time to reawaken that hidden charisma and those stifled interpersonal skills.\r\n\r\nThe default setup is male seeking female.",
                 "attribs": [
-                    [17, 10.0],
-                    [14, 0.0],
                     [2, 3.0],
+                    [3, 5.0],
                     [4, 3.0],
                     [5, 10.0],
-                    [11, 1.0],
                     [8, 1.0],
                     [10, 5.0],
-                    [3, 5.0],
+                    [11, 1.0],
                     [12, 3.0],
-                    [13, 9910.0]
+                    [13, 9910.0],
+                    [14, 0.0],
+                    [17, 10.0]
                 ],
-                "abilities": [64, 63],
+                "abilities": [63, 64],
                 "toplevel": true,
                 "location_id": 47,
                 "items": [
+                    {"item_id": 19, "quantity": 1.0, "slot": "Wrist"},
                     {"item_id": 30, "quantity": 1.0, "slot": "Upper Body"},
                     {"item_id": 31, "quantity": 1.0, "slot": "Legs"},
-                    {"item_id": 32, "quantity": 1.0, "slot": "Feet"},
-                    {"item_id": 19, "quantity": 1.0, "slot": "Wrist"}
+                    {"item_id": 32, "quantity": 1.0, "slot": "Feet"}
                 ]
             },
             {
@@ -422,17 +508,17 @@
                 "name": "Sierra",
                 "description": "A young woman, but judging from her appearance, not a \"lady.\" Auburn shoulder-length hair. Loves dancing even if she's not particularly skilled at it.",
                 "attribs": [
-                    [17, 10.0],
-                    [3, 8.0],
                     [2, 5.0],
+                    [3, 8.0],
                     [4, 5.0],
                     [5, 7.0],
-                    [11, 1.0],
-                    [10, 2.0],
                     [6, 1.0],
                     [7, 1.0],
+                    [10, 2.0],
+                    [11, 1.0],
                     [12, 4.0],
-                    [14, 1.0]
+                    [14, 1.0],
+                    [17, 10.0]
                 ],
                 "location_id": 44,
                 "items": [
@@ -669,17 +755,86 @@
                         "outfield": {"role": "target char", "attrib_id": 7}
                     }
                 ]
+            },
+            {
+                "id": 69,
+                "name": "Next Day",
+                "description": "You don't necessarily need to to account for all the hours each day, but also, don't do so much that it would be unrealistic for a single day.",
+                "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 15},
+                        "op_transform": "+"
+                    },
+                    {"op_application": ":=", "op_transform": "%", "val_transform": 7.0}
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 15},
+                        "op_application": ":="
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 70},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 24.0
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 71},
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 74},
+                        "op_application": ":=",
+                        "op_transform": "+",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 71},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0
+                    }
+                ],
+                "chained": [
+                    {"child_id": 76}
+                ]
+            },
+            {
+                "id": 76,
+                "name": "Next Week",
+                "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 77}
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 81}
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 77},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0
+                    }
+                ]
             }
         ]
     },
     "general data": {
         "piles": [
-            {"item_id": 18, "quantity": 0.0},
-            {"item_id": 22, "quantity": 0.0},
-            {"item_id": 23, "quantity": 0.0},
-            {"item_id": 24, "quantity": 0.0},
-            {"item_id": 25, "quantity": 0.0},
-            {"item_id": 26, "quantity": 0.0}
+            {"item_id": 18},
+            {"item_id": 22},
+            {"item_id": 23},
+            {"item_id": 24},
+            {"item_id": 25},
+            {"item_id": 26},
+            {"item_id": 68, "quantity": 1.0},
+            {"item_id": 81, "quantity": 100.0}
         ]
     },
     "progress": []
