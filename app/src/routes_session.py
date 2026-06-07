@@ -9,6 +9,8 @@ from flask import (
     g, Blueprint, request, session, redirect, url_for, render_template, json,
     current_app, send_file)
 from http import HTTPStatus
+from sqlalchemy import func
+
 from app.models import db, JsonKeys, UserInteraction, Character, Overall
 from app.serialization import (
     init_game_session, load_scenario_from_path, DEFAULT_SCENARIO_FILE,
@@ -192,28 +194,81 @@ def log_user_activity(endpoint, entity_id=None):
 
 @session_bp.route('/join')
 def join_game():
-    """
-    Point of entry via a shared link. Sets the session token 
-    and ensures the System Entity (ID 1) exists.
-    """
-    game_token = request.args.get('game_token')
-    if game_token:
-        session['game_token'] = game_token
-        # Ensure the shared-id registry is bootstrapped for this token
-        init_game_session()
+    """Point of entry via a shared link. Sets the session token."""
+    new_token = request.args.get('game_token')
+    if new_token:
+        current = session.get('game_token')
+        alternate = session.get('alternate_token')
+        if new_token == alternate:
+            # Swap
+            session['game_token'] = alternate
+            session['alternate_token'] = current
+        elif new_token != current:
+            # Replace current
+            session['game_token'] = new_token
+            init_game_session()
+
         return redirect(url_for('play.overview'))
     
     return "Please include a valid game token in the URL.", 400
 
-@session_bp.route('/session-link')
-def get_session_link():
-    """Generates the external URL that others can use to join this game."""
+@session_bp.route('/current-tokens')
+def current_tokens():
+    """Shows the current and alternate game tokens with invite link."""
     if 'game_token' not in session:
-        return "No active session found.", 404
-    
-    url = url_for(
+        return "No active game sessions found.", 404
+
+    # Validate alternate token still exists in DB
+    alt_token = session.get('alternate_token')
+    if alt_token:
+        alt_overall = Overall.query.filter_by(game_token=alt_token).first()
+        if alt_overall is None:
+            session.pop('alternate_token', None)
+            alt_token = None
+
+    # Fetch titles
+    current_overall = Overall.query.filter_by(
+        game_token=session['game_token']).first()
+    current_title = current_overall.title if current_overall else '(unknown)'
+    alt_title = None
+    if alt_token:
+        alt_overall = Overall.query.filter_by(game_token=alt_token).first()
+        alt_title = alt_overall.title if alt_overall else '(unknown)'
+
+    invite_url = url_for(
         'session.join_game', game_token=session['game_token'], _external=True)
-    return render_template('session/session_link.html', url=url)
+    return render_template(
+        'session/tokens.html',
+        url=invite_url,
+        current_title=current_title,
+        alt_token=alt_token,
+        alt_title=alt_title,
+    )
+
+@session_bp.route('/swap-tokens')
+def swap_tokens():
+    """Swap game_token and alternate_token, then redirect to overview."""
+    current = session.get('game_token')
+    alternate = session.get('alternate_token')
+    if current and alternate:
+        session['game_token'] = alternate
+        session['alternate_token'] = current
+        g.game_token = session['game_token']
+        init_game_session()
+    return redirect(url_for('play.overview'))
+
+@session_bp.route('/new-token')
+def new_token():
+    """Move current game to alternate slot and start a fresh game token.
+    Only allowed when no alternate token already exists."""
+    if 'alternate_token' not in session:
+        current = session.get('game_token')
+        if current:
+            session['alternate_token'] = current
+        session['game_token'] = str(uuid.uuid4())
+        g.game_token = session['game_token']
+        init_game_session()
+    return redirect(url_for('play.overview'))
 
 @session_bp.route('/user-settings', methods=['GET', 'POST'])
 def user_settings():
@@ -239,27 +294,45 @@ def user_settings():
 
 @session_bp.route('/session-users')
 def session_users():
-    """
-    Queries the UserInteraction table to show who has 
-    been active in the last 5 minutes.
-    """
-    threshold = datetime.now() - timedelta(minutes=5)
+    """Queries the UserInteraction table to show who has been active."""
+    threshold = datetime.now() - timedelta(minutes=15)
     
-    # Get distinct users active recently
-    recent_interactions = UserInteraction.query.filter(
-        UserInteraction.game_token == g.game_token,
-        UserInteraction.timestamp >= threshold
-    ).order_by(UserInteraction.timestamp.desc()).all()
+    # Create a subquery that assigns a rank to each user's interactions, 
+    # ordering by most recent first
+    subquery = (
+        db.session.query(
+            UserInteraction.username,
+            UserInteraction.game_token,
+            UserInteraction.route,
+            UserInteraction.timestamp,
+            Overall.title.label('game_title'),
+            func.row_number().over(
+                partition_by=UserInteraction.username,
+                order_by=UserInteraction.timestamp.desc()
+            ).label('rn')
+        )
+        .join(Overall, UserInteraction.game_token == Overall.game_token)
+        .filter(UserInteraction.timestamp >= threshold)
+        .subquery()
+    )
 
-    # De-duplicate by username in Python for simpler query logic
-    unique_users = {}
-    for inter in recent_interactions:
-        if inter.username not in unique_users:
-            unique_users[inter.username] = inter
+    # Filter for only the top (most recent) row per user, and sort by username
+    recent_interactions = (
+        db.session.query(
+            subquery.c.username,
+            subquery.c.game_title,
+            subquery.c.game_token,
+            subquery.c.route,
+            subquery.c.timestamp
+        )
+        .filter(subquery.c.rn == 1)
+        .order_by(subquery.c.game_title.asc(), subquery.c.game_token.asc())
+        .all()
+    )
 
     return render_template(
         'session/users.html', 
-        interactions=unique_users.values()
+        interactions=recent_interactions
     )
 
 # ------------------------------------------------------------------------

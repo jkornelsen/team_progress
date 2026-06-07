@@ -139,7 +139,7 @@ def adjust_quantity(item_id, owner_id, delta, position=None, slot=None):
         check_item_unmasking(game_token, item_id, was_gained=True)
     
     # Cleanup empty rows
-    if pile.quantity <= 0:
+    if abs(pile.quantity) <= 0.000000001:
         safe_remove(pile)
         
     return remainder

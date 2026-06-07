@@ -171,7 +171,7 @@ def edit_item(id):
             gen_pile = Pile.query.filter_by(
                 game_token=game_token, item_id=item.id, owner_id=GENERAL_ID
             ).first()
-            if qty > 0:
+            if qty:
                 if not gen_pile:
                     gen_pile = Pile(
                         game_token=game_token, item_id=item.id, 

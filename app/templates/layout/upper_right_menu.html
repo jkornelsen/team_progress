@@ -1,12 +1,12 @@
 <div class="session-info">
     <div class="dropdown-container">
         <span class="dropdown-trigger">
-            player <span class="username-display">{{ current_username }}</span> 
+            <span class="username-display">{{ current_username }}</span> 
             <span class="dropdown-icon">▼</span>
         </span>
         <div class="dropdown-menu">
             <a href="{{ url_for('session.user_settings') }}">User Settings</a>
-            <a href="{{ url_for('session.get_session_link') }}">Invite Friends (Link)</a>
+            <a href="{{ url_for('session.current_tokens') }}">Your Current Games</a>
             <a href="{{ url_for('session.session_users') }}">Who's Online?</a>
         </div>
     </div>

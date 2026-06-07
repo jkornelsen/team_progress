@@ -4,8 +4,6 @@
 
 ---- functional, tightening, quality of life ----
 
-can't set negative universal item quantiy in item configure
-
 old_loc_id doesn't always get set when going to loc page
     http://localhost:5000/play/location/14 (navigate and reload both failed)
     old_loc_id=14 play_location()
@@ -17,8 +15,6 @@ old_loc_id doesn't always get set when going to loc page
 
 effect ledger doesn't take outcome filter into account
     adds up everything
-
-fourway filter shows when adding a new chained event despite not being fourway
 
 Value: -4.500000000000018
     truncate floating point limits with epsilon or whatever it was
@@ -163,14 +159,6 @@ saving grandfather clock resets hour, an enumerated attrib, to 12am
 can doors be owned deterministically so they don't move around in diffs
 
 ---- doesn't seem important currently ----
-
-reload games by token 
-    for easier switching between multiple games
-    maybe not needed if we clean up old records in the db 
-
-prompt each player to save to their PC occasionally
-    only if no one recently saved from that session
-    warn that loading will erase any scenario currently being played, so save first
 
 disconnect after 30 minutes without user interaction
     reloading overview doesn't count

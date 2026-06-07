@@ -160,7 +160,7 @@
         <section class="outer-border" style="background: #442200">
             <div class="flex-between">
                 <h3>Follow-up Events</h3>
-                <button type="button" class="btn-sm" onclick="ConfigEditor.addRow('chained-list', 'chained-template')">+ Add Follow-up</button>
+                <button type="button" class="btn-sm" onclick="ConfigEditor.addRow('chained-list', 'chained-template'); syncOutcomeTypeState();">+ Add Follow-up</button>
             </div>
             <div id="chained-list" class="spacious-top">
                 {% for link in event.chained %}

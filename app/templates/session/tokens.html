@@ -1,0 +1,63 @@
+{% extends 'layout/base.html' %}
+{% import 'macros/hotkeys.html' as hk %}
+
+{% block upper_left %}
+    <nav class="nav-container">
+        {{ hk.page_overview() }}
+        <span class="separator">|</span>
+        {{ hk.page_main_setup() }}
+    </nav>
+{% endblock %}
+
+{% block content %}
+<div class="session-card outer-border">
+    <h1>Your Game Slots</h1>
+    <p class="label-like">Loading a game overwrites the current slot. Create an alternate token slot to switch back and forth between two game sessions without having to reload data. To keep games longer than a day or two, <a href="/configure">save to file.</a></p>
+    
+    <div class="flex-row align-center gap-20 game-slot active-slot spacious-top">
+        <div class="slot-label">Current Slot</div>
+        <div class="slot-title">{{ current_title }}</div>
+    </div>
+
+    <div class="flex-row align-center gap-20 game-slot alt-slot spacious-top">
+        <div class="slot-label">Quick Swap Slot</div>
+        {% if alt_token %}
+            <a href="{{ url_for('session.swap_tokens') }}" class="go-button" style="display:inline-block; padding: 8px 16px;">⇄ {{ alt_title }}</a>
+        {% else %}
+            <a href="{{ url_for('session.new_token') }}" class="go-button" style="display:inline-block; padding: 8px 16px;">＋ Create alternate slot</a>
+        {% endif %}
+    </div>
+
+    <hr class="spacious-top" style="border-color: var(--border);">
+
+    <h2 style="margin-top:1em;">Invite Players</h2>
+    <p class="label-like">Share this link to invite others to your <strong>current</strong> game.</p>
+
+    <div class="link-box spacious-top">
+        <code id="session-url">{{ url }}</code>
+        <button onclick="copyLink()" class="btn-sm" style="margin-left: 10px;">📋 Copy</button>
+     </div>
+
+    <div class="info-box spacious-top">
+        <p>Anyone with this link will have full access to view and modify the current game.</p>
+    </div>
+</div>
+
+<style>
+.link-box { background: #000; padding: 15px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; border-radius: 4px; }
+#session-url { color: var(--accent); word-break: break-all; }
+.info-box { background: #332b00; border-left: 4px solid #ffd700; padding: 10px; font-size: 0.9em; color: #eee; }
+.game-slot { border: 1px solid var(--border); border-radius: 4px; padding: 12px 16px; }
+.active-slot { border-color: var(--accent); }
+.slot-label { font-size: 0.75em; text-transform: uppercase; color: #888; margin-bottom: 4px; }
+.slot-title { font-size: 1.1em; font-weight: bold; color: var(--accent); }
+</style>
+
+<script>
+function copyLink() {
+    const urlText = document.getElementById('session-url').innerText;
+    navigator.clipboard.writeText(urlText);
+    alert("Link copied to clipboard!");
+}
+</script>
+{% endblock %}
