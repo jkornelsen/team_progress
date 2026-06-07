@@ -4,25 +4,30 @@
 
 ---- functional, tightening, quality of life ----
 
-old_loc_id doesn't always get set when reloading loc page
-    maybe because the browser caches the page
-    to test, use an event in another window to show context loc
-    that should show whether the heartbeat is causing the problem or not
+can't set negative universal item quantiy in item configure
 
-fourway filter showed when adding a new chained event despite not being fourway
+old_loc_id doesn't always get set when going to loc page
+    http://localhost:5000/play/location/14 (navigate and reload both failed)
+    old_loc_id=14 play_location()
+    http://localhost:5000/play/item/11?owner_id=1 (reload)
+    ctx.loc_id=12 play_item()
+    with 7 tabs open -- maybe because of chrome performance behavior
+    holding shift to reload didn't help
+    waiting 5 seconds may have helped?
+
+effect ledger doesn't take outcome filter into account
+    adds up everything
+
+fourway filter shows when adding a new chained event despite not being fourway
 
 Value: -4.500000000000018
     truncate floating point limits with epsilon or whatever it was
     or 6-8 places, especially when writing to json and maybe also db
     at least 3 more than displayed 3, up to 1 million if turned to integer
 
-effect ledger looked like it wasn't taking outcome filter into account
-    added up everything
-
 prompt before overwriting another character action in progress
 
 session settings
-    number format -- instead of overall (scenario) settings
     allow arrow key navigation
 
 don't show duplicate destinations in play location
@@ -156,7 +161,6 @@ saving grandfather clock resets hour, an enumerated attrib, to 12am
 ---- code ----
 
 can doors be owned deterministically so they don't move around in diffs
-    and sort relations by ids since they don't have names
 
 ---- doesn't seem important currently ----
 

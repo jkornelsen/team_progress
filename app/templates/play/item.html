@@ -637,15 +637,16 @@ async function updateStatus() {
     if (main.quantity !== undefined) {
         const qtyDisplay = document.getElementById('main-qty-display');
         if (qtyDisplay) qtyDisplay.textContent = main.quantity;
-        //isWaitingForServer = false;
 
         const isCurrentlyZero = (
             parseFloat(main.quantity.replace(/,/g, '')) || 0) === 0;
+        {% if item.storage_type == StorageType.CARRIED or has_masked_dependents %}
         if (isCurrentlyZero !== startedAtZero) {
-            // Show or hide inventory actions
+            // Show inventory actions or unmask items
             window.location.reload();
             return;
         }
+        {% endif %}
     }
 
     // 5. Update Ingredient/Source Stock Labels

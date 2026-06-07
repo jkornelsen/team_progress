@@ -28,7 +28,7 @@
 <div class="event-play-container">
     <header class="entity-header">
         <span id="context-list" class="label-like">
-            {% if subject %}
+            {% if subject and subject.id != 1 %}
                 Called by 
                 {{ '👤' if subject.entity_type == 'character' else '📍' if subject.entity_type == 'location' else '📦' }} 
                 {% set target_url = url_for('play.play_' + subject.entity_type, id=subject.id) %}

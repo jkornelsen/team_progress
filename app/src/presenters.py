@@ -246,7 +246,17 @@ class ItemPlayPresenter:
                 self._check_attrib_req(ar, recipe_scope, lookup)
                 for ar in r.attrib_reqs]
 
-        # --- Reverse dependencies ---
+        # Check if any masked item might be unmasked by this item
+        has_masked_dependents = False
+        if self.pile.quantity <= 0:
+            has_masked_dependents = any(
+                item.masked for item in (
+                    Item.query.get((self.game_token, link.recipe.product_id))
+                    for link in self.item.as_ingredient
+                ) if item is not None
+            )
+
+        # Reverse dependencies
         used_for_production, seen_ids = [], {self.item_id}
         for source_link in self.item.as_ingredient:
             prod = source_link.recipe.product
@@ -258,7 +268,7 @@ class ItemPlayPresenter:
                     'url_params': self.ctx.get_params()})
                 seen_ids.add(prod.id)
 
-        # --- Other characters here (Give button) ---
+        # Other characters here (Give button)
         other_chars_here = []
         if isinstance(self.owner, Character) and self.owner.location_id:
             raw_chars = Character.query.filter_by(
@@ -271,7 +281,7 @@ class ItemPlayPresenter:
                     if self.owner.position else True
                 other_chars_here.append(c)
 
-        # --- Reachability ---
+        # Reachability
         is_reachable, reach_error = True, None
         if self.ctx_char:
             if self.owner.entity_type == 'location' \
@@ -296,7 +306,7 @@ class ItemPlayPresenter:
                     is_reachable = False
                     reach_error = f"{self.owner.name} is in a different location."
 
-        # --- attribreq_entities lookup for tooltip links ---
+        # attribreq_entities lookup for tooltip links
         attribreq_entities = {self.owner.id: self.owner}
         if self.ctx_char:
             attribreq_entities[self.ctx_char.id] = self.ctx_char
@@ -334,5 +344,6 @@ class ItemPlayPresenter:
                     game_token=self.game_token,
                     subject_id=self.item_id).all(),
                 lambda p: p.attrib),
+            "has_masked_dependents": has_masked_dependents,
             "link_letters": LinkLetters(excluded='moedpqrg')
         }

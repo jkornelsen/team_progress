@@ -2,7 +2,6 @@
     "overall settings": {
         "title": "Fission Plant",
         "description": "Produce enough energy to fill a high-capacity battery while managing {orange|waste}. Handle any {orange|critical problems} and then restore operations.",
-        "number_format": "sci",
         "slots": [],
         "win_reqs": [
             {"item_id": 9, "quantity": 10000000.0}
@@ -83,11 +82,11 @@
             },
             {
                 "id": 52,
-                "name": "Petri Dishes I",
+                "name": "Petri Dishes",
                 "description": "Increase the number of cultured dishes to grow bacteria faster. Agar gel provides the nutrition they need.",
                 "abilities": [60],
                 "storage_type": "u",
-                "q_limit": 10.0,
+                "q_limit": 11.0,
                 "recipes": [
                     {
                         "id": 53,
@@ -313,7 +312,7 @@
             },
             {
                 "id": 54,
-                "name": "Water Capacity I",
+                "name": "Water Capacity",
                 "description": "Larger tubes and pumps to circulate heat efficiently.",
                 "abilities": [38],
                 "storage_type": "u",
@@ -478,7 +477,7 @@
             {
                 "id": 15,
                 "name": "Plant Problem Type",
-                "description": "Get information about a problem that occurred. If the inciting roll was a major failure then consider the problem to be more severe.\r\n\r\n- **Unusable Amenities** — lower [worker mood](/play/attrib/20/subject/19) by 3 for 3 cycles\r\n- **Long Hours** — lower [worker mood](/play/attrib/20/subject/19) by 1\r\n- **Low Wages** — [workers may react badly](/play/event/23)\r\n- **Burnt Food** — microwave left on too long; two offices lost in most crowded area\r\n- **Waste Bacteria Inert** — fail to reduce radioactive waste for 3 production cycles\r\n- **Radioactive Waste Leak** — see [radioactive waste leak](/play/event/51) (event)\r\n- **Cooling System Leak** — [double the duration](/configure/item/8) of thermal waste reduction for 3 production cycles, major failure hits employees with scalding water\r\n- **Machinery Jam** — problem with [reclaiming machinery](/play/item/34?owner_id=12); set reclaim difficulty to *Hard* for 2 production cycles or *Very Hard* for major failure\r\n- **Electricity Down** — prevents cooling tower from operating for 3 production cycles, major failure requires repairs to [electrical system](/play/item/10)\r\n- **Fuel Spill** — lose  10% (rounded up) of your best [Plutonium Purchase](/play/item/27?owner_id=14) quantity on major failure, or second best for minor failure\r\n- **Energy Not Gained** — nothing to fix but roll back recent energy gains\r\n- **Excess Energy** — damages storage systems, reduce [battery](/configure/item/9) *Limit per Pile* by 100,000; [can be repaired](/play/event/33)\r\n- **Battery Power Loss** — see [battery power loss](/play/event/42) (event)\r\n- **Core Meltdown — Reactor Damage** — cannot produce energy until [repairs are made](/play/item/6)\r\n- **Core Meltdown — Radioactive Contamination** — worst-case scenario, [wait for it to dissipate](/play/item/29)",
+                "description": "Get information about a problem that occurred. If the inciting roll was a major failure then consider the problem to be more severe.\r\n\r\n- **Unusable Amenities** — lower [worker mood](/play/attrib/20/subject/19) by 3 for 3 cycles\r\n- **Long Hours** — lower [worker mood](/play/attrib/20/subject/19) by 1\r\n- **Low Wages** — [workers may react badly](/play/event/23)\r\n- **Burnt Food** — microwave left on too long; two offices lost in most crowded area\r\n- **Waste Bacteria Inert** — fail to reduce radioactive waste for 3 production cycles\r\n- **Radioactive Waste Leak** — see [radioactive waste leak](/play/event/51) (event)\r\n- **Cooling System Leak** — [double the duration](/configure/item/8) of thermal waste reduction for 3 production cycles, major failure hits employees with scalding water\r\n- **Electricity Down** — prevents cooling tower from operating for 3 production cycles, major failure requires repairs to [electrical system](/play/item/10)\r\n- **Machinery Jam** — problem with [reclaiming machinery](/play/item/34?owner_id=12); set reclaim difficulty to *Hard* for 3 production cycles or *Very Hard* for major failure\r\n- **Fuel Spill** — lose  10% (rounded up) of your best [Plutonium Purchase](/play/item/27?owner_id=14) quantity on major failure, or second best for minor failure\r\n- **Energy Not Gained** — nothing to fix but roll back recent energy gains\r\n- **Excess Energy** — damages storage systems, reduce [battery](/configure/item/9) *Limit per Pile* by 100,000; [can be repaired](/play/event/33)\r\n- **Battery Power Loss** — see [battery power loss](/play/event/42) (event)\r\n- **Core Meltdown — Reactor Damage** — cannot produce energy until [repairs are made](/play/item/6)\r\n- **Core Meltdown — Radioactive Contamination** — worst-case scenario, [wait for it to dissipate](/play/item/29)",
                 "outcome_type": "selection",
                 "selection_strings": "Unusable Amenities\r\nLong Hours\r\nLow Wages\r\nBurnt Food\r\nWaste Bacteria Inert\r\nRadioactive Waste Leak\r\nCooling System Leak\r\nMachinery Jam\r\nElectricity Down\r\nFuel Spill\r\nEnergy Not Gained\r\nExcess Energy\r\nBattery Power Loss\r\nCore Meltdown — Reactor Damage\r\nCore Meltdown — Radioactive Contamination"
             },
@@ -509,6 +508,17 @@
                         "get_val_from": "outcome",
                         "outfield": {
                             "role": "blueprint",
+                            "field_mode": "src_qty",
+                            "item_id": 9,
+                            "recipe_id": 14,
+                            "source_item_id": 4
+                        },
+                        "op_application": ":="
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {
+                            "role": "blueprint",
                             "field_mode": "rate_amt",
                             "item_id": 9,
                             "recipe_id": 14
@@ -516,17 +526,6 @@
                         "op_application": ":=",
                         "op_transform": "*",
                         "val_transform": 2.0
-                    },
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {
-                            "role": "blueprint",
-                            "field_mode": "src_qty",
-                            "item_id": 9,
-                            "recipe_id": 14,
-                            "source_item_id": 4
-                        },
-                        "op_application": ":="
                     },
                     {
                         "get_val_from": "outcome",

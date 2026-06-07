@@ -34,7 +34,7 @@
         <section class="outer-border">
             <h3>Value Definition</h3>
             <div class="column-container">
-                <div class="type-selection">
+                <div class="type-selection" style="min-width: 250px;">
                     <label>Value Type:</label><br>
                     <label class="radio-label">
                         <input type="radio" name="value_type" value="number" 
@@ -61,19 +61,11 @@
             </div>
         </section>
 
-        <!-- Footer Actions -->
-        <div class="footer-actions flex-between">
-            <div class="gap-20" style="display: flex">
-                <button type="submit" name="duplicate" class="btn">Save & Duplicate</button>
-                <button type="submit" name="save" class="go-button">Save Changes</button>
-                <a href="{{ url_for('configure.cancel') }}" class="btn">Cancel</a>
-            </div>
-            {% if attrib.id %}
-            <div>
-                <button type="submit" name="delete" class="dangerous-button" onclick="return confirm('Delete this attribute?')">Delete Attribute</button>
-            </div>
-            {% endif %}
-        </div>
+        <!-- Form Actions -->
+        {{ footer_actions(
+            entity_name='attribute', 
+            entity_id=attrib.id
+        ) }}
     </form>
 </div>
 
@@ -127,14 +119,4 @@
         syncFormState();
     });
 </script>
-
-<style>
-    .type-selection { min-width: 250px; }
-/*
-    .full-width { width: 100%; box-sizing: border-box; background: #000; color: #fff; border: 1px solid var(--border); padding: 8px; font-family: inherit; }
-*/
-    .radio-label { display: block; cursor: pointer; font-size: 0.9em; margin: 5px 0; }
-    .footer-actions { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); }
-    .hidden { display: none; }
-</style>
 {% endblock %}

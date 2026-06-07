@@ -1450,9 +1450,15 @@ class Recipe(db.Model, DictHydrator):
             "rate_amount": self.rate_amount,
             "rate_duration": self.rate_duration,
             "instant": self.instant,
-            "sources": [s.to_dict() for s in self.sources],
-            "byproducts": [b.to_dict() for b in self.byproducts],
-            "attrib_reqs": [ar.to_dict() for ar in self.attrib_reqs]
+            "sources": sorted(
+                [s.to_dict() for s in self.sources],
+                key=lambda x: x['item_id']),
+            "byproducts": sorted(
+                [b.to_dict() for b in self.byproducts],
+                key=lambda x: x['item_id']),
+            "attrib_reqs": sorted(
+                [ar.to_dict() for ar in self.attrib_reqs],
+                key=lambda x: x['attrib_id']),
         }
         return self.to_dict_sparse(data)
 
@@ -1795,7 +1801,6 @@ class Overall(db.Model, DictHydrator):
     game_token = db.Column(db.String(50), primary_key=True)
     title = db.Column(db.String(255), nullable=False, default='New Scenario')
     description = db.Column(db.Text)
-    number_format = db.Column(db.String(5), default='en_US')
     slots = db.Column(ARRAY(db.Text), default=list)
 
     # Metadata tags for scenario browsing
@@ -1812,7 +1817,6 @@ class Overall(db.Model, DictHydrator):
         data = {
             "title": self.title,
             "description": self.description,
-            "number_format": self.number_format,
             "slots": self.slots or [],
             "win_reqs": [
                 wr.to_dict() for wr in

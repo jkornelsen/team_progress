@@ -102,9 +102,12 @@ def create_app():
         # This is a lightweight check performed via database_setup.py
         init_game_session()
 
-        # 3. Ensure User Identity
+        # 3. User Settings
         if 'username' not in session:
             session['username'] = generate_username()
+        if 'number_format' not in session:
+            session['number_format'] = 'en_US'
+        g.number_format = session['number_format']
 
         # 4. Log the user's presence for 'Session Users' view
         if request.endpoint:

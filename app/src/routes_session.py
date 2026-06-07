@@ -14,7 +14,7 @@ from app.serialization import (
     init_game_session, load_scenario_from_path, DEFAULT_SCENARIO_FILE,
     import_from_dict, patch_from_dict,
     clear_game_data, export_game_to_json, export_to_dict)
-from app.utils import RequestHelper, LinkLetters, BaseFieldMap
+from app.utils import RequestHelper, LinkLetters, BaseFieldMap, redirect_back
 
 logger = logging.getLogger(__name__)
 session_bp = Blueprint('session', __name__)
@@ -215,24 +215,27 @@ def get_session_link():
         'session.join_game', game_token=session['game_token'], _external=True)
     return render_template('session/session_link.html', url=url)
 
-@session_bp.route('/change-user', methods=['GET', 'POST'])
-def change_user():
+@session_bp.route('/user-settings', methods=['GET', 'POST'])
+def user_settings():
     """Allows the user to set a custom display name."""
-    if request.method == 'GET':
-        # Provide list of characters as suggestions for names
-        characters = Character.query.filter_by(game_token=g.game_token).all()
-        return render_template('session/username.html', characters=characters)
+    if request.method == 'POST':
+        req = RequestHelper('form')
+        new_username = req.get_str('username')
+        if not new_username:
+            new_username = generate_username()
+        session['username'] = new_username
 
-    req = RequestHelper('form')
-    new_username = req.get_str('username')
-    if not new_username:
-        new_username = generate_username()
-    
-    session['username'] = new_username
-    
-    # Return to the previous page if possible
-    referrer = req.get_str('referrer') or url_for('play.overview')
-    return redirect(referrer)
+        session['number_format'] = request.form.get(
+            'number_format',
+            session.get('number_format', 'en_US')
+        )
+        return redirect_back('play.overview')
+ 
+    # Provide list of characters as suggestions for names
+    characters = Character.query.filter_by(game_token=g.game_token).all()
+    return render_template(
+        'session/user_settings.html',
+        characters=characters)
 
 @session_bp.route('/session-users')
 def session_users():

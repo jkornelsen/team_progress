@@ -53,7 +53,6 @@ def edit_overall():
         req = RequestHelper('form')
         overall.title = req.get_str('title', overall.title)
         overall.description = req.get_str('description')
-        overall.number_format = req.get_str('number_format', overall.number_format)
         slots_text = req.get_str('slots')
         overall.slots = [s.strip() for s in slots_text.split('\n') if s.strip()]
         

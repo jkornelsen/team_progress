@@ -31,6 +31,7 @@ Rules:
 - include NO code
 - include ONLY files you are confident are relevant or directly adjacent
 - prefer completeness over minimality, but avoid noise
+- output within a single Markdown code block
 ```
 
 Prompt 3:
@@ -43,6 +44,7 @@ You are helping modify an existing Flask + SQLAlchemy project.
 - avoid unrelated refactors
 
 Goal:
+[enter goal]
 ```
 
 Copy and paste goal from prompt 1.
