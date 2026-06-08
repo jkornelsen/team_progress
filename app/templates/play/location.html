@@ -257,7 +257,7 @@
                             </div>
 
                             <div class="flex-column" style="margin-top: 10px; gap: 2px;">
-                                <div class="label-like desktop-only">Use {#Arrow Keys or #}Numpad to move.</div>
+                                <div class="label-like desktop-only">Use{{ '' if session.get('disable_arrow_keys') else ' Arrow Keys or' }} Numpad to move.</div>
                                 <div class="label-like desktop-only">
                                     view [c]haracter, 
                                     <span id="travel-prompt">arrange [t]ravel</span>
@@ -659,21 +659,20 @@ document.addEventListener('keydown', (event) => {
     }
 
     {% if location.has_grid %}
-    // 1. Handle Movement (Arrows & Numpad)
+    // 1. Handle Movement
     const moveKeys = {
-        // Arrow Keys
-        /*
+        {% if not session.get('disable_arrow_keys') %}
         'ArrowUp': [0, -1],
         'ArrowDown': [0, 1],
         'ArrowLeft': [-1, 0],
         'ArrowRight': [1, 0],
-        */
+        {% endif %}
+
         // NumPad
         '7': [-1, -1], '8': [0, -1], '9': [1, -1],
         '4': [-1, 0],                '6': [1, 0],
         '1': [-1, 1],  '2': [0, 1],  '3': [1, 1],
     };
-
     if (moveKeys[key]) {
         event.preventDefault();
         const [dx, dy] = moveKeys[key];

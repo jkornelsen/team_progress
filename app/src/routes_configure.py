@@ -678,6 +678,10 @@ def edit_event(id):
                 get_val_from = row.get_str('get_val_from', Participant.INFIELD)
                 if op_trans == Operation.CONST and usage == Participant.EFF:
                     get_val_from = Participant.OUTCOME
+                outcome_success = Participant.ALWAYS
+                if event.outcome_type == OutcomeType.FOURWAY:
+                    outcome_success = row.get_str(
+                        'outcome_success', Participant.ALWAYS)
 
                 factor = EventFactor(
                     game_token=game_token,
@@ -687,7 +691,7 @@ def edit_event(id):
                     label=row.get_str('label'),
                     get_val_from=get_val_from,
                     negate=row.get_bool('negate'),
-                    outcome_success=row.get_str('outcome_success', Participant.ALWAYS),
+                    outcome_success=outcome_success,
                     auto_apply=row.get_bool('auto_apply'),
                     op_application=op_app,
                     op_transform=op_trans,
@@ -740,50 +744,45 @@ def edit_event(id):
         for row in req.get_list('chained'):
             child_id = row.get_int('child_id')
             if child_id:
-                new_link = EventLink(
-                    game_token=game_token,
-                    parent_id=event.id,
-                    child_id=child_id
-                )
-                event.chained.append(new_link)
-                
-                factor = EventFactor(
-                    game_token=game_token,
-                    event_id=event.id,
-                    usage_type=Participant.CHAIN,
-                    outcome_success=row.get_str('outcome_success', Participant.ALWAYS)
-                )
-                new_link.req = factor
-
+                instance_args = {
+                    "game_token": game_token,
+                    "event_id": event.id,
+                    "usage_type": Participant.CHAIN
+                }
+                if event.outcome_type == OutcomeType.FOURWAY:
+                    instance_args['outcome_success'] = row.get_str(
+                        'outcome_success', Participant.ALWAYS)
                 get_val_from = row.get_str('get_val_from')
                 if get_val_from == Participant.OUTCOME:
-                    factor.get_val_from = get_val_from
-                    factor.op_application = row.get_str(
-                        'op_application', Operation.EQ)
-                    factor.val_required = row.get_float(
-                        'val_required', 1.0)
-                    factor.negate = row.get_bool('negate')
+                    instance_args.update({
+                        "get_val_from": get_val_from,
+                        "op_application": row.get_str(
+                            'op_application', Operation.EQ),
+                        "val_required": row.get_float(
+                            'val_required', 1.0),
+                        "negate": row.get_bool('negate')
+                    })
                 elif get_val_from == Participant.INFIELD:
                     fld = row.get_map('infield')
                     mode = fld.get_str('field_mode')
                     role = fld.get_str('role')
                     if role and mode:
-                        factor.get_val_from = get_val_from
-                        factor.op_application = row.get_str(
-                            'op_application', Operation.EQ)
-                        factor.op_transform = row.get_str(
-                            'op_transform')
-                        factor.val_transform = row.get_float(
-                            'val_transform', 1.0)
-                        factor.val_required = row.get_float(
-                            'val_required', 1.0)
-                        factor.negate = row.get_bool('negate')
-
+                        instance_args.update({
+                            "get_val_from": get_val_from,
+                            "op_application": row.get_str(
+                                'op_application', Operation.EQ),
+                            "op_transform": row.get_str('op_transform'),
+                            "val_transform": row.get_float(
+                                'val_transform', 1.0),
+                            "val_required": row.get_float(
+                                'val_required', 1.0),
+                            "negate": row.get_bool('negate')
+                        })
                         fld_attrib_id = fld.get_int('attrib_id') \
                             if mode in Participant.USES_ATTRIB else None
                         fld_item_id = fld.get_int('item_id') \
                             if mode in Participant.USES_ITEM else None
-                        factor.infield = EventField(
+                        instance_args['infield'] = EventField(
                             game_token=game_token,
                             role=role,
                             field_mode=mode,
@@ -791,6 +790,15 @@ def edit_event(id):
                             attrib_id=fld_attrib_id,
                             item_id=fld_item_id
                         )
+
+                factor = EventFactor(**instance_args)
+                elink = EventLink(
+                    game_token=game_token,
+                    parent_id=event.id,
+                    child_id=child_id,
+                    req=factor
+                )
+                event.chained.append(elink)
 
         db.session.commit()
         if 'duplicate' in request.form:

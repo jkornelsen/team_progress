@@ -92,9 +92,7 @@ def import_from_dict(data):
     """
     # Wipe current data
     game_token = g.game_token
-    db.session.query(Overall).filter_by(game_token=game_token).delete()
-    db.session.query(Entity).filter_by(game_token=game_token).delete()
-    clear_session_logs(game_token)
+    clear_game_data()
     for key in ['old_char_id', 'old_loc_id', 'default_slot']:
         session.pop(key, None)
     
@@ -274,12 +272,9 @@ def patch_from_dict(data):
     db.session.commit()
     return True
 
-def clear_game_data():
-    """
-    Wipes all data associated with a specific token.
-    Useful for 'Reset Game' or 'Blank Scenario' functionality.
-    """
-    game_token = g.game_token
+def clear_game_data(game_token=None):
+    """Wipes all data associated with a specific token."""
+    game_token = game_token or g.game_token
     logger.warning(f"Clearing all data for token: {game_token}")
     
     # Due to CASCADE constraints, these two lines wipe the entire relational tree

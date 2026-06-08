@@ -15,7 +15,7 @@
     <h1>User Settings</h1>
     <form method="POST" action="{{ url_for('session.user_settings') }}">
         <div class="form-group">
-            <label for="username">Username (optional):</label>
+            <label for="username">Username (optional)</label>
             <input type="text"
                    id="username"
                    name="username"
@@ -24,32 +24,27 @@
                    class="full-width themed-input" autofocus>
         </div>
 
-        {% if characters %}
-        <div class="spacious-top">
-            <label class="label-like">Suggestions (Characters in this scenario):</label>
-            <div class="suggestion-chips">
-                {% for char in characters %}
-                <button type="button" class="chip" onclick="document.getElementById('username').value = '{{ char.name }}'">
-                    {{ char.name }}
-                </button>
-                {% endfor %}
-            </div>
+        <div class="form-group spacious-top">
+            <label for="number_format">Display Number Format</label>
+            <select id="number_format" name="number_format" class="full-width themed-input">
+                <option value="en_US" {{ 'selected' if session.get('number_format', 'en_US'
+                    ) == 'en_US' }}>International (1,234.56)</option>
+                <option value="de_DE" {{ 'selected' if session.get('number_format'
+                    ) == 'de_DE' }}>European (1.234,56)</option>
+                <option value="abbr" {{ 'selected' if session.get('number_format'
+                    ) == 'abbr' }}>Abbreviated (1.2k, 1.5m)</option>
+                <option value="sci" {{ 'selected' if session.get('number_format'
+                    ) == 'sci' }}>Scientific (1.2e3)</option>
+            </select>
         </div>
-        {% endif %}
 
-    <div class="form-group spacious-top">
-        <label for="number_format">Display Number Format</label>
-        <select id="number_format" name="number_format" class="full-width themed-input">
-            <option value="en_US" {{ 'selected' if session.get('number_format', 'en_US'
-                ) == 'en_US' }}>International (1,234.56)</option>
-            <option value="de_DE" {{ 'selected' if session.get('number_format'
-                ) == 'de_DE' }}>European (1.234,56)</option>
-            <option value="abbr" {{ 'selected' if session.get('number_format'
-                ) == 'abbr' }}>Abbreviated (1.2k, 1.5m)</option>
-            <option value="sci" {{ 'selected' if session.get('number_format'
-                ) == 'sci' }}>Scientific (1.2e3)</option>
-        </select>
-    </div>
+        <div class="spacious-top">
+            <label class="checkbox-label desktop-only">
+                <input type="checkbox" name="disable_arrow_keys" {{ 'checked' if session.get('disable_arrow_keys') }}> 
+                Disable arrow keys in grid.
+            </label>
+            <span class="label-like" style="margin-left: 10px;">Numpad always enabled.</span>
+        </div>
 
         <!-- Form Actions -->
         {{ footer_actions() }}
@@ -57,9 +52,5 @@
 </div>
 
 <style>
-.suggestion-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
-.chip { background: #333; border: 1px solid #444; padding: 4px 10px; border-radius: 15px; font-size: 0.8em; color: var(--text-dim); }
-.chip:hover { background: #444; color: white; border-color: var(--accent); }
-.text-center { text-align: center; margin-top: 10px; }
 </style>
 {% endblock %}

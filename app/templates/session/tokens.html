@@ -12,7 +12,7 @@
 {% block content %}
 <div class="session-card outer-border">
     <h1>Your Game Slots</h1>
-    <p class="label-like">Loading a game overwrites the current slot. Create an alternate token slot to switch back and forth between two game sessions without having to reload data. To keep games longer than a day or two, <a href="/configure">save to file.</a></p>
+    <p class="label-like">Loading a game overwrites the current slot. Create an alternate token slot to switch back and forth between two game sessions without having to reload data. Data is removed from  the server after 4 days — <a href="/configure">save to file</a> to upload later.</p>
     
     <div class="flex-row align-center gap-20 game-slot active-slot spacious-top">
         <div class="slot-label">Current Slot</div>
@@ -23,6 +23,7 @@
         <div class="slot-label">Quick Swap Slot</div>
         {% if alt_token %}
             <a href="{{ url_for('session.swap_tokens') }}" class="go-button" style="display:inline-block; padding: 8px 16px;">⇄ {{ alt_title }}</a>
+            <form action="{{ url_for('session.delete_token') }}"><input type="submit" class="btn-sm dangerous-button" value="×" /></form>
         {% else %}
             <a href="{{ url_for('session.new_token') }}" class="go-button" style="display:inline-block; padding: 8px 16px;">＋ Create alternate slot</a>
         {% endif %}

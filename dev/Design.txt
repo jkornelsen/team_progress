@@ -13,18 +13,12 @@ old_loc_id doesn't always get set when going to loc page
     holding shift to reload didn't help
     waiting 5 seconds may have helped?
 
-effect ledger doesn't take outcome filter into account
-    adds up everything
-
 Value: -4.500000000000018
     truncate floating point limits with epsilon or whatever it was
     or 6-8 places, especially when writing to json and maybe also db
     at least 3 more than displayed 3, up to 1 million if turned to integer
 
 prompt before overwriting another character action in progress
-
-session settings
-    allow arrow key navigation
 
 don't show duplicate destinations in play location
     same door positions (null in the example)
@@ -154,28 +148,29 @@ furniture
 saving grandfather clock resets hour, an enumerated attrib, to 12am
     hasn't been tested in new version
 
----- code ----
+---- code quality ----
 
 can doors be owned deterministically so they don't move around in diffs
 
----- doesn't seem important currently ----
+---- tests ----
 
-disconnect after 30 minutes without user interaction
-    reloading overview doesn't count
-    disconnect means go to a static page so it doesn't keep requesting updates
-    session['disconnected'] = True
-    button on page to reconnect
+try selenium to test client side
 
--------------------------------------------------------------------------------
-- planning
--------------------------------------------------------------------------------
+---- server and sharing ----
 
 hosting possibilities:
 Pythonanywhere should be able to host postgres and flask web app.
 https://www.reddit.com/r/flask/comments/12beskr/free_hosting_sites_compatible_with_flask/
 render.com is an alternative.
 
-try selenium to test client side
+delete data based on user_interactions timestamp
+psql -d app -c "DELETE FROM your_table WHERE created_at < NOW() - INTERVAL '4 days';"
+
+disconnect after 30 minutes without user interaction
+    reloading overview doesn't count
+    disconnect means go to a static page so it doesn't keep requesting updates
+    session['disconnected'] = True
+    button on page to reconnect
 
 consider sharing community scenarios
 perhaps submit to reddit, or github via pull requests

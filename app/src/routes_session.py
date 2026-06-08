@@ -270,6 +270,14 @@ def new_token():
         init_game_session()
     return redirect(url_for('play.overview'))
 
+@session_bp.route('/delete-token')
+def delete_token():
+    """Delete alternate_token, then redirect to tokens page."""
+    alternate = session.get('alternate_token')
+    if alternate:
+        clear_game_data(alternate)
+    return redirect(url_for('session.current_tokens'))
+
 @session_bp.route('/user-settings', methods=['GET', 'POST'])
 def user_settings():
     """Allows the user to set a custom display name."""
@@ -284,13 +292,11 @@ def user_settings():
             'number_format',
             session.get('number_format', 'en_US')
         )
+        session['disable_arrow_keys'] = req.get_bool('disable_arrow_keys')
+
         return redirect_back('play.overview')
  
-    # Provide list of characters as suggestions for names
-    characters = Character.query.filter_by(game_token=g.game_token).all()
-    return render_template(
-        'session/user_settings.html',
-        characters=characters)
+    return render_template('session/user_settings.html')
 
 @session_bp.route('/session-users')
 def session_users():

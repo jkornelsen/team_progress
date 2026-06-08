@@ -24,7 +24,7 @@ def create_app():
     app.config['TITLE'] = 'Team Progress Kit'
     app.config['SECRET_KEY'] = os.environ.get(
         'SECRET_KEY', 'team-progress-kit')
-    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=3)
+    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
     app.config['DATA_DIR'] = os.path.join(app.root_path, 'data_files')
 
     app.config['SQLALCHEMY_DATABASE_URI'] = get_db_uri()

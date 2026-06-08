@@ -963,7 +963,7 @@ def roll_event(id):
             id, role_entities, difficulty)
 
     resolved_effects, ledger = resolve_effects(
-        event, role_entities, result_val)
+        event, role_entities, result_val, tier)
     process_all_effects(
         event, role_entities, result_val, tier, force_auto_only=True)
     db.session.commit()

@@ -620,7 +620,7 @@ def preview_effects(event, role_entities):
         })
     return results
 
-def resolve_effects(event, role_entities, roll_val):
+def resolve_effects(event, role_entities, roll_val, tier=None):
     """
     Calculates the final outcome of every effect for display after a roll
     has occurred, but before it is applied.
@@ -636,6 +636,9 @@ def resolve_effects(event, role_entities, roll_val):
     for preview, eff in zip(previews, event.effects):
         field_def = eff.outfield
         if not field_def:
+            continue
+
+        if not check_outcome_success(eff.outcome_success, tier):
             continue
  
         # --- 1. FILL IN IMPACT now that roll_val is known ---
