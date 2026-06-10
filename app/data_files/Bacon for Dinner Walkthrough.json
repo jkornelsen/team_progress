@@ -11,7 +11,7 @@
         "tag_best_order": 97,
         "tag_progress_type": "RPG",
         "tag_multiplayer": false,
-        "tag_complete": "07 Needs Updating"
+        "tag_complete": "09 Complete"
     },
     "entities": {
         "items": [
@@ -30,7 +30,7 @@
             {
                 "id": 6,
                 "name": "Cash",
-                "description": "Move Suzy to the **Farmhouse** get your earnings. Navigate to **Uncle** > **Pays for Odd Jobs** > **Cash.**\r\n\r\nGetting paid doesn't take any particular amount of time, so there's a *Gain Instant* button instead of *Start,* but otherwise, it works the same. The default is *Max* to add up the earnings all at once. Now, with the cash, have Uncle *give to* Suzy.\r\n\r\nIf you don't have enough cash to buy a pig yet, go back to **Chores** and repeat this process. Also, of course, you'll need more than one pig in order to get baby pigs.",
+                "description": "Move Suzy to the **Farmhouse** get your earnings. Navigate to **Uncle** > **Pays for Odd Jobs** > **Cash.**\r\n\r\nGetting paid doesn't take any particular amount of time, so there's a *Gain Instant* button instead of *Start,* but otherwise, it works the same. The default is *Max* to add up the earnings all at once. Now, with the cash, have Uncle *give to* Suzy.\r\n\r\nSince you don't have enough cash to buy a pig yet, go back to **Chores** and repeat this process. Once you do have enough, go to **Uncle's Farm** and buy the pigs, placing them at that location. Of course, you'll need more than one pig in order to get baby pigs.",
                 "q_limit": 100.0,
                 "recipes": [
                     {
@@ -53,7 +53,7 @@
             {
                 "id": 7,
                 "name": "Chores",
-                "description": "**Chores** is a *universal* item (or *general storage*), meaning that they can be used anywhere and aren't carried by a specific person. In this case, it's a way to remember how much work Suzy has done.\r\n\r\nPress *Start* to do some chores. There's no limit to the chores that can be done, but you can only get paid for 10 at a time.",
+                "description": "**Chores** is a *universal* item (or *general storage*), meaning that it can be used anywhere and isn't carried by a specific person. In this case, it's a way to remember how much work Suzy has done.\r\n\r\nPress *Start* to do some chores. There's no limit to the chores that can be done, but you can only get paid for 10 at a time.",
                 "storage_type": "u",
                 "q_limit": 10.0,
                 "recipes": [
@@ -103,7 +103,7 @@
             {
                 "id": 11,
                 "name": "Pigs",
-                "description": "The most efficient plan would be to raise more pigs after butchering only 2 of them, by pressing *Start* on the row where pigs are the *Source* (as well as the result). However, let's do it the hard way this time. Go to **Raw Bacon** and slaughter all of them!\r\n\r\nAfter you've dispatched the original herd, it's time to earn some cash to buy more. Navigate to **Cash** > **Chores.**\r\n\r\nWhen you've bought a new pair of pigs, reload the page to be able to raise more. Then, finish the stack of **Raw Bacon,** leaving at least a pair left.",
+                "description": "The most efficient plan would be to raise more pigs after butchering only 2 of them, by pressing *Start* on the row where pigs are the *Source* (as well as the result). However, let's do it the hard way this time. Go to **Raw Bacon** and slaughter all of them!\r\n\r\nAfter you've dispatched the original herd, it's time to earn some cash to buy more. Navigate to **Cash** > **Chores.**\r\n\r\nWhen you've bought a new pair of pigs, use them to raise more. Then, finish the stack of **Raw Bacon,** leaving at least a pair left.",
                 "storage_type": "l",
                 "q_limit": 4.0,
                 "recipes": [
@@ -126,7 +126,7 @@
             {
                 "id": 12,
                 "name": "Raw Bacon",
-                "description": "Now we can make use of that **Knife** Suzy has been carrying. There are 4 pigs currently at the farm. Press *Start* and wait while she turns them into neatly sized pieces of meat.\r\n\r\nIf Suzy is not shown under *Where* as carrying the knife, you may need to go back to her screen and click on the knife to get to this raw bacon screen. Similarly, if the pigs are at the farm but not shown, navigate back to the farm and then click through the pigs to get here.\r\n\r\nLooks like we ran out. Go back to **Pigs** and see how to get more.\r\n\r\nOnce you have a full load of raw bacon (20), it's time for Suzy to start the perilous trip back home. Navigate to her page to do so.",
+                "description": "Now we can make use of that **Knife** Suzy has been carrying. There are 4 pigs currently at the farm. Press *Start* and wait while she turns them into neatly sized pieces of meat.\r\n\r\nAt the top, \"Carried by Suzy\" indicates whose inventory the bacon will go to, and who is holding the knife. If it doesn't say that, you may need to go back to her screen and click on the knife to get to this screen. Similarly, if the pigs are at the farm but it says \"Have 0\" here, navigate back to the farm and then click through the pigs to get here.\r\n\r\nLooks like we ran out. Go back to **Pigs** and see how to get more.\r\n\r\nOnce you have a full load of raw bacon (20), it's time for Suzy to start the perilous trip back home. Navigate to her page to return to **Sketchy-Path Forest.**",
                 "q_limit": 20.0,
                 "recipes": [
                     {
@@ -176,7 +176,7 @@
             {
                 "id": 16,
                 "name": "Sketchy-Path Forest",
-                "description": "To cross this area, **Suzy** is expected to run the **Navigate Woods** event. However, let's assume everything goes smoothly during the daytime, that is, the first time Suzy visits. Use the numpad (navigation buttons on mobile) to move to the eastern exit. Then press \"t\" to travel, or click on Suzy and select the destination.",
+                "description": "To cross this area, **Suzy** is expected to run the **Navigate Woods** event. However, let's assume everything goes smoothly during the daytime, that is, the first time Suzy visits. Use the numpad (or arrow keys; navigation buttons on mobile) to move to the eastern exit. Then press \"t\" to travel, or click on Suzy and select the destination.\r\n\r\n* * * * *\r\n\r\nOn the return trip, go to **Suzy** > **Navigate Woods.**",
                 "dimensions": [10, 5],
                 "masked": true,
                 "items": [
@@ -229,7 +229,7 @@
             {
                 "id": 17,
                 "name": "Suzy",
-                "description": "This is your player character for the scenario. Under *Player* in the upper right, *Change Username* to \"Playing as Suzy.\" Then return **Home.**\r\n\r\nOnce you're finished at **Home** and are ready to travel, take a look at the possible destinations to travel to. There's only one, initially shown as *(not yet visited),* so select it and press *Go*. On arrival, the location is revealed.\r\n\r\n* * * * *\r\n\r\nIf you've finished getting bacon, then it's time to go back. Getting *to* the forest won't be a problem, but *leaving* it will be. In case the event doesn't pop up (5% chance), we'll still say it happened, so make sure Suzy is in the forest and click on **Navigate Woods.** Continue by following instructions for that event.",
+                "description": "This is your player character for the scenario. In the upper right menu, find *User Settings* and change username to \"Playing as Suzy\" (or another name you prefer). Then return **Home.**\r\n\r\nOnce you're finished at **Home** and are ready to travel, take a look at the possible destinations to travel to. There's only one, initially shown as *(not yet visited),* so select it and press *Go*. On arrival, the location is revealed.",
                 "attribs": [
                     [2, 1.0],
                     [4, 1.0],
@@ -255,7 +255,7 @@
             {
                 "id": 23,
                 "name": "Wolf",
-                "description": "Shaggy forest dweller with teeth and a snarl.\r\n\r\nTo appear, set location to **Sketchy-Path Forest** and grid position for example `4,1`.",
+                "description": "Shaggy forest dweller with teeth and a snarl.\r\n\r\nTo appear, set location to **Sketchy-Path Forest** and grid position, for example `4,1`.",
                 "position": [4, 1]
             }
         ],
@@ -287,19 +287,19 @@
             {
                 "id": 21,
                 "name": "Connect to Service",
-                "description": "Suzy needs to call her Mother for help of some kind. Choose Easy difficulty since we won't be far from civilization, then roll.\r\n\r\nFor a major success, Mother will explain to Suzy how to get home, meaning that she will arrive home without further incident. For a minor success, Mother can travel to the woods and lead Suzy out, using her higher **Pathfinding** skill so that **Navigate Woods** has a better chance to succeed.\r\n\r\nFor a single minor failure, Suzy can probably just try to call again (wouldn't you, if you were her?) But if things get worse, you might have to go to setup and add a **Wolf** character, then roll either **Navigate Woods** or a new event such as **Danger Interaction** to see if it is close enough to be threatening. If push comes to shove, maybe she can grab a fallen branch to fend it off (set up as a new item), or climb a tree, or yell.\r\n\r\nThis is the end of the walkthrough explanation. After returning home, Suzy can cook the bacon. Once the win condition described under *Overall Settings* is met, a green checkmark should show in the log on the overview page, indicating that the scenario is successfully completed.",
+                "description": "Suzy needs to call her **Mother** for help of some kind. Choose *Easy* difficulty since we won't be far from civilization, then roll.\r\n\r\nOn *Major Success,* Mother explains to Suzy how to get home, meaning that she will arrive home without further incident. On *Minor Success,* Mother can travel to the woods and lead Suzy out, using her higher **Pathfinding** skill so that **Navigate Woods** has a better chance to succeed.\r\n\r\nOn a single *Minor Failure,* Suzy can probably just try to call again (wouldn't you, if you were her?) But if things get worse, go to setup and put the **Wolf** character at this location, then roll **Contest Enemy.** Avoiding the wolf might still be the best plan, but if push comes to shove, she can grab a fallen branch to fend it off, or climb a tree, or yell.\r\n\r\nThis is the end of the walkthrough. After returning home, Suzy can cook the bacon. Once the win conditions in *Scenario Settings* are met, go to the overview page to see that the scenario has been completed.",
                 "numeric_range": [1, 20]
             },
             {
                 "id": 27,
                 "name": "Contest Enemy",
-                "description": "Run, hide, frighten, fight—the choice is up to you.\r\n\r\nEdit this event to add **Climbing** as a *Determinant*. Or, [create an attribute](/configure/#attrib), such as **Strength** for fighting, and assign Suzy a value (she would be weak).",
+                "description": "Run, hide, frighten, fight—the choice is up to you.\r\n\r\nEdit this event to add **Climbing** as a *Determinant.* Or, [create an attribute](/configure/#attrib), such as **Strength** for fighting, and assign Suzy a value (she would be weak).",
                 "numeric_range": [1, 20]
             },
             {
                 "id": 25,
                 "name": "Navigate Woods",
-                "description": "Set difficulty to Moderate, meaning the chance of getting lost or eaten by wolves in this particular forest is decent but not overwhelming. If Suzy is alone in the forest, select her name with stat 2 and press *Add*. Otherwise, use her Mother's stat. Then press *Roll*.\r\n\r\nBecause she's tired after all those chores, play at a disadvantage, which means we take the worst of two rolls. So, remember the first result and then press Roll again.\r\n\r\nActually, in this case, we need it to be a *Minor Failure*, so keep rolling until that happens. We'll take that to mean she's lost but there are no wolves or twisted ankles.\r\n\r\nTo get out of this pickle, go to Suzy's page and and find the **Connect to Service** event.",
+                "description": "Because Suzy is tired after all those chores, set difficulty to *Hard,* meaning there is a substantial risk of of getting lost or eaten by wolves.\r\n\r\nFor this walkthrough, keep rolling until the outcome is a *Minor Failure.* We'll take that to mean she's lost but there are no wolves or twisted ankles.\r\n\r\nTo get out of this pickle, go to Suzy's page and and find the **Connect to Service** event.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {

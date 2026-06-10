@@ -1,12 +1,12 @@
 # Team Progress Kit
 
-## Incremental + TTRPG
+## Overview
 
 Produce, interact, and explore, driven by storytelling and chance. Model ideas using descriptive text as building blocks.
 
 A good place to start is the pre-built quest **Bacon for Dinner.** If you're not a divergent thinker, you may still enjoy the **Rays** scenario, designed like a standard idler.
 
-The original idea behind this game was to be an *incremental-plus,* with roleplaying mechanics to provide the flexibility other idlers lack. Like, employees from a rival factory might suddenly attack with staplers.
+The original idea behind this game was to be an *incremental-plus,* with roleplaying mechanics to provide the flexibility other idlers lack. Like, employees from a rival factory might suddenly attack with staplers. A lot of the scenarios ended up as primarily either incremental or RPG, so I included a progress type tag on the browse page.
 
 ## Right for you?
 

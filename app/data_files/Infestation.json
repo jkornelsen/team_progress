@@ -12,7 +12,7 @@
         "tag_best_order": 30,
         "tag_progress_type": "RPG",
         "tag_multiplayer": false,
-        "tag_complete": "04 Under Construction"
+        "tag_complete": "07 Playable / Under Construction"
     },
     "entities": {
         "items": [
@@ -134,8 +134,16 @@
                 "name": "🐭Full-grown Mouse",
                 "description": "Okay, it's still kind of cute, despite the toxic green eyes.",
                 "attribs": [
+                    [27, 11.0],
+                    [29, 1.0],
+                    [30, 5.0],
+                    [45, 0.0],
+                    [53, 11.0],
+                    [56, 1.0],
+                    [57, 1.0],
                     [60, 7.0]
                 ],
+                "abilities": [39, 41, 43, 46, 47, 49, 58, 62],
                 "location_id": 7
             },
             {
@@ -146,7 +154,7 @@
                     [2, 0.0],
                     [4, 1.0],
                     [27, 10.0],
-                    [29, 3.0],
+                    [29, 2.0],
                     [30, 2.0],
                     [45, 0.0],
                     [53, 10.0]
@@ -180,14 +188,9 @@
         ],
         "attribs": [
             {
-                "id": 32,
-                "name": "Accuracy",
-                "description": "Or use Action Speed instead, meaning a guaranteed hit if we can land a hit on the target fast enough? Because robots should be 100% accurate unless something is damaged."
-            },
-            {
                 "id": 30,
                 "name": "Action Speed",
-                "description": "Higher numbers increase not only your chance of getting in a hit before the opponent, but also landing hits before they can dodge."
+                "description": "Higher numbers increase your chance of landing hits before they can dodge."
             },
             {
                 "id": 45,
@@ -235,7 +238,7 @@
             {
                 "id": 4,
                 "name": "XL",
-                "description": "<pre>\r\nLevel  Total XP Required\r\n~~~~~  ~~~~~~~~~~~~~~~~~\r\n1      (0)\r\n2      5\r\n3      15\r\n4      30\r\n5      50\r\n6      80\r\n7      120\r\n8      180\r\n9      260\r\n10     370\r\n11     500\r\n12     660\r\n13     860\r\n14     1110\r\n15     1400\r\n16     1800\r\n17     2300\r\n18     2900\r\n19     3600\r\n20     4200\r\n</pre>"
+                "description": "The required **XP** to reach a level is (XL × 1.8)^{2}\r\n\r\n<pre>\r\nLevel  Total XP Required\r\n~~~~~  ~~~~~~~~~~~~~~~~~\r\n2      13\r\n3      30\r\n4      52\r\n5      81\r\n6      117\r\n7      159\r\n8      208\r\n9      263\r\n10     324\r\n11     393\r\n12     467\r\n13     548\r\n14     636\r\n15     729\r\n16     830\r\n17     937\r\n18     1050\r\n19     1170\r\n20     1296\r\n</pre>"
             },
             {
                 "id": 2,
@@ -252,7 +255,7 @@
             {
                 "id": 39,
                 "name": "Bite (To-Hit)",
-                "description": "Use teeth for a basic melee attack.\r\n\r\n- **Difficulty:** If the enemy significantly outlevels you, for example level 1 or 2 to the enemy's 5, then set difficulty to *Easy*. If you significantly outlevel the enemy, then set difficulty to *Hard*.\r\n- **Damage:** If the attack hits then roll **ATK Bite Dmg.**\r\n- **Major Success:** (Nat 20) Enemy gets two damage rolls instead of one.\r\n- **Major Failure:** Wild lunge—enemy cannot reposition on the next turn.",
+                "description": "Use teeth for a basic melee attack.\r\n\r\n- **Damage:** If the attack hits then roll **Bite Dmg.**\r\n- **Major Success:** (Nat 20) Enemy gets two damage rolls instead of one.\r\n- **Major Failure:** Wild lunge—enemy cannot reposition on the next turn.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -301,10 +304,6 @@
                 "determinants": [
                     {
                         "infield": {"attrib_id": 29}
-                    },
-                    {
-                        "infield": {"role": "target char", "attrib_id": 27},
-                        "op_application": ">="
                     }
                 ],
                 "effects": [
@@ -317,10 +316,10 @@
             },
             {
                 "id": 41,
-                "name": "Choose Baby Mouse Action",
-                "description": "Roll to determine what an enemy does next.\r\nIf there is a straightforward choice then there is no need to roll.\r\nIf the result does not make sense for this encounter, then roll again.",
+                "name": "Choose Mouse Action",
+                "description": "If there is a straightforward choice then there is no need to roll. At range, Baby mice typically wait, unless they're getting blasted. Adult mice use their ranged fur attack unless they have too little **HP.**\r\n\r\nOtherwise, roll to determine what the mouse does next. If the outcome does not make sense for this encounter, then roll again. Mice aren't really fighters and often freeze (wait) at inopportune times.",
                 "outcome_type": "selection",
-                "selection_strings": "Bite\r\nWait\r\nMove Away"
+                "selection_strings": "Bite\r\nWait — End Turn\r\nMove Away"
             },
             {
                 "id": 36,
@@ -331,7 +330,7 @@
             {
                 "id": 28,
                 "name": "Fist Pummel (To-Hit)",
-                "description": "Close grasping digits and swing robotic arm forward. Basic melee attack.\r\n\r\n- **Any Success:** If the attack hits then roll **ATK Fist Pummel Dmg.**\r\n- **Major Success:** (Nat 20) Two damage rolls instead of one.\r\n- **Major Failure:** Consumes 2 **Energy** instead of 1.\r\n\r\nAfter swinging, the enemy gets a turn.",
+                "description": "Close grasping digits and swing robotic arm forward. Basic melee attack.\r\n\r\n- **Any Success:** If the attack hits then roll **Fist Pummel Dmg.**\r\n- **Major Success:** (Nat 20) Two damage rolls instead of one.\r\n- **Major Failure:** Consumes 2 **Energy** instead of 1.\r\n\r\nAfter swinging, the enemy gets a turn.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -399,10 +398,6 @@
                 "numeric_range": [1, 6],
                 "determinants": [
                     {
-                        "infield": {"role": "target char", "attrib_id": 27},
-                        "op_application": ">="
-                    },
-                    {
                         "infield": {"attrib_id": 29}
                     },
                     {
@@ -419,7 +414,13 @@
                     }
                 ],
                 "chained": [
-                    {"child_id": 18}
+                    {
+                        "child_id": 18,
+                        "req": {
+                            "infield": {"role": "target char", "attrib_id": 27},
+                            "op_application": "<"
+                        }
+                    }
                 ]
             },
             {
@@ -456,22 +457,93 @@
             {
                 "id": 35,
                 "name": "Ignite",
-                "description": "Burning enemies take damage each round. Typically lasts 3 rounds. Damage per round is decided by the original event outcome.\r\n\r\n- **Energy**: Make sure the robot has at least 1 to start.\r\n\r\nRoll, then see [Finish Fight](/play/event/18?subject_id=13).",
+                "description": "Shoot flames out of a nozzle that can reach up to 2 distance. Hard to dodge, but the flame doesn't always take.\r\n\r\n- **Major Success:** 50% more damage\r\n- Burning enemies must **Suffer DoT** for 3 turns\r\n- **Any Failure:** lose energy, no damage",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
-                        "infield": {"attrib_id": 4}
+                        "label": "Extended Melee Range",
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "op_application": "<",
+                        "val_required": 3.0
                     },
                     {
-                        "infield": {"role": "target char", "attrib_id": 4},
-                        "op_application": "-"
+                        "label": "Can Operate",
+                        "infield": {"field_mode": "qty", "item_id": 5},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Powerful Enough",
+                        "infield": {"attrib_id": 33},
+                        "op_application": ">=",
+                        "val_required": 2.0
+                    },
+                    {
+                        "label": "Can Fight",
+                        "infield": {"attrib_id": 27},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Enemy Can Fight",
+                        "infield": {"role": "target char", "attrib_id": 27},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Chance to Hit",
+                        "infield": {"attrib_id": 30},
+                        "op_transform": "*",
+                        "val_transform": 0.5
+                    },
+                    {
+                        "label": "Evasion",
+                        "infield": {"role": "target char", "attrib_id": 30},
+                        "op_application": "-",
+                        "op_transform": "*",
+                        "val_transform": 0.5
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"field_mode": "qty", "item_id": 5},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 3.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 57},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 3.0
+                    },
+                    {
+                        "infield": {"attrib_id": 33},
+                        "outfield": {"attrib_id": 56},
+                        "op_application": ":=",
+                        "op_transform": "/",
+                        "val_transform": 2.0,
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "get_val_from": "outfield",
+                        "outfield": {"attrib_id": 56},
+                        "op_application": ":=",
+                        "op_transform": "*",
+                        "val_transform": 1.5,
+                        "outcome_success": "success_major"
+                    },
+                    {
+                        "get_val_from": "outfield",
+                        "outfield": {"attrib_id": 56},
+                        "op_application": ":=",
+                        "op_transform": "round"
                     }
                 ]
             },
             {
                 "id": 54,
                 "name": "Level Up!",
-                "description": "Gaining a new level:\r\n- increases **Energy** limit and sets current energy to full\r\n- increases **Max HP** and sets **HP** to full\r\n\r\nOn reaching level 3, see [Upgrade Bonus](/play/event/23?subject_id=13).",
+                "description": "Gaining a new level:\r\n- increases **Energy** limit and sets current energy to full\r\n- increases **Max HP** and sets **HP** to full\r\n- **Force** and **Action Speed** increase every few levels",
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -525,6 +597,63 @@
                         "infield": {"role": "blueprint", "field_mode": "limit", "item_id": 5},
                         "outfield": {"field_mode": "qty", "item_id": 5},
                         "op_application": ":="
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 30},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 30},
+                        "op_transform": "*",
+                        "val_transform": 0.3
+                    },
+                    {
+                        "get_val_from": "outfield",
+                        "outfield": {"attrib_id": 30},
+                        "op_application": ":=",
+                        "op_transform": "floor"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 29},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 2.5
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 29},
+                        "op_transform": "*",
+                        "val_transform": 0.5
+                    },
+                    {
+                        "get_val_from": "outfield",
+                        "outfield": {"attrib_id": 29},
+                        "op_application": ":=",
+                        "op_transform": "floor"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 33},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.5
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 33},
+                        "op_transform": "*",
+                        "val_transform": 0.7
+                    },
+                    {
+                        "get_val_from": "outfield",
+                        "outfield": {"attrib_id": 33},
+                        "op_application": ":=",
+                        "op_transform": "floor"
                     }
                 ]
             },
@@ -723,6 +852,85 @@
                         "label": "Target Can Fight",
                         "infield": {"role": "target char", "attrib_id": 27},
                         "op_application": ">="
+                    }
+                ]
+            },
+            {
+                "id": 62,
+                "name": "Project Fur (To-Hit)",
+                "description": "The creature goes wild and tears off some of its own corrupted fur to throw at you from distance.\r\n\r\n- **Damage:** If the attack hits then roll **Project Fur Dmg.**\r\n- **Major Failure:** More self-inflicted **HP** loss.\r\n- This attack cannot crit—*Major Success* has no additional effect.",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "label": "Ranged Dist",
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "op_application": ">=",
+                        "val_required": 3.0
+                    },
+                    {
+                        "label": "Can Fight",
+                        "infield": {"attrib_id": 27},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Target Can Fight",
+                        "infield": {"role": "target char", "attrib_id": 27},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Chance to Hit",
+                        "infield": {"attrib_id": 30}
+                    },
+                    {
+                        "label": "Accuracy Bonus",
+                        "infield": {"attrib_id": 45}
+                    },
+                    {
+                        "label": "Evasion",
+                        "infield": {"role": "target char", "attrib_id": 30},
+                        "op_application": "-"
+                    }
+                ],
+                "effects": [
+                    {
+                        "label": "Loss of Fur",
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 27},
+                        "op_application": "-",
+                        "op_transform": "c"
+                    },
+                    {
+                        "label": "Loss of Fur",
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 27},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "outcome_success": "failure_major"
+                    }
+                ],
+                "chained": [
+                    {
+                        "child_id": 63,
+                        "req": {"outcome_success": "success_any"}
+                    }
+                ]
+            },
+            {
+                "id": 63,
+                "name": "Project Fur Dmg",
+                "description": "Damage applies to the target, not self-inflicted.",
+                "outcome_type": "numeric",
+                "numeric_range": [1, 2],
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 29}
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 27},
+                        "op_application": "-"
                     }
                 ]
             },
