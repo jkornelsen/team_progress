@@ -21,6 +21,10 @@
 
 {% block content %}
 
+<script>
+    window.linkForKey['a'] = "#apply-all-btn";
+</script>
+
 {# =========================================================================
    2. MAIN CONTENT
    ========================================================================= #}
@@ -268,7 +272,7 @@
                     <h3>Effects</h3>
                     {% set roll_title = 'Resolve' if event.outcome_type == OutcomeType.DETERMINED else 'Roll' %}
                     {% set manual_count = event.effects | rejectattr('auto_apply') | list | length %}
-                    {% if manual_count > 1 %}
+                    {% if manual_count >= 1 %}
                         <div id="apply-all-container">
                             <button type="button"
                                 id="apply-all-btn"
@@ -276,7 +280,7 @@
                                 disabled
                                 title="Available after pressing {{ roll_title }}"
                                 onclick="applyAllManual()">
-                                — Apply All —
+                                —— {{ hk.bracket('a') }}pply all ——
                             </button>
                         </div>
                     {% endif %}
@@ -675,7 +679,7 @@ function syncApplyAllState() {
         '.effect-row:not(.hidden) .apply-eff-btn:not(.hidden):not(:disabled)'
     );
 
-    if (activeManualButtons.length <= 1) {
+    if (activeManualButtons.length < 1) {
         container.classList.add('hidden');
     } else {
         container.classList.remove('hidden');

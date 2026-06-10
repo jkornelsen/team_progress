@@ -11,7 +11,6 @@
         "tag_introduce_order": 30,
         "tag_best_order": 30,
         "tag_progress_type": "RPG",
-        "tag_multiplayer": false,
         "tag_complete": "07 Playable / Under Construction"
     },
     "entities": {
@@ -54,11 +53,16 @@
                 "id": 6,
                 "name": "Recharging Station",
                 "description": "Click on *Energy* to power up the robot.",
-                "abilities": [52],
                 "storage_type": "l",
                 "q_limit": 1.0
             },
-            {"id": 51, "name": "Repair Dock", "storage_type": "l", "q_limit": 1.0}
+            {
+                "id": 51,
+                "name": "Repair Dock",
+                "abilities": [52],
+                "storage_type": "l",
+                "q_limit": 1.0
+            }
         ],
         "locations": [
             {
@@ -88,7 +92,6 @@
                 "id": 12,
                 "name": "Maintenance Building",
                 "description": "An outpost in northern Florida set up to contain the infestation. Engineers assess intel and perform upgrades and repairs.",
-                "abilities": [52],
                 "items": [
                     {"item_id": 6, "quantity": 1.0},
                     {"item_id": 51, "quantity": 1.0}
@@ -111,8 +114,8 @@
                     [30, 3.0],
                     [45, 0.0],
                     [53, 5.0],
-                    [56, 1.0],
-                    [57, 1.0],
+                    [56, 0.0],
+                    [57, 0.0],
                     [60, 3.0]
                 ],
                 "abilities": [39, 41, 43, 46, 47, 49, 58],
@@ -127,6 +130,7 @@
                     [26, 1.0],
                     [60, 100.0]
                 ],
+                "abilities": [65],
                 "location_id": 9
             },
             {
@@ -135,12 +139,12 @@
                 "description": "Okay, it's still kind of cute, despite the toxic green eyes.",
                 "attribs": [
                     [27, 11.0],
-                    [29, 1.0],
+                    [29, 2.0],
                     [30, 5.0],
                     [45, 0.0],
                     [53, 11.0],
-                    [56, 1.0],
-                    [57, 1.0],
+                    [56, 0.0],
+                    [57, 0.0],
                     [60, 7.0]
                 ],
                 "abilities": [39, 41, 43, 46, 47, 49, 58, 62],
@@ -149,17 +153,18 @@
             {
                 "id": 13,
                 "name": "🤖 Herbert 2100B",
-                "description": "Semi-autonomous robot, the player character.\r\n\r\nDoes not get diseases from being bitten, but has a limited amount of power.\r\nBattle testing allows engineers to improve the technology.\r\nFight initiator—always gets the first turn.",
+                "description": "Semi-autonomous robot, the player character.\r\nFight initiator—always gets the first turn.\r\nDoes not get diseases from being bitten, but has a limited amount of power.\r\nBattle testing allows engineers to improve the technology.",
                 "attribs": [
                     [2, 0.0],
                     [4, 1.0],
                     [27, 10.0],
                     [29, 2.0],
                     [30, 2.0],
+                    [33, 1.0],
                     [45, 0.0],
                     [53, 10.0]
                 ],
-                "abilities": [28, 35, 43, 44, 47],
+                "abilities": [28, 35, 43, 44, 47, 64],
                 "toplevel": true,
                 "location_id": 12,
                 "items": [
@@ -174,7 +179,8 @@
                     [3, 0.0],
                     [26, 1.0],
                     [60, 200.0]
-                ]
+                ],
+                "abilities": [65]
             },
             {
                 "id": 14,
@@ -195,7 +201,7 @@
             {
                 "id": 45,
                 "name": "Boost",
-                "description": "Set to the result of [Surge](/play/event/44) for 1 round. It goes away even if the enemy doesn't choose to attack in that round."
+                "description": "Gets set by **Surge** for 1 round. It goes away even if the enemy doesn't choose to attack in that round."
             },
             {
                 "id": 3,
@@ -381,6 +387,14 @@
                         "op_application": "-",
                         "op_transform": "c",
                         "outcome_success": "failure_major"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 45},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0,
+                        "outcome_success": "failure_any"
                     }
                 ],
                 "chained": [
@@ -411,6 +425,13 @@
                         "get_val_from": "outcome",
                         "outfield": {"role": "target char", "attrib_id": 27},
                         "op_application": "-"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 45},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0
                     }
                 ],
                 "chained": [
@@ -430,6 +451,14 @@
                 "outcome_type": "determined",
                 "effects": [
                     {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 5.0,
+                        "auto_apply": true
+                    },
+                    {
                         "infield": {"attrib_id": 53},
                         "outfield": {"attrib_id": 27},
                         "op_application": ":=",
@@ -446,10 +475,18 @@
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "outfield": {"attrib_id": 57},
                         "op_application": ":=",
                         "op_transform": "c",
-                        "val_transform": 5.0,
+                        "val_transform": 0.0,
+                        "auto_apply": true
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 56},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0,
                         "auto_apply": true
                     }
                 ]
@@ -514,19 +551,26 @@
                         "outfield": {"role": "target char", "attrib_id": 57},
                         "op_application": ":=",
                         "op_transform": "c",
-                        "val_transform": 3.0
+                        "val_transform": 3.0,
+                        "outcome_success": "success_any"
                     },
                     {
                         "infield": {"attrib_id": 33},
-                        "outfield": {"attrib_id": 56},
+                        "outfield": {"role": "target char", "attrib_id": 56},
                         "op_application": ":=",
                         "op_transform": "/",
                         "val_transform": 2.0,
                         "outcome_success": "success_any"
                     },
                     {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 56},
+                        "op_transform": "c",
+                        "outcome_success": "success_any"
+                    },
+                    {
                         "get_val_from": "outfield",
-                        "outfield": {"attrib_id": 56},
+                        "outfield": {"role": "target char", "attrib_id": 56},
                         "op_application": ":=",
                         "op_transform": "*",
                         "val_transform": 1.5,
@@ -534,9 +578,10 @@
                     },
                     {
                         "get_val_from": "outfield",
-                        "outfield": {"attrib_id": 56},
+                        "outfield": {"role": "target char", "attrib_id": 56},
                         "op_application": ":=",
-                        "op_transform": "round"
+                        "op_transform": "round",
+                        "outcome_success": "success_any"
                     }
                 ]
             },
@@ -658,6 +703,45 @@
                 ]
             },
             {
+                "id": 64,
+                "name": "Maintenance Self",
+                "description": "Use instead of returning to the **Maintenance Building,** either after the enemy is defeated or by travelling to a safe area.",
+                "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "infield": {"field_mode": "qty", "item_id": 5},
+                        "op_application": ">=",
+                        "val_required": 10.0
+                    },
+                    {
+                        "infield": {"attrib_id": 53}
+                    },
+                    {
+                        "infield": {"attrib_id": 27},
+                        "op_application": "-"
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"field_mode": "qty", "item_id": 5},
+                        "op_application": "-",
+                        "op_transform": "/",
+                        "val_transform": 5.0
+                    },
+                    {
+                        "get_val_from": "outfield",
+                        "outfield": {"field_mode": "qty", "item_id": 5},
+                        "op_application": ":=",
+                        "op_transform": "floor"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 27}
+                    }
+                ]
+            },
+            {
                 "id": 43,
                 "name": "Move Away",
                 "description": "Step out of melee range, repositioning to 5 tiles away.\r\n\r\n- **Major Success:** (Nat 20) No loss of turn—the action is free.\r\n- **Minor Success:** Move away and turn ends.\r\n- **Minor Failure:** Disengage but allow an *Attack of Opportunity* (wait to apply distance).\r\n- **Major Failure:** Still in melee range.",
@@ -741,121 +825,6 @@
                 ]
             },
             {
-                "id": 37,
-                "name": "Resist Shock",
-                "description": "Attempt to resist getting shocked. Is this necessary or can the attack event do the necessary roll?",
-                "numeric_range": [1, 20]
-            },
-            {
-                "id": 47,
-                "name": "Rush to Melee Dist",
-                "description": "Rush into melee range, repositioning to 1 tile away.\r\n\r\n- **Success:** The action is free—no loss of turn.\r\n- **Minor Failure:** Close gap but turn ends and consumes 1 **Energy.**\r\n- **Major Failure:** Fail to close gap.",
-                "numeric_range": [1, 20],
-                "determinants": [
-                    {
-                        "label": "Not Melee Dist",
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
-                        "op_application": ">=",
-                        "val_required": 2.0
-                    },
-                    {
-                        "label": "Can Fight",
-                        "infield": {"attrib_id": 27},
-                        "op_application": ">="
-                    },
-                    {
-                        "label": "Target Can Fight",
-                        "infield": {"role": "target char", "attrib_id": 27},
-                        "op_application": ">="
-                    },
-                    {
-                        "label": "Quickness",
-                        "infield": {"attrib_id": 30}
-                    },
-                    {
-                        "label": "Quickness",
-                        "infield": {"role": "target char", "attrib_id": 30},
-                        "op_application": "-"
-                    }
-                ],
-                "effects": [
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 48},
-                        "op_application": ":=",
-                        "op_transform": "c",
-                        "outcome_success": "success_any"
-                    },
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 48},
-                        "op_application": ":=",
-                        "op_transform": "c",
-                        "outcome_success": "failure_minor"
-                    },
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {"field_mode": "qty", "item_id": 5},
-                        "op_application": "-",
-                        "op_transform": "c",
-                        "outcome_success": "failure_any"
-                    }
-                ]
-            },
-            {
-                "id": 49,
-                "name": "Suffer DoT",
-                "description": "Roll and apply the damage.\r\n\r\nDamage over time due to burning or toxicity. Applies each turn even when the opponent does not attack, so backing off may be worthwhile.",
-                "outcome_type": "numeric",
-                "numeric_range": [0, 2],
-                "determinants": [
-                    {
-                        "infield": {"attrib_id": 57},
-                        "op_application": ">="
-                    },
-                    {
-                        "infield": {"attrib_id": 27},
-                        "op_application": ">="
-                    },
-                    {
-                        "infield": {"attrib_id": 56},
-                        "op_application": "*"
-                    }
-                ],
-                "effects": [
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {"attrib_id": 57},
-                        "op_application": "-",
-                        "op_transform": "c"
-                    },
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {"attrib_id": 27},
-                        "op_application": "-"
-                    }
-                ]
-            },
-            {
-                "id": 44,
-                "name": "Surge",
-                "description": "Gain bonus power and speed for 1 turn.\r\n\r\n- Normally costs a turn to use. However, if you had just withdrawn to range and the enemy used their turn to follow, then it does not.\r\n- Can only be used once per fight.\r\n- Chance of causing a small penalty rather than a bonus.",
-                "outcome_type": "numeric",
-                "numeric_range": [-1, 4],
-                "determinants": [
-                    {
-                        "label": "Can Fight",
-                        "infield": {"attrib_id": 27},
-                        "op_application": ">="
-                    },
-                    {
-                        "label": "Target Can Fight",
-                        "infield": {"role": "target char", "attrib_id": 27},
-                        "op_application": ">="
-                    }
-                ]
-            },
-            {
                 "id": 62,
                 "name": "Project Fur (To-Hit)",
                 "description": "The creature goes wild and tears off some of its own corrupted fur to throw at you from distance.\r\n\r\n- **Damage:** If the attack hits then roll **Project Fur Dmg.**\r\n- **Major Failure:** More self-inflicted **HP** loss.\r\n- This attack cannot crit—*Major Success* has no additional effect.",
@@ -931,6 +900,197 @@
                         "get_val_from": "outcome",
                         "outfield": {"role": "target char", "attrib_id": 27},
                         "op_application": "-"
+                    }
+                ]
+            },
+            {
+                "id": 65,
+                "name": "Refresh Boss",
+                "description": "Run when you exit the area while the fight is in progress.",
+                "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 27},
+                        "op_application": ">="
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 5.0,
+                        "auto_apply": true
+                    },
+                    {
+                        "infield": {"attrib_id": 53},
+                        "outfield": {"attrib_id": 27},
+                        "op_application": ":=",
+                        "val_transform": 5.0,
+                        "auto_apply": true
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 45},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0,
+                        "auto_apply": true
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 57},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0,
+                        "auto_apply": true
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 56},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0,
+                        "auto_apply": true
+                    }
+                ]
+            },
+            {
+                "id": 37,
+                "name": "Resist Shock",
+                "description": "Attempt to resist getting shocked. Is this necessary or can the attack event do the necessary roll?",
+                "numeric_range": [1, 20]
+            },
+            {
+                "id": 47,
+                "name": "Rush to Melee Dist",
+                "description": "Rush into melee range, repositioning to 1 tile away.\r\n\r\n- **Success:** The action is free—no loss of turn.\r\n- **Minor Failure:** Close gap but turn ends and (if robot) consumes 1 **Energy.**\r\n- **Major Failure:** Fail to close gap.",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "label": "Not Melee Dist",
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "op_application": ">=",
+                        "val_required": 2.0
+                    },
+                    {
+                        "label": "Can Fight",
+                        "infield": {"attrib_id": 27},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Target Can Fight",
+                        "infield": {"role": "target char", "attrib_id": 27},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Quickness",
+                        "infield": {"attrib_id": 30}
+                    },
+                    {
+                        "label": "Quickness",
+                        "infield": {"role": "target char", "attrib_id": 30},
+                        "op_application": "-"
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "outcome_success": "failure_minor"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"field_mode": "qty", "item_id": 5},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "outcome_success": "failure_any"
+                    }
+                ]
+            },
+            {
+                "id": 49,
+                "name": "Suffer DoT",
+                "description": "Damage over time due to burning or toxicity.\r\nRun at the start of each turn even when the opponent does not attack.",
+                "outcome_type": "numeric",
+                "numeric_range": [1, 3],
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 27},
+                        "op_application": ">="
+                    },
+                    {
+                        "infield": {"attrib_id": 57},
+                        "op_application": ">="
+                    },
+                    {
+                        "infield": {"attrib_id": 56},
+                        "op_application": "*"
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 57},
+                        "op_application": "-",
+                        "op_transform": "c"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 27},
+                        "op_application": "-"
+                    }
+                ]
+            },
+            {
+                "id": 44,
+                "name": "Surge",
+                "description": "Gain bonus power and attack speed for 1 turn.\r\n\r\n- Normally costs a turn to use. However, if you had just withdrawn to range and the enemy used their turn to follow, then it does not.\r\n- Chance of causing a small penalty rather than a bonus.",
+                "outcome_type": "numeric",
+                "numeric_range": [-1, 4],
+                "determinants": [
+                    {
+                        "infield": {"field_mode": "qty", "item_id": 5},
+                        "op_application": ">=",
+                        "val_required": 4.0
+                    },
+                    {
+                        "label": "Can Fight",
+                        "infield": {"attrib_id": 27},
+                        "op_application": ">="
+                    },
+                    {
+                        "infield": {"attrib_id": 45},
+                        "op_application": "<"
+                    },
+                    {
+                        "label": "Target Can Fight",
+                        "infield": {"role": "target char", "attrib_id": 27},
+                        "op_application": ">="
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"field_mode": "qty", "item_id": 5},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 3.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 45},
+                        "op_application": ":="
                     }
                 ]
             },

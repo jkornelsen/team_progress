@@ -98,6 +98,7 @@ def play_location(id):
     location = Location.query.get_or_404((game_token, id))
     capture_origin(name=location.name)
     session['old_loc_id'] = id
+    logger.debug(f"old_loc_id={id}")
     
     # 1. Fetch Characters & Items
     characters_here = Character.query.filter_by(
@@ -792,6 +793,7 @@ def play_event(id):
         ctx_loc_id = ctx_char.location_id
     ctx_loc = Location.query.get(
         (game_token, ctx_loc_id)) if ctx_loc_id else None
+    logger.debug(f"ctx_loc_id={ctx_loc_id}")
 
     # Get list of all available nearby entities
 
@@ -913,7 +915,7 @@ def play_event(id):
         OutcomeType=OutcomeType,
         Participant=Participant,
         Operation=Operation,
-        link_letters=LinkLetters(excluded='moerijk')
+        link_letters=LinkLetters(excluded='moeraijk')
     )
 
 @play_bp.route('/event/preview/<int:id>', methods=['POST'])

@@ -30,8 +30,6 @@
                 <option value="completeness" {{ 'selected' if sort_by == 'completeness' }}>Completeness</option>
                 <option value="filesize" {{ 'selected' if sort_by == 'filesize' }}>Size</option>
                 <option value="progress_type" {{ 'selected' if sort_by == 'progress_type' }}>Progress Type</option>
-                <option value="multiplayer" {{ 'selected' if sort_by == 'multiplayer' }}>Multiplayer Design</option>
-                <option value="title" {{ 'selected' if sort_by == 'title' }}>Alphabetical</option>
             </select>
         </form>
     </header>
@@ -58,9 +56,6 @@
                     <span class="tag">{{ scenario.completeness }}</span>
                     <span class="tag">{{ (scenario.filesize / 1024) | int }} KB</span>
                     <span class="tag">{{ scenario.progress_type }}</span>
-                    {% if scenario.multiplayer %}
-                        <span class="tag tag-mp" title="Designed for multiple players">Multiplayer</span>
-                    {% endif %}
                 </div>
 
                 <form method="POST" action="{{ url_for('session.browse_scenarios') }}">

@@ -24,6 +24,33 @@ don't show duplicate destinations in play location
     same door positions (null in the example)
     maybe shouldn't allow in database
 
+action speed took two "level up" rolls to get right
+    31 xp, level 4
+    🤖 Herbert 2100B Action Speed
+    ✓ Changed
+    2 → 2 = 2
+    🤖 Herbert 2100B Action Speed
+    ✓ Changed
+    (Roll Result × 0.3)
+    2 + (Roll × 0.3) = 3.2
+    🤖 Herbert 2100B Action Speed
+    ✓ Changed
+    Floor(Action Speed, 1.0)
+    3.2 → Floor(3, 1.0) = 3 = 2
+
+ignite effects display could use work
+    🐭Full-grown Mouse DoT Power
+    ✓ Changed
+    If Major Success — (DoT Power × 1.5)
+    2 → (3 × 1.5) = 4.5 = 0
+    🐭Full-grown Mouse DoT Power
+    ✓ Changed
+    If Successful — Round(DoT Power, 1.0)
+    0 → Round(3, 1.0) = 3 = 0
+what it should say is:
+    2 -> (2 x 1.5) = 3
+    3 -> Round(3, 1.0) = 3
+
 logic_navigation.py", line 300, in move_group
     db.session.flush()
 sqlalchemy.exc.OperationalError: (psycopg2.errors.DeadlockDetected) deadlock detected
@@ -103,7 +130,6 @@ infestation
         rifle
         grappling hook -- moves to melee distance
         detect -- lowers enemy stealth
-    edit char to add ability links after reaching certain xl levels
     enemy attacks depend on distance
         claw
         jump
@@ -120,9 +146,6 @@ infestation
         swamp containing later enemies
     store attrib "Boss I Defeated" in universal item "Enemies Defeated"
         so events can check for that attrib
-    in addition to recording energy bonuses by editing description,
-        add attribute or universal item to store the bonus quantity,
-        so it can be included in the levelup calculation
 
 dungeon crawl
     3 levels up and down of location grids -- 7 total floors
@@ -130,6 +153,10 @@ dungeon crawl
     try generating grid layouts and adapt any good ones
 
 dating
+    shared values rather than just being more effective
+    spending time and giving gifts improve relationship
+    npcs should have their own goals e.g. supporting a cause
+        random selection events to set their motivation and goal enum attributes
     already have market to buy stuff so work somewhere else
         different positions have different hours vs pay
         apply for the position you want

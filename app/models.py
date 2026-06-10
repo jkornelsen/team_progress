@@ -1807,7 +1807,6 @@ class Overall(db.Model, DictHydrator):
     tag_introduce_order = db.Column(db.Integer, default=50)
     tag_best_order = db.Column(db.Integer, default=50)
     tag_progress_type = db.Column(db.String(20), default='RPG')
-    tag_multiplayer = db.Column(db.Boolean, default=False)
     tag_complete = db.Column(db.String(50), default='02 Under Construction')
 
     # Used to generate unique IDs per game token
@@ -1825,7 +1824,6 @@ class Overall(db.Model, DictHydrator):
             "tag_introduce_order": self.tag_introduce_order,
             "tag_best_order": self.tag_best_order,
             "tag_progress_type": self.tag_progress_type,
-            "tag_multiplayer": self.tag_multiplayer,
             "tag_complete": self.tag_complete,
         }
         return data

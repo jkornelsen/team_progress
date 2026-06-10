@@ -23,6 +23,7 @@ class ItemPlayPresenter:
         self.owner = Entity.query.get((self.game_token, self.owner_id))
 
         self.ctx = self._reconcile_context(req)
+        logger.debug(f"ctx.loc_id={self.ctx.loc_id}")
         self.pile = self._get_pile()
 
         capture_origin(name=self.item.name)

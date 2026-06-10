@@ -64,8 +64,6 @@ def browse_scenarios():
                             'tag_best_order', 50),
                         'progress_type': overall.get_str(
                             'tag_progress_type', 'Idle'),
-                        'multiplayer': overall.get_bool(
-                            'tag_multiplayer', False),
                         'completeness': overall.get_str(
                             'tag_complete', '02 Under Construction'),
                         'filesize': os.path.getsize(path)
@@ -74,9 +72,9 @@ def browse_scenarios():
                     logger.exception(e)
 
     # Sorting
-    if sort_by in ('introduce', 'best', 'title', 'progress_type'):
+    if sort_by in ('introduce', 'best', 'progress_type'):
         reverse = False  # Ascending
-    elif sort_by in ('filesize', 'completeness', 'multiplayer'):
+    elif sort_by in ('completeness', 'filesize'):
         reverse = True  # Descending
     else:
         raise ValueError(f"Unexpected sort_by {sort_by}")
