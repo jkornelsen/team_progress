@@ -1200,8 +1200,13 @@ class EventField(db.Model, DictHydrator):
             attrib = Attrib.query.get((self.game_token, self.attrib_id))
             if not attrib:
                 return f"(!broken attrib!)"
+            if self.item_id:
+                item = Item.query.get((self.game_token, self.item_id))
+                item_label = f" of {maskable_name(item)}" if item else ""
+            else:
+                item_label = ""
             inventory_item = "Item " if self.child_of_anchor else ""
-            return f"{inventory_item}{attrib.name}"
+            return f"{inventory_item}{attrib.name}{item_label}"
         if self.item_id:
             item = Item.query.get((self.game_token, self.item_id))
             if self.field_mode == Participant.QTY:

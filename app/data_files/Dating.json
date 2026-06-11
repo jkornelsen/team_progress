@@ -48,7 +48,7 @@
                 "id": 68,
                 "name": "Calendar",
                 "attribs": [
-                    [15, 3.0],
+                    [15, 1.0],
                     [86, 1.0]
                 ],
                 "abilities": [69],
@@ -56,12 +56,151 @@
                 "q_limit": 1.0,
                 "toplevel": true
             },
-            {"id": 81, "name": "Cash", "storage_type": "u", "toplevel": true},
+            {
+                "id": 81,
+                "name": "Cash",
+                "description": "Either cash on hand or funds at the bank.",
+                "storage_type": "u",
+                "toplevel": true
+            },
+            {
+                "id": 21,
+                "name": "Convo 1a",
+                "description": "प्यारे बेटे, तुम्हें बड़ा देखकर मुझे बहुत खुशी हुई।\r\nPyaare bete, tumhe bara dekhkar mujhe bahut khushi hui.\r\n\r\nLovely son, I am so happy to see you all grown up.",
+                "abilities": [66],
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 12,
+                        "instant": true,
+                        "attrib_reqs": [
+                            {
+                                "attrib_id": 9,
+                                "value_range": [1.0, 1.0],
+                                "range_inclusive": [true, true]
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 23,
+                "name": "Convo 1b",
+                "description": "मैं भी तुमसे प्यार करता हूँ, माँ।\r\nI love you too, Maa.",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 6,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 21, "q_required": 1.0}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 24,
+                "name": "Convo 1b-r",
+                "description": "Main bhi tumse pyaar karta hoon, maa.\r\nI love you too, Maa.",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 8,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 25, "q_required": 1.0}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 22,
+                "name": "Convo 1c",
+                "description": "लेकिन तुम ठीक से नहीं खा रहे हो, और अब एक मैच ढूंढने का समय है!\r\nBut you're not eating enough, and it's time to find a match!",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 9,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 23, "q_required": 1.0}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 26,
+                "name": "Convo 1c-r",
+                "description": "Lekin tum theek se nahin kha rahe ho, aur ab ek match dhoondhne ka samay hai!\r\nBut you're not eating enough, and it's time to find a match!",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 10,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 24, "q_required": 1.0}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 18,
+                "name": "Convo 1d",
+                "description": "अब वहाँ बहुत सारी लड़कियाँ हैं कि तुम उनकी तरफ भी नहीं देख रहे!\r\nThere are now so many girls out there that you are not even looking in their direction!",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 11,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 22, "q_required": 1.0}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 111,
+                "name": "Convo 1d-r",
+                "description": "Ab wahan bahut saari ladkiyan hain ki tum unki taraf bhi nahi dekh rahe!\r\nThere are now so many girls out there that you are not even looking in their direction!",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 112,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 26, "q_required": 1.0}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 25,
+                "name": "Convo RomanScript",
+                "description": "Kindly use roman letters.",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 7,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 21, "q_required": 1.0}
+                        ]
+                    }
+                ]
+            },
             {"id": 83, "name": "Desktop Computer", "q_limit": 1.0},
             {
                 "id": 70,
                 "name": "Hours",
-                "description": "The basic measure of time needed to accomplish things. Starts (with 24 hours left) at sunrise — the hours aren't counted from midnight, even when staying up all night.",
+                "description": "The basic measure of time needed to accomplish things. Starts at sunrise with 24 hours left, so the 24th hour is just before dawn the next day.",
                 "storage_type": "u",
                 "q_limit": 24.0
             },
@@ -74,7 +213,7 @@
             {
                 "id": 91,
                 "name": "Job Listing 1",
-                "description": "Use the events to read first this listing and then the other one: location, hours, wages.\r\n\r\nCircle one of the listings you plan to apply for. If it doesn't work out, then you may circle the other one afterwards.",
+                "description": "Use the sequence of 3 events to \"read\" this listing, then do the same for the other listing: location, hours, wages.\r\n\r\nAfter reading, go to the listing you plan to apply for and **Circle Job Listing** (event). If it doesn't work out, then you may circle the other one afterwards. *Note: the recipes are for information only.*",
                 "attribs": [
                     [85, 0.0],
                     [88, 0.0],
@@ -124,13 +263,16 @@
             },
             {
                 "id": 87,
-                "name": "Job Listing—Circled",
-                "description": "Circle a job listing and call to inquire about details. Visit to apply.",
+                "name": "Job—Circled",
+                "description": "Circle a job listing. If the job is from asking directly at the site instead of a listing, then roll for hours and wages here.",
                 "attribs": [
                     [85, 0.0],
                     [88, 0.0],
-                    [89, 0.0]
+                    [89, 0.0],
+                    [109, 0.0],
+                    [110, 0.0]
                 ],
+                "abilities": [95],
                 "storage_type": "u",
                 "q_limit": 1.0,
                 "recipes": [
@@ -151,38 +293,6 @@
                 ]
             },
             {
-                "id": 25,
-                "name": "Kindly use roman letters.",
-                "description": "I've always tried to pay attention to Devanagiri, but would you mind if we use roman letters this time?",
-                "storage_type": "u",
-                "q_limit": 1.0,
-                "recipes": [
-                    {
-                        "id": 7,
-                        "instant": true,
-                        "sources": [
-                            {"item_id": 21, "q_required": 1.0}
-                        ]
-                    }
-                ]
-            },
-            {
-                "id": 26,
-                "name": "Lekin ab ek match dhoondhne ka samay hai!",
-                "description": "Lekin tum theek se nahin kha rahe ho, aur ab ek match dhoondhne ka samay hai!\r\n\r\nBut you're not eating enough, and it's time to find a match!",
-                "storage_type": "u",
-                "q_limit": 1.0,
-                "recipes": [
-                    {
-                        "id": 10,
-                        "instant": true,
-                        "sources": [
-                            {"item_id": 24, "q_required": 1.0}
-                        ]
-                    }
-                ]
-            },
-            {
                 "id": 32,
                 "name": "Loafers",
                 "description": "Easy to put on although not the most secure.",
@@ -194,28 +304,18 @@
                 "description": "Good for work or spending time with friends, not hiking or sports."
             },
             {
-                "id": 24,
-                "name": "Main bhi tumse pyaar karta hoon, maa.",
-                "description": "I love you too, Maa.",
-                "storage_type": "u",
-                "q_limit": 1.0,
-                "recipes": [
-                    {
-                        "id": 8,
-                        "instant": true,
-                        "sources": [
-                            {"item_id": 25, "q_required": 1.0}
-                        ]
-                    }
-                ]
-            },
-            {
                 "id": 34,
                 "name": "Plain Black Dress",
                 "description": "Good for a variety of occasions including work and free time.",
                 "q_limit": 1.0
             },
-            {"id": 74, "name": "Rested", "storage_type": "u", "toplevel": true},
+            {
+                "id": 74,
+                "name": "Rested",
+                "description": "Based primarily on how many hours of sleep you've had.",
+                "storage_type": "u",
+                "toplevel": true
+            },
             {
                 "id": 35,
                 "name": "Revealing Leather Dress",
@@ -225,6 +325,7 @@
             {
                 "id": 71,
                 "name": "Sleep",
+                "description": "Consider how much you've done today and how many hours would likely be left available for sleeping. If you've already worked 10 hours then there's probably not a lot of time for much else.",
                 "storage_type": "u",
                 "q_limit": 8.0,
                 "recipes": [
@@ -270,85 +371,19 @@
             {
                 "id": 77,
                 "name": "Work",
+                "description": "Travel to the [circled job location](/play/item/87) if you haven't yet, then produce per hour until the limit is reached, earning cash.",
                 "storage_type": "u",
-                "q_limit": 40.0,
+                "q_limit": 8.0,
+                "toplevel": true,
                 "recipes": [
                     {
                         "id": 78,
-                        "rate_amount": 8.0,
-                        "rate_duration": 15,
                         "sources": [
-                            {"item_id": 70, "q_required": 8.0},
+                            {"item_id": 70, "q_required": 1.0},
                             {"item_id": 74, "q_required": 4.0, "preserve": true}
-                        ]
-                    }
-                ]
-            },
-            {
-                "id": 18,
-                "name": "अब वहाँ बहुत सारी लड़कियाँ हैं!",
-                "description": "अब वहाँ बहुत सारी लड़कियाँ हैं कि तुम उनकी तरफ भी नहीं देख रहे!\r\n\r\nThere are now so many girls out there that you are not even looking in their direction!",
-                "storage_type": "u",
-                "q_limit": 1.0,
-                "recipes": [
-                    {
-                        "id": 11,
-                        "instant": true,
-                        "sources": [
-                            {"item_id": 22, "q_required": 1.0}
-                        ]
-                    }
-                ]
-            },
-            {
-                "id": 21,
-                "name": "प्यारे बेटे, तुम्हें बड़ा देखकर मुझे बहुत खुशी हुई।",
-                "description": "Pyaare bete, tumhe bara dekhkar mujhe bahut khushi hui.\r\n\r\nLovely son, I am so happy to see you all grown up.",
-                "abilities": [66],
-                "storage_type": "u",
-                "q_limit": 1.0,
-                "recipes": [
-                    {
-                        "id": 12,
-                        "instant": true,
-                        "attrib_reqs": [
-                            {
-                                "attrib_id": 9,
-                                "value_range": [1.0, 1.0],
-                                "range_inclusive": [true, true]
-                            }
-                        ]
-                    }
-                ]
-            },
-            {
-                "id": 23,
-                "name": "मैं भी तुमसे प्यार करता हूँ, माँ।",
-                "description": "I love you too, Maa. ",
-                "storage_type": "u",
-                "q_limit": 1.0,
-                "recipes": [
-                    {
-                        "id": 6,
-                        "instant": true,
-                        "sources": [
-                            {"item_id": 21, "q_required": 1.0}
-                        ]
-                    }
-                ]
-            },
-            {
-                "id": 22,
-                "name": "लेकिन अब एक मैच ढूंढने का समय है!",
-                "description": "लेकिन तुम ठीक से नहीं खा रहे हो, और अब एक मैच ढूंढने का समय है!\r\n\r\nBut you're not eating enough, and it's time to find a match!",
-                "storage_type": "u",
-                "q_limit": 1.0,
-                "recipes": [
-                    {
-                        "id": 9,
-                        "instant": true,
-                        "sources": [
-                            {"item_id": 23, "q_required": 1.0}
+                        ],
+                        "byproducts": [
+                            {"item_id": 81, "rate_amount": 1.0}
                         ]
                     }
                 ]
@@ -368,6 +403,22 @@
                 ]
             },
             {
+                "id": 103,
+                "name": "Business District",
+                "destinations": [
+                    {"loc2_id": 41},
+                    {"loc2_id": 42}
+                ]
+            },
+            {
+                "id": 105,
+                "name": "Cinema",
+                "description": "One or two new movies come out each week, but there is also a large selection of classic movie showings for cheaper tickets.",
+                "destinations": [
+                    {"loc2_id": 103}
+                ]
+            },
+            {
                 "id": 40,
                 "name": "Claudia's House",
                 "description": "Within walking distance of the church."
@@ -375,7 +426,7 @@
             {
                 "id": 52,
                 "name": "Corner Room of Church",
-                "description": "The Young Singles group meets in the back corner room, with cement walls that can get damp when the humidity is high enough. There's plenty of room, though, so it's fine as long as other people show up and no one is unreasonably argumentative.\r\n\r\nSturdy plastic-covered metal chairs are arranged in a circle, offering places to sit once it's time to officially start."
+                "description": "The Young Singles group meets in the back corner room, with cement walls that get damp when the humidity is high enough. There's plenty of room, so it's fine as long as other people show up and no one is unreasonably argumentative.\r\n\r\nSturdy plastic-covered metal chairs are arranged in a circle, offering places to sit once it's time to officially start."
             },
             {
                 "id": 42,
@@ -387,50 +438,57 @@
                 "name": "Downtown",
                 "description": "The lights are much brighter, and the night life as well as the day life is humming.",
                 "destinations": [
-                    {"loc2_id": 40},
-                    {"loc2_id": 42},
-                    {"loc2_id": 44},
-                    {"loc2_id": 46},
-                    {"loc2_id": 51}
+                    {"loc2_id": 103},
+                    {"loc2_id": 104}
                 ]
             },
             {
                 "id": 84,
                 "name": "Electronics Store",
+                "description": "Available jobs: customer assistant, product returns, repair squad, checkout register.",
                 "attribs": [
                     [85, 1.0]
                 ],
                 "abilities": [101],
                 "destinations": [
-                    {"loc2_id": 55}
+                    {"loc2_id": 103}
                 ]
             },
             {
                 "id": 51,
                 "name": "Friendly Community Church",
-                "description": "If you're religious anyway, then this is one of the best places to meet like-minded people. If not, you could go the dark route of trying to seduce some good girls and lead them astray.\r\n\r\nIn a place like this, however, it might be wise to take plenty of time to get to know someone you're interested in before you decide that they're all they seem to be.\r\n\r\nServices are Sunday mornings, young singles group is Monday evenings, and mid-week meetings are Wednesday evenings. There are also retreats from time to time, and special activities such as assisting at homeless shelters.",
+                "description": "If your character is religious, then this is one of the best places to meet like-minded people. If not, you could go the dark route of trying to seduce some good girls and lead them astray.\r\n\r\nIn a place like this, however, it would be wise to get to know someone you're interested in before you decide that they're all they seem to be.\r\n\r\nServices are Sunday mornings, young singles group is Monday evenings, and mid-week meetings are Wednesday evenings. There are also retreats from time to time, and special activities such as assisting at homeless shelters.",
                 "destinations": [
-                    {"loc2_id": 52}
+                    {"loc2_id": 52},
+                    {"loc2_id": 55}
                 ]
             },
             {
                 "id": 41,
                 "name": "Gym",
                 "description": "Improve your fitness and perhaps meet people.",
-                "abilities": [101],
+                "abilities": [101]
+            },
+            {
+                "id": 44,
+                "name": "Happy Hour Pub",
+                "description": "Where else would you go to blow off steam and have a good time? There's certain to be people here to meet. The only question is whether the types who frequent this joint are worth your time.\r\n\r\nEven if you'd normally consider yourself too moral to indulge in such a lifestyle, you could still choose someone less worthy (but good-looking) in an attempt to get them back on the right road.\r\n\r\nIn a place like this, it would be a good idea to get to know someone you're interested in before you decide that they're all they seem to be.",
                 "destinations": [
                     {"loc2_id": 55}
                 ]
             },
             {
-                "id": 44,
-                "name": "Happy Hour Pub",
-                "description": "Where else would you go to blow off steam and have a good time? There's certain to be people here to meet. The only question is whether the types who frequent this joint are worth your time.\r\n\r\nEven if you'd normally consider yourself too moral to indulge in such a lifestyle, you could still choose someone less worthy (but good-looking) in an attempt to get them back on the right road.\r\n\r\nIn a place like this, it might be a good idea to be patient and get to know someone you're interested in before you decide that they're all they seem to be."
-            },
-            {
                 "id": 43,
                 "name": "Outskirts",
                 "description": "Generally a bit more relaxed, and lower crime, than the main part of the city."
+            },
+            {
+                "id": 106,
+                "name": "River Walk",
+                "description": "Cafes and restaurants line the cobblestone pathway. Paddle boat rentals are available, though they're relatively expensive in comparison with rentals on the beach.",
+                "destinations": [
+                    {"loc2_id": 55}
+                ]
             },
             {
                 "id": 46,
@@ -455,9 +513,25 @@
                 ]
             },
             {
+                "id": 104,
+                "name": "Urban Neighborhood",
+                "destinations": [
+                    {"loc2_id": 40},
+                    {"loc2_id": 46}
+                ]
+            },
+            {
+                "id": 102,
+                "name": "Your Backyard",
+                "description": "Luxurious — three in-ground swimming pools, far more than your grandparents in India. Only they're all very small, about ankle deep.",
+                "destinations": [
+                    {"loc2_id": 47}
+                ]
+            },
+            {
                 "id": 54,
                 "name": "Your Bathroom",
-                "description": "Shower with hot water if you flip on the small water heater for a short time.\r\n\r\nIn a drawer is toothpaste and other toiletries. A shelf contains towels. The door has a hook for a bathrobe.",
+                "description": "Before getting in the shower, flip on the small water heater for a few minutes.\r\n\r\nIn a drawer is toothpaste and other toiletries. A shelf contains towels. The door has a hook for a bathrobe.",
                 "items": [
                     {"item_id": 28, "quantity": 7.0},
                     {"item_id": 37, "quantity": 1.0},
@@ -479,28 +553,30 @@
             {
                 "id": 47,
                 "name": "Your Home",
-                "description": "Luxurious — three swimming pools, far more than your grandparents in India. Only for some reason they're all very small, about ankle deep. Well, it may not be the finest in the land, but it's nothing to be ashamed of either.",
+                "description": "It may not be the finest in the land, but it's nothing to be ashamed of either.",
                 "items": [
                     {"item_id": 27, "quantity": 1.0}
                 ],
                 "destinations": [
-                    {"loc2_id": 39},
                     {"loc2_id": 50},
-                    {"loc2_id": 53},
                     {"loc2_id": 54}
                 ]
             },
             {
                 "id": 39,
                 "name": "Your Kitchen",
-                "description": "Gas stove, refrigerator, dining table for six. Cupboard with dishes and utensils, many of them metal."
+                "description": "Gas stove, refrigerator, dining table for six. Cupboard with utensils and dishes, many of them metal.",
+                "destinations": [
+                    {"loc2_id": 47}
+                ]
             },
             {
                 "id": 53,
-                "name": "Your Street",
-                "description": "Partway between downtown and the outskirts, it's a good place to get somewhere easily from.\r\n\r\nThere is a bus stop with routes to downtown.",
+                "name": "Your Neighborhood",
+                "description": "Part way between downtown and the outskirts, this neighborhood is well positioned to get somewhere easily. On the street is a bus stop with routes downtown.",
                 "destinations": [
                     {"loc2_id": 43},
+                    {"loc2_id": 47},
                     {"loc2_id": 55}
                 ]
             }
@@ -522,7 +598,7 @@
                 ],
                 "location_id": 52,
                 "items": [
-                    {"item_id": 30, "quantity": 1.0, "slot": "Upper Body"},
+                    {"item_id": 30, "quantity": 1.0, "slot": "Torso"},
                     {"item_id": 31, "quantity": 1.0, "slot": "Legs"},
                     {"item_id": 33, "quantity": 1.0, "slot": "Feet"}
                 ]
@@ -550,7 +626,7 @@
             {
                 "id": 62,
                 "name": "(Enter a name)",
-                "description": "Work has left little time for social life, until now. With a few months off, this is the perfect time to reawaken that hidden charisma and those stifled interpersonal skills.\r\n\r\nThe default setup is male seeking female.",
+                "description": "College has left little time for social life, until now. With a few months' holiday, this is the perfect time to reawaken that hidden charisma and those stifled interpersonal skills.\r\n\r\nThe default setup is male seeking female.",
                 "attribs": [
                     [2, 3.0],
                     [3, 5.0],
@@ -560,16 +636,16 @@
                     [10, 5.0],
                     [11, 1.0],
                     [12, 3.0],
-                    [13, 9910.0],
                     [14, 0.0],
-                    [17, 10.0]
+                    [17, 10.0],
+                    [108, 8.0]
                 ],
-                "abilities": [63, 64],
+                "abilities": [63, 64, 101, 107],
                 "toplevel": true,
                 "location_id": 47,
                 "items": [
                     {"item_id": 19, "quantity": 1.0, "slot": "Wrist"},
-                    {"item_id": 30, "quantity": 1.0, "slot": "Upper Body"},
+                    {"item_id": 30, "quantity": 1.0, "slot": "Torso"},
                     {"item_id": 31, "quantity": 1.0, "slot": "Legs"},
                     {"item_id": 32, "quantity": 1.0, "slot": "Feet"}
                 ]
@@ -654,6 +730,11 @@
                 "name": "Clean",
                 "description": "State of a person. 10 for completely clean, 0 for dirtiest.\r\n\r\nFactors include how long since showered, and clothing washed. Most clothes get less clean from wearing (but not shoes), although tracking this gets tedious.\r\n\r\nSee also: [Dirty](/configure/attrib/19)"
             },
+            {
+                "id": 108,
+                "name": "Clothing Score",
+                "description": "Set up to 10 based on how well and appropriately dressed for the current situation."
+            },
             {"id": 65, "name": "Convo Maa 1", "is_binary": true},
             {
                 "id": 12,
@@ -675,7 +756,7 @@
             },
             {
                 "id": 86,
-                "name": "Days Count",
+                "name": "Days Counter",
                 "description": "A simple running total, not necessarily important for months or seasons. Rather, used for example to track how long someone stays angry before they're willing to talk with you again."
             },
             {
@@ -694,12 +775,6 @@
                 "description": "Scale from professional athletes down to gamers who never leave the basement."
             },
             {
-                "id": 13,
-                "name": "Funds",
-                "description": "Either cash on hand or at the bank."
-            },
-            {"id": 88, "name": "Hours Required"},
-            {
                 "id": 10,
                 "name": "Intelligence",
                 "description": "Measured by whether a person can calculate tips correctly, or how many lines of Shakespeare they can recite. Whether that makes conversations more interesting or not depends on who is listening."
@@ -709,6 +784,10 @@
                 "name": "Intoxicated",
                 "description": "Even a little could be relaxing. A moderate amount is unsafe to drive under, while a lot could mean acting wildly or even passing out."
             },
+            {"id": 110, "name": "Job—Accepted", "is_binary": true},
+            {"id": 109, "name": "Job—Applied", "is_binary": true},
+            {"id": 88, "name": "Job—Hours Required"},
+            {"id": 89, "name": "Job—Wages Per Hour"},
             {
                 "id": 85,
                 "name": "Location ID",
@@ -719,7 +798,6 @@
                 "name": "Modesty",
                 "description": "10 for fully modest, primarily based on wearing clothes. Not wearing clothes at home is normally not a problem, while forgetting to wear proper clothes in public could very well be.\r\n\r\nIf a person's clothes aren't listed but they have a reasonable modesty then that implies they're wearing clothes. There may also be a mention about clothing in the person's description.\r\n\r\nBehaving lewdly or erotically can lower modesty even with clothes on."
             },
-            {"id": 89, "name": "Wages"},
             {
                 "id": 6,
                 "name": "You Feel about Them",
@@ -728,9 +806,72 @@
         ],
         "events": [
             {
+                "id": 107,
+                "name": "Apply For Job",
+                "description": "Call or visit the circled location to apply. Set your **Clothing Score** before rolling.",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "infield": {"role": "universal", "item_id": 87, "attrib_id": 88},
+                        "op_application": ">="
+                    },
+                    {
+                        "infield": {"role": "universal", "item_id": 87, "attrib_id": 109},
+                        "op_application": "==",
+                        "val_required": 0.0
+                    },
+                    {
+                        "infield": {"role": "universal", "item_id": 87, "attrib_id": 89},
+                        "op_application": "-",
+                        "val_transform": 3.0
+                    },
+                    {
+                        "infield": {"attrib_id": 108}
+                    },
+                    {
+                        "label": "Standard Adjustment",
+                        "op_transform": "c",
+                        "val_transform": 3.0
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "item_id": 87, "attrib_id": 109},
+                        "op_application": ":=",
+                        "op_transform": "c"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "item_id": 87, "attrib_id": 110},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "infield": {"role": "universal", "item_id": 87, "attrib_id": 88},
+                        "outfield": {"role": "blueprint", "field_mode": "limit", "item_id": 77},
+                        "op_application": ":=",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "infield": {"role": "universal", "item_id": 87, "attrib_id": 89},
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "byp_qty",
+                            "item_id": 77,
+                            "recipe_id": 78,
+                            "source_item_id": 81
+                        },
+                        "op_application": ":=",
+                        "outcome_success": "success_any"
+                    }
+                ]
+            },
+            {
                 "id": 101,
                 "name": "Ask Available Jobs",
-                "description": "Can ask at each location once a day.",
+                "description": "Can ask at each location once a day. If you've already read a job listing for this location today, then there's no need to ask.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -747,8 +888,8 @@
                 ],
                 "effects": [
                     {
-                        "infield": {"attrib_id": 85},
-                        "outfield": {"role": "target char", "attrib_id": 85},
+                        "infield": {"role": "at", "attrib_id": 85},
+                        "outfield": {"role": "universal", "item_id": 87, "attrib_id": 85},
                         "op_application": ":=",
                         "outcome_success": "success_any"
                     }
@@ -758,12 +899,26 @@
                 "id": 90,
                 "name": "Circle Job Listing",
                 "description": "Use a bright colored marker to circle this job listing.",
-                "outcome_type": "numeric",
-                "numeric_range": [1, 8],
+                "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 82}
+                    }
+                ],
                 "effects": [
                     {
                         "infield": {"attrib_id": 85},
-                        "outfield": {"role": "target char", "attrib_id": 85},
+                        "outfield": {"role": "universal", "item_id": 87, "attrib_id": 85},
+                        "op_application": ":="
+                    },
+                    {
+                        "infield": {"attrib_id": 88},
+                        "outfield": {"role": "universal", "item_id": 87, "attrib_id": 88},
+                        "op_application": ":="
+                    },
+                    {
+                        "infield": {"attrib_id": 89},
+                        "outfield": {"role": "universal", "item_id": 87, "attrib_id": 89},
                         "op_application": ":="
                     }
                 ]
@@ -898,7 +1053,7 @@
                 "id": 95,
                 "name": "Job Hours",
                 "outcome_type": "numeric",
-                "numeric_range": [1, 8],
+                "numeric_range": [1, 10],
                 "determinants": [
                     {
                         "label": "(works for 1 or 2)",
@@ -948,13 +1103,12 @@
             {
                 "id": 96,
                 "name": "Job Pay",
-                "description": "Rolls for hourly pay and then multiplies by number of hours for the listing.",
                 "outcome_type": "numeric",
                 "numeric_range": [1, 5],
                 "determinants": [
                     {
                         "infield": {"attrib_id": 88},
-                        "op_application": "*"
+                        "op_application": ">="
                     }
                 ],
                 "effects": [
@@ -968,7 +1122,7 @@
             {
                 "id": 69,
                 "name": "Next Day",
-                "description": "You don't necessarily need to to account for all the hours each day, but also, don't do so much that it would be unrealistic for a single day.",
+                "description": "You don't need to to account for all the hours each day, but be realistic about how much could happen in a single day.",
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -982,7 +1136,7 @@
                         "outfield": {"attrib_id": 15},
                         "op_application": ":=",
                         "op_transform": "%",
-                        "val_transform": 7.0
+                        "val_transform": 0.0
                     },
                     {
                         "get_val_from": "outcome",
@@ -1034,14 +1188,13 @@
     },
     "general data": {
         "piles": [
-            {"item_id": 18},
-            {"item_id": 22},
-            {"item_id": 23},
-            {"item_id": 24},
-            {"item_id": 25},
-            {"item_id": 26},
             {"item_id": 68, "quantity": 1.0},
+            {"item_id": 70, "quantity": 24.0},
+            {"item_id": 74, "quantity": 8.0},
+            {"item_id": 77, "quantity": 0.0},
             {"item_id": 81, "quantity": 100.0},
+            {"item_id": 82, "quantity": 0.0},
+            {"item_id": 87, "quantity": 1.0},
             {"item_id": 91, "quantity": 1.0},
             {"item_id": 92, "quantity": 1.0}
         ]

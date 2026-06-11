@@ -427,9 +427,15 @@ function syncEventFieldState(element) {
         roleHidden.value = roleSelect.value;
     }
 
-    // Child Item Toggle Visibility
-    if ((mode === '{{ Participant.ATTR }}') && (roleSelect.value !== "{{ Participant.UNIVERSAL }}")) {
-        childContainer.classList.remove('hidden');
+    if (mode === '{{ Participant.ATTR }}') {
+        if (roleSelect.value === "{{ Participant.UNIVERSAL }}") {
+            itemSelect.classList.remove('hidden');
+            childContainer.classList.add('hidden');
+            childCheckbox.checked = false;
+        } else {
+            itemSelect.classList.add('hidden');
+            childContainer.classList.remove('hidden');
+        }
     } else {
         childContainer.classList.add('hidden');
         childCheckbox.checked = false;

@@ -882,19 +882,28 @@ def play_event(id):
     for f in event.factors:
         for field in [f.infield, f.outfield]:
             if not field: continue
+
+            def add_ent(ent):
+                if ent:
+                    all_related[ent.id] = ent
+
             if field.attrib_id:
-                ent = Attrib.query.get((game_token, field.attrib_id))
-            elif field.item_id:
-                ent = Item.query.filter_by(game_token=game_token, id=field.item_id, masked=False).first()
-            elif field.char_id:
-                ent = Character.query.get((game_token, field.char_id))
-            elif field.recipe_id:
+                add_ent(Attrib.query.get((game_token, field.attrib_id)))
+            if field.item_id:
+                add_ent(Item.query.filter_by(
+                    game_token=game_token,
+                    id=field.item_id,
+                    masked=False).first())
+            if field.char_id:
+                add_ent(Character.query.get((game_token, field.char_id)))
+            if field.recipe_id:
                 rec = Recipe.query.get((game_token, field.recipe_id))
-                ent = Item.query.filter_by(game_token=game_token, id=rec.product_id, masked=False).first() if rec else None
-            else:
-                ent = None
-            if ent:
-                all_related[ent.id] = ent
+                if rec:
+                    add_ent(Item.query.filter_by(
+                        game_token=game_token,
+                        id=rec.product_id,
+                        masked=False).first()
+                    )
 
     # Chained events
     for link in event.chained:

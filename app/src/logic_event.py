@@ -215,7 +215,8 @@ def get_entity_value(anchor_id, field_def, subject_id=None, ledger=None):
 
     # Fetch Attribute Value
     if field_def.field_mode == Participant.ATTR:
-        # If entity_id is set, we use that specific Attribute Blueprint
+        if field_def.item_id:
+            target_id = field_def.item_id
         val_obj = AttribVal.query.filter_by(
             game_token=game_token,
             subject_id=target_id,
@@ -281,6 +282,10 @@ def can_use_field(field, entity):
 
     # --- 3. STANDARD ATTRIBUTE CHECK (On the Anchor itself) ---
     if field.field_mode == Participant.ATTR and field.attrib_id:
+        if field.item_id:
+            entity = Item.query.get((game_token, field.item_id))
+            if not entity:
+                return False
         if not any(av.attrib_id == field.attrib_id for av in entity.attrib_values):
             return False
 
@@ -810,10 +815,12 @@ def do_effect_change(eff, roll_val, role_entities):
         if field_def.child_of_anchor:
             pile = db.session.query(Pile).join(
                 Item, 
-                (Pile.item_id == Item.id) & (Pile.game_token == Item.game_token)
+                (Pile.item_id == Item.id) &
+                (Pile.game_token == Item.game_token)
             ).join(
                 AttribVal, 
-                (AttribVal.subject_id == Item.id) & (AttribVal.game_token == Item.game_token)
+                (AttribVal.subject_id == Item.id) &
+                (AttribVal.game_token == Item.game_token)
             ).filter(
                 Pile.game_token == game_token,
                 Pile.owner_id == out_entity_id,
@@ -828,6 +835,8 @@ def do_effect_change(eff, roll_val, role_entities):
                 attr_name = attr.name if attr else "(Unknown)"
                 return False, f"Could not find an item at {anchor_name}" \
                               f" that has {attr_name}."
+        elif field_def.item_id:
+            out_entity_id = field_def.item_id
 
         record = AttribVal.query.filter_by(
             game_token=game_token,

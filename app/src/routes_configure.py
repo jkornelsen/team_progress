@@ -716,8 +716,11 @@ def edit_event(id):
                     if role and mode:
                         fld_attrib_id = fld.get_int('attrib_id') \
                             if mode in Participant.USES_ATTRIB else None
-                        fld_item_id = fld.get_int('item_id') \
-                            if mode in Participant.USES_ITEM else None
+                        fld_item_id = fld.get_int('item_id') if (
+                            mode in Participant.USES_ITEM or 
+                                (mode == Participant.ATTR and
+                                role == Participant.UNIVERSAL)
+                            ) else None
                         fld_recipe_id = fld.get_int('recipe_id') \
                             if mode in Participant.USES_RECIPE else None
                         fld_loc_id = fld.get_int('loc_id') \
@@ -780,8 +783,11 @@ def edit_event(id):
                         })
                         fld_attrib_id = fld.get_int('attrib_id') \
                             if mode in Participant.USES_ATTRIB else None
-                        fld_item_id = fld.get_int('item_id') \
-                            if mode in Participant.USES_ITEM else None
+                        fld_item_id = fld.get_int('item_id') if (
+                            mode in Participant.USES_ITEM or 
+                                (mode == Participant.ATTR and
+                                role == Participant.UNIVERSAL)
+                            ) else None
                         instance_args['infield'] = EventField(
                             game_token=game_token,
                             role=role,
