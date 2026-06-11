@@ -4,6 +4,9 @@
 
 ---- functional, tightening, quality of life ----
 
+eventfactor can be a chosen attribute of a specific universal item
+    'role': "universal", 'field_mode': "attr" (default so not in json)
+
 old_loc_id doesn't always get set when going to loc page
     http://localhost:5000/play/location/14 (navigate and reload both failed)
     old_loc_id=14 play_location()
@@ -154,17 +157,18 @@ dungeon crawl
 
 dating
     shared values rather than just being more effective
-    spending time and giving gifts improve relationship
-    npcs should have their own goals e.g. supporting a cause
+    npcs have their own goals e.g. supporting a cause
         random selection events to set their motivation and goal enum attributes
-    already have market to buy stuff so work somewhere else
-        different positions have different hours vs pay
-        apply for the position you want
-    choose physical scale / goal -- sleeping together vs saving yourself
-        or maybe the npcs set their goals
-    note for the bible study
+        physical scale / goal -- sleeping together vs saving yourself
+    acts improve relationship
+        spending time together
+        giving gifts
+        providing assistance or accomplishing tasks
+    bible study description
         suggestion: give your ai a personality that likes to quote verses
         out of context and draw questionable conclusions
+    the day for a date must be assigned beforehand
+        but you can still meet people by showing up
 
 mine helium-3 with location production
     then char converts to cannisters

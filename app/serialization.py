@@ -275,7 +275,7 @@ def patch_from_dict(data):
 def clear_game_data(game_token=None):
     """Wipes all data associated with a specific token."""
     game_token = game_token or g.game_token
-    logger.warning(f"Clearing all data for token: {game_token}")
+    logger.info(f"Clearing all data for token: {game_token}")
     
     # Due to CASCADE constraints, these two lines wipe the entire relational tree
     Overall.query.filter_by(game_token=game_token).delete()

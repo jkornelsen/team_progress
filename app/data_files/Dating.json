@@ -1,7 +1,7 @@
 {
     "overall settings": {
         "title": "Dating",
-        "description": "Your Indian mother has decided it's time. She's fine with you having a ❤️ love marriage, but if you don't find someone soon, she has in mind a match with a well-off family. The problem is that they're ugly! First, [talk things over with your Maa](/play/item/21?char_id=56), then make a visit to either {violet|the church or the bar} to start meeting people.\r\n\r\nDuring the day, work at a grocery store to earn cash. The right clothes are important to impress people.\r\n\r\n*The initial setup aims for generally acceptable standards. If you make it explicit and want to share the file, then be considerate by including a warning.*",
+        "description": "Your Indian mother has decided it's time. She's fine with you having a ❤️ love marriage, but if you don't find someone soon, she has in mind a match with a well-off family. The problem is that they're ugly! First, [talk things over with your Maa](/play/item/21?char_id=56), then make a visit to either {violet|the church or the bar} to start meeting people.\r\n\r\nWork odd jobs to earn cash. The right clothes are important to impress people.\r\n\r\n*The initial setup aims for generally acceptable standards. If you make it explicit and want to share the file, then be considerate by including a warning.*",
         "slots": [
             "Torso",
             "Chest (Women)",
@@ -48,7 +48,8 @@
                 "id": 68,
                 "name": "Calendar",
                 "attribs": [
-                    [15, 3.0]
+                    [15, 3.0],
+                    [86, 1.0]
                 ],
                 "abilities": [69],
                 "storage_type": "u",
@@ -56,12 +57,7 @@
                 "toplevel": true
             },
             {"id": 81, "name": "Cash", "storage_type": "u", "toplevel": true},
-            {
-                "id": 80,
-                "name": "Cash Register",
-                "storage_type": "l",
-                "q_limit": 1.0
-            },
+            {"id": 83, "name": "Desktop Computer", "q_limit": 1.0},
             {
                 "id": 70,
                 "name": "Hours",
@@ -74,6 +70,85 @@
                 "name": "Jeans",
                 "description": "Nothing special, but passable away from home.",
                 "q_limit": 1.0
+            },
+            {
+                "id": 91,
+                "name": "Job Listing 1",
+                "description": "Use the events to read first this listing and then the other one: location, hours, wages.\r\n\r\nCircle one of the listings you plan to apply for. If it doesn't work out, then you may circle the other one afterwards.",
+                "attribs": [
+                    [85, 0.0],
+                    [88, 0.0],
+                    [89, 0.0]
+                ],
+                "abilities": [90, 93],
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 94,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 82, "q_required": 1.0}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 92,
+                "name": "Job Listing 2",
+                "attribs": [
+                    [85, 0.0],
+                    [88, 0.0],
+                    [89, 0.0]
+                ],
+                "abilities": [90, 93],
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 99,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 82, "q_required": 1.0}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 82,
+                "name": "Job Listings—New",
+                "description": "Purchase a newspaper from the store, or have it delivered with a subscription, or buy local online news from a computer.\r\n\r\nTwo jobs are posted every weekday. If a posting is listed then it's guaranteed to be available for the day, though you'll still need to apply. Otherwise, there's a small chance of finding a job by asking around.",
+                "storage_type": "u",
+                "q_limit": 2.0,
+                "toplevel": true
+            },
+            {
+                "id": 87,
+                "name": "Job Listing—Circled",
+                "description": "Circle a job listing and call to inquire about details. Visit to apply.",
+                "attribs": [
+                    [85, 0.0],
+                    [88, 0.0],
+                    [89, 0.0]
+                ],
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 97,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 91, "q_required": 1.0}
+                        ]
+                    },
+                    {
+                        "id": 98,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 92, "q_required": 1.0}
+                        ]
+                    }
+                ]
             },
             {
                 "id": 25,
@@ -195,7 +270,6 @@
             {
                 "id": 77,
                 "name": "Work",
-                "description": "There are several types of jobs available here:\r\n- Stocker\r\n- Bagger\r\n- Cashier\r\n- Manager",
                 "storage_type": "u",
                 "q_limit": 40.0,
                 "recipes": [
@@ -205,8 +279,7 @@
                         "rate_duration": 15,
                         "sources": [
                             {"item_id": 70, "q_required": 8.0},
-                            {"item_id": 74, "q_required": 4.0, "preserve": true},
-                            {"item_id": 80, "q_required": 1.0, "preserve": true}
+                            {"item_id": 74, "q_required": 4.0, "preserve": true}
                         ]
                     }
                 ]
@@ -285,7 +358,14 @@
             {
                 "id": 49,
                 "name": "Beach",
-                "description": "Might be a good place to bring a date, or happen to run into someone you're interested in. Strangers might not appreciate advances here though, even if they're hot.\r\n\r\nThere's also swimming, sand volleyball, or jogging on the beach for exercise."
+                "description": "Might be a good place to bring a date, or happen to run into someone you're interested in. Strangers might not appreciate advances here though, even if they're hot.\r\n\r\nThere's also swimming, sand volleyball, or jogging on the beach for exercise.\r\n\r\nJobs include rentals, lifeguard, and surfing instructor.",
+                "attribs": [
+                    [85, 0.0]
+                ],
+                "abilities": [101],
+                "destinations": [
+                    {"loc2_id": 43}
+                ]
             },
             {
                 "id": 40,
@@ -308,11 +388,21 @@
                 "description": "The lights are much brighter, and the night life as well as the day life is humming.",
                 "destinations": [
                     {"loc2_id": 40},
-                    {"loc2_id": 41},
                     {"loc2_id": 42},
                     {"loc2_id": 44},
                     {"loc2_id": 46},
                     {"loc2_id": 51}
+                ]
+            },
+            {
+                "id": 84,
+                "name": "Electronics Store",
+                "attribs": [
+                    [85, 1.0]
+                ],
+                "abilities": [101],
+                "destinations": [
+                    {"loc2_id": 55}
                 ]
             },
             {
@@ -324,19 +414,13 @@
                 ]
             },
             {
-                "id": 79,
-                "name": "Grocery Store",
-                "items": [
-                    {"item_id": 80, "quantity": 1.0}
-                ],
-                "destinations": [
-                    {"loc2_id": 43}
-                ]
-            },
-            {
                 "id": 41,
                 "name": "Gym",
-                "description": "Improve your fitness and perhaps meet people."
+                "description": "Improve your fitness and perhaps meet people.",
+                "abilities": [101],
+                "destinations": [
+                    {"loc2_id": 55}
+                ]
             },
             {
                 "id": 44,
@@ -344,18 +428,9 @@
                 "description": "Where else would you go to blow off steam and have a good time? There's certain to be people here to meet. The only question is whether the types who frequent this joint are worth your time.\r\n\r\nEven if you'd normally consider yourself too moral to indulge in such a lifestyle, you could still choose someone less worthy (but good-looking) in an attempt to get them back on the right road.\r\n\r\nIn a place like this, it might be a good idea to be patient and get to know someone you're interested in before you decide that they're all they seem to be."
             },
             {
-                "id": 48,
-                "name": "Market",
-                "description": "Good prices for everyday items, such as:\r\n* Groceries\r\n* Over-the-counter medicine\r\n* Toiletries\r\n* Basic clothes"
-            },
-            {
                 "id": 43,
                 "name": "Outskirts",
-                "description": "Generally a bit more relaxed, and lower crime, than the main part of the city.",
-                "destinations": [
-                    {"loc2_id": 48},
-                    {"loc2_id": 49}
-                ]
+                "description": "Generally a bit more relaxed, and lower crime, than the main part of the city."
             },
             {
                 "id": 46,
@@ -366,6 +441,18 @@
                 "id": 45,
                 "name": "Single Bed",
                 "description": "The mattress isn't worn out, comfortable enough unless the day has been too stressful to sleep. Held by slats in a wooden frame.\r\n\r\nWhile you *could* fit another person in, it wouldn't be comfortable. In that case, it would be better to buy a bigger bed."
+            },
+            {
+                "id": 48,
+                "name": "Supermarket",
+                "description": "Good prices for everyday items, such as:\r\n* Groceries\r\n* Over-the-counter medicine\r\n* Toiletries\r\n* Basic clothes\r\n\r\nThere are several types of jobs available here:\r\n- Stocker\r\n- Bagger\r\n- Cashier\r\n- Manager",
+                "attribs": [
+                    [85, 3.0]
+                ],
+                "abilities": [101],
+                "destinations": [
+                    {"loc2_id": 43}
+                ]
             },
             {
                 "id": 54,
@@ -587,6 +674,11 @@
                 ]
             },
             {
+                "id": 86,
+                "name": "Days Count",
+                "description": "A simple running total, not necessarily important for months or seasons. Rather, used for example to track how long someone stays angry before they're willing to talk with you again."
+            },
+            {
                 "id": 16,
                 "name": "Dirty",
                 "description": "For example, shoes get dirty if stepping in something such as mud. May affect how clean a person is. 0 is not dirty, up to 10."
@@ -606,6 +698,7 @@
                 "name": "Funds",
                 "description": "Either cash on hand or at the bank."
             },
+            {"id": 88, "name": "Hours Required"},
             {
                 "id": 10,
                 "name": "Intelligence",
@@ -617,10 +710,16 @@
                 "description": "Even a little could be relaxing. A moderate amount is unsafe to drive under, while a lot could mean acting wildly or even passing out."
             },
             {
+                "id": 85,
+                "name": "Location ID",
+                "enum_list": ["Beach", "Electronics Store", "Gym", "Supermarket"]
+            },
+            {
                 "id": 5,
                 "name": "Modesty",
                 "description": "10 for fully modest, primarily based on wearing clothes. Not wearing clothes at home is normally not a problem, while forgetting to wear proper clothes in public could very well be.\r\n\r\nIf a person's clothes aren't listed but they have a reasonable modesty then that implies they're wearing clothes. There may also be a mention about clothing in the person's description.\r\n\r\nBehaving lewdly or erotically can lower modesty even with clothes on."
             },
+            {"id": 89, "name": "Wages"},
             {
                 "id": 6,
                 "name": "You Feel about Them",
@@ -628,6 +727,47 @@
             }
         ],
         "events": [
+            {
+                "id": 101,
+                "name": "Ask Available Jobs",
+                "description": "Can ask at each location once a day.",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "infield": {"role": "at", "attrib_id": 85},
+                        "op_application": ">=",
+                        "val_required": 0.0
+                    },
+                    {
+                        "label": "Base Threshold",
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 6.0
+                    }
+                ],
+                "effects": [
+                    {
+                        "infield": {"attrib_id": 85},
+                        "outfield": {"role": "target char", "attrib_id": 85},
+                        "op_application": ":=",
+                        "outcome_success": "success_any"
+                    }
+                ]
+            },
+            {
+                "id": 90,
+                "name": "Circle Job Listing",
+                "description": "Use a bright colored marker to circle this job listing.",
+                "outcome_type": "numeric",
+                "numeric_range": [1, 8],
+                "effects": [
+                    {
+                        "infield": {"attrib_id": 85},
+                        "outfield": {"role": "target char", "attrib_id": 85},
+                        "op_application": ":="
+                    }
+                ]
+            },
             {
                 "id": 66,
                 "name": "Convo Maa 1 Start",
@@ -755,22 +895,94 @@
                 ]
             },
             {
+                "id": 95,
+                "name": "Job Hours",
+                "outcome_type": "numeric",
+                "numeric_range": [1, 8],
+                "determinants": [
+                    {
+                        "label": "(works for 1 or 2)",
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 91},
+                        "op_application": ">="
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 88},
+                        "op_application": ":="
+                    }
+                ],
+                "chained": [
+                    {"child_id": 96}
+                ]
+            },
+            {
+                "id": 93,
+                "name": "Job Location",
+                "outcome_type": "numeric",
+                "numeric_range": [1, 4],
+                "determinants": [
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 82},
+                        "op_application": ">="
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 85},
+                        "op_application": ":="
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 82},
+                        "op_application": "-",
+                        "op_transform": "c"
+                    }
+                ],
+                "chained": [
+                    {"child_id": 95}
+                ]
+            },
+            {
+                "id": 96,
+                "name": "Job Pay",
+                "description": "Rolls for hourly pay and then multiplies by number of hours for the listing.",
+                "outcome_type": "numeric",
+                "numeric_range": [1, 5],
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 88},
+                        "op_application": "*"
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 89},
+                        "op_application": ":="
+                    }
+                ]
+            },
+            {
                 "id": 69,
                 "name": "Next Day",
                 "description": "You don't necessarily need to to account for all the hours each day, but also, don't do so much that it would be unrealistic for a single day.",
                 "outcome_type": "determined",
                 "determinants": [
                     {
-                        "infield": {"attrib_id": 15},
+                        "infield": {"attrib_id": 86},
                         "op_transform": "+"
-                    },
-                    {"op_application": ":=", "op_transform": "%", "val_transform": 7.0}
+                    }
                 ],
                 "effects": [
                     {
-                        "get_val_from": "outcome",
+                        "infield": {"attrib_id": 86},
                         "outfield": {"attrib_id": 15},
-                        "op_application": ":="
+                        "op_application": ":=",
+                        "op_transform": "%",
+                        "val_transform": 7.0
                     },
                     {
                         "get_val_from": "outcome",
@@ -793,9 +1005,6 @@
                         "op_transform": "c",
                         "val_transform": 0.0
                     }
-                ],
-                "chained": [
-                    {"child_id": 76}
                 ]
             },
             {
@@ -832,7 +1041,9 @@
             {"item_id": 25},
             {"item_id": 26},
             {"item_id": 68, "quantity": 1.0},
-            {"item_id": 81, "quantity": 100.0}
+            {"item_id": 81, "quantity": 100.0},
+            {"item_id": 91, "quantity": 1.0},
+            {"item_id": 92, "quantity": 1.0}
         ]
     },
     "progress": []
