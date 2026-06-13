@@ -4,7 +4,7 @@ import logging
 from flask import g, request, session
 from app.models import (
     db, GENERAL_ID, Entity, Item, Location, Character, Attrib, Event,
-    StorageType, Operation, OutcomeType, RollerType, Participant,
+    StorageType, Operation, OutcomeType, SuccessTier, RollerType, Participant,
     AttribVal, Pile, LocDest, Recipe)
 from app.utils import maskable_name
 from app.serialization import clone_entity
@@ -33,10 +33,25 @@ def num_sides(event=None):
 
 def apply_operation(current_val, mod_val, op, output_range=None):
     """Applies the specific operation and returns the new value."""
-    if op == Operation.CONST:
+    if op == Operation.CONST or op == Operation.MEM_RECALL:
         return mod_val
 
     # Unary Functions
+    if op == Operation.ABS:
+        return abs(current_val)
+    if op in (Operation.ROUND, Operation.FLOOR, Operation.CEIL):
+        try:
+            step = float(mod_val) if mod_val else 1.0
+            if step == 0.0:
+                step = 1.0
+        except (ValueError, TypeError):
+            step = 1.0
+        if op == Operation.ROUND:
+            return float(round(current_val / step) * step)
+        if op == Operation.FLOOR:
+            return float(math.floor(current_val / step) * step)
+        if op == Operation.CEIL:
+            return float(math.ceil(current_val / step) * step)
     if op == Operation.SOFTCAP:
         cap_threshold = mod_val if (mod_val and mod_val != 0) else 50
         output_range = (output_range or 20) * 0.2
@@ -51,18 +66,6 @@ def apply_operation(current_val, mod_val, op, output_range=None):
         ratio = math.log(1 + current_abs / cap_threshold) / (
             1 + math.log(1 + current_abs / cap_threshold))
         return sign * (1 + output_range * ratio)
-    try:
-        step = float(mod_val) if mod_val else 1.0
-        if step == 0.0:
-            step = 1.0
-    except (ValueError, TypeError):
-        step = 1.0
-    if op == Operation.ROUND:
-        return float(round(current_val / step) * step)
-    if op == Operation.FLOOR:
-        return float(math.floor(current_val / step) * step)
-    if op == Operation.CEIL:
-        return float(math.ceil(current_val / step) * step)
 
     # Comparisons
     if op == Operation.EQ: return current_val == mod_val
@@ -96,10 +99,11 @@ def get_inner_breakdown(val, mod_val, op):
         Operation.MOD:        f"{v} mod {m}",
         Operation.VAL_TO_POW: f"{v}<sup>{m}</sup>",
         Operation.POW_OF_VAL: f"{m}<sup>{v}</sup>",
-        Operation.SOFTCAP:    f"SoftCap({v}, {m})",
         Operation.ROUND:      f"Round({v}, {m})",
         Operation.FLOOR:      f"Floor({v}, {m})",
-        Operation.CEIL:       f"Ceiling({v}, {m})"
+        Operation.CEIL:       f"Ceiling({v}, {m})",
+        Operation.ABS:        f"Abs({v})",
+        Operation.SOFTCAP:    f"SoftCap({v}, {m})",
     }
     return formats.get(op, v)
 
@@ -352,8 +356,20 @@ def calculate_determinants(event, role_entities):
         infield = det.infield
         field_name = infield.get_field_name() if infield else "Value"
         source_display = "Constant"
+        value_display_override = None
             
-        if det.op_transform == Operation.CONST:
+        if det.op_transform == Operation.MEM_RECALL:
+            source_display = "Memory"
+            field_name = "Recall"
+            value_display_override = "Stored"
+        elif det.op_application == Operation.MEM_STORE:
+            source_display = "Memory"
+            field_name = ""
+            if det.op_transform:
+                breakdown_text = get_inner_breakdown(
+                    "total", det.val_transform, det.op_transform)
+            value_display_override = ""
+        elif det.op_transform == Operation.CONST:
             val = det.val_transform
         elif det.op_application == Operation.ASSIGN:
             field_name = ""
@@ -435,7 +451,9 @@ def calculate_determinants(event, role_entities):
             'source_name': source_display,
             'field_name': field_name,
             'value': val,
-            'value_display': format_for_display(val),
+            'value_display':
+                value_display_override if value_display_override is not None \
+                else format_for_display(val),
             'val_required': det.val_required,
             'negate': det.negate,
             'op_app': det.op_application,
@@ -743,29 +761,29 @@ def get_chain_results(event, role_entities, roll_val, tier, ledger=None):
     return chain_results
 
 def check_outcome_success(filter_val, tier):
-    if filter_val == Participant.ALWAYS:
+    if filter_val == SuccessTier.ALWAYS:
         return True
     if tier is None:
         return False
     if filter_val == tier:
         # Exact Match
         return True
-    if filter_val == Participant.SUCCESS_ANY:
+    if filter_val == SuccessTier.SUCCESS_ANY:
         return tier in [
-            Participant.SUCCESS_NAT_MAX, 
-            Participant.SUCCESS_MAJOR, 
-            Participant.SUCCESS_MINOR
+            SuccessTier.SUCCESS_NAT_MAX, 
+            SuccessTier.SUCCESS_MAJOR, 
+            SuccessTier.SUCCESS_MINOR
         ]
     if filter_val == Participant.FAILURE_ANY:
         return tier in [
-            Participant.FAILURE_NAT_MIN, 
-            Participant.FAILURE_MAJOR, 
-            Participant.FAILURE_MINOR
+            SuccessTier.FAILURE_NAT_MIN, 
+            SuccessTier.FAILURE_MAJOR, 
+            SuccessTier.FAILURE_MINOR
         ]
-    if filter_val == Participant.SUCCESS_MAJOR:
-        return tier == Participant.SUCCESS_NAT_MAX
-    if filter_val == Participant.FAILURE_MAJOR:
-        return tier == Participant.FAILURE_NAT_MIN
+    if filter_val == SuccessTier.SUCCESS_MAJOR:
+        return tier == SuccessTier.SUCCESS_NAT_MAX
+    if filter_val == SuccessTier.FAILURE_MAJOR:
+        return tier == SuccessTier.FAILURE_NAT_MIN
 
     return False
 
@@ -990,7 +1008,7 @@ def do_effect_change(eff, roll_val, role_entities):
 def roll_for_outcome(event_id, role_entities, difficulty=0.0):
     """
     Performs the random roll based on user-provided difficulty and Event rules.
-    Returns: (numeric_result, string_display)
+    Returns: (numeric_result, string_display, tier)
     """
     game_token = g.game_token
     event = Event.query.get((g.game_token, event_id))
@@ -998,17 +1016,22 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
     
     result_val = 0
     choice_str = ''
-    if event.outcome_type == 'determined':
+    if event.outcome_type == OutcomeType.DETERMINED:
         # Determined events don't roll; they use the fixed_base as the start.
         result_val = event.fixed_base
         breakdown_parts = [format_for_display(result_val)]
 
-    elif event.outcome_type == 'selection':
-        options = [s.strip() for s in event.selection_strings.split('\n') if s.strip()]
-        choice_str = random.choice(options) if options else "Nothing"
+    elif event.outcome_type == OutcomeType.SELECT:
+        choice_str = "(No Choices)"
+        if event.selection_attrib_id:
+            attrib = Attrib.query.get((game_token, event.selection_attrib_id))
+            options = attrib.enum_list if attrib and attrib.enum_list else []
+            if options:
+                result_val = float(random.randrange(len(options)))
+                choice_str = options[int(result_val)]
         breakdown_parts = [f"Selection: <b>{choice_str}</b>"]
 
-    elif event.outcome_type == 'coordinates':
+    elif event.outcome_type == OutcomeType.COORDS:
         loc_id = role_entities.get(Participant.AT)
         result_val, coord_str = roll_coordinate(loc_id)
         breakdown_parts = [coord_str]
@@ -1034,16 +1057,36 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
     }
     breakdown_str = breakdown_parts[0] # Start with the Die Roll/Base
     current_min_precedence = 99 
+    memory_val = 0.0
 
     for m in modifiers:
         if m['is_comparison']:
             continue
 
         op = m['op_app']
+        op_transform = m['op_transform']
+        val_transform = m['val_transform']
+
+        if op == Operation.MEM_STORE:
+            if op_transform and op_transform != Operation.MEM_RECALL:
+                memory_val = apply_operation(
+                    result_val, val_transform, op_transform, sides)
+                label = get_inner_breakdown(
+                    "total", val_transform, op_transform)
+                breakdown_str = f"{breakdown_str} (Store {label})"
+            else:
+                memory_val = result_val
+                breakdown_str = f"{breakdown_str} (Store)"
+            continue
+
         op_prec = PRECEDENCE.get(op, PRECEDENCE[Operation.ADD])
-        if op == Operation.ASSIGN:
-            op = m['op_transform']
-            val = m['val_transform']
+        if op_transform == Operation.MEM_RECALL:
+            val = memory_val
+            formatted_val = f"Recall({format_for_display(val)})"
+            symbol = Operation.Repr[op]
+        elif op == Operation.ASSIGN:
+            op = op_transform
+            val = val_transform
             formatted_val = get_inner_breakdown(result_val, val, op)
             symbol = Operation.Repr[Operation.ASSIGN]
         else:
@@ -1064,13 +1107,13 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
         result_val = apply_operation(result_val, val, op, sides)
 
     # 3. Final Formatting
-    if event.outcome_type not in('selection', 'coordinates'):
+    if event.outcome_type not in (OutcomeType.SELECT, OutcomeType.COORDS):
         breakdown_str += \
             f" = <span class='outcome-val'>{format_for_display(result_val)}</span>"
     
     display_str = ""
     tier = None
-    if event.outcome_type == 'fourway':
+    if event.outcome_type == OutcomeType.FOURWAY:
         shift = round(sides * difficulty)
 
         major_failure_max = base_min + math.floor(shift * 0.20)
@@ -1080,26 +1123,26 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
 
         if die_roll == base_max:
             res = "Natural Max!"
-            tier = Participant.SUCCESS_NAT_MAX
+            tier = SuccessTier.SUCCESS_NAT_MAX
         elif die_roll == base_min:
             res = "Natural Min!"
-            tier = Participant.FAILURE_NAT_MIN
+            tier = SuccessTier.FAILURE_NAT_MIN
         elif result_val >= major_success_min:
             res = "Major Success"
-            tier = Participant.SUCCESS_MAJOR
+            tier = SuccessTier.SUCCESS_MAJOR
         elif result_val >= minor_success_min:
             res = "Minor Success"
-            tier = Participant.SUCCESS_MINOR
+            tier = SuccessTier.SUCCESS_MINOR
         elif result_val <= major_failure_max:
             res = "Major Failure"
-            tier = Participant.FAILURE_MAJOR
+            tier = SuccessTier.FAILURE_MAJOR
         else:
             res = "Minor Failure"
-            tier = Participant.FAILURE_MINOR
+            tier = SuccessTier.FAILURE_MINOR
 
         display_str = f"<b>{res}</b><br><small>{breakdown_str}</small>"
         message_str = f"{format_for_display(result_val)} — {res}"
-    elif event.outcome_type == 'selection':
+    elif event.outcome_type == OutcomeType.SELECT:
         display_str = breakdown_str
         message_str = choice_str
     else:
@@ -1159,10 +1202,12 @@ def roll_for_system_outcome(event_id, num_dice=1, sides=20, bonus=0):
     """
     Handles specific dice systems (D&D, Ironsworn) without
     any database determining factors.
+    Returns: (numeric_result, string_display, tier)
     """
     event = Event.query.get((g.game_token, event_id))
     display_str = ""
     numeric_val = 0.0
+    tier = SuccessTier.SUCCESS_MINOR
 
     if event.roller_type == RollerType.DND:
         rolls = [random.randint(1, sides) for _ in range(num_dice)]
@@ -1173,6 +1218,7 @@ def roll_for_system_outcome(event_id, num_dice=1, sides=20, bonus=0):
         
         display_str = f"{rolls_details}{bonus_str} = <b>{total}</b>"
         numeric_val = float(total)
+        res_text = total
 
     elif event.roller_type == RollerType.IRONSWORN:
         action_die = random.randint(1, 6)
@@ -1180,7 +1226,22 @@ def roll_for_system_outcome(event_id, num_dice=1, sides=20, bonus=0):
         total = action_die + bonus
         
         hits = sum(1 for die in challenge_dice if total > die)
-        res_text = "Strong Hit" if hits == 2 else "Weak Hit" if hits == 1 else "Miss"
+        with_match = challenge_dice[0] == challenge_dice[1]
+        if hits == 2:
+            res_text = "Strong Hit"
+            tier = SuccessTier.SUCCESS_MAJOR
+            if with_match:
+                tier = SuccessTier.SUCCESS_NAT_MAX
+        elif hits == 1:
+            res_text = "Weak Hit"
+            tier = SuccessTier.SUCCESS_MINOR
+        else:
+            res_text = "Miss"
+            tier = SuccessTier.FAILURE_MAJOR
+            if with_match:
+                tier = SuccessTier.FAILURE_NAT_MIN
+        if with_match:
+            res_text += " With A Match"
         
         display_str = (
             f"{res_text} <br>"
@@ -1189,6 +1250,6 @@ def roll_for_system_outcome(event_id, num_dice=1, sides=20, bonus=0):
         )
         numeric_val = float(hits)
 
-    add_message(f"{event.name}: {display_str.replace('<br>', ' ')}")
-    return numeric_val, display_str
+    add_message(f"{event.name}: {res_text}")
+    return numeric_val, display_str, tier
 

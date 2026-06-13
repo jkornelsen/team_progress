@@ -67,7 +67,7 @@
                     <label for="outcome_type">Outcome Type:</label>
                     <select id="outcome_type"
                             name="outcome_type"
-                            class="full-width themed-input"
+                            class="themed-input"
                             onchange="syncOutcomeTypeState()">
                         <option value="{{ OutcomeType.FOURWAY }}" {{ 'selected'
                             if event.outcome_type == OutcomeType.FOURWAY }}
@@ -93,8 +93,14 @@
             </div>
 
             <div id="fields-selection" class="spacious-top hidden">
-                <label>Choices (One per line):</label>
-                <textarea name="selection_strings" rows="4" class="full-width themed-input" placeholder="Critical Hit&#10;Glancing Blow&#10;Fumble">{{ event.selection_strings or '' }}</textarea>
+                <label>Enumerated Attribute:
+                    <select name="selection_attrib_id">
+                        {% for a in all_attribs if a.enum_list %}
+                            <option value="{{ a.id }}" {{ 'selected' if
+                                event.selection_attrib_id == a.id }}>{{ a.name }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
             </div>
             <div id="fields-dice" class="grid-2-col spacious-top hidden">
                 <div>
@@ -307,20 +313,19 @@ function adjustEff(method, ...args) {
 function syncOutcomeTypeState() {
     const type = document.getElementById('outcome_type').value;
     document.getElementById('fields-range').classList.toggle(
-        'hidden', !['fourway', 'numeric'].includes(type));
+        'hidden', !['{{ OutcomeType.FOURWAY }}',
+                    '{{ OutcomeType.NUMERIC }}'].includes(type));
     document.getElementById('fields-base').classList.toggle(
-        'hidden', type !== 'determined');
+        'hidden', type !== '{{ OutcomeType.DETERMINED }}');
     document.getElementById('fields-selection').classList.toggle(
-        'hidden', type !== 'selection');
+        'hidden', type !== '{{ OutcomeType.SELECT }}');
     document.getElementById('fields-dice').classList.toggle(
-        'hidden', type !== 'dice_system');
+        'hidden', type !== '{{ OutcomeType.ROLLER }}');
     document.getElementById('determinants').classList.toggle(
-        'hidden', type == 'dice_system');
-    document.getElementById('effects').classList.toggle(
-        'hidden', type == 'dice_system');
+        'hidden', type == '{{ OutcomeType.ROLLER }}');
 
     document.querySelectorAll('.success-filter-container').forEach(filter => {
-        filter.classList.toggle('hidden', type !== 'fourway');
+        filter.classList.toggle('hidden', type !== '{{ OutcomeType.FOURWAY }}');
     });
 }
 
@@ -597,13 +602,14 @@ function syncOuterExprState(card) {
 
     const isComparison = COMPARISON_OPS.includes(op);
     const isAssign = (op === '{{ Operation.ASSIGN }}');
+    const isStore = (op === '{{ Operation.MEM_STORE }}');
     const isDet = card.classList.contains('det-card');
     const lhsLabel = card.querySelector('[data-slot-lhs]');
 
     if (isDet) {
         const sourceSection = card.querySelector('.sub-section');
         if (sourceSection) {
-            sourceSection.classList.toggle('hidden', isAssign);
+            sourceSection.classList.toggle('hidden', isAssign || isStore);
         }
         if (lhsLabel) {
             lhsLabel.innerText = isAssign ? "Running Total" : "Fetched Value";
@@ -660,20 +666,18 @@ function syncInnerExprState(card) {
 
     const op = opSelector.value;
     const isConstant = (op === "{{ Operation.CONST }}");
+    const isRecall = (op === "{{ Operation.MEM_RECALL }}");
+    const isAbs = (op === "{{ Operation.ABS }}");
     const hasNoTransform = (op === ""); 
     const isEff = card.classList.contains('eff-card');
     
-    const lhs = card.querySelector('[data-slot-lhs]');       // "Fetched Value" / "Source"
+    const lhs = card.querySelector('[data-slot-lhs]');      // "Fetched Value"
     const rhsGroup = card.querySelector('[data-slot-rhs]'); // The numeric input [ 1.0 ]
 
     // --- 1. VISIBILITY RULES ---
     
-    // Hide "Fetched Value" only if we are in "Constant" mode
-    if (lhs) lhs.classList.toggle('hidden', isConstant);
-
-    // Hide the numeric input if we are just using the raw value ("Use Value")
-    // but keep it for every other operation (including Constant)
-    if (rhsGroup) rhsGroup.classList.toggle('hidden', hasNoTransform);
+    if (lhs) lhs.classList.toggle('hidden', isConstant || isRecall);
+    if (rhsGroup) rhsGroup.classList.toggle('hidden', hasNoTransform || isRecall || isAbs);
 
     // --- 2. ORDERING RULES (Visual Equation Flow) ---
     
@@ -684,7 +688,7 @@ function syncInnerExprState(card) {
         rhsGroup.style.order = "1";
         opSelector.style.order = "2";
     } 
-    else if (op === "{{ Operation.POW_OF_VAL }}") {
+    else if (op === "{{ Operation.POW_OF_VAL }}" || op === "{{ Operation.ABS }}") {
         // ( [ 10 ] ^ Fetched Value )
         rhsGroup.style.order = "1";
         opSelector.style.order = "2";
@@ -693,7 +697,8 @@ function syncInnerExprState(card) {
     else if (["{{ Operation.SOFTCAP }}",
                 "{{ Operation.ROUND }}",
                 "{{ Operation.FLOOR }}",
-                "{{ Operation.CEIL }}"].includes(op)) {
+                "{{ Operation.CEIL }}"
+                ].includes(op)) {
         // Round ( Fetched Value , [ 10 ] )
         opSelector.style.order = "1";
         lhs.style.order = "2";
@@ -745,7 +750,7 @@ function syncInnerExprState(card) {
     } else {
         const detSourceSection = card.querySelector('.card-body .sub-section');
         if (detSourceSection) {
-            detSourceSection.querySelectorAll('select, input').forEach(i => i.disabled = isConstant);
+            detSourceSection.querySelectorAll('select, input').forEach(i => i.disabled = isConstant | isRecall);
             detSourceSection.style.opacity = isConstant ? "0.5" : "1";
             detSourceSection.style.pointerEvents = isConstant ? "none" : "auto";
         }
@@ -1020,6 +1025,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             if op_transform == Operation.CONST }}>Constant</option>
                         <option value="" {{ 'selected'
                             if not op_transform }}>Use Value</option>
+                        <option value="{{ Operation.MEM_RECALL }}" {{ 'selected'
+                            if op_transform == Operation.MEM_RECALL }}>Recall</option>
                         {% for op_key in Operation.TRANSFORM_OPS %}
                             <option value="{{ op_key }}" {{ 'selected'
                             if op_transform == op_key }}>
@@ -1141,33 +1148,33 @@ document.addEventListener('DOMContentLoaded', function() {
                             Fourway Filter:
                         <select name="effs[{{ card_index }}][outcome_success]"
                                 class="mini-select success-tier-select">
-                            <option value="{{ Participant.ALWAYS }}" 
+                            <option value="{{ SuccessTier.ALWAYS }}" 
                                 {{ 'selected' if factor and factor.outcome_success ==
-                                    Participant.ALWAYS }}>Always</option>
-                            <option value="{{ Participant.SUCCESS_ANY }}" 
+                                    SuccessTier.ALWAYS }}>Always</option>
+                            <option value="{{ SuccessTier.SUCCESS_ANY }}" 
                                 {{ 'selected' if factor and factor.outcome_success ==
-                                    Participant.SUCCESS_ANY }}>Any Success</option>
-                            <option value="{{ Participant.SUCCESS_NAT_MAX }}" 
+                                    SuccessTier.SUCCESS_ANY }}>Any Success</option>
+                            <option value="{{ SuccessTier.SUCCESS_NAT_MAX }}" 
                                 {{ 'selected' if factor and factor.outcome_success ==
-                                    Participant.SUCCESS_NAT_MAX }}>Natural Max</option>
-                            <option value="{{ Participant.SUCCESS_MAJOR }}" 
+                                    SuccessTier.SUCCESS_NAT_MAX }}>Natural Max</option>
+                            <option value="{{ SuccessTier.SUCCESS_MAJOR }}" 
                                 {{ 'selected' if factor and factor.outcome_success ==
-                                    Participant.SUCCESS_MAJOR }}>Major Success</option>
-                            <option value="{{ Participant.SUCCESS_MINOR }}" 
+                                    SuccessTier.SUCCESS_MAJOR }}>Major Success</option>
+                            <option value="{{ SuccessTier.SUCCESS_MINOR }}" 
                                 {{ 'selected' if factor and factor.outcome_success ==
-                                    Participant.SUCCESS_MINOR }}>Minor Success</option>
-                            <option value="{{ Participant.FAILURE_ANY }}" 
+                                    SuccessTier.SUCCESS_MINOR }}>Minor Success</option>
+                            <option value="{{ SuccessTier.FAILURE_ANY }}" 
                                 {{ 'selected' if factor and factor.outcome_success ==
-                                    Participant.FAILURE_ANY }}>Any Failure</option>
-                            <option value="{{ Participant.FAILURE_MINOR }}" 
+                                    SuccessTier.FAILURE_ANY }}>Any Failure</option>
+                            <option value="{{ SuccessTier.FAILURE_MINOR }}" 
                                 {{ 'selected' if factor and factor.outcome_success ==
-                                    Participant.FAILURE_MINOR }}>Minor Failure</option>
-                            <option value="{{ Participant.FAILURE_MAJOR }}" 
+                                    SuccessTier.FAILURE_MINOR }}>Minor Failure</option>
+                            <option value="{{ SuccessTier.FAILURE_MAJOR }}" 
                                 {{ 'selected' if factor and factor.outcome_success ==
-                                    Participant.FAILURE_MAJOR }}>Major Failure</option>
-                            <option value="{{ Participant.FAILURE_NAT_MIN }}" 
+                                    SuccessTier.FAILURE_MAJOR }}>Major Failure</option>
+                            <option value="{{ SuccessTier.FAILURE_NAT_MIN }}" 
                                 {{ 'selected' if factor and factor.outcome_success ==
-                                    Participant.FAILURE_NAT_MIN }}>Natural Min</option>
+                                    SuccessTier.FAILURE_NAT_MIN }}>Natural Min</option>
                         </select>
                         </label>
                     </div>
@@ -1289,33 +1296,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 Fourway Filter:
             <select name="chained[{{ card_index }}][outcome_success]"
                     class="mini-select" id="chain1">
-                <option value="{{ Participant.ALWAYS }}" 
+                <option value="{{ SuccessTier.ALWAYS }}" 
                     {{ 'selected' if not outcome_success or outcome_success ==
-                        Participant.ALWAYS }}>Any Outcome</option>
-                <option value="{{ Participant.SUCCESS_ANY }}" 
+                        SuccessTier.ALWAYS }}>Any Outcome</option>
+                <option value="{{ SuccessTier.SUCCESS_ANY }}" 
                     {{ 'selected' if outcome_success ==
-                        Participant.SUCCESS_ANY }}>Any Success</option>
-                <option value="{{ Participant.SUCCESS_NAT_MAX }}" 
+                        SuccessTier.SUCCESS_ANY }}>Any Success</option>
+                <option value="{{ SuccessTier.SUCCESS_NAT_MAX }}" 
                     {{ 'selected' if outcome_success ==
-                        Participant.SUCCESS_NAT_MAX }}>Natural Max</option>
-                <option value="{{ Participant.SUCCESS_MAJOR }}" 
+                        SuccessTier.SUCCESS_NAT_MAX }}>Natural Max</option>
+                <option value="{{ SuccessTier.SUCCESS_MAJOR }}" 
                     {{ 'selected' if outcome_success ==
-                        Participant.SUCCESS_MAJOR }}>Major Success</option>
-                <option value="{{ Participant.SUCCESS_MINOR }}" 
+                        SuccessTier.SUCCESS_MAJOR }}>Major Success</option>
+                <option value="{{ SuccessTier.SUCCESS_MINOR }}" 
                     {{ 'selected' if outcome_success ==
-                        Participant.SUCCESS_MINOR }}>Minor Success</option>
-                <option value="{{ Participant.FAILURE_ANY }}" 
+                        SuccessTier.SUCCESS_MINOR }}>Minor Success</option>
+                <option value="{{ SuccessTier.FAILURE_ANY }}" 
                     {{ 'selected' if outcome_success ==
-                        Participant.FAILURE_ANY }}>Any Failure</option>
-                <option value="{{ Participant.FAILURE_MINOR }}" 
+                        SuccessTier.FAILURE_ANY }}>Any Failure</option>
+                <option value="{{ SuccessTier.FAILURE_MINOR }}" 
                     {{ 'selected' if outcome_success ==
-                        Participant.FAILURE_MINOR }}>Minor Failure</option>
-                <option value="{{ Participant.FAILURE_MAJOR }}" 
+                        SuccessTier.FAILURE_MINOR }}>Minor Failure</option>
+                <option value="{{ SuccessTier.FAILURE_MAJOR }}" 
                     {{ 'selected' if outcome_success ==
-                        Participant.FAILURE_MAJOR }}>Major Failure</option>
-                <option value="{{ Participant.FAILURE_NAT_MIN }}" 
+                        SuccessTier.FAILURE_MAJOR }}>Major Failure</option>
+                <option value="{{ SuccessTier.FAILURE_NAT_MIN }}" 
                     {{ 'selected' if outcome_success ==
-                        Participant.FAILURE_NAT_MIN }}>Natural Min</option>
+                        SuccessTier.FAILURE_NAT_MIN }}>Natural Min</option>
             </select>
             </label>
         </div>

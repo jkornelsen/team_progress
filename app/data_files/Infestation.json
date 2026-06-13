@@ -199,6 +199,12 @@
                 "description": "Higher numbers increase your chance of landing hits before they can dodge."
             },
             {
+                "id": 66,
+                "name": "Action — Mouse",
+                "description": "selection list for event",
+                "enum_list": ["Bite", "Wait — End Turn", "Move Away"]
+            },
+            {
                 "id": 45,
                 "name": "Boost",
                 "description": "Gets set by **Surge** for 1 round. It goes away even if the enemy doesn't choose to attack in that round."
@@ -325,7 +331,7 @@
                 "name": "Choose Mouse Action",
                 "description": "If there is a straightforward choice then there is no need to roll. At range, Baby mice typically wait, unless they're getting blasted. Adult mice use their ranged fur attack unless they have too little **HP.**\r\n\r\nOtherwise, roll to determine what the mouse does next. If the outcome does not make sense for this encounter, then roll again. Mice aren't really fighters and often freeze (wait) at inopportune times.",
                 "outcome_type": "selection",
-                "selection_strings": "Bite\r\nWait — End Turn\r\nMove Away"
+                "selection_attrib_id": 66
             },
             {
                 "id": 36,
@@ -1093,13 +1099,6 @@
                         "op_application": ":="
                     }
                 ]
-            },
-            {
-                "id": 23,
-                "name": "Upgrade Bonus",
-                "description": "Run after every 3 experience levels.",
-                "outcome_type": "selection",
-                "selection_strings": "Triple XP for the next three fights.\r\nGain 50% of XP towards the next level.\r\nIncrease Energy limit by 1.\r\nFor three fights, do not decrease Energy unless critical.\r\nNo Bonus."
             },
             {
                 "id": 58,

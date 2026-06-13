@@ -397,6 +397,28 @@
                 "name": "Pay",
                 "description": "Roughly keep track of how pay compares to industry averages.",
                 "enum_list": ["Very High", "Above Average", "Standard", "Low", "Very Low"]
+            },
+            {
+                "id": 61,
+                "name": "Plant Problem Type — List",
+                "description": "selection list for the event",
+                "enum_list": [
+                    "Unusable Amenities",
+                    "Long Hours",
+                    "Low Wages",
+                    "Burnt Food",
+                    "Waste Bacteria Inert",
+                    "Radioactive Waste Leak",
+                    "Cooling System Leak",
+                    "Machinery Jam",
+                    "Electricity Down",
+                    "Fuel Spill",
+                    "Energy Not Gained",
+                    "Excess Energy",
+                    "Battery Power Loss",
+                    "Core Meltdown — Reactor Damage",
+                    "Core Meltdown — Radioactive Contamination"
+                ]
             }
         ],
         "events": [
@@ -478,7 +500,7 @@
                 "name": "Plant Problem Type",
                 "description": "Get information about a problem that occurred. If the inciting roll was a major failure then consider the problem to be more severe.\r\n\r\n- **Unusable Amenities** — lower [worker mood](/play/attrib/20/subject/19) by 3 for 3 cycles\r\n- **Long Hours** — lower [worker mood](/play/attrib/20/subject/19) by 1\r\n- **Low Wages** — [workers may react badly](/play/event/23)\r\n- **Burnt Food** — microwave left on too long; two offices lost in most crowded area\r\n- **Waste Bacteria Inert** — fail to reduce radioactive waste for 3 production cycles\r\n- **Radioactive Waste Leak** — see [radioactive waste leak](/play/event/51) (event)\r\n- **Cooling System Leak** — [double the duration](/configure/item/8) of thermal waste reduction for 3 production cycles, major failure hits employees with scalding water\r\n- **Electricity Down** — prevents cooling tower from operating for 3 production cycles, major failure requires repairs to [electrical system](/play/item/10)\r\n- **Machinery Jam** — problem with [reclaiming machinery](/play/item/34?owner_id=12); set reclaim difficulty to *Hard* for 3 production cycles or *Very Hard* for major failure\r\n- **Fuel Spill** — lose  10% (rounded up) of your best [Plutonium Purchase](/play/item/27?owner_id=14) quantity on major failure, or second best for minor failure\r\n- **Energy Not Gained** — nothing to fix but roll back recent energy gains\r\n- **Excess Energy** — damages storage systems, reduce [battery](/configure/item/9) *Limit per Pile* by 100,000; [can be repaired](/play/event/33)\r\n- **Battery Power Loss** — see [battery power loss](/play/event/42) (event)\r\n- **Core Meltdown — Reactor Damage** — cannot produce energy until [repairs are made](/play/item/6)\r\n- **Core Meltdown — Radioactive Contamination** — worst-case scenario, [wait for it to dissipate](/play/item/29)",
                 "outcome_type": "selection",
-                "selection_strings": "Unusable Amenities\r\nLong Hours\r\nLow Wages\r\nBurnt Food\r\nWaste Bacteria Inert\r\nRadioactive Waste Leak\r\nCooling System Leak\r\nMachinery Jam\r\nElectricity Down\r\nFuel Spill\r\nEnergy Not Gained\r\nExcess Energy\r\nBattery Power Loss\r\nCore Meltdown — Reactor Damage\r\nCore Meltdown — Radioactive Contamination"
+                "selection_attrib_id": 61
             },
             {
                 "id": 17,

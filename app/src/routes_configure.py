@@ -10,7 +10,7 @@ from app.models import (
     Pile, ItemLimit, AttribVal, Operation, EntityAbility,
     Recipe, RecipeSource, RecipeByproduct, RecipeAttribReq,
     LocDest, LocZone, EntranceReq, ItemRef,
-    Participant, OutcomeType, EventFactor, EventField, EventLink,
+    Participant, OutcomeType, SuccessTier, EventFactor, EventField, EventLink,
     Overall, WinRequirement)
 from app.serialization import clone_entity
 from app.utils import (
@@ -663,7 +663,8 @@ def edit_event(id):
         elif event.outcome_type == OutcomeType.DETERMINED:
             event.fixed_base = req.get_float('fixed_base')
         elif event.outcome_type == OutcomeType.SELECT:
-            event.selection_strings = req.get_str('selection_strings')
+            event.selection_attrib_id = req.get_int(
+                'selection_attrib_id', None)
 
         # --- SAVE DETERMINANTS & EFFECTS ---
         # 1. Clear existing factors to perform a clean sync
@@ -678,10 +679,10 @@ def edit_event(id):
                 get_val_from = row.get_str('get_val_from', Participant.INFIELD)
                 if op_trans == Operation.CONST and usage == Participant.EFF:
                     get_val_from = Participant.OUTCOME
-                outcome_success = Participant.ALWAYS
+                outcome_success = SuccessTier.ALWAYS
                 if event.outcome_type == OutcomeType.FOURWAY:
                     outcome_success = row.get_str(
-                        'outcome_success', Participant.ALWAYS)
+                        'outcome_success', SuccessTier.ALWAYS)
 
                 factor = EventFactor(
                     game_token=game_token,
@@ -754,7 +755,7 @@ def edit_event(id):
                 }
                 if event.outcome_type == OutcomeType.FOURWAY:
                     instance_args['outcome_success'] = row.get_str(
-                        'outcome_success', Participant.ALWAYS)
+                        'outcome_success', SuccessTier.ALWAYS)
                 get_val_from = row.get_str('get_val_from')
                 if get_val_from == Participant.OUTCOME:
                     instance_args.update({
@@ -839,6 +840,7 @@ def edit_event(id):
             game_token=game_token).order_by(name_stripped()).all(),
         recipe_map=recipe_map,
         OutcomeType=OutcomeType,
+        SuccessTier=SuccessTier,
         Operation=Operation,
         Participant=Participant
     )

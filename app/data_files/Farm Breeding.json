@@ -85,7 +85,7 @@
                 "name": "Breeding Pen",
                 "toplevel": true,
                 "items": [
-                    {"item_id": 12, "quantity": 0.0, "position": null}
+                    {"item_id": 12}
                 ],
                 "destinations": [
                     {"loc2_id": 18}
@@ -96,9 +96,9 @@
                 "name": "Cow Pen",
                 "toplevel": true,
                 "items": [
-                    {"item_id": 16, "quantity": 1.0, "position": null},
-                    {"item_id": 11, "quantity": 1.0, "position": null},
-                    {"item_id": 13, "quantity": 1.0, "position": null}
+                    {"item_id": 11, "quantity": 1.0},
+                    {"item_id": 13, "quantity": 1.0},
+                    {"item_id": 16, "quantity": 1.0}
                 ]
             }
         ],
@@ -109,7 +109,7 @@
                 "description": "Herd (pick up) animals to move them from one place to the other.",
                 "location_id": 18,
                 "items": [
-                    {"item_id": 14, "quantity": 1.0, "slot": ""}
+                    {"item_id": 14, "quantity": 1.0}
                 ]
             }
         ],
@@ -126,12 +126,30 @@
                 "name": "bovine color",
                 "enum_list": ["Black and White", "Brown", "Red", "Black", "White"]
             },
+            {
+                "id": 22,
+                "name": "inherit parent trait — list",
+                "description": "selection list for the event",
+                "enum_list": [
+                    "Mother",
+                    "Mother",
+                    "Mother",
+                    "Mother",
+                    "Mother",
+                    "New Trait",
+                    "Father",
+                    "Father",
+                    "Father",
+                    "Father",
+                    "Father"
+                ]
+            },
             {"id": 2, "name": "life expectancy"},
             {
                 "id": 3,
                 "name": "sex",
                 "description": "Determines which pairs can breed.",
-                "enum_list": ["male", "female"]
+                "enum_list": ["Male ♂", "Female ♀"]
             },
             {
                 "id": 7,
@@ -155,15 +173,13 @@
                 "name": "inherit parent trait",
                 "description": "Whether to inherit a trait such as color from mother or father. Small chance of developing a new color that's not inherited directly from either one, based on some combination of genetics from ancestors.",
                 "outcome_type": "selection",
-                "numeric_range": [1, 20],
-                "selection_strings": "Mother\r\nMother\r\nMother\r\nMother\r\nMother\r\nNew Trait\r\nFather\r\nFather\r\nFather\r\nFather\r\nFather"
+                "selection_attrib_id": 22
             },
             {
                 "id": 21,
                 "name": "sex of offspring",
                 "outcome_type": "selection",
-                "numeric_range": [1, 20],
-                "selection_strings": "Male ♂\r\nFemale ♀"
+                "selection_attrib_id": 3
             }
         ]
     },

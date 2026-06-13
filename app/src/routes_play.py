@@ -8,7 +8,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import joinedload
 from app.models import (
     db, Entity, Item, Character, Location, Attrib, Event,
-    Pile, AttribVal, Operation, OutcomeType, EventFactor,
+    Pile, AttribVal, Operation, OutcomeType, SuccessTier, EventFactor,
     Recipe, RecipeAttribReq, LocDest, EventLink, EntityAbility, EventField,
     Progress, Overall, WinRequirement, GameMessage,
     GENERAL_ID, StorageType, Participant)
@@ -922,6 +922,7 @@ def play_event(id):
         fields_not_met=fields_not_met,
         related_entities=related,
         OutcomeType=OutcomeType,
+        SuccessTier=SuccessTier,
         Participant=Participant,
         Operation=Operation,
         link_letters=LinkLetters(excluded='moeraijk')
@@ -961,12 +962,11 @@ def roll_event(id):
             role_name = Participant.formkey_to_role(key)
             role_entities[role_name] = req.get_int(key)
 
-    tier = None
     if event.outcome_type == OutcomeType.ROLLER:
         n_dice = req.get_int('num_dice', 1)
         sides = req.get_int('sides', 20)
         bonus = req.get_int('bonus', 0)
-        result_val, result_str = roll_for_system_outcome(
+        result_val, result_str, tier = roll_for_system_outcome(
             id, n_dice, sides, bonus)
     else:
         difficulty = req.get_float('difficulty', 0.55)

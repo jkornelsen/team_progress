@@ -564,6 +564,17 @@ class OutcomeType:
 
     ALL = [FOURWAY, NUMERIC, DETERMINED, SELECT, COORDS, ROLLER]
 
+class SuccessTier:
+    ALWAYS = 'always'
+    SUCCESS_ANY = 'success_any'
+    SUCCESS_NAT_MAX = 'natural_max'
+    SUCCESS_MAJOR = 'success_major'
+    SUCCESS_MINOR = 'success_minor'
+    FAILURE_ANY = 'failure_any'
+    FAILURE_NAT_MIN = 'natural_min'
+    FAILURE_MAJOR = 'failure_major'
+    FAILURE_MINOR = 'failure_minor'
+
 class RollerType:
     """System for ROLLER outcome type"""
     DND = 'dnd'
@@ -588,7 +599,7 @@ class Event(Entity):
     roller_type = db.Column(db.String(20))
     numeric_range = db.Column(ARRAY(db.Integer)) # [min, max]
     fixed_base = db.Column(db.Float, default=0.0)
-    selection_strings = db.Column(db.Text)
+    selection_attrib_id = db.Column(db.Integer)
 
     def to_dict(self):
         data = super().to_dict()
@@ -602,7 +613,7 @@ class Event(Entity):
                 OutcomeType.FOURWAY, OutcomeType.NUMERIC) else None,
             "fixed_base": self.fixed_base \
                 if self.outcome_type == OutcomeType.DETERMINED else None,
-            "selection_strings": self.selection_strings \
+            "selection_attrib_id": self.selection_attrib_id
                 if self.outcome_type == OutcomeType.SELECT else None,
             "determinants": [d.to_dict() for d in self.determinants],
             "effects": [e.to_dict() for e in self.effects],
@@ -1083,17 +1094,6 @@ class Participant:
     USES_LOC = {POS, SPAWN, PLACE}
     USES_CHAR = {SPAWN}
 
-    # --- Outcome Success Filter ---
-    ALWAYS = 'always'
-    SUCCESS_ANY = 'success_any'
-    SUCCESS_NAT_MAX = 'natural_max'
-    SUCCESS_MAJOR = 'success_major'
-    SUCCESS_MINOR = 'success_minor'
-    FAILURE_ANY = 'failure_any'
-    FAILURE_NAT_MIN = 'natural_min'
-    FAILURE_MAJOR = 'failure_major'
-    FAILURE_MINOR = 'failure_minor'
-
     # --- Usage ---
     DET = 'det'  # Determinant (affects roll)
     EFF = 'eff'  # Effect (applies changes)
@@ -1112,12 +1112,15 @@ class Operation:
     MULT = '*'
     DIV = '/'
     MOD = '%'
+    ABS = 'abs'
     VAL_TO_POW = 'x^'
     POW_OF_VAL = '^x'
-    SOFTCAP = 'scap'
     ROUND = 'round'
     FLOOR = 'floor'
     CEIL = 'ceil'
+    SOFTCAP = 'scap'
+    MEM_STORE = 'm:='
+    MEM_RECALL = 'mr'
 
     Repr = {
         CONST:      'n',
@@ -1130,23 +1133,27 @@ class Operation:
         SUB:        '−',
         MULT:       '×',
         DIV:        '÷',
-        MOD:        'mod',
+        MOD:        'Mod',
         VAL_TO_POW: 'xⁿ',
         POW_OF_VAL: 'nˣ',
-        SOFTCAP:    'SoftCap',
         ROUND:      'Round',
         FLOOR:      'Floor',
         CEIL:       'Ceiling',
+        ABS:        'Abs',
+        SOFTCAP:    'SoftCap',
+        MEM_STORE:  'Store',
+        MEM_RECALL: 'Recall',
     }
 
     # How the result applies to the total
-    DET_APPLICATION_OPS = [ADD, SUB, MULT, DIV, MOD, ASSIGN, EQ, GE, LT, NE]
+    DET_APPLICATION_OPS = [
+        ADD, SUB, MULT, DIV, MOD, ASSIGN, MEM_STORE, EQ, GE, LT, NE]
     COMPARISON_OPS = [EQ, GE, LT, NE]
 
     # Modify the Field Value before we apply it to the total
     TRANSFORM_OPS = [
         ADD, SUB, MULT, DIV, MOD,
-        VAL_TO_POW, POW_OF_VAL, SOFTCAP, ROUND, FLOOR, CEIL]
+        VAL_TO_POW, POW_OF_VAL, ROUND, FLOOR, CEIL, ABS, SOFTCAP]
 
 class EventField(db.Model, DictHydrator):
     """
@@ -1256,7 +1263,7 @@ class EventFactor(db.Model, DictHydrator):
 
     # --- Filter & Workflow ---
     negate = db.Column(db.Boolean, default=False) # = not(lookup && compare)
-    outcome_success = db.Column(db.String(20), default=Participant.ALWAYS)
+    outcome_success = db.Column(db.String(20), default=SuccessTier.ALWAYS)
     auto_apply = db.Column(db.Boolean, default=False)
 
     # --- Retrieval ---

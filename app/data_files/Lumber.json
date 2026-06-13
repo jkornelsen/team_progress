@@ -135,7 +135,7 @@
                 "name": "P1 Marked Tree",
                 "description": "Plots are full of trees, but mark only one at a time for harvesting.",
                 "attribs": [
-                    [2, 100],
+                    [2, 100.0],
                     [60, 100.0]
                 ],
                 "storage_type": "l",
@@ -566,6 +566,20 @@
                 "description": "Values are negative, to change a tree's HP. Similar to *Strength* but additive."
             },
             {"id": 51, "name": "Can Build Bridge", "is_binary": true},
+            {
+                "id": 61,
+                "name": "Chopping Mishap List",
+                "enum_list": [
+                    "Fewer resources gained",
+                    "Resources lost",
+                    "No progress",
+                    "Tool damaged",
+                    "Tool broken",
+                    "Tool destroyed",
+                    "Minor injury",
+                    "Severe injury"
+                ]
+            },
             {"id": 57, "name": "Hired", "is_binary": true},
             {
                 "id": 54,
@@ -648,7 +662,7 @@
                 "name": "Chopping Mishap Type",
                 "description": "Run to get details on what happened after a **Chopping Check** fails.",
                 "outcome_type": "selection",
-                "selection_strings": "Fewer resources gained\r\nResources lost\r\nNo progress\r\nTool damaged\r\nTool broken\r\nTool destroyed\r\nMinor injury\r\nSevere injury"
+                "selection_attrib_id": 61
             },
             {
                 "id": 52,

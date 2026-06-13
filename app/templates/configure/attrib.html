@@ -13,51 +13,43 @@
 {% block content %}
 <div class="configure-attrib">
     <h1>Attribute Setup</h1>
-    <p class="label-like">Stat or state that a subject can have.</p>
+    <p class="label-like">Numeric stat or state that a subject can have.</p>
     <p class="label-like">For example, with a <i>damage bonus</i> attribute, edit <i>iron dagger</i> (item) and assign the attribute's value as 2. Then, save and duplicate, name the new item <i>steel dagger,</i> and change to 3.</p>
     
     <form method="POST">
-        <!-- 1. Identity (Entity Table) -->
         <section class="outer-border">
-            <h3>General Info</h3>
-            <div class="form-group">
+            <div>
                 <label for="name">Attribute Name:</label>
                 <input type="text" id="name" name="name" value="{{ attrib.name or '' }}" required class="full-width themed-input">
             </div>
-            <div class="form-group spacious-top">
+            <div class="spacious-top">
                 <label for="description">Description:</label>
                 <textarea id="description" name="description" rows="3" class="full-width themed-input">{{ attrib.description or '' }}</textarea>
             </div>
-        </section>
 
-        <!-- 2. Logic Type (Attrib Table) -->
-        <section class="outer-border">
-            <h3>Value Definition</h3>
-            <div class="column-container">
-                <div class="type-selection" style="min-width: 250px;">
-                    <label>Value Type:</label><br>
-                    <label class="radio-label">
-                        <input type="radio" name="value_type" value="number" 
-                               {{ 'checked' if not attrib or (not attrib.is_binary and not attrib.enum_list) }}> 
-                        Standard Number
-                    </label>
-                    <label class="radio-label">
-                        <input type="radio" name="value_type" value="binary" 
-                               {{ 'checked' if attrib.is_binary }}> 
-                        True / False
-                    </label>
-                    <label class="radio-label">
-                        <input type="radio" name="value_type" value="enum" 
-                               {{ 'checked' if attrib.enum_list }}> 
-                        Enumerated List of States
-                    </label>
-                </div>
+            <div class="type-selection" class="spacious-top">
+                <label>Value Type:</label>
+                <label class="radio-label">
+                    <input type="radio" name="value_type" value="number" 
+                           {{ 'checked' if not attrib or (not attrib.is_binary and not attrib.enum_list) }}> 
+                    Plain Number
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="value_type" value="binary" 
+                           {{ 'checked' if attrib.is_binary }}> 
+                    True / False
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="value_type" value="enum" 
+                           {{ 'checked' if attrib.enum_list }}> 
+                    Enumerated List
+                </label>
+            </div>
 
-                <div id="enum-container" class="flex-grow {{ 'hidden' if not attrib or not attrib.enum_list }}">
-                    <label for="enum_values">States (One per line):</label>
-                    <textarea id="enum_values" name="enum_values" rows="5" class="full-width themed-input" 
-                              placeholder="Empty&#10;Low&#10;Medium&#10;High&#10;Full">{{ attrib.enum_list | join('\n') if attrib.enum_list }}</textarea>
-                </div>
+            <div id="enum-container" class="spacious-top {{ 'hidden' if not attrib or not attrib.enum_list }}">
+                <label for="enum_values">Enum Labels (one per line, value is the index):</label>
+                <textarea id="enum_values" name="enum_values" rows="5" class="full-width themed-input" 
+                          placeholder="Empty&#10;Low&#10;Medium&#10;High&#10;Full">{{ attrib.enum_list | join('\n') if attrib.enum_list }}</textarea>
             </div>
         </section>
 

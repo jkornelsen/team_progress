@@ -130,20 +130,32 @@
                 <h3>Roll Setup</h3>
                 {% if event.roller_type == 'dnd' %}
                 <div class="system-controls dnd-fields">
-                    <div class="input-group">
-                        <label>Dice</label>
-                        <input type="number" id="num-dice" name="num_dice" value="1" min="1" class="form-control">
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <label>
+                            Dice
+                            <input type="number" id="num-dice" name="num_dice"
+                                   value="1" min="1" class="form-control"
+                                   style="width: 10ch;">
+                        </label>
                         
-                        <label>Sides</label>
-                        <input type="number" id="num-sides" name="sides" value="20" min="2" class="form-control">
+                        <label>
+                            Sides
+                            <input type="number" id="num-sides" name="sides"
+                                   value="20" min="2" class="form-control"
+                                   style="width: 10ch;">
+                        </label>
                         
-                        <label>Bonus</label>
-                        <input type="number" id="num-bonus" name="bonus" value="0" class="form-control">
+                        <label>
+                            Bonus
+                            <input type="number" id="num-bonus" name="bonus"
+                                   value="0" class="form-control"
+                                   style="width: 10ch;">
+                        </label>
                     </div>
                 </div>
                 {% elif event.roller_type == 'ironsworn' %}
                 <div class="system-controls ironsworn-fields">
-                    <div class="input-group">
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
                         <label for="num-bonus">Action Bonus (Stat + Adds)</label>
                         <input type="number" id="num-bonus" name="bonus" value="0" class="form-control" style="width: 80px;">
                     </div>
@@ -407,14 +419,14 @@
 const OP_MAP = {{ Operation.Repr | tojson | safe }};
 const eventId = {{ event.id }};
 const FILTER_LABELS = {
-    '{{ Participant.SUCCESS_ANY }}': 'If Successful',
-    '{{ Participant.SUCCESS_NAT_MAX }}': 'If Natural Max',
-    '{{ Participant.SUCCESS_MAJOR }}': 'If Major Success',
-    '{{ Participant.SUCCESS_MINOR }}': 'If Minor Success',
-    '{{ Participant.FAILURE_ANY }}': 'If Failure',
-    '{{ Participant.FAILURE_NAT_MIN }}': 'If Natural Min',
-    '{{ Participant.FAILURE_MAJOR }}': 'If Major Failure',
-    '{{ Participant.FAILURE_MINOR }}': 'If Minor Failure'
+    '{{ SuccessTier.SUCCESS_ANY }}': 'If Successful',
+    '{{ SuccessTier.SUCCESS_NAT_MAX }}': 'If Natural Max',
+    '{{ SuccessTier.SUCCESS_MAJOR }}': 'If Major Success',
+    '{{ SuccessTier.SUCCESS_MINOR }}': 'If Minor Success',
+    '{{ SuccessTier.FAILURE_ANY }}': 'If Failure',
+    '{{ SuccessTier.FAILURE_NAT_MIN }}': 'If Natural Min',
+    '{{ SuccessTier.FAILURE_MAJOR }}': 'If Major Failure',
+    '{{ SuccessTier.FAILURE_MINOR }}': 'If Minor Failure'
 };
 
 const diffSelect = document.getElementById('difficulty-select');
@@ -695,23 +707,23 @@ function tierMatch(filter, tier) {
     if (filter === 'always') return true;
     if (!tier) return false;
     if (filter === tier) return true;
-    if (filter === '{{ Participant.SUCCESS_ANY }}') {
+    if (filter === '{{ SuccessTier.SUCCESS_ANY }}') {
         return [
-            '{{ Participant.SUCCESS_NAT_MAX }}',
-            '{{ Participant.SUCCESS_MAJOR }}',
-            '{{ Participant.SUCCESS_MINOR }}'].includes(tier);
+            '{{ SuccessTier.SUCCESS_NAT_MAX }}',
+            '{{ SuccessTier.SUCCESS_MAJOR }}',
+            '{{ SuccessTier.SUCCESS_MINOR }}'].includes(tier);
     }
-    if (filter === '{{ Participant.SUCCESS_MAJOR }}') {
-        return tier === '{{ Participant.SUCCESS_NAT_MAX }}';
+    if (filter === '{{ SuccessTier.SUCCESS_MAJOR }}') {
+        return tier === '{{ SuccessTier.SUCCESS_NAT_MAX }}';
     }
-    if (filter === '{{ Participant.FAILURE_ANY }}') {
+    if (filter === '{{ SuccessTier.FAILURE_ANY }}') {
         return [
-            '{{ Participant.FAILURE_NAT_MIN }}',
-            '{{ Participant.FAILURE_MAJOR }}',
-            '{{ Participant.FAILURE_MINOR }}'].includes(tier);
+            '{{ SuccessTier.FAILURE_NAT_MIN }}',
+            '{{ SuccessTier.FAILURE_MAJOR }}',
+            '{{ SuccessTier.FAILURE_MINOR }}'].includes(tier);
     }
-    if (filter === '{{ Participant.FAILURE_MAJOR }}') {
-        return tier === '{{ Participant.FAILURE_NAT_MIN }}';
+    if (filter === '{{ SuccessTier.FAILURE_MAJOR }}') {
+        return tier === '{{ SuccessTier.FAILURE_NAT_MIN }}';
     }
     return false;
 }

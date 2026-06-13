@@ -46,9 +46,9 @@
                         "id": 1,
                         "rate_duration": 8,
                         "sources": [
+                            {"item_id": 21, "q_required": 1.0},
                             {"item_id": 22, "q_required": 1.0, "preserve": true},
-                            {"item_id": 28, "q_required": 1.0},
-                            {"item_id": 21, "q_required": 1.0}
+                            {"item_id": 28, "q_required": 1.0}
                         ]
                     }
                 ]
@@ -153,11 +153,6 @@
                 "dimensions": [7, 7],
                 "items": [
                     {
-                        "item_id": 28,
-                        "quantity": 10.0,
-                        "position": [7, 5]
-                    },
-                    {
                         "item_id": 21,
                         "quantity": 5.0,
                         "position": [7, 5]
@@ -166,6 +161,11 @@
                         "item_id": 22,
                         "quantity": 1.0,
                         "position": [7, 4]
+                    },
+                    {
+                        "item_id": 28,
+                        "quantity": 10.0,
+                        "position": [7, 5]
                     }
                 ],
                 "zones": [
@@ -225,6 +225,11 @@
                 "masked": true,
                 "destinations": [
                     {
+                        "loc2_id": 30,
+                        "door1": [1, 2],
+                        "door2": [7, 2]
+                    },
+                    {
                         "loc2_id": 31,
                         "door1": [5, 4],
                         "door2": [3, 6]
@@ -233,11 +238,6 @@
                         "loc2_id": 37,
                         "door1": [4, 1],
                         "door2": [5, 8]
-                    },
-                    {
-                        "loc2_id": 30,
-                        "door1": [1, 2],
-                        "door2": [7, 2]
                     }
                 ],
                 "zones": [
@@ -284,12 +284,12 @@
                 "name": "Animal Template",
                 "description": "Animals rely on natural skills and do not use equipment.\r\n\r\nDuplicate to create enemies.",
                 "attribs": [
-                    [6, 5.0],
-                    [12, 5.0],
-                    [7, 1.0],
                     [2, 10.0],
+                    [5, 1.0],
+                    [6, 5.0],
+                    [7, 1.0],
                     [8, 10.0],
-                    [5, 1.0]
+                    [12, 5.0]
                 ]
             },
             {
@@ -297,15 +297,15 @@
                 "name": "Dwarf Template",
                 "description": "Dwarves are strong and tough, natural Melee Fighters, but clumsy and poor at magic.\r\n\r\nDuplicate to create either a player char or NPC.",
                 "attribs": [
-                    [5, 1.0],
-                    [17, 0.0],
-                    [6, 5.0],
-                    [12, 1.0],
-                    [7, 1.0],
-                    [10, 1.0],
                     [2, 12.0],
+                    [3, 1.0],
+                    [5, 1.0],
+                    [6, 5.0],
+                    [7, 1.0],
                     [8, 12.0],
-                    [3, 1.0]
+                    [10, 1.0],
+                    [12, 1.0],
+                    [17, 0.0]
                 ]
             },
             {
@@ -313,15 +313,15 @@
                 "name": "Elf Template",
                 "description": "Elves are intelligent and light on their feet, known especially for their Mages.\r\n\r\nDuplicate to create either a player char or NPC.",
                 "attribs": [
-                    [5, 1.0],
-                    [17, 0.0],
-                    [6, 1.0],
-                    [12, 3.0],
-                    [7, 5.0],
-                    [10, 3.0],
                     [2, 7.0],
+                    [3, 3.0],
+                    [5, 1.0],
+                    [6, 1.0],
+                    [7, 5.0],
                     [8, 7.0],
-                    [3, 3.0]
+                    [10, 3.0],
+                    [12, 3.0],
+                    [17, 0.0]
                 ]
             },
             {
@@ -329,15 +329,15 @@
                 "name": "Halfling Template",
                 "description": "Halflings are highly nimble, master Thieves and good with ranged weapons.\r\n\r\nDuplicate to create either a player char or NPC.",
                 "attribs": [
-                    [5, 1.0],
-                    [17, 0.0],
-                    [6, 1.0],
-                    [12, 4.0],
-                    [7, 2.0],
-                    [10, 1.0],
                     [2, 9.0],
+                    [3, 1.0],
+                    [5, 1.0],
+                    [6, 1.0],
+                    [7, 2.0],
                     [8, 9.0],
-                    [3, 1.0]
+                    [10, 1.0],
+                    [12, 4.0],
+                    [17, 0.0]
                 ]
             },
             {
@@ -345,14 +345,14 @@
                 "name": "moss",
                 "description": "Slightly sentient green covering the stone floor. Cannot move but can attack slowly in melee. Some advanced species of moss may be able to teleport short distances, but this one can't.",
                 "attribs": [
-                    [6, 2.0],
-                    [12, 1.0],
-                    [7, 1.0],
-                    [10, 0.0],
                     [2, 15.0],
-                    [8, 15.0],
                     [3, 0.0],
-                    [5, 1.0]
+                    [5, 1.0],
+                    [6, 2.0],
+                    [7, 1.0],
+                    [8, 15.0],
+                    [10, 0.0],
+                    [12, 1.0]
                 ],
                 "location_id": 33,
                 "position": [3, 3]
@@ -362,12 +362,12 @@
                 "name": "rat",
                 "description": "Somehow they're always bigger when they're coming out of the shadows in an unexplored room.",
                 "attribs": [
-                    [6, 1.0],
-                    [12, 6.0],
-                    [7, 1.0],
                     [2, 10.0],
+                    [5, 1.0],
+                    [6, 1.0],
+                    [7, 1.0],
                     [8, 10.0],
-                    [5, 1.0]
+                    [12, 6.0]
                 ],
                 "location_id": 32,
                 "position": [2, 1]
@@ -377,13 +377,13 @@
                 "name": "skeleton rat",
                 "description": "Well, that's not something you'd find in sunlit lands. An underworld force binds and animates its bones.",
                 "attribs": [
-                    [18, 2.0],
-                    [6, 1.0],
-                    [12, 5.0],
-                    [7, 1.0],
                     [2, 6.0],
+                    [5, 1.0],
+                    [6, 1.0],
+                    [7, 1.0],
                     [8, 6.0],
-                    [5, 1.0]
+                    [12, 5.0],
+                    [18, 2.0]
                 ],
                 "location_id": 31,
                 "position": [2, 1]
@@ -393,14 +393,14 @@
                 "name": "spore colony",
                 "description": "Connected fungi that launch spores over long distances. Must wait a turn after attempting to attack.",
                 "attribs": [
-                    [5, 1.0],
-                    [3, 0.0],
-                    [8, 11.0],
                     [2, 11.0],
-                    [10, 0.0],
+                    [3, 0.0],
+                    [5, 1.0],
+                    [6, 3.0],
                     [7, 1.0],
-                    [12, 2.0],
-                    [6, 3.0]
+                    [8, 11.0],
+                    [10, 0.0],
+                    [12, 2.0]
                 ],
                 "location_id": 33,
                 "position": [2, 1]
@@ -410,24 +410,24 @@
                 "name": "@Thornwick",
                 "description": "Elf Archer, an example player character. A patch over his left eye has left him slower to react (-1 Dex), but his battle scars have made him resilient (+2 Max HP).",
                 "attribs": [
-                    [3, 3.0],
-                    [8, 9.0],
                     [2, 9.0],
-                    [10, 3.0],
-                    [7, 5.0],
-                    [12, 4.0],
+                    [3, 3.0],
+                    [5, 1.0],
                     [6, 2.0],
-                    [17, 0.0],
-                    [5, 1.0]
+                    [7, 5.0],
+                    [8, 9.0],
+                    [10, 3.0],
+                    [12, 4.0],
+                    [17, 0.0]
                 ],
                 "toplevel": true,
                 "location_id": 30,
                 "position": [6, 5],
                 "items": [
-                    {"item_id": 24, "quantity": 15.0, "slot": ""},
-                    {"item_id": 27, "quantity": 1.0, "slot": ""},
-                    {"item_id": 25, "quantity": 1.0, "slot": ""},
-                    {"item_id": 23, "quantity": 1.0, "slot": ""}
+                    {"item_id": 23, "quantity": 1.0},
+                    {"item_id": 24, "quantity": 15.0},
+                    {"item_id": 25, "quantity": 1.0},
+                    {"item_id": 27, "quantity": 1.0}
                 ]
             }
         ],
@@ -518,6 +518,27 @@
                 "description": "Strength increases melee damage dealt.\r\n\r\nChoosing the Melee class grants 2 Str, 1 Dex, and 2 Max HP."
             },
             {
+                "id": 61,
+                "name": "Which Enemy",
+                "enum_list": ["(none)", "rat", "skeleton rat", "moss", "spore colony"]
+            },
+            {
+                "id": 62,
+                "name": "Which Item",
+                "enum_list": [
+                    "(None)",
+                    "Pine Wood",
+                    "Bowstring",
+                    "Improved Pine Bow",
+                    "Pine Bow",
+                    "Pine Stick",
+                    "Pine Arrow",
+                    "Pine Arrow",
+                    "Stone",
+                    "Stone"
+                ]
+            },
+            {
                 "id": 17,
                 "name": "XP",
                 "description": "Experience Points are gained through combat. Defeating an enemy yields 10 × the enemy's XP level to each party member.\r\n\r\nWhen high enough, increase XP Level."
@@ -548,8 +569,7 @@
                 "name": "Grid Coordinates",
                 "description": "Find out where something is placed.",
                 "toplevel": true,
-                "outcome_type": "coordinates",
-                "numeric_range": [1, 5]
+                "outcome_type": "coordinates"
             },
             {
                 "id": 48,
@@ -605,19 +625,15 @@
                 "id": 56,
                 "name": "Populate Room — Which Enemy",
                 "description": "Roll after [Number of Enemies](/play/event/8).",
-                "toplevel": true,
                 "outcome_type": "selection",
-                "numeric_range": [1, 20],
-                "selection_strings": "(none)\r\nrat\r\nskeleton rat\r\nmoss\r\nspore colony"
+                "selection_attrib_id": 61
             },
             {
                 "id": 57,
                 "name": "Populate Room — Which Item",
                 "description": "Roll after [Number of Items](/play/event/11).",
-                "toplevel": true,
                 "outcome_type": "selection",
-                "numeric_range": [1, 20],
-                "selection_strings": "(None)\r\nPine Wood\r\nBowstring\r\nImproved Pine Bow\r\nPine Bow\r\nPine Stick\r\nPine Arrow\r\nPine Arrow\r\nStone\r\nStone"
+                "selection_attrib_id": 62
             },
             {
                 "id": 54,

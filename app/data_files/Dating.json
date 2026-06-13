@@ -1,7 +1,7 @@
 {
     "overall settings": {
         "title": "Dating",
-        "description": "Your Indian mother has decided it's time. She's fine with you having a ❤️ love marriage, but if you don't find someone soon, she has in mind a match with a well-off family. The problem is that they're ugly! First, [talk things over with your Maa](/play/item/21?char_id=56), then make a visit to either {violet|the church or the bar} to start meeting people.\r\n\r\nWork odd jobs to earn cash. The right clothes are important to impress people.\r\n\r\n*The initial setup aims for generally acceptable standards. If you make it explicit and want to share the file, then be considerate by including a warning.*",
+        "description": "Your Indian mother has decided it's time. She's fine with you having a ❤️ love marriage, but if you don't find someone soon, she has in mind a match with a well-off family. The problem is that they're ugly! First, [talk things over with your Maa](/play/event/66?subject_id=56), then make a visit to either {violet|the church or the bar} to start meeting people.\r\n\r\nWork odd jobs to earn cash. The right clothes are important to impress people.\r\n\r\n*The initial setup aims for generally acceptable standards. If you make it explicit and want to share the file, then be considerate by including a warning.*",
         "slots": [
             "Torso",
             "Chest (Women)",
@@ -10,6 +10,7 @@
             "Feet",
             "Full Body",
             "Wrist",
+            "Held",
             "Riding"
         ],
         "win_reqs": [],
@@ -29,14 +30,33 @@
             {
                 "id": 75,
                 "name": "Ate",
-                "description": "One meal a day is enough, typically in the evening.",
+                "description": "One meal a day is enough, typically in the evening. If you don't eat, you'll feel weak the next day.\r\n\r\nThe hours are averaged for meals over a whole day.",
                 "storage_type": "u",
-                "toplevel": true
+                "q_limit": 1.0,
+                "toplevel": true,
+                "recipes": [
+                    {
+                        "id": 116,
+                        "rate_duration": 8,
+                        "sources": [
+                            {"item_id": 70, "q_required": 3.0},
+                            {"item_id": 115, "q_required": 1.0}
+                        ]
+                    },
+                    {
+                        "id": 117,
+                        "rate_duration": 8,
+                        "sources": [
+                            {"item_id": 70, "q_required": 3.0},
+                            {"item_id": 114, "q_required": 1.0}
+                        ]
+                    }
+                ]
             },
             {
                 "id": 29,
                 "name": "Bible",
-                "description": "Best bring one of these to church meetings, or else it may be hard to follow the discussion."
+                "description": "Best bring one of these to church meetings, or else it may be hard to follow the discussion. Also, it helps you fit in."
             },
             {
                 "id": 30,
@@ -45,8 +65,15 @@
                 "q_limit": 1.0
             },
             {
+                "id": 121,
+                "name": "Buy from Supermarket",
+                "storage_type": "l",
+                "q_limit": 1.0
+            },
+            {
                 "id": 68,
                 "name": "Calendar",
+                "description": "Shows date and time information.",
                 "attribs": [
                     [15, 1.0],
                     [86, 1.0]
@@ -54,7 +81,16 @@
                 "abilities": [69],
                 "storage_type": "u",
                 "q_limit": 1.0,
-                "toplevel": true
+                "toplevel": true,
+                "recipes": [
+                    {
+                        "id": 113,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 70, "q_required": 0.0, "preserve": true}
+                        ]
+                    }
+                ]
             },
             {
                 "id": 81,
@@ -65,18 +101,21 @@
             },
             {
                 "id": 21,
-                "name": "Convo 1a",
+                "name": "Convo Maa 1a",
                 "description": "प्यारे बेटे, तुम्हें बड़ा देखकर मुझे बहुत खुशी हुई।\r\nPyaare bete, tumhe bara dekhkar mujhe bahut khushi hui.\r\n\r\nLovely son, I am so happy to see you all grown up.",
-                "abilities": [66],
                 "storage_type": "u",
-                "q_limit": 1.0,
+                "q_limit": 2.0,
                 "recipes": [
                     {
                         "id": 12,
                         "instant": true,
+                        "sources": [
+                            {"item_id": 21, "q_required": 1.0, "preserve": true},
+                            {"item_id": 70, "q_required": 3.0}
+                        ],
                         "attrib_reqs": [
                             {
-                                "attrib_id": 9,
+                                "attrib_id": 8,
                                 "value_range": [1.0, 1.0],
                                 "range_inclusive": [true, true]
                             }
@@ -85,104 +124,8 @@
                 ]
             },
             {
-                "id": 23,
-                "name": "Convo 1b",
-                "description": "मैं भी तुमसे प्यार करता हूँ, माँ।\r\nI love you too, Maa.",
-                "storage_type": "u",
-                "q_limit": 1.0,
-                "recipes": [
-                    {
-                        "id": 6,
-                        "instant": true,
-                        "sources": [
-                            {"item_id": 21, "q_required": 1.0}
-                        ]
-                    }
-                ]
-            },
-            {
-                "id": 24,
-                "name": "Convo 1b-r",
-                "description": "Main bhi tumse pyaar karta hoon, maa.\r\nI love you too, Maa.",
-                "storage_type": "u",
-                "q_limit": 1.0,
-                "recipes": [
-                    {
-                        "id": 8,
-                        "instant": true,
-                        "sources": [
-                            {"item_id": 25, "q_required": 1.0}
-                        ]
-                    }
-                ]
-            },
-            {
-                "id": 22,
-                "name": "Convo 1c",
-                "description": "लेकिन तुम ठीक से नहीं खा रहे हो, और अब एक मैच ढूंढने का समय है!\r\nBut you're not eating enough, and it's time to find a match!",
-                "storage_type": "u",
-                "q_limit": 1.0,
-                "recipes": [
-                    {
-                        "id": 9,
-                        "instant": true,
-                        "sources": [
-                            {"item_id": 23, "q_required": 1.0}
-                        ]
-                    }
-                ]
-            },
-            {
-                "id": 26,
-                "name": "Convo 1c-r",
-                "description": "Lekin tum theek se nahin kha rahe ho, aur ab ek match dhoondhne ka samay hai!\r\nBut you're not eating enough, and it's time to find a match!",
-                "storage_type": "u",
-                "q_limit": 1.0,
-                "recipes": [
-                    {
-                        "id": 10,
-                        "instant": true,
-                        "sources": [
-                            {"item_id": 24, "q_required": 1.0}
-                        ]
-                    }
-                ]
-            },
-            {
-                "id": 18,
-                "name": "Convo 1d",
-                "description": "अब वहाँ बहुत सारी लड़कियाँ हैं कि तुम उनकी तरफ भी नहीं देख रहे!\r\nThere are now so many girls out there that you are not even looking in their direction!",
-                "storage_type": "u",
-                "q_limit": 1.0,
-                "recipes": [
-                    {
-                        "id": 11,
-                        "instant": true,
-                        "sources": [
-                            {"item_id": 22, "q_required": 1.0}
-                        ]
-                    }
-                ]
-            },
-            {
-                "id": 111,
-                "name": "Convo 1d-r",
-                "description": "Ab wahan bahut saari ladkiyan hain ki tum unki taraf bhi nahi dekh rahe!\r\nThere are now so many girls out there that you are not even looking in their direction!",
-                "storage_type": "u",
-                "q_limit": 1.0,
-                "recipes": [
-                    {
-                        "id": 112,
-                        "instant": true,
-                        "sources": [
-                            {"item_id": 26, "q_required": 1.0}
-                        ]
-                    }
-                ]
-            },
-            {
                 "id": 25,
-                "name": "Convo RomanScript",
+                "name": "Convo Maa 1a2 RomanScript",
                 "description": "Kindly use roman letters.",
                 "storage_type": "u",
                 "q_limit": 1.0,
@@ -191,12 +134,174 @@
                         "id": 7,
                         "instant": true,
                         "sources": [
-                            {"item_id": 21, "q_required": 1.0}
+                            {"item_id": 21, "q_required": 2.0}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 23,
+                "name": "Convo Maa 1b",
+                "description": "मैं भी तुमसे प्यार करता हूँ, माँ।\r\nI love you too, Maa.",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 6,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 21, "q_required": 2.0}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 24,
+                "name": "Convo Maa 1b-r",
+                "description": "Main bhi tumse pyaar karta hoon, maa.\r\nI love you too, Maa.",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 8,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 25, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 22,
+                "name": "Convo Maa 1c",
+                "description": "लेकिन तुम ठीक से नहीं खा रहे हो, और अब एक मैच ढूंढने का समय है!\r\nBut you're not eating enough, and it's time to find a match!",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 9,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 23, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 26,
+                "name": "Convo Maa 1c-r",
+                "description": "Lekin tum thik se nahin kha rahe ho, aur ab ek match dhoondhne ka samay hai!\r\nBut you're not eating enough, and it's time to find a match!",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 10,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 24, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 18,
+                "name": "Convo Maa 1d",
+                "description": "अब वहाँ बहुत सारी लड़कियाँ हैं कि तुम उनकी तरफ भी नहीं देख रहे!\r\nThere are now so many girls out there that you are not even looking in their direction!",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 11,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 22, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 111,
+                "name": "Convo Maa 1d-r",
+                "description": "Ab wahan bahut saari ladkiyan hain ki tum unki taraf bhi nahi dekh rahe!\r\nThere are now so many girls out there that you are not even looking in their direction!",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "masked": true,
+                "recipes": [
+                    {
+                        "id": 112,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 26, "q_required": 1.0, "preserve": true}
                         ]
                     }
                 ]
             },
             {"id": 83, "name": "Desktop Computer", "q_limit": 1.0},
+            {
+                "id": 115,
+                "name": "Food—Burger and Fries",
+                "description": "The homemade version is healthier than it sounds, a grilled hamburger loaded with onions, tomatoes, mushrooms, peppers, and spinach, wrapped in lettuce instead of a bun, with steamed broccoli on the side.\r\n\r\nThe version found at fast food restaurants however is high in sugar and low in nutrients, likely adding to your waistline and generally not feeling your best.",
+                "recipes": [
+                    {
+                        "id": 122,
+                        "rate_duration": 8,
+                        "sources": [
+                            {"item_id": 70, "q_required": 2.0},
+                            {"item_id": 118, "q_required": 1.0},
+                            {"item_id": 123, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 118,
+                "name": "Food—Burger and Fries Ingredients",
+                "description": "A bit expensive but doesn't take too long to roast.",
+                "recipes": [
+                    {
+                        "id": 120,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 81, "q_required": 7.0},
+                            {"item_id": 121, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 114,
+                "name": "Food—Daal and Rice",
+                "description": "With aloo gobi on the side. A decent standard meal although a bit high in carbs.",
+                "recipes": [
+                    {
+                        "id": 124,
+                        "rate_duration": 10,
+                        "sources": [
+                            {"item_id": 70, "q_required": 3.0},
+                            {"item_id": 119, "q_required": 1.0},
+                            {"item_id": 123, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 119,
+                "name": "Food—Daal and Rice Ingredients",
+                "description": "Cheap but takes awhile to cook.",
+                "recipes": [
+                    {
+                        "id": 125,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 81, "q_required": 4.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {"id": 123, "name": "Gas Stove", "storage_type": "l", "q_limit": 1.0},
             {
                 "id": 70,
                 "name": "Hours",
@@ -350,6 +455,44 @@
                 "description": "To dry off or wrap around."
             },
             {
+                "id": 126,
+                "name": "Visits",
+                "description": "Roughly keep track of the hours spent at locations.",
+                "storage_type": "u",
+                "recipes": [
+                    {
+                        "id": 127,
+                        "rate_amount": 3.0,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 70, "q_required": 3.0}
+                        ],
+                        "attrib_reqs": [
+                            {
+                                "attrib_id": 85,
+                                "value_range": [2.0, 2.0],
+                                "range_inclusive": [true, true]
+                            }
+                        ]
+                    },
+                    {
+                        "id": 128,
+                        "rate_amount": 3.0,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 70, "q_required": 3.0}
+                        ],
+                        "attrib_reqs": [
+                            {
+                                "attrib_id": 85,
+                                "value_range": [4.0, 4.0],
+                                "range_inclusive": [true, true]
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
                 "id": 27,
                 "name": "Volvo S60",
                 "description": "A car that shows someone who likes things done right.",
@@ -426,7 +569,7 @@
             {
                 "id": 52,
                 "name": "Corner Room of Church",
-                "description": "The Young Singles group meets in the back corner room, with cement walls that get damp when the humidity is high enough. There's plenty of room, so it's fine as long as other people show up and no one is unreasonably argumentative.\r\n\r\nSturdy plastic-covered metal chairs are arranged in a circle, offering places to sit once it's time to officially start."
+                "description": "The Young Singles group meets in the back corner room, with cement walls that get damp when the humidity is high enough. There's plenty of room, so it's fine as long as other people show up and no one is unreasonably argumentative.\r\n\r\nSturdy plastic-covered metal chairs are arranged in a circle, offering places to sit once it's time to officially start.\r\n\r\nThe first week's topic is Proverbs 21:9, \"Better to live on a corner of the roof than share a house with a quarrelsome wife. (NIV)\" *Make this fun with an AI discussion. Give it a personality that likes to quote verses out of context and draw questionable conclusions.*"
             },
             {
                 "id": 42,
@@ -457,7 +600,12 @@
             {
                 "id": 51,
                 "name": "Friendly Community Church",
-                "description": "If your character is religious, then this is one of the best places to meet like-minded people. If not, you could go the dark route of trying to seduce some good girls and lead them astray.\r\n\r\nIn a place like this, however, it would be wise to get to know someone you're interested in before you decide that they're all they seem to be.\r\n\r\nServices are Sunday mornings, young singles group is Monday evenings, and mid-week meetings are Wednesday evenings. There are also retreats from time to time, and special activities such as assisting at homeless shelters.",
+                "description": "If your character is religious, then this is one of the best places to meet like-minded people. If not, you could go the dark route of trying to seduce some good girls and lead them astray.\r\n\r\nIn a place like this, it would be wise to get to know someone you're interested in before you decide that they're all they seem to be.\r\n\r\nServices are Sunday mornings, young singles group is Monday evenings, and mid-week meetings are Wednesday evenings. There are also retreats from time to time, and special activities such as assisting at homeless shelters.\r\n\r\nA few paid jobs are available: childcare, printing bulletins, landscaping.",
+                "attribs": [
+                    [85, 2.0],
+                    [130, 4.0]
+                ],
+                "abilities": [129],
                 "destinations": [
                     {"loc2_id": 52},
                     {"loc2_id": 55}
@@ -472,7 +620,11 @@
             {
                 "id": 44,
                 "name": "Happy Hour Pub",
-                "description": "Where else would you go to blow off steam and have a good time? There's certain to be people here to meet. The only question is whether the types who frequent this joint are worth your time.\r\n\r\nEven if you'd normally consider yourself too moral to indulge in such a lifestyle, you could still choose someone less worthy (but good-looking) in an attempt to get them back on the right road.\r\n\r\nIn a place like this, it would be a good idea to get to know someone you're interested in before you decide that they're all they seem to be.",
+                "description": "Where else would you go to blow off steam and have a good time? There's certain to be people here to meet. The only question is whether the types who frequent this joint are worth your time.\r\n\r\nEven if you'd normally consider yourself too moral to indulge in such a lifestyle, you could still choose someone less worthy (but good-looking) in an attempt to get them back on the right road.\r\n\r\nIn a place like this, it would be a good idea to get to know someone you're interested in before you decide that they're all they seem to be.\r\n\r\nAvailable jobs: bartender, piano man, bouncer, bathroom cleaner.",
+                "attribs": [
+                    [130, 4.0]
+                ],
+                "abilities": [129],
                 "destinations": [
                     {"loc2_id": 55}
                 ]
@@ -505,9 +657,13 @@
                 "name": "Supermarket",
                 "description": "Good prices for everyday items, such as:\r\n* Groceries\r\n* Over-the-counter medicine\r\n* Toiletries\r\n* Basic clothes\r\n\r\nThere are several types of jobs available here:\r\n- Stocker\r\n- Bagger\r\n- Cashier\r\n- Manager",
                 "attribs": [
-                    [85, 3.0]
+                    [85, 3.0],
+                    [130, 2.0]
                 ],
-                "abilities": [101],
+                "abilities": [101, 129],
+                "items": [
+                    {"item_id": 121, "quantity": 1.0}
+                ],
                 "destinations": [
                     {"loc2_id": 43}
                 ]
@@ -566,6 +722,11 @@
                 "id": 39,
                 "name": "Your Kitchen",
                 "description": "Gas stove, refrigerator, dining table for six. Cupboard with utensils and dishes, many of them metal.",
+                "items": [
+                    {"item_id": 114, "quantity": 7.0},
+                    {"item_id": 115, "quantity": 3.0},
+                    {"item_id": 123, "quantity": 1.0}
+                ],
                 "destinations": [
                     {"loc2_id": 47}
                 ]
@@ -585,17 +746,20 @@
             {
                 "id": 60,
                 "name": "Claudia",
-                "description": "Neatly dressed young woman with braided long brown hair. Looks like someone who would be welcoming but should be greeted respectfully.",
+                "description": "Neatly dressed young woman with braided long brown hair. Looks welcoming but someone who should be greeted respectfully.",
                 "attribs": [
                     [2, 5.0],
                     [3, 5.0],
                     [4, 5.0],
                     [5, 10.0],
-                    [6, 1.0],
                     [7, 1.0],
                     [10, 5.0],
-                    [11, 1.0]
+                    [11, 1.0],
+                    [131, 0.0],
+                    [132, 0.0],
+                    [135, 0.0]
                 ],
+                "abilities": [133, 136, 139],
                 "location_id": 52,
                 "items": [
                     {"item_id": 30, "quantity": 1.0, "slot": "Torso"},
@@ -612,7 +776,7 @@
             {
                 "id": 61,
                 "name": "Daveed",
-                "description": "Leads the young singles' group. Also single himself. Prematurely balding, but with an unusually warm personality.",
+                "description": "Leads the young singles' group. Also young and single himself. Prematurely balding, but with a warm personality, even if overeager.",
                 "attribs": [
                     [2, 7.0],
                     [3, 3.0],
@@ -620,7 +784,7 @@
                 ],
                 "location_id": 52,
                 "items": [
-                    {"item_id": 29, "quantity": 1.0}
+                    {"item_id": 29, "quantity": 1.0, "slot": "Held"}
                 ]
             },
             {
@@ -655,13 +819,10 @@
                 "name": "Maa",
                 "description": "Only wants the best for you, and makes sure to let you know what that is. Which includes eating, good grades, avoiding dangerous sports, and of course, finding a favorable match.",
                 "attribs": [
-                    [6, 80.0],
                     [7, 100.0],
-                    [9, 1.0],
-                    [65, 0.0]
+                    [9, 1.0]
                 ],
                 "abilities": [66],
-                "toplevel": true,
                 "location_id": 47
             },
             {
@@ -673,14 +834,16 @@
                     [3, 8.0],
                     [4, 5.0],
                     [5, 7.0],
-                    [6, 1.0],
                     [7, 1.0],
                     [10, 2.0],
                     [11, 1.0],
                     [12, 4.0],
                     [14, 1.0],
-                    [17, 10.0]
+                    [17, 10.0],
+                    [131, 0.0],
+                    [132, 0.0]
                 ],
+                "abilities": [133, 136, 139],
                 "location_id": 44,
                 "items": [
                     {"item_id": 33, "quantity": 1.0, "slot": "Feet"},
@@ -735,7 +898,6 @@
                 "name": "Clothing Score",
                 "description": "Set up to 10 based on how well and appropriately dressed for the current situation."
             },
-            {"id": 65, "name": "Convo Maa 1", "is_binary": true},
             {
                 "id": 12,
                 "name": "Dancing Skill",
@@ -774,6 +936,7 @@
                 "name": "Fitness",
                 "description": "Scale from professional athletes down to gamers who never leave the basement."
             },
+            {"id": 130, "name": "Hours to Visit"},
             {
                 "id": 10,
                 "name": "Intelligence",
@@ -791,7 +954,15 @@
             {
                 "id": 85,
                 "name": "Location ID",
-                "enum_list": ["Beach", "Electronics Store", "Gym", "Supermarket"]
+                "description": "If you add a state then increase the *Die Max* for **Job Location** (event).",
+                "enum_list": [
+                    "Beach",
+                    "Electronics Store",
+                    "Friendly Community Church",
+                    "Gym",
+                    "Happy Hour Pub",
+                    "Supermarket"
+                ]
             },
             {
                 "id": 5,
@@ -799,9 +970,44 @@
                 "description": "10 for fully modest, primarily based on wearing clothes. Not wearing clothes at home is normally not a problem, while forgetting to wear proper clothes in public could very well be.\r\n\r\nIf a person's clothes aren't listed but they have a reasonable modesty then that implies they're wearing clothes. There may also be a mention about clothing in the person's description.\r\n\r\nBehaving lewdly or erotically can lower modesty even with clothes on."
             },
             {
-                "id": 6,
-                "name": "You Feel about Them",
-                "description": "Not always mechanically relevant, because you're the player, so you can make whatever decisions you want. But your character should be keeping this in mind.\r\n\r\n**Love:**     above  50\r\n**Like:**      1 to  50\r\n**Dislike:**  -1 to -50\r\n**Loathe:**   below -50"
+                "id": 135,
+                "name": "Similar Personality",
+                "description": "Sometimes it's more important to be similar than to be great."
+            },
+            {
+                "id": 132,
+                "name": "Their Attitude",
+                "description": "How the NPC typically interacts.\r\n\r\n- **Burned:** Cynical and guarded based on past experience.\r\n- **Dutiful:** Loyal to family; their own needs are secondary.\r\n- **Unstable:** Can easily turn from hot to cold.\r\n- **Wild:** Dislikes rules and wants to try new things spontaneously.\r\n- **Flirty:** Friendly or seductive with just about anyone.\r\n- **Crude:** Enjoys talking dirty, poor table manners.\r\n- **Aggressive:** Hot tempered and also quick to arousal.\r\n- **Domineering:** They expect to be in control.\r\n- **Fearful:** Quiet and hesitant to speak up, preferring to avoid problems.\r\n- **Distrustful:** Jealous and questioning.\r\n- **Secretive:** Tends to lie and cover up motivations.",
+                "enum_list": [
+                    "Burned",
+                    "Dutiful",
+                    "Unstable",
+                    "Wild",
+                    "Flirty",
+                    "Crude",
+                    "Aggressive",
+                    "Domineering",
+                    "Fearful",
+                    "Distrustful",
+                    "Secretive"
+                ]
+            },
+            {
+                "id": 131,
+                "name": "Their Goal",
+                "description": "What the NPC hopes to achieve. Supporting this goal is important for furthering a relationship.\r\n\r\n- **Wealth:** Career-driven or looking for a rich or ambitious partner.\r\n- **Stability:** Build a quiet, safe life.\r\n- **Excitement:** Avoid mundane existence, boring jobs or school.\r\n- **Discovery:** Create or learn new things that may improve the world.\r\n- **Positivity:** Deal with toxic parents, friends, or online comments.\r\n- **Noble Cause:** Feed the poor or join a political movement.\r\n- **Saving Myself:** Believes in waiting until marriage.\r\n- **Hookup:** Looking for one-night stands, anything to get into bed.\r\n- **Wounded:** Trying not to dwell on their recent breakup.\r\n- **Revenge:** Angry at someone or something.",
+                "enum_list": [
+                    "Wealth",
+                    "Stability",
+                    "Excitement",
+                    "Discovery",
+                    "Positivity",
+                    "Noble Cause",
+                    "Saving Myself",
+                    "Hookup",
+                    "Wounded",
+                    "Revenge"
+                ]
             }
         ],
         "events": [
@@ -926,6 +1132,7 @@
             {
                 "id": 66,
                 "name": "Convo Maa 1 Start",
+                "description": "Resolve and apply, then go to **Convo Maa 1a** (item).",
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -935,47 +1142,42 @@
                     {
                         "infield": {"role": "target char", "attrib_id": 8},
                         "op_application": "=="
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 21},
+                        "op_application": "==",
+                        "val_required": 0.0
                     }
                 ],
                 "effects": [
                     {
-                        "get_val_from": "const",
-                        "outfield": {"attrib_id": 65},
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 21},
                         "op_application": ":=",
-                        "op_transform": "c",
-                        "auto_apply": true
+                        "op_transform": "c"
                     }
                 ]
             },
             {
                 "id": 64,
                 "name": "First Impression",
-                "description": "Based on appearance and greeting, people may like you, dislike you, or (maybe the worst if you want to be noticed) have no opinion about you.",
+                "description": "Based on appearance and greeting, people may like you, dislike you, or (maybe worse if you want to be noticed) have no opinion about you.\r\n\r\nSet **Clothing Score** and **Similar Personality** before rolling.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
                         "infield": {"attrib_id": 3}
                     },
                     {
-                        "infield": {"attrib_id": 2}
+                        "infield": {"attrib_id": 108}
                     },
                     {
-                        "infield": {"attrib_id": 17}
-                    },
-                    {
-                        "infield": {"attrib_id": 4}
-                    },
-                    {
-                        "infield": {"attrib_id": 10}
-                    },
-                    {
-                        "infield": {"attrib_id": 5}
+                        "infield": {"role": "target char", "attrib_id": 135}
                     },
                     {
                         "label": "Base Threshold (Avg 5 per)",
                         "op_application": "-",
                         "op_transform": "c",
-                        "val_transform": 40.0
+                        "val_transform": 15.0
                     }
                 ],
                 "effects": [
@@ -1075,8 +1277,9 @@
             {
                 "id": 93,
                 "name": "Job Location",
-                "outcome_type": "numeric",
-                "numeric_range": [1, 4],
+                "description": "*Die Max* should be the number of **Location ID** entries.",
+                "outcome_type": "selection",
+                "selection_attrib_id": 85,
                 "determinants": [
                     {
                         "infield": {"role": "universal", "field_mode": "qty", "item_id": 82},
@@ -1116,6 +1319,19 @@
                         "get_val_from": "outcome",
                         "outfield": {"attrib_id": 89},
                         "op_application": ":="
+                    }
+                ]
+            },
+            {
+                "id": 139,
+                "name": "Narrative Feeling Change",
+                "description": "Either adjust the value directly based on the narrative, or roll to include some chance.",
+                "outcome_type": "dice_system",
+                "roller_type": "dnd",
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 7}
                     }
                 ]
             },
@@ -1181,6 +1397,111 @@
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 0.0
+                    }
+                ]
+            },
+            {
+                "id": 136,
+                "name": "Similar Personality—Calculate",
+                "description": "Compares how close you are in charisma, intelligence, and fitness.",
+                "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 2}
+                    },
+                    {
+                        "infield": {"role": "target char", "attrib_id": 2},
+                        "op_application": "-"
+                    },
+                    {
+                        "infield": {"attrib_id": 11},
+                        "op_application": "m:=",
+                        "op_transform": "abs"
+                    },
+                    {"op_application": ":=", "op_transform": "c", "val_transform": 0.0},
+                    {
+                        "infield": {"attrib_id": 10}
+                    },
+                    {
+                        "infield": {"role": "target char", "attrib_id": 10},
+                        "op_application": "-"
+                    },
+                    {"op_application": ":=", "op_transform": "abs"},
+                    {"op_transform": "mr"},
+                    {
+                        "infield": {"attrib_id": 11},
+                        "op_application": "m:="
+                    },
+                    {"op_application": ":=", "op_transform": "c", "val_transform": 0.0},
+                    {
+                        "infield": {"attrib_id": 4}
+                    },
+                    {
+                        "infield": {"role": "target char", "attrib_id": 4},
+                        "op_application": "-"
+                    },
+                    {"op_application": ":=", "op_transform": "abs"},
+                    {"op_transform": "mr"},
+                    {
+                        "infield": {"attrib_id": 11},
+                        "op_application": "m:="
+                    },
+                    {"op_application": ":=", "op_transform": "c", "val_transform": 12.0},
+                    {"op_application": "-", "op_transform": "mr"}
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 135},
+                        "op_application": ":="
+                    }
+                ]
+            },
+            {
+                "id": 133,
+                "name": "Their Attitude—Roll",
+                "description": "When you first meet a prospective match (Claudia, Sierra, or a new character you add), roll to set their attitude, then their goal.",
+                "outcome_type": "selection",
+                "selection_attrib_id": 132,
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 132},
+                        "op_application": ":="
+                    }
+                ],
+                "chained": [
+                    {"child_id": 134}
+                ]
+            },
+            {
+                "id": 134,
+                "name": "Their Goal—Roll",
+                "outcome_type": "selection",
+                "selection_attrib_id": 131,
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 131},
+                        "op_application": ":="
+                    }
+                ]
+            },
+            {
+                "id": 129,
+                "name": "Visit Location",
+                "description": "Use this simple event to keep track of hours whenever you visit a location.",
+                "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "infield": {"role": "at", "attrib_id": 130}
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 70},
+                        "op_application": "-"
                     }
                 ]
             }
