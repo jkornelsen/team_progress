@@ -252,7 +252,8 @@ const USES_LOC = {{ Participant.USES_LOC|list|tojson }};
 const USES_RECIPE = {{ Participant.USES_RECIPE|list|tojson }};
 const USES_BLUEPRINT = {{ Participant.USES_BLUEPRINT|list|tojson }};
 const USES_SOURCE_ITEM = {{ Participant.USES_SOURCE_ITEM|list|tojson }};
-const COMPARISON_OPS = {{ Operation.COMPARISON_OPS|list|tojson }};
+const COMPARISON_OPS = {{ Operation.COMPARISON|list|tojson }};
+const FUNCTIONAL_OPS = {{ Operation.FUNCTIONAL|list|tojson }};
 
 function addFactor(usage) {
     const list = document.getElementById(`${usage}-list`);
@@ -694,11 +695,7 @@ function syncInnerExprState(card) {
         opSelector.style.order = "2";
         lhs.style.order = "3";
     } 
-    else if (["{{ Operation.SOFTCAP }}",
-                "{{ Operation.ROUND }}",
-                "{{ Operation.FLOOR }}",
-                "{{ Operation.CEIL }}"
-                ].includes(op)) {
+    else if (FUNCTIONAL_OPS.includes(op)) {
         // Round ( Fetched Value , [ 10 ] )
         opSelector.style.order = "1";
         lhs.style.order = "2";
@@ -1027,7 +1024,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             if not op_transform }}>Use Value</option>
                         <option value="{{ Operation.MEM_RECALL }}" {{ 'selected'
                             if op_transform == Operation.MEM_RECALL }}>Recall</option>
-                        {% for op_key in Operation.TRANSFORM_OPS %}
+                        {% for op_key in Operation.TRANSFORM %}
                             <option value="{{ op_key }}" {{ 'selected'
                             if op_transform == op_key }}>
                                 {{ Operation.Repr[op_key] }}
@@ -1052,7 +1049,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         class="op-application-selector" 
                         style="max-width: 8ch;"
                         onchange="syncOuterExprState(this.closest('.factor-card'))">
-                    {% for op_key in Operation.DET_APPLICATION_OPS %}
+                    {% for op_key in Operation.DET_APPLICATION %}
                         <option value="{{ op_key }}" {{ 'selected'
                             if op_application == op_key }}>
                             {{ Operation.Repr[op_key] }}
@@ -1232,7 +1229,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             if op_transform == Operation.CONST }}>Constant</option>
                         <option value="" {{ 'selected'
                             if not op_transform }}>Use Value</option>
-                        {% for op_key in Operation.TRANSFORM_OPS %}
+                        {% for op_key in Operation.TRANSFORM %}
                             <option value="{{ op_key }}" {{ 'selected'
                                 if op_transform == op_key }}>
                                 {{ Operation.Repr[op_key] }}
@@ -1344,7 +1341,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <select name="chained[{{ card_index }}][op_application]"
                     class="op-application-selector">
                 {% set op_application = factor.op_application if factor else '' %}
-                {% for op_key in Operation.COMPARISON_OPS %}
+                {% for op_key in Operation.COMPARISON %}
                     <option value="{{ op_key }}" {{ 'selected'
                         if op_application == op_key }}>
                         {{ Operation.Repr[op_key] }}

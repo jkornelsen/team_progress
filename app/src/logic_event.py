@@ -36,9 +36,13 @@ def apply_operation(current_val, mod_val, op, output_range=None):
     if op == Operation.CONST or op == Operation.MEM_RECALL:
         return mod_val
 
-    # Unary Functions
+    # Transformation
     if op == Operation.ABS:
         return abs(current_val)
+    if op == Operation.MIN:
+        return min(current_val, mod_val)
+    if op == Operation.MAX:
+        return max(current_val, mod_val)
     if op in (Operation.ROUND, Operation.FLOOR, Operation.CEIL):
         try:
             step = float(mod_val) if mod_val else 1.0
@@ -102,8 +106,10 @@ def get_inner_breakdown(val, mod_val, op):
         Operation.ROUND:      f"Round({v}, {m})",
         Operation.FLOOR:      f"Floor({v}, {m})",
         Operation.CEIL:       f"Ceiling({v}, {m})",
-        Operation.ABS:        f"Abs({v})",
+        Operation.MIN:        f"Min({v}, {m})",
+        Operation.MAX:        f"Max({v}, {m})",
         Operation.SOFTCAP:    f"SoftCap({v}, {m})",
+        Operation.ABS:        f"Abs({v})",
     }
     return formats.get(op, v)
 

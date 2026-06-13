@@ -38,6 +38,7 @@ Prompt 3:
 
 ```
 You are helping modify an existing Flask + SQLAlchemy project.
+- if there are any other needed files then ask about that first
 - output diffs to implement changes
 - prefer minimal diffs
 - preserve existing behavior unless explicitly changed

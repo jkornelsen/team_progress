@@ -417,6 +417,7 @@
 
 <script>
 const OP_MAP = {{ Operation.Repr | tojson | safe }};
+const FUNCTIONAL_OPS = {{ Operation.FUNCTIONAL|list|tojson }};
 const eventId = {{ event.id }};
 const FILTER_LABELS = {
     '{{ SuccessTier.SUCCESS_ANY }}': 'If Successful',
@@ -466,10 +467,7 @@ function formatInnerFormula(source, constant, op) {
     if (!op || op === '{{ Operation.CONST }}') return source;
 
     const opSymbol = OP_MAP[op] || op;
-    if (["{{ Operation.SOFTCAP }}",
-                "{{ Operation.ROUND }}",
-                "{{ Operation.FLOOR }}",
-                "{{ Operation.CEIL }}"].includes(op)) {
+    if (FUNCTIONAL_OPS.includes(op)) {
         return `${opSymbol}(${source}, ${constant})`;
     }
     if (op === '{{ Operation.VAL_TO_POW }}') {
@@ -698,34 +696,6 @@ function syncApplyAllState() {
         const btn = document.getElementById('apply-all-btn');
         if (btn) btn.disabled = false;
     }
-}
-
-/**
- * Mirrors backend check_outcome_success logic.
- */
-function tierMatch(filter, tier) {
-    if (filter === 'always') return true;
-    if (!tier) return false;
-    if (filter === tier) return true;
-    if (filter === '{{ SuccessTier.SUCCESS_ANY }}') {
-        return [
-            '{{ SuccessTier.SUCCESS_NAT_MAX }}',
-            '{{ SuccessTier.SUCCESS_MAJOR }}',
-            '{{ SuccessTier.SUCCESS_MINOR }}'].includes(tier);
-    }
-    if (filter === '{{ SuccessTier.SUCCESS_MAJOR }}') {
-        return tier === '{{ SuccessTier.SUCCESS_NAT_MAX }}';
-    }
-    if (filter === '{{ SuccessTier.FAILURE_ANY }}') {
-        return [
-            '{{ SuccessTier.FAILURE_NAT_MIN }}',
-            '{{ SuccessTier.FAILURE_MAJOR }}',
-            '{{ SuccessTier.FAILURE_MINOR }}'].includes(tier);
-    }
-    if (filter === '{{ SuccessTier.FAILURE_MAJOR }}') {
-        return tier === '{{ SuccessTier.FAILURE_NAT_MIN }}';
-    }
-    return false;
 }
 
 /**

@@ -1118,6 +1118,8 @@ class Operation:
     ROUND = 'round'
     FLOOR = 'floor'
     CEIL = 'ceil'
+    MIN = 'min'
+    MAX = 'max'
     SOFTCAP = 'scap'
     MEM_STORE = 'm:='
     MEM_RECALL = 'mr'
@@ -1140,20 +1142,24 @@ class Operation:
         FLOOR:      'Floor',
         CEIL:       'Ceiling',
         ABS:        'Abs',
+        MIN:        'Min',
+        MAX:        'Max',
         SOFTCAP:    'SoftCap',
         MEM_STORE:  'Store',
         MEM_RECALL: 'Recall',
     }
 
     # How the result applies to the total
-    DET_APPLICATION_OPS = [
+    DET_APPLICATION = [
         ADD, SUB, MULT, DIV, MOD, ASSIGN, MEM_STORE, EQ, GE, LT, NE]
-    COMPARISON_OPS = [EQ, GE, LT, NE]
+    COMPARISON = [EQ, GE, LT, NE]
 
     # Modify the Field Value before we apply it to the total
-    TRANSFORM_OPS = [
+    TRANSFORM = [
         ADD, SUB, MULT, DIV, MOD,
-        VAL_TO_POW, POW_OF_VAL, ROUND, FLOOR, CEIL, ABS, SOFTCAP]
+        VAL_TO_POW, POW_OF_VAL, ROUND, FLOOR, CEIL, ABS, MIN, MAX, SOFTCAP]
+    FUNCTIONAL = [ROUND, FLOOR, CEIL, MIN, MAX, SOFTCAP]
+
 
 class EventField(db.Model, DictHydrator):
     """
@@ -1319,7 +1325,7 @@ class EventFactor(db.Model, DictHydrator):
 
     @property
     def is_comparison(self):
-        return self.op_application in Operation.COMPARISON_OPS
+        return self.op_application in Operation.COMPARISON
 
     @property
     def op_app_display(self):

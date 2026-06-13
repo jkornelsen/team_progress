@@ -343,26 +343,30 @@ def edit_location(id):
             direction = row.get_str('direction', 'two-way')
             
             existing_route = existing_map.get(route_id)
-            old_there_door = None
+            old_door_there = None
             if existing_route:
                 route = existing_route
-                old_there_door = route.door_at(target_id)
+                old_door_there = route.door_at(target_id)
             else:
                 route = LocDest(game_token=game_token)
                 db.session.add(route)
 
-            if direction == 'backward':
-                route.loc1_id = target_id
-                route.loc2_id = loc.id
-                route.bidirectional = False
-                route.door1 = old_there_door
-                route.door2 = row.get_coords('door_here')
+            door_here = row.get_coords('door_here')
+            bidirectional = (direction == 'two-way')
+            here_is_loc1 = (direction != 'backward')
+            if loc.id < target_id:
+                route.loc1_id, route.loc2_id = loc.id, target_id
+                if here_is_loc1:
+                    route.door1, route.door2 = door_here, old_door_there
+                else:
+                    route.door1, route.door2 = old_door_there, door_here
             else:
-                route.loc1_id = loc.id
-                route.loc2_id = target_id
-                route.bidirectional = (direction == 'two-way')
-                route.door1 = row.get_coords('door_here')
-                route.door2 = old_there_door
+                route.loc1_id, route.loc2_id = target_id, loc.id
+                if here_is_loc1:
+                    route.door1, route.door2 = old_door_there, door_here
+                else:
+                    route.door1, route.door2 = door_here, old_door_there
+            route.bidirectional = bidirectional
 
             db.session.flush()
 
