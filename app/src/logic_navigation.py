@@ -200,7 +200,7 @@ def find_best_output_pos(item_id, loc_id, anchor_pos):
         return None
 
     game_token = g.game_token
-    loc = Location.query.get((game_token, loc_id))
+    loc = db.session.get(Location, (game_token, loc_id))
     if not loc or not loc.dimensions:
         return None
 
@@ -345,11 +345,11 @@ def move_group(main_char_id, dx, dy, move_party=False):
     positions before the teammate calculates their own movement.
     """
     game_token = g.game_token
-    main_char = Character.query.get((game_token, main_char_id))
+    main_char = db.session.get(Character, (game_token, main_char_id))
     if not main_char or not main_char.location_id:
         return False, "Character not found."
 
-    loc = Location.query.get((game_token, main_char.location_id))
+    loc = db.session.get(Location, (game_token, main_char.location_id))
     party = get_cohesive_party(main_char, move_party)
     followers = [c for c in party if c.id != main_char.id]
     
@@ -531,7 +531,7 @@ def arrive_at_destination(main_char_id, dest_loc_id, move_party=False):
     Places them at the door coordinate if a link exists, otherwise default.
     """
     game_token = g.game_token
-    main_char = Character.query.get((game_token, main_char_id))
+    main_char = db.session.get(Character, (game_token, main_char_id))
     loc_here = main_char.location
 
     all_exits = loc_here.exits

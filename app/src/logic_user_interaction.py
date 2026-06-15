@@ -127,7 +127,7 @@ def format_action_string(game_token, interaction):
     
     # If we have an entity ID, try to get its name from our registry
     if eid and eid.isdigit():
-        entity = Entity.query.get((int(eid), game_token))
+        entity = db.session.get(Entity, (int(eid), game_token))
         if entity:
             type_label = entity.entity_type.capitalize()
             return f"Viewing {type_label}: {maskable_name(entity)}"

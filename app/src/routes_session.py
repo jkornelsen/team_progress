@@ -95,7 +95,7 @@ def save_to_file():
     """Exports the current game token state to a JSON file."""
     json_data = export_game_to_json()
     
-    overall = Overall.query.get(g.game_token)
+    overall = db.session.get(Overall, g.game_token)
     title = (overall.title or '').strip() or 'scenario'
     filename = f"{title}.json"
 

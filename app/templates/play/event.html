@@ -92,7 +92,7 @@
                         {% elif eligible|length > 1 %}
                             <select name="{{ role }}{{ Participant.ROLE_SUFFIX }}"
                                     class="full-width themed-input"
-                                    onchange="refreshModifiers()">
+                                    onchange="refreshFactors()">
                                 <option value="">-- Select {{ role }} --</option>
                                 {% for ent in eligible %}
                                     <option value="{{ ent.id }}">{{ render.maskable_name(ent) }}</option>
@@ -480,22 +480,25 @@ function formatInnerFormula(source, constant, op) {
 }
 
 /**
- * Fetches calculated modifiers from the server and updates the UI
+ * Fetches calculated event factors from the server and updates the UI
  */
-async function refreshModifiers(updateEffectVals = true) {
-    const previewDiv = document.getElementById('modifier-preview');
+async function refreshFactors() {
     const fd = getRoleIDs();
+    if (lastRollValue !== null) {
+        fd.append('roll_value', JSON.stringify(lastRollValue));
+    }
     const url = `/event/preview/${eventId}`;
     const data = await apiPost(url, fd, "Could not load modifiers");
     if (!data) return;
 
     // --- Handle Determinants (Left Column) ---
+    const modifiersDiv = document.getElementById('modifier-preview');
+    const modifiers = data.modifiers;
     let allRequirementsMet = true;
     let html = '<ul class="modifier-list" style="list-style: none; padding: 0;">';
 
-    const modifiers = data.modifiers;
     if (modifiers.length === 0) {
-        previewDiv.innerHTML = '<span class="text-dim">No modifiers applied.</span>';
+        modifiersDiv.innerHTML = '<span class="text-dim">No modifiers applied.</span>';
     } else {
         modifiers.forEach(m => {
             const labelHtml = (m.label && m.label.trim() !== "") 
@@ -568,7 +571,7 @@ async function refreshModifiers(updateEffectVals = true) {
                     ${labelHtml} ${contentHtml}
                 </li>`;
         });
-        previewDiv.innerHTML = html + '</ul>';
+        modifiersDiv.innerHTML = html + '</ul>';
     }
 
     if (rollBtn) {
@@ -576,13 +579,11 @@ async function refreshModifiers(updateEffectVals = true) {
         rollBtn.style.opacity = allRequirementsMet ? "1" : "0.5";
     }
 
-    // --- Handle Effect Previews (Right Column) ---
+    // --- Handle Effects (Right Column) ---
     if (data.effect_previews) {
         data.effect_previews.forEach(eff => {
             const row = document.getElementById(`eff-row-${eff.effect_id}`);
             if (!row) return;
-
-            row.dataset.reliesOnRoll = eff.relies_on_roll ? "true" : "false";
 
             const equationEl = row.querySelector('.equation-display');
             const getValFrom = row.dataset.getValFrom;
@@ -591,13 +592,8 @@ async function refreshModifiers(updateEffectVals = true) {
             row.style.opacity = eff.is_resolved ? "1" : "0.5";
 
             // Update current value and operator for a new roll
-            if (updateEffectVals) {
-                const currentValEl = row.querySelector('.current-value-display');
-                currentValEl.innerText = eff.current_display;
-
-                const impactRes = row.querySelector('.impact-result');
-                if (impactRes) impactRes.classList.add('hidden');
-            }
+            const currentValEl = row.querySelector('.current-value-display');
+            currentValEl.innerText = eff.current_display;
             row.querySelector('.op-display').innerText = eff.op_app_display;
 
             // Update Line 2: Logic description
@@ -643,7 +639,9 @@ async function refreshModifiers(updateEffectVals = true) {
                     // Show: (1 * 1.0) = 1 (green)
                     const baseEq = formatInnerFormula(
                         eff.source_display, row.dataset.valTrans, row.dataset.opTrans);
-                    equationEl.innerHTML = `${baseEq} = ${formattedImpact}`;
+                    equationEl.innerHTML = (eff.op_app === '{{ Operation.ASSIGN }}')
+                        ?  baseEq
+                        : `(${baseEq} = ${formattedImpact})`;
                 } else {
                     // Show: 1 (green)
                     equationEl.innerHTML = formattedImpact;
@@ -703,8 +701,6 @@ function syncApplyAllState() {
  */
 if (rollBtn) {
     rollBtn.onclick = async () => {
-        refreshModifiers();
-
         document.querySelectorAll('.check-mark').forEach(
             el => el.classList.add('hidden'));
         document.querySelectorAll('.auto-gear').forEach(
@@ -742,40 +738,13 @@ if (rollBtn) {
 
                 row.classList.remove('hidden');
 
+                // Show final display
                 const impactRes = row.querySelector('.impact-result');
-                const currentValEl = row.querySelector('.current-value-display');
                 const newValEl = row.querySelector('.new-val');
-                const equationEl = row.querySelector('.equation-display');
-                const reliesOnRoll = row.dataset.reliesOnRoll === "true";
 
-                currentValEl.innerText = eff.current_display;
-
-                if (reliesOnRoll && eff.final_display) {
-                    // Update the "Roll" placeholder with the actual number
-                    if (row.dataset.getValFrom === '{{ Participant.OUTCOME }}') {
-                        const displayRoll = Array.isArray(data.result_value) 
-                            ? `(${data.result_value.join(',')})` 
-                            : data.result_val_display;
-                        equationEl.innerText = formatInnerFormula(
-                            displayRoll,
-                            row.dataset.valTrans, 
-                            row.dataset.opTrans
-                        );
-                    }
-
-                    // Show the final value calculated by the server
-                    if (newValEl) newValEl.innerText = eff.final_display;
-                    if (impactRes) impactRes.classList.remove('hidden');
-                } else {
-                    // This was a known value (e.g. Constant or Field).
-                    // It's already showing the correct green result in equationEl.
-                    equationEl.innerHTML = `<span class="text-success" style="font-weight:bold;">${eff.impact_display}</span>`;
-                    if (newValEl && eff.final_display) {
-                        newValEl.innerText = eff.final_display;
-                        if (impactRes) impactRes.classList.remove('hidden');
-                    } else {
-                        if (impactRes) impactRes.classList.add('hidden');
-                    }
+                if (impactRes) impactRes.classList.toggle('hidden', !eff.final_display);
+                if (eff.final_display && newValEl) {
+                    newValEl.innerText = eff.final_display;
                 }
 
                 // Handle button states
@@ -801,6 +770,9 @@ if (rollBtn) {
                 row.classList.add('hidden');
             }
         });
+
+        // Redo the displayed values now that the roll is known
+        refreshFactors();
 
         // Sync based on outcome
         syncApplyAllState()
@@ -890,7 +862,7 @@ async function applySingleEffect(factorId) {
         row.querySelector('.check-mark').classList.remove('hidden');
         row.style.opacity = "0.7";
 
-        await refreshModifiers(false);
+        await refreshFactors();
         syncApplyAllState();
     } else {
         btn.innerText = "Retry";
@@ -899,7 +871,7 @@ async function applySingleEffect(factorId) {
 
 document.addEventListener('DOMContentLoaded', function() {
     updateDieThresholds();
-    refreshModifiers();
+    refreshFactors();
 });
 </script>
 {% endblock %}

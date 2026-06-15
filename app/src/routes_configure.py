@@ -34,7 +34,7 @@ def index():
         name: model.query.filter_by(game_token=g.game_token).order_by(name_stripped()).all()
         for name, model in ENTITIES.items()
     }
-    overall = Overall.query.get(g.game_token)
+    overall = db.session.get(Overall, g.game_token)
     
     return render_template(
         'configure/index.html',
@@ -48,7 +48,7 @@ def index():
 
 @configure_bp.route('/overall', methods=['GET', 'POST'])
 def edit_overall():
-    overall = Overall.query.get(g.game_token)
+    overall = db.session.get(Overall, g.game_token)
     if request.method == 'POST':
         req = RequestHelper('form')
         overall.title = req.get_str('title', overall.title)
@@ -74,7 +74,7 @@ def edit_overall():
             
             # Resolve target
             if target_id:
-                target = Entity.query.get((g.game_token, target_id))
+                target = db.session.get(Entity, (g.game_token, target_id))
                 if target:
                     if target.entity_type == Item.TYPENAME:
                         new_req.item_id = target_id
@@ -83,7 +83,7 @@ def edit_overall():
 
             # Resolve owner
             if owner_id:
-                owner = Entity.query.get((g.game_token, owner_id))
+                owner = db.session.get(Entity, (g.game_token, owner_id))
                 if owner:
                     if owner.entity_type == Location.TYPENAME:
                         new_req.loc_id = owner_id
@@ -373,7 +373,7 @@ def edit_location(id):
             d1_tuple = tuple(route.door1) if route.door1 else None
             if d1_tuple and d1_tuple in new_coords:
                 route.door1 = None
-                target_loc = Location.query.get((game_token, target_id))
+                target_loc = db.session.get(Location, (game_token, target_id))
                 target_name = target_loc.name if target_loc else "other location"
                 flash(
                     f"Entrance at {target_name} was reset"
@@ -594,7 +594,7 @@ def edit_character(id):
             game_token=game_token).order_by(name_stripped()).all(),
         all_events=Event.query.filter_by(
             game_token=game_token).order_by(name_stripped()).all(),
-        overall=Overall.query.get(game_token)
+        overall=db.session.get(Overall, game_token)
     )
 
 @configure_bp.route('/attrib/<int:id>', methods=['GET', 'POST'])
@@ -856,7 +856,7 @@ def edit_event(id):
 @configure_bp.route('/lookup/<string:ent_type>/<int:id>')
 def lookup_entity(ent_type, id):
     game_token = g.game_token
-    entity = Entity.query.get_or_404((game_token, id))
+    entity = db.get_or_404(Entity, (game_token, id))
     
     # Results is a dict of lists: { 'Category Name': [ {label, name, link, meta}, ... ] }
     results = {}
@@ -867,7 +867,7 @@ def lookup_entity(ent_type, id):
         key_name = 'Physical Presence'
         results[key_name] = []
         for p in piles:
-            owner = Entity.query.get((game_token, p.owner_id))
+            owner = db.session.get(Entity, (game_token, p.owner_id))
             label = "General Storage" if owner.id == GENERAL_ID else f"Stored at ({owner.entity_type})"
             results[key_name].append({
                 'label': label,
@@ -882,7 +882,7 @@ def lookup_entity(ent_type, id):
         key_name = 'Applied to Entities'
         results[key_name] = []
         for v in values:
-            subject = Entity.query.get((game_token, v.subject_id))
+            subject = db.session.get(Entity, (game_token, v.subject_id))
             results[key_name].append({
                 'label': f'Stat on {subject.entity_type}',
                 'name': subject.name,
@@ -897,8 +897,8 @@ def lookup_entity(ent_type, id):
         key_name = 'Used as Ingredient'
         results[key_name] = []
         for s in sources:
-            recipe = Recipe.query.get((game_token, s.recipe_id))
-            prod = Item.query.get((game_token, recipe.item_id))
+            recipe = db.session.get(Recipe, (game_token, s.recipe_id))
+            prod = db.session.get(Item, (game_token, recipe.item_id))
             results[key_name].append({
                 'label': 'Required to produce',
                 'name': prod.name,
@@ -916,7 +916,7 @@ def lookup_entity(ent_type, id):
         results[key_name] = []
         for d in dests:
             other_id = d.loc2_id if d.loc1_id == id else d.loc1_id
-            other = Location.query.get((game_token, other_id))
+            other = db.session.get(Location, (game_token, other_id))
             results[key_name].append({
                 'label': 'Linked to',
                 'name': other.name,
@@ -930,7 +930,7 @@ def lookup_entity(ent_type, id):
             key_name = 'Can Be Called By'
             results[key_name] = []
             for ab in abilities:
-                owner = Entity.query.get((game_token, ab.entity_id))
+                owner = db.session.get(Entity, (game_token, ab.entity_id))
                 if owner:
                     results[key_name].append({
                         'label': f'Ability on {owner.entity_type}',
@@ -944,7 +944,7 @@ def lookup_entity(ent_type, id):
     search_str = f'/{ent_type}/{id}'
     
     # Check Overall Scenario description
-    ov = Overall.query.get(game_token)
+    ov = db.session.get(Overall, game_token)
     if ov.description and search_str in ov.description:
         results.setdefault(mention_key, []).append({
             'label': 'Scenario Settings',

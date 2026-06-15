@@ -175,8 +175,8 @@ def get_elapsed_seconds(progress):
 def start_production(host_id, recipe_id, owner_id, ctx, stop_at=None):
     """Initializes a Progress record for an Entity."""
     game_token = g.game_token
-    recipe = Recipe.query.get((game_token, recipe_id))
-    host_entity = Entity.query.get((game_token, host_id))
+    recipe = db.session.get(Recipe, (game_token, recipe_id))
+    host_entity = db.session.get(Entity, (game_token, host_id))
     
     # Check if we can even start the first batch
     possible, reason = can_perform_recipe(

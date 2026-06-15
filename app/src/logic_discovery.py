@@ -8,7 +8,7 @@ def check_item_unmasking(game_token, item_id, was_gained=False):
     Tick-safe discovery logic.
     Updates the state of the item provided and checks its immediate dependents.
     """
-    item = Item.query.get((game_token, item_id))
+    item = db.session.get(Item, (game_token, item_id))
     if not item:
         return
 
@@ -36,10 +36,10 @@ def check_item_unmasking(game_token, item_id, was_gained=False):
             game_token=game_token, item_id=item_id).all()
         
         for ds in dependent_sources:
-            recipe = Recipe.query.get((game_token, ds.recipe_id))
+            recipe = db.session.get(Recipe, (game_token, ds.recipe_id))
             if not recipe: continue
             
-            target_item = Item.query.get((game_token, recipe.product_id))
+            target_item = db.session.get(Item, (game_token, recipe.product_id))
 
             # If the product of that recipe is still masked, see if it can be revealed
             if target_item and target_item.masked:
@@ -57,7 +57,7 @@ def can_unmask_item(game_token, item):
     for recipe in item.recipes:
         all_sources_available = True
         for source in recipe.sources:
-            ingred = Item.query.get((game_token, source.item_id))
+            ingred = db.session.get(Item, (game_token, source.item_id))
             
             # A source is available if it's not masked AND the player has had some.
             # We check both the flag AND the actual quantity for safety.

@@ -20,11 +20,11 @@ class TestItemIntegrated(BaseTestCase):
         db.session.commit()
 
         # Check that it exists in the subclass table
-        item_row = Item.query.get((100, self.game_token))
+        item_row = db.session.get(Item, (100, self.game_token))
         self.assertEqual(item_row.name, "Steel Ingot")
 
         # Check that it exists in the base entity table (Inheritance check)
-        entity_row = Entity.query.get((100, self.game_token))
+        entity_row = db.session.get(Entity, (100, self.game_token))
         self.assertIsNotNone(entity_row)
         self.assertEqual(entity_row.entity_type, "item")
 
@@ -117,7 +117,7 @@ class TestItemIntegrated(BaseTestCase):
         import_from_dict(scenario_data, self.game_token)
 
         # 1. Check item was created
-        wand = Item.query.get((200, self.game_token))
+        wand = db.session.get(Item, (200, self.game_token))
         self.assertEqual(wand.name, "Magic Wand")
 
         # 2. Check quantity was mapped to Pile Owner ID 1
@@ -125,7 +125,7 @@ class TestItemIntegrated(BaseTestCase):
         self.assertEqual(pile.quantity, 5.0)
 
         # 3. Check recipe was reconstructed
-        recipe = Recipe.query.get((99, self.game_token))
+        recipe = db.session.get(Recipe, (99, self.game_token))
         self.assertEqual(recipe.item_id, 200)
         self.assertEqual(recipe.sources[0].item_id, 201)
 

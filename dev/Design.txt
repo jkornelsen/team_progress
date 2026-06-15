@@ -24,33 +24,6 @@ don't show duplicate destinations in play location
     same door positions (null in the example)
     maybe shouldn't allow in database
 
-action speed took two "level up" rolls to get right
-    31 xp, level 4
-    🤖 Herbert 2100B Action Speed
-    ✓ Changed
-    2 → 2 = 2
-    🤖 Herbert 2100B Action Speed
-    ✓ Changed
-    (Roll Result × 0.3)
-    2 + (Roll × 0.3) = 3.2
-    🤖 Herbert 2100B Action Speed
-    ✓ Changed
-    Floor(Action Speed, 1.0)
-    3.2 → Floor(3, 1.0) = 3 = 2
-
-ignite effects display could use work
-    🐭Full-grown Mouse DoT Power
-    ✓ Changed
-    If Major Success — (DoT Power × 1.5)
-    2 → (3 × 1.5) = 4.5 = 0
-    🐭Full-grown Mouse DoT Power
-    ✓ Changed
-    If Successful — Round(DoT Power, 1.0)
-    0 → Round(3, 1.0) = 3 = 0
-what it should say is:
-    2 -> (2 x 1.5) = 3
-    3 -> Round(3, 1.0) = 3
-
 logic_navigation.py", line 300, in move_group
     db.session.flush()
 sqlalchemy.exc.OperationalError: (psycopg2.errors.DeadlockDetected) deadlock detected

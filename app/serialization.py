@@ -46,7 +46,7 @@ DEFAULT_SCENARIO_FILE = "_Default.json"
 def init_game_session():
     """Bootstraps a specific game session."""
     game_token = g.game_token
-    overall = Overall.query.get(game_token)
+    overall = db.session.get(Overall, game_token)
     if not overall:
         logger.info(f"Initializing game session")
         if not load_scenario_from_path(DEFAULT_SCENARIO_FILE):
@@ -197,7 +197,7 @@ def patch_from_dict(data):
           then use SQLAlchemy's merge() to update all fields.
     """
     game_token = g.game_token
-    overall = Overall.query.get(game_token)
+    overall = db.session.get(Overall, game_token)
     
     # --- PHASE 0: DETERMINE NEXT ID ---
     # Find the absolute highest ID currently in use in the DB
@@ -262,7 +262,7 @@ def patch_from_dict(data):
         if is_new:
             db.session.add(model_cls.from_dict(entry, game_token))
         else:
-            existing_obj = model_cls.query.get((game_token, entry['id']))
+            existing_obj = db.session.get(model_cls, (game_token, entry['id']))
             # Wipe collections to prevent data stacking
             for attr in ['piles', 'recipes', 'attrib_values', 'routes_forward', 'item_refs']:
                 if hasattr(existing_obj, attr): setattr(existing_obj, attr, [])
@@ -313,7 +313,7 @@ def export_to_dict():
 
     # Overall settings
     game_token = g.game_token
-    ov = Overall.query.get(game_token)
+    ov = db.session.get(Overall, game_token)
     if ov:
         output[JsonKeys.OVERALL] = ov.to_dict()
 
@@ -437,7 +437,7 @@ def clone_entity(source_id, entity_type):
     """
     game_token = g.game_token
     model_class = ENTITIES[f"{entity_type}s"]
-    src = model_class.query.get((game_token, source_id))
+    src = db.session.get(model_class, (game_token, source_id))
     if not src:
         return None
     

@@ -1210,18 +1210,18 @@ class EventField(db.Model, DictHydrator):
     def get_field_name(self):
         from .utils import maskable_name
         if self.field_mode == Participant.ATTR and self.attrib_id:
-            attrib = Attrib.query.get((self.game_token, self.attrib_id))
+            attrib = db.session.get(Attrib, (self.game_token, self.attrib_id))
             if not attrib:
                 return f"(!broken attrib!)"
             if self.item_id:
-                item = Item.query.get((self.game_token, self.item_id))
+                item = db.session.get(Item, (self.game_token, self.item_id))
                 item_label = f" of {maskable_name(item)}" if item else ""
             else:
                 item_label = ""
             inventory_item = "Item " if self.child_of_anchor else ""
             return f"{inventory_item}{attrib.name}{item_label}"
         if self.item_id:
-            item = Item.query.get((self.game_token, self.item_id))
+            item = db.session.get(Item, (self.game_token, self.item_id))
             if self.field_mode == Participant.QTY:
                 return f"{maskable_name(item)} Qty"
             if self.field_mode == Participant.LIMIT:
@@ -1237,7 +1237,8 @@ class EventField(db.Model, DictHydrator):
             if self.field_mode in (
                     Participant.SOURCE_QTY, Participant.BYP_QTY) \
                     and self.recipe_id and self.source_item_id:
-                src = Item.query.get((self.game_token, self.source_item_id))
+                src = db.session.get(
+                    Item, (self.game_token, self.source_item_id))
                 label = "Source" if self.field_mode == Participant.SOURCE_QTY \
                     else "Byproduct"
                 return f"{maskable_name(item)} {label}" \
@@ -1774,7 +1775,7 @@ class Progress(db.Model, DictHydrator):
         obj = super().from_dict(data, game_token)
 
         from app.models import Recipe
-        recipe = Recipe.query.get((game_token, data.get('recipe_id')))
+        recipe = db.session.get(Recipe, (game_token, data.get('recipe_id')))
         if recipe:
             obj.product_id = recipe.product_id
 

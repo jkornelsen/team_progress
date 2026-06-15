@@ -52,9 +52,9 @@ def get_accessible_quantity(item_id, owner_id):
     total += sum(p.quantity for p in primary_piles)
 
     # 2. If the owner is a Character, add stock from their current Location
-    owner_entity = Entity.query.get((game_token, owner_id))
+    owner_entity = db.session.get(Entity, (game_token, owner_id))
     if owner_entity and owner_entity.entity_type == 'character':
-        char = Character.query.get((game_token, owner_id))
+        char = db.session.get(Character, (game_token, owner_id))
         if char and char.location_id:
             loc_piles = Pile.query.filter_by(
                 game_token=game_token, 
@@ -95,7 +95,7 @@ def get_quantity_limit(item_id, owner_id):
         return specific_limit.q_limit
         
     # Fallback to Item default
-    item = Item.query.get((game_token, item_id))
+    item = db.session.get(Item, (game_token, item_id))
     return item.q_limit if item else 0.0
 
 def adjust_quantity(item_id, owner_id, delta, position=None, slot=None):
@@ -106,7 +106,7 @@ def adjust_quantity(item_id, owner_id, delta, position=None, slot=None):
     """
     game_token = g.game_token
     pile = get_or_create_pile(item_id, owner_id, position, slot)
-    item = Item.query.get((g.game_token, item_id))
+    item = db.session.get(Item, (g.game_token, item_id))
     remainder = 0.0
 
     logger.debug(

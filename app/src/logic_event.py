@@ -172,8 +172,8 @@ def get_entity_value(anchor_id, field_def, subject_id=None, ledger=None):
     # Distance Calculation (Read-Only)
     if field_def.field_mode == Participant.DIST:
         if not subject_id or not anchor_id: return 0.0
-        subj = Entity.query.get((game_token, subject_id))
-        target = Entity.query.get((game_token, anchor_id))
+        subj = db.session.get(Entity, (game_token, subject_id))
+        target = db.session.get(Entity, (game_token, anchor_id))
         if not (subj and target and subj.position and target.position):
             return 0.0
         return float(straight_line_dist(subj.position, target.position) or 0.0)
@@ -183,7 +183,7 @@ def get_entity_value(anchor_id, field_def, subject_id=None, ledger=None):
             Participant.RATE_AMT, Participant.RATE_DUR,
             Participant.SOURCE_QTY, Participant.BYP_QTY):
         if not field_def.recipe_id: return 0.0
-        recipe = Recipe.query.get((game_token, field_def.recipe_id))
+        recipe = db.session.get(Recipe, (game_token, field_def.recipe_id))
         if not recipe: return 0.0
 
         if field_def.field_mode == Participant.RATE_AMT:
@@ -236,17 +236,17 @@ def get_entity_value(anchor_id, field_def, subject_id=None, ledger=None):
     
     # Fetch Default Storage Limit
     if field_def.field_mode == Participant.LIMIT and field_def.item_id:
-        item = Item.query.get((game_token, field_def.item_id))
+        item = db.session.get(Item, (game_token, field_def.item_id))
         return item.q_limit if item else 0.0
 
     # Fetch Quantity Value
     if field_def.field_mode == Participant.QTY and field_def.item_id:
-        item = Item.query.get((game_token, field_def.item_id))
+        item = db.session.get(Item, (game_token, field_def.item_id))
         if field_def.role == Participant.UNIVERSAL or (
                 item and item.storage_type == StorageType.UNIVERSAL):
             owner_id = GENERAL_ID
         else:
-            anchor_ent = Entity.query.get((game_token, anchor_id))
+            anchor_ent = db.session.get(Entity, (game_token, anchor_id))
             if anchor_ent and anchor_ent.entity_type == Item.TYPENAME:
                 owner_id = session.get('old_char_id') or session.get('old_loc_id') or GENERAL_ID
             else:
@@ -286,14 +286,14 @@ def can_use_field(field, entity):
     # --- 2. UNIVERSAL STORAGE CHECK ---
     # If the item is universal, only ID 1 (General Storage) can meet it
     if field.field_mode == Participant.QTY and field.item_id:
-        item_def = Item.query.get((game_token, field.item_id))
+        item_def = db.session.get(Item, (game_token, field.item_id))
         if item_def and item_def.storage_type == StorageType.UNIVERSAL:
             return entity.id == GENERAL_ID
 
     # --- 3. STANDARD ATTRIBUTE CHECK (On the Anchor itself) ---
     if field.field_mode == Participant.ATTR and field.attrib_id:
         if field.item_id:
-            entity = Item.query.get((game_token, field.item_id))
+            entity = db.session.get(Item, (game_token, field.item_id))
             if not entity:
                 return False
         if not any(av.attrib_id == field.attrib_id for av in entity.attrib_values):
@@ -394,14 +394,14 @@ def calculate_determinants(event, role_entities):
             # Source Display Name
             if infield.role == Participant.BLUEPRINT:
                 if infield.item_id:
-                    blueprint_item = Item.query.get((game_token, infield.item_id))
+                    blueprint_item = db.session.get(Item, (game_token, infield.item_id))
                     source_display = \
                         f"{maskable_name(blueprint_item)}" \
                         if blueprint_item else "(Item)"
                 else:
                     source_display = "(Item)"
             else:
-                anchor = Entity.query.get((game_token, anchor_id))
+                anchor = db.session.get(Entity, (game_token, anchor_id))
                 anchor_name = '' if anchor_id == GENERAL_ID \
                     else maskable_name(anchor) if anchor else "Unknown"
                 source_display = anchor_name
@@ -477,7 +477,7 @@ def calculate_determinants(event, role_entities):
 # Effects
 # ------------------------------------------------------------------------
 
-def calculate_numeric_impact(eff, role_entities, roll_val=None):
+def calculate_numeric_impact(eff, role_entities, roll_val=None, ledger=None):
     """
     Computes the numeric impact value for an effect,
     the source value after the inner transform.
@@ -500,7 +500,7 @@ def calculate_numeric_impact(eff, role_entities, roll_val=None):
     elif eff.get_val_from in (Participant.INFIELD, Participant.OUTFIELD):
         source_field = eff.infield or eff.outfield
         anchor_id = resolve_anchor_id(source_field.role, role_entities)
-        impact = get_entity_value(anchor_id, source_field, subject_id)
+        impact = get_entity_value(anchor_id, source_field, subject_id, ledger)
     else:
         impact = eff.val_transform
 
@@ -509,13 +509,14 @@ def calculate_numeric_impact(eff, role_entities, roll_val=None):
 
     return impact, relies_on_roll
 
-def preview_effects(event, role_entities):
+def preview_effects(event, role_entities, roll_val=None):
     """
     Returns a list of current and calculated values for the event's effects.
     """
     results = []
     game_token = g.game_token
     subject_id = resolve_anchor_id(Participant.SUBJECT, role_entities)
+    ledger = {}
 
     for eff in event.effects:
         field_def = eff.outfield
@@ -524,29 +525,32 @@ def preview_effects(event, role_entities):
         # --- 1. RESOLVE TARGET NAME & CURRENT VALUE ---
         target_id = resolve_anchor_id(field_def.role, role_entities)
         target_name = ""
-        current_val = 0.0
         current_display = ""
         impact_display = ""
         is_resolved = False
+
+        # Resolve current value using the local ledger
+        lkey = _ledger_key(target_id, field_def)
+        current_val = get_entity_value(target_id, field_def, subject_id, ledger)
 
         if field_def.field_mode in Participant.USES_LOC:
             is_resolved = True
 
             # A. Determine Target Name (Who is moving)
             if field_def.field_mode == Participant.SPAWN:
-                char_template = Character.query.get((game_token, field_def.char_id))
+                char_template = db.session.get(Character, (game_token, field_def.char_id))
                 target_name = f"Spawn {char_template.name if char_template else 'Char'}"
                 current_display = "Empty"
             elif field_def.field_mode == Participant.PLACE:
-                item = Item.query.get((game_token, field_def.item_id))
+                item = db.session.get(Item, (game_token, field_def.item_id))
                 target_name = maskable_name(item) if item else '? item'
                 current_display = "None"
             elif field_def.field_mode == Participant.POS:
-                ent = Entity.query.get((game_token, target_id))
+                ent = db.session.get(Entity, (game_token, target_id))
                 target_name = maskable_name(ent) if ent \
                     else f"({field_def.role})"
                 if ent and ent.entity_type == Character.TYPENAME:
-                    char = Character.query.get((game_token, ent.id))
+                    char = db.session.get(Character, (game_token, ent.id))
                     current_display = char.location.name if char.location \
                         else "Inactive"
 
@@ -557,7 +561,7 @@ def preview_effects(event, role_entities):
                 impact_display = "Inactive"
             elif loc_id:
                 impact_display = maskable_name(
-                    Location.query.get((game_token, loc_id)))
+                    db.session.get(Location, (game_token, loc_id)))
             else:
                 impact_display = "(Selected)"
             impact_value = None
@@ -565,10 +569,11 @@ def preview_effects(event, role_entities):
         elif field_def.role in Participant.BLUEPRINT:
             is_resolved = True 
             target_name = "📦"
-            current_val = get_entity_value(None, field_def)
+            current_val = get_entity_value(None, field_def, ledger)
         elif target_id is not None:
             is_resolved = True
-            current_val = get_entity_value(target_id, field_def, subject_id)
+            current_val = get_entity_value(
+                target_id, field_def, subject_id, ledger)
 
             if field_def.child_of_anchor and \
                     field_def.field_mode == Participant.ATTR:
@@ -588,16 +593,16 @@ def preview_effects(event, role_entities):
                 if pile:
                     parent_name = "🌐" if target_id == GENERAL_ID \
                         else maskable_name(
-                            Entity.query.get((game_token, target_id)))
+                            db.session.get(Entity, (game_token, target_id)))
                     target_name = f"{parent_name}'s {maskable_name(pile.item)}"
                 else:
                     target_name = "🌐" if target_id == GENERAL_ID \
                         else maskable_name(
-                            Entity.query.get((game_token, target_id)))
+                            db.session.get(Entity, (game_token, target_id)))
             else:
                 target_name = "🌐" if target_id == GENERAL_ID \
                     else maskable_name(
-                        Entity.query.get((game_token, target_id)))
+                        db.session.get(Entity, (game_token, target_id)))
         else:
             target_name = "" if field_def.role == Participant.BLUEPRINT \
                 else "(" + field_def.role + ")"
@@ -609,18 +614,30 @@ def preview_effects(event, role_entities):
         
         if eff.get_val_from == Participant.OUTCOME:
             source_name = "Roll Result"
+            source_val = roll_val
         elif eff.get_val_from in (Participant.INFIELD, Participant.OUTFIELD):
             field = eff.infield or eff.outfield
             anchor_id = resolve_anchor_id(field.role, role_entities)
             source_name = field.get_field_name()
-            if field.field_mode in [Participant.RATE_AMT, Participant.RATE_DUR] or anchor_id:
-                source_val = get_entity_value(anchor_id, field, subject_id)
+            if field.field_mode in [
+                    Participant.RATE_AMT, Participant.RATE_DUR] or anchor_id:
+                source_val = get_entity_value(
+                    anchor_id, field, subject_id, ledger)
         else:
             source_val = eff.val_transform
 
         # --- 3. CALCULATE PRE-ROLL IMPACT ---
         impact_value, relies_on_roll = calculate_numeric_impact(
-            eff, role_entities, roll_val=None)
+            eff, role_entities, roll_val, ledger)
+
+        # Update Ledger for subsequent rows
+        if lkey:
+            if not relies_on_roll or roll_val is not None:
+                if eff.op_application == Operation.ASSIGN:
+                    ledger[lkey] = impact_value
+                else:
+                    ledger[lkey] = apply_operation(
+                        current_val, impact_value, eff.op_application)
 
         # Output looks generally like:
         # target_name
@@ -671,7 +688,8 @@ def resolve_effects(event, role_entities, roll_val, tier=None):
             continue
  
         # --- 1. FILL IN IMPACT now that roll_val is known ---
-        impact, _ = calculate_numeric_impact(eff, role_entities, roll_val)
+        impact, _ = calculate_numeric_impact(
+            eff, role_entities, roll_val, ledger)
  
         # --- 2. COMPUTE FINAL VALUE ---
         # Use the ledgered value if a prior effect already changed this field,
@@ -699,7 +717,7 @@ def resolve_effects(event, role_entities, roll_val, tier=None):
                 loc_id = resolve_anchor_id(Participant.AT, role_entities)
             d_name = "Inactive"
             if loc_id:
-                loc = Location.query.get((game_token, loc_id))
+                loc = db.session.get(Location, (game_token, loc_id))
                 d_name = loc.name if loc else "Unknown"
             impact_display = d_name
             final_display = ""
@@ -717,7 +735,8 @@ def resolve_effects(event, role_entities, roll_val, tier=None):
             'impact_value': impact,
             'impact_display': impact_display,
             'final_value': final_val,
-            'final_display': final_display
+            'final_display': final_display,
+            'op_app': eff.op_application
         })
     return results, ledger
 
@@ -750,7 +769,7 @@ def get_chain_results(event, role_entities, roll_val, tier, ledger=None):
                 anchor_id = resolve_anchor_id(
                     factor.infield.role, role_entities)
                 if anchor_id:
-                    anchor = Entity.query.get((game_token, anchor_id))
+                    anchor = db.session.get(Entity, (game_token, anchor_id))
                     if not is_factor_met(
                             factor, anchor, subject_id=subject_id,
                             ledger=ledger):
@@ -780,7 +799,7 @@ def check_outcome_success(filter_val, tier):
             SuccessTier.SUCCESS_MAJOR, 
             SuccessTier.SUCCESS_MINOR
         ]
-    if filter_val == Participant.FAILURE_ANY:
+    if filter_val == SuccessTier.FAILURE_ANY:
         return tier in [
             SuccessTier.FAILURE_NAT_MIN, 
             SuccessTier.FAILURE_MAJOR, 
@@ -853,9 +872,9 @@ def do_effect_change(eff, roll_val, role_entities):
             if pile:
                 out_entity_id = pile.item_id
             else:
-                anchor = Entity.query.get((game_token, out_entity_id))
+                anchor = db.session.get(Entity, (game_token, out_entity_id))
                 anchor_name = maskable_name(anchor) if anchor else "(Unknown)"
-                attr = Attrib.query.get((game_token, field_def.attrib_id))
+                attr = db.session.get(Attrib, (game_token, field_def.attrib_id))
                 attr_name = attr.name if attr else "(Unknown)"
                 return False, f"Could not find an item at {anchor_name}" \
                               f" that has {attr_name}."
@@ -890,7 +909,7 @@ def do_effect_change(eff, roll_val, role_entities):
 
     # Destination C: Item Limit (Blueprint)
     elif field_def.field_mode == Participant.LIMIT:
-        item = Item.query.get((game_token, field_def.item_id))
+        item = db.session.get(Item, (game_token, field_def.item_id))
         if item:
             current = item.q_limit
             item.q_limit = impact if op == Operation.ASSIGN \
@@ -901,7 +920,7 @@ def do_effect_change(eff, roll_val, role_entities):
 
     # Destination D: Recipe Efficiency (Global Blueprint Change)
     elif field_def.field_mode in Participant.USES_RECIPE:
-        recipe = Recipe.query.get((game_token, field_def.recipe_id))
+        recipe = db.session.get(Recipe, (game_token, field_def.recipe_id))
         if recipe:
             if field_def.field_mode == Participant.RATE_AMT:
                 current = recipe.rate_amount
@@ -963,12 +982,12 @@ def do_effect_change(eff, roll_val, role_entities):
             position=roll_val
         )
         
-        item = Item.query.get((game_token, field_def.item_id))
+        item = db.session.get(Item, (game_token, field_def.item_id))
         add_message(f"Placed {maskable_name(item)} at {roll_val}")
 
     # Destination F: Teleportation (Move existing character)
     elif field_def.field_mode == Participant.POS:
-        char = Character.query.get((game_token, out_entity_id))
+        char = db.session.get(Character, (game_token, out_entity_id))
         if not char:
             return False, "Expected a character."
         loc_id = get_loc(field_def, role_entities)
@@ -979,7 +998,7 @@ def do_effect_change(eff, roll_val, role_entities):
             add_message(f"{char.name} is now inactive.")
         else:
             # Determine Position
-            loc = Location.query.get((game_token, loc_id))
+            loc = db.session.get(Location, (game_token, loc_id))
             char.location_id = loc_id
             char.position = list(roll_val) \
                 if isinstance(roll_val, (list, tuple)) \
@@ -999,7 +1018,7 @@ def do_effect_change(eff, roll_val, role_entities):
 
         # Position the clone at the rolled coordinates
         loc_id = get_loc(field_def, role_entities)
-        loc = Location.query.get((game_token, loc_id))
+        loc = db.session.get(Location, (game_token, loc_id))
         char.location_id = loc_id
         char.position = roll_val
         add_message(f"Spawned {char.name} at {maskable_name(loc)} {roll_val}")
@@ -1017,7 +1036,7 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
     Returns: (numeric_result, string_display, tier)
     """
     game_token = g.game_token
-    event = Event.query.get((g.game_token, event_id))
+    event = db.session.get(Event, (g.game_token, event_id))
     sides, base_min, base_max = num_sides(event)
     
     result_val = 0
@@ -1030,7 +1049,7 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
     elif event.outcome_type == OutcomeType.SELECT:
         choice_str = "(No Choices)"
         if event.selection_attrib_id:
-            attrib = Attrib.query.get((game_token, event.selection_attrib_id))
+            attrib = db.session.get(Attrib, (game_token, event.selection_attrib_id))
             options = attrib.enum_list if attrib and attrib.enum_list else []
             if options:
                 result_val = float(random.randrange(len(options)))
@@ -1160,7 +1179,7 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
 
 def roll_coordinate(loc_id):
     """Pick a random available square at a location."""
-    loc = Location.query.get((g.game_token, loc_id))
+    loc = db.session.get(Location, (g.game_token, loc_id))
     if not loc or not loc.dimensions:
         return 0, "No valid grid found for coordinate roll."
 
@@ -1210,7 +1229,7 @@ def roll_for_system_outcome(event_id, num_dice=1, sides=20, bonus=0):
     any database determining factors.
     Returns: (numeric_result, string_display, tier)
     """
-    event = Event.query.get((g.game_token, event_id))
+    event = db.session.get(Event, (g.game_token, event_id))
     display_str = ""
     numeric_val = 0.0
     tier = SuccessTier.SUCCESS_MINOR

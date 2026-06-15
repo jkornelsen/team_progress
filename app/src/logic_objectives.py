@@ -51,7 +51,7 @@ def validate_requirements(game_token):
 
         # --- CASE 2: LOCATION GOALS (Char at Loc) ---
         elif r.char_id and r.loc_id and not r.item_id and not r.attrib_id:
-            char = Character.query.get((game_token, r.char_id))
+            char = db.session.get(Character, (game_token, r.char_id))
             is_fulfilled = char.location_id == r.loc_id
             desc = f"👤 {char.name} must be at {maskable_name(r.loc)}"
 

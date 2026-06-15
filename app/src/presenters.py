@@ -17,10 +17,10 @@ class ItemPlayPresenter:
         self.req = req
         self.game_token = g.game_token
         self.item_id = item_id
-        self.item = Item.query.get_or_404((self.game_token, item_id))
+        self.item = db.get_or_404(Item, (self.game_token, item_id))
         
         self.owner_id = self._resolve_owner_id(req)
-        self.owner = Entity.query.get((self.game_token, self.owner_id))
+        self.owner = db.session.get(Entity, (self.game_token, self.owner_id))
 
         self.ctx = self._reconcile_context(req)
         logger.debug(f"ctx.loc_id={self.ctx.loc_id}")
@@ -58,8 +58,8 @@ class ItemPlayPresenter:
             loc_id = self.owner.id
 
         self.ctx_char = None
-        char = Character.query.get(
-            (self.game_token, char_id)) if char_id else None
+        char = db.session.get(
+            Character, (self.game_token, char_id)) if char_id else None
         if char and self.owner.entity_type == Location.TYPENAME \
                 and char.location_id != self.owner.id:
             # Clear character if they aren't here
@@ -75,8 +75,8 @@ class ItemPlayPresenter:
         if self.owner.entity_type == Location.TYPENAME or self.ctx_char:
             logger.debug(f"old_loc_id {session.get('old_loc_id')} -> {loc_id}")
             session['old_loc_id'] = loc_id
-        self.ctx_loc = Location.query.get(
-            (self.game_token, loc_id)) if loc_id else None
+        self.ctx_loc = db.session.get(
+            Location, (self.game_token, loc_id)) if loc_id else None
 
         return ContextIds(
             owner_id=self.owner_id,
@@ -175,7 +175,8 @@ class ItemPlayPresenter:
         max_batches = max(1, min(possible)) if (
             can_do and possible) else (1 if can_do else 0)
 
-        host_ent = Entity.query.get((self.game_token, host_id)) if host_id else None
+        host_ent = db.session.get(
+            Entity, (self.game_token, host_id)) if host_id else None
 
         enriched = {
             'recipe': r,
@@ -226,7 +227,7 @@ class ItemPlayPresenter:
         return scope
 
     def get_template_context(self):
-        overall = Overall.query.get(self.game_token)
+        overall = db.session.get(Overall, self.game_token)
 
         # Enrich recipes, collecting all entity IDs seen across all recipes
         base_scope = self._base_attrib_scope()
@@ -252,7 +253,8 @@ class ItemPlayPresenter:
         if self.pile.quantity <= 0:
             has_masked_dependents = any(
                 item.masked for item in (
-                    Item.query.get((self.game_token, link.recipe.product_id))
+                    db.session.get(
+                        Item, (self.game_token, link.recipe.product_id))
                     for link in self.item.as_ingredient
                 ) if item is not None
             )
@@ -315,7 +317,7 @@ class ItemPlayPresenter:
             attribreq_entities[self.ctx_loc.id] = self.ctx_loc  # already correct
         for eid in base_scope | all_discovered_ids:
             if eid not in attribreq_entities and eid != GENERAL_ID:
-                ent = Entity.query.get((self.game_token, eid))
+                ent = db.session.get(Entity, (self.game_token, eid))
                 if ent:
                     attribreq_entities[eid] = ent
 

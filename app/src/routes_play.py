@@ -67,7 +67,7 @@ def overview():
 
     # Check Win Requirements
     win_reqs, all_met = validate_requirements(game_token)
-    overall = Overall.query.get(game_token)
+    overall = db.session.get(Overall, game_token)
     
     # Recent Messages
     messages = GameMessage.query.filter_by(game_token=game_token)\
@@ -95,7 +95,7 @@ def overview():
 @play_bp.route('/play/location/<int:id>')
 def play_location(id):
     game_token = g.game_token
-    location = Location.query.get_or_404((game_token, id))
+    location = db.get_or_404(Location, (game_token, id))
     capture_origin(name=location.name)
     session['old_loc_id'] = id
     logger.debug(f"old_loc_id={id}")
@@ -124,17 +124,22 @@ def play_location(id):
         occupied_in_fix = set()
         for char in characters_here:
             out_of_bounds = not is_in_grid(location, char.position)
-            # If out of bounds OR someone else already took this spot during the fix
-            if not char.position or out_of_bounds or tuple(char.position) in occupied_in_fix:
+            # If out of bounds OR someone already took this spot during the fix
+            if not char.position or out_of_bounds \
+                    or tuple(char.position) in occupied_in_fix:
                 start_search = char.position or [1, 1]
                 # Find nearest that isn't blocked by items/zones, 
                 # and isn't in our 'occupied_in_fix' set
-                new_pos = find_nearest_available_pos(location, start_search, exclude_char_id=char.id)
+                new_pos = find_nearest_available_pos(
+                    location, start_search, exclude_char_id=char.id)
                 
                 # Check for collisions with characters we haven't processed yet
                 while new_pos and tuple(new_pos) in occupied_in_fix:
-                     # Bump the search slightly if there's a collision in the local tracker
-                     new_pos = find_nearest_available_pos(location, [new_pos[0]+1, new_pos[1]], exclude_char_id=char.id)
+                     # Bump search if there's a collision in the local tracker
+                     new_pos = find_nearest_available_pos(
+                        location,
+                        [new_pos[0]+1, new_pos[1]],
+                        exclude_char_id=char.id)
 
                 if new_pos:
                     char.position = new_pos
@@ -227,7 +232,7 @@ def play_location(id):
 @play_bp.route('/play/char/<int:id>')
 def play_character(id):
     game_token = g.game_token
-    character = Character.query.get_or_404((game_token, id))
+    character = db.get_or_404(Character, (game_token, id))
     capture_origin(name=character.name)
     exit_loc_id = request.args.get('auto_select_exit', type=int)
     session['old_char_id'] = id
@@ -275,14 +280,14 @@ def drop_item(id):
     qty = req.get_float('quantity')
     
     # Get character to find current location
-    char = Character.query.get((g.game_token, id))
+    char = db.session.get(Character, (g.game_token, id))
     
     # Transfer from Char to Location at current Char position
     success, msg = transfer_item(
         item_id, from_owner_id=id, to_owner_id=char.location_id,
         quantity=qty, to_pos=char.position)
     
-    item = Item.query.get((g.game_token, item_id))
+    item = db.session.get(Item, (g.game_token, item_id))
     if success:
         db.session.commit()
         add_message(f"{char.name} dropped {qty:g} {item.name}")
@@ -298,7 +303,7 @@ def pickup_item(id):
     qty = req.get_float('quantity')
     pos = parse_coords(req.get_str('pos'))
     
-    char = Character.query.get((g.game_token, id))
+    char = db.session.get(Character, (g.game_token, id))
     loc = char.location
     
     # Position Dependency Check
@@ -314,7 +319,7 @@ def pickup_item(id):
         quantity=qty, from_pos=pos
     )
     
-    item = Item.query.get((g.game_token, item_id))
+    item = db.session.get(Item, (g.game_token, item_id))
     if success:
         db.session.commit()
         add_message(f"{char.name} picked up {qty:g} {item.name}")
@@ -331,8 +336,8 @@ def give_item(id):
     target_char_id = req.get_int('target_char_id')
     qty = req.get_float('quantity')
     
-    char = Character.query.get((g.game_token, id))
-    target_char = Character.query.get((g.game_token, target_char_id))
+    char = db.session.get(Character, (g.game_token, id))
+    target_char = db.session.get(Character, (g.game_token, target_char_id))
     loc = char.location
     
     # Position Dependency Check
@@ -348,7 +353,7 @@ def give_item(id):
         quantity=qty
     )
 
-    item = Item.query.get((g.game_token, item_id))
+    item = db.session.get(Item, (g.game_token, item_id))
     if success:
         db.session.commit()
         add_message(f"{char.name} gave {qty:g} {item.name} to {target_char.name}")
@@ -369,8 +374,8 @@ def equip_item(id):
     session['default_slot'] = slot
     
     # 1. Fetch character and item to ensure they exist (for the log message)
-    char = Character.query.get((game_token, id))
-    item = Item.query.get((game_token, item_id))
+    char = db.session.get(Character, (game_token, id))
+    item = db.session.get(Item, (game_token, item_id))
     
     if not char or not item:
         return jsonify(
@@ -403,8 +408,8 @@ def unequip_item(id):
     game_token = g.game_token
     item_id = req.get_int('item_id')
     
-    char = Character.query.get((game_token, id))
-    item = Item.query.get((game_token, item_id))
+    char = db.session.get(Character, (game_token, id))
+    item = db.session.get(Item, (game_token, item_id))
 
     if not char or not item:
         return jsonify(
@@ -496,7 +501,7 @@ def item_production_status(item_id, owner_id):
     tick_all_active()
 
     # 2. Gather data for the specific pile we are viewing
-    main_item = Item.query.get((game_token, item_id))
+    main_item = db.session.get(Item, (game_token, item_id))
     if not main_item:
         return jsonify({"message": "Item not found"}), HTTPStatus.NOT_FOUND
 
@@ -597,7 +602,7 @@ def start_item_production(host_id):
     owner_id = req.get_int('owner_id')
     stop_at = req.get_float('stop_at', default=None)
 
-    owner = Entity.query.get((game_token, owner_id))
+    owner = db.session.get(Entity, (game_token, owner_id))
     ctx = ContextIds(
         owner.id,
         req.get_int('char_id'),
@@ -620,7 +625,7 @@ def start_item_production(host_id):
 def stop_item_production(host_id, item_id):
     if stop_production(host_id, item_id):
         return '', HTTPStatus.NO_CONTENT
-    item = Item.query.get((g.game_token, item_id))
+    item = db.session.get(Item, (g.game_token, item_id))
     if not item:
         return jsonify(
             {"message": "Item not found"}), HTTPStatus.NOT_FOUND
@@ -641,7 +646,7 @@ def instant_item_production(host_id):
         host_id
     )
 
-    recipe = Recipe.query.get((g.game_token, recipe_id))
+    recipe = db.session.get(Recipe, (g.game_token, recipe_id))
     if not recipe:
         return jsonify({"message": "Recipe not found."}), HTTPStatus.BAD_REQUEST
 
@@ -669,8 +674,8 @@ def instant_item_production(host_id):
 @play_bp.route('/play/attrib/<int:attrib_id>/subject/<int:subject_id>', methods=['GET', 'POST'])
 def play_attrib(attrib_id, subject_id):
     game_token = g.game_token
-    attribute = Attrib.query.get_or_404((game_token, attrib_id))
-    subject = Entity.query.get_or_404((game_token, subject_id))
+    attribute = db.get_or_404(Attrib, (game_token, attrib_id))
+    subject = db.get_or_404(Entity, (game_token, subject_id))
     capture_origin(name=f"{subject.name} {attribute.name}")
     
     val_record = AttribVal.query.filter_by(
@@ -762,22 +767,22 @@ def play_attrib(attrib_id, subject_id):
 def play_event(id):
     game_token = g.game_token
     req = RequestHelper('args')
-    event = Event.query.get_or_404((game_token, id))
+    event = db.get_or_404(Event, (game_token, id))
     capture_origin(name=event.name)
     
     # Semantic Context
     subject_id = req.get_int('subject_role_id') or req.get_int('subject_id')
-    subject = Entity.query.get(
-        (game_token, subject_id)) if subject_id else None
+    subject = db.session.get(
+        Entity, (game_token, subject_id)) if subject_id else None
 
     owner_id = req.get_int('owner_role_id') or req.get_int('owner_id')
-    owner = Entity.query.get(
-        (game_token, owner_id)) if owner_id else None
+    owner = db.session.get(
+        Entity, (game_token, owner_id)) if owner_id else None
 
     ctx_char_id = req.get_int('target char_role_id') \
         or req.get_int('char_id') or session.get('old_char_id')
-    ctx_char = Character.query.get(
-        (game_token, ctx_char_id)) if ctx_char_id else None
+    ctx_char = db.session.get(
+        Character, (game_token, ctx_char_id)) if ctx_char_id else None
 
     ctx_loc_id = req.get_int('at_role_id') \
         or req.get_int('loc_id') or session.get('old_loc_id')
@@ -791,8 +796,8 @@ def play_event(id):
         ctx_loc_id = owner.id
     elif ctx_char:
         ctx_loc_id = ctx_char.location_id
-    ctx_loc = Location.query.get(
-        (game_token, ctx_loc_id)) if ctx_loc_id else None
+    ctx_loc = db.session.get(
+        Location, (game_token, ctx_loc_id)) if ctx_loc_id else None
     logger.debug(f"ctx_loc_id={ctx_loc_id}")
 
     # Get list of all available nearby entities
@@ -822,7 +827,7 @@ def play_event(id):
         if role == Participant.BLUEPRINT:
             continue
         if role == Participant.UNIVERSAL:
-            search_pool= [Entity.query.get((game_token, GENERAL_ID))]
+            search_pool= [db.session.get(Entity, (game_token, GENERAL_ID))]
         elif role == Participant.SUBJECT:
             search_pool = [subject] if subject else other_entities_here
         elif role == Participant.OWNER:
@@ -888,16 +893,16 @@ def play_event(id):
                     all_related[ent.id] = ent
 
             if field.attrib_id:
-                add_ent(Attrib.query.get((game_token, field.attrib_id)))
+                add_ent(db.session.get(Attrib, (game_token, field.attrib_id)))
             if field.item_id:
                 add_ent(Item.query.filter_by(
                     game_token=game_token,
                     id=field.item_id,
                     masked=False).first())
             if field.char_id:
-                add_ent(Character.query.get((game_token, field.char_id)))
+                add_ent(db.session.get(Character, (game_token, field.char_id)))
             if field.recipe_id:
-                rec = Recipe.query.get((game_token, field.recipe_id))
+                rec = db.session.get(Recipe, (game_token, field.recipe_id))
                 if rec:
                     add_ent(Item.query.filter_by(
                         game_token=game_token,
@@ -934,8 +939,9 @@ def event_preview(id):
     on UI selections.
     """
     game_token = g.game_token
-    event = Event.query.get((game_token, id))
+    event = db.session.get(Event, (game_token, id))
     req = RequestHelper('form')
+    roll_val = req.get_json('roll_value')
     
     role_entities = {}
     for key in req:
@@ -944,7 +950,7 @@ def event_preview(id):
             role_entities[role_name] = req.get_int(key)
     
     modifiers = calculate_determinants(event, role_entities)
-    effect_previews = preview_effects(event, role_entities)
+    effect_previews = preview_effects(event, role_entities, roll_val)
     return jsonify({
         "modifiers": modifiers,
         "effect_previews": effect_previews
@@ -953,7 +959,7 @@ def event_preview(id):
 @play_bp.route('/event/roll/<int:id>', methods=['POST'])
 def roll_event(id):
     game_token = g.game_token
-    event = Event.query.get_or_404((game_token, id))
+    event = db.get_or_404(Event, (game_token, id))
     req = RequestHelper('form')
 
     role_entities = {}
@@ -994,19 +1000,14 @@ def roll_event(id):
 @play_bp.route('/event/apply-effect/<int:factor_id>', methods=['POST'])
 def apply_single_effect(factor_id):
     req = RequestHelper('form')
-    eff = EventFactor.query.get_or_404(factor_id)
+    eff = db.get_or_404(EventFactor, factor_id)
     
     role_entities = {
         Participant.formkey_to_role(k): req.get_int(k)
         for k in req if k.endswith(Participant.ROLE_SUFFIX)
     }
-    try:
-        roll_str = req.get_str('roll_value')
-        roll_val = json.loads(roll_str)
-    except (json.JSONDecodeError, TypeError):
-        roll_val = req.get_float('roll_value')
-    success, message = do_effect_change(
-        eff, roll_val, role_entities)
+    roll_val = req.get_json('roll_value')
+    success, message = do_effect_change(eff, roll_val, role_entities)
     db.session.commit()
     
     if not success:

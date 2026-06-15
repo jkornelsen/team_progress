@@ -28,7 +28,7 @@ def find_best_host(recipe, owner_id, ctx):
         f" | Char:{ctx.char_id} | Loc:{ctx.loc_id}")
 
     game_token = g.game_token
-    product = Item.query.get((game_token, recipe.product_id))
+    product = db.session.get(Item, (game_token, recipe.product_id))
 
     # 1. THE MACHINE CHECK (Highest Priority)
     # If the recipe requires a LOCAL crafting station marked as automated, 
@@ -67,7 +67,7 @@ def find_best_host(recipe, owner_id, ctx):
 
 def resolve_host_pos(host_id, recipe, sources=None):
     """Returns (loc_id, anchor_pos) for a host."""
-    host_ent = Entity.query.get((g.game_token, host_id))
+    host_ent = db.session.get(Entity, (g.game_token, host_id))
     if not host_ent or host_ent.entity_type not in [
             Character.TYPENAME, Location.TYPENAME]:
         return None, None
@@ -99,13 +99,13 @@ def get_eligible_placements(recipe, target_owner_id, host_id, sources=None):
 
     # Intent: Backpack (Only if item is CARRIED and target is Character)
     if product.storage_type == StorageType.CARRIED:
-        target_ent = Entity.query.get((game_token, target_owner_id))
+        target_ent = db.session.get(Entity, (game_token, target_owner_id))
         if target_ent and target_ent.entity_type == Character.TYPENAME:
             placements.append((target_owner_id, None))
 
     # Physical: Floor / Surroundings
     if loc_id:
-        loc = Location.query.get((game_token, loc_id))
+        loc = db.session.get(Location, (game_token, loc_id))
         if loc.has_grid and anchor_pos:
             for cand in get_output_positions(loc, anchor_pos):
                 placements.append((loc_id, cand))
@@ -229,7 +229,7 @@ def get_host_scope(host_id, ctx):
     if host_id == GENERAL_ID:
         return [GENERAL_ID]
 
-    host_ent = Entity.query.get((game_token, host_id))
+    host_ent = db.session.get(Entity, (game_token, host_id))
 
     # Character: Can see their own bags, the floor they stand on, and the bank.
     if host_ent and host_ent.entity_type == Character.TYPENAME:
@@ -257,7 +257,7 @@ def resolve_recipe_sources(host_id, recipe, ctx):
     if host_id == GENERAL_ID:
         search_ids = [GENERAL_ID]
     else:
-        host_ent = Entity.query.get((game_token, host_id))
+        host_ent = db.session.get(Entity, (game_token, host_id))
         if host_ent and host_ent.entity_type == Character.TYPENAME:
             # Characters can reach into their own pockets, the floor, and global bank
             search_ids = ctx.unique_ids(GENERAL_ID, host_id, ctx.loc_id)
@@ -321,7 +321,7 @@ def resolve_recipe_sources(host_id, recipe, ctx):
             sorted_piles = sorted(valid_piles, key=sort_priority)
             best_pile = sorted_piles[0]
             owner_id = best_pile.owner_id
-            ent = Entity.query.get((game_token, owner_id))
+            ent = db.session.get(Entity, (game_token, owner_id))
             owner_type = ent.entity_type if ent else Entity.TYPENAME
         else:
             owner_id = GENERAL_ID if item.storage_type == StorageType.UNIVERSAL else host_id
@@ -352,7 +352,7 @@ def execute_production(
     if batches <= 0:
         return 0, None
     game_token = g.game_token
-    host_ent = Entity.query.get((game_token, host_id))
+    host_ent = db.session.get(Entity, (game_token, host_id))
     if not host_ent: return 0, "Host not found."
 
     # Validate if we can perform at least ONE
@@ -497,11 +497,11 @@ def get_byproduct_target(item_id, main_target_id, host_id, ctx):
     """
     game_token = g.game_token
 
-    item = Item.query.get((g.game_token, item_id))
+    item = db.session.get(Item, (g.game_token, item_id))
     if item.storage_type == StorageType.UNIVERSAL:
         return GENERAL_ID
     
-    host_ent = Entity.query.get((g.game_token, host_id))
+    host_ent = db.session.get(Entity, (g.game_token, host_id))
     if host_ent.entity_type == Character.TYPENAME:
         return main_target_id if main_target_id != GENERAL_ID else host_id
 

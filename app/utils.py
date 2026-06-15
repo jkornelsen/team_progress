@@ -1,5 +1,6 @@
 import locale
 import logging
+import json
 from flask import g, session, request, url_for, redirect
 from sqlalchemy import func, literal_column, text
 import re
@@ -85,6 +86,16 @@ class BaseFieldMap:
     def get_coords(self, key, required_len=2):
         val = self._get_raw(key)
         return parse_coords(val, required_len)
+
+    def get_json(self, key, default=0):
+        """Deduce the type by parsing a json string. Can handle arrays."""
+        val_raw = self._get_raw(key)
+        if val_raw is None or str(val_raw).strip() == "":
+            return default
+        try:
+            return json.loads(val_raw)
+        except (json.JSONDecodeError, TypeError):
+            return default
 
     def get_map(self, key):
         """Returns a nested BaseFieldMap for the given key."""
