@@ -9,17 +9,22 @@
             "Hips (Underwear)",
             "Feet",
             "Full Body",
-            "Wrist",
+            "Accessories",
             "Held"
         ],
-        "win_reqs": [],
+        "win_reqs": [
+            {"attrib_id": 144, "attrib_value": 17.0}
+        ],
         "tag_introduce_order": 35,
         "tag_best_order": 40,
         "tag_progress_type": "RPG",
-        "tag_complete": "06 Starter Kit / Under Construction"
+        "tag_complete": "07 Playable / Under Construction"
     },
     "entities": {
         "items": [
+            {"id": 162, "name": "Accessory—Dangly Earrings"},
+            {"id": 163, "name": "Accessory—Stud Earrings"},
+            {"id": 19, "name": "Accessory—Watch", "q_limit": 1.0},
             {
                 "id": 28,
                 "name": "Aloe Vera",
@@ -49,6 +54,14 @@
                             {"item_id": 70, "q_required": 3.0},
                             {"item_id": 114, "q_required": 1.0}
                         ]
+                    },
+                    {
+                        "id": 153,
+                        "rate_duration": 8,
+                        "sources": [
+                            {"item_id": 70, "q_required": 3.0},
+                            {"item_id": 151, "q_required": 1.0}
+                        ]
                     }
                 ]
             },
@@ -57,15 +70,22 @@
                 "name": "Bible",
                 "description": "Best bring one of these to church meetings, or else it may be hard to follow the discussion. Also, it helps you fit in."
             },
+            {"id": 159, "name": "Bra—Purple"},
             {
-                "id": 30,
-                "name": "Button Shirt",
-                "description": "Decent looking shirt.",
+                "id": 147,
+                "name": "Buy from Bar",
+                "storage_type": "l",
                 "q_limit": 1.0
             },
             {
                 "id": 121,
                 "name": "Buy from Supermarket",
+                "storage_type": "l",
+                "q_limit": 1.0
+            },
+            {
+                "id": 150,
+                "name": "Buy from Teria's Place",
                 "storage_type": "l",
                 "q_limit": 1.0
             },
@@ -240,6 +260,45 @@
             },
             {"id": 83, "name": "Desktop Computer", "q_limit": 1.0},
             {
+                "id": 160,
+                "name": "Drink—Beer",
+                "description": "Not going to impress anyone, but sufficient for anyone looking to have a good time. Raises **Intoxication** by 1 point.",
+                "recipes": [
+                    {
+                        "id": 161,
+                        "sources": [
+                            {"item_id": 81, "q_required": 5.0},
+                            {"item_id": 147, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 148,
+                "name": "Drink—Margarita",
+                "description": "Raises **Intoxication** by 1 point, enough to feel good without causing any difficulty driving or interacting with people. To get truly drunk, buying harder liquor would be cheaper.\r\n\r\nFor both yourself and someone else, you'd need to buy two glasses.",
+                "recipes": [
+                    {
+                        "id": 149,
+                        "sources": [
+                            {"item_id": 81, "q_required": 10.0},
+                            {"item_id": 147, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 32,
+                "name": "Feet—Loafers",
+                "description": "Easy to put on although not the most secure.",
+                "q_limit": 1.0
+            },
+            {
+                "id": 33,
+                "name": "Feet—Low Heels",
+                "description": "Good for work or spending time with friends, not hiking or sports."
+            },
+            {
                 "id": 115,
                 "name": "Food—Burger and Fries",
                 "description": "The homemade version is healthier than it sounds, a grilled hamburger loaded with onions, tomatoes, mushrooms, peppers, and spinach, wrapped in lettuce instead of a bun, with steamed broccoli on the side.\r\n\r\nThe version found at fast food restaurants however is high in sugar and low in nutrients, likely adding to your waistline and generally not feeling your best.",
@@ -271,6 +330,20 @@
                 ]
             },
             {
+                "id": 151,
+                "name": "Food—Chef Salad",
+                "description": "Comes in a large wooden bowl.",
+                "recipes": [
+                    {
+                        "id": 152,
+                        "sources": [
+                            {"item_id": 81, "q_required": 6.0},
+                            {"item_id": 150, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
                 "id": 114,
                 "name": "Food—Daal and Rice",
                 "description": "With aloo gobi on the side. A decent standard meal although a bit high in carbs.",
@@ -295,10 +368,23 @@
                         "id": 125,
                         "instant": true,
                         "sources": [
-                            {"item_id": 81, "q_required": 4.0, "preserve": true}
+                            {"item_id": 81, "q_required": 4.0},
+                            {"item_id": 121, "q_required": 1.0, "preserve": true}
                         ]
                     }
                 ]
+            },
+            {
+                "id": 34,
+                "name": "Full Body—Plain Black Dress",
+                "description": "Good for a variety of occasions including work and free time.",
+                "q_limit": 1.0
+            },
+            {
+                "id": 35,
+                "name": "Full Body—Revealing Leather Dress",
+                "description": "The bottom of the skirt rests just above the knees.",
+                "q_limit": 1.0
             },
             {"id": 123, "name": "Gas Stove", "storage_type": "l", "q_limit": 1.0},
             {
@@ -307,12 +393,6 @@
                 "description": "The basic measure of time needed to accomplish things. Starts at sunrise with 24 hours left, so the 24th hour is just before dawn the next day.\r\n\r\nYou don't need to to account for all the hours each day, but be realistic about how much could happen in a single day.",
                 "storage_type": "u",
                 "q_limit": 24.0
-            },
-            {
-                "id": 31,
-                "name": "Jeans",
-                "description": "Nothing special, but passable away from home.",
-                "q_limit": 1.0
             },
             {
                 "id": 91,
@@ -397,20 +477,15 @@
                 ]
             },
             {
-                "id": 32,
-                "name": "Loafers",
-                "description": "Easy to put on although not the most secure.",
+                "id": 31,
+                "name": "Legs—Jeans",
+                "description": "Nothing special, but passable away from home.",
                 "q_limit": 1.0
             },
             {
-                "id": 33,
-                "name": "Low Heels",
-                "description": "Good for work or spending time with friends, not hiking or sports."
-            },
-            {
-                "id": 34,
-                "name": "Plain Black Dress",
-                "description": "Good for a variety of occasions including work and free time.",
+                "id": 36,
+                "name": "Legs—Swim Trunks",
+                "description": "Not necessarily immodest if a guy wears these at a public place to swim. Could even be attractive if he's fit.",
                 "q_limit": 1.0
             },
             {
@@ -418,12 +493,6 @@
                 "name": "Rested",
                 "description": "Based on how many hours of sleep you've had, and whether you've been eating.",
                 "storage_type": "u"
-            },
-            {
-                "id": 35,
-                "name": "Revealing Leather Dress",
-                "description": "The bottom of the skirt rests just above the knees.",
-                "q_limit": 1.0
             },
             {
                 "id": 71,
@@ -443,9 +512,9 @@
                 ]
             },
             {
-                "id": 36,
-                "name": "Swim Trunks",
-                "description": "Not necessarily immodest if a guy wears these at a public place to swim. Could even be attractive if he's fit.",
+                "id": 30,
+                "name": "Torso—Button Shirt",
+                "description": "Decent looking shirt.",
                 "q_limit": 1.0
             },
             {
@@ -499,17 +568,11 @@
                 "q_limit": 1.0
             },
             {
-                "id": 19,
-                "name": "Watch",
-                "description": "Like something out of the Stone Age, it requires setting for each new day. If the *Day of Week* was last set yesterday, ensure <b>+</b> and <b>1</b> are selected, then press *Change* once.",
-                "q_limit": 1.0
-            },
-            {
                 "id": 77,
                 "name": "Work",
                 "description": "Travel to the [circled job location](/play/item/87) if you haven't yet, then produce per hour until the limit is reached, earning cash.",
                 "storage_type": "u",
-                "q_limit": 8.0,
+                "q_limit": 0.0,
                 "toplevel": true,
                 "recipes": [
                     {
@@ -617,11 +680,14 @@
             {
                 "id": 44,
                 "name": "Happy Hour Pub",
-                "description": "Where else would you go to blow off steam and have a good time? There's certain to be people here to meet. The only question is whether the types who frequent this joint are worth your time.\r\n\r\nEven if you'd normally consider yourself too moral to indulge in such a lifestyle, you could still choose someone less worthy (but good-looking) in an attempt to get them back on the right road.\r\n\r\nAvailable jobs: bartender, piano man, bouncer, bathroom cleaner.",
+                "description": "Where else would you go to blow off steam and have a good time? There's certain to be people here to meet. The only question is whether the types who frequent this joint are worth your time.\r\n\r\nEven if you'd normally consider yourself too moral to indulge in such a lifestyle, you could still choose someone less worthy (but good-looking) in an attempt to get them back on the right road.\r\n\r\nAvailable jobs: drink mixer, piano man, bouncer, bathroom cleaner.",
                 "attribs": [
                     [130, 4.0]
                 ],
                 "abilities": [129],
+                "items": [
+                    {"item_id": 147, "quantity": 1.0}
+                ],
                 "destinations": [
                     {"loc2_id": 55}
                 ]
@@ -677,9 +743,12 @@
                 "description": "Cafeteria style restaurant — go through the line and ask for what to put on your plate. A variety of options: noodles, meat, salads.\r\n\r\nThe owner named the place after his daughter. To meet her, start setting her up by duplicating one of the other characters.\r\n\r\nAvailable jobs: server, cook, dish washer.",
                 "attribs": [
                     [85, 6.0]
+                ],
+                "items": [
+                    {"item_id": 150, "quantity": 1.0}
                 ]
             },
-            { "id": 104, "name": "Urban Neighborhood" },
+            {"id": 104, "name": "Urban Neighborhood"},
             {
                 "id": 102,
                 "name": "Your Backyard",
@@ -739,6 +808,12 @@
         ],
         "characters": [
             {
+                "id": 143,
+                "name": "Art",
+                "description": "Holding Sydney's hand. His name means \"bear\" in Celtic.",
+                "location_id": 52
+            },
+            {
                 "id": 60,
                 "name": "Claudia",
                 "description": "Neatly dressed young woman with braided long brown hair. Looks welcoming but someone who should be greeted respectfully.",
@@ -752,14 +827,16 @@
                     [11, 1.0],
                     [131, 0.0],
                     [132, 0.0],
-                    [135, 0.0]
+                    [135, 0.0],
+                    [144, 0.0]
                 ],
-                "abilities": [133, 136, 139],
+                "abilities": [133, 136, 139, 166],
                 "location_id": 52,
                 "items": [
                     {"item_id": 30, "quantity": 1.0, "slot": "Torso"},
                     {"item_id": 31, "quantity": 1.0, "slot": "Legs"},
-                    {"item_id": 33, "quantity": 1.0, "slot": "Feet"}
+                    {"item_id": 33, "quantity": 1.0, "slot": "Feet"},
+                    {"item_id": 163, "quantity": 1.0, "slot": "Accessories"}
                 ]
             },
             {
@@ -797,17 +874,26 @@
                     [12, 3.0],
                     [14, 0.0],
                     [17, 10.0],
-                    [108, 8.0]
+                    [108, 5.0],
+                    [154, 0.0],
+                    [156, 0.0],
+                    [158, 0.0]
                 ],
-                "abilities": [63, 64, 101, 107],
+                "abilities": [63, 64, 101, 107, 145, 146, 157],
                 "toplevel": true,
                 "location_id": 47,
                 "items": [
-                    {"item_id": 19, "quantity": 1.0, "slot": "Wrist"},
+                    {"item_id": 19, "quantity": 1.0, "slot": "Accessories"},
                     {"item_id": 30, "quantity": 1.0, "slot": "Torso"},
                     {"item_id": 31, "quantity": 1.0, "slot": "Legs"},
                     {"item_id": 32, "quantity": 1.0, "slot": "Feet"}
                 ]
+            },
+            {
+                "id": 155,
+                "name": "Drechsel",
+                "description": "Bartender. Has a knack for bottles, jars, and mixes.",
+                "location_id": 44
             },
             {
                 "id": 56,
@@ -836,13 +922,16 @@
                     [14, 1.0],
                     [17, 10.0],
                     [131, 0.0],
-                    [132, 0.0]
+                    [132, 0.0],
+                    [135, 0.0],
+                    [144, 0.0]
                 ],
-                "abilities": [133, 136, 139],
+                "abilities": [133, 136, 139, 166],
                 "location_id": 44,
                 "items": [
                     {"item_id": 33, "quantity": 1.0, "slot": "Feet"},
-                    {"item_id": 35, "quantity": 1.0, "slot": "Full Body"}
+                    {"item_id": 35, "quantity": 1.0, "slot": "Full Body"},
+                    {"item_id": 162, "quantity": 1.0, "slot": "Accessories"}
                 ]
             },
             {
@@ -855,6 +944,15 @@
                 "location_id": 46
             },
             {
+                "id": 142,
+                "name": "Sydney",
+                "description": "The guy in the plastic white chair next to her is holding her hand. Does that mean they're seeing each other exclusively?",
+                "attribs": [
+                    [144, 1.0]
+                ],
+                "location_id": 52
+            },
+            {
                 "id": 141,
                 "name": "Volvo S60",
                 "description": "A car that shows someone who likes things done right.",
@@ -865,7 +963,7 @@
             {
                 "id": 11,
                 "name": "Arousal",
-                "description": "Physical arousal, not necessarily love. 1 could be considered average for a person of whatever age they are, while negative values indicate feeling sluggish or creeped out. Otherwise, the number increases in steamy situations."
+                "description": "Physical arousal. **1** could be considered average for a person of whatever age they are, while negative values indicate feeling sluggish or cold. The number temporarily increases in steamy situations, up to around **100.**\r\n\r\nReset to **1** when meeting someone again on a new day."
             },
             {
                 "id": 3,
@@ -892,7 +990,7 @@
             {
                 "id": 17,
                 "name": "Clean",
-                "description": "State of a person. 10 for completely clean, 0 for dirtiest.\r\n\r\nFactors include how long since showered, and clothing washed. Most clothes get less clean from wearing (but not shoes), although tracking this gets tedious.\r\n\r\nSee also: [Dirty](/configure/attrib/19)"
+                "description": "State of a person. 10 for completely clean, 0 for dirtiest.\r\n\r\nFactors include how long since showered, and clothing washed. Most clothes get less clean from wearing (but not shoes), although tracking this gets tedious.\r\n\r\nSee also: [Dirty](/configure/attrib/16)"
             },
             {
                 "id": 108,
@@ -937,16 +1035,31 @@
                 "name": "Fitness",
                 "description": "Scale from professional athletes down to gamers who never leave the basement."
             },
-            {"id": 130, "name": "Hours to Visit"},
+            {
+                "id": 154,
+                "name": "Gift Bonus",
+                "description": "Provides temporary boosts to certain rolls."
+            },
+            {
+                "id": 130,
+                "name": "Hours Per Visit",
+                "description": "How many hours it takes for a typical visit to a certain location."
+            },
             {
                 "id": 10,
                 "name": "Intelligence",
                 "description": "Measured by whether a person can calculate tips correctly, or how many lines of Shakespeare they can recite. Whether that makes conversations more interesting or not depends on who is listening."
             },
             {
+                "id": 158,
+                "name": "Intensity of Act",
+                "description": "For a positive response to a more intense physical act, your partner will probably need to be significantly aroused.",
+                "enum_list": ["No Pressure", "Gentle Touch", "Close Embrace", "Steamy", "Wild"]
+            },
+            {
                 "id": 14,
                 "name": "Intoxicated",
-                "description": "Even a little could be relaxing. A moderate amount is unsafe to drive under, while a lot could mean acting wildly or even passing out."
+                "description": "Even a little (1-2) could be relaxing. A moderate amount (5) is unsafe to drive under, while a lot (7-10) could mean acting wildly or even passing out."
             },
             {"id": 110, "name": "Job—Accepted", "is_binary": true},
             {"id": 109, "name": "Job—Applied", "is_binary": true},
@@ -968,12 +1081,115 @@
             {
                 "id": 5,
                 "name": "Modesty",
-                "description": "10 for fully modest, primarily based on wearing clothes. Not wearing clothes at home is normally not a problem, while forgetting to wear proper clothes in public could very well be.\r\n\r\nIf a person's clothes aren't listed but they have a reasonable modesty then that implies they're wearing clothes. There may also be a mention about clothing in the person's description.\r\n\r\nBehaving lewdly or erotically can lower modesty even with clothes on."
+                "description": "10 for fully modest, primarily based on wearing clothes in the right context. Wearing only underwear at home alone is not an issue, while neglecting to wear proper clothes in public could very well be.\r\n\r\nIf a person's clothes aren't listed but they have a reasonable modesty stat (or not shown), then that implies they're wearing normal clothes.\r\n\r\nBehaving lewdly or erotically can lower modesty even with clothes on."
+            },
+            {
+                "id": 144,
+                "name": "Relationship Status",
+                "description": "This character's romantic status with you. Only applies to potential romantic partners.\r\n\r\nArranged approximately by how difficult it is to move to another level, not the order it happens. For example, *Mistress* means you are already *Married* to someone else, but getting to that status with someone may require less effort.",
+                "enum_list": [
+                    "Unaware",
+                    "Acquaintance",
+                    "Friend",
+                    "Love Interest",
+                    "Matched",
+                    "Friends With Benefits",
+                    "Ex-Girlfriend",
+                    "Ex-Lover",
+                    "Divorced",
+                    "Dating",
+                    "Courting",
+                    "Exclusive",
+                    "Cheating With",
+                    "Living Together",
+                    "Separated",
+                    "Open Relationship",
+                    "Mistress",
+                    "Engaged",
+                    "Married",
+                    "Polyamorous",
+                    "Widowed"
+                ]
+            },
+            {
+                "id": 156,
+                "name": "Relevant Skill",
+                "description": "General attribute to set based on the situation. For example, if dancing is relevant, then set this value to your **Dancing Skill.**"
             },
             {
                 "id": 135,
                 "name": "Similar Personality",
-                "description": "Sometimes it's more important to be similar than to be great."
+                "description": "Sometimes it's more important to be similar than to be great. Tells roughly how much you have in common with them.\r\n\r\nTo set for someone, run their **Similar Personality—Calculate** event."
+            },
+            {
+                "id": 164,
+                "name": "Their Action",
+                "description": "List for **Choose Action** event.",
+                "enum_list": [
+                    "Shares about family she cares about",
+                    "Shares about a bad experience",
+                    "Asks about your family",
+                    "Tells about their dad",
+                    "Talks about their work",
+                    "Asks about your work",
+                    "Talks about movies",
+                    "Talks about hobbies",
+                    "Talks about sports",
+                    "Talks about school",
+                    "Gives their philosophy",
+                    "Talks about the future",
+                    "Emotionally vulnerable",
+                    "Cries",
+                    "Complains about the situation",
+                    "Complains about a person",
+                    "Complains about the world",
+                    "Judges you",
+                    "Judges themself",
+                    "Points at someone else in the room",
+                    "Tells about goals",
+                    "Asks what your intentions are",
+                    "Asks what your goals are",
+                    "Physical advance",
+                    "Flirt",
+                    "Talks dirty",
+                    "Adjusts clothing",
+                    "Slips",
+                    "Bumps into something and gets a bruise",
+                    "Laughs at your joke",
+                    "Acts silly",
+                    "Burps or farts crudely",
+                    "Makes up a fake story",
+                    "Lies about interest in other partners",
+                    "Lies about past with other partners",
+                    "Demand to know about your interest in them",
+                    "Demand to know about your interest in others",
+                    "Interacts with someone else",
+                    "Avoids a question",
+                    "Takes a bathroom break",
+                    "Slaps you a bit hard",
+                    "Accidentally elbows you",
+                    "Trips you",
+                    "Leaves or runs away",
+                    "Gets angry at what you say",
+                    "Gets angry at what they see you do",
+                    "Gets angry at what you forgot to do",
+                    "Starts a petty argument",
+                    "Refuses to talk",
+                    "Suggests a game",
+                    "Dares you",
+                    "You dare them",
+                    "Ask truth question",
+                    "They ask you a truth question",
+                    "Wants to go out and have fun",
+                    "Does something rash",
+                    "Does something illegal",
+                    "Gets injured",
+                    "Gets sick",
+                    "Brings you to see someone",
+                    "Go on an adventure",
+                    "Try something difficult",
+                    "Sit quietly together"
+                ]
             },
             {
                 "id": 132,
@@ -1008,6 +1224,43 @@
                     "Hookup",
                     "Wounded",
                     "Revenge"
+                ]
+            },
+            {
+                "id": 165,
+                "name": "Their Tone",
+                "description": "List for **Choose Tone** event.",
+                "enum_list": [
+                    "Sensitive",
+                    "Kind",
+                    "Loving",
+                    "Intimate",
+                    "Distant",
+                    "Cold",
+                    "Sad",
+                    "Happy",
+                    "Excited",
+                    "Goofy",
+                    "Angry",
+                    "Irrational",
+                    "Argumentative",
+                    "Jealous",
+                    "Cute",
+                    "Seductive",
+                    "Steamy",
+                    "Pleasant",
+                    "Needy",
+                    "Hungry",
+                    "Casual",
+                    "Uncomfortable",
+                    "Awkward",
+                    "Fun",
+                    "Confident",
+                    "Brave",
+                    "Quiet",
+                    "Fearful",
+                    "Uncertain",
+                    "Confused"
                 ]
             }
         ],
@@ -1103,6 +1356,23 @@
                 ]
             },
             {
+                "id": 166,
+                "name": "Choose Action",
+                "description": "Ask what an NPC you're interacting with romantically decides to do next. Also roll **Choose Tone.**",
+                "outcome_type": "selection",
+                "selection_attrib_id": 164,
+                "chained": [
+                    {"child_id": 167}
+                ]
+            },
+            {
+                "id": 167,
+                "name": "Choose Tone",
+                "description": "Roll and use to interpret the outcome of **Choose Action.**",
+                "outcome_type": "selection",
+                "selection_attrib_id": 165
+            },
+            {
                 "id": 90,
                 "name": "Circle Job Listing",
                 "description": "Use a bright colored marker to circle this job listing.",
@@ -1127,6 +1397,27 @@
                         "infield": {"attrib_id": 89},
                         "outfield": {"role": "universal", "item_id": 87, "attrib_id": 89},
                         "op_application": ":="
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "item_id": 87, "attrib_id": 109},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "item_id": 87, "attrib_id": 110},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 77},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0
                     }
                 ]
             },
@@ -1185,6 +1476,9 @@
                         "infield": {"attrib_id": 108}
                     },
                     {
+                        "infield": {"attrib_id": 154}
+                    },
+                    {
                         "infield": {"role": "target char", "attrib_id": 135}
                     },
                     {
@@ -1232,36 +1526,91 @@
             {
                 "id": 63,
                 "name": "How an Advance is Received",
-                "description": "Does the person draw back or are they happy about the initiative taken. The attempt could be spoken or physical.",
-                "outcome_type": "numeric",
+                "description": "Does the person draw back or are they happy about the initiative taken. For example, attempt to hold their hand. The attempt could be physical or spoken.\r\n\r\nFor actions that are primarily about being physical and erotic rather than emotional, use **Steamy Action** instead.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
-                        "infield": {"attrib_id": 3}
+                        "infield": {"attrib_id": 2}
                     },
                     {
-                        "infield": {"attrib_id": 2}
+                        "infield": {"attrib_id": 108}
                     },
                     {
                         "infield": {"attrib_id": 17}
                     },
                     {
-                        "infield": {"attrib_id": 12}
+                        "infield": {"attrib_id": 3}
                     },
                     {
-                        "infield": {"attrib_id": 4}
+                        "infield": {"attrib_id": 156}
                     },
                     {
-                        "infield": {"attrib_id": 10}
+                        "infield": {"attrib_id": 154}
                     },
                     {
-                        "infield": {"attrib_id": 5}
+                        "infield": {"role": "target char", "attrib_id": 7},
+                        "op_transform": "/",
+                        "val_transform": 5.0
+                    },
+                    {"op_application": ":=", "op_transform": "floor"},
+                    {
+                        "label": "Standard Threshold",
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 28.0
                     }
                 ],
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "target char", "attrib_id": 7}
+                        "outfield": {"role": "target char", "attrib_id": 7},
+                        "op_transform": "c",
+                        "val_transform": 3.0,
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 7},
+                        "op_transform": "c",
+                        "val_transform": 3.0,
+                        "outcome_success": "success_major"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 7},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "outcome_success": "failure_minor"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 7},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 3.0,
+                        "outcome_success": "failure_major"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 11},
+                        "op_transform": "c",
+                        "val_transform": 5.0,
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 11},
+                        "op_transform": "c",
+                        "val_transform": 5.0,
+                        "outcome_success": "success_major"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 11},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 5.0,
+                        "outcome_success": "failure_major"
                     }
                 ]
             },
@@ -1281,7 +1630,8 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {"attrib_id": 88},
-                        "op_application": ":="
+                        "op_application": ":=",
+                        "auto_apply": true
                     }
                 ],
                 "chained": [
@@ -1291,7 +1641,6 @@
             {
                 "id": 93,
                 "name": "Job Location",
-                "description": "*Die Max* should be the number of **Location ID** entries.",
                 "outcome_type": "selection",
                 "selection_attrib_id": 85,
                 "determinants": [
@@ -1304,13 +1653,15 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {"attrib_id": 85},
-                        "op_application": ":="
+                        "op_application": ":=",
+                        "auto_apply": true
                     },
                     {
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 82},
                         "op_application": "-",
-                        "op_transform": "c"
+                        "op_transform": "c",
+                        "auto_apply": true
                     }
                 ],
                 "chained": [
@@ -1332,7 +1683,8 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {"attrib_id": 89},
-                        "op_application": ":="
+                        "op_application": ":=",
+                        "auto_apply": true
                     }
                 ]
             },
@@ -1418,13 +1770,145 @@
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 0.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "item_id": 91, "attrib_id": 88},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "item_id": 92, "attrib_id": 88},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0
+                    }
+                ]
+            },
+            {
+                "id": 146,
+                "name": "Preserve Relationship",
+                "description": "Attempt to avoid losing the relationship.",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "label": "Base Threshold",
+                        "infield": {"role": "target char", "attrib_id": 144},
+                        "op_application": "-"
+                    },
+                    {
+                        "infield": {"role": "target char", "attrib_id": 7},
+                        "val_transform": 2.0
+                    },
+                    {
+                        "label": "Base Threshold",
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 5.0
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 7},
+                        "op_transform": "c",
+                        "val_transform": 10.0,
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 7},
+                        "op_transform": "c",
+                        "val_transform": 10.0,
+                        "outcome_success": "success_major"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 7},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 10.0,
+                        "outcome_success": "failure_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 7},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 10.0,
+                        "outcome_success": "failure_major"
+                    }
+                ]
+            },
+            {
+                "id": 145,
+                "name": "Propose Next Level",
+                "description": "Attempt to advance the relationship, for example, marriage proposal. If successful, change the **Relationship Status** of that person.\r\n\r\nOn failure, it would be best to wait before trying again. To try again without waiting, increase the difficulty by one class each time.",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "label": "Base Threshold",
+                        "infield": {"role": "target char", "attrib_id": 144},
+                        "op_application": "-"
+                    },
+                    {
+                        "infield": {"role": "target char", "attrib_id": 7},
+                        "val_transform": 2.0
+                    },
+                    {
+                        "infield": {"attrib_id": 135}
+                    },
+                    {
+                        "infield": {"attrib_id": 3},
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "label": "Base Threshold",
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 10.0
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 7},
+                        "op_transform": "c",
+                        "val_transform": 5.0,
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 7},
+                        "op_transform": "c",
+                        "val_transform": 5.0,
+                        "outcome_success": "success_major"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 7},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 2.0,
+                        "outcome_success": "failure_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 7},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 3.0,
+                        "outcome_success": "failure_major"
                     }
                 ]
             },
             {
                 "id": 136,
                 "name": "Similar Personality—Calculate",
-                "description": "Compares how close you are in charisma, intelligence, and fitness.",
+                "description": "Compares how close you are in charisma, intelligence, modesty, and fitness.",
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -1467,7 +1951,21 @@
                         "infield": {"attrib_id": 11},
                         "op_application": "m:="
                     },
-                    {"op_application": ":=", "op_transform": "c", "val_transform": 12.0},
+                    {"op_application": ":=", "op_transform": "c", "val_transform": 0.0},
+                    {
+                        "infield": {"attrib_id": 5}
+                    },
+                    {
+                        "infield": {"role": "target char", "attrib_id": 5},
+                        "op_application": "-"
+                    },
+                    {"op_application": ":=", "op_transform": "abs"},
+                    {"op_transform": "mr"},
+                    {
+                        "infield": {"attrib_id": 11},
+                        "op_application": "m:="
+                    },
+                    {"op_application": ":=", "op_transform": "c", "val_transform": 16.0},
                     {"op_application": "-", "op_transform": "mr"}
                 ],
                 "effects": [
@@ -1475,6 +1973,90 @@
                         "get_val_from": "outcome",
                         "outfield": {"attrib_id": 135},
                         "op_application": ":="
+                    }
+                ]
+            },
+            {
+                "id": 157,
+                "name": "Steamy Action",
+                "description": "Immediate physical focus takes priority over emotional feelings once the mood is right. This could be a bedroom scene or any physically focused situation such as dancing or making out. Clothing bonus may change based on what fits the new situation better.\r\n\r\n*Minor Failure* incurs a small penalty, and *Major Failure* generally indicates that your attempted action gets rejected.",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "infield": {"role": "target char", "attrib_id": 11},
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "infield": {"attrib_id": 108}
+                    },
+                    {
+                        "infield": {"attrib_id": 3},
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "infield": {"attrib_id": 156},
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "infield": {"attrib_id": 154}
+                    },
+                    {
+                        "infield": {"role": "target char", "attrib_id": 7},
+                        "op_transform": "/",
+                        "val_transform": 10.0
+                    },
+                    {
+                        "infield": {"attrib_id": 5},
+                        "op_application": "-",
+                        "op_transform": "/",
+                        "val_transform": 9.0
+                    },
+                    {
+                        "infield": {"attrib_id": 158},
+                        "op_application": "-",
+                        "op_transform": "*",
+                        "val_transform": 3.0
+                    },
+                    {"op_application": ":=", "op_transform": "floor"},
+                    {
+                        "label": "Standard Threshold",
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 18.0
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 11},
+                        "op_transform": "c",
+                        "val_transform": 5.0,
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 11},
+                        "op_transform": "c",
+                        "val_transform": 5.0,
+                        "outcome_success": "success_major"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 11},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "outcome_success": "failure_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 11},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 4.0,
+                        "outcome_success": "failure_major"
                     }
                 ]
             },
@@ -1530,12 +2112,16 @@
     },
     "general data": {
         "piles": [
+            {"item_id": 18, "quantity": 1.0},
+            {"item_id": 22, "quantity": 1.0},
+            {"item_id": 23, "quantity": 1.0},
             {"item_id": 68, "quantity": 1.0},
             {"item_id": 70, "quantity": 24.0},
-            {"item_id": 74, "quantity": 8.0},
+            {"item_id": 74, "quantity": 10.0},
+            {"item_id": 75, "quantity": 0.0},
             {"item_id": 77, "quantity": 0.0},
             {"item_id": 81, "quantity": 100.0},
-            {"item_id": 82, "quantity": 0.0},
+            {"item_id": 82, "quantity": 2.0},
             {"item_id": 87, "quantity": 1.0},
             {"item_id": 91, "quantity": 1.0},
             {"item_id": 92, "quantity": 1.0}

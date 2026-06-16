@@ -1,3 +1,4 @@
+from sqlalchemy import select
 from app.models import (
     db, WinRequirement, Pile, Character, Item, AttribVal, GENERAL_ID)
 from app.utils import format_num, maskable_name
@@ -59,28 +60,40 @@ def validate_requirements(game_token):
         elif r.attrib_id:
             # Determine the subject (Character or Item)
             subject_id = r.char_id or r.item_id
-            subject_name = r.char.name if r.char_id else maskable_name(r.item)
-            icon = "👤" if r.char_id else "📦"
+            subject_name = r.char.name if r.char_id else (
+                maskable_name(r.item) if r.item_id else None)
+            icon = "👤" if r.char_id else ("📦" if r.item_id else "📊")
+            subject_prefix = f"{icon} {subject_name}" if subject_name \
+                else f"{icon} (Any Subject)"
             
-            val_rec = AttribVal.query.filter_by(
-                game_token=game_token, subject_id=subject_id, attrib_id=r.attrib_id
-            ).first()
-            current_val = val_rec.value if val_rec else 0
+            stmt = select(AttribVal).where(
+                AttribVal.game_token == game_token,
+                AttribVal.attrib_id == r.attrib_id
+            )
+            if subject_id:
+                stmt = stmt.where(AttribVal.subject_id == subject_id)
+            val_recs = db.session.scalars(stmt).all()
+            current_vals = [rec.value for rec in val_recs] if val_recs else [0]
 
             if r.attrib.is_binary:
-                is_fulfilled = (current_val == r.attrib_value)
+                is_fulfilled = any(
+                    val == r.attrib_value for val in current_vals)
                 have = "must have" if r.attrib_value > 0 else "cannot have"
-                desc = f"👤 {r.char.name} {have} {r.attrib.name}"
+                desc = f"{subject_prefix} {have} {r.attrib.name}"
             elif r.attrib.enum_list:
-                is_fulfilled = (current_val == r.attrib_value)
+                is_fulfilled = any(
+                    val == r.attrib_value for val in current_vals)
                 try:
                     state_name = r.attrib.enum_list[int(r.attrib_value)]
-                except:
+                except (TypeError, ValueError, LookupError):
                     state_name = str(r.attrib_value)
-                desc = f"👤 {r.char.name} must have {r.attrib.name} set to '{state_name}'"
+                desc = f"{subject_prefix} must have {r.attrib.name} " \
+                       f"set to '{state_name}'"
             else:
-                is_fulfilled = current_val >= r.attrib_value
-                desc = f"👤 {r.char.name} needs {r.attrib.name} ≥ {format_num(r.attrib_value)}"
+                is_fulfilled = any(
+                    val >= r.attrib_value for val in current_vals)
+                desc = f"{subject_prefix} needs {r.attrib.name} ≥ " \
+                       f"{format_num(r.attrib_value)}"
 
         if not is_fulfilled:
             all_met = False

@@ -20,7 +20,7 @@ You'll probably "get" this game if you have done any of these:
 
 ## Suggestions for Playing
 
-- For role-playing scenarios, it often helps to track the narrative in a separate markdown document, optionally enhanced by AI.
+- For dynamic role-playing scenarios such as **Dating,** track the narrative in a separate markdown document, optionally enhanced by AI.
 
 - Anytime the story calls for a value that isn't handled automatically, go ahead and make the change in settings—don't worry that you might be bypassing the "official" game.
 
