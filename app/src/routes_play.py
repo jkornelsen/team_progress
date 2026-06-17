@@ -270,7 +270,7 @@ def play_character(id):
         exit_loc_id=exit_loc_id,
         has_nonadjacent=has_nonadjacent,
         party_members=party_members,
-        link_letters=LinkLetters(excluded='gltmoe')
+        link_letters=LinkLetters(excluded='gltmoew')
     )
 
 @play_bp.route('/char/<int:id>/drop', methods=['POST'])
@@ -854,6 +854,9 @@ def play_event(id):
                 logic_key = 'negated' if factor.negate else 'positive'
                 field = factor.infield
                 fields_not_met[role][logic_key].append((factor, field))
+                logger.info(
+                    f"factor {factor.id} not met: "
+                    f"{role}, {logic_key}, {field.get_field_name()}")
 
         eligible_role_entities[role] = sort_by_name_stripped(
             list(role_candidates))

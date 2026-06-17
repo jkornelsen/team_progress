@@ -613,7 +613,7 @@ function syncOuterExprState(card) {
             sourceSection.classList.toggle('hidden', isAssign || isStore);
         }
         if (lhsLabel) {
-            lhsLabel.innerText = isAssign ? "Running Total" : "Fetched Value";
+            lhsLabel.innerText = (isAssign || isStore) ? "Running Total" : "Fetched Value";
         }
     }
 

@@ -78,6 +78,12 @@
                 "q_limit": 1.0
             },
             {
+                "id": 172,
+                "name": "Buy from Petrol Station",
+                "storage_type": "l",
+                "q_limit": 1.0
+            },
+            {
                 "id": 121,
                 "name": "Buy from Supermarket",
                 "storage_type": "l",
@@ -258,6 +264,17 @@
                     }
                 ]
             },
+            {
+                "id": 179,
+                "name": "Date",
+                "description": "To plan dates with different people at the same time, you'd need to save and duplicate this item. But there are several ways that could get you into trouble.\r\n\r\nIt's up to you to choose the location thoughtfully — there's no event that selects randomly for you.",
+                "attribs": [
+                    [15, 0.0],
+                    [85, 0.0],
+                    [86, 0.0]
+                ],
+                "q_limit": 1.0
+            },
             {"id": 83, "name": "Desktop Computer", "q_limit": 1.0},
             {
                 "id": 160,
@@ -386,13 +403,28 @@
                 "description": "The bottom of the skirt rests just above the knees.",
                 "q_limit": 1.0
             },
-            {"id": 123, "name": "Gas Stove", "storage_type": "l", "q_limit": 1.0},
+            {
+                "id": 123,
+                "name": "Gas Stove",
+                "description": "A gas cylinder sits on the floor, connected to the stove by a tube.",
+                "storage_type": "l",
+                "q_limit": 1.0
+            },
             {
                 "id": 70,
                 "name": "Hours",
                 "description": "The basic measure of time needed to accomplish things. Starts at sunrise with 24 hours left, so the 24th hour is just before dawn the next day.\r\n\r\nYou don't need to to account for all the hours each day, but be realistic about how much could happen in a single day.",
                 "storage_type": "u",
-                "q_limit": 24.0
+                "q_limit": 24.0,
+                "recipes": [
+                    {
+                        "id": 169,
+                        "rate_amount": 0.0,
+                        "sources": [
+                            {"item_id": 70, "q_required": 1.0}
+                        ]
+                    }
+                ]
             },
             {
                 "id": 91,
@@ -440,7 +472,7 @@
             {
                 "id": 82,
                 "name": "Job Listings—New",
-                "description": "Purchase a newspaper from the store, or have it delivered with a subscription, or buy local online news from a computer.\r\n\r\nTwo jobs are posted every weekday. If a posting is listed then it's guaranteed to be available for the day, though you'll still need to apply. Otherwise, there's a small chance of finding a job by asking around.",
+                "description": "Purchase a newspaper from the store, or have it delivered every morning with a subscription, or buy local online news from a computer.\r\n\r\nTwo jobs are posted every weekday. If a posting is listed then it's guaranteed to be available for the day, though you'll still need to apply. Otherwise, there's a small chance of finding a job by asking around.",
                 "storage_type": "u",
                 "q_limit": 2.0,
                 "toplevel": true
@@ -489,6 +521,28 @@
                 "q_limit": 1.0
             },
             {
+                "id": 170,
+                "name": "Petrol",
+                "description": "Takes **1** Liter each way, **2** round trip.",
+                "q_limit": 10.0,
+                "recipes": [
+                    {
+                        "id": 173,
+                        "sources": [
+                            {"item_id": 81, "q_required": 1.0},
+                            {"item_id": 172, "q_required": 1.0, "preserve": true}
+                        ]
+                    },
+                    {
+                        "id": 174,
+                        "rate_amount": 0.0,
+                        "sources": [
+                            {"item_id": 170, "q_required": 1.0}
+                        ]
+                    }
+                ]
+            },
+            {
                 "id": 74,
                 "name": "Rested",
                 "description": "Based on how many hours of sleep you've had, and whether you've been eating.",
@@ -523,49 +577,22 @@
                 "description": "To dry off or wrap around."
             },
             {
-                "id": 126,
-                "name": "Visits",
-                "description": "Roughly keep track of the hours spent at locations.",
-                "storage_type": "u",
-                "recipes": [
-                    {
-                        "id": 127,
-                        "rate_amount": 3.0,
-                        "instant": true,
-                        "sources": [
-                            {"item_id": 70, "q_required": 3.0}
-                        ],
-                        "attrib_reqs": [
-                            {
-                                "attrib_id": 85,
-                                "value_range": [2.0, 2.0],
-                                "range_inclusive": [true, true]
-                            }
-                        ]
-                    },
-                    {
-                        "id": 128,
-                        "rate_amount": 3.0,
-                        "instant": true,
-                        "sources": [
-                            {"item_id": 70, "q_required": 3.0}
-                        ],
-                        "attrib_reqs": [
-                            {
-                                "attrib_id": 85,
-                                "value_range": [4.0, 4.0],
-                                "range_inclusive": [true, true]
-                            }
-                        ]
-                    }
-                ]
-            },
-            {
                 "id": 38,
                 "name": "Washing Machine",
                 "description": "Removes dirt from clothes. Doesn't work on people — use a shower for that.",
                 "storage_type": "l",
-                "q_limit": 1.0
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 168,
+                        "rate_amount": 0.0,
+                        "rate_duration": 8,
+                        "sources": [
+                            {"item_id": 38, "q_required": 1.0, "preserve": true},
+                            {"item_id": 70, "q_required": 2.0}
+                        ]
+                    }
+                ]
             },
             {
                 "id": 77,
@@ -607,9 +634,22 @@
                 ]
             },
             {
+                "id": 52,
+                "name": "Church Corner Room",
+                "description": "The Young Singles group meets in the back corner room, with cement walls that get damp when the humidity is high enough. There's plenty of room, so it's fine as long as other people show up and no one is unreasonably argumentative.\r\n\r\nSturdy plastic-covered metal chairs are arranged in a circle, offering places to sit once it's time to officially start.\r\n\r\nThe first week's topic is Proverbs 21:9, \"Better to live on a corner of the roof than share a house with a quarrelsome wife. (NIV)\" *Make this fun with an AI discussion. Give it a personality that likes to quote verses out of context and draw questionable conclusions.*"
+            },
+            {
+                "id": 175,
+                "name": "Church Sanctuary",
+                "description": "Where Sunday morning services and mid-week meetings take place."
+            },
+            {
                 "id": 105,
                 "name": "Cinema",
-                "description": "One or two new movies come out each week, but there is also a large selection of classic movie showings for cheaper tickets."
+                "description": "One or two new movies come out each week, but there is also a large selection of classic movie showings for cheaper tickets.\r\n\r\nAvailable jobs: ticket vendor, popcorn popper, play button presser, clean sticky floors.",
+                "attribs": [
+                    [85, 1.0]
+                ]
             },
             {
                 "id": 40,
@@ -620,14 +660,12 @@
                 ]
             },
             {
-                "id": 52,
-                "name": "Corner Room of Church",
-                "description": "The Young Singles group meets in the back corner room, with cement walls that get damp when the humidity is high enough. There's plenty of room, so it's fine as long as other people show up and no one is unreasonably argumentative.\r\n\r\nSturdy plastic-covered metal chairs are arranged in a circle, offering places to sit once it's time to officially start.\r\n\r\nThe first week's topic is Proverbs 21:9, \"Better to live on a corner of the roof than share a house with a quarrelsome wife. (NIV)\" *Make this fun with an AI discussion. Give it a personality that likes to quote verses out of context and draw questionable conclusions.*"
-            },
-            {
                 "id": 42,
                 "name": "Department Store",
-                "description": "All the name brands. Buy better clothes, maybe one day even a ring.",
+                "description": "All the name brands. Buy better clothes, maybe one day even a ring.\r\n\r\nAvailable jobs: outfit fetcher, checkout counter, security monitors.",
+                "attribs": [
+                    [85, 2.0]
+                ],
                 "destinations": [
                     {"loc2_id": 103}
                 ]
@@ -647,7 +685,7 @@
                 "name": "Electronics Store",
                 "description": "Available jobs: customer assistant, product returns, repair squad, checkout register.",
                 "attribs": [
-                    [85, 1.0]
+                    [85, 3.0]
                 ],
                 "abilities": [101],
                 "destinations": [
@@ -659,19 +697,23 @@
                 "name": "Friendly Community Church",
                 "description": "The message board out front says, \"All are welcome. So don't blame the pastor when someone else as bad as you comes!\"\r\n\r\nIf your character is religious, then this is one of the best places to meet like-minded people. If not, you could go the dark route of trying to seduce some good girls and lead them astray.\r\n\r\nServices are Sunday mornings, young singles group is Monday evenings, and mid-week meetings are Wednesday evenings. There are also retreats from time to time, and special activities such as assisting at homeless shelters.\r\n\r\nA few paid jobs are available: childcare, printing bulletins, landscaping.",
                 "attribs": [
-                    [85, 2.0],
+                    [85, 4.0],
                     [130, 4.0]
                 ],
                 "abilities": [129],
                 "destinations": [
                     {"loc2_id": 52},
-                    {"loc2_id": 55}
+                    {"loc2_id": 55},
+                    {"loc2_id": 175}
                 ]
             },
             {
                 "id": 41,
                 "name": "Gym",
-                "description": "Improve your fitness and perhaps meet people.",
+                "description": "Improve your fitness and perhaps meet people.\r\n\r\nAvailable jobs: yoga instructor, masseuse, pick up weights, pool scraper.",
+                "attribs": [
+                    [85, 5.0]
+                ],
                 "abilities": [101],
                 "destinations": [
                     {"loc2_id": 103}
@@ -682,6 +724,7 @@
                 "name": "Happy Hour Pub",
                 "description": "Where else would you go to blow off steam and have a good time? There's certain to be people here to meet. The only question is whether the types who frequent this joint are worth your time.\r\n\r\nEven if you'd normally consider yourself too moral to indulge in such a lifestyle, you could still choose someone less worthy (but good-looking) in an attempt to get them back on the right road.\r\n\r\nAvailable jobs: drink mixer, piano man, bouncer, bathroom cleaner.",
                 "attribs": [
+                    [85, 6.0],
                     [130, 4.0]
                 ],
                 "abilities": [129],
@@ -699,7 +742,19 @@
                 "destinations": [
                     {"loc2_id": 48},
                     {"loc2_id": 49},
-                    {"loc2_id": 53}
+                    {"loc2_id": 53},
+                    {"loc2_id": 171}
+                ]
+            },
+            {
+                "id": 171,
+                "name": "Petrol Station",
+                "description": "Not only sells petrol but also any kind of vehicle maintenance, from selling wipers to repainting and replacing engine parts.\r\n\r\nAvailable jobs: pump receipt printing, oil changer, mechanic, order parts from catalog.",
+                "attribs": [
+                    [85, 7.0]
+                ],
+                "items": [
+                    {"item_id": 172, "quantity": 1.0}
                 ]
             },
             {
@@ -727,9 +782,9 @@
             {
                 "id": 48,
                 "name": "Supermarket",
-                "description": "Good prices for everyday items, such as:\r\n* Groceries\r\n* Over-the-counter medicine\r\n* Toiletries\r\n* Basic clothes\r\n\r\nThere are several types of jobs available here:\r\n- Stocker\r\n- Bagger\r\n- Cashier\r\n- Manager",
+                "description": "Good prices for everyday items, such as:\r\n* Groceries\r\n* Over-the-counter medicine\r\n* Toiletries\r\n* Basic clothes\r\n\r\nAvailable jobs: stocker, bagger, cashier, alcohol scanner.",
                 "attribs": [
-                    [85, 3.0],
+                    [85, 8.0],
                     [130, 2.0]
                 ],
                 "abilities": [101, 129],
@@ -742,7 +797,7 @@
                 "name": "Teria's Place",
                 "description": "Cafeteria style restaurant — go through the line and ask for what to put on your plate. A variety of options: noodles, meat, salads.\r\n\r\nThe owner named the place after his daughter. To meet her, start setting her up by duplicating one of the other characters.\r\n\r\nAvailable jobs: server, cook, dish washer.",
                 "attribs": [
-                    [85, 6.0]
+                    [85, 9.0]
                 ],
                 "items": [
                     {"item_id": 150, "quantity": 1.0}
@@ -800,7 +855,8 @@
             {
                 "id": 53,
                 "name": "Your Neighborhood",
-                "description": "Part way between downtown and the outskirts, this neighborhood is well positioned to get somewhere easily. On the street is a bus stop with routes downtown.",
+                "description": "Part way between downtown and the outskirts, this neighborhood is well positioned to get somewhere easily.\r\n\r\nOn the street is a bus stop with routes downtown. Deduct an hour whenever you use the bus.",
+                "item_refs": [70],
                 "destinations": [
                     {"loc2_id": 55}
                 ]
@@ -810,15 +866,16 @@
             {
                 "id": 143,
                 "name": "Art",
-                "description": "Holding Sydney's hand. His name means \"bear\" in Celtic.",
-                "location_id": 52
+                "description": "Holding Sydney's hand. His name means \"bear\" in Celtic.\r\n\r\nPlays guitar. Leads the worship music on Sunday mornings and Wednesday evenings.",
+                "location_id": 52,
+                "travel_party": "Church Attenders"
             },
             {
                 "id": 60,
                 "name": "Claudia",
                 "description": "Neatly dressed young woman with braided long brown hair. Looks welcoming but someone who should be greeted respectfully.",
                 "attribs": [
-                    [2, 5.0],
+                    [2, 4.0],
                     [3, 5.0],
                     [4, 5.0],
                     [5, 10.0],
@@ -830,9 +887,11 @@
                     [135, 0.0],
                     [144, 0.0]
                 ],
-                "abilities": [133, 136, 139, 166],
+                "abilities": [134, 136, 139, 166],
                 "location_id": 52,
+                "travel_party": "Church Attenders",
                 "items": [
+                    {"item_id": 29, "quantity": 1.0},
                     {"item_id": 30, "quantity": 1.0, "slot": "Torso"},
                     {"item_id": 31, "quantity": 1.0, "slot": "Legs"},
                     {"item_id": 33, "quantity": 1.0, "slot": "Feet"},
@@ -855,6 +914,7 @@
                     [10, 5.0]
                 ],
                 "location_id": 52,
+                "travel_party": "Church Attenders",
                 "items": [
                     {"item_id": 29, "quantity": 1.0, "slot": "Held"}
                 ]
@@ -864,7 +924,7 @@
                 "name": "(Enter a name)",
                 "description": "College has left little time for social life, until now. With a few months' holiday, this is the perfect time to reawaken that hidden charisma and those stifled interpersonal skills.\r\n\r\nThe default setup is male seeking female.",
                 "attribs": [
-                    [2, 3.0],
+                    [2, 5.0],
                     [3, 5.0],
                     [4, 3.0],
                     [5, 10.0],
@@ -879,9 +939,10 @@
                     [156, 0.0],
                     [158, 0.0]
                 ],
-                "abilities": [63, 64, 101, 107, 145, 146, 157],
+                "abilities": [63, 64, 101, 107, 145, 146, 157, 178, 180],
                 "toplevel": true,
                 "location_id": 47,
+                "travel_party": "Drive",
                 "items": [
                     {"item_id": 19, "quantity": 1.0, "slot": "Accessories"},
                     {"item_id": 30, "quantity": 1.0, "slot": "Torso"},
@@ -907,6 +968,15 @@
                 "location_id": 47
             },
             {
+                "id": 177,
+                "name": "Minister Breece",
+                "description": "The preacher. Passionate middle-aged man who enjoys making spiritual comparisons to rugby, from his time playing in college.",
+                "location_id": 175,
+                "items": [
+                    {"item_id": 29, "quantity": 1.0, "slot": "Held"}
+                ]
+            },
+            {
                 "id": 58,
                 "name": "Sierra",
                 "description": "A young woman, but judging from her appearance, not a \"lady.\" Auburn shoulder-length hair. Loves dancing even if she's not particularly skilled at it.",
@@ -926,7 +996,7 @@
                     [135, 0.0],
                     [144, 0.0]
                 ],
-                "abilities": [133, 136, 139, 166],
+                "abilities": [134, 136, 139, 166],
                 "location_id": 44,
                 "items": [
                     {"item_id": 33, "quantity": 1.0, "slot": "Feet"},
@@ -950,13 +1020,18 @@
                 "attribs": [
                     [144, 1.0]
                 ],
-                "location_id": 52
+                "location_id": 52,
+                "travel_party": "Church Attenders"
             },
             {
                 "id": 141,
                 "name": "Volvo S60",
-                "description": "A car that shows someone who likes things done right.",
-                "location_id": 47
+                "description": "A car that shows someone who likes things done right. Faster than waiting for the bus.",
+                "location_id": 47,
+                "travel_party": "Drive",
+                "items": [
+                    {"item_id": 170, "quantity": 8.0}
+                ]
             }
         ],
         "attribs": [
@@ -1067,13 +1142,16 @@
             {"id": 89, "name": "Job—Wages Per Hour"},
             {
                 "id": 85,
-                "name": "Location ID",
+                "name": "Employer ID",
                 "enum_list": [
                     "Beach",
+                    "Cinema",
+                    "Department Store",
                     "Electronics Store",
                     "Friendly Community Church",
                     "Gym",
                     "Happy Hour Pub",
+                    "Petrol Station",
                     "Supermarket",
                     "Teria's Place"
                 ]
@@ -1114,7 +1192,7 @@
             {
                 "id": 156,
                 "name": "Relevant Skill",
-                "description": "General attribute to set based on the situation. For example, if dancing is relevant, then set this value to your **Dancing Skill.**"
+                "description": "General attribute to set based on the situation. For example, if dancing is relevant, then set this value to your **Dancing Skill.** If no skills apply to the situation then set to **5.**"
             },
             {
                 "id": 135,
@@ -1153,8 +1231,6 @@
                     "Flirt",
                     "Talks dirty",
                     "Adjusts clothing",
-                    "Slips",
-                    "Bumps into something and gets a bruise",
                     "Laughs at your joke",
                     "Acts silly",
                     "Burps or farts crudely",
@@ -1166,9 +1242,12 @@
                     "Interacts with someone else",
                     "Avoids a question",
                     "Takes a bathroom break",
-                    "Slaps you a bit hard",
+                    "Slips",
+                    "Bumps into something and gets a bruise",
                     "Accidentally elbows you",
                     "Trips you",
+                    "Slaps you a bit hard",
+                    "Breaks something",
                     "Leaves or runs away",
                     "Gets angry at what you say",
                     "Gets angry at what they see you do",
@@ -1268,7 +1347,7 @@
             {
                 "id": 107,
                 "name": "Apply For Job",
-                "description": "Call or visit the circled location to apply. Set your **Clothing Score** before rolling.",
+                "description": "Visit the circled location to apply. (If you're at the wrong location then the outcome will go deeply negative, guaranteeing failure).\r\n\r\nSet your **Clothing Score** before rolling.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -1280,6 +1359,23 @@
                         "op_application": "==",
                         "val_required": 0.0
                     },
+                    {"op_application": "m:="},
+                    {"op_application": ":=", "op_transform": "c", "val_transform": 0.0},
+                    {
+                        "infield": {"role": "universal", "item_id": 87, "attrib_id": 85}
+                    },
+                    {
+                        "infield": {"role": "at", "attrib_id": 85},
+                        "op_application": "-"
+                    },
+                    {"op_application": ":=", "op_transform": "abs"},
+                    {
+                        "label": "Fail If Different Employer ID",
+                        "op_application": "*",
+                        "op_transform": "c",
+                        "val_transform": -100.0
+                    },
+                    {"op_transform": "mr"},
                     {
                         "infield": {"role": "universal", "item_id": 87, "attrib_id": 89},
                         "op_application": "-",
@@ -1351,6 +1447,73 @@
                         "infield": {"role": "at", "attrib_id": 85},
                         "outfield": {"role": "universal", "item_id": 87, "attrib_id": 85},
                         "op_application": ":=",
+                        "outcome_success": "success_any"
+                    }
+                ]
+            },
+            {
+                "id": 178,
+                "name": "Ask Out On Date",
+                "description": "The date must be a literal date, that is, decide together on a future day and place. \r\n\r\n- If they accept, then go to **Date** and set the location.\r\n- Default is tomorrow, so you can keep that or change it.",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 2}
+                    },
+                    {
+                        "infield": {"attrib_id": 108}
+                    },
+                    {
+                        "infield": {"attrib_id": 17}
+                    },
+                    {
+                        "infield": {"attrib_id": 3}
+                    },
+                    {
+                        "infield": {"role": "target char", "attrib_id": 144}
+                    },
+                    {
+                        "infield": {"role": "target char", "attrib_id": 7},
+                        "op_transform": "/",
+                        "val_transform": 5.0
+                    },
+                    {"op_application": ":=", "op_transform": "floor"},
+                    {
+                        "label": "Standard Threshold",
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 30.0
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "field_mode": "qty", "item_id": 179},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0,
+                        "outcome_success": "failure_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "field_mode": "qty", "item_id": 179},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "infield": {"role": "universal", "item_id": 68, "attrib_id": 86},
+                        "outfield": {"role": "universal", "item_id": 179, "attrib_id": 86},
+                        "op_application": ":=",
+                        "op_transform": "+",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "infield": {"role": "universal", "item_id": 179, "attrib_id": 86},
+                        "outfield": {"role": "universal", "item_id": 179, "attrib_id": 15},
+                        "op_application": ":=",
+                        "op_transform": "%",
+                        "val_transform": 0.0,
                         "outcome_success": "success_any"
                     }
                 ]
@@ -1447,6 +1610,112 @@
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 21},
                         "op_application": ":=",
                         "op_transform": "c"
+                    }
+                ]
+            },
+            {
+                "id": 180,
+                "name": "Date Outcome",
+                "description": "Roll at the end of the date. One of the most important ways to improve how they feel about you.",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "infield": {"role": "target char", "field_mode": "qty", "item_id": 179},
+                        "op_application": ">="
+                    },
+                    {
+                        "infield": {"attrib_id": 108}
+                    },
+                    {
+                        "infield": {"attrib_id": 156}
+                    },
+                    {
+                        "infield": {"attrib_id": 154}
+                    },
+                    {
+                        "infield": {"attrib_id": 17},
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "infield": {"attrib_id": 3},
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "infield": {"role": "target char", "attrib_id": 135}
+                    },
+                    {
+                        "infield": {"role": "target char", "attrib_id": 7},
+                        "op_transform": "/",
+                        "val_transform": 5.0
+                    },
+                    {"op_application": ":=", "op_transform": "floor"},
+                    {
+                        "label": "Standard Threshold",
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 28.0
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "field_mode": "qty", "item_id": 179},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 7},
+                        "op_transform": "c",
+                        "val_transform": 8.0,
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 7},
+                        "op_transform": "c",
+                        "val_transform": 4.0,
+                        "outcome_success": "success_major"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 7},
+                        "op_transform": "c",
+                        "val_transform": 4.0,
+                        "outcome_success": "failure_minor"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 7},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 4.0,
+                        "outcome_success": "failure_major"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 11},
+                        "op_transform": "c",
+                        "val_transform": 10.0,
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 11},
+                        "op_transform": "c",
+                        "val_transform": 10.0,
+                        "outcome_success": "success_major"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 11},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 5.0,
+                        "outcome_success": "failure_major"
                     }
                 ]
             },
@@ -1772,6 +2041,13 @@
                         "val_transform": 0.0
                     },
                     {
+                        "label": "Daily News Delivery",
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 81},
+                        "op_application": "-",
+                        "op_transform": "c"
+                    },
+                    {
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "item_id": 91, "attrib_id": 88},
                         "op_application": ":=",
@@ -1784,6 +2060,13 @@
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 0.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 82},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 2.0
                     }
                 ]
             },
@@ -1918,11 +2201,7 @@
                         "infield": {"role": "target char", "attrib_id": 2},
                         "op_application": "-"
                     },
-                    {
-                        "infield": {"attrib_id": 11},
-                        "op_application": "m:=",
-                        "op_transform": "abs"
-                    },
+                    {"op_application": "m:=", "op_transform": "abs"},
                     {"op_application": ":=", "op_transform": "c", "val_transform": 0.0},
                     {
                         "infield": {"attrib_id": 10}
@@ -1933,10 +2212,7 @@
                     },
                     {"op_application": ":=", "op_transform": "abs"},
                     {"op_transform": "mr"},
-                    {
-                        "infield": {"attrib_id": 11},
-                        "op_application": "m:="
-                    },
+                    {"op_application": "m:="},
                     {"op_application": ":=", "op_transform": "c", "val_transform": 0.0},
                     {
                         "infield": {"attrib_id": 4}
@@ -1947,10 +2223,7 @@
                     },
                     {"op_application": ":=", "op_transform": "abs"},
                     {"op_transform": "mr"},
-                    {
-                        "infield": {"attrib_id": 11},
-                        "op_application": "m:="
-                    },
+                    {"op_application": "m:="},
                     {"op_application": ":=", "op_transform": "c", "val_transform": 0.0},
                     {
                         "infield": {"attrib_id": 5}
@@ -1961,11 +2234,8 @@
                     },
                     {"op_application": ":=", "op_transform": "abs"},
                     {"op_transform": "mr"},
-                    {
-                        "infield": {"attrib_id": 11},
-                        "op_application": "m:="
-                    },
-                    {"op_application": ":=", "op_transform": "c", "val_transform": 16.0},
+                    {"op_application": "m:="},
+                    {"op_application": ":=", "op_transform": "c", "val_transform": 12.0},
                     {"op_application": "-", "op_transform": "mr"}
                 ],
                 "effects": [
@@ -2063,7 +2333,6 @@
             {
                 "id": 133,
                 "name": "Their Attitude—Roll",
-                "description": "When you first meet a prospective match (Claudia, Sierra, or a new character you add), roll to set their attitude, then their goal.",
                 "outcome_type": "selection",
                 "selection_attrib_id": 132,
                 "effects": [
@@ -2072,14 +2341,12 @@
                         "outfield": {"attrib_id": 132},
                         "op_application": ":="
                     }
-                ],
-                "chained": [
-                    {"child_id": 134}
                 ]
             },
             {
                 "id": 134,
                 "name": "Their Goal—Roll",
+                "description": "When you first meet a prospective match (Claudia, Sierra, or a new character you add), roll to set their goal, then their attitude.",
                 "outcome_type": "selection",
                 "selection_attrib_id": 131,
                 "effects": [
@@ -2088,6 +2355,9 @@
                         "outfield": {"attrib_id": 131},
                         "op_application": ":="
                     }
+                ],
+                "chained": [
+                    {"child_id": 133}
                 ]
             },
             {

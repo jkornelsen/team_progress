@@ -704,7 +704,8 @@ def edit_event(id):
                     val_required=row.get_float('val_required', 1.0)
                 )
                 for field_key in ('infield', 'outfield'):
-                    if usage == Participant.DET and op_app == Operation.ASSIGN:
+                    if usage == Participant.DET and op_app in (
+                            Operation.ASSIGN, Operation.MEM_STORE):
                         continue
                     if field_key == 'infield' and \
                             factor.get_val_from != Participant.INFIELD:
